@@ -4769,6 +4769,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@atlaskit/media-core@npm:^37.0.0":
+  version: 37.0.0
+  resolution: "@atlaskit/media-core@npm:37.0.0"
+  dependencies:
+    "@babel/runtime": "npm:^7.0.0"
+    eventemitter2: "npm:^4.1.0"
+    lru_map: "npm:^0.4.1"
+    rxjs: "npm:^5.5.0"
+  peerDependencies:
+    react: ^18.2.0
+  checksum: 10/7479b041ac03b8f36b50733f746ec34254bd0ad99eedf48d10721cd2af254bdbf70d46da40fc9869a0c6ed92411f8d5c61ec667db79f03f1a2feb645119bf30d
+  languageName: node
+  linkType: hard
+
 "@atlaskit/media-document-viewer@npm:^0.3.0":
   version: 0.3.8
   resolution: "@atlaskit/media-document-viewer@npm:0.3.8"
@@ -12881,6 +12895,8 @@ __metadata:
     "@atlaskit/inline-dialog": "npm:^17.2.6"
     "@atlaskit/layering": "npm:^3.0.0"
     "@atlaskit/lozenge": "npm:^13.0.8"
+    "@atlaskit/media-core": "npm:^37.0.0"
+    "@atlaskit/media-state": "npm:^1.8.0"
     "@atlaskit/modal-dialog": "npm:^14.3.4"
     "@atlaskit/page": "npm:^14.0.1"
     "@atlaskit/page-header": "npm:^12.1.1"
