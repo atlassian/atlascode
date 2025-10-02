@@ -395,7 +395,7 @@ export class RovoDevChatProvider {
                                 toolName: tool.tool_name,
                                 toolArgs: tool.args,
                                 mcpServer: tool.mcp_server,
-                                text: 'To do this I will need to',
+                                text: '',
                                 toolCallId: tool.tool_call_id,
                             },
                         });
