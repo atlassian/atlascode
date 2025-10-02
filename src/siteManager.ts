@@ -106,10 +106,20 @@ export class SiteManager extends Disposable {
         const productKey = newSites[0].product.key;
         let notify = true;
         let allSites = this.readSitesFromGlobalStore(productKey);
+
+        // Generally, we overwrite credential IDs on cloud sites to prevent
+        // several instances of OAuth credentials from existing at once.
+        // However, we must NOT mix cloud API token credentials with OAuth credentials
+        const cloudCredentialIdsToKeep = new Set(
+            this.getSitesAvailable(ProductJira)
+                .filter((site) => Container.credentialManager.getApiTokenIfExists(site))
+                .map((s) => s.credentialId),
+        );
+
         if (allSites) {
             // Ensure all cloud sites use the per account credential ID
             allSites.forEach((site) => {
-                if (site.isCloud) {
+                if (site.isCloud && !cloudCredentialIdsToKeep.has(site.credentialId)) {
                     site.credentialId = CredentialManager.generateCredentialId(site.product.key, site.userId);
                 }
             });

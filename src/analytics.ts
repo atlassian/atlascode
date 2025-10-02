@@ -570,6 +570,10 @@ export async function apiTokenNudgeClickedEvent(source: string): Promise<TrackEv
     return trackEvent('clicked', 'apiTokenNudge', { attributes: { source } });
 }
 
+export async function apiTokenRetainedEvent() {
+    return trackEvent('retained', 'apiToken');
+}
+
 export async function quickFlowEvent(event: QuickFlowAnalyticsEvent): Promise<TrackEvent> {
     return trackEvent('statusUpdated', 'quickFlow', { attributes: { ...event } });
 }

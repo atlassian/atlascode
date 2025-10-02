@@ -1,5 +1,6 @@
 import {
     apiTokenNudgeClickedEvent,
+    apiTokenRetainedEvent,
     authenticateButtonEvent,
     authenticatedEvent,
     bbIssuesPaginationEvent,
@@ -374,6 +375,11 @@ export class VSCAnalyticsApi implements AnalyticsApi {
 
     async fireApiTokenNudgeClickedEvent({ source }: { source: string }) {
         const event = await apiTokenNudgeClickedEvent(source);
+        this._analyticsClient.sendTrackEvent(event);
+    }
+
+    async fireApiTokenRetainedEvent() {
+        const event = await apiTokenRetainedEvent();
         this._analyticsClient.sendTrackEvent(event);
     }
 }

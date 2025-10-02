@@ -65,4 +65,6 @@ export interface AnalyticsApi {
     fireIssueSuggestionGeneratedEvent(): Promise<void>;
     fireIssueSuggestionFailedEvent(attributes: { error: string }): Promise<void>;
     fireIssueSuggestionSettingsChangeEvent(newSettings: IssueSuggestionSettings): Promise<void>;
+
+    fireApiTokenRetainedEvent(): Promise<void>;
 }
