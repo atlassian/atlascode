@@ -4,6 +4,7 @@ import {
     RovoDevClearResponse,
     RovoDevExceptionResponse,
     RovoDevOnCallToolStartResponse,
+    RovoDevParsingError,
     RovoDevPruneResponse,
     RovoDevResponse,
     RovoDevRetryPromptResponse,
@@ -306,6 +307,13 @@ function parseOnCallToolStart(data: RovoDevOnCallToolStartResponseRaw): RovoDevO
 
 // the parser
 
+function generateError(error: Error): RovoDevParsingError {
+    return {
+        event_kind: '_parsing_error',
+        error,
+    };
+}
+
 export interface RovoDevResponseParserOptions {
     mergeAllChunks?: boolean;
 }
@@ -341,7 +349,8 @@ export class RovoDevResponseParser {
 
             const match = chunkRaw.match(/^event: ([^\r\n]+)\r?\ndata: (.*)$/);
             if (!match) {
-                throw new Error(`Rovo Dev parser error: unable to parse chunk: "${chunkRaw}"`);
+                yield generateError(new Error(`Rovo Dev parser error: unable to parse chunk: "${chunkRaw}"`));
+                continue;
             }
 
             const chunk: RovoDevSingleChunk | RovoDevPartStartChunk | RovoDevPartDeltaChunk = {
@@ -367,9 +376,13 @@ export class RovoDevResponseParser {
 
                 this.previousChunk = this.parseGenericReponse(partStartChunk);
 
-                if (!this.mergeAllChunks && event_kind_inner === 'text') {
-                    // if the event is a text message, send them out immediately instead
-                    // of waiting for it to be fully reconstructed
+                // send out immediately:
+                // - errors
+                // - text messages unless we'd like to reconstruct them fully
+                if (
+                    this.previousChunk.event_kind === '_parsing_error' ||
+                    (!this.mergeAllChunks && event_kind_inner === 'text')
+                ) {
                     tmpChunkToFlush = this.flushPreviousChunk();
                     if (tmpChunkToFlush) {
                         yield tmpChunkToFlush;
@@ -386,9 +399,13 @@ export class RovoDevResponseParser {
 
                 this.previousChunk = this.parseGenericReponse(partDeltaChunk, this.previousChunk);
 
-                if (!this.mergeAllChunks && event_kind_inner === 'text') {
-                    // if the event is a text message, send them out immediately instead
-                    // of waiting for it to be fully reconstructed
+                // send out immediately:
+                // - errors
+                // - text messages unless we'd like to reconstruct them fully
+                if (
+                    this.previousChunk.event_kind === '_parsing_error' ||
+                    (!this.mergeAllChunks && event_kind_inner === 'text')
+                ) {
                     tmpChunkToFlush = this.flushPreviousChunk();
                     if (tmpChunkToFlush) {
                         yield tmpChunkToFlush;
@@ -409,7 +426,7 @@ export class RovoDevResponseParser {
     *flush() {
         // if there is still data in the buffer, something went wrong.
         if (this.buffer) {
-            throw new Error('Rovo Dev parser error: flushed with non-empty buffer');
+            yield generateError(new Error('Rovo Dev parser error: flushed with non-empty buffer'));
         }
 
         const chunk = this.flushPreviousChunk();
@@ -422,6 +439,7 @@ export class RovoDevResponseParser {
         const chunk = this.previousChunk;
         this.previousChunk = undefined;
 
+        // store tool calls so they can be attached in tool return messages
         if (chunk?.event_kind === 'tool-call') {
             this.toolCalls[chunk.tool_call_id] = chunk;
         } else if (chunk?.event_kind === 'tool-return') {
@@ -437,12 +455,7 @@ export class RovoDevResponseParser {
             case 'user_prompt':
                 return parseResponseUserPrompt(chunk.data, buffer as RovoDevUserPromptResponse);
 
-            // text is a special case, where we don't care about reconstructing the delta messages,
-            // but we just want to send every single chunk as individual messages
             case 'text':
-                if (!this.mergeAllChunks && buffer) {
-                    throw new Error('Rovo Dev parser error: text should not have buffer set');
-                }
                 return parseResponseText(chunk.data, buffer as RovoDevTextResponse);
 
             case 'tool-call':
@@ -452,54 +465,47 @@ export class RovoDevResponseParser {
             // it doesn't seem like tool-return can be split in parts
             case 'tool-return':
             case 'tool_return':
-                if (buffer) {
-                    throw new Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`);
-                }
-                return parseResponseToolReturn(chunk.data, this.toolCalls);
+                return buffer
+                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
+                    : parseResponseToolReturn(chunk.data, this.toolCalls);
 
             case 'retry-prompt':
             case 'retry_prompt':
                 return parseResponseRetryPrompt(chunk.data, buffer as RovoDevRetryPromptResponse);
 
             case 'exception':
-                if (buffer) {
-                    throw new Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`);
-                }
-                return parseResponseException(chunk.data);
+                return buffer
+                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
+                    : parseResponseException(chunk.data);
 
             case 'warning':
-                if (buffer) {
-                    throw new Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`);
-                }
-                return parseResponseWarning(chunk.data);
+                return buffer
+                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
+                    : parseResponseWarning(chunk.data);
 
             case 'clear':
-                if (buffer) {
-                    throw new Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`);
-                }
-                return parseResponseClear(chunk.data);
+                return buffer
+                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
+                    : parseResponseClear(chunk.data);
 
             case 'prune':
-                if (buffer) {
-                    throw new Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`);
-                }
-                return parseResponsePrune(chunk.data);
+                return buffer
+                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
+                    : parseResponsePrune(chunk.data);
 
             case 'on_call_tools_start':
-                if (buffer) {
-                    throw new Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`);
-                }
-                return parseOnCallToolStart(chunk.data);
+                return buffer
+                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
+                    : parseOnCallToolStart(chunk.data);
 
             case 'close':
-                if (buffer) {
-                    throw new Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`);
-                }
-                return { event_kind: 'close' };
+                return buffer
+                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
+                    : { event_kind: 'close' };
 
             default:
                 // @ts-expect-error ts(2339) - chunk here should be 'never'
-                throw new Error(`Rovo Dev parser error: unknown event kind: ${chunk.event_kind}`);
+                return generateError(new Error(`Rovo Dev parser error: unknown event kind: ${chunk.event_kind}`));
         }
     }
 }

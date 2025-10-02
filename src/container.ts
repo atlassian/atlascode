@@ -440,7 +440,7 @@ export class Container {
             } catch {}
         }
 
-        return this._isDebugging;
+        return !!this._isDebugging;
     }
 
     // Container for all rovodev components that might get toggled by feature flags

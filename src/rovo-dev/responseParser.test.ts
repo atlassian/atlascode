@@ -420,20 +420,34 @@ describe('RovoDevResponseParser', () => {
         });
 
         describe('error handling', () => {
-            it('should throw error for malformed chunk', () => {
+            it('should return a parsing error for malformed chunk', () => {
                 const input = 'invalid chunk format\n\n';
 
-                expect(() => {
-                    Array.from(parser.parse(input));
-                }).toThrow('Rovo Dev parser error: unable to parse chunk');
+                const results = Array.from(parser.parse(input));
+                expect(results).toHaveLength(1);
+                expect(results[0].event_kind === '_parsing_error');
             });
 
-            it('should throw error for unknown event kind', () => {
+            it('should return a parsing error for unknown event kind', () => {
                 const input = 'event: unknown-event\ndata: {"test": "value"}\n\n';
 
-                expect(() => {
-                    Array.from(parser.parse(input));
-                }).toThrow('Rovo Dev parser error: unknown event kind: unknown-event');
+                const results = Array.from(parser.parse(input));
+                expect(results).toHaveLength(1);
+                expect(results[0].event_kind === '_parsing_error');
+            });
+
+            it("parsing errors shouldn't stop processing the response", () => {
+                const input =
+                    'event: text\ndata: {"index": 0, "content": "Text1"}\n\n' +
+                    'event: unknown-event\ndata: {"test": "value"}\n\n' +
+                    'event: text\ndata: {"index": 1, "content": "Text2"}\n\n';
+
+                const results = Array.from(parser.parse(input));
+                expect(results).toHaveLength(3);
+
+                expect(results[0].event_kind === 'text' && results[0].content === 'Text1');
+                expect(results[1].event_kind === '_parsing_error');
+                expect(results[2].event_kind === 'text' && results[2].content === 'Text2');
             });
 
             it('should throw error when text has buffer set', () => {
@@ -481,14 +495,14 @@ describe('RovoDevResponseParser', () => {
             expect(results).toHaveLength(0);
         });
 
-        it('should throw error when flushed with non-empty buffer', () => {
+        it('should return a parsing error when flushed with non-empty buffer', () => {
             const input = 'event: user-prompt\ndata: {"content": "incomplete';
 
             Array.from(parser.parse(input)); // This will leave data in buffer
 
-            expect(() => {
-                Array.from(parser.flush());
-            }).toThrow('Rovo Dev parser error: flushed with non-empty buffer');
+            const results = Array.from(parser.flush());
+            expect(results).toHaveLength(1);
+            expect(results[0].event_kind === '_parsing_error');
         });
     });
 

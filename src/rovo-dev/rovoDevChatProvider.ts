@@ -1,3 +1,4 @@
+import { Container } from 'src/container';
 import { RovoDevLogger } from 'src/logger';
 import { RovoDevViewResponse } from 'src/react/atlascode/rovo-dev/rovoDevViewMessages';
 import { v4 } from 'uuid';
@@ -23,6 +24,8 @@ interface TypedWebview<MessageOut, MessageIn> extends Webview {
 type StreamingApi = 'chat' | 'replay';
 
 export class RovoDevChatProvider {
+    private readonly isDebugging = Container.isDebugging;
+
     private _pendingToolConfirmation: Record<string, ToolPermissionChoice | 'undecided'> = {};
     private _pendingToolConfirmationLeft = 0;
     private _pendingPrompt: RovoDevPrompt | undefined;
@@ -189,7 +192,7 @@ export class RovoDevChatProvider {
                 const cancelResponse = await this._rovoDevApiClient.cancel();
                 success = cancelResponse.cancelled || cancelResponse.message === 'No chat in progress';
             } catch {
-                await this.processError(new Error('Failed to cancel the current response. Please try again.'), false);
+                await this.processError(new Error('Failed to cancel the current response. Please try again.'));
                 success = false;
             }
 
@@ -338,9 +341,12 @@ export class RovoDevChatProvider {
                 }
                 return Promise.resolve(false);
 
+            case '_parsing_error':
+                return this.processError(response.error, { showOnlyInDebug: true });
+
             case 'exception':
                 const msg = response.title ? `${response.title} - ${response.message}` : response.message;
-                return this.processError(new Error(msg), false);
+                return this.processError(new Error(msg));
 
             case 'warning':
                 return webview.postMessage({
@@ -448,10 +454,10 @@ export class RovoDevChatProvider {
                 await func(this._rovoDevApiClient);
             } catch (error) {
                 // the error is retriable only when it happens during the streaming of a 'chat' response
-                await this.processError(error, sourceApi === 'chat');
+                await this.processError(error, { isRetriable: sourceApi === 'chat' });
             }
         } else {
-            await this.processError(new Error('RovoDev client not initialized'), false);
+            await this.processError(new Error('RovoDev client not initialized'));
         }
 
         // whatever happens, at the end of the streaming API we need to tell the webview
@@ -461,11 +467,23 @@ export class RovoDevChatProvider {
         });
     }
 
-    private processError(error: Error, isRetriable: boolean, isProcessTerminated?: boolean) {
+    private async processError(
+        error: Error,
+        {
+            isRetriable,
+            isProcessTerminated,
+            showOnlyInDebug,
+        }: { isRetriable?: boolean; isProcessTerminated?: boolean; showOnlyInDebug?: boolean } = {},
+    ) {
         RovoDevLogger.error(error);
 
+        if (this.isDebugging) {
+            // since we are running in debug mode, make this always visible
+            showOnlyInDebug = false;
+        }
+
         const webview = this._webView!;
-        return webview.postMessage({
+        await webview.postMessage({
             type: RovoDevProviderMessageType.ShowDialog,
             message: {
                 type: 'error',
@@ -473,6 +491,7 @@ export class RovoDevChatProvider {
                 source: 'RovoDevDialog',
                 isRetriable,
                 isProcessTerminated,
+                showOnlyInDebug,
                 uid: v4(),
             },
         });

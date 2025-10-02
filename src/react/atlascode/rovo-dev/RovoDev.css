@@ -21,6 +21,10 @@ body {
     max-width: 800px;
 }
 
+.rovoDevChat:not(.debugEnabled) .debugOnly {
+    display: none !important;
+}
+
 #rovoDevLogo > path {
     fill: #6A9A23;
 }
