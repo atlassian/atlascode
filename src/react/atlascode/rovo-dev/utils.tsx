@@ -28,7 +28,7 @@ export interface ErrorDialogMessage extends AbstractDialogMessage {
     type: 'error';
     isRetriable?: boolean;
     isProcessTerminated?: boolean;
-    showInDebugOnly?: boolean;
+    showOnlyInDebug?: boolean;
     uid: string;
 }
 

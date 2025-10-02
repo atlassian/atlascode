@@ -342,7 +342,7 @@ export class RovoDevChatProvider {
                 return Promise.resolve(false);
 
             case '_parsing_error':
-                return this.processError(response.error, { showInDebugOnly: !this.isDebugging });
+                return this.processError(response.error, { showOnlyInDebug: true });
 
             case 'exception':
                 const msg = response.title ? `${response.title} - ${response.message}` : response.message;
@@ -472,10 +472,15 @@ export class RovoDevChatProvider {
         {
             isRetriable,
             isProcessTerminated,
-            showInDebugOnly,
-        }: { isRetriable?: boolean; isProcessTerminated?: boolean; showInDebugOnly?: boolean } = {},
+            showOnlyInDebug,
+        }: { isRetriable?: boolean; isProcessTerminated?: boolean; showOnlyInDebug?: boolean } = {},
     ) {
         RovoDevLogger.error(error);
+
+        if (this.isDebugging) {
+            // since we are running in debug mode, make this always visible
+            showOnlyInDebug = false;
+        }
 
         const webview = this._webView!;
         await webview.postMessage({
@@ -486,7 +491,7 @@ export class RovoDevChatProvider {
                 source: 'RovoDevDialog',
                 isRetriable,
                 isProcessTerminated,
-                showInDebugOnly,
+                showOnlyInDebug,
                 uid: v4(),
             },
         });
