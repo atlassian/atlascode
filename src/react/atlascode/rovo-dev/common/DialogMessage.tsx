@@ -146,12 +146,6 @@ const InfoIcon: React.FC<{
     </div>
 );
 
-const toolCallCodeBlockStyles: React.CSSProperties = {
-    maxWidth: '100%',
-    textWrap: 'wrap',
-    overflowWrap: 'break-word',
-};
-
 const fileListStyles: React.CSSProperties = {
     margin: '0',
     paddingLeft: '20px',
@@ -204,11 +198,11 @@ const ToolCallBody: React.FC<{
     if (toolName === 'bash') {
         return (
             <pre style={{ margin: '0' }}>
-                <code style={toolCallCodeBlockStyles}>{jsonArgs.command}</code>
+                <code style={{ maxWidth: '100%' }}>{jsonArgs.command}</code>
             </pre>
         );
     } else if (toolName === 'grep') {
-        return <code style={toolCallCodeBlockStyles}>{jsonArgs.content_pattern}</code>;
+        return <code style={{ maxWidth: '100%' }}>{jsonArgs.content_pattern}</code>;
     } else if (toolName === 'create_technical_plan') {
         return null;
     } else if (toolName === 'mcp_invoke_tool') {
