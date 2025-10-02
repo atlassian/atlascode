@@ -3,8 +3,11 @@ import './AtlaskitEditor.css';
 import { ComposableEditor, EditorNextProps } from '@atlaskit/editor-core/composable-editor';
 import { createDefaultPreset } from '@atlaskit/editor-core/preset-default';
 import { usePreset } from '@atlaskit/editor-core/use-preset';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { gridPlugin } from '@atlaskit/editor-plugin-grid';
 import { insertBlockPlugin } from '@atlaskit/editor-plugin-insert-block';
 import { listPlugin } from '@atlaskit/editor-plugin-list';
+import { mediaPlugin } from '@atlaskit/editor-plugin-media';
 import { textColorPlugin } from '@atlaskit/editor-plugin-text-color';
 import { toolbarListsIndentationPlugin } from '@atlaskit/editor-plugin-toolbar-lists-indentation';
 import { WikiMarkupTransformer } from '@atlaskit/editor-wikimarkup-transformer';
@@ -18,10 +21,70 @@ interface AtlaskitEditorProps extends Omit<Partial<EditorNextProps>, 'onChange' 
     onContentChange?: (content: string) => void;
     onChange?: (content: string) => void;
     onBlur?: (content: string) => void;
+    getMediaAuth?: () => Promise<{ token: string; clientId: string; baseUrl?: string }>;
+    issueKey?: string;
 }
 
 const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProps) => {
-    const { appearance = 'comment', onCancel, onSave, defaultValue = '', onChange, onBlur, onContentChange } = props;
+    const {
+        appearance = 'comment',
+        onCancel,
+        onSave,
+        defaultValue = '',
+        onChange,
+        onBlur,
+        onContentChange,
+        getMediaAuth,
+        issueKey,
+    } = props;
+
+    // Media plugin options with provider that calls getMediaAuth (when supplied)
+    const mediaOptions = React.useMemo(() => {
+        const base: any = {
+            allowMediaSingle: true,
+            allowMediaGroup: true,
+            allowResizing: true,
+            allowAnnotation: true,
+            allowLinking: true,
+            allowResizingInTables: true,
+            allowMediaInline: true,
+            allowCaptions: true,
+            allowAltTextOnImages: true,
+            featureFlags: { mediaInline: true },
+        };
+
+        // Use provided media auth or return base config without provider
+        if (!getMediaAuth) {
+            return base;
+        }
+
+        const provider = Promise.resolve({
+            uploadMediaClientConfig: {
+                authProvider: async () => {
+                    const auth = await getMediaAuth();
+                    return {
+                        token: auth.token,
+                        clientId: auth.clientId,
+                        baseUrl: auth.baseUrl ?? 'https://api.media.atlassian.com',
+                    } as any;
+                },
+            },
+            viewMediaClientConfig: {
+                authProvider: async () => {
+                    const auth = await getMediaAuth();
+                    return {
+                        token: auth.token,
+                        clientId: auth.clientId,
+                        baseUrl: auth.baseUrl ?? 'https://api.media.atlassian.com',
+                    } as any;
+                },
+            },
+            uploadParams: {
+                collection: (issueKey as any) ?? 'atlascode',
+            },
+        });
+        return { ...base, provider };
+    }, [getMediaAuth, issueKey]);
     const { preset, editorApi } = usePreset(() => {
         return (
             createDefaultPreset({
@@ -35,19 +98,21 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                     platform: 'web',
                 },
             })
-                // You can extend this with other plugins if you need them
+                // Add additional plugins (floatingToolbar is already in default preset, but grid is needed for media)
+                .add(gridPlugin)
                 .add(listPlugin)
                 .add([
                     toolbarListsIndentationPlugin,
                     { showIndentationButtons: false, allowHeadingAndParagraphIndentation: false },
                 ])
                 .add(textColorPlugin)
+                .add([mediaPlugin, mediaOptions])
                 .add([
                     insertBlockPlugin,
-                    { toolbarShowPlusInsertOnly: true, appearance: appearance, allowExpand: true },
+                    { toolbarShowPlusInsertOnly: false, appearance: appearance, allowExpand: true }, // Set to false to show media button
                 ])
         );
-    }, []);
+    }, [mediaOptions]);
     // Helper function to get current document content
     const getCurrentContent = React.useCallback(async (): Promise<string | null> => {
         try {

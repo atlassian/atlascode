@@ -12,7 +12,7 @@ import { formatDistanceToNow, parseISO } from 'date-fns';
 import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
-import { AdfAwareContent } from '../../../AdfAwareContent';
+import AdfAwareContent from '../../../AdfAwareContent';
 import { RenderedContent } from '../../../RenderedContent';
 import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
@@ -32,6 +32,8 @@ export type IssueCommentComponentProps = {
     isEditingComment: boolean;
     onEditingCommentChange: (editing: boolean) => void;
     isAtlaskitEditorEnabled?: boolean;
+    getMediaAuth?: () => Promise<{ token: string; clientId: string; baseUrl?: string }>;
+    issueKey?: string;
 };
 const CommentComponent: React.FC<{
     siteDetails: DetailedSiteInfo;
@@ -151,7 +153,7 @@ const CommentComponent: React.FC<{
                             />
                         )
                     ) : isAtlaskitEditorEnabled ? (
-                        <AdfAwareContent content={comment.body} fetchImage={fetchImage} />
+                        <AdfAwareContent content={comment.body} />
                     ) : (
                         <RenderedContent html={bodyText} fetchImage={fetchImage} />
                     )}
@@ -175,6 +177,8 @@ const AddCommentComponent: React.FC<{
     setCommentText: (text: string) => void;
     isEditing: boolean;
     setIsEditing: (editing: boolean) => void;
+    getMediaAuth?: () => Promise<{ token: string; clientId: string; baseUrl?: string }>;
+    issueKey?: string;
 }> = ({
     fetchUsers,
     user,
@@ -185,6 +189,8 @@ const AddCommentComponent: React.FC<{
     setCommentText,
     isEditing,
     setIsEditing,
+    getMediaAuth,
+    issueKey,
 }) => {
     return (
         <Box style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
@@ -216,7 +222,10 @@ const AddCommentComponent: React.FC<{
                 ) : isAtlaskitEditorEnabled ? (
                     <Box sx={{ width: '100%' }}>
                         <AtlaskitEditor
+                            appearance="full-page"
                             defaultValue={commentText}
+                            getMediaAuth={getMediaAuth}
+                            issueKey={issueKey}
                             onSave={(content) => {
                                 if (content && content.trim() !== '') {
                                     onCreate(content, undefined);
@@ -279,6 +288,8 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
     isEditingComment,
     onEditingCommentChange,
     isAtlaskitEditorEnabled,
+    getMediaAuth,
+    issueKey,
 }) => {
     return (
         <Box
@@ -295,6 +306,8 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
                 setCommentText={onCommentTextChange}
                 isEditing={isEditingComment}
                 setIsEditing={onEditingCommentChange}
+                getMediaAuth={getMediaAuth}
+                issueKey={issueKey}
             />
             {comments
                 .sort((a, b) => (a.created > b.created ? -1 : 1))
