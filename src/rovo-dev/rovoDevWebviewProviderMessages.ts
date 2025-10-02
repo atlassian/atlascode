@@ -3,17 +3,20 @@ import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { DialogMessage } from '../react/atlascode/rovo-dev/utils';
-import { RovoDevResponse } from './responseParserInterfaces';
+import {
+    RovoDevRetryPromptResponse,
+    RovoDevTextResponse,
+    RovoDevToolCallResponse,
+    RovoDevToolReturnResponse,
+} from './responseParserInterfaces';
 import { EntitlementCheckRovoDevHealthcheckResponse } from './rovoDevApiClientInterfaces';
 import { DisabledState, RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 
 export const enum RovoDevProviderMessageType {
     RovoDevDisabled = 'rovoDevDisabled',
     SignalPromptSent = 'signalPromptSent',
-    Response = 'response',
+    RovoDevResponseMessage = 'rovoDevResponseMessage',
     CompleteMessage = 'completeMessage',
-    ToolCall = 'toolCall',
-    ToolReturn = 'toolReturn',
     ShowDialog = 'showDialog',
     ClearChat = 'clearChat',
     ProviderReady = 'providerReady',
@@ -35,10 +38,6 @@ export const enum RovoDevProviderMessageType {
     CheckFileExistsComplete = 'checkFileExistsComplete',
 }
 
-export interface RovoDevObjectResponse {
-    dataObject: RovoDevResponse;
-}
-
 interface FocusedContextRemovedResponse {
     isFocus: true;
 }
@@ -52,16 +51,20 @@ export type RovoDevDisabledReason = DisabledState['subState'];
 
 export type RovoDevEntitlementCheckFailedDetail = EntitlementCheckRovoDevHealthcheckResponse['detail'];
 
+export type RovoDevResponseMessageType =
+    | RovoDevTextResponse
+    | RovoDevToolCallResponse
+    | RovoDevToolReturnResponse
+    | RovoDevRetryPromptResponse;
+
 export type RovoDevProviderMessage =
     | ReducerAction<
           RovoDevProviderMessageType.RovoDevDisabled,
           { reason: RovoDevDisabledReason; detail?: RovoDevEntitlementCheckFailedDetail }
       >
     | ReducerAction<RovoDevProviderMessageType.SignalPromptSent, RovoDevPrompt & { echoMessage: boolean }>
-    | ReducerAction<RovoDevProviderMessageType.Response, RovoDevObjectResponse>
-    | ReducerAction<RovoDevProviderMessageType.CompleteMessage, { isReplay?: boolean }>
-    | ReducerAction<RovoDevProviderMessageType.ToolCall, RovoDevObjectResponse>
-    | ReducerAction<RovoDevProviderMessageType.ToolReturn, RovoDevObjectResponse>
+    | ReducerAction<RovoDevProviderMessageType.RovoDevResponseMessage, { message: RovoDevResponseMessageType }>
+    | ReducerAction<RovoDevProviderMessageType.CompleteMessage>
     | ReducerAction<RovoDevProviderMessageType.ShowDialog, { message: DialogMessage }>
     | ReducerAction<RovoDevProviderMessageType.ClearChat>
     | ReducerAction<

@@ -7,7 +7,6 @@ import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
 import * as React from 'react';
-import { RovoDevResponse } from 'src/rovo-dev/responseParserInterfaces';
 import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
 import { RovoDevContextItem, State } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
@@ -96,12 +95,9 @@ const RovoDevView: React.FC = () => {
         });
     }, [history, currentState, pendingToolCallMessage]);
 
-    const removeModifiedFileToolReturns = useCallback(
-        (files: ToolReturnParseResult[]) => {
-            setTotalModifiedFiles((prev) => prev.filter((x) => !files.includes(x)));
-        },
-        [setTotalModifiedFiles],
-    );
+    const removeModifiedFileToolReturns = useCallback((files: ToolReturnParseResult[]) => {
+        setTotalModifiedFiles((prev) => prev.filter((x) => !files.includes(x)));
+    }, []);
 
     const keepFiles = useCallback(
         (files: ToolReturnParseResult[]) => {
@@ -151,7 +147,7 @@ const RovoDevView: React.FC = () => {
         setTotalModifiedFiles([]);
         setIsDeepPlanCreated(false);
         setIsFeedbackFormVisible(false);
-    }, [totalModifiedFiles, keepFiles]);
+    }, [keepFiles, totalModifiedFiles]);
 
     const handleAppendModifiedFileToolReturns = useCallback((toolReturn: ToolReturnGenericMessage) => {
         if (isCodeChangeTool(toolReturn.tool_name)) {
@@ -194,12 +190,11 @@ const RovoDevView: React.FC = () => {
                 appendResponse(response, prev, handleAppendModifiedFileToolReturns, setIsDeepPlanCreated),
             );
         },
-        [setHistory, handleAppendModifiedFileToolReturns, setIsDeepPlanCreated],
+        [handleAppendModifiedFileToolReturns],
     );
 
     const onMessageHandler = useCallback(
         (event: RovoDevProviderMessage): void => {
-            let object: RovoDevResponse;
             switch (event.type) {
                 case RovoDevProviderMessageType.SignalPromptSent:
                     setIsDeepPlanToggled(event.enable_deep_plan || false);
@@ -209,17 +204,32 @@ const RovoDevView: React.FC = () => {
                     }
                     break;
 
-                case RovoDevProviderMessageType.Response:
+                case RovoDevProviderMessageType.RovoDevResponseMessage:
                     setCurrentState((prev) =>
                         prev.state === 'WaitingForPrompt' ? { state: 'GeneratingResponse' } : prev,
                     );
-                    object = event.dataObject;
+
+                    const object = event.message;
                     if (object.event_kind === 'text' && object.content) {
                         const msg: ChatMessage = {
                             text: object.content || '',
                             source: 'RovoDev',
                         };
                         handleAppendResponse(msg);
+                    } else if (object.event_kind === 'tool-call') {
+                        setPendingToolCallMessage(parseToolCallMessage(object.tool_name));
+                    } else if (object.event_kind === 'tool-return') {
+                        const returnMessage: ToolReturnGenericMessage = {
+                            source: 'ToolReturn',
+                            tool_name: object.tool_name,
+                            content: object.content || '',
+                            parsedContent: object.parsedContent,
+                            tool_call_id: object.tool_call_id, // Optional ID for tracking
+                            args: object.toolCallMessage.args,
+                        };
+
+                        setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE); // Clear pending tool call
+                        handleAppendResponse(returnMessage);
                     }
                     break;
 
@@ -232,38 +242,6 @@ const RovoDevView: React.FC = () => {
                         finalizeResponse();
                     }
                     setModalDialogs([]);
-                    break;
-
-                case RovoDevProviderMessageType.ToolCall:
-                    setCurrentState((prev) =>
-                        prev.state === 'WaitingForPrompt' ? { state: 'GeneratingResponse' } : prev,
-                    );
-                    object = event.dataObject;
-                    if (object.event_kind !== 'tool-call') {
-                        break;
-                    }
-                    setPendingToolCallMessage(parseToolCallMessage(object.tool_name));
-                    break;
-
-                case RovoDevProviderMessageType.ToolReturn:
-                    setCurrentState((prev) =>
-                        prev.state === 'WaitingForPrompt' ? { state: 'GeneratingResponse' } : prev,
-                    );
-                    object = event.dataObject;
-                    if (object.event_kind !== 'tool-return') {
-                        break;
-                    }
-                    const returnMessage: ToolReturnGenericMessage = {
-                        source: 'ToolReturn',
-                        tool_name: object.tool_name,
-                        content: object.content || '',
-                        parsedContent: object.parsedContent,
-                        tool_call_id: object.tool_call_id, // Optional ID for tracking
-                        args: object.toolCallMessage.args,
-                    };
-
-                    setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE); // Clear pending tool call
-                    handleAppendResponse(returnMessage);
                     break;
 
                 case RovoDevProviderMessageType.ShowDialog:
@@ -442,6 +420,8 @@ const RovoDevView: React.FC = () => {
         RovoDevProviderMessage
     >(onMessageHandler);
 
+    // on new `outgoingMessage`, post it
+    // this effectively implements the logic for `dispatch` to work as a `postMessage`
     React.useEffect(() => {
         if (outgoingMessage) {
             postMessage(outgoingMessage);
@@ -485,30 +465,20 @@ const RovoDevView: React.FC = () => {
 
             return true;
         },
-        [
-            currentState,
-            isDeepPlanCreated,
-            isDeepPlanToggled,
-            promptContextCollection,
-            setIsDeepPlanCreated,
-            setCurrentState,
-            postMessage,
-        ],
+        [currentState, isDeepPlanCreated, isDeepPlanToggled, promptContextCollection, postMessage],
     );
 
-    // On the first render, get the context update
     React.useEffect(() => {
-        postMessage?.({
-            type: RovoDevViewResponseType.ForceUserFocusUpdate,
-        });
-    }, [postMessage]);
-
-    // Notify the backend that the webview is ready
-    // This is used to initialize the process manager if needed
-    // and to signal that the webview is ready to receive messages
-    React.useEffect(() => {
-        postMessage?.({
+        // Notify the backend that the webview is ready
+        // This is used to initialize the process manager if needed
+        // and to signal that the webview is ready to receive messages
+        postMessage({
             type: RovoDevViewResponseType.WebviewReady,
+        });
+
+        // On the first render, get the context update
+        postMessage({
+            type: RovoDevViewResponseType.ForceUserFocusUpdate,
         });
     }, [postMessage]);
 
@@ -519,7 +489,7 @@ const RovoDevView: React.FC = () => {
         if (sendPrompt(CODE_PLAN_EXECUTE_PROMPT)) {
             setCurrentState({ state: 'ExecutingPlan' });
         }
-    }, [currentState, setCurrentState, sendPrompt]);
+    }, [currentState, sendPrompt]);
 
     const retryPromptAfterError = useCallback((): void => {
         setCurrentState({ state: 'GeneratingResponse' });
@@ -528,7 +498,7 @@ const RovoDevView: React.FC = () => {
         postMessage({
             type: RovoDevViewResponseType.RetryPromptAfterError,
         });
-    }, [setCurrentState, postMessage]);
+    }, [postMessage]);
 
     const cancelResponse = useCallback((): void => {
         if (currentState.state === 'CancellingResponse') {
@@ -544,7 +514,7 @@ const RovoDevView: React.FC = () => {
         postMessage({
             type: RovoDevViewResponseType.CancelResponse,
         });
-    }, [postMessage, currentState, setCurrentState, isDeepPlanCreated]);
+    }, [postMessage, currentState, isDeepPlanCreated]);
 
     const openFile = useCallback(
         (filePath: string, tryShowDiff?: boolean, range?: number[]) => {
@@ -615,19 +585,14 @@ const RovoDevView: React.FC = () => {
             return;
         }
 
-        if (!navigator.clipboard) {
-            console.warn('Clipboard API not available');
-            return;
-        }
-
-        navigator.clipboard.writeText(lastMessage.text);
+        navigator.clipboard?.writeText(lastMessage.text);
     }, [currentState, history]);
 
     const executeGetAgentMemory = useCallback(() => {
-        dispatch({
+        postMessage({
             type: RovoDevViewResponseType.GetAgentMemory,
         });
-    }, []);
+    }, [postMessage]);
 
     const handleShowFeedbackForm = useCallback(() => {
         setIsFeedbackFormVisible(true);
@@ -668,6 +633,12 @@ const RovoDevView: React.FC = () => {
         });
     }, [postMessage]);
 
+    const onAddContext = useCallback(() => {
+        postMessage({
+            type: RovoDevViewResponseType.AddContext,
+        });
+    }, [postMessage]);
+
     const onMcpChoice = useCallback(
         (choice: McpConsentChoice, serverName?: string) => {
             postMessage({
@@ -679,13 +650,10 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
-    const onJiraItemClick = useCallback(
-        (issue: MinimalIssue<DetailedSiteInfo>) => {
-            const template = createRovoDevTemplate(issue.key, issue.siteDetails);
-            setPromptText(template);
-        },
-        [setPromptText],
-    );
+    const onJiraItemClick = useCallback((issue: MinimalIssue<DetailedSiteInfo>) => {
+        const template = createRovoDevTemplate(issue.key, issue.siteDetails);
+        setPromptText(template);
+    }, []);
 
     const onToolPermissionChoice = useCallback(
         (toolCallId: string, choice: ToolPermissionChoice) => {
@@ -700,7 +668,7 @@ const RovoDevView: React.FC = () => {
                 toolCallId,
             });
         },
-        [setModalDialogs, postMessage],
+        [postMessage],
     );
 
     const onYoloModeToggled = useCallback(() => setIsYoloModeToggled((prev) => !prev), [setIsYoloModeToggled]);
@@ -802,11 +770,7 @@ const RovoDevView: React.FC = () => {
                             onYoloModeToggled={IsBoysenberry ? undefined : () => onYoloModeToggled()}
                             onSend={sendPrompt}
                             onCancel={cancelResponse}
-                            onAddContext={() => {
-                                postMessage({
-                                    type: RovoDevViewResponseType.AddContext,
-                                });
-                            }}
+                            onAddContext={onAddContext}
                             onCopy={handleCopyResponse}
                             handleMemoryCommand={executeGetAgentMemory}
                             handleTriggerFeedbackCommand={handleShowFeedbackForm}

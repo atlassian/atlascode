@@ -289,48 +289,39 @@ export class RovoDevChatProvider {
         const fireTelemetry = sourceApi === 'chat';
         const webview = this._webView!;
 
+        if (
+            fireTelemetry &&
+            response.event_kind === 'tool-return' &&
+            response.tool_name === 'create_technical_plan' &&
+            response.parsedContent
+        ) {
+            this._telemetryProvider.perfLogger.promptTechnicalPlanReceived(this._currentPromptId);
+
+            const parsedContent = response.parsedContent as TechnicalPlan;
+            const stepsCount = parsedContent.logicalChanges.length;
+            const filesCount = parsedContent.logicalChanges.reduce((p, c) => p + c.filesToChange.length, 0);
+            const questionsCount = parsedContent.logicalChanges.reduce(
+                (p, c) => p + c.filesToChange.reduce((p2, c2) => p2 + (c2.clarifyingQuestionIfAny ? 1 : 0), 0),
+                0,
+            );
+
+            this._telemetryProvider.fireTelemetryEvent(
+                'rovoDevTechnicalPlanningShownEvent',
+                this._currentPromptId,
+                stepsCount,
+                filesCount,
+                questionsCount,
+            );
+        }
+
         switch (response.event_kind) {
             case 'text':
-                return webview.postMessage({
-                    type: RovoDevProviderMessageType.Response,
-                    dataObject: response,
-                });
-
             case 'tool-call':
-                return webview.postMessage({
-                    type: RovoDevProviderMessageType.ToolCall,
-                    dataObject: response,
-                });
-
             case 'tool-return':
-                if (fireTelemetry && response.tool_name === 'create_technical_plan' && response.parsedContent) {
-                    this._telemetryProvider.perfLogger.promptTechnicalPlanReceived(this._currentPromptId);
-
-                    const parsedContent = response.parsedContent as TechnicalPlan;
-                    const stepsCount = parsedContent.logicalChanges.length;
-                    const filesCount = parsedContent.logicalChanges.reduce((p, c) => p + c.filesToChange.length, 0);
-                    const questionsCount = parsedContent.logicalChanges.reduce(
-                        (p, c) => p + c.filesToChange.reduce((p2, c2) => p2 + (c2.clarifyingQuestionIfAny ? 1 : 0), 0),
-                        0,
-                    );
-
-                    this._telemetryProvider.fireTelemetryEvent(
-                        'rovoDevTechnicalPlanningShownEvent',
-                        this._currentPromptId,
-                        stepsCount,
-                        filesCount,
-                        questionsCount,
-                    );
-                }
-                return webview.postMessage({
-                    type: RovoDevProviderMessageType.ToolReturn,
-                    dataObject: response,
-                });
-
             case 'retry-prompt':
                 return webview.postMessage({
-                    type: RovoDevProviderMessageType.ToolReturn,
-                    dataObject: response,
+                    type: RovoDevProviderMessageType.RovoDevResponseMessage,
+                    message: response,
                 });
 
             case 'user-prompt':
@@ -467,7 +458,6 @@ export class RovoDevChatProvider {
         // that the generation of the response has finished
         await webview.postMessage({
             type: RovoDevProviderMessageType.CompleteMessage,
-            isReplay: sourceApi === 'replay',
         });
     }
 
