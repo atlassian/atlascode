@@ -7,7 +7,7 @@ jest.mock('mustache', () => ({
 
 const mockMustacheRender = require('mustache').default.render;
 
-import { generateBranchName, getAllBranches, getDefaultSourceBranch } from './branchUtils';
+import { findDefaultSourceBranch, generateBranchName, getAllBranches, getDefaultSourceBranch } from './branchUtils';
 
 describe('branchUtils', () => {
     const mockRepoData = {
@@ -53,13 +53,53 @@ describe('branchUtils', () => {
             expect(result).toEqual(mockRepoData.localBranches[1]); // develop branch
         });
 
-        it('should return first local branch when no development branch', () => {
+        it('should return main branch when no development branch but main exists', () => {
             const repoDataWithoutDevelopmentBranch = {
                 ...mockRepoData,
                 developmentBranch: 'non-existent',
             };
             const result = getDefaultSourceBranch(repoDataWithoutDevelopmentBranch);
             expect(result).toEqual(mockRepoData.localBranches[0]); // main branch
+        });
+
+        it('should return master branch when no development branch and no main', () => {
+            const repoDataWithMaster = {
+                ...mockRepoData,
+                localBranches: [
+                    { name: 'master', type: 0 },
+                    { name: 'feature/test', type: 0 },
+                ],
+                developmentBranch: undefined,
+            };
+            const result = getDefaultSourceBranch(repoDataWithMaster);
+            expect(result).toEqual({ name: 'master', type: 0 });
+        });
+
+        it('should return develop branch when no main or master', () => {
+            const repoDataWithDevelop = {
+                ...mockRepoData,
+                localBranches: [
+                    { name: 'feature/test', type: 0 },
+                    { name: 'develop', type: 0 },
+                    { name: 'bugfix/something', type: 0 },
+                ],
+                developmentBranch: undefined,
+            };
+            const result = getDefaultSourceBranch(repoDataWithDevelop);
+            expect(result).toEqual({ name: 'develop', type: 0 });
+        });
+
+        it('should return first branch when no common main branches exist', () => {
+            const repoDataWithoutCommonBranches = {
+                ...mockRepoData,
+                localBranches: [
+                    { name: 'feature/test', type: 0 },
+                    { name: 'bugfix/something', type: 0 },
+                ],
+                developmentBranch: undefined,
+            };
+            const result = getDefaultSourceBranch(repoDataWithoutCommonBranches);
+            expect(result).toEqual({ name: 'feature/test', type: 0 });
         });
 
         it('should return empty branch when no local branches', () => {
@@ -69,6 +109,56 @@ describe('branchUtils', () => {
             };
             const result = getDefaultSourceBranch(repoDataWithoutLocalBranches);
             expect(result).toEqual({ type: 0, name: '' });
+        });
+    });
+
+    describe('findDefaultSourceBranch', () => {
+        const branches = [
+            { name: 'main', type: 0 },
+            { name: 'develop', type: 0 },
+            { name: 'feature/test', type: 0 },
+        ];
+
+        it('should return configured development branch when available', () => {
+            const result = findDefaultSourceBranch(branches, 'develop');
+            expect(result).toEqual({ name: 'develop', type: 0 });
+        });
+
+        it('should return main when no development branch configured', () => {
+            const result = findDefaultSourceBranch(branches, undefined);
+            expect(result).toEqual({ name: 'main', type: 0 });
+        });
+
+        it('should return master when no main branch', () => {
+            const branchesWithMaster = [
+                { name: 'master', type: 0 },
+                { name: 'feature/test', type: 0 },
+            ];
+            const result = findDefaultSourceBranch(branchesWithMaster, undefined);
+            expect(result).toEqual({ name: 'master', type: 0 });
+        });
+
+        it('should return develop when no main or master', () => {
+            const branchesWithDevelop = [
+                { name: 'feature/test', type: 0 },
+                { name: 'develop', type: 0 },
+            ];
+            const result = findDefaultSourceBranch(branchesWithDevelop, undefined);
+            expect(result).toEqual({ name: 'develop', type: 0 });
+        });
+
+        it('should return first branch when no common main branches', () => {
+            const featureBranches = [
+                { name: 'feature/test', type: 0 },
+                { name: 'bugfix/something', type: 0 },
+            ];
+            const result = findDefaultSourceBranch(featureBranches, undefined);
+            expect(result).toEqual({ name: 'feature/test', type: 0 });
+        });
+
+        it('should return undefined when no branches', () => {
+            const result = findDefaultSourceBranch([], undefined);
+            expect(result).toBeUndefined();
         });
     });
 
