@@ -99,6 +99,17 @@ const IssueMainPanel: React.FC<Props> = ({
     const [localIsEditingDescription, setLocalIsEditingDescription] = React.useState(false);
     const isEditingDescription = isAtlaskitEditorEnabled ? isEditorActive('description') : localIsEditingDescription;
 
+    // Define editor handlers based on feature flag
+    const openEditorHandler = React.useMemo(
+        () => (isAtlaskitEditorEnabled ? () => openEditor('description') : () => setLocalIsEditingDescription(true)),
+        [isAtlaskitEditorEnabled, openEditor],
+    );
+
+    const closeEditorHandler = React.useMemo(
+        () => (isAtlaskitEditorEnabled ? () => closeEditor('description') : () => setLocalIsEditingDescription(false)),
+        [isAtlaskitEditorEnabled, closeEditor],
+    );
+
     // Update descriptionText when defaultDescription changes (after save)
     React.useEffect(() => {
         if (!isEditingDescription) {
@@ -112,8 +123,8 @@ const IssueMainPanel: React.FC<Props> = ({
         React.useCallback(() => {
             // Reset description editor state when it's forcibly closed
             setDescriptionText(getDescriptionTextForEditor());
-            closeEditor('description');
-        }, [closeEditor, getDescriptionTextForEditor]),
+            closeEditorHandler();
+        }, [closeEditorHandler, getDescriptionTextForEditor]),
         isAtlaskitEditorEnabled,
     );
 
@@ -202,19 +213,11 @@ const IssueMainPanel: React.FC<Props> = ({
                                 defaultValue={descriptionText}
                                 onSave={(content) => {
                                     handleInlineEdit(fields['description'], content);
-                                    if (isAtlaskitEditorEnabled) {
-                                        closeEditor('description');
-                                    } else {
-                                        setLocalIsEditingDescription(false);
-                                    }
+                                    closeEditorHandler();
                                 }}
                                 onCancel={() => {
                                     setDescriptionText(getDescriptionTextForEditor());
-                                    if (isAtlaskitEditorEnabled) {
-                                        closeEditor('description');
-                                    } else {
-                                        setLocalIsEditingDescription(false);
-                                    }
+                                    closeEditorHandler();
                                 }}
                                 onContentChange={(content) => {
                                     setDescriptionText(content);
@@ -228,19 +231,11 @@ const IssueMainPanel: React.FC<Props> = ({
                                 }}
                                 onSave={(i: string) => {
                                     handleInlineEdit(fields['description'], i);
-                                    if (isAtlaskitEditorEnabled) {
-                                        closeEditor('description');
-                                    } else {
-                                        setLocalIsEditingDescription(false);
-                                    }
+                                    closeEditorHandler();
                                 }}
                                 onCancel={() => {
                                     setDescriptionText(getDescriptionTextForEditor());
-                                    if (isAtlaskitEditorEnabled) {
-                                        closeEditor('description');
-                                    } else {
-                                        setLocalIsEditingDescription(false);
-                                    }
+                                    closeEditorHandler();
                                 }}
                                 fetchUsers={fetchUsers}
                                 isDescription
@@ -260,13 +255,7 @@ const IssueMainPanel: React.FC<Props> = ({
                                 display: 'flex',
                                 alignItems: 'flex-start',
                             }}
-                            onClick={() => {
-                                if (isAtlaskitEditorEnabled) {
-                                    openEditor('description');
-                                } else {
-                                    setLocalIsEditingDescription(true);
-                                }
-                            }}
+                            onClick={openEditorHandler}
                             className="ac-inline-input-view-p"
                         >
                             {isAtlaskitEditorEnabled ? (
