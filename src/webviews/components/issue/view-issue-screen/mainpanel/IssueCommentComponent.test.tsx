@@ -104,6 +104,11 @@ const mockOnEditingCommentChange = jest.fn();
 // Mock mention provider
 const mockMentionProvider = AtlascodeMentionProvider.init({ url: '' }, jest.fn().mockResolvedValue([]));
 
+// Helper function to wrap components with EditorStateProvider for testing
+const renderWithEditorProvider = (component: React.ReactElement) => {
+    return render(<EditorStateProvider>{component}</EditorStateProvider>);
+};
+
 describe('IssueCommentComponent', () => {
     beforeAll(() => {
         disableConsole('warn', 'error');
