@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 3.8.21
+
+### Bug Fixes
+
+- Fix issue when logging out from api token does not restore the corresponding oauth site
+
 ## What's new in 3.8.19
 
 ### Bug Fixes

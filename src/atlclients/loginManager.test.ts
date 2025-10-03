@@ -285,6 +285,74 @@ describe('LoginManager', () => {
                 'Currently only one Jira site can be connected via API token at a time. The previous Jira site has been disconnected to connect the new one.',
             );
         });
+
+        it('restores OAuth site when removing API token site', async () => {
+            global.fetch = jest.fn().mockResolvedValue({
+                json: jest.fn().mockResolvedValue({ cloudId: 'test-cloud-id' }),
+            });
+
+            const apiTokenSite = forceCastTo<DetailedSiteInfo>({
+                host: 'example.atlassian.net',
+                name: 'example.atlassian.net',
+                product: ProductJira,
+                isCloud: true,
+                contextPath: '/',
+                userId: 'user-123',
+            });
+
+            const oauthSite = forceCastTo<DetailedSiteInfo>({
+                host: 'different.atlassian.net',
+                name: 'different',
+                product: ProductJira,
+                isCloud: true,
+                userId: 'user-123',
+                credentialId: 'oauth-cred-id',
+            });
+
+            const mockOAuthInfo = {
+                access: 'access-token',
+                refresh: 'refresh-token',
+                user: {
+                    id: 'user-123',
+                    displayName: 'Test User',
+                    email: 'test@example.com',
+                    avatarUrl: 'https://avatar.url/test.png',
+                },
+                state: AuthInfoState.Valid,
+            };
+
+            jest.spyOn(siteManager, 'getSitesAvailable').mockReturnValue([apiTokenSite, oauthSite]);
+            jest.spyOn(credentialManager, 'getAuthInfo').mockResolvedValue(mockOAuthInfo);
+            jest.spyOn(credentialManager, 'saveAuthInfo').mockResolvedValue();
+            jest.spyOn(siteManager, 'addSites').mockImplementation();
+
+            await loginManager['removeTokenConnectedSites']();
+
+            expect(Container.clientManager.removeClient).toHaveBeenCalledWith(apiTokenSite);
+            expect(Container.siteManager.removeSite).toHaveBeenCalledWith(apiTokenSite, true, true);
+
+            expect(global.fetch).toHaveBeenCalledWith('https://example.atlassian.net/_edge/tenant_info');
+            expect(credentialManager.getAuthInfo).toHaveBeenCalledWith(oauthSite, false);
+            expect(credentialManager.saveAuthInfo).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    host: 'example.atlassian.net',
+                    baseLinkUrl: 'https://example.atlassian.net',
+                    baseApiUrl: 'https://api.atlassian.com/ex/jira/test-cloud-id/rest',
+                    id: 'test-cloud-id',
+                    name: 'example',
+                }),
+                mockOAuthInfo,
+            );
+            expect(siteManager.addSites).toHaveBeenCalledWith([
+                expect.objectContaining({
+                    host: 'example.atlassian.net',
+                    baseLinkUrl: 'https://example.atlassian.net',
+                    baseApiUrl: 'https://api.atlassian.com/ex/jira/test-cloud-id/rest',
+                    id: 'test-cloud-id',
+                    name: 'example',
+                }),
+            ]);
+        });
     });
 
     describe('updatedServerInfo', () => {

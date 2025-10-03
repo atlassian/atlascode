@@ -51,6 +51,55 @@ export class VSCConfigActionApi implements ConfigActionApi {
     public async clearAuth(site: DetailedSiteInfo): Promise<void> {
         await Container.clientManager.removeClient(site);
         await Container.siteManager.removeSite(site);
+
+        const existingSites = Container.siteManager.getSitesAvailable(ProductJira);
+        const isOauthSiteConnected = existingSites.find(
+            (existingSite) =>
+                existingSite.isCloud && existingSite.name !== existingSite.host && existingSite.userId === site.userId,
+        );
+
+        await this.restoreOAuthSiteIfNeeded(site, isOauthSiteConnected);
+    }
+
+    private async restoreOAuthSiteIfNeeded(
+        removedSite: DetailedSiteInfo,
+        oauthSiteConnected?: DetailedSiteInfo,
+    ): Promise<void> {
+        if (!oauthSiteConnected || removedSite.name !== removedSite.host || !removedSite.isCloud) {
+            return;
+        }
+
+        try {
+            const oauthAuthInfo = await Container.credentialManager.getAuthInfo(oauthSiteConnected, false);
+
+            if (!oauthAuthInfo) {
+                return;
+            }
+
+            const cloudId = await this.fetchCloudSiteId(removedSite.host);
+
+            const siteName = removedSite.host.split('.')[0];
+
+            const oauthVersion: DetailedSiteInfo = {
+                ...oauthSiteConnected,
+                host: removedSite.host,
+                baseLinkUrl: `https://${removedSite.host}`,
+                baseApiUrl: `https://api.atlassian.com/ex/jira/${cloudId}/rest`,
+                id: cloudId,
+                name: siteName,
+            };
+
+            await Container.credentialManager.saveAuthInfo(oauthVersion, oauthAuthInfo);
+            Container.siteManager.addSites([oauthVersion]);
+        } catch (error) {
+            console.error('Error restoring OAuth site:', error);
+        }
+    }
+
+    private async fetchCloudSiteId(host: string): Promise<string> {
+        const response = await fetch(`https://${host}/_edge/tenant_info`);
+        const data = await response.json();
+        return data.cloudId;
     }
 
     public async fetchJqlOptions(site: DetailedSiteInfo): Promise<JQLAutocompleteData> {
