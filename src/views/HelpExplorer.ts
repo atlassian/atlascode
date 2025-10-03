@@ -28,4 +28,8 @@ export class HelpExplorer extends Explorer implements Disposable {
     async handleFocusEvent(e: FocusEvent) {
         //No focus available for now
     }
+
+    refresh() {
+        this.newTreeView();
+    }
 }
