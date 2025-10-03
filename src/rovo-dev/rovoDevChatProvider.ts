@@ -35,6 +35,10 @@ export class RovoDevChatProvider {
 
     private _replayInProgress = false;
 
+    private get isDebugPanelEnabled() {
+        return Container.config.rovodev.debugPanelEnabled;
+    }
+
     private _yoloMode = false;
     public get yoloMode() {
         return this._yoloMode;
@@ -477,24 +481,20 @@ export class RovoDevChatProvider {
     ) {
         RovoDevLogger.error(error);
 
-        if (this.isDebugging) {
-            // since we are running in debug mode, make this always visible
-            showOnlyInDebug = false;
+        if (!showOnlyInDebug || this.isDebugging || this.isDebugPanelEnabled) {
+            const webview = this._webView!;
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.ShowDialog,
+                message: {
+                    type: 'error',
+                    text: error.message,
+                    source: 'RovoDevDialog',
+                    isRetriable,
+                    isProcessTerminated,
+                    uid: v4(),
+                },
+            });
         }
-
-        const webview = this._webView!;
-        await webview.postMessage({
-            type: RovoDevProviderMessageType.ShowDialog,
-            message: {
-                type: 'error',
-                text: error.message,
-                source: 'RovoDevDialog',
-                isRetriable,
-                isProcessTerminated,
-                showOnlyInDebug,
-                uid: v4(),
-            },
-        });
     }
 
     private async signalPromptSent({ text, enable_deep_plan, context }: RovoDevPrompt, echoMessage: boolean) {
