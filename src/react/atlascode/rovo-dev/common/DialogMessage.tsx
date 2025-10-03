@@ -66,11 +66,14 @@ export const DialogMessageItem: React.FC<{
                     }}
                 >
                     <div style={messageContentStyles}>{title}</div>
-                    <div style={messageContentStyles}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <MarkedDown value={msg.text} />
+
+                    {msg.text && (
+                        <div style={messageContentStyles}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <MarkedDown value={msg.text} />
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {msg.type === 'toolPermissionRequest' && (
                         <ToolCall toolName={msg.toolName} toolArgs={msg.toolArgs} mcpServer={msg.mcpServer} />
@@ -95,7 +98,7 @@ export const DialogMessageItem: React.FC<{
                                 justifyContent: 'flex-end',
                                 width: '100%',
                                 marginTop: '8px',
-                                gap: '4px',
+                                gap: '8px',
                             }}
                         >
                             <button
@@ -142,12 +145,6 @@ const InfoIcon: React.FC<{
         <StatusInfoIcon label={title} />
     </div>
 );
-
-const toolCallCodeBlockStyles: React.CSSProperties = {
-    maxWidth: '100%',
-    textWrap: 'wrap',
-    overflowWrap: 'break-word',
-};
 
 const fileListStyles: React.CSSProperties = {
     margin: '0',
@@ -201,11 +198,11 @@ const ToolCallBody: React.FC<{
     if (toolName === 'bash') {
         return (
             <pre style={{ margin: '0' }}>
-                <code style={toolCallCodeBlockStyles}>{jsonArgs.command}</code>
+                <code style={{ maxWidth: '100%' }}>{jsonArgs.command}</code>
             </pre>
         );
     } else if (toolName === 'grep') {
-        return <code style={toolCallCodeBlockStyles}>{jsonArgs.content_pattern}</code>;
+        return <code style={{ maxWidth: '100%' }}>{jsonArgs.content_pattern}</code>;
     } else if (toolName === 'create_technical_plan') {
         return null;
     } else if (toolName === 'mcp_invoke_tool') {

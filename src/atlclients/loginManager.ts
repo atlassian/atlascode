@@ -103,19 +103,36 @@ export class LoginManager {
                 resp.accessibleResources,
             );
 
-            await Promise.all(
+            const promises = await Promise.all(
                 siteDetails.map(async (siteInfo) => {
+                    // If an API token is already provided for the site, retain it
+                    const tokenAuthInfo = await this._credentialManager.getApiTokenIfExists(siteInfo);
+                    if (
+                        tokenAuthInfo &&
+                        tokenAuthInfo.state === AuthInfoState.Valid &&
+                        tokenAuthInfo.username === oauthInfo.user.email
+                    ) {
+                        // Discard the incoming OAuth info since token is preferred
+                        Logger.debug(`Retaining existing API token for ${siteInfo.host}`);
+                        Container.analyticsApi.fireApiTokenRetainedEvent();
+                        return undefined;
+                    }
+
                     await this._credentialManager.saveAuthInfo(siteInfo, oauthInfo);
                     authenticatedEvent(siteInfo, isOnboarding, source).then((e) => {
                         this._analyticsClient.sendTrackEvent(e);
                     });
+
+                    return siteInfo;
                 }),
             );
 
-            // Add all sites at once to prevent race condition
-            this._siteManager.addSites(siteDetails);
+            const sitesToAdd = promises.filter((p) => p !== undefined) as DetailedSiteInfo[];
 
-            this.fireExplicitSiteChangeEvent(siteDetails);
+            // Add all sites at once to prevent race condition
+            await this._siteManager.addSites(sitesToAdd);
+
+            this.fireExplicitSiteChangeEvent(sitesToAdd);
         } catch (e) {
             Logger.error(e, `Error authenticating with provider '${provider}'`);
             vscode.window.showErrorMessage(`There was an error authenticating with provider '${provider}': ${e}`);
@@ -314,7 +331,7 @@ export class LoginManager {
 
         await this._credentialManager.saveAuthInfo(siteDetails, credentials);
 
-        this._siteManager.addOrUpdateSite(siteDetails);
+        await this._siteManager.addOrUpdateSite(siteDetails);
 
         return siteDetails;
     }

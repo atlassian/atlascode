@@ -739,44 +739,46 @@ const RovoDevView: React.FC = () => {
                         workspacePath={workspacePath}
                         homeDir={homeDir}
                     />
-                    <div className="prompt-container">
-                        <PromptContextCollection
-                            content={promptContextCollection}
-                            readonly={false}
-                            onRemoveContext={(item: RovoDevContextItem) => {
-                                setPromptContextCollection((prev) => {
-                                    return [...prev.filter((x) => x.file.absolutePath !== item.file.absolutePath)];
-                                });
-                            }}
-                            onToggleActiveItem={(enabled) => {
-                                setPromptContextCollection((prev) => {
-                                    const idx = prev.findIndex((x) => x.isFocus);
-                                    if (idx < 0) {
-                                        return prev;
-                                    } else {
-                                        prev[idx].enabled = enabled;
-                                        return [...prev];
-                                    }
-                                });
-                            }}
-                            openFile={openFile}
-                        />
-                        <PromptInputBox
-                            disabled={currentState.state === 'ProcessTerminated'}
-                            currentState={currentState}
-                            isDeepPlanEnabled={isDeepPlanToggled}
-                            isYoloModeEnabled={isYoloModeToggled}
-                            onDeepPlanToggled={() => setIsDeepPlanToggled((prev) => !prev)}
-                            onYoloModeToggled={IsBoysenberry ? undefined : () => onYoloModeToggled()}
-                            onSend={sendPrompt}
-                            onCancel={cancelResponse}
-                            onAddContext={onAddContext}
-                            onCopy={handleCopyResponse}
-                            handleMemoryCommand={executeGetAgentMemory}
-                            handleTriggerFeedbackCommand={handleShowFeedbackForm}
-                            promptText={promptText}
-                            onPromptTextSet={handlePromptTextSet}
-                        />
+                    <div className="prompt-container-container">
+                        <div className="prompt-container">
+                            <PromptContextCollection
+                                content={promptContextCollection}
+                                readonly={false}
+                                onRemoveContext={(item: RovoDevContextItem) => {
+                                    setPromptContextCollection((prev) => {
+                                        return [...prev.filter((x) => x.file.absolutePath !== item.file.absolutePath)];
+                                    });
+                                }}
+                                onToggleActiveItem={(enabled) => {
+                                    setPromptContextCollection((prev) => {
+                                        const idx = prev.findIndex((x) => x.isFocus);
+                                        if (idx < 0) {
+                                            return prev;
+                                        } else {
+                                            prev[idx].enabled = enabled;
+                                            return [...prev];
+                                        }
+                                    });
+                                }}
+                                openFile={openFile}
+                            />
+                            <PromptInputBox
+                                disabled={currentState.state === 'ProcessTerminated'}
+                                currentState={currentState}
+                                isDeepPlanEnabled={isDeepPlanToggled}
+                                isYoloModeEnabled={isYoloModeToggled}
+                                onDeepPlanToggled={() => setIsDeepPlanToggled((prev) => !prev)}
+                                onYoloModeToggled={IsBoysenberry ? undefined : () => onYoloModeToggled()}
+                                onSend={sendPrompt}
+                                onCancel={cancelResponse}
+                                onAddContext={onAddContext}
+                                onCopy={handleCopyResponse}
+                                handleMemoryCommand={executeGetAgentMemory}
+                                handleTriggerFeedbackCommand={handleShowFeedbackForm}
+                                promptText={promptText}
+                                onPromptTextSet={handlePromptTextSet}
+                            />
+                        </div>
                     </div>
                     <div className="ai-disclaimer">Uses AI. Verify results.</div>
                 </div>
