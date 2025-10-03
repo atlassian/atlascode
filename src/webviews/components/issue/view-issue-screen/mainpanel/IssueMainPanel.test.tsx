@@ -57,7 +57,7 @@ const renderWithEditorProvider = (component: React.ReactElement) => {
     return render(<EditorStateProvider>{component}</EditorStateProvider>);
 };
 // Mock mention provider for regular tests
-const mockMentionProvider = new AtlascodeMentionProvider({ url: '' }, jest.fn().mockResolvedValue([]));
+const mockMentionProvider = AtlascodeMentionProvider.init({ url: '' }, jest.fn().mockResolvedValue([]));
 
 describe('IssueMainPanel', () => {
     beforeAll(() => {

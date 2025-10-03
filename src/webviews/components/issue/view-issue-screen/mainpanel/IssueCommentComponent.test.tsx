@@ -102,7 +102,7 @@ const mockOnCommentTextChange = jest.fn();
 const mockOnEditingCommentChange = jest.fn();
 
 // Mock mention provider
-const mockMentionProvider = new AtlascodeMentionProvider({ url: '' }, jest.fn().mockResolvedValue([]));
+const mockMentionProvider = AtlascodeMentionProvider.init({ url: '' }, jest.fn().mockResolvedValue([]));
 
 describe('IssueCommentComponent', () => {
     beforeAll(() => {

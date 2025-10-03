@@ -1,4 +1,3 @@
-import { MentionNameDetails, MentionNameStatus } from '@atlaskit/mention';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Tooltip from '@atlaskit/tooltip';
 import WidthDetector from '@atlaskit/width-detector';
@@ -27,6 +26,7 @@ import {
     CommonEditorPageEmit,
     CommonEditorViewState,
     emptyCommonEditorState,
+    MentionInfo,
 } from '../AbstractIssueEditorPage';
 import { AtlascodeMentionProvider } from '../common/AtlaskitEditor/AtlascodeMentionsProvider';
 import NavItem from '../NavItem';
@@ -61,15 +61,6 @@ const emptyState: ViewState = {
     hierarchy: [],
 };
 
-export type MentionInfo = {
-    displayName: string;
-    avatarUrl: string;
-    mention: string;
-    accountId: string;
-};
-
-export type CachedMention = MentionNameDetails & { ttl: Date };
-
 export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
     private advancedSidebarFields: FieldUI[] = [];
     private advancedMainFields: FieldUI[] = [];
@@ -80,45 +71,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         super(props);
         this.state = emptyState;
         this.mentionProvider = this.getMentionProvider();
-    }
-
-    private getMentionProvider() {
-        return AtlascodeMentionProvider.init(
-            {
-                url: '',
-                mentionNameResolver: {
-                    lookupName: async (id: string) => {
-                        const accountId = id.split('accountid:')[1];
-                        if (!accountId) {
-                            return {
-                                id,
-                                name: 'Unknown User',
-                                status: MentionNameStatus.UNKNOWN,
-                            };
-                        }
-
-                        const users = await this.fetchAndTransformUsers('', accountId);
-                        if (users.length === 0) {
-                            return {
-                                id,
-                                name: 'Unknown User',
-                                status: MentionNameStatus.UNKNOWN,
-                            };
-                        }
-                        const resolvedMention = {
-                            id,
-                            name: users[0].displayName,
-                            status: MentionNameStatus.OK,
-                        };
-                        return resolvedMention;
-                    },
-                    cacheName: (_id: string, _name: string) => {
-                        // currently this method is never called by Atlaskit. So it is implemented only to satisfy the interface
-                    },
-                },
-            },
-            this.fetchAndTransformUsers,
-        );
     }
 
     // TODO: proper error handling in webviews :'(
@@ -218,19 +170,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             action: 'openStartWorkPage',
             issue: { key: this.state.key, siteDetails: this.state.siteDetails },
         });
-    };
-
-    fetchUsers = (input: string, accountId?: string) => {
-        const apiVersion = this.getApiVersion();
-        let userSearchUrl;
-        if (accountId) {
-            userSearchUrl = `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?accountId=${accountId}`;
-        } else {
-            userSearchUrl = this.state.siteDetails.isCloud
-                ? `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?query=`
-                : `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?username=`;
-        }
-        return this.loadSelectOptions(input, userSearchUrl);
     };
 
     fetchAndTransformUsers = async (input: string, accountId?: string): Promise<MentionInfo[]> =>
