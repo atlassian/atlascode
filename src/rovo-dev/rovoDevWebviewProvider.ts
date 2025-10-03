@@ -127,12 +127,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await this._context.workspaceState.update(key, enabled);
     }
 
-    private get isDisabled() {
-        return this._processState === RovoDevProcessState.Disabled;
-    }
-
     public get isVisible(): boolean {
         return this._webviewView?.visible ?? false;
+    }
+
+    public get isDisabled(): boolean {
+        return (
+            this._processState === RovoDevProcessState.Disabled || this._processState === RovoDevProcessState.Terminated
+        );
     }
 
     constructor(context: ExtensionContext, extensionPath: string) {
@@ -309,7 +311,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.CheckGitChanges:
-                        const isClean = await this._prHandler!.isGitStateClean();
+                        const isClean = await this._prHandler?.isGitStateClean();
                         await webview.postMessage({
                             type: RovoDevProviderMessageType.CheckGitChangesComplete,
                             hasChanges: !isClean,
@@ -330,12 +332,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.WebviewReady:
+                        // we may receive this message multiple times because the webview can be destroyed and recreated
+                        const refreshOnly = this._webviewReady;
+
                         this._webviewReady = true;
                         this.refreshDebugPanel(true);
+
                         if (!this.isBoysenberry && !this.isDisabled) {
                             if (!workspace.workspaceFolders?.length) {
                                 await this.signalRovoDevDisabled('NoWorkspaceOpen');
-                                return;
+                                break;
                             } else {
                                 const yoloMode = await this.loadYoloModeFromStorage();
                                 await webview.postMessage({
@@ -345,6 +351,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                                     yoloMode: yoloMode,
                                 });
                             }
+                        }
+
+                        // if we refresh only, we don't want to restart the process
+                        if (refreshOnly) {
+                            await this.initializeWithHealthcheck(this.rovoDevApiClient!);
+                            break;
                         }
 
                         const fixedPort = parseInt(process.env[rovodevInfo.envVars.port] || '0');
@@ -516,14 +528,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private sendJiraItemsToView(issues: MinimalIssue<DetailedSiteInfo>[]) {
+    private sendJiraItemsToView(issues: MinimalIssue<DetailedSiteInfo>[] | undefined) {
         if (!this._webView) {
             return;
         }
 
         return this._webView.postMessage({
             type: RovoDevProviderMessageType.SetJiraWorkItems,
-            issues: issues,
+            issues,
         });
     }
 
@@ -829,11 +841,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async createPR(commitMessage?: string, branchName?: string): Promise<void> {
-        const prHandler = this._prHandler!;
+        const prHandler = this._prHandler;
 
         let prLink: string | undefined;
         const webview = this._webView!;
         try {
+            if (!prHandler) {
+                throw new Error('Pull Request handler not initialized');
+            }
             if (!commitMessage || !branchName) {
                 throw new Error('Commit message and branch name are required to create a PR');
             }
@@ -863,10 +878,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async getCurrentBranchName(): Promise<void> {
-        const webview = this._webView!;
-        const prHandler = this._prHandler!;
+        const webview = this._webView;
+        const prHandler = this._prHandler;
 
         try {
+            if (!prHandler) {
+                throw new Error('Pull Request handler not initialized');
+            }
+            if (!webview) {
+                throw new Error('Webview not initialized');
+            }
             const branchName = await prHandler.getCurrentBranchName();
             await webview.postMessage({
                 type: RovoDevProviderMessageType.GetCurrentBranchNameComplete,
@@ -1204,10 +1225,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         reason: RovoDevDisabledReason,
         detail?: RovoDevEntitlementCheckFailedDetail,
     ): Promise<void> {
-        if (
-            this._processState === RovoDevProcessState.Terminated ||
-            this._processState === RovoDevProcessState.Disabled
-        ) {
+        if (this.isDisabled) {
             return;
         }
 
@@ -1222,10 +1240,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     public async signalProcessFailedToInitialize(errorMessage?: string) {
-        if (
-            this._processState === RovoDevProcessState.Terminated ||
-            this._processState === RovoDevProcessState.Disabled
-        ) {
+        if (this.isDisabled) {
             return;
         }
 
@@ -1242,10 +1257,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     public async signalProcessTerminated(code?: number) {
-        if (
-            this._processState === RovoDevProcessState.Terminated ||
-            this._processState === RovoDevProcessState.Disabled
-        ) {
+        if (this.isDisabled) {
             return;
         }
 

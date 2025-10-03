@@ -440,7 +440,7 @@ export class Container {
             } catch {}
         }
 
-        return this._isDebugging;
+        return !!this._isDebugging;
     }
 
     // Container for all rovodev components that might get toggled by feature flags
@@ -479,6 +479,10 @@ export class Container {
     private static _isRovoDevEnabled: boolean;
     public static get isRovoDevEnabled() {
         return this._isRovoDevEnabled;
+    }
+
+    public static isRovoDevActive(): boolean {
+        return this._isRovoDevEnabled && this._rovodevWebviewProvider && !this._rovodevWebviewProvider.isDisabled;
     }
 
     private static _version: string;

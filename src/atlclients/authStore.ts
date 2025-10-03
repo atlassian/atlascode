@@ -78,6 +78,29 @@ export class CredentialManager implements Disposable {
         return this.softRefreshOAuth(site, authInfo);
     }
 
+    async getApiTokenIfExists(site: DetailedSiteInfo): Promise<BasicAuthInfo | undefined> {
+        // Only applicable to cloud sites
+        if (!site.host.endsWith('.atlassian.net')) {
+            return undefined;
+        }
+
+        // this.getAuthInfo relies on credentialId, which can be different between oauth and API token
+        // We can't rely on site.credentialId, so let's check the site from scratch
+        // TODO: switch this to use this.getAuthInfo after some time when enough users are on the new logic
+        const sites = Container.siteManager.getSitesAvailable(ProductJira);
+        const selectedSite = sites.find((s) => s.id === site.id);
+        if (!selectedSite) {
+            return undefined;
+        }
+
+        const authInfo = await this.getAuthInfo(selectedSite);
+        if (isBasicAuthInfo(authInfo)) {
+            return authInfo;
+        }
+
+        return undefined;
+    }
+
     async findApiTokenForSite(site?: DetailedSiteInfo | string): Promise<BasicAuthInfo | undefined> {
         const siteToCheck = typeof site === 'string' ? Container.siteManager.getSiteForId(ProductJira, site) : site;
 

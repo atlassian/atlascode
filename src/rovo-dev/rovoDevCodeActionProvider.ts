@@ -21,8 +21,14 @@ export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
         }
 
         return [
-            this.generateCommand('Rovo Dev: Explain', 'Please explain this code', document, range),
-            this.generateCommand('Rovo Dev: Fix Code', 'Please fix this code', document, range),
+            this.generateCommand(
+                'Explain by Rovo Dev',
+                'Please explain what is the problem with this code',
+                document,
+                range,
+                context,
+            ),
+            this.generateCommand('Fix by Rovo Dev', 'Please fix problem with this code', document, range, context),
             {
                 title: 'Rovo Dev: Add to Context',
                 command: {
@@ -38,34 +44,40 @@ export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
         prompt: string,
         document: vscode.TextDocument,
         range: vscode.Range | vscode.Selection,
+        context: vscode.CodeActionContext,
     ): vscode.CodeAction {
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
         const baseName = document.fileName.split(path.sep).pop() || '';
-        return {
-            title,
-            command: {
-                command: Commands.RovodevAsk,
-                title: 'Ask Rovo Dev',
-                arguments: [
-                    prompt,
+        const action = new vscode.CodeAction(title, vscode.CodeActionKind.QuickFix);
+
+        const finalPrompt = context.diagnostics.length
+            ? `${prompt}\nAdditional problem context:\n${context.diagnostics.map((d) => d.message).join('\n')}`
+            : prompt;
+
+        action.command = {
+            command: Commands.RovodevAsk,
+            title: 'Ask Rovo Dev',
+            arguments: [
+                finalPrompt,
+                [
                     {
-                        focusInfo: {
-                            file: {
-                                name: baseName,
-                                absolutePath: document.uri.fsPath,
-                                relativePath: workspaceFolder
-                                    ? path.relative(workspaceFolder.uri.fsPath, document.uri.fsPath)
-                                    : document.fileName,
-                            },
-                            selection: {
-                                start: range.start.line,
-                                end: range.end.line,
-                            },
-                            enabled: true,
+                        file: {
+                            name: baseName,
+                            absolutePath: document.uri.fsPath,
+                            relativePath: workspaceFolder
+                                ? path.relative(workspaceFolder.uri.fsPath, document.uri.fsPath)
+                                : document.fileName,
                         },
+                        selection: {
+                            start: range.start.line,
+                            end: range.end.line,
+                        },
+                        isFocus: true,
+                        enabled: true,
                     },
                 ],
-            },
+            ],
         };
+        return action;
     }
 }

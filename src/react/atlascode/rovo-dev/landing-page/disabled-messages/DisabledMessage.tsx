@@ -3,7 +3,7 @@ import { State } from 'src/rovo-dev/rovoDevTypes';
 
 import { DialogMessageItem } from '../../common/DialogMessage';
 import { McpConsentChoice } from '../../rovoDevViewMessages';
-import { inChatButtonStyles } from '../../rovoDevViewStyles';
+import { inChatButtonStyles, inChatSecondaryButtonStyles } from '../../rovoDevViewStyles';
 
 const messageOuterStyles: React.CSSProperties = {
     marginTop: '24px',
@@ -69,14 +69,22 @@ export const DisabledMessage: React.FC<{
                     {currentState.mcpIds.map((serverName) => (
                         <tr>
                             <td style={{ width: '100%' }}>{serverName}</td>
-                            <td>
+                            <td
+                                style={{
+                                    display: 'flex',
+                                    justifyContent: 'flex-end',
+                                    width: '100%',
+                                    gap: '8px',
+                                }}
+                            >
+                                <button
+                                    style={inChatSecondaryButtonStyles}
+                                    onClick={() => onMcpChoice('deny', serverName)}
+                                >
+                                    Deny
+                                </button>
                                 <button style={inChatButtonStyles} onClick={() => onMcpChoice('accept', serverName)}>
                                     Allow
-                                </button>
-                            </td>
-                            <td>
-                                <button style={inChatButtonStyles} onClick={() => onMcpChoice('deny', serverName)}>
-                                    Deny
                                 </button>
                             </td>
                         </tr>

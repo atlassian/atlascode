@@ -9,8 +9,8 @@ export class RovoDevJiraItemsProvider extends Disposable {
     private jiraSiteHostname: DetailedSiteInfo | undefined = undefined;
     private pollTimer: NodeJS.Timeout | undefined = undefined;
 
-    private _onNewJiraItems = new EventEmitter<MinimalIssue<DetailedSiteInfo>[]>();
-    public get onNewJiraItems(): Event<MinimalIssue<DetailedSiteInfo>[]> {
+    private _onNewJiraItems = new EventEmitter<MinimalIssue<DetailedSiteInfo>[] | undefined>();
+    public get onNewJiraItems(): Event<MinimalIssue<DetailedSiteInfo>[] | undefined> {
         return this._onNewJiraItems.event;
     }
 
@@ -24,6 +24,9 @@ export class RovoDevJiraItemsProvider extends Disposable {
     }
 
     public setJiraSite(jiraSiteHostname: DetailedSiteInfo | string) {
+        this.stop();
+        this._onNewJiraItems.fire(undefined);
+
         this.jiraSiteHostname = undefined;
 
         if (typeof jiraSiteHostname === 'object') {
@@ -41,13 +44,15 @@ export class RovoDevJiraItemsProvider extends Disposable {
         this.start();
     }
 
-    public start() {
+    private start() {
+        this.stop();
+
         if (this.jiraSiteHostname && !this.pollTimer) {
             this.checkForIssues();
         }
     }
 
-    public stop() {
+    private stop() {
         if (this.pollTimer) {
             clearTimeout(this.pollTimer);
             this.pollTimer = undefined;

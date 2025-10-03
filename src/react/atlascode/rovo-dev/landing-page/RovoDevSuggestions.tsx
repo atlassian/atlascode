@@ -46,6 +46,11 @@ export const RovoDevJiraWorkItems: React.FC<{
     jiraWorkItems: MinimalIssue<DetailedSiteInfo>[] | undefined;
     onJiraItemClick: (issue: MinimalIssue<DetailedSiteInfo>) => void;
 }> = ({ jiraWorkItems, onJiraItemClick }) => {
+    // hide the entire thing if there are no Jira items to display
+    if (jiraWorkItems !== undefined && jiraWorkItems.length === 0) {
+        return null;
+    }
+
     return (
         <div style={{ marginTop: '24px', width: '100%', maxWidth: '270px' }}>
             <div style={titleStyles}>Jira Work Items</div>
