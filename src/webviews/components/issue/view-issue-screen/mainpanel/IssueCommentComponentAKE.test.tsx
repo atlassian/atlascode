@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { DetailedSiteInfo, Product } from 'src/atlclients/authInfo';
 
+import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
 import { IssueCommentComponent, type IssueCommentComponentProps } from './IssueCommentComponent';
 
 const mockSiteDetails: DetailedSiteInfo = {
@@ -98,6 +99,9 @@ const mockOnDelete = jest.fn();
 const mockOnCommentTextChange = jest.fn();
 const mockOnEditingCommentChange = jest.fn();
 
+// Mock mention provider
+const mockMentionProvider = new AtlascodeMentionProvider({ url: '' }, jest.fn().mockResolvedValue([]));
+
 describe('IssueCommentComponent with Atlaskit Editor', () => {
     const renderComponent = ({
         siteDetails = mockSiteDetails,
@@ -114,6 +118,7 @@ describe('IssueCommentComponent with Atlaskit Editor', () => {
         isEditingComment = false,
         onEditingCommentChange = mockOnEditingCommentChange,
         isAtlaskitEditorEnabled = true,
+        mentionProvider = mockMentionProvider,
     }: Partial<IssueCommentComponentProps>) => {
         return (
             <IssueCommentComponent
@@ -131,6 +136,7 @@ describe('IssueCommentComponent with Atlaskit Editor', () => {
                 isEditingComment={isEditingComment}
                 onEditingCommentChange={onEditingCommentChange}
                 isAtlaskitEditorEnabled={isAtlaskitEditorEnabled}
+                mentionProvider={mentionProvider}
             />
         );
     };

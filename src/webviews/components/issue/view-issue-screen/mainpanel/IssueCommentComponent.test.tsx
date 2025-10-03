@@ -4,6 +4,7 @@ import React from 'react';
 import { DetailedSiteInfo, Product } from 'src/atlclients/authInfo';
 import { disableConsole } from 'testsutil/console';
 
+import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
 import { IssueCommentComponent } from './IssueCommentComponent';
 
 const mockSiteDetails: DetailedSiteInfo = {
@@ -99,6 +100,9 @@ const mockOnDelete = jest.fn();
 const mockOnCommentTextChange = jest.fn();
 const mockOnEditingCommentChange = jest.fn();
 
+// Mock mention provider
+const mockMentionProvider = new AtlascodeMentionProvider({ url: '' }, jest.fn().mockResolvedValue([]));
+
 describe('IssueCommentComponent', () => {
     beforeAll(() => {
         disableConsole('warn', 'error');
@@ -121,6 +125,7 @@ describe('IssueCommentComponent', () => {
                 isEditingComment={false}
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={false}
+                mentionProvider={mockMentionProvider}
             />,
         );
 
@@ -144,6 +149,7 @@ describe('IssueCommentComponent', () => {
                 isEditingComment={false}
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={false}
+                mentionProvider={mockMentionProvider}
             />,
         );
 
@@ -169,6 +175,7 @@ describe('IssueCommentComponent', () => {
                     isEditingComment={false}
                     onEditingCommentChange={mockOnEditingCommentChange}
                     isAtlaskitEditorEnabled={false}
+                    mentionProvider={mockMentionProvider}
                 />,
             ),
         );
@@ -199,6 +206,7 @@ describe('IssueCommentComponent', () => {
                 isEditingComment={false}
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={false}
+                mentionProvider={mockMentionProvider}
             />,
         );
 
@@ -228,6 +236,7 @@ describe('IssueCommentComponent', () => {
                     isEditingComment={isEditingComment}
                     onEditingCommentChange={setIsEditingComment}
                     isAtlaskitEditorEnabled={false}
+                    mentionProvider={mockMentionProvider}
                 />
             );
         };
