@@ -56,7 +56,8 @@ const CommentComponent: React.FC<{
 }) => {
     const { openEditor, closeEditor, isEditorActive } = useEditorState();
     const editorId = `edit-comment-${comment.id}` as const;
-    const isEditing = isEditorActive(editorId);
+    const [localIsEditing, setLocalIsEditing] = React.useState(false);
+    const isEditing = isAtlaskitEditorEnabled ? isEditorActive(editorId) : localIsEditing;
     const [isSaving, setIsSaving] = React.useState(false);
     const bodyText = comment.renderedBody ? comment.renderedBody : comment.body;
 
@@ -77,12 +78,17 @@ const CommentComponent: React.FC<{
             setIsSaving(false);
             closeEditor(editorId);
         }, [comment.body, closeEditor, editorId]),
+        isAtlaskitEditorEnabled,
     );
 
     const baseActions: JSX.Element[] = [
         <CommentAction
             onClick={() => {
-                openEditor(editorId);
+                if (isAtlaskitEditorEnabled) {
+                    openEditor(editorId);
+                } else {
+                    setLocalIsEditing(true);
+                }
             }}
         >
             Edit
@@ -128,13 +134,21 @@ const CommentComponent: React.FC<{
                                 defaultValue={commentText}
                                 onSave={(content) => {
                                     setIsSaving(true);
-                                    closeEditor(editorId);
+                                    if (isAtlaskitEditorEnabled) {
+                                        closeEditor(editorId);
+                                    } else {
+                                        setLocalIsEditing(false);
+                                    }
                                     onSave(content, comment.id, undefined);
                                 }}
                                 onCancel={() => {
                                     setCommentText(comment.body);
                                     setIsSaving(false);
-                                    closeEditor(editorId);
+                                    if (isAtlaskitEditorEnabled) {
+                                        closeEditor(editorId);
+                                    } else {
+                                        setLocalIsEditing(false);
+                                    }
                                 }}
                                 onContentChange={(content) => {
                                     setCommentText(content);
@@ -148,17 +162,29 @@ const CommentComponent: React.FC<{
                                 }}
                                 onSave={() => {
                                     setIsSaving(true);
-                                    closeEditor(editorId);
+                                    if (isAtlaskitEditorEnabled) {
+                                        closeEditor(editorId);
+                                    } else {
+                                        setLocalIsEditing(false);
+                                    }
                                     onSave(commentText, comment.id, undefined);
                                 }}
                                 onCancel={() => {
                                     setIsSaving(false);
-                                    closeEditor(editorId);
+                                    if (isAtlaskitEditorEnabled) {
+                                        closeEditor(editorId);
+                                    } else {
+                                        setLocalIsEditing(false);
+                                    }
                                     setCommentText(comment.body);
                                 }}
                                 onInternalCommentSave={() => {
                                     setIsSaving(false);
-                                    closeEditor(editorId);
+                                    if (isAtlaskitEditorEnabled) {
+                                        closeEditor(editorId);
+                                    } else {
+                                        setLocalIsEditing(false);
+                                    }
                                     onSave(commentText, comment.id, JsdInternalCommentVisibility);
                                 }}
                                 fetchUsers={fetchUsers}
@@ -212,6 +238,7 @@ const AddCommentComponent: React.FC<{
             closeEditor('add-comment');
             setIsEditing(false);
         }, [closeEditor, setCommentText, setIsEditing]),
+        isAtlaskitEditorEnabled,
     );
 
     return (

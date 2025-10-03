@@ -814,7 +814,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
         return (
             <Page>
-                <EditorStateProvider>
+                <EditorStateProvider isAtlaskitEditorEnabled={this.state.isAtlaskitEditorEnabled}>
                     <AtlascodeErrorBoundary
                         context={{ view: AnalyticsView.JiraIssuePage }}
                         postMessageFunc={(e) => {

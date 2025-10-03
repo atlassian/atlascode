@@ -96,7 +96,8 @@ const IssueMainPanel: React.FC<Props> = ({
     }, [defaultDescription]);
 
     const [descriptionText, setDescriptionText] = React.useState(() => getDescriptionTextForEditor());
-    const isEditingDescription = isEditorActive('description');
+    const [localIsEditingDescription, setLocalIsEditingDescription] = React.useState(false);
+    const isEditingDescription = isAtlaskitEditorEnabled ? isEditorActive('description') : localIsEditingDescription;
 
     // Update descriptionText when defaultDescription changes (after save)
     React.useEffect(() => {
@@ -113,6 +114,7 @@ const IssueMainPanel: React.FC<Props> = ({
             setDescriptionText(getDescriptionTextForEditor());
             closeEditor('description');
         }, [closeEditor, getDescriptionTextForEditor]),
+        isAtlaskitEditorEnabled,
     );
 
     const handleStatusChange = (issueKey: string, statusName: string) => {
@@ -200,11 +202,19 @@ const IssueMainPanel: React.FC<Props> = ({
                                 defaultValue={descriptionText}
                                 onSave={(content) => {
                                     handleInlineEdit(fields['description'], content);
-                                    closeEditor('description');
+                                    if (isAtlaskitEditorEnabled) {
+                                        closeEditor('description');
+                                    } else {
+                                        setLocalIsEditingDescription(false);
+                                    }
                                 }}
                                 onCancel={() => {
                                     setDescriptionText(getDescriptionTextForEditor());
-                                    closeEditor('description');
+                                    if (isAtlaskitEditorEnabled) {
+                                        closeEditor('description');
+                                    } else {
+                                        setLocalIsEditingDescription(false);
+                                    }
                                 }}
                                 onContentChange={(content) => {
                                     setDescriptionText(content);
@@ -218,11 +228,19 @@ const IssueMainPanel: React.FC<Props> = ({
                                 }}
                                 onSave={(i: string) => {
                                     handleInlineEdit(fields['description'], i);
-                                    closeEditor('description');
+                                    if (isAtlaskitEditorEnabled) {
+                                        closeEditor('description');
+                                    } else {
+                                        setLocalIsEditingDescription(false);
+                                    }
                                 }}
                                 onCancel={() => {
                                     setDescriptionText(getDescriptionTextForEditor());
-                                    closeEditor('description');
+                                    if (isAtlaskitEditorEnabled) {
+                                        closeEditor('description');
+                                    } else {
+                                        setLocalIsEditingDescription(false);
+                                    }
                                 }}
                                 fetchUsers={fetchUsers}
                                 isDescription
@@ -243,7 +261,11 @@ const IssueMainPanel: React.FC<Props> = ({
                                 alignItems: 'flex-start',
                             }}
                             onClick={() => {
-                                openEditor('description');
+                                if (isAtlaskitEditorEnabled) {
+                                    openEditor('description');
+                                } else {
+                                    setLocalIsEditingDescription(true);
+                                }
                             }}
                             className="ac-inline-input-view-p"
                         >
