@@ -4,6 +4,7 @@ import React from 'react';
 import { DetailedSiteInfo, Product } from 'src/atlclients/authInfo';
 import { disableConsole } from 'testsutil/console';
 
+import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
 import { EditorStateProvider } from '../EditorStateContext';
 import { IssueCommentComponent } from './IssueCommentComponent';
 
@@ -100,10 +101,8 @@ const mockOnDelete = jest.fn();
 const mockOnCommentTextChange = jest.fn();
 const mockOnEditingCommentChange = jest.fn();
 
-// Helper function to wrap components with EditorStateProvider for testing
-const renderWithEditorProvider = (component: React.ReactElement) => {
-    return render(<EditorStateProvider>{component}</EditorStateProvider>);
-};
+// Mock mention provider
+const mockMentionProvider = new AtlascodeMentionProvider({ url: '' }, jest.fn().mockResolvedValue([]));
 
 describe('IssueCommentComponent', () => {
     beforeAll(() => {
@@ -127,6 +126,7 @@ describe('IssueCommentComponent', () => {
                 isEditingComment={false}
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={false}
+                mentionProvider={mockMentionProvider}
             />,
         );
 
@@ -150,6 +150,7 @@ describe('IssueCommentComponent', () => {
                 isEditingComment={false}
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={false}
+                mentionProvider={mockMentionProvider}
             />,
         );
 
@@ -175,6 +176,7 @@ describe('IssueCommentComponent', () => {
                     isEditingComment={false}
                     onEditingCommentChange={mockOnEditingCommentChange}
                     isAtlaskitEditorEnabled={false}
+                    mentionProvider={mockMentionProvider}
                 />,
             ),
         );
@@ -205,6 +207,7 @@ describe('IssueCommentComponent', () => {
                 isEditingComment={false}
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={false}
+                mentionProvider={mockMentionProvider}
             />,
         );
 
@@ -234,6 +237,7 @@ describe('IssueCommentComponent', () => {
                     isEditingComment={isEditingComment}
                     onEditingCommentChange={setIsEditingComment}
                     isAtlaskitEditorEnabled={false}
+                    mentionProvider={mockMentionProvider}
                 />
             );
         };
