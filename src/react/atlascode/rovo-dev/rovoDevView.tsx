@@ -641,6 +641,27 @@ const RovoDevView: React.FC = () => {
 
     const onMcpChoice = useCallback(
         (choice: McpConsentChoice, serverName?: string) => {
+            // removes the server name dialog, in case Rovo Dev is too slow responding back
+            setCurrentState((prev) => {
+                if (prev.state !== 'Initializing' || prev.subState !== 'MCPAcceptance') {
+                    return prev;
+                }
+
+                const otherIdsToAccept = prev.mcpIds.filter((x) => x !== serverName);
+                return otherIdsToAccept.length > 0
+                    ? {
+                          state: 'Initializing',
+                          subState: 'MCPAcceptance',
+                          mcpIds: otherIdsToAccept,
+                          isPromptPending: prev.isPromptPending,
+                      }
+                    : {
+                          state: 'Initializing',
+                          subState: 'Other',
+                          isPromptPending: prev.isPromptPending,
+                      };
+            });
+
             postMessage({
                 type: RovoDevViewResponseType.McpConsentChoiceSubmit,
                 choice,
