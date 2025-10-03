@@ -16,6 +16,7 @@ import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
 import WorklogForm from '../../WorklogForm';
 import Worklogs from '../../Worklogs';
 import { useEditorState } from '../EditorStateContext';
+import { useEditorForceClose } from '../hooks/useEditorForceClose';
 import { AddContentDropdown } from './AddContentDropDown';
 import { ChildIssuesComponent } from './ChildIssuesComponent';
 import { LinkedIssuesComponent } from './LinkedIssuesComponent';
@@ -105,21 +106,14 @@ const IssueMainPanel: React.FC<Props> = ({
     }, [defaultDescription, isEditingDescription, getDescriptionTextForEditor]);
 
     // Listen for forced editor close events
-    React.useEffect(() => {
-        const handleEditorForceClosed = (event: CustomEvent) => {
-            if (event.detail.editorType === 'description') {
-                // Reset description editor state when it's forcibly closed
-                setDescriptionText(getDescriptionTextForEditor());
-                closeEditor('description');
-            }
-        };
-
-        window.addEventListener('editorForceClosed', handleEditorForceClosed as EventListener);
-
-        return () => {
-            window.removeEventListener('editorForceClosed', handleEditorForceClosed as EventListener);
-        };
-    }, [closeEditor, getDescriptionTextForEditor]);
+    useEditorForceClose(
+        'description',
+        React.useCallback(() => {
+            // Reset description editor state when it's forcibly closed
+            setDescriptionText(getDescriptionTextForEditor());
+            closeEditor('description');
+        }, [closeEditor, getDescriptionTextForEditor]),
+    );
 
     const handleStatusChange = (issueKey: string, statusName: string) => {
         if (onIssueUpdate) {

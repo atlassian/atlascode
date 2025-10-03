@@ -17,6 +17,7 @@ import { RenderedContent } from '../../../RenderedContent';
 import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
 import { useEditorState } from '../EditorStateContext';
+import { useEditorForceClose } from '../hooks/useEditorForceClose';
 
 export type IssueCommentComponentProps = {
     siteDetails: DetailedSiteInfo;
@@ -68,22 +69,15 @@ const CommentComponent: React.FC<{
     }, [comment.body, isEditing]);
 
     // Listen for forced editor close events
-    React.useEffect(() => {
-        const handleEditorForceClosed = (event: CustomEvent) => {
-            if (event.detail.editorType === editorId) {
-                // Reset comment editor state when it's forcibly closed
-                setCommentText(comment.body);
-                setIsSaving(false);
-                closeEditor(editorId);
-            }
-        };
-
-        window.addEventListener('editorForceClosed', handleEditorForceClosed as EventListener);
-
-        return () => {
-            window.removeEventListener('editorForceClosed', handleEditorForceClosed as EventListener);
-        };
-    }, [editorId, comment.body, closeEditor]);
+    useEditorForceClose(
+        editorId,
+        React.useCallback(() => {
+            // Reset comment editor state when it's forcibly closed
+            setCommentText(comment.body);
+            setIsSaving(false);
+            closeEditor(editorId);
+        }, [comment.body, closeEditor, editorId]),
+    );
 
     const baseActions: JSX.Element[] = [
         <CommentAction
@@ -210,22 +204,15 @@ const AddCommentComponent: React.FC<{
     const { openEditor, closeEditor } = useEditorState();
 
     // Listen for forced editor close events
-    React.useEffect(() => {
-        const handleEditorForceClosed = (event: CustomEvent) => {
-            if (event.detail.editorType === 'add-comment') {
-                // Reset add comment editor state when it's forcibly closed
-                setCommentText('');
-                closeEditor('add-comment');
-                setIsEditing(false);
-            }
-        };
-
-        window.addEventListener('editorForceClosed', handleEditorForceClosed as EventListener);
-
-        return () => {
-            window.removeEventListener('editorForceClosed', handleEditorForceClosed as EventListener);
-        };
-    }, [closeEditor, setCommentText, setIsEditing]);
+    useEditorForceClose(
+        'add-comment',
+        React.useCallback(() => {
+            // Reset add comment editor state when it's forcibly closed
+            setCommentText('');
+            closeEditor('add-comment');
+            setIsEditing(false);
+        }, [closeEditor, setCommentText, setIsEditing]),
+    );
 
     return (
         <Box style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
