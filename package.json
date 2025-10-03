@@ -1496,6 +1496,7 @@
         "@atlaskit/icon-lab": "^5.7.0",
         "@atlaskit/inline-dialog": "^18.0.4",
         "@atlaskit/layering": "^3.0.0",
+        "@atlaskit/link-provider": "^4.0.0",
         "@atlaskit/lozenge": "^13.0.8",
         "@atlaskit/media-core": "^37.0.0",
         "@atlaskit/media-state": "^1.8.0",
@@ -1689,7 +1690,6 @@
         "@atlaskit/teams-client/@sentry/browser": "^7.119.2",
         "@atlaskit/editor-common/@sentry/browser": "^7.119.2",
         "@atlaskit/editor-common/@atlaskit/media-viewer": "^52.4.20",
-        "@atlaskit/editor-common/@atlaskit/media-core": "^37.0.0",
         "fetch-mock/path-to-regexp": "^3.2.0",
         "react-loosely-lazy/react": "^18.3.1",
         "react-lazily-render/react": "^18.3.1"
