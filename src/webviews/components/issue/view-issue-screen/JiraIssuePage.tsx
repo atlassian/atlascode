@@ -48,7 +48,6 @@ export interface ViewState extends CommonEditorViewState, EditIssueData {
     hierarchyLoading: boolean;
     hierarchy: MinimalIssue<DetailedSiteInfo>[];
     containerWidth?: number;
-    mentionProvider: AtlascodeMentionProvider | null;
 }
 
 const emptyState: ViewState = {
@@ -60,7 +59,6 @@ const emptyState: ViewState = {
     isEditingComment: false,
     hierarchyLoading: false,
     hierarchy: [],
-    mentionProvider: null,
 };
 
 export type MentionInfo = {
@@ -76,65 +74,51 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     private advancedSidebarFields: FieldUI[] = [];
     private advancedMainFields: FieldUI[] = [];
     private attachingInProgress = false;
-    protected mentionNames: Map<string, CachedMention>;
+    private mentionProvider: AtlascodeMentionProvider;
 
     constructor(props: any) {
         super(props);
         this.state = emptyState;
-        this.mentionNames = new Map<string, CachedMention>();
+        this.mentionProvider = this.getMentionProvider();
     }
 
-    get mentionProvider() {
-        if (!this.state.mentionProvider) {
-            const provider = new AtlascodeMentionProvider(
-                {
-                    url: '',
-                    mentionNameResolver: {
-                        lookupName: async (id: string) => {
-                            const accountId = id.split('accountid:')[1];
-                            if (!accountId) {
-                                return {
-                                    id,
-                                    name: 'Unknown User',
-                                    status: MentionNameStatus.UNKNOWN,
-                                };
-                            }
-
-                            if (this.mentionNames.has(accountId)) {
-                                //TODO: implement cache invalidation
-                                return this.mentionNames.get(accountId)!;
-                            }
-
-                            const users = await this.fetchAndTransformUsers('', accountId);
-                            if (users.length === 0) {
-                                return {
-                                    id,
-                                    name: 'Unknown User',
-                                    status: MentionNameStatus.UNKNOWN,
-                                };
-                            }
-                            const resolvedMention = {
+    private getMentionProvider() {
+        return AtlascodeMentionProvider.init(
+            {
+                url: '',
+                mentionNameResolver: {
+                    lookupName: async (id: string) => {
+                        const accountId = id.split('accountid:')[1];
+                        if (!accountId) {
+                            return {
                                 id,
-                                name: users[0].displayName,
-                                status: MentionNameStatus.OK,
+                                name: 'Unknown User',
+                                status: MentionNameStatus.UNKNOWN,
                             };
-                            this.mentionNames.set(accountId, {
-                                ...resolvedMention,
-                                ttl: new Date(Date.now() + 5 * 60 * 1000),
-                            });
-                            return resolvedMention;
-                        },
-                        cacheName: (_id: string, _name: string) => {
-                            // currently this method is never called by Atlaskit. So it is implemented only to satisfy the interface
-                        },
+                        }
+
+                        const users = await this.fetchAndTransformUsers('', accountId);
+                        if (users.length === 0) {
+                            return {
+                                id,
+                                name: 'Unknown User',
+                                status: MentionNameStatus.UNKNOWN,
+                            };
+                        }
+                        const resolvedMention = {
+                            id,
+                            name: users[0].displayName,
+                            status: MentionNameStatus.OK,
+                        };
+                        return resolvedMention;
+                    },
+                    cacheName: (_id: string, _name: string) => {
+                        // currently this method is never called by Atlaskit. So it is implemented only to satisfy the interface
                     },
                 },
-                this.fetchAndTransformUsers,
-            );
-            this.setState({ mentionProvider: provider });
-            return provider;
-        }
-        return this.state.mentionProvider;
+            },
+            this.fetchAndTransformUsers,
+        );
     }
 
     // TODO: proper error handling in webviews :'(
@@ -730,6 +714,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             onCommentTextChange={this.handleCommentTextChange}
                             isEditingComment={this.state.isEditingComment}
                             onEditingCommentChange={this.handleCommentEditingChange}
+                            mentionProvider={this.mentionProvider}
                         />
                     </div>
                 )}
