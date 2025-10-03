@@ -71,7 +71,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private readonly isBoysenberry = process.env.ROVODEV_BBY === 'true';
     private readonly appInstanceId: string;
 
-    private readonly _prHandler: RovoDevPullRequestHandler | undefined;
+    private readonly _prHandler: RovoDevPullRequestHandler;
     private readonly _telemetryProvider: RovoDevTelemetryProvider;
     private readonly _jiraItemsProvider: RovoDevJiraItemsProvider;
     private readonly _chatProvider: RovoDevChatProvider;
@@ -161,8 +161,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // Register this provider with the process manager for error handling
         RovoDevProcessManager.setRovoDevWebviewProvider(this);
 
+        // Initialize PR handler for both Boysenberry and regular environments
+        this._prHandler = new RovoDevPullRequestHandler();
+
         if (this.isBoysenberry) {
-            this._prHandler = new RovoDevPullRequestHandler();
             this.appInstanceId = process.env.ROVODEV_SANDBOX_ID as string;
         } else {
             this.appInstanceId = Container.appInstanceId;
@@ -311,7 +313,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.CheckGitChanges:
-                        const isClean = await this._prHandler?.isGitStateClean();
+                        const isClean = await this._prHandler.isGitStateClean();
                         await webview.postMessage({
                             type: RovoDevProviderMessageType.CheckGitChangesComplete,
                             hasChanges: !isClean,
@@ -846,9 +848,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         let prLink: string | undefined;
         const webview = this._webView!;
         try {
-            if (!prHandler) {
-                throw new Error('Pull Request handler not initialized');
-            }
             if (!commitMessage || !branchName) {
                 throw new Error('Commit message and branch name are required to create a PR');
             }
@@ -882,9 +881,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         const prHandler = this._prHandler;
 
         try {
-            if (!prHandler) {
-                throw new Error('Pull Request handler not initialized');
-            }
             if (!webview) {
                 throw new Error('Webview not initialized');
             }
