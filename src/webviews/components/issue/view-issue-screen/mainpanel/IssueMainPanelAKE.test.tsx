@@ -4,9 +4,9 @@ import React from 'react';
 import { DetailedSiteInfo, Product } from 'src/atlclients/authInfo';
 import { disableConsole } from 'testsutil/console';
 
+import { MentionInfo } from '../../AbstractIssueEditorPage';
 import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
 import { EditorStateProvider } from '../EditorStateContext';
-import { MentionInfo } from '../JiraIssuePage';
 import IssueMainPanel from './IssueMainPanel';
 
 const mockSiteDetails: DetailedSiteInfo = {
@@ -73,7 +73,7 @@ const mockMentionUsers: MentionInfo[] = [
     },
 ];
 
-const mockMentionProvider = new AtlascodeMentionProvider(
+const mockMentionProvider = AtlascodeMentionProvider.init(
     {
         url: '',
         mentionNameResolver: {

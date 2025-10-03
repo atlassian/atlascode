@@ -6,7 +6,7 @@ import {
     ResolvingMentionProvider,
 } from '@atlaskit/mention';
 
-import { MentionInfo } from '../../view-issue-screen/JiraIssuePage';
+import { MentionInfo } from '../../AbstractIssueEditorPage';
 
 export class AtlascodeMentionProvider extends AbstractMentionResource implements ResolvingMentionProvider {
     static #instance: AtlascodeMentionProvider;
