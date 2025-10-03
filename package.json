@@ -1444,7 +1444,7 @@
         "@atlaskit/datetime-picker": "^17.0.13",
         "@atlaskit/dropdown-menu": "^16.3.8",
         "@atlaskit/editor-common": "^110.0.0",
-        "@atlaskit/editor-core": "214.0.1",
+        "@atlaskit/editor-core": "214.2.2",
         "@atlaskit/editor-json-transformer": "^8.27.2",
         "@atlaskit/editor-plugin-insert-block": "^7.0.1",
         "@atlaskit/editor-plugin-list": "^8.0.0",
@@ -1659,8 +1659,7 @@
             "@sentry/browser": "^7.119.2"
         },
         "@atlaskit/editor-common": {
-            "@sentry/browser": "^7.119.2",
-            "@atlaskit/media-viewer": "^52.4.20"
+            "@sentry/browser": "^7.119.2"
         },
         "fetch-mock": {
             "path-to-regexp": "^3.2.0"
@@ -1669,6 +1668,13 @@
             "react": "^18.3.1"
         },
         "react-lazily-render": {
+            "react": "^18.3.1"
+        },
+        "@loomhq/record-sdk": {
+            "@atlaskit/icon": "^28.3.0"
+        },
+        "transition-hook@1.5.2": {
+            "react-dom": "^18.3.1",
             "react": "^18.3.1"
         }
     },
