@@ -14,6 +14,7 @@ import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
 import { AdfAwareContent } from '../../../AdfAwareContent';
 import { RenderedContent } from '../../../RenderedContent';
+import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
 import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
 
@@ -32,6 +33,7 @@ export type IssueCommentComponentProps = {
     isEditingComment: boolean;
     onEditingCommentChange: (editing: boolean) => void;
     isAtlaskitEditorEnabled?: boolean;
+    mentionProvider: AtlascodeMentionProvider;
 };
 const CommentComponent: React.FC<{
     siteDetails: DetailedSiteInfo;
@@ -42,6 +44,7 @@ const CommentComponent: React.FC<{
     fetchUsers: (input: string) => Promise<any[]>;
     isServiceDeskProject?: boolean;
     isAtlaskitEditorEnabled?: boolean;
+    mentionProvider: AtlascodeMentionProvider;
 }> = ({
     siteDetails,
     comment,
@@ -51,6 +54,7 @@ const CommentComponent: React.FC<{
     fetchUsers,
     isServiceDeskProject,
     isAtlaskitEditorEnabled,
+    mentionProvider,
 }) => {
     const [isEditing, setIsEditing] = React.useState(false);
     const [isSaving, setIsSaving] = React.useState(false);
@@ -124,6 +128,7 @@ const CommentComponent: React.FC<{
                                 onContentChange={(content) => {
                                     setCommentText(content);
                                 }}
+                                mentionProvider={Promise.resolve(mentionProvider)}
                             />
                         ) : (
                             <JiraIssueTextAreaEditor
@@ -151,7 +156,7 @@ const CommentComponent: React.FC<{
                             />
                         )
                     ) : isAtlaskitEditorEnabled ? (
-                        <AdfAwareContent content={comment.body} fetchImage={fetchImage} />
+                        <AdfAwareContent content={comment.body} mentionProvider={mentionProvider} />
                     ) : (
                         <RenderedContent html={bodyText} fetchImage={fetchImage} />
                     )}
@@ -175,6 +180,7 @@ const AddCommentComponent: React.FC<{
     setCommentText: (text: string) => void;
     isEditing: boolean;
     setIsEditing: (editing: boolean) => void;
+    mentionProvider: AtlascodeMentionProvider;
 }> = ({
     fetchUsers,
     user,
@@ -185,6 +191,7 @@ const AddCommentComponent: React.FC<{
     setCommentText,
     isEditing,
     setIsEditing,
+    mentionProvider,
 }) => {
     return (
         <Box style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
@@ -231,6 +238,7 @@ const AddCommentComponent: React.FC<{
                             onContentChange={(content) => {
                                 setCommentText(content);
                             }}
+                            mentionProvider={Promise.resolve(mentionProvider)}
                         />
                     </Box>
                 ) : (
@@ -279,6 +287,7 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
     isEditingComment,
     onEditingCommentChange,
     isAtlaskitEditorEnabled,
+    mentionProvider,
 }) => {
     return (
         <Box
@@ -295,6 +304,7 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
                 setCommentText={onCommentTextChange}
                 isEditing={isEditingComment}
                 setIsEditing={onEditingCommentChange}
+                mentionProvider={mentionProvider}
             />
             {comments
                 .sort((a, b) => (a.created > b.created ? -1 : 1))
@@ -309,6 +319,7 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
                         fetchUsers={fetchUsers}
                         isServiceDeskProject={isServiceDeskProject}
                         isAtlaskitEditorEnabled={isAtlaskitEditorEnabled}
+                        mentionProvider={mentionProvider}
                     />
                 ))}
         </Box>
