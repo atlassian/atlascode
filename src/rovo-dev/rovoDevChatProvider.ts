@@ -13,7 +13,7 @@ import {
     ToolPermissionChoice,
 } from './rovoDevApiClientInterfaces';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
-import { RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
+import { RovoDevContextItem, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 
 interface TypedWebview<MessageOut, MessageIn> extends Webview {
@@ -329,15 +329,13 @@ export class RovoDevChatProvider {
 
             case 'user-prompt':
                 if (this._replayInProgress) {
+                    const { text, context } = this.parseUserPromptReplay(response.content || '');
                     this._currentPrompt = {
-                        text: response.content,
+                        text: text,
                         enable_deep_plan: false,
-                        context: [],
+                        context: context,
                     };
-                    return this.signalPromptSent(
-                        { text: response.content, enable_deep_plan: false, context: [] },
-                        true,
-                    );
+                    return this.signalPromptSent({ text, enable_deep_plan: false, context }, true);
                 }
                 return Promise.resolve(false);
 
@@ -541,5 +539,22 @@ export class RovoDevChatProvider {
             content:
                 'The previous response interrupted prematurely because of an error. Continue processing the previous prompt from the point where it was interrupted.',
         });
+    }
+
+    // Rovo Dev CLI inserts context into the response during replay
+    // we need to parse it out to reconstruct the prompt
+    private parseUserPromptReplay(source: string): { text: string; context: RovoDevContextItem[] } {
+        // Let's target the specific pattern from `/replay` to minimize the risk of
+        // accidentally matching something in the user's prompt.
+        const contextRegex =
+            /<context>\nWhen relevant, use the context below to better respond to the message above([\s\S]*?)<\/context>$/g;
+        const contextMatch = contextRegex.exec(source);
+
+        if (!contextMatch) {
+            return { text: source.trim(), context: [] };
+        }
+
+        // TODO: actually parse context here, or fix it on the CLI side
+        return { text: source.replace(contextRegex, '').trim(), context: [] };
     }
 }
