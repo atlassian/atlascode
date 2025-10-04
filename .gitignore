@@ -7,7 +7,13 @@ node_modules
 launch.json
 *.vsix
 .yo-*
+
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
 yarn-error.log
+
 *.pem
 *.crt
 *.p12

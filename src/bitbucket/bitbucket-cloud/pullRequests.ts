@@ -490,8 +490,8 @@ export class CloudPullRequestApi implements PullRequestApi {
             } as any;
         });
 
-        const convertedComments = await Promise.all(
-            comments.map((commentData) => this.convertDataToComment(commentData, pr.site, commitHash)),
+        const convertedComments = comments.map((commentData) =>
+            this.convertDataToComment(commentData, pr.site, commitHash),
         );
 
         const nestedComments = this.toNestedList(convertedComments);
