@@ -13,7 +13,7 @@ import {
     ToolPermissionChoice,
 } from './rovoDevApiClientInterfaces';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
-import { RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
+import { RovoDevContextItem, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 
 interface TypedWebview<MessageOut, MessageIn> extends Webview {
@@ -333,15 +333,13 @@ export class RovoDevChatProvider {
 
             case 'user-prompt':
                 if (this._replayInProgress) {
+                    const { text, context } = this.parseUserPromptReplay(response.content || '');
                     this._currentPrompt = {
-                        text: response.content,
+                        text: text,
                         enable_deep_plan: false,
-                        context: [],
+                        context: context,
                     };
-                    return this.signalPromptSent(
-                        { text: response.content, enable_deep_plan: false, context: [] },
-                        true,
-                    );
+                    return this.signalPromptSent({ text, enable_deep_plan: false, context }, true);
                 }
                 return Promise.resolve(false);
 
@@ -541,5 +539,54 @@ export class RovoDevChatProvider {
             content:
                 'The previous response interrupted prematurely because of an error. Continue processing the previous prompt from the point where it was interrupted.',
         });
+    }
+
+    // Rovo Dev CLI inserts context into the response during replay
+    // we need to parse it out to reconstruct the prompt
+    // TODO: get a proper solution for this from the CLI team :)
+    private parseUserPromptReplay(source: string): { text: string; context: RovoDevContextItem[] } {
+        // Let's target the specific pattern from `/replay` to minimize the risk of
+        // accidentally matching something in the user's prompt.
+        const contextRegex =
+            /<context>\nWhen relevant, use the context below to better respond to the message above([\s\S]*?)<\/context>$/g;
+        const contextMatch = contextRegex.exec(source);
+
+        if (!contextMatch) {
+            return { text: source.trim(), context: [] };
+        }
+
+        const contextContent = contextMatch[1];
+        const context: RovoDevContextItem[] = [];
+
+        // Parse individual file entries within context
+        const fileRegex = /<file path="([^"]+)"[^>]*>\s*([^<]*)\s*<\/file>/g;
+        let fileMatch;
+
+        while ((fileMatch = fileRegex.exec(contextContent)) !== null) {
+            const filePath = fileMatch[1];
+
+            // Parse selection info if available (format: "path" selection="start-end")
+            const selectionMatch = fileMatch[0].match(/selection="(\d+-\d+)"/);
+            let selection: { start: number; end: number } | undefined;
+
+            if (selectionMatch) {
+                const [start, end] = selectionMatch[1].split('-').map(Number);
+                selection = { start, end };
+            }
+
+            // Create context item for each file
+            context.push({
+                isFocus: false,
+                enabled: true,
+                file: {
+                    name: filePath.split('/').pop() || filePath,
+                    absolutePath: filePath,
+                    relativePath: filePath.split('/').pop() || filePath, // Use basename as relative path
+                },
+                selection: selection,
+            });
+        }
+
+        return { text: source.replace(contextRegex, '').trim(), context };
     }
 }
