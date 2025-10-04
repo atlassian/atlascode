@@ -1,3 +1,5 @@
+import { RovoDevToolName } from 'src/rovo-dev/responseParserInterfaces';
+
 import { RovoDevContextItem, TechnicalPlan } from '../../../../src/rovo-dev/rovoDevTypes';
 
 export type ToolReturnMessage =
@@ -18,6 +20,7 @@ export interface DefaultMessage {
 export interface AbstractDialogMessage {
     text: string;
     title?: string;
+    statusCode?: string;
     source: 'RovoDevDialog';
 }
 
@@ -34,8 +37,9 @@ export interface WarningInfoDialogMessage extends AbstractDialogMessage {
 
 export interface ToolPermissionDialogMessage extends AbstractDialogMessage {
     type: 'toolPermissionRequest';
-    toolName: string;
+    toolName: RovoDevToolName;
     toolArgs: string;
+    mcpServer?: string;
     toolCallId: string;
 }
 
@@ -82,7 +86,7 @@ export interface ToolReturnTechnicalPlanMessage {
 }
 
 export interface ToolReturnGenericMessage {
-    tool_name: string;
+    tool_name: RovoDevToolName;
     source: 'ToolReturn' | 'ModifiedFile' | 'RovoDevRetry';
     content: string;
     parsedContent?: object | undefined;

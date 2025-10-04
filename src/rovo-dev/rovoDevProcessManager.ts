@@ -99,16 +99,16 @@ async function getOrAssignPortForWorkspace(): Promise<number> {
 /**
  * Placeholder implementation for Rovo Dev CLI credential storage
  */
-async function getCloudCredentials(): Promise<{ username: string; key: string; host: string } | undefined> {
+async function getCloudCredentials(): Promise<
+    { username: string; key: string; host: string; isStaging: boolean } | undefined
+> {
     try {
         const sites = Container.siteManager.getSitesAvailable(ProductJira);
 
         const promises = sites.map(async (site) => {
-            if (!site.isCloud) {
-                return undefined;
-            }
-
-            if (!site.host.endsWith('.atlassian.net')) {
+            // *.atlassian.net are PROD cloud sites
+            // *.jira-dev.com are Staging cloud sites
+            if (!site.host.endsWith('.atlassian.net') && !site.host.endsWith('.jira-dev.com')) {
                 return undefined;
             }
 
@@ -121,11 +121,14 @@ async function getCloudCredentials(): Promise<{ username: string; key: string; h
                 username: authInfo.username,
                 key: authInfo.password,
                 host: site.host,
+                isStaging: site.host.endsWith('.jira-dev.com'),
             };
         });
 
         const results = (await Promise.all(promises)).filter((result) => result !== undefined);
-        return results.length > 0 ? results[0] : undefined;
+
+        // give priority to staging sites
+        return results.filter((x) => x.isStaging)[0] || results[0];
     } catch (error) {
         RovoDevLogger.error(error, 'Error fetching cloud credentials for Rovo Dev');
         return undefined;
@@ -236,6 +239,11 @@ export abstract class RovoDevProcessManager {
         credentials: CloudCredentials | undefined,
         forceNewInstance?: boolean,
     ) {
+        if (!workspace.workspaceFolders?.length) {
+            await this.rovoDevWebviewProvider.signalRovoDevDisabled('NoWorkspaceOpen');
+            return;
+        }
+
         if (forceNewInstance) {
             this.stopRovoDevInstance();
         } else {
@@ -245,12 +253,12 @@ export abstract class RovoDevProcessManager {
         this.currentCredentials = credentials;
 
         if (!credentials) {
-            await this.sendErrorToChat(this.rovoDevWebviewProvider, new ProcessManagerError('needAuth'));
+            await this.rovoDevWebviewProvider.signalRovoDevDisabled('NeedAuth');
             return;
         }
 
         const rovoDevURIs = GetRovoDevURIs(context);
-        await this.rovoDevWebviewProvider.signalInitializing();
+        await this.rovoDevWebviewProvider.signalInitializing(credentials.host);
 
         try {
             if (!fs.existsSync(rovoDevURIs.RovoDevBinPath)) {
@@ -338,7 +346,7 @@ export abstract class RovoDevProcessManager {
 
     private static async sendErrorToChat(rovoDevWebViewProvider: RovoDevWebviewProvider, error: Error) {
         if (error instanceof ProcessManagerError && error.type === 'needAuth') {
-            await rovoDevWebViewProvider.signalRovoDevDisabled('needAuth');
+            await rovoDevWebViewProvider.signalRovoDevDisabled('NeedAuth');
         } else {
             await rovoDevWebViewProvider.signalProcessFailedToInitialize(error.message);
         }
@@ -386,22 +394,26 @@ class RovoDevTerminalInstance extends Disposable {
                 }
 
                 try {
-                    const { username, key } = credentials;
-                    const siteUrl = `"https://${credentials.host}"`;
+                    const siteUrl = `https://${credentials.host}`;
+                    const shellArgs = ['serve', `${port}`, '--xid', 'rovodev-ide-vscode', '--site-url', siteUrl];
+
+                    if (credentials.isStaging) {
+                        shellArgs.push('--server-env', 'staging');
+                    }
 
                     this.rovoDevTerminal = window.createTerminal({
                         name: 'Rovo Dev',
                         shellPath: this.rovoDevBinPath,
-                        shellArgs: ['serve', `${port}`, '--xid', 'rovodev-ide-vscode', '--site-url', siteUrl],
+                        shellArgs,
                         cwd: this.workspacePath,
                         hideFromUser: true,
                         isTransient: true,
                         iconPath: this.rovoDevIconUri,
                         env: {
                             USER: process.env.USER,
-                            USER_EMAIL: username,
+                            USER_EMAIL: credentials.username,
                             ROVODEV_SANDBOX_ID: Container.appInstanceId,
-                            ...(key ? { USER_API_TOKEN: key } : {}),
+                            ...(credentials.key ? { USER_API_TOKEN: credentials.key } : {}),
                         },
                     });
 
@@ -409,7 +421,7 @@ class RovoDevTerminalInstance extends Disposable {
 
                     // prints a line in the terminal indicating when the process started, and the full command line
                     this.rovoDevTerminal.sendText(
-                        `${format(timeStarted, 'yyyy-MM-dd hh:mm:ss.sss')} | START    | ${this.rovoDevBinPath} serve ${port} --xid rovodev-ide-vscode --site-url ${siteUrl}\r\n`,
+                        `${format(timeStarted, 'yyyy-MM-dd hh:mm:ss.sss')} | START    | ${this.rovoDevBinPath} ${shellArgs.join(' ')}\r\n`,
                         false,
                     );
 

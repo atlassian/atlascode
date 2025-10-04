@@ -15,6 +15,8 @@ import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
 import WorklogForm from '../../WorklogForm';
 import Worklogs from '../../Worklogs';
+import { useEditorState } from '../EditorStateContext';
+import { useEditorForceClose } from '../hooks/useEditorForceClose';
 import { AddContentDropdown } from './AddContentDropDown';
 import { ChildIssuesComponent } from './ChildIssuesComponent';
 import { LinkedIssuesComponent } from './LinkedIssuesComponent';
@@ -78,6 +80,9 @@ const IssueMainPanel: React.FC<Props> = ({
     const [enableLinkedIssues, setEnableLinkedIssues] = React.useState(false);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
     const [isInlineDialogOpen, setIsInlineDialogOpen] = React.useState(false);
+
+    // Use centralized editor state
+    const { openEditor, closeEditor, isEditorActive } = useEditorState();
     // Handle descriptionText - convert ADF object to JSON string for editor input
     const getDescriptionTextForEditor = React.useCallback(() => {
         if (
@@ -91,7 +96,19 @@ const IssueMainPanel: React.FC<Props> = ({
     }, [defaultDescription]);
 
     const [descriptionText, setDescriptionText] = React.useState(() => getDescriptionTextForEditor());
-    const [isEditingDescription, setIsEditingDescription] = React.useState(false);
+    const [localIsEditingDescription, setLocalIsEditingDescription] = React.useState(false);
+    const isEditingDescription = isAtlaskitEditorEnabled ? isEditorActive('description') : localIsEditingDescription;
+
+    // Define editor handlers based on feature flag
+    const openEditorHandler = React.useMemo(
+        () => (isAtlaskitEditorEnabled ? () => openEditor('description') : () => setLocalIsEditingDescription(true)),
+        [isAtlaskitEditorEnabled, openEditor],
+    );
+
+    const closeEditorHandler = React.useMemo(
+        () => (isAtlaskitEditorEnabled ? () => closeEditor('description') : () => setLocalIsEditingDescription(false)),
+        [isAtlaskitEditorEnabled, closeEditor],
+    );
 
     // Update descriptionText when defaultDescription changes (after save)
     React.useEffect(() => {
@@ -99,6 +116,17 @@ const IssueMainPanel: React.FC<Props> = ({
             setDescriptionText(getDescriptionTextForEditor());
         }
     }, [defaultDescription, isEditingDescription, getDescriptionTextForEditor]);
+
+    // Listen for forced editor close events
+    useEditorForceClose(
+        'description',
+        React.useCallback(() => {
+            // Reset description editor state when it's forcibly closed
+            setDescriptionText(getDescriptionTextForEditor());
+            closeEditorHandler();
+        }, [closeEditorHandler, getDescriptionTextForEditor]),
+        isAtlaskitEditorEnabled,
+    );
 
     const handleStatusChange = (issueKey: string, statusName: string) => {
         if (onIssueUpdate) {
@@ -185,11 +213,11 @@ const IssueMainPanel: React.FC<Props> = ({
                                 defaultValue={descriptionText}
                                 onSave={(content) => {
                                     handleInlineEdit(fields['description'], content);
-                                    setIsEditingDescription(false);
+                                    closeEditorHandler();
                                 }}
                                 onCancel={() => {
                                     setDescriptionText(getDescriptionTextForEditor());
-                                    setIsEditingDescription(false);
+                                    closeEditorHandler();
                                 }}
                                 onContentChange={(content) => {
                                     setDescriptionText(content);
@@ -203,11 +231,11 @@ const IssueMainPanel: React.FC<Props> = ({
                                 }}
                                 onSave={(i: string) => {
                                     handleInlineEdit(fields['description'], i);
-                                    setIsEditingDescription(false);
+                                    closeEditorHandler();
                                 }}
                                 onCancel={() => {
                                     setDescriptionText(getDescriptionTextForEditor());
-                                    setIsEditingDescription(false);
+                                    closeEditorHandler();
                                 }}
                                 fetchUsers={fetchUsers}
                                 isDescription
@@ -227,9 +255,7 @@ const IssueMainPanel: React.FC<Props> = ({
                                 display: 'flex',
                                 alignItems: 'flex-start',
                             }}
-                            onClick={() => {
-                                setIsEditingDescription(true);
-                            }}
+                            onClick={openEditorHandler}
                             className="ac-inline-input-view-p"
                         >
                             {isAtlaskitEditorEnabled ? (

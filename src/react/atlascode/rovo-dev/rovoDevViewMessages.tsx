@@ -1,4 +1,5 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
+import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
 import { RovoDevPrompt } from 'src/rovo-dev/rovoDevTypes';
 
 import { FeedbackType } from './feedback-form/FeedbackForm';
@@ -28,7 +29,6 @@ export const enum RovoDevViewResponseType {
     LaunchJiraAuth = 'launchJiraAuth',
     McpConsentChoiceSubmit = 'mcpConsentChoiceSubmit',
     CheckFileExists = 'checkFileExists',
-    GetJiraWorkItems = 'getJiraWorkItems',
     ToolPermissionChoiceSubmit = 'toolPermissionChoiceSubmit',
     YoloModeToggled = 'yoloModeToggled',
 }
@@ -39,7 +39,6 @@ export interface ModifiedFile {
 }
 
 export type McpConsentChoice = 'accept' | 'acceptAll' | 'deny';
-export type ToolPermissionChoice = 'allow' | 'deny';
 
 export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.Refresh>
@@ -69,7 +68,6 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.LaunchJiraAuth>
     | ReducerAction<RovoDevViewResponseType.McpConsentChoiceSubmit, { choice: McpConsentChoice; serverName?: string }>
     | ReducerAction<RovoDevViewResponseType.CheckFileExists, { filePath: string; requestId: string }>
-    | ReducerAction<RovoDevViewResponseType.GetJiraWorkItems>
     | ReducerAction<
           RovoDevViewResponseType.ToolPermissionChoiceSubmit,
           { choice: ToolPermissionChoice; toolCallId: string }

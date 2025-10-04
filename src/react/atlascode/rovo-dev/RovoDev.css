@@ -21,11 +21,15 @@ body {
     max-width: 800px;
 }
 
-#rovoDevLogo > path {
-    fill: #6A9A23;
+.rovoDevChat:not(.debugEnabled) .debugOnly {
+    display: none !important;
 }
 
-.vscode-dark #rovoDevLogo > path {
+#rovoDevLogo > path:first-child {
+    fill: #94C748;  /* it was #6A9A23 */
+}
+
+.vscode-dark #rovoDevLogo > path:first-child {
     fill: #94C748;
 }
 
@@ -168,6 +172,11 @@ body {
 .file-lozenge.file-lozenge-disabled:hover {
     background-color: transparent;
     cursor: not-allowed;
+}
+
+.rovoDevChat pre > code {
+    text-wrap: wrap;
+    overflow-wrap: break-word;
 }
 
 .code-changes-container {
@@ -532,7 +541,7 @@ body {
     display: block;
     overflow-y: auto;
     max-height: 100px;
-    padding: 4px 8px;
+    padding: 4px 0px;
     border-top: 1px solid var(--vscode-panel-border);
 }
 .modified-file-item {
@@ -541,7 +550,7 @@ body {
     align-items: center;
     justify-content: space-between;
     cursor: pointer;
-    padding: 2px 8px;
+    padding: 2px 12px;
     width: 100%;
 }
 
@@ -622,6 +631,8 @@ body {
     gap: 8px;
     padding-top: 8px;
     border: solid 1px var(--vscode-dropdown-border);
+    border-left: none;
+    border-right: none;
     border-bottom: none;
     margin-bottom: -16px;
     padding-bottom: 16px;
@@ -634,7 +645,7 @@ body {
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 0 8px;
+    padding: 0 12px;
 }
 
 .updated-files-header div {
@@ -654,7 +665,7 @@ body {
     background-color: inherit;
     border: none;
     border-radius: 4px;
-    padding: 2px 6px;
+    padding: 2px 12px;
 }
 
 #bordered-button {
@@ -692,8 +703,12 @@ body {
 .input-section-container {
     width: 100%;
     background-color: var(--vscode-sideBar-background);
-    padding: 8px 16px 6px 16px;
+    padding: 8px 0px 6px 0px;
     border-radius: 12px 12px 0 0;
+}
+
+.prompt-container-container {
+    padding: 0px 16px;
 }
 
 .prompt-container {

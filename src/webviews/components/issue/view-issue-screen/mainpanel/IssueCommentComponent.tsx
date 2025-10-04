@@ -16,6 +16,8 @@ import { AdfAwareContent } from '../../../AdfAwareContent';
 import { RenderedContent } from '../../../RenderedContent';
 import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
+import { useEditorState } from '../EditorStateContext';
+import { useEditorForceClose } from '../hooks/useEditorForceClose';
 
 export type IssueCommentComponentProps = {
     siteDetails: DetailedSiteInfo;
@@ -52,7 +54,21 @@ const CommentComponent: React.FC<{
     isServiceDeskProject,
     isAtlaskitEditorEnabled,
 }) => {
-    const [isEditing, setIsEditing] = React.useState(false);
+    const { openEditor, closeEditor, isEditorActive } = useEditorState();
+    const editorId = `edit-comment-${comment.id}` as const;
+    const [localIsEditing, setLocalIsEditing] = React.useState(false);
+    const isEditing = isAtlaskitEditorEnabled ? isEditorActive(editorId) : localIsEditing;
+
+    // Define editor handlers based on feature flag
+    const openEditorHandler = React.useMemo(
+        () => (isAtlaskitEditorEnabled ? () => openEditor(editorId) : () => setLocalIsEditing(true)),
+        [isAtlaskitEditorEnabled, openEditor, editorId],
+    );
+
+    const closeEditorHandler = React.useMemo(
+        () => (isAtlaskitEditorEnabled ? () => closeEditor(editorId) : () => setLocalIsEditing(false)),
+        [isAtlaskitEditorEnabled, closeEditor, editorId],
+    );
     const [isSaving, setIsSaving] = React.useState(false);
     const bodyText = comment.renderedBody ? comment.renderedBody : comment.body;
 
@@ -64,15 +80,19 @@ const CommentComponent: React.FC<{
         }
     }, [comment.body, isEditing]);
 
-    const baseActions: JSX.Element[] = [
-        <CommentAction
-            onClick={() => {
-                setIsEditing(true);
-            }}
-        >
-            Edit
-        </CommentAction>,
-    ];
+    // Listen for forced editor close events
+    useEditorForceClose(
+        editorId,
+        React.useCallback(() => {
+            // Reset comment editor state when it's forcibly closed
+            setCommentText(comment.body);
+            setIsSaving(false);
+            closeEditorHandler();
+        }, [comment.body, closeEditorHandler]),
+        isAtlaskitEditorEnabled,
+    );
+
+    const baseActions: JSX.Element[] = [<CommentAction onClick={openEditorHandler}>Edit</CommentAction>];
 
     const actions =
         comment.author.accountId === siteDetails.userId
@@ -113,13 +133,13 @@ const CommentComponent: React.FC<{
                                 defaultValue={commentText}
                                 onSave={(content) => {
                                     setIsSaving(true);
-                                    setIsEditing(false);
+                                    closeEditorHandler();
                                     onSave(content, comment.id, undefined);
                                 }}
                                 onCancel={() => {
                                     setCommentText(comment.body);
                                     setIsSaving(false);
-                                    setIsEditing(false);
+                                    closeEditorHandler();
                                 }}
                                 onContentChange={(content) => {
                                     setCommentText(content);
@@ -133,17 +153,17 @@ const CommentComponent: React.FC<{
                                 }}
                                 onSave={() => {
                                     setIsSaving(true);
-                                    setIsEditing(false);
+                                    closeEditorHandler();
                                     onSave(commentText, comment.id, undefined);
                                 }}
                                 onCancel={() => {
                                     setIsSaving(false);
-                                    setIsEditing(false);
+                                    closeEditorHandler();
                                     setCommentText(comment.body);
                                 }}
                                 onInternalCommentSave={() => {
                                     setIsSaving(false);
-                                    setIsEditing(false);
+                                    closeEditorHandler();
                                     onSave(commentText, comment.id, JsdInternalCommentVisibility);
                                 }}
                                 fetchUsers={fetchUsers}
@@ -186,6 +206,42 @@ const AddCommentComponent: React.FC<{
     isEditing,
     setIsEditing,
 }) => {
+    const { openEditor, closeEditor } = useEditorState();
+
+    // Define editor handlers based on feature flag
+    const openEditorHandler = React.useMemo(
+        () =>
+            isAtlaskitEditorEnabled
+                ? () => {
+                      openEditor('add-comment');
+                      setIsEditing(true);
+                  }
+                : () => setIsEditing(true),
+        [isAtlaskitEditorEnabled, openEditor, setIsEditing],
+    );
+
+    const closeEditorHandler = React.useMemo(
+        () =>
+            isAtlaskitEditorEnabled
+                ? () => {
+                      closeEditor('add-comment');
+                      setIsEditing(false);
+                  }
+                : () => setIsEditing(false),
+        [isAtlaskitEditorEnabled, closeEditor, setIsEditing],
+    );
+
+    // Listen for forced editor close events
+    useEditorForceClose(
+        'add-comment',
+        React.useCallback(() => {
+            // Reset add comment editor state when it's forcibly closed
+            setCommentText('');
+            closeEditorHandler();
+        }, [closeEditorHandler, setCommentText]),
+        isAtlaskitEditorEnabled,
+    );
+
     return (
         <Box style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
             <Box
@@ -208,9 +264,7 @@ const AddCommentComponent: React.FC<{
                                 color: 'var(--vscode-input-placeholderForeground) !important',
                             },
                         }}
-                        onClick={() => {
-                            setIsEditing(true);
-                        }}
+                        onClick={openEditorHandler}
                         placeholder="Add a comment..."
                     />
                 ) : isAtlaskitEditorEnabled ? (
@@ -221,12 +275,12 @@ const AddCommentComponent: React.FC<{
                                 if (content && content.trim() !== '') {
                                     onCreate(content, undefined);
                                     setCommentText('');
-                                    setIsEditing(false);
+                                    closeEditorHandler();
                                 }
                             }}
                             onCancel={() => {
                                 setCommentText('');
-                                setIsEditing(false);
+                                closeEditorHandler();
                             }}
                             onContentChange={(content) => {
                                 setCommentText(content);
@@ -241,21 +295,19 @@ const AddCommentComponent: React.FC<{
                             if (i !== '') {
                                 onCreate(i, undefined);
                                 setCommentText('');
-                                setIsEditing(false);
+                                closeEditorHandler();
                             }
                         }}
                         onInternalCommentSave={() => {
                             onCreate(commentText, JsdInternalCommentVisibility);
                             setCommentText('');
-                            setIsEditing(false);
+                            closeEditorHandler();
                         }}
                         onCancel={() => {
                             setCommentText('');
-                            setIsEditing(false);
+                            closeEditorHandler();
                         }}
-                        onEditorFocus={() => {
-                            setIsEditing(true);
-                        }}
+                        onEditorFocus={openEditorHandler}
                         fetchUsers={fetchUsers}
                         isServiceDeskProject={isServiceDeskProject}
                     />

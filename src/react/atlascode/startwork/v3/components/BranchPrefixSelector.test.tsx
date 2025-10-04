@@ -53,4 +53,35 @@ describe('BranchPrefixSelector', () => {
 
         expect(screen.getByText('Branch prefix')).toBeTruthy();
     });
+
+    it('should render with custom prefixes when no branch types', () => {
+        const repoWithoutBranchTypes = {
+            ...mockRepoData,
+            branchTypes: [],
+        };
+
+        render(
+            <BranchPrefixSelector
+                selectedRepository={repoWithoutBranchTypes}
+                selectedBranchType={{ kind: 'hotfix', prefix: 'hotfix/' }}
+                customPrefixes={['hotfix', 'chore']}
+                onBranchTypeChange={jest.fn()}
+            />,
+        );
+
+        expect(screen.getByText('Branch prefix')).toBeTruthy();
+    });
+
+    it('should render with both branch types and custom prefixes', () => {
+        render(
+            <BranchPrefixSelector
+                selectedRepository={mockRepoData}
+                selectedBranchType={{ kind: 'Feature', prefix: 'feature/' }}
+                customPrefixes={['hotfix', 'chore']}
+                onBranchTypeChange={jest.fn()}
+            />,
+        );
+
+        expect(screen.getByText('Branch prefix')).toBeTruthy();
+    });
 });

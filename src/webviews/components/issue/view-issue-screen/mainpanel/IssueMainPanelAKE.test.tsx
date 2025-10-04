@@ -4,6 +4,7 @@ import React from 'react';
 import { DetailedSiteInfo, Product } from 'src/atlclients/authInfo';
 import { disableConsole } from 'testsutil/console';
 
+import { EditorStateProvider } from '../EditorStateContext';
 import IssueMainPanel from './IssueMainPanel';
 
 const mockSiteDetails: DetailedSiteInfo = {
@@ -50,6 +51,11 @@ const mockOnFetchIssues = jest.fn();
 const mockFetchUsers = jest.fn();
 const mockFetchImage = jest.fn();
 
+// Helper function to wrap components with EditorStateProvider for testing
+const renderWithEditorProvider = (component: React.ReactElement) => {
+    return render(<EditorStateProvider>{component}</EditorStateProvider>);
+};
+
 describe('IssueMainPanel with Atlaskit Editor', () => {
     beforeAll(() => {
         disableConsole('warn', 'error');
@@ -57,7 +63,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
 
     it('renders the main panel', async () => {
         await act(() =>
-            render(
+            renderWithEditorProvider(
                 <IssueMainPanel
                     fields={mockFields}
                     fieldValues={mockFieldValues}
@@ -83,7 +89,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
 
     it('renders editing description area', async () => {
         await act(() =>
-            render(
+            renderWithEditorProvider(
                 <IssueMainPanel
                     fields={mockFields}
                     fieldValues={mockFieldValues}

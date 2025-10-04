@@ -17,7 +17,11 @@ jest.mock('vscode', () => {
                 scheme: 'file',
                 path,
             })),
-            parse: jest.fn(),
+            parse: jest.fn().mockImplementation((path) => ({
+                fsPath: path,
+                scheme: 'file',
+                path,
+            })),
         },
         ViewColumn: {
             Active: 1,
@@ -27,6 +31,21 @@ jest.mock('vscode', () => {
         WorkspaceEdit: jest.fn().mockImplementation(() => ({
             insert: jest.fn(),
         })),
+        workspace: {
+            getWorkspaceFolder: jest.fn().mockReturnValue({
+                uri: {
+                    fsPath: '/test',
+                },
+            }),
+            getWorkspaceFolders: jest.fn().mockReturnValue([]),
+            getConfiguration: jest.fn().mockReturnValue({
+                get: jest.fn().mockReturnValue(undefined),
+            }),
+            textDocuments: {
+                find: jest.fn(),
+            },
+            asRelativePath: jest.fn().mockImplementation((path) => path),
+        },
     };
 });
 

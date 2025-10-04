@@ -1,3 +1,4 @@
+import { emptyTransition } from '@atlassianlabs/jira-pi-common-models';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 
@@ -173,5 +174,52 @@ describe('UpdateStatusSection', () => {
         expect(screen.getByText('To Do')).toBeDefined();
         expect(screen.getByRole('checkbox')).toBeDefined();
         expect(screen.getByRole('combobox')).toBeDefined();
+    });
+
+    it('should select transition with "progress" in name as default', () => {
+        const mockStateWithProgress = {
+            ...mockState,
+            issue: {
+                ...mockState.issue,
+                transitions: [
+                    {
+                        id: 'transition-1',
+                        name: 'Start Progress',
+                        to: {
+                            id: '2',
+                            name: 'In Progress',
+                            statusCategory: { key: 'indeterminate', colorName: 'yellow' },
+                        },
+                        isInitial: false,
+                    },
+                    {
+                        id: 'transition-2',
+                        name: 'Skip to Done',
+                        to: { id: '3', name: 'Done', statusCategory: { key: 'done', colorName: 'green' } },
+                        isInitial: false,
+                    },
+                ],
+            },
+        };
+
+        const mockFormStateWithEmptyTransition = {
+            ...mockFormState,
+            selectedTransition: emptyTransition,
+        };
+
+        render(
+            <UpdateStatusSection
+                {...mockProps}
+                state={mockStateWithProgress}
+                formState={mockFormStateWithEmptyTransition}
+            />,
+        );
+
+        expect(mockFormActions.onSelectedTransitionChange).toHaveBeenCalledWith(
+            expect.objectContaining({
+                id: 'transition-1',
+                to: expect.objectContaining({ name: 'In Progress' }),
+            }),
+        );
     });
 });

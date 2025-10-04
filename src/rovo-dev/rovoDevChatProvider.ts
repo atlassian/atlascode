@@ -1,12 +1,19 @@
+import { Container } from 'src/container';
 import { RovoDevLogger } from 'src/logger';
-import { RovoDevViewResponse, ToolPermissionChoice } from 'src/react/atlascode/rovo-dev/rovoDevViewMessages';
+import { RovoDevViewResponse } from 'src/react/atlascode/rovo-dev/rovoDevViewMessages';
 import { v4 } from 'uuid';
 import { Event, Webview } from 'vscode';
 
-import { RovoDevResponse, RovoDevResponseParser } from './responseParser';
-import { RovoDevApiClient, RovoDevChatRequest, RovoDevChatRequestContextFileEntry } from './rovoDevApiClient';
+import { RovoDevResponseParser } from './responseParser';
+import { RovoDevResponse } from './responseParserInterfaces';
+import { RovoDevApiClient } from './rovoDevApiClient';
+import {
+    RovoDevChatRequest,
+    RovoDevChatRequestContextFileEntry,
+    ToolPermissionChoice,
+} from './rovoDevApiClientInterfaces';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
-import { RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
+import { RovoDevContextItem, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 
 interface TypedWebview<MessageOut, MessageIn> extends Webview {
@@ -17,6 +24,8 @@ interface TypedWebview<MessageOut, MessageIn> extends Webview {
 type StreamingApi = 'chat' | 'replay';
 
 export class RovoDevChatProvider {
+    private readonly isDebugging = Container.isDebugging;
+
     private _pendingToolConfirmation: Record<string, ToolPermissionChoice | 'undecided'> = {};
     private _pendingToolConfirmationLeft = 0;
     private _pendingPrompt: RovoDevPrompt | undefined;
@@ -25,6 +34,10 @@ export class RovoDevChatProvider {
     private _webView: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse> | undefined;
 
     private _replayInProgress = false;
+
+    private get isDebugPanelEnabled() {
+        return Container.config.rovodev.debugPanelEnabled;
+    }
 
     private _yoloMode = false;
     public get yoloMode() {
@@ -183,7 +196,7 @@ export class RovoDevChatProvider {
                 const cancelResponse = await this._rovoDevApiClient.cancel();
                 success = cancelResponse.cancelled || cancelResponse.message === 'No chat in progress';
             } catch {
-                await this.processError(new Error('Failed to cancel the current response. Please try again.'), false);
+                await this.processError(new Error('Failed to cancel the current response. Please try again.'));
                 success = false;
             }
 
@@ -283,67 +296,59 @@ export class RovoDevChatProvider {
         const fireTelemetry = sourceApi === 'chat';
         const webview = this._webView!;
 
+        if (
+            fireTelemetry &&
+            response.event_kind === 'tool-return' &&
+            response.tool_name === 'create_technical_plan' &&
+            response.parsedContent
+        ) {
+            this._telemetryProvider.perfLogger.promptTechnicalPlanReceived(this._currentPromptId);
+
+            const parsedContent = response.parsedContent as TechnicalPlan;
+            const stepsCount = parsedContent.logicalChanges.length;
+            const filesCount = parsedContent.logicalChanges.reduce((p, c) => p + c.filesToChange.length, 0);
+            const questionsCount = parsedContent.logicalChanges.reduce(
+                (p, c) => p + c.filesToChange.reduce((p2, c2) => p2 + (c2.clarifyingQuestionIfAny ? 1 : 0), 0),
+                0,
+            );
+
+            this._telemetryProvider.fireTelemetryEvent(
+                'rovoDevTechnicalPlanningShownEvent',
+                this._currentPromptId,
+                stepsCount,
+                filesCount,
+                questionsCount,
+            );
+        }
+
         switch (response.event_kind) {
             case 'text':
-                return webview.postMessage({
-                    type: RovoDevProviderMessageType.Response,
-                    dataObject: response,
-                });
-
             case 'tool-call':
-                return webview.postMessage({
-                    type: RovoDevProviderMessageType.ToolCall,
-                    dataObject: response,
-                });
-
             case 'tool-return':
-                if (fireTelemetry && response.tool_name === 'create_technical_plan' && response.parsedContent) {
-                    this._telemetryProvider.perfLogger.promptTechnicalPlanReceived(this._currentPromptId);
-
-                    const parsedContent = response.parsedContent as TechnicalPlan;
-                    const stepsCount = parsedContent.logicalChanges.length;
-                    const filesCount = parsedContent.logicalChanges.reduce((p, c) => p + c.filesToChange.length, 0);
-                    const questionsCount = parsedContent.logicalChanges.reduce(
-                        (p, c) => p + c.filesToChange.reduce((p2, c2) => p2 + (c2.clarifyingQuestionIfAny ? 1 : 0), 0),
-                        0,
-                    );
-
-                    this._telemetryProvider.fireTelemetryEvent(
-                        'rovoDevTechnicalPlanningShownEvent',
-                        this._currentPromptId,
-                        stepsCount,
-                        filesCount,
-                        questionsCount,
-                    );
-                }
-                return webview.postMessage({
-                    type: RovoDevProviderMessageType.ToolReturn,
-                    dataObject: response,
-                });
-
             case 'retry-prompt':
                 return webview.postMessage({
-                    type: RovoDevProviderMessageType.ToolReturn,
-                    dataObject: response,
+                    type: RovoDevProviderMessageType.RovoDevResponseMessage,
+                    message: response,
                 });
 
             case 'user-prompt':
                 if (this._replayInProgress) {
+                    const { text, context } = this.parseUserPromptReplay(response.content || '');
                     this._currentPrompt = {
-                        text: response.content,
+                        text: text,
                         enable_deep_plan: false,
-                        context: [],
+                        context: context,
                     };
-                    return this.signalPromptSent(
-                        { text: response.content, enable_deep_plan: false, context: [] },
-                        true,
-                    );
+                    return this.signalPromptSent({ text, enable_deep_plan: false, context }, true);
                 }
                 return Promise.resolve(false);
 
+            case '_parsing_error':
+                return this.processError(response.error, { showOnlyInDebug: true });
+
             case 'exception':
                 const msg = response.title ? `${response.title} - ${response.message}` : response.message;
-                return this.processError(new Error(msg), false);
+                return this.processError(new Error(msg));
 
             case 'warning':
                 return webview.postMessage({
@@ -391,7 +396,8 @@ export class RovoDevChatProvider {
                                 source: 'RovoDevDialog',
                                 toolName: tool.tool_name,
                                 toolArgs: tool.args,
-                                text: 'To do this I will need to',
+                                mcpServer: tool.mcp_server,
+                                text: '',
                                 toolCallId: tool.tool_call_id,
                             },
                         });
@@ -450,35 +456,43 @@ export class RovoDevChatProvider {
                 await func(this._rovoDevApiClient);
             } catch (error) {
                 // the error is retriable only when it happens during the streaming of a 'chat' response
-                await this.processError(error, sourceApi === 'chat');
+                await this.processError(error, { isRetriable: sourceApi === 'chat' });
             }
         } else {
-            await this.processError(new Error('RovoDev client not initialized'), false);
+            await this.processError(new Error('RovoDev client not initialized'));
         }
 
         // whatever happens, at the end of the streaming API we need to tell the webview
         // that the generation of the response has finished
         await webview.postMessage({
             type: RovoDevProviderMessageType.CompleteMessage,
-            isReplay: sourceApi === 'replay',
         });
     }
 
-    private processError(error: Error, isRetriable: boolean, isProcessTerminated?: boolean) {
+    private async processError(
+        error: Error,
+        {
+            isRetriable,
+            isProcessTerminated,
+            showOnlyInDebug,
+        }: { isRetriable?: boolean; isProcessTerminated?: boolean; showOnlyInDebug?: boolean } = {},
+    ) {
         RovoDevLogger.error(error);
 
-        const webview = this._webView!;
-        return webview.postMessage({
-            type: RovoDevProviderMessageType.ShowDialog,
-            message: {
-                type: 'error',
-                text: error.message,
-                source: 'RovoDevDialog',
-                isRetriable,
-                isProcessTerminated,
-                uid: v4(),
-            },
-        });
+        if (!showOnlyInDebug || this.isDebugging || this.isDebugPanelEnabled) {
+            const webview = this._webView!;
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.ShowDialog,
+                message: {
+                    type: 'error',
+                    text: error.message,
+                    source: 'RovoDevDialog',
+                    isRetriable,
+                    isProcessTerminated,
+                    uid: v4(),
+                },
+            });
+        }
     }
 
     private async signalPromptSent({ text, enable_deep_plan, context }: RovoDevPrompt, echoMessage: boolean) {
@@ -525,5 +539,54 @@ export class RovoDevChatProvider {
             content:
                 'The previous response interrupted prematurely because of an error. Continue processing the previous prompt from the point where it was interrupted.',
         });
+    }
+
+    // Rovo Dev CLI inserts context into the response during replay
+    // we need to parse it out to reconstruct the prompt
+    // TODO: get a proper solution for this from the CLI team :)
+    private parseUserPromptReplay(source: string): { text: string; context: RovoDevContextItem[] } {
+        // Let's target the specific pattern from `/replay` to minimize the risk of
+        // accidentally matching something in the user's prompt.
+        const contextRegex =
+            /<context>\nWhen relevant, use the context below to better respond to the message above([\s\S]*?)<\/context>$/g;
+        const contextMatch = contextRegex.exec(source);
+
+        if (!contextMatch) {
+            return { text: source.trim(), context: [] };
+        }
+
+        const contextContent = contextMatch[1];
+        const context: RovoDevContextItem[] = [];
+
+        // Parse individual file entries within context
+        const fileRegex = /<file path="([^"]+)"[^>]*>\s*([^<]*)\s*<\/file>/g;
+        let fileMatch;
+
+        while ((fileMatch = fileRegex.exec(contextContent)) !== null) {
+            const filePath = fileMatch[1];
+
+            // Parse selection info if available (format: "path" selection="start-end")
+            const selectionMatch = fileMatch[0].match(/selection="(\d+-\d+)"/);
+            let selection: { start: number; end: number } | undefined;
+
+            if (selectionMatch) {
+                const [start, end] = selectionMatch[1].split('-').map(Number);
+                selection = { start, end };
+            }
+
+            // Create context item for each file
+            context.push({
+                isFocus: false,
+                enabled: true,
+                file: {
+                    name: filePath.split('/').pop() || filePath,
+                    absolutePath: filePath,
+                    relativePath: filePath.split('/').pop() || filePath, // Use basename as relative path
+                },
+                selection: selection,
+            });
+        }
+
+        return { text: source.replace(contextRegex, '').trim(), context };
     }
 }

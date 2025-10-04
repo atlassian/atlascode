@@ -1,4 +1,6 @@
 import {
+    apiTokenNudgeClickedEvent,
+    apiTokenRetainedEvent,
     authenticateButtonEvent,
     authenticatedEvent,
     bbIssuesPaginationEvent,
@@ -17,6 +19,9 @@ import {
     installedEvent,
     issueCommentEvent,
     issueCreatedEvent,
+    issueSuggestionFailedEvent,
+    issueSuggestionGeneratedEvent,
+    issueSuggestionSettingsChangeEvent,
     issueTransitionedEvent,
     issueUpdatedEvent,
     issueUrlCopiedEvent,
@@ -49,6 +54,7 @@ import {
 import { AnalyticsClient } from './analytics-node-client/src/client.min.js';
 import { FeedbackSentEvent, UIErrorInfo } from './analyticsTypes';
 import { DetailedSiteInfo, Product, SiteInfo } from './atlclients/authInfo';
+import { IssueSuggestionSettings } from './config/model';
 import { AnalyticsApi } from './lib/analyticsApi';
 import { QuickFlowAnalyticsEvent } from './onboarding/quickFlow/types';
 
@@ -350,5 +356,30 @@ export class VSCAnalyticsApi implements AnalyticsApi {
         return feedbackSentEvent(event).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
+    }
+
+    async fireIssueSuggestionGeneratedEvent() {
+        const event = await issueSuggestionGeneratedEvent();
+        this._analyticsClient.sendTrackEvent(event);
+    }
+
+    async fireIssueSuggestionFailedEvent({ error }: { error: string }) {
+        const event = await issueSuggestionFailedEvent(error);
+        this._analyticsClient.sendTrackEvent(event);
+    }
+
+    async fireIssueSuggestionSettingsChangeEvent(newSettings: IssueSuggestionSettings) {
+        const event = await issueSuggestionSettingsChangeEvent(newSettings);
+        this._analyticsClient.sendTrackEvent(event);
+    }
+
+    async fireApiTokenNudgeClickedEvent({ source }: { source: string }) {
+        const event = await apiTokenNudgeClickedEvent(source);
+        this._analyticsClient.sendTrackEvent(event);
+    }
+
+    async fireApiTokenRetainedEvent() {
+        const event = await apiTokenRetainedEvent();
+        this._analyticsClient.sendTrackEvent(event);
     }
 }

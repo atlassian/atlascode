@@ -46,7 +46,7 @@
     ],
     "main": "./build/extension/extension",
     "rovoDev": {
-        "version": "0.11.24"
+        "version": "0.12.0"
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
@@ -128,7 +128,7 @@
                     "light": "resources/light/add.svg"
                 },
                 "category": "Rovo Dev",
-                "enablement": "atlascode:rovoDevEnabled"
+                "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
             },
             {
                 "command": "atlascode.rovodev.showTerminal",
@@ -515,7 +515,7 @@
                 {
                     "id": "atlascode-rovo-dev",
                     "title": "Rovo Dev",
-                    "icon": "resources/light/rovodev-icon.svg"
+                    "icon": "resources/rovodev-sidebar-icon.svg"
                 }
             ]
         },
@@ -621,7 +621,7 @@
             "view/title": [
                 {
                     "command": "atlascode.rovodev.newChatSession",
-                    "when": "view == atlascode.views.rovoDev.webView",
+                    "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
                     "group": "navigation@1"
                 },
                 {
@@ -843,7 +843,7 @@
                 },
                 {
                     "command": "atlascode.rovodev.newChatSession",
-                    "when": "atlascode:rovoDevEnabled"
+                    "when": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
                 },
                 {
                     "command": "atlascode.rovodev.showTerminal",
