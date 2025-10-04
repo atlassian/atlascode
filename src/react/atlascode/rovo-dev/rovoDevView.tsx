@@ -136,17 +136,13 @@ const RovoDevView: React.FC = () => {
         [dispatch, removeModifiedFileToolReturns],
     );
 
-    const finalizeResponse = useCallback(() => {
-        setPendingToolCallMessage('');
-        setCurrentState({ state: 'WaitingForPrompt' });
-    }, []);
-
     const clearChatHistory = useCallback(() => {
-        setHistory([]);
         keepFiles(totalModifiedFiles);
+        setHistory([]);
         setTotalModifiedFiles([]);
         setIsDeepPlanCreated(false);
         setIsFeedbackFormVisible(false);
+        setPendingToolCallMessage('');
     }, [keepFiles, totalModifiedFiles]);
 
     const handleAppendModifiedFileToolReturns = useCallback((toolReturn: ToolReturnGenericMessage) => {
@@ -239,8 +235,9 @@ const RovoDevView: React.FC = () => {
                         currentState.state === 'ExecutingPlan' ||
                         currentState.state === 'CancellingResponse'
                     ) {
-                        finalizeResponse();
+                        setCurrentState({ state: 'WaitingForPrompt' });
                     }
+                    setPendingToolCallMessage('');
                     setModalDialogs([]);
                     break;
 
@@ -262,7 +259,6 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.ClearChat:
                     clearChatHistory();
-                    setPendingToolCallMessage('');
                     break;
 
                 case RovoDevProviderMessageType.ProviderReady:
@@ -322,13 +318,7 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.RovoDevDisabled:
-                    if (
-                        currentState.state === 'GeneratingResponse' ||
-                        currentState.state === 'ExecutingPlan' ||
-                        currentState.state === 'CancellingResponse'
-                    ) {
-                        finalizeResponse();
-                    }
+                    clearChatHistory();
 
                     if (event.reason === 'EntitlementCheckFailed') {
                         setCurrentState({
@@ -411,7 +401,7 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [currentState.state, handleAppendResponse, clearChatHistory, finalizeResponse],
+        [currentState.state, handleAppendResponse, clearChatHistory],
     );
 
     const { postMessage, postMessagePromise } = useMessagingApi<
