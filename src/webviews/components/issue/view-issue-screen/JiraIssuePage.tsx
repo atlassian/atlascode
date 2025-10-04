@@ -26,7 +26,9 @@ import {
     CommonEditorPageEmit,
     CommonEditorViewState,
     emptyCommonEditorState,
+    MentionInfo,
 } from '../AbstractIssueEditorPage';
+import { AtlascodeMentionProvider } from '../common/AtlaskitEditor/AtlascodeMentionsProvider';
 import NavItem from '../NavItem';
 import PullRequests from '../PullRequests';
 import { EditorStateProvider } from './EditorStateContext';
@@ -63,10 +65,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     private advancedSidebarFields: FieldUI[] = [];
     private advancedMainFields: FieldUI[] = [];
     private attachingInProgress = false;
+    private mentionProvider: AtlascodeMentionProvider;
 
     constructor(props: any) {
         super(props);
         this.state = emptyState;
+        this.mentionProvider = this.getMentionProvider();
     }
 
     // TODO: proper error handling in webviews :'(
@@ -168,14 +172,15 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
     };
 
-    fetchUsers = (input: string) => {
-        const apiVersion = this.getApiVersion();
-        const userSearchUrl = this.state.siteDetails.isCloud
-            ? `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?query=`
-            : `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?username=`;
-
-        return this.loadSelectOptions(input, userSearchUrl);
-    };
+    fetchAndTransformUsers = async (input: string, accountId?: string): Promise<MentionInfo[]> =>
+        (await this.fetchUsers(input, accountId)).map((user) => {
+            return {
+                displayName: user.displayName,
+                avatarUrl: user.avatarUrls?.['48x48'],
+                mention: this.state.siteDetails.isCloud ? `[~accountid:${user.accountId}]` : `[~${user.name}]`,
+                accountId: user.accountId,
+            };
+        });
 
     protected override handleInlineEdit = async (field: FieldUI, newValue: any) => {
         switch (field.uiType) {
@@ -620,18 +625,11 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         await this.loadIssueOptions(this.state.fields['issuelinks'] as SelectFieldUI, input)
                     }
                     onDelete={this.handleDeleteIssuelink}
-                    fetchUsers={async (input: string) =>
-                        (await this.fetchUsers(input)).map((user) => ({
-                            displayName: user.displayName,
-                            avatarUrl: user.avatarUrls?.['48x48'],
-                            mention: this.state.siteDetails.isCloud
-                                ? `[~accountid:${user.accountId}]`
-                                : `[~${user.name}]`,
-                        }))
-                    }
+                    fetchUsers={this.fetchAndTransformUsers}
                     fetchImage={(img) => this.fetchImage(img)}
                     isAtlaskitEditorEnabled={this.state.isAtlaskitEditorEnabled}
                     onIssueUpdate={this.handleChildIssueUpdate}
+                    mentionProvider={this.mentionProvider}
                 />
                 {this.advancedMain()}
                 {this.state.fields['comment'] && (
@@ -643,15 +641,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             siteDetails={this.state.siteDetails}
                             onCreate={this.handleCreateComment}
                             onSave={this.handleUpdateComment}
-                            fetchUsers={async (input: string) =>
-                                (await this.fetchUsers(input)).map((user) => ({
-                                    displayName: user.displayName,
-                                    avatarUrl: user.avatarUrls?.['48x48'],
-                                    mention: this.state.siteDetails.isCloud
-                                        ? `[~accountid:${user.accountId}]`
-                                        : `[~${user.name}]`,
-                                }))
-                            }
+                            fetchUsers={this.fetchAndTransformUsers}
                             fetchImage={(img) => this.fetchImage(img)}
                             onDelete={this.handleDeleteComment}
                             isServiceDeskProject={
@@ -663,6 +653,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             onCommentTextChange={this.handleCommentTextChange}
                             isEditingComment={this.state.isEditingComment}
                             onEditingCommentChange={this.handleCommentEditingChange}
+                            mentionProvider={this.mentionProvider}
                         />
                     </div>
                 )}

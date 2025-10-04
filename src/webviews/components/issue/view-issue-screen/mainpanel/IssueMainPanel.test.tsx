@@ -4,6 +4,7 @@ import React from 'react';
 import { DetailedSiteInfo, Product } from 'src/atlclients/authInfo';
 import { disableConsole } from 'testsutil/console';
 
+import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
 import { EditorStateProvider } from '../EditorStateContext';
 import IssueMainPanel from './IssueMainPanel';
 
@@ -55,6 +56,8 @@ const mockFetchImage = jest.fn();
 const renderWithEditorProvider = (component: React.ReactElement) => {
     return render(<EditorStateProvider>{component}</EditorStateProvider>);
 };
+// Mock mention provider for regular tests
+const mockMentionProvider = AtlascodeMentionProvider.init({ url: '' }, jest.fn().mockResolvedValue([]));
 
 describe('IssueMainPanel', () => {
     beforeAll(() => {
@@ -80,6 +83,7 @@ describe('IssueMainPanel', () => {
                     fetchUsers={mockFetchUsers}
                     fetchImage={mockFetchImage}
                     isAtlaskitEditorEnabled={false}
+                    mentionProvider={mockMentionProvider}
                 />,
             ),
         );
@@ -106,6 +110,7 @@ describe('IssueMainPanel', () => {
                     fetchUsers={mockFetchUsers}
                     fetchImage={mockFetchImage}
                     isAtlaskitEditorEnabled={false}
+                    mentionProvider={mockMentionProvider}
                 />,
             ),
         );

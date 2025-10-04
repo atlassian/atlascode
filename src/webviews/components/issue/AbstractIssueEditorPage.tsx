@@ -4,6 +4,7 @@ import { Checkbox } from '@atlaskit/checkbox';
 import { DatePicker, DateTimePicker } from '@atlaskit/datetime-picker';
 import { CheckboxField, ErrorMessage, Field, Fieldset, HelperMessage } from '@atlaskit/form';
 import Lozenge from '@atlaskit/lozenge';
+import { MentionNameStatus } from '@atlaskit/mention';
 import { RadioGroup } from '@atlaskit/radio';
 import Select, { AsyncCreatableSelect, AsyncSelect, CreatableSelect } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
@@ -54,6 +55,7 @@ import { chain } from '../fieldValidators';
 import * as SelectFieldHelper from '../selectFieldHelper';
 import { WebviewComponent } from '../WebviewComponent';
 import { AttachmentForm } from './AttachmentForm';
+import { AtlascodeMentionProvider } from './common/AtlaskitEditor/AtlascodeMentionsProvider';
 import AtlaskitEditor from './common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from './common/JiraIssueTextArea';
 import { EditRenderedTextArea } from './EditRenderedTextArea';
@@ -61,6 +63,13 @@ import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import InlineSubtaskEditor from './InlineSubtaskEditor';
 import { ParticipantList } from './ParticipantList';
 import { TextAreaEditor } from './TextAreaEditor';
+
+export type MentionInfo = {
+    displayName: string;
+    avatarUrl: string;
+    mention: string;
+    accountId: string;
+};
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
@@ -119,13 +128,67 @@ export abstract class AbstractIssueEditorPage<
     ES extends CommonEditorViewState,
 > extends WebviewComponent<EA, ER, EP, ES> {
     abstract getProjectKey(): string;
-    abstract fetchUsers: (input: string) => Promise<any[]>;
+
+    protected abstract fetchAndTransformUsers: (input: string, accountId?: string) => Promise<MentionInfo[]>;
 
     protected abstract getApiVersion(): string;
+
+    protected getMentionProvider() {
+        return AtlascodeMentionProvider.init(
+            {
+                url: '',
+                mentionNameResolver: {
+                    lookupName: async (id: string) => {
+                        const accountId = id.split('accountid:')[1];
+                        if (!accountId) {
+                            return {
+                                id,
+                                name: 'Unknown User',
+                                status: MentionNameStatus.UNKNOWN,
+                            };
+                        }
+
+                        const users = await this.fetchAndTransformUsers('', accountId);
+                        if (users.length === 0) {
+                            return {
+                                id,
+                                name: 'Unknown User',
+                                status: MentionNameStatus.UNKNOWN,
+                            };
+                        }
+                        const resolvedMention = {
+                            id,
+                            name: users[0].displayName,
+                            status: MentionNameStatus.OK,
+                        };
+                        return resolvedMention;
+                    },
+                    cacheName: (_id: string, _name: string) => {
+                        // currently this method is never called by Atlaskit. So it is implemented only to satisfy the interface
+                    },
+                },
+            },
+            this.fetchAndTransformUsers,
+        );
+    }
+
+    protected fetchUsers = (input: string, accountId?: string) => {
+        const apiVersion = this.getApiVersion();
+        let userSearchUrl;
+        if (accountId) {
+            userSearchUrl = `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?accountId=${accountId}`;
+        } else {
+            userSearchUrl = this.state.siteDetails.isCloud
+                ? `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?query=`
+                : `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?username=`;
+        }
+        return this.loadSelectOptions(input, userSearchUrl);
+    };
 
     protected handleInlineEdit = (field: FieldUI, newValue: any): Promise<void> => {
         return Promise.resolve();
     };
+
     protected handleCreateComment = (commentBody: string, restriction?: CommentVisibility) => {};
 
     // react-select has issues and doesn't stop propagation on click events when you provide
@@ -480,15 +543,7 @@ export abstract class AbstractIssueEditorPage<
                             <EditRenderedTextArea
                                 text={this.state.fieldValues[`${field.key}`]}
                                 renderedText={this.state.fieldValues[`${field.key}.rendered`]}
-                                fetchUsers={async (input: string) =>
-                                    (await this.fetchUsers(input)).map((user) => ({
-                                        displayName: user.displayName,
-                                        avatarUrl: user.avatarUrls?.['48x48'],
-                                        mention: this.state.siteDetails.isCloud
-                                            ? `[~accountid:${user.accountId}]`
-                                            : `[~${user.name}]`,
-                                    }))
-                                }
+                                fetchUsers={this.fetchAndTransformUsers}
                                 onSave={async (val: string) => {
                                     await this.handleInlineEdit(field, val);
                                 }}
@@ -553,6 +608,7 @@ export abstract class AbstractIssueEditorPage<
                                             onBlur={(content: string) => {
                                                 this.handleInlineEdit(field, content);
                                             }}
+                                            mentionProvider={Promise.resolve(this.getMentionProvider())}
                                         />
                                     ) : (
                                         <JiraIssueTextAreaEditor
@@ -564,15 +620,7 @@ export abstract class AbstractIssueEditorPage<
                                             onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
                                                 this.handleInlineEdit(field, val),
                                             )}
-                                            fetchUsers={async (input: string) =>
-                                                (await this.fetchUsers(input)).map((user) => ({
-                                                    displayName: user.displayName,
-                                                    avatarUrl: user.avatarUrls?.['48x48'],
-                                                    mention: this.state.siteDetails.isCloud
-                                                        ? `[~accountid:${user.accountId}]`
-                                                        : `[~${user.name}]`,
-                                                }))
-                                            }
+                                            fetchUsers={this.fetchAndTransformUsers}
                                         />
                                     );
                                 }
@@ -968,15 +1016,7 @@ export abstract class AbstractIssueEditorPage<
                         {this.state.loadingField === field.key && <Spinner size="large" />}
                         <TextAreaEditor
                             value={this.state.commentInputValue}
-                            fetchUsers={async (input: string) =>
-                                (await this.fetchUsers(input)).map((user) => ({
-                                    displayName: user.displayName,
-                                    avatarUrl: user.avatarUrls?.['48x48'],
-                                    mention: this.state.siteDetails.isCloud
-                                        ? `[~accountid:${user.accountId}]`
-                                        : `[~${user.name}]`,
-                                }))
-                            }
+                            fetchUsers={this.fetchAndTransformUsers}
                             placeholder="Add a comment..."
                             disabled={false}
                             onChange={(input: string) => this.setState({ commentInputValue: input })}

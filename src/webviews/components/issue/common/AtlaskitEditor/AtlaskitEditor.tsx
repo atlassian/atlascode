@@ -5,6 +5,7 @@ import { createDefaultPreset } from '@atlaskit/editor-core/preset-default';
 import { usePreset } from '@atlaskit/editor-core/use-preset';
 import { insertBlockPlugin } from '@atlaskit/editor-plugin-insert-block';
 import { listPlugin } from '@atlaskit/editor-plugin-list';
+import { mentionsPlugin } from '@atlaskit/editor-plugin-mentions';
 import { textColorPlugin } from '@atlaskit/editor-plugin-text-color';
 import { toolbarListsIndentationPlugin } from '@atlaskit/editor-plugin-toolbar-lists-indentation';
 import { WikiMarkupTransformer } from '@atlaskit/editor-wikimarkup-transformer';
@@ -21,7 +22,17 @@ interface AtlaskitEditorProps extends Omit<Partial<EditorNextProps>, 'onChange' 
 }
 
 const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProps) => {
-    const { appearance = 'comment', onCancel, onSave, defaultValue = '', onChange, onBlur, onContentChange } = props;
+    const {
+        appearance = 'comment',
+        onCancel,
+        onSave,
+        defaultValue = '',
+        onChange,
+        onBlur,
+        onContentChange,
+        mentionProvider,
+    } = props;
+
     const { preset, editorApi } = usePreset(() => {
         return (
             createDefaultPreset({
@@ -46,6 +57,7 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                     insertBlockPlugin,
                     { toolbarShowPlusInsertOnly: true, appearance: appearance, allowExpand: true },
                 ])
+                .add(mentionsPlugin)
         );
     }, []);
     // Helper function to get current document content
@@ -167,6 +179,7 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                     // here we transforms ADF <-> wiki markup
                     return new WikiMarkupTransformer(schema);
                 }}
+                mentionProvider={mentionProvider}
             />
             {(onSave || onCancel) && (
                 <div
