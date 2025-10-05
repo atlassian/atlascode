@@ -357,7 +357,7 @@ export class RovoDevChatProvider {
                         type: 'warning',
                         text: response.message,
                         title: response.title,
-                        source: 'RovoDevDialog',
+                        event_kind: '_RovoDevDialog',
                     },
                 });
 
@@ -372,7 +372,7 @@ export class RovoDevChatProvider {
                     message: {
                         type: 'info',
                         text: response.message,
-                        source: 'RovoDevDialog',
+                        event_kind: '_RovoDevDialog',
                     },
                 });
 
@@ -392,8 +392,8 @@ export class RovoDevChatProvider {
                         return webview.postMessage({
                             type: RovoDevProviderMessageType.ShowDialog,
                             message: {
+                                event_kind: '_RovoDevDialog',
                                 type: 'toolPermissionRequest',
-                                source: 'RovoDevDialog',
                                 toolName: tool.tool_name,
                                 toolArgs: tool.args,
                                 mcpServer: tool.mcp_server,
@@ -484,9 +484,9 @@ export class RovoDevChatProvider {
             await webview.postMessage({
                 type: RovoDevProviderMessageType.ShowDialog,
                 message: {
+                    event_kind: '_RovoDevDialog',
                     type: 'error',
                     text: error.message,
-                    source: 'RovoDevDialog',
                     isRetriable,
                     isProcessTerminated,
                     uid: v4(),

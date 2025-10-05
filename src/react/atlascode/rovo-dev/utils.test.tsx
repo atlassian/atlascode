@@ -1,5 +1,7 @@
+import { RovoDevToolCallResponse, RovoDevToolReturnResponse } from 'src/rovo-dev/responseParserInterfaces';
+
 import { appendResponse, ChatMessage } from './utils';
-import { Response, ToolReturnGenericMessage } from './utils';
+import { Response } from './utils';
 
 describe('appendResponse', () => {
     const mockHandleAppendModifiedFileToolReturns = jest.fn();
@@ -10,14 +12,14 @@ describe('appendResponse', () => {
     });
 
     it('should return prev when response is null', () => {
-        const prev: Response[] = [{ text: 'test', source: 'User' }];
+        const prev: Response[] = [{ event_kind: '_RovoDevUserPrompt', content: 'test' }];
         const result = appendResponse(null, prev, mockHandleAppendModifiedFileToolReturns, mockSetIsDeepPlanCreated);
         expect(result).toEqual(prev);
     });
 
     it('should append streaming RovoDev text to existing RovoDev message', () => {
-        const prev: Response[] = [{ text: 'Hello ', source: 'RovoDev' }];
-        const response = { text: 'world', source: 'RovoDev' } as const;
+        const prev: Response[] = [{ event_kind: 'text', content: 'Hello ', index: 0 }];
+        const response = { event_kind: 'text', content: 'world', index: 0 } as const;
 
         const result = appendResponse(
             response,
@@ -27,12 +29,12 @@ describe('appendResponse', () => {
         );
 
         expect(result).toHaveLength(1);
-        expect(result[0]).toEqual({ text: 'Hello world', source: 'RovoDev' });
+        expect(result[0]).toEqual({ event_kind: 'text', content: 'Hello world', index: 0 });
     });
 
     it('should not append streaming text when sources differ', () => {
-        const prev: Response[] = [{ text: 'Hello', source: 'User' }];
-        const response = { text: 'world', source: 'RovoDev' } as const;
+        const prev: Response[] = [{ event_kind: '_RovoDevUserPrompt', content: 'Hello' }];
+        const response = { event_kind: 'text', content: 'world', index: 0 } as const;
 
         const result = appendResponse(
             response,
@@ -42,19 +44,41 @@ describe('appendResponse', () => {
         );
 
         expect(result).toHaveLength(2);
-        expect(result[0]).toEqual({ text: 'Hello', source: 'User' });
-        expect(result[1]).toEqual({ text: 'world', source: 'RovoDev' });
+        expect(result[0]).toEqual({ event_kind: '_RovoDevUserPrompt', content: 'Hello' });
+        expect(result[1]).toEqual({ event_kind: 'text', content: 'world', index: 0 });
     });
 
     it('should group ToolReturn with previous message when groupable', () => {
-        const prev: Response[] = [
-            { tool_name: 'grep', source: 'ToolReturn', content: 'prev result', args: 'args', tool_call_id: 'id' },
-        ];
-        const response: ToolReturnGenericMessage = {
+        const toolCallMessage1: RovoDevToolCallResponse = {
+            event_kind: 'tool-call',
+            tool_name: 'grep',
+            args: 'args1',
+            tool_call_id: 'id1',
+        };
+        const toolCallMessage2: RovoDevToolCallResponse = {
+            event_kind: 'tool-call',
             tool_name: 'bash',
-            source: 'ToolReturn',
+            args: 'args1',
+            tool_call_id: 'id2',
+        };
+
+        const prev: Response[] = [
+            {
+                event_kind: 'tool-return',
+                tool_name: 'grep',
+                content: 'prev result',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage: toolCallMessage1,
+            },
+        ];
+        const response: RovoDevToolReturnResponse = {
+            event_kind: 'tool-return',
+            tool_name: 'bash',
             content: 'result',
-            tool_call_id: 'id',
+            tool_call_id: 'id2',
+            timestamp: '0',
+            toolCallMessage: toolCallMessage2,
         };
 
         const result = appendResponse(
@@ -70,13 +94,22 @@ describe('appendResponse', () => {
         expect(result[0]).toHaveLength(2);
     });
 
-    it('should not group ToolReturn when latest is User message', () => {
-        const prev: Response[] = [{ text: 'user message', source: 'User' }];
-        const response: ToolReturnGenericMessage = {
+    it('should not group ToolReturn when latest is a user prompt', () => {
+        const toolCallMessage: RovoDevToolCallResponse = {
+            event_kind: 'tool-call',
             tool_name: 'bash',
-            source: 'ToolReturn',
+            args: 'args1',
+            tool_call_id: 'id1',
+        };
+
+        const prev: Response[] = [{ event_kind: '_RovoDevUserPrompt', content: 'user message' }];
+        const response: RovoDevToolReturnResponse = {
+            event_kind: 'tool-return',
+            tool_name: 'bash',
             content: 'result',
-            tool_call_id: 'id',
+            tool_call_id: 'id1',
+            timestamp: '0',
+            toolCallMessage,
         };
 
         const result = appendResponse(
@@ -87,26 +120,35 @@ describe('appendResponse', () => {
         );
 
         expect(result).toHaveLength(2);
-        expect(result[0]).toEqual({ text: 'user message', source: 'User' });
+        expect(result[0]).toEqual({ event_kind: '_RovoDevUserPrompt', content: 'user message' });
         expect(Array.isArray(result[1])).toBe(true);
         expect(result[1]).toHaveLength(1);
     });
 
     it('should not group ToolReturn when latest is RovoDevDialog message', () => {
+        const toolCallMessage: RovoDevToolCallResponse = {
+            event_kind: 'tool-call',
+            tool_name: 'bash',
+            args: 'args1',
+            tool_call_id: 'id1',
+        };
+
         const prev: Response[] = [
             {
+                event_kind: '_RovoDevDialog',
                 type: 'error',
                 text: 'error',
-                source: 'RovoDevDialog',
                 isRetriable: false,
                 uid: 'uid',
             },
         ];
-        const response: ToolReturnGenericMessage = {
+        const response: RovoDevToolReturnResponse = {
+            event_kind: 'tool-return',
             tool_name: 'bash',
-            source: 'ToolReturn',
             content: 'result',
-            tool_call_id: 'id',
+            tool_call_id: 'id1',
+            timestamp: '0',
+            toolCallMessage,
         };
 
         const result = appendResponse(
@@ -122,12 +164,21 @@ describe('appendResponse', () => {
     });
 
     it('should handle create_technical_plan as separate message', () => {
-        const prev: Response[] = [{ text: 'previous', source: 'RovoDev' }];
-        const response: ToolReturnGenericMessage = {
+        const toolCallMessage: RovoDevToolCallResponse = {
+            event_kind: 'tool-call',
             tool_name: 'create_technical_plan',
-            source: 'ToolReturn',
+            args: 'args1',
+            tool_call_id: 'id1',
+        };
+
+        const prev: Response[] = [{ event_kind: 'text', content: 'previous', index: 0 }];
+        const response: RovoDevToolReturnResponse = {
+            event_kind: 'tool-return',
+            tool_name: 'create_technical_plan',
             content: 'plan',
-            tool_call_id: 'id',
+            tool_call_id: 'id1',
+            timestamp: '0',
+            toolCallMessage,
         };
 
         const result = appendResponse(
@@ -143,16 +194,50 @@ describe('appendResponse', () => {
     });
 
     it('should merge with existing thinking group', () => {
+        const toolCallMessage1: RovoDevToolCallResponse = {
+            event_kind: 'tool-call',
+            tool_name: 'grep',
+            args: 'args1',
+            tool_call_id: 'id1',
+        };
+        const toolCallMessage2: RovoDevToolCallResponse = {
+            event_kind: 'tool-call',
+            tool_name: 'grep',
+            args: 'args1',
+            tool_call_id: 'id2',
+        };
+        const toolCallMessage3: RovoDevToolCallResponse = {
+            event_kind: 'tool-call',
+            tool_name: 'bash',
+            args: 'args1',
+            tool_call_id: 'id3',
+        };
         const existingGroup: ChatMessage[] = [
-            { tool_name: 'grep', source: 'ToolReturn', content: 'result', tool_call_id: 'id1' },
-            { tool_name: 'grep', source: 'ToolReturn', content: 'result1', tool_call_id: 'id1' },
+            {
+                event_kind: 'tool-return',
+                tool_name: 'grep',
+                content: 'result',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage: toolCallMessage1,
+            },
+            {
+                event_kind: 'tool-return',
+                tool_name: 'grep',
+                content: 'result1',
+                tool_call_id: 'id2',
+                timestamp: '0',
+                toolCallMessage: toolCallMessage2,
+            },
         ];
         const prev: Response[] = [existingGroup];
-        const response: ToolReturnGenericMessage = {
+        const response: RovoDevToolReturnResponse = {
+            event_kind: 'tool-return',
             tool_name: 'bash',
-            source: 'ToolReturn',
             content: 'result2',
-            tool_call_id: 'id2',
+            tool_call_id: 'id3',
+            timestamp: '0',
+            toolCallMessage: toolCallMessage3,
         };
 
         const result = appendResponse(
@@ -168,15 +253,23 @@ describe('appendResponse', () => {
     });
 
     it('should handle create_technical_plan when latest is array', () => {
+        const toolCallMessage: RovoDevToolCallResponse = {
+            event_kind: 'tool-call',
+            tool_name: 'create_technical_plan',
+            args: 'args1',
+            tool_call_id: 'id2',
+        };
         const existingArray: ChatMessage[] = [
-            { tool_name: 'tool1', source: 'ToolCall', args: 'args1', tool_call_id: 'id1' },
+            { event_kind: 'tool-call', tool_name: 'grep', args: 'args1', tool_call_id: 'id1' },
         ];
         const prev: Response[] = [existingArray];
-        const response: ToolReturnGenericMessage = {
+        const response: RovoDevToolReturnResponse = {
+            event_kind: 'tool-return',
             tool_name: 'create_technical_plan',
-            source: 'ToolReturn',
             content: 'plan',
-            tool_call_id: 'id',
+            tool_call_id: 'id2',
+            timestamp: '0',
+            toolCallMessage,
         };
 
         const result = appendResponse(
@@ -192,10 +285,24 @@ describe('appendResponse', () => {
     });
 
     it('should handle array response when latest exists', () => {
-        const prev: Response[] = [{ text: 'previous', source: 'User' }];
+        const toolCallMessage = {
+            event_kind: 'tool-call' as const,
+            tool_name: 'grep' as const,
+            args: 'args1',
+            tool_call_id: 'id1',
+        };
+
+        const prev: Response[] = [{ event_kind: '_RovoDevUserPrompt', content: 'previous' }];
         const response: ChatMessage[] = [
-            { tool_name: 'grep', source: 'ToolCall', args: 'args1', tool_call_id: 'id1' },
-            { tool_name: 'grep', source: 'ToolReturn', content: 'result1', tool_call_id: 'id1' },
+            toolCallMessage,
+            {
+                event_kind: 'tool-return',
+                tool_name: 'grep',
+                content: 'result1',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            },
         ] as const;
 
         const result = appendResponse(
@@ -206,14 +313,14 @@ describe('appendResponse', () => {
         );
 
         expect(result).toHaveLength(2);
-        expect(result[0]).toEqual({ text: 'previous', source: 'User' });
+        expect(result[0]).toEqual({ event_kind: '_RovoDevUserPrompt', content: 'previous' });
         expect(result[1]).toEqual(response);
     });
 
     it('should handle array response when no latest exists', () => {
         const prev: Response[] = [];
         const response: ChatMessage[] = [
-            { tool_name: 'tool1', source: 'ToolCall', args: 'args1', tool_call_id: 'id1' },
+            { event_kind: 'tool-call', tool_name: 'grep', args: 'args1', tool_call_id: 'id1' },
         ] as const;
 
         const result = appendResponse(
@@ -229,10 +336,10 @@ describe('appendResponse', () => {
 
     it('should handle non-ToolReturn response when latest is array', () => {
         const existingArray: ChatMessage[] = [
-            { tool_name: 'tool1', source: 'ToolCall', args: 'args1', tool_call_id: 'id1' },
+            { event_kind: 'tool-call', tool_name: 'grep', args: 'args1', tool_call_id: 'id1' },
         ];
         const prev: Response[] = [existingArray];
-        const response = { text: 'new message', source: 'RovoDev' } as const;
+        const response = { event_kind: 'text', content: 'new message', index: 0 } as const;
 
         const result = appendResponse(
             response,

@@ -56,10 +56,9 @@ export const MessageDrawer: React.FC<MessageDrawerProps> = ({
                 </div>
             </div>
             <div hidden={!isOpen} className="message-drawer-content">
-                {messages.map((msg, index) =>
+                {messages.map((msg) =>
                     renderChatHistory(
                         msg,
-                        index,
                         openFile,
                         checkFileExists,
                         isRetryAfterErrorButtonEnabled,

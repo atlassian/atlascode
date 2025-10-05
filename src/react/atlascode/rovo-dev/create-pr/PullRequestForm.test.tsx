@@ -1,10 +1,8 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
-import { forceCastTo } from 'testsutil/miscFunctions';
 
 import { RovoDevViewResponseType } from '../rovoDevViewMessages';
-import { DefaultMessage } from '../utils';
 import { PullRequestChatItem, PullRequestForm } from './PullRequestForm';
 
 const mockPostMessage = jest.fn();
@@ -141,10 +139,10 @@ describe('PullRequestForm', () => {
 
 describe('PullRequestChatItem', () => {
     it('renders message content with markdown', () => {
-        const mockMessage = forceCastTo<DefaultMessage>({
+        const mockMessage = {
+            event_kind: '_RovoDevPullRequest' as const,
             text: 'This is a **Bold text** and normal text',
-            source: 'PullRequest',
-        });
+        };
 
         render(<PullRequestChatItem msg={mockMessage} />);
 
