@@ -154,5 +154,25 @@ describe('branchUtils', () => {
             );
             expect(result).toBe('TEST-123-Test-issue-summary');
         });
+
+        it('should use custom template even when prefix is empty', () => {
+            mockMustacheRender.mockReturnValue('test.user/TEST-123-Test-issue-summary');
+            const emptyBranchType = {
+                kind: '',
+                prefix: '',
+            };
+            const customTemplateWithUsername = '{{username}}/{{issueKey}}-{{summary}}';
+            const result = generateBranchName(mockRepo, emptyBranchType, mockIssue, customTemplateWithUsername);
+            expect(mockMustacheRender).toHaveBeenCalledWith(
+                customTemplateWithUsername,
+                expect.objectContaining({
+                    username: 'test.user',
+                    prefix: '',
+                    issueKey: 'TEST-123',
+                    summary: 'test-issue-summary',
+                }),
+            );
+            expect(result).toBe('test.user/TEST-123-Test-issue-summary');
+        });
     });
 });

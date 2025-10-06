@@ -53,31 +53,35 @@ export function useStartWorkFormState(
             const defaultRepo = state.repoData[0];
             setSelectedRepository(defaultRepo);
             setSourceBranch(getDefaultSourceBranch(defaultRepo));
+
+            // Set branch type based on repo's branch types or custom prefixes
             if (defaultRepo.branchTypes?.length > 0) {
                 setSelectedBranchType(defaultRepo.branchTypes[0]);
+            } else {
+                const convertedCustomPrefixes = state.customPrefixes.map((prefix) => {
+                    const normalizedCustomPrefix = prefix.endsWith('/') ? prefix : prefix + '/';
+                    return { prefix: normalizedCustomPrefix, kind: prefix };
+                });
+
+                if (convertedCustomPrefixes.length > 0) {
+                    setSelectedBranchType(convertedCustomPrefixes[0]);
+                } else {
+                    setSelectedBranchType({ kind: '', prefix: '' });
+                }
             }
+
             if (!upstream) {
                 setUpstream(defaultRepo.workspaceRepo.mainSiteRemote.remote.name);
             }
         }
-    }, [state.repoData, upstream]);
+    }, [state.repoData, upstream, state.customPrefixes]);
 
     // useEffect: auto-generate branch name
     useEffect(() => {
         if (selectedRepository) {
-            if (selectedBranchType.prefix) {
-                // Generate branch name with prefix using the custom template
-                setLocalBranch(
-                    generateBranchName(selectedRepository, selectedBranchType, state.issue, state.customTemplate),
-                );
-            } else {
-                // No prefix available, generate branch name without prefix using a template without prefix
-                const emptyBranchType = { kind: '', prefix: '' };
-                const templateWithoutPrefix = '{{issueKey}}-{{summary}}';
-                setLocalBranch(
-                    generateBranchName(selectedRepository, emptyBranchType, state.issue, templateWithoutPrefix),
-                );
-            }
+            const branchTypeToUse = selectedBranchType.prefix ? selectedBranchType : { kind: '', prefix: '' };
+
+            setLocalBranch(generateBranchName(selectedRepository, branchTypeToUse, state.issue, state.customTemplate));
         }
     }, [selectedRepository, selectedBranchType, state.issue, state.customTemplate]);
 
