@@ -122,7 +122,7 @@ describe('PullRequestForm', () => {
         });
     });
 
-    it('does not submit form with empty fields', async () => {
+    it('does not submit form without branch name', async () => {
         render(
             <PullRequestForm
                 onCancel={mockOnCancel}
@@ -132,10 +132,47 @@ describe('PullRequestForm', () => {
             />,
         );
 
+        fireEvent.change(screen.getByLabelText(/commit message/i), {
+            target: { value: 'Test commit message' },
+        });
+
         fireEvent.click(screen.getByRole('button', { name: /create pull request/i }));
 
         expect(mockPostMessagePromise).not.toHaveBeenCalled();
         expect(mockOnPullRequestCreated).not.toHaveBeenCalled();
+    });
+
+    it('submits form with only branch name (commit message optional)', async () => {
+        mockPostMessagePromise.mockResolvedValue({
+            type: RovoDevProviderMessageType.CreatePRComplete,
+            data: { url: 'http://pr-url.com' },
+        });
+
+        render(
+            <PullRequestForm
+                onCancel={mockOnCancel}
+                messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                onPullRequestCreated={mockOnPullRequestCreated}
+                isFormVisible={true}
+            />,
+        );
+
+        fireEvent.change(screen.getByLabelText(/branch name/i), {
+            target: { value: 'test-branch' },
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: /create pull request/i }));
+
+        await waitFor(() => {
+            expect(mockPostMessagePromise).toHaveBeenCalledWith(
+                {
+                    type: RovoDevViewResponseType.CreatePR,
+                    payload: { branchName: 'test-branch', commitMessage: undefined },
+                },
+                RovoDevProviderMessageType.CreatePRComplete,
+                expect.any(Number),
+            );
+        });
     });
 });
 

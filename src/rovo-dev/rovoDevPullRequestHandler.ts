@@ -60,28 +60,81 @@ export class RovoDevPullRequestHandler {
 
     // This is the happy path for single small repository
     // There would probably need to be a lot of logic in monorepos/multiple repos etc.
-    public async createPR(branchName: string, commitMessage: string): Promise<string | undefined> {
+    public async createPR(branchName: string, commitMessage?: string): Promise<string | undefined> {
         const gitExt = await this.getGitExtension();
         const repo = await this.getGitRepository(gitExt);
 
         await repo.fetch();
-        const curBranch = repo.state.HEAD?.name;
-        if (curBranch !== branchName) {
-            await repo.createBranch(branchName, true);
+
+        const hasUncommitted = await this.hasUncommittedChanges();
+        const hasUnpushed = await this.hasUnpushedCommits();
+
+        if (!hasUncommitted && !hasUnpushed) {
+            throw new Error('No changes to create PR. Please make changes or commit them first.');
         }
-        await repo.commit(commitMessage, {
-            all: true,
-        });
+
+        if (hasUncommitted) {
+            if (!commitMessage || commitMessage.trim() === '') {
+                throw new Error('Commit message is required when you have uncommitted changes.');
+            }
+
+            const curBranch = repo.state.HEAD?.name;
+            if (curBranch !== branchName) {
+                await repo.createBranch(branchName, true);
+            }
+
+            try {
+                await repo.commit(commitMessage, {
+                    all: true,
+                });
+                RovoDevLogger.info(`Successfully committed changes with message: "${commitMessage}"`);
+            } catch (error) {
+                RovoDevLogger.error(error, 'Failed to commit changes');
+                throw new Error(`Failed to commit changes: ${error.message || 'Unknown error'}`);
+            }
+        } else {
+            const curBranch = repo.state.HEAD?.name;
+            if (curBranch !== branchName) {
+                try {
+                    await repo.createBranch(branchName, true);
+                } catch (error) {
+                    RovoDevLogger.error(error, `Failed to create/switch to branch: ${branchName}`);
+                    throw new Error(`Failed to switch to branch "${branchName}": ${error.message || 'Unknown error'}`);
+                }
+            }
+        }
 
         const execAsync = promisify(exec);
+        let stderr: string;
+        try {
+            const result = await execAsync(`git push origin ${branchName}`, {
+                cwd: repo.rootUri.fsPath,
+            });
+            stderr = result.stderr;
+            RovoDevLogger.info(`Successfully pushed to origin/${branchName}`);
+        } catch (error) {
+            RovoDevLogger.error(error, 'Failed to push changes');
+            const errorMessage = error.stderr || error.message || 'Unknown error';
 
-        const { stderr } = await execAsync(`git push origin ${branchName}`, {
-            cwd: repo.rootUri.fsPath,
-        });
+            if (errorMessage.includes('no upstream branch')) {
+                throw new Error(
+                    `Branch "${branchName}" has no upstream. Try: git push --set-upstream origin ${branchName}`,
+                );
+            } else if (errorMessage.includes('rejected')) {
+                throw new Error('Push was rejected. The remote branch may have changes you need to pull first.');
+            } else if (errorMessage.includes('permission denied') || errorMessage.includes('Authentication failed')) {
+                throw new Error('Push failed: Authentication error. Please check your Git credentials.');
+            }
+
+            throw new Error(`Failed to push changes: ${errorMessage}`);
+        }
 
         const prLink = this.findPRLink(stderr);
         if (prLink) {
             env.openExternal(Uri.parse(prLink));
+            RovoDevLogger.info(`Found PR link: ${prLink}`);
+        } else {
+            RovoDevLogger.info('No PR link found in push output. Changes pushed successfully.');
         }
 
         return prLink;
@@ -108,6 +161,46 @@ export class RovoDevPullRequestHandler {
         } catch (error) {
             RovoDevLogger.error(error, 'Error checking git state');
             return true; // If we can't determine the state, assume it's clean
+        }
+    }
+
+    public async hasUncommittedChanges(): Promise<boolean> {
+        try {
+            const gitExt = await this.getGitExtension();
+            const repo = await this.getGitRepository(gitExt);
+
+            return (
+                repo.state.workingTreeChanges.length > 0 ||
+                repo.state.indexChanges.length > 0 ||
+                repo.state.mergeChanges.length > 0
+            );
+        } catch (error) {
+            RovoDevLogger.error(error, 'Error checking for uncommitted changes');
+            return false;
+        }
+    }
+
+    public async hasUnpushedCommits(): Promise<boolean> {
+        try {
+            const gitExt = await this.getGitExtension();
+            const repo = await this.getGitRepository(gitExt);
+
+            const hasUnpushed = repo.state.HEAD?.ahead && repo.state.HEAD.ahead > 0;
+            return !!hasUnpushed;
+        } catch (error) {
+            RovoDevLogger.error(error, 'Error checking for unpushed commits');
+            return false;
+        }
+    }
+
+    public async hasChangesOrUnpushedCommits(): Promise<boolean> {
+        try {
+            const hasUncommitted = await this.hasUncommittedChanges();
+            const hasUnpushed = await this.hasUnpushedCommits();
+            return hasUncommitted || hasUnpushed;
+        } catch (error) {
+            RovoDevLogger.error(error, 'Error checking git changes and unpushed commits');
+            return false;
         }
     }
 }

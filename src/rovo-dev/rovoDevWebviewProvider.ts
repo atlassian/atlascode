@@ -313,10 +313,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.CheckGitChanges:
-                        const isClean = await this._prHandler.isGitStateClean();
+                        const hasChanges = await this._prHandler.hasChangesOrUnpushedCommits();
                         await webview.postMessage({
                             type: RovoDevProviderMessageType.CheckGitChangesComplete,
-                            hasChanges: !isClean,
+                            hasChanges: hasChanges,
                         });
                         break;
 
@@ -848,9 +848,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         let prLink: string | undefined;
         const webview = this._webView!;
         try {
-            if (!commitMessage || !branchName) {
-                throw new Error('Commit message and branch name are required to create a PR');
+            // Branch name is always required
+            if (!branchName || branchName.trim() === '') {
+                throw new Error('Branch name is required to create a PR');
             }
+
+            // Commit message validation is now handled in createPR based on git state
+            // If there are uncommitted changes, createPR will require a commit message
+            // If only unpushed commits exist, commit message is optional
             prLink = await prHandler.createPR(branchName, commitMessage);
 
             await webview.postMessage({
