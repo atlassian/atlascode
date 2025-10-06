@@ -161,7 +161,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
 
         it('renders with mention provider', async () => {
             await act(() =>
-                render(
+                renderWithEditorProvider(
                     <IssueMainPanel
                         fields={mockFields}
                         fieldValues={mockFieldValues}
@@ -189,7 +189,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
 
         it('passes mention provider to AtlaskitEditor when editing', async () => {
             await act(() =>
-                render(
+                renderWithEditorProvider(
                     <IssueMainPanel
                         fields={mockFields}
                         fieldValues={mockFieldValues}
@@ -257,7 +257,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
             };
 
             await act(() =>
-                render(
+                renderWithEditorProvider(
                     <IssueMainPanel
                         fields={mockFields}
                         fieldValues={fieldValuesWithMentions}
@@ -285,7 +285,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
 
         it('handles save with mention content', async () => {
             await act(() =>
-                render(
+                renderWithEditorProvider(
                     <IssueMainPanel
                         fields={mockFields}
                         fieldValues={mockFieldValues}
@@ -327,7 +327,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
 
         it('handles cancel when editing with mentions', async () => {
             await act(() =>
-                render(
+                renderWithEditorProvider(
                     <IssueMainPanel
                         fields={mockFields}
                         fieldValues={mockFieldValues}
