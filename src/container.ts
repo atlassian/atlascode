@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 
 import { featureFlagClientInitializedEvent } from './analytics';
 import { AnalyticsClient, analyticsClient } from './analytics-node-client/src/client.min.js';
-import { Product, ProductJira } from './atlclients/authInfo';
+import { Product } from './atlclients/authInfo';
 import { CredentialManager } from './atlclients/authStore';
 import { ClientManager } from './atlclients/clientManager';
 import { LoginManager } from './atlclients/loginManager';
@@ -290,9 +290,8 @@ export class Container {
     }
 
     private static async refreshRovoDev(context: ExtensionContext) {
-        const isJiraEnabledAndAtlassianUser = this.config.jira.enabled && (await this.isAtlassianUser(ProductJira));
         const isBoysenberryMode = !!process.env.ROVODEV_BBY;
-        const shouldEnableRovoDev = isJiraEnabledAndAtlassianUser || isBoysenberryMode;
+        const shouldEnableRovoDev = this.config.jira.enabled || isBoysenberryMode;
 
         if (shouldEnableRovoDev) {
             this._isRovoDevEnabled = true;
