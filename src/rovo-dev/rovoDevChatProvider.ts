@@ -250,8 +250,16 @@ export class RovoDevChatProvider {
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        const parser =
-            sourceApi === 'replay' ? new RovoDevResponseParser({ mergeAllChunks: true }) : new RovoDevResponseParser();
+        
+        // SCRUM-69: Test streaming performance with different parser configurations
+        const parser = sourceApi === 'replay' ? 
+            new RovoDevResponseParser({ mergeAllChunks: true }) : 
+            new RovoDevResponseParser({ mergeAllChunks: false }); // Explicitly set to false for testing
+        
+        // Add debug logging for streaming performance
+        let chunkCount = 0;
+        let totalBytesReceived = 0;
+        const streamStartTime = Date.now();
 
         let isFirstByte = true;
         let isFirstMessage = true;
@@ -277,13 +285,32 @@ export class RovoDevChatProvider {
             }
 
             const data = decoder.decode(value, { stream: true });
+            
+            // SCRUM-69: Add streaming performance logging
+            chunkCount++;
+            totalBytesReceived += value.length;
+            const currentTime = Date.now();
+            const elapsedTime = currentTime - streamStartTime;
+            
+            if (this.isDebugging || Container.config.rovodev.debugPanelEnabled) {
+                console.log(`[SCRUM-69] Streaming chunk ${chunkCount}: ${value.length} bytes, ${data.length} chars, elapsed: ${elapsedTime}ms`);
+                console.log(`[SCRUM-69] Data preview: "${data.substring(0, 100)}${data.length > 100 ? '...' : ''}"`);
+            }
+            
             for (const msg of parser.parse(data)) {
                 if (fireTelemetry && isFirstMessage) {
                     this._telemetryProvider.perfLogger.promptFirstMessageReceived(this._currentPromptId);
                     isFirstMessage = false;
                 }
 
+                // SCRUM-69: Log message processing timing
+                const msgProcessStart = Date.now();
                 await this.processRovoDevResponse(sourceApi, msg);
+                const msgProcessTime = Date.now() - msgProcessStart;
+                
+                if (this.isDebugging || Container.config.rovodev.debugPanelEnabled) {
+                    console.log(`[SCRUM-69] Processed message type ${msg.event_kind} in ${msgProcessTime}ms`);
+                }
             }
         }
     }

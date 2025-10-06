@@ -376,12 +376,15 @@ export class RovoDevResponseParser {
 
                 this.previousChunk = this.parseGenericReponse(partStartChunk);
 
+                // SCRUM-69: Modified streaming strategy for smoother text delivery
                 // send out immediately:
                 // - errors
                 // - text messages unless we'd like to reconstruct them fully
+                // - For SCRUM-69 testing: always send text messages immediately for faster streaming
                 if (
                     this.previousChunk.event_kind === '_parsing_error' ||
-                    (!this.mergeAllChunks && event_kind_inner === 'text')
+                    (!this.mergeAllChunks && event_kind_inner === 'text') ||
+                    (event_kind_inner === 'text') // SCRUM-69: Always send text immediately
                 ) {
                     tmpChunkToFlush = this.flushPreviousChunk();
                     if (tmpChunkToFlush) {
@@ -399,12 +402,15 @@ export class RovoDevResponseParser {
 
                 this.previousChunk = this.parseGenericReponse(partDeltaChunk, this.previousChunk);
 
+                // SCRUM-69: Modified streaming strategy for smoother text delivery (part_delta)
                 // send out immediately:
                 // - errors
                 // - text messages unless we'd like to reconstruct them fully
+                // - For SCRUM-69 testing: always send text messages immediately for faster streaming
                 if (
                     this.previousChunk.event_kind === '_parsing_error' ||
-                    (!this.mergeAllChunks && event_kind_inner === 'text')
+                    (!this.mergeAllChunks && event_kind_inner === 'text') ||
+                    (event_kind_inner === 'text') // SCRUM-69: Always send text immediately
                 ) {
                     tmpChunkToFlush = this.flushPreviousChunk();
                     if (tmpChunkToFlush) {

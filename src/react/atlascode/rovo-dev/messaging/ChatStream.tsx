@@ -184,9 +184,33 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         };
     }, [autoScrollEnabled, chatHistory]);
 
+    // SCRUM-69: Add throttling to reduce excessive re-renders during streaming
+    const [throttledChatHistory, setThrottledChatHistory] = React.useState(chatHistory);
+    const throttleTimeoutRef = React.useRef<NodeJS.Timeout>();
+    
+    React.useEffect(() => {
+        // Clear previous timeout
+        if (throttleTimeoutRef.current) {
+            clearTimeout(throttleTimeoutRef.current);
+        }
+        
+        // Set a short delay to batch updates during rapid streaming
+        throttleTimeoutRef.current = setTimeout(() => {
+            setThrottledChatHistory(chatHistory);
+        }, 16); // ~60fps update rate
+        
+        // Cleanup
+        return () => {
+            if (throttleTimeoutRef.current) {
+                clearTimeout(throttleTimeoutRef.current);
+            }
+        };
+    }, [chatHistory]);
+    
     // Auto-scroll when content changes or when re-enabled
+    // SCRUM-69: Use throttled history to reduce scroll calculations during streaming
     React.useEffect(performAutoScroll, [
-        chatHistory,
+        throttledChatHistory,
         modalDialogs,
         isFormVisible,
         pendingToolCall,
@@ -195,6 +219,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     ]);
 
     // Other state management effect
+    // SCRUM-69: Use original chatHistory for state management (not throttled) to ensure immediate response
     React.useEffect(() => {
         if (process.env.ROVODEV_BBY && currentState.state === 'WaitingForPrompt') {
             const canCreatePR = chatHistory.length > 0;
@@ -237,7 +262,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
             {!process.env.ROVODEV_BBY && (
                 <RovoDevLanding
                     currentState={currentState}
-                    isHistoryEmpty={chatHistory.length === 0}
+                    isHistoryEmpty={throttledChatHistory.length === 0}
                     onLoginClick={onLoginClick}
                     onOpenFolder={onOpenFolder}
                     onMcpChoice={onMcpChoice}
@@ -247,10 +272,10 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                 />
             )}
             {!isChatHistoryDisabled &&
-                chatHistory &&
-                chatHistory.map((block, idx) => {
+                throttledChatHistory &&
+                throttledChatHistory.map((block, idx) => {
                     const drawerOpen =
-                        idx === chatHistory.findLastIndex((msg) => Array.isArray(msg)) &&
+                        idx === throttledChatHistory.findLastIndex((msg) => Array.isArray(msg)) &&
                         currentState.state !== 'WaitingForPrompt';
 
                     if (block) {
