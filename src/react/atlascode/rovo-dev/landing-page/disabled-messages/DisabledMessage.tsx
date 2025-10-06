@@ -44,8 +44,8 @@ export const DisabledMessage: React.FC<{
                     msg={{
                         source: 'RovoDevDialog',
                         type: 'error',
-                        title: currentState.detail.title,
-                        text: currentState.detail.message,
+                        title: currentState.detail.payload.title,
+                        text: currentState.detail.payload.message,
                         statusCode: `Failure code: ${currentState.detail.payload.status}`,
                         uid: '',
                     }}
