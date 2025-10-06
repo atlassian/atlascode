@@ -290,9 +290,11 @@ export class Container {
     }
 
     private static async refreshRovoDev(context: ExtensionContext) {
-        const isJiraEnabledAndAtlassianUser = this.config.jira.enabled && (await this.isAtlassianUser(ProductJira));
+        const isJiraAndRovodevEnabled =
+            this.config.jira.enabled &&
+            (this.featureFlagClient.checkGate(Features.RovoDevEnabled) || (await this.isAtlassianUser(ProductJira)));
         const isBoysenberryMode = !!process.env.ROVODEV_BBY;
-        const shouldEnableRovoDev = isJiraEnabledAndAtlassianUser || isBoysenberryMode;
+        const shouldEnableRovoDev = isJiraAndRovodevEnabled || isBoysenberryMode;
 
         if (shouldEnableRovoDev) {
             this._isRovoDevEnabled = true;
