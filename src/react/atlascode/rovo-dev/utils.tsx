@@ -288,58 +288,56 @@ export const appendResponse = (
 
     const latest = prev.pop();
 
-    if (!Array.isArray(response)) {
-        if (!Array.isArray(latest)) {
-            // Streaming text response, append to current message
-            if (latest?.event_kind === 'text' && response?.event_kind === 'text') {
-                latest.content += response.content;
-                return [...prev, latest];
-            }
-            // Group tool return with previous message if applicable
-            if (response.event_kind === 'tool-return') {
-                handleAppendModifiedFileToolReturns(response);
-                if (response.tool_name !== 'create_technical_plan') {
-                    // Do not group if User, Error message, or Pull Request message is the latest
-                    const canGroup =
-                        latest &&
-                        latest.event_kind !== '_RovoDevUserPrompt' &&
-                        latest.event_kind !== '_RovoDevDialog' &&
-                        latest.event_kind !== '_RovoDevPullRequest';
-
-                    let thinkingGroup: ChatMessage[] = canGroup ? [latest, response] : [response];
-
-                    if (canGroup) {
-                        const prevGroup = prev.pop();
-                        // if previous message is also a thinking group, merge them
-                        if (prevGroup !== undefined) {
-                            if (Array.isArray(prevGroup)) {
-                                thinkingGroup = [...prevGroup, ...thinkingGroup];
-                            } else {
-                                return [...prev, prevGroup, thinkingGroup];
-                            }
-                        }
-                        return [...prev, thinkingGroup];
-                    } else {
-                        return latest ? [...prev, latest, thinkingGroup] : [...prev, thinkingGroup];
-                    }
-                } else {
-                    // create_technical_plan is always its own message
-                    return latest ? [...prev, latest, response] : [...prev, response];
-                }
-            }
-        } else {
-            if (response.event_kind === 'tool-return') {
-                handleAppendModifiedFileToolReturns(response);
-                if (response.tool_name !== 'create_technical_plan') {
-                    latest.push(response);
-                    return [...prev, latest];
-                } else {
-                    // create_technical_plan is always its own message
-                    return [...prev, latest, response];
-                }
-            }
-            return [...prev, latest, response];
+    if (!Array.isArray(latest)) {
+        // Streaming text response, append to current message
+        if (latest?.event_kind === 'text' && response?.event_kind === 'text') {
+            latest.content += response.content;
+            return [...prev, latest];
         }
+        // Group tool return with previous message if applicable
+        if (response.event_kind === 'tool-return') {
+            handleAppendModifiedFileToolReturns(response);
+            if (response.tool_name !== 'create_technical_plan') {
+                // Do not group if User, Error message, or Pull Request message is the latest
+                const canGroup =
+                    latest &&
+                    latest.event_kind !== '_RovoDevUserPrompt' &&
+                    latest.event_kind !== '_RovoDevDialog' &&
+                    latest.event_kind !== '_RovoDevPullRequest';
+
+                let thinkingGroup: ChatMessage[] = canGroup ? [latest, response] : [response];
+
+                if (canGroup) {
+                    const prevGroup = prev.pop();
+                    // if previous message is also a thinking group, merge them
+                    if (prevGroup !== undefined) {
+                        if (Array.isArray(prevGroup)) {
+                            thinkingGroup = [...prevGroup, ...thinkingGroup];
+                        } else {
+                            return [...prev, prevGroup, thinkingGroup];
+                        }
+                    }
+                    return [...prev, thinkingGroup];
+                } else {
+                    return latest ? [...prev, latest, thinkingGroup] : [...prev, thinkingGroup];
+                }
+            } else {
+                // create_technical_plan is always its own message
+                return latest ? [...prev, latest, response] : [...prev, response];
+            }
+        }
+    } else {
+        if (response.event_kind === 'tool-return') {
+            handleAppendModifiedFileToolReturns(response);
+            if (response.tool_name !== 'create_technical_plan') {
+                latest.push(response);
+                return [...prev, latest];
+            } else {
+                // create_technical_plan is always its own message
+                return [...prev, latest, response];
+            }
+        }
+        return [...prev, latest, response];
     }
 
     if (latest) {
