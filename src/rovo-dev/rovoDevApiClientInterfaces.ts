@@ -41,10 +41,9 @@ export interface EntitlementCheckRovoDevHealthcheckResponse {
     status: 'entitlement check failed';
     version: string;
     detail: {
-        title: string;
-        message: string;
         payload: {
             status: EntitlementFailedStatus;
+            title?: string;
             message: string;
             userCreditLimits: {
                 user: {
