@@ -1,11 +1,12 @@
 {
     "name": "atlascode",
-    "displayName": "Atlassian: Jira & Bitbucket",
-    "description": "Bringing the power of Jira and Bitbucket to VS Code - With Atlassian for VS Code you can create and view issues, start work on issues, create pull requests, do code reviews, start builds, get build statuses and more!",
+    "displayName": "Atlassian: Jira, Rovo Dev, Bitbucket",
+    "description": "Bringing the power of Jira, Rovo Dev, and Bitbucket to VS Code - With Atlassian for VS Code you can create and view issues, start work on issues, create pull requests, do code reviews, start builds, get build statuses and more!",
     "keywords": [
         "bitbucket",
         "jira",
         "atlassian",
+        "rovo dev",
         "issues",
         "builds",
         "pull requests"
