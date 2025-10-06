@@ -1158,9 +1158,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // this scenario is when the user is not allowed to run Rovo Dev because it's disabled by the Jira administrator
         if (result.status === 'entitlement check failed') {
             if (this.isBoysenberry) {
-                await this.processError(new Error(`${result.detail.message}\nCode: ${result.detail.payload.status}`), {
-                    title: result.detail.title,
-                });
+                await this.processError(
+                    new Error(`${result.detail.payload.message}\nCode: ${result.detail.payload.status}`),
+                    {
+                        title: result.detail.payload.title || 'Entitlement check failed',
+                    },
+                );
                 this.signalRovoDevDisabled('Other');
             } else {
                 await this.signalRovoDevDisabled('EntitlementCheckFailed', result.detail);
