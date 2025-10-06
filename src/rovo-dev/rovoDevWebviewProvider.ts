@@ -1082,7 +1082,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             condition: (info) =>
                 !!info &&
                 info.status !== 'unknown' &&
-                (info.status !== 'healthy' || info.mcp_servers?.['filesystem-tools'] === 'started'),
+                (info.status !== 'healthy' || info.mcp_servers?.['filesystem-tools'] === 'running'),
             check: () => this.executeHealthcheckInfo(),
             timeout,
             interval: 500,

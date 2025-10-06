@@ -3,12 +3,7 @@ import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { DialogMessage } from '../react/atlascode/rovo-dev/utils';
-import {
-    RovoDevRetryPromptResponse,
-    RovoDevTextResponse,
-    RovoDevToolCallResponse,
-    RovoDevToolReturnResponse,
-} from './responseParserInterfaces';
+import { RovoDevTextResponse, RovoDevToolCallResponse, RovoDevToolReturnResponse } from './responseParserInterfaces';
 import { EntitlementCheckRovoDevHealthcheckResponse } from './rovoDevApiClientInterfaces';
 import { DisabledState, RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 
@@ -51,11 +46,8 @@ export type RovoDevDisabledReason = DisabledState['subState'];
 
 export type RovoDevEntitlementCheckFailedDetail = EntitlementCheckRovoDevHealthcheckResponse['detail'];
 
-export type RovoDevResponseMessageType =
-    | RovoDevTextResponse
-    | RovoDevToolCallResponse
-    | RovoDevToolReturnResponse
-    | RovoDevRetryPromptResponse;
+export type RovoDevResponseMessageType = RovoDevTextResponse | RovoDevToolCallResponse | RovoDevToolReturnResponse;
+//| RovoDevRetryPromptResponse;
 
 export type RovoDevProviderMessage =
     | ReducerAction<
@@ -63,7 +55,10 @@ export type RovoDevProviderMessage =
           { reason: RovoDevDisabledReason; detail?: RovoDevEntitlementCheckFailedDetail }
       >
     | ReducerAction<RovoDevProviderMessageType.SignalPromptSent, RovoDevPrompt & { echoMessage: boolean }>
-    | ReducerAction<RovoDevProviderMessageType.RovoDevResponseMessage, { message: RovoDevResponseMessageType }>
+    | ReducerAction<
+          RovoDevProviderMessageType.RovoDevResponseMessage,
+          { message: RovoDevResponseMessageType | RovoDevResponseMessageType[] }
+      >
     | ReducerAction<RovoDevProviderMessageType.CompleteMessage>
     | ReducerAction<RovoDevProviderMessageType.ShowDialog, { message: DialogMessage }>
     | ReducerAction<RovoDevProviderMessageType.ClearChat>

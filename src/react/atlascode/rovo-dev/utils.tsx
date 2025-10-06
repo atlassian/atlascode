@@ -262,20 +262,26 @@ export function extractLastNMessages(n: number, history: Response[]) {
     }
     return lastTenMessages;
 }
+
 /**
  *
- * @param response new incoming response
  * @param prev current state of response history
+ * @param response new incoming response
  * @param handleAppendModifiedFileToolReturns function to handle appending modified file tool returns
- * @param setIsDeepPlanCreated function to set if a deep plan has been created
  * @returns updated response history
  */
 export const appendResponse = (
-    response: Response,
     prev: Response[],
+    response: Response | Response[],
     handleAppendModifiedFileToolReturns: (tr: RovoDevToolReturnResponse) => void,
-    setIsDeepPlanCreated: (val: boolean) => void,
 ): Response[] => {
+    if (Array.isArray(response)) {
+        for (const _resp of response) {
+            prev = appendResponse(prev, _resp, handleAppendModifiedFileToolReturns);
+        }
+        return prev;
+    }
+
     if (!response) {
         return prev;
     }
@@ -318,7 +324,6 @@ export const appendResponse = (
                     }
                 } else {
                     // create_technical_plan is always its own message
-                    setIsDeepPlanCreated(true);
                     return latest ? [...prev, latest, response] : [...prev, response];
                 }
             }
@@ -329,7 +334,7 @@ export const appendResponse = (
                     latest.push(response);
                     return [...prev, latest];
                 } else {
-                    setIsDeepPlanCreated(true);
+                    // create_technical_plan is always its own message
                     return [...prev, latest, response];
                 }
             }

@@ -5,7 +5,6 @@ import { Response } from './utils';
 
 describe('appendResponse', () => {
     const mockHandleAppendModifiedFileToolReturns = jest.fn();
-    const mockSetIsDeepPlanCreated = jest.fn();
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -13,7 +12,7 @@ describe('appendResponse', () => {
 
     it('should return prev when response is null', () => {
         const prev: Response[] = [{ event_kind: '_RovoDevUserPrompt', content: 'test' }];
-        const result = appendResponse(null, prev, mockHandleAppendModifiedFileToolReturns, mockSetIsDeepPlanCreated);
+        const result = appendResponse(prev, null, mockHandleAppendModifiedFileToolReturns);
         expect(result).toEqual(prev);
     });
 
@@ -21,12 +20,7 @@ describe('appendResponse', () => {
         const prev: Response[] = [{ event_kind: 'text', content: 'Hello ', index: 0 }];
         const response = { event_kind: 'text', content: 'world', index: 0 } as const;
 
-        const result = appendResponse(
-            response,
-            prev,
-            mockHandleAppendModifiedFileToolReturns,
-            mockSetIsDeepPlanCreated,
-        );
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns);
 
         expect(result).toHaveLength(1);
         expect(result[0]).toEqual({ event_kind: 'text', content: 'Hello world', index: 0 });
@@ -36,12 +30,7 @@ describe('appendResponse', () => {
         const prev: Response[] = [{ event_kind: '_RovoDevUserPrompt', content: 'Hello' }];
         const response = { event_kind: 'text', content: 'world', index: 0 } as const;
 
-        const result = appendResponse(
-            response,
-            prev,
-            mockHandleAppendModifiedFileToolReturns,
-            mockSetIsDeepPlanCreated,
-        );
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns);
 
         expect(result).toHaveLength(2);
         expect(result[0]).toEqual({ event_kind: '_RovoDevUserPrompt', content: 'Hello' });
@@ -81,12 +70,7 @@ describe('appendResponse', () => {
             toolCallMessage: toolCallMessage2,
         };
 
-        const result = appendResponse(
-            response,
-            prev,
-            mockHandleAppendModifiedFileToolReturns,
-            mockSetIsDeepPlanCreated,
-        );
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns);
 
         expect(mockHandleAppendModifiedFileToolReturns).toHaveBeenCalledWith(response);
         expect(result).toHaveLength(1);
@@ -112,12 +96,7 @@ describe('appendResponse', () => {
             toolCallMessage,
         };
 
-        const result = appendResponse(
-            response,
-            prev,
-            mockHandleAppendModifiedFileToolReturns,
-            mockSetIsDeepPlanCreated,
-        );
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns);
 
         expect(result).toHaveLength(2);
         expect(result[0]).toEqual({ event_kind: '_RovoDevUserPrompt', content: 'user message' });
@@ -151,12 +130,7 @@ describe('appendResponse', () => {
             toolCallMessage,
         };
 
-        const result = appendResponse(
-            response,
-            prev,
-            mockHandleAppendModifiedFileToolReturns,
-            mockSetIsDeepPlanCreated,
-        );
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns);
 
         expect(result).toHaveLength(2);
         expect(Array.isArray(result[1])).toBe(true);
@@ -181,14 +155,8 @@ describe('appendResponse', () => {
             toolCallMessage,
         };
 
-        const result = appendResponse(
-            response,
-            prev,
-            mockHandleAppendModifiedFileToolReturns,
-            mockSetIsDeepPlanCreated,
-        );
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns);
 
-        expect(mockSetIsDeepPlanCreated).toHaveBeenCalledWith(true);
         expect(result).toHaveLength(2);
         expect(result[1]).toEqual(response);
     });
@@ -240,12 +208,7 @@ describe('appendResponse', () => {
             toolCallMessage: toolCallMessage3,
         };
 
-        const result = appendResponse(
-            response,
-            prev,
-            mockHandleAppendModifiedFileToolReturns,
-            mockSetIsDeepPlanCreated,
-        );
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns);
 
         expect(result).toHaveLength(1);
         expect(Array.isArray(result[0])).toBe(true);
@@ -272,14 +235,8 @@ describe('appendResponse', () => {
             toolCallMessage,
         };
 
-        const result = appendResponse(
-            response,
-            prev,
-            mockHandleAppendModifiedFileToolReturns,
-            mockSetIsDeepPlanCreated,
-        );
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns);
 
-        expect(mockSetIsDeepPlanCreated).toHaveBeenCalledWith(true);
         expect(result).toHaveLength(2);
         expect(result[1]).toEqual(response);
     });
@@ -305,12 +262,7 @@ describe('appendResponse', () => {
             },
         ] as const;
 
-        const result = appendResponse(
-            response,
-            prev,
-            mockHandleAppendModifiedFileToolReturns,
-            mockSetIsDeepPlanCreated,
-        );
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns);
 
         expect(result).toHaveLength(2);
         expect(result[0]).toEqual({ event_kind: '_RovoDevUserPrompt', content: 'previous' });
@@ -323,15 +275,10 @@ describe('appendResponse', () => {
             { event_kind: 'tool-call', tool_name: 'grep', args: 'args1', tool_call_id: 'id1' },
         ] as const;
 
-        const result = appendResponse(
-            response,
-            prev,
-            mockHandleAppendModifiedFileToolReturns,
-            mockSetIsDeepPlanCreated,
-        );
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns);
 
         expect(result).toHaveLength(1);
-        expect(result[0]).toEqual(response);
+        expect(result[0]).toEqual(response[0]);
     });
 
     it('should handle non-ToolReturn response when latest is array', () => {
@@ -341,12 +288,7 @@ describe('appendResponse', () => {
         const prev: Response[] = [existingArray];
         const response = { event_kind: 'text', content: 'new message', index: 0 } as const;
 
-        const result = appendResponse(
-            response,
-            prev,
-            mockHandleAppendModifiedFileToolReturns,
-            mockSetIsDeepPlanCreated,
-        );
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns);
 
         expect(result).toHaveLength(2);
         expect(result[0]).toEqual(existingArray);
