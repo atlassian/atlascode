@@ -14,6 +14,7 @@ type JiraBasicAuthFormProps = {
     authFormState: AuthFormState;
     updateState: (state: AuthFormState) => void;
     preventClickDefault: (event: React.MouseEvent<HTMLButtonElement>) => void;
+    onPasswordKeyDown?: (event: React.KeyboardEvent) => void;
 };
 
 export const JiraBasicAuthForm = ({
@@ -23,6 +24,7 @@ export const JiraBasicAuthForm = ({
     authFormState,
     updateState,
     preventClickDefault,
+    onPasswordKeyDown,
 }: JiraBasicAuthFormProps) => {
     const defaultSiteUsername = useMemo(
         () => (defaultSiteWithAuth.auth as BasicAuthInfo).username || defaultSiteWithAuth.auth.user.email,
@@ -61,6 +63,7 @@ export const JiraBasicAuthForm = ({
                     fullWidth
                     error={!!errors.password}
                     inputRef={registerRequiredString}
+                    onKeyDown={onPasswordKeyDown}
                     InputProps={{
                         endAdornment: (
                             <IconButton

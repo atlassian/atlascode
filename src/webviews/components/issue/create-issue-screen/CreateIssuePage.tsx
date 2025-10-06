@@ -374,14 +374,13 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         }
     };
 
-    fetchUsers = (input: string) => {
-        const apiVersion = this.getApiVersion();
-        const userSearchUrl = this.state.siteDetails.isCloud
-            ? `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?query=`
-            : `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?username=`;
-
-        return this.loadSelectOptions(input, userSearchUrl);
-    };
+    fetchAndTransformUsers = async (input: string, accountId?: string) =>
+        (await this.fetchUsers(input, accountId)).map((user) => ({
+            displayName: user.displayName,
+            avatarUrl: user.avatarUrls?.['48x48'],
+            mention: this.state.siteDetails.isCloud ? `[~accountid:${user.accountId}]` : `[~${user.name}]`,
+            accountId: user.accountId,
+        }));
 
     private getFieldError(fieldKey: string): string | undefined {
         if (fieldKey === 'project' && this.state?.selectFieldOptions?.project?.length === 0) {
