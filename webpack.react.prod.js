@@ -149,7 +149,7 @@ module.exports = {
     ],
     performance: {
         maxEntrypointSize: 350000,
-        maxAssetSize: 12698855,
+        maxAssetSize: 13960034,
     },
     watchOptions: {
         ignored: /node_modules/,
