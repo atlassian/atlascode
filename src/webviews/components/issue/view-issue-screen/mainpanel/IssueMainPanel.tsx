@@ -7,7 +7,7 @@ import { FieldUI, FieldUIs, FieldValues, IssueLinkTypeSelectOption } from '@atla
 import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
-import { AdfAwareContent } from '../../../AdfAwareContent';
+import AdfAwareContent from '../../../AdfAwareContent';
 import { RenderedContent } from '../../../RenderedContent';
 import { AttachmentList } from '../../AttachmentList';
 import { AttachmentsModal } from '../../AttachmentsModal';
@@ -41,6 +41,8 @@ type Props = {
     fetchImage: (url: string) => Promise<string>;
     onIssueUpdate?: (issueKey: string, fieldKey: string, newValue: any) => void;
     isAtlaskitEditorEnabled?: boolean;
+    getMediaAuth?: () => Promise<{ token: string; clientId: string; baseUrl?: string }>;
+    issueKey?: string;
 };
 
 const IssueMainPanel: React.FC<Props> = ({
@@ -63,6 +65,8 @@ const IssueMainPanel: React.FC<Props> = ({
     fetchImage,
     onIssueUpdate,
     isAtlaskitEditorEnabled,
+    getMediaAuth,
+    issueKey,
 }) => {
     const attachments = fields['attachment'] && fieldValues['attachment'] ? fieldValues['attachment'] : undefined;
     const subtasks =
@@ -210,7 +214,10 @@ const IssueMainPanel: React.FC<Props> = ({
                     {isEditingDescription || loadingField === 'description' ? (
                         isAtlaskitEditorEnabled ? (
                             <AtlaskitEditor
+                                appearance="full-page"
                                 defaultValue={descriptionText}
+                                getMediaAuth={getMediaAuth}
+                                issueKey={issueKey}
                                 onSave={(content) => {
                                     handleInlineEdit(fields['description'], content);
                                     closeEditorHandler();
@@ -259,7 +266,7 @@ const IssueMainPanel: React.FC<Props> = ({
                             className="ac-inline-input-view-p"
                         >
                             {isAtlaskitEditorEnabled ? (
-                                <AdfAwareContent content={descriptionText} fetchImage={fetchImage} />
+                                <AdfAwareContent content={descriptionText} />
                             ) : renderedDescription ? (
                                 <RenderedContent html={renderedDescription} fetchImage={fetchImage} />
                             ) : (
