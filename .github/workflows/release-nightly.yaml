@@ -108,3 +108,6 @@ jobs:
           name: Release ${{ env.RELEASE_TAG }}
           draft: false
           prerelease: true
+          files: |
+            atlascode-${{ env.PACKAGE_VERSION }}.vsix
+          fail_on_unmatched_files: true
