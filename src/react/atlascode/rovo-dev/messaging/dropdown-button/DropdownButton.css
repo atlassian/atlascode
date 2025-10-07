@@ -21,7 +21,7 @@
     display: flex;
     background: inherit;
     border: none;
-    padding: 6px 12px;
+    padding: 6px 8px;
     color: var(--vscode-button-foreground);
 }
 .dropdown-button-trigger:hover {

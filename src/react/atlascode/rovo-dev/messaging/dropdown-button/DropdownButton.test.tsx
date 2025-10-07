@@ -41,7 +41,7 @@ describe('DropdownButton', () => {
 
     it('renders dropdown items when dropdown is opened', () => {
         render(<DropdownButton buttonItem={mockButtonItem} items={mockItems} />);
-        const dropdownTrigger = screen.getAllByRole('button')[0];
+        const dropdownTrigger = screen.getAllByRole('button')[1];
         fireEvent.click(dropdownTrigger);
         expect(screen.getByText('Item 1')).toBeTruthy();
         expect(screen.getByText('Item 2')).toBeTruthy();
@@ -49,7 +49,7 @@ describe('DropdownButton', () => {
 
     it('calls item onSelect when dropdown item is clicked', () => {
         render(<DropdownButton buttonItem={mockButtonItem} items={mockItems} />);
-        const dropdownTrigger = screen.getAllByRole('button')[0];
+        const dropdownTrigger = screen.getAllByRole('button')[1];
         fireEvent.click(dropdownTrigger);
         fireEvent.click(screen.getByText('Item 1'));
         expect(mockItems[0].onSelect).toHaveBeenCalledTimes(1);
