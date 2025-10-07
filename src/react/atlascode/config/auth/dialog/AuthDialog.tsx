@@ -200,7 +200,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                 </DialogTitle>
                 <DialogContent>
                     <DialogContentText>{`Add ${product.name} Site`}</DialogContentText>
-                    <Grid container direction="column" spacing={2} onKeyDown={handleFormKeyDown}>
+                    <Grid container direction="column" spacing={2}>
                         <Grid item>
                             {autocompleteSites.length > 0 && (
                                 <Autocomplete
@@ -258,6 +258,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                                 errors={errors}
                                 registerRequiredString={registerRequiredString}
                                 preventClickDefault={preventClickDefault}
+                                onPasswordKeyDown={handleFormKeyDown}
                             />
                         )}
 

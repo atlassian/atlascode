@@ -212,8 +212,14 @@ export class LoginManager {
         }
 
         for (const siteToRemove of sitesToRemove) {
+            const oauthSiteConnected = existingSites.find(
+                (existingSite) => existingSite.isCloud && existingSite.name !== existingSite.host,
+            );
+
             await Container.clientManager.removeClient(siteToRemove);
             await Container.siteManager.removeSite(siteToRemove, true, true);
+
+            await this.restoreOAuthSiteIfNeeded(siteToRemove, oauthSiteConnected);
         }
     }
 
@@ -334,6 +340,40 @@ export class LoginManager {
         await this._siteManager.addOrUpdateSite(siteDetails);
 
         return siteDetails;
+    }
+
+    private async restoreOAuthSiteIfNeeded(
+        removedSite: DetailedSiteInfo,
+        oauthSiteConnected?: DetailedSiteInfo,
+    ): Promise<void> {
+        if (!oauthSiteConnected || removedSite.name !== removedSite.host || !removedSite.isCloud) {
+            return;
+        }
+
+        try {
+            const oauthAuthInfo = await this._credentialManager.getAuthInfo(oauthSiteConnected, false);
+
+            if (!oauthAuthInfo) {
+                return;
+            }
+
+            const cloudId = await this.fetchCloudSiteId(removedSite.host);
+            const siteName = removedSite.host.split('.')[0];
+
+            const oauthVersion: DetailedSiteInfo = {
+                ...oauthSiteConnected,
+                host: removedSite.host,
+                baseLinkUrl: `https://${removedSite.host}`,
+                baseApiUrl: `https://api.atlassian.com/ex/jira/${cloudId}/rest`,
+                id: cloudId,
+                name: siteName,
+            };
+
+            await this._credentialManager.saveAuthInfo(oauthVersion, oauthAuthInfo);
+            this._siteManager.addSites([oauthVersion]);
+        } catch (error) {
+            Logger.error(error, 'Error restoring OAuth site');
+        }
     }
 
     private async fetchCloudSiteId(host: string): Promise<string> {

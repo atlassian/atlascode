@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 
 import { featureFlagClientInitializedEvent } from './analytics';
 import { AnalyticsClient, analyticsClient } from './analytics-node-client/src/client.min.js';
-import { Product, ProductJira } from './atlclients/authInfo';
+import { Product } from './atlclients/authInfo';
 import { CredentialManager } from './atlclients/authStore';
 import { ClientManager } from './atlclients/clientManager';
 import { LoginManager } from './atlclients/loginManager';
@@ -80,6 +80,7 @@ export class Container {
     private static _commonMessageHandler: CommonActionMessageHandler;
     private static _bitbucketHelper: CheckoutHelper;
     private static _assignedWorkItemsView: AssignedWorkItemsViewProvider;
+    private static _helpExplorer: HelpExplorer;
 
     static async initialize(context: ExtensionContext, version: string) {
         canFetchInternalUrl().then((success) => {
@@ -194,7 +195,8 @@ export class Container {
 
         this._loginManager = new LoginManager(this._credentialManager, this._siteManager, this._analyticsClient);
         this._bitbucketHelper = new BitbucketCheckoutHelper(context.globalState);
-        context.subscriptions.push(new HelpExplorer());
+        this._helpExplorer = new HelpExplorer();
+        context.subscriptions.push(this._helpExplorer);
 
         this._featureFlagClient = FeatureFlagClient.getInstance();
 
@@ -288,9 +290,8 @@ export class Container {
     }
 
     private static async refreshRovoDev(context: ExtensionContext) {
-        const isJiraEnabledAndAtlassianUser = this.config.jira.enabled && (await this.isAtlassianUser(ProductJira));
         const isBoysenberryMode = !!process.env.ROVODEV_BBY;
-        const shouldEnableRovoDev = isJiraEnabledAndAtlassianUser || isBoysenberryMode;
+        const shouldEnableRovoDev = this.config.jira.enabled || isBoysenberryMode;
 
         if (shouldEnableRovoDev) {
             this._isRovoDevEnabled = true;
@@ -324,6 +325,9 @@ export class Container {
                 );
 
                 context.subscriptions.push(this._rovodevDisposable);
+
+                // Update help explorer to show Rovo Dev content
+                this._helpExplorer.refresh();
             } catch (error) {
                 RovoDevLogger.error(error, 'Enabling Rovo Dev');
             }
@@ -343,6 +347,9 @@ export class Container {
             // Already disabled
             return;
         }
+
+        // Update help explorer to hide Rovo Dev content
+        this._helpExplorer.refresh();
 
         try {
             await setCommandContext(CommandContext.RovoDevEnabled, false);

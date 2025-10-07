@@ -135,5 +135,24 @@ describe('branchUtils', () => {
             const result = generateBranchName(mockRepo, mockBranchType, mockIssue, invalidTemplate);
             expect(result).toBe('Invalid template: please follow the format described above');
         });
+
+        it('should generate branch name without prefix when prefix is empty', () => {
+            mockMustacheRender.mockReturnValue('TEST-123-Test-issue-summary');
+            const emptyBranchType = {
+                kind: '',
+                prefix: '',
+            };
+            const templateWithoutPrefix = '{{issueKey}}-{{summary}}';
+            const result = generateBranchName(mockRepo, emptyBranchType, mockIssue, templateWithoutPrefix);
+            expect(mockMustacheRender).toHaveBeenCalledWith(
+                templateWithoutPrefix,
+                expect.objectContaining({
+                    prefix: '',
+                    issueKey: 'TEST-123',
+                    summary: 'test-issue-summary',
+                }),
+            );
+            expect(result).toBe('TEST-123-Test-issue-summary');
+        });
     });
 });

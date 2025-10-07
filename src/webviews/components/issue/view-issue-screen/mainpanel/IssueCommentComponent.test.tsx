@@ -4,6 +4,8 @@ import React from 'react';
 import { DetailedSiteInfo, Product } from 'src/atlclients/authInfo';
 import { disableConsole } from 'testsutil/console';
 
+import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
+import { EditorStateProvider } from '../EditorStateContext';
 import { IssueCommentComponent } from './IssueCommentComponent';
 
 const mockSiteDetails: DetailedSiteInfo = {
@@ -99,13 +101,21 @@ const mockOnDelete = jest.fn();
 const mockOnCommentTextChange = jest.fn();
 const mockOnEditingCommentChange = jest.fn();
 
+// Mock mention provider
+const mockMentionProvider = AtlascodeMentionProvider.init({ url: '' }, jest.fn().mockResolvedValue([]));
+
+// Helper function to wrap components with EditorStateProvider for testing
+const renderWithEditorProvider = (component: React.ReactElement) => {
+    return render(<EditorStateProvider>{component}</EditorStateProvider>);
+};
+
 describe('IssueCommentComponent', () => {
     beforeAll(() => {
         disableConsole('warn', 'error');
     });
 
     it('renders the AddCommentComponent', () => {
-        render(
+        renderWithEditorProvider(
             <IssueCommentComponent
                 siteDetails={mockSiteDetails}
                 currentUser={mockCurrentUser}
@@ -121,6 +131,7 @@ describe('IssueCommentComponent', () => {
                 isEditingComment={false}
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={false}
+                mentionProvider={mockMentionProvider}
             />,
         );
 
@@ -128,7 +139,7 @@ describe('IssueCommentComponent', () => {
     });
 
     it('renders a list of comments', async () => {
-        render(
+        renderWithEditorProvider(
             <IssueCommentComponent
                 siteDetails={mockSiteDetails}
                 currentUser={mockCurrentUser}
@@ -144,6 +155,7 @@ describe('IssueCommentComponent', () => {
                 isEditingComment={false}
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={false}
+                mentionProvider={mockMentionProvider}
             />,
         );
 
@@ -153,7 +165,7 @@ describe('IssueCommentComponent', () => {
 
     it('allows editing a comment', async () => {
         await act(() =>
-            render(
+            renderWithEditorProvider(
                 <IssueCommentComponent
                     siteDetails={mockSiteDetails}
                     currentUser={mockCurrentUser}
@@ -169,6 +181,7 @@ describe('IssueCommentComponent', () => {
                     isEditingComment={false}
                     onEditingCommentChange={mockOnEditingCommentChange}
                     isAtlaskitEditorEnabled={false}
+                    mentionProvider={mockMentionProvider}
                 />,
             ),
         );
@@ -183,7 +196,7 @@ describe('IssueCommentComponent', () => {
     }, 100000);
 
     it('allows deleting a comment', () => {
-        render(
+        renderWithEditorProvider(
             <IssueCommentComponent
                 siteDetails={mockSiteDetails}
                 currentUser={mockCurrentUser}
@@ -199,6 +212,7 @@ describe('IssueCommentComponent', () => {
                 isEditingComment={false}
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={false}
+                mentionProvider={mockMentionProvider}
             />,
         );
 
@@ -228,11 +242,12 @@ describe('IssueCommentComponent', () => {
                     isEditingComment={isEditingComment}
                     onEditingCommentChange={setIsEditingComment}
                     isAtlaskitEditorEnabled={false}
+                    mentionProvider={mockMentionProvider}
                 />
             );
         };
 
-        render(<IssueCommentComponentWrapper />);
+        renderWithEditorProvider(<IssueCommentComponentWrapper />);
 
         fireEvent.click(screen.getByPlaceholderText('Add a comment...'));
         fireEvent.focus(screen.getByRole('textbox'));
