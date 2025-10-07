@@ -137,6 +137,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await this._context.workspaceState.update(key, enabled);
     }
 
+    public get isReady(): boolean {
+        return !!this._webviewReady;
+    }
+
     public get isVisible(): boolean {
         return this._webviewView?.visible ?? false;
     }
