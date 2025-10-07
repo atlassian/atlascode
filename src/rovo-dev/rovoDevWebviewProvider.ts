@@ -137,6 +137,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await this._context.workspaceState.update(key, enabled);
     }
 
+    public get isReady(): boolean {
+        return !!this._webviewReady;
+    }
+
     public get isVisible(): boolean {
         return this._webviewView?.visible ?? false;
     }
@@ -1132,10 +1136,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         if (!result || result.status === 'unknown') {
             const msg = result ? 'Rovo Dev service is unhealthy/unknown.' : 'Rovo Dev service is unreachable.';
             if (this.isBoysenberry) {
-                await this.processError(
-                    new Error(`${msg}\rTry closing and reopening the Boysenberry session to retry.`),
-                    { title: 'Failed to initialize Rovo Dev' },
-                );
+                await this.processError(new Error(`${msg}\rTry closing and reopening the session to retry.`), {
+                    title: 'Failed to initialize Rovo Dev',
+                });
                 this.signalRovoDevDisabled('Other');
             } else {
                 await this.signalProcessFailedToInitialize(msg);
@@ -1148,9 +1151,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         if (result.status === 'unhealthy') {
             if (this.isBoysenberry) {
                 await this.processError(
-                    new Error(
-                        `Rovo Dev service is unhealthy.\nTry closing and reopening the Boysenberry session to retry.`,
-                    ),
+                    new Error(`Rovo Dev service is unhealthy.\nTry closing and reopening the session to retry.`),
                     { title: 'Failed to initialize Rovo Dev' },
                 );
                 this.signalRovoDevDisabled('Other');

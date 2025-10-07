@@ -295,6 +295,12 @@ export abstract class RovoDevProcessManager {
             return;
         }
 
+        // don't do anything if the provider isn't ready yet - the initialization will be called
+        // by the provider when it becomes ready
+        if (!this.rovoDevWebviewProvider || !this.rovoDevWebviewProvider.isReady) {
+            return;
+        }
+
         if (this.rovoDevInstance) {
             this.asyncLocked = true;
 

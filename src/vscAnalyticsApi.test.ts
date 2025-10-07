@@ -104,6 +104,9 @@ describe('VSCAnalyticsApi', () => {
             const numJiraDcAuthed = 2;
             const numBitbucketCloudAuthed = 3;
             const numBitbucketDcAuthed = 4;
+            const isJiraEnabled = true;
+            const isBitbucketEnabled = false;
+            const isRovoDevEnabled = true;
 
             await analyticsApi.fireLaunchedEvent(
                 location,
@@ -112,6 +115,9 @@ describe('VSCAnalyticsApi', () => {
                 numJiraDcAuthed,
                 numBitbucketCloudAuthed,
                 numBitbucketDcAuthed,
+                isJiraEnabled,
+                isBitbucketEnabled,
+                isRovoDevEnabled,
             );
 
             expect(analytics.launchedEvent).toHaveBeenCalledWith(
@@ -121,6 +127,9 @@ describe('VSCAnalyticsApi', () => {
                 numJiraDcAuthed,
                 numBitbucketCloudAuthed,
                 numBitbucketDcAuthed,
+                isJiraEnabled,
+                isBitbucketEnabled,
+                isRovoDevEnabled,
             );
             expect(mockAnalyticsClient.sendTrackEvent).toHaveBeenCalled();
         });

@@ -999,6 +999,13 @@
             "type": "object",
             "title": "Atlassian",
             "properties": {
+                "atlascode.rovodev.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Rovo Dev Agentic AI enabled.\nIt requires Jira to be enabled.",
+                    "scope": "window",
+                    "order": 1
+                },
                 "atlascode.rovodev.showKeybinding": {
                     "type": "boolean",
                     "default": true,
