@@ -1,6 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
 ## What's new in 4.0.0
+### Bug Fixes
+- Cleaned up user facing error messages 
+
+
+## What's new in 4.0.0
 
 ### Features
 - **Rovo Dev: Atlassian AI Agent** is now available in beta
