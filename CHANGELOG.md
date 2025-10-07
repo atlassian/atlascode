@@ -2,7 +2,9 @@
 
 ## What's new in 4.0.1
 
-- Internal changes only.
+### Features
+
+- Added a config option to enable/disable the Rovo Dev feature
 
 ## What's new in 4.0.0
 
