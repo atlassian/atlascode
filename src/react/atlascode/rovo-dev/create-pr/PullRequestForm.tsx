@@ -114,7 +114,7 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
                                     type="text"
                                     id="pr-commit-message"
                                     name="pr-commit-message"
-                                    placeholder="Enter a commit message (required for uncommitted changes)"
+                                    placeholder="Enter a commit message"
                                 />
                             </div>
                             <div className="form-field">
