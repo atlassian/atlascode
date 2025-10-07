@@ -458,7 +458,7 @@ export class RovoDevChatProvider {
                 this._pendingToolConfirmationLeft = 0;
 
                 if (!response.permission_required) {
-                    return Promise.resolve(true);
+                    break;
                 }
 
                 const toolsToAskForPermission = response.tools.filter(
@@ -468,7 +468,8 @@ export class RovoDevChatProvider {
                 if (this.yoloMode) {
                     const yoloChoices: RovoDevChatProvider['_pendingToolConfirmation'] = {};
                     toolsToAskForPermission.forEach((x) => (yoloChoices[x.tool_call_id] = 'allow'));
-                    return this._rovoDevApiClient!.resumeToolCall(yoloChoices);
+                    await this._rovoDevApiClient!.resumeToolCall(yoloChoices);
+                    break;
                 } else {
                     toolsToAskForPermission.forEach(
                         (x) => (this._pendingToolConfirmation[x.tool_call_id] = 'undecided'),
