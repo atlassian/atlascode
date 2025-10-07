@@ -16,10 +16,11 @@ export const DropdownButton: React.FC<DropdownButtonProps> = ({ buttonItem, item
     return (
         <div className="dropdown-button-container">
             <div className="dropdown-button">
-                {items && (
+                {items && items.length > 0 && (
                     <DropdownMenu
                         trigger={({ triggerRef, isSelected, testId, ...providedProps }) => (
                             <button
+                                aria-label="More actions"
                                 className="dropdown-button-trigger"
                                 type="button"
                                 {...providedProps}
@@ -40,7 +41,7 @@ export const DropdownButton: React.FC<DropdownButtonProps> = ({ buttonItem, item
                     </DropdownMenu>
                 )}
                 <div className="dropdown-button-separator" />
-                <button className="dropdown-button-trigger" onClick={buttonItem.onSelect}>
+                <button aria-label="Main action" className="dropdown-button-trigger" onClick={buttonItem.onSelect}>
                     {buttonItem.label}
                 </button>
             </div>
