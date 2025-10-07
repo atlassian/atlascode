@@ -380,15 +380,25 @@ export class RovoDevChatProvider {
                 this._pendingToolConfirmation = {};
                 this._pendingToolConfirmationLeft = 0;
 
+                if (!response.permission_required) {
+                    return Promise.resolve(true);
+                }
+
+                const toolsToAskForPermission = response.tools.filter(
+                    (x) => response.permissions[x.tool_call_id] === 'ASK',
+                );
+
                 if (this.yoloMode) {
                     const yoloChoices: RovoDevChatProvider['_pendingToolConfirmation'] = {};
-                    response.tools.forEach((x) => (yoloChoices[x.tool_call_id] = 'allow'));
+                    toolsToAskForPermission.forEach((x) => (yoloChoices[x.tool_call_id] = 'allow'));
                     return this._rovoDevApiClient!.resumeToolCall(yoloChoices);
                 } else {
-                    response.tools.forEach((x) => (this._pendingToolConfirmation[x.tool_call_id] = 'undecided'));
-                    this._pendingToolConfirmationLeft = response.tools.length;
+                    toolsToAskForPermission.forEach(
+                        (x) => (this._pendingToolConfirmation[x.tool_call_id] = 'undecided'),
+                    );
+                    this._pendingToolConfirmationLeft = toolsToAskForPermission.length;
 
-                    const promises = response.tools.map((tool) => {
+                    const promises = toolsToAskForPermission.map((tool) => {
                         return webview.postMessage({
                             type: RovoDevProviderMessageType.ShowDialog,
                             message: {

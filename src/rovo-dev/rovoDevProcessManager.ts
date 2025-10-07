@@ -395,7 +395,15 @@ class RovoDevTerminalInstance extends Disposable {
 
                 try {
                     const siteUrl = `https://${credentials.host}`;
-                    const shellArgs = ['serve', `${port}`, '--xid', 'rovodev-ide-vscode', '--site-url', siteUrl];
+                    const shellArgs = [
+                        'serve',
+                        `${port}`,
+                        '--xid',
+                        'rovodev-ide-vscode',
+                        '--site-url',
+                        siteUrl,
+                        '--respect-configured-permissions',
+                    ];
 
                     if (credentials.isStaging) {
                         shellArgs.push('--server-env', 'staging');

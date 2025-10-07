@@ -130,7 +130,9 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         await Container.context.globalState.update('startWorkWithRovoDev', enabled);
     }
 
-    async openRovoDev(): Promise<void> {
-        await Container.rovodevWebviewProvider.invokeRovoDevAskCommand('', undefined);
+    async openRovoDev(issue: MinimalIssue<DetailedSiteInfo>): Promise<void> {
+        const issueUrl = `${issue.siteDetails.baseLinkUrl}/browse/${issue.key}`;
+        const prompt = `Please work on [${issue.key}](${issueUrl})`;
+        await Container.rovodevWebviewProvider.setPromptTextWithFocus(prompt);
     }
 }
