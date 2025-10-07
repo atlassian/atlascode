@@ -79,18 +79,6 @@ export const renderChatHistory = (
         case 'text':
         case '_RovoDevUserPrompt':
             return <ChatMessageItem msg={msg} openFile={openFile} />;
-        // case 'RovoDevRetry':
-        //     const retryMsg: DefaultMessage = {
-        //         text: msg.content,
-        //         source: 'RovoDev',
-        //     };
-        //     return (
-        //         <ChatMessageItem
-        //             msg={retryMsg}
-        //             icon={<StatusErrorIcon color="var(--ds-icon-danger)" label="error-icon" spacing="none" />}
-        //             openFile={openFile}
-        //         />
-        //     );
         default:
             return <div>Unknown message type</div>;
     }
