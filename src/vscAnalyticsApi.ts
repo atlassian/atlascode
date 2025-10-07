@@ -88,6 +88,9 @@ export class VSCAnalyticsApi implements AnalyticsApi {
         numJiraDcAuthed: number,
         numBitbucketCloudAuthed: number,
         numBitbucketDcAuthed: number,
+        isJiraEnabled: boolean,
+        isBitbucketEnabled: boolean,
+        isRovoDevEnabled: boolean,
     ): Promise<void> {
         return launchedEvent(
             location,
@@ -96,6 +99,9 @@ export class VSCAnalyticsApi implements AnalyticsApi {
             numJiraDcAuthed,
             numBitbucketCloudAuthed,
             numBitbucketDcAuthed,
+            isJiraEnabled,
+            isBitbucketEnabled,
+            isRovoDevEnabled,
         ).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });

@@ -15,6 +15,9 @@ export interface AnalyticsApi {
         numJiraDcAuthed: number,
         numBitbucketCloudAuthed: number,
         numBitbucketDcAuthed: number,
+        isJiraEnabled: boolean,
+        isBitbucketEnabled: boolean,
+        isRovoDevEnabled: boolean,
     ): Promise<void>;
     fireFeatureChangeEvent(featureId: string, enabled: boolean): Promise<void>;
     fireAuthenticatedEvent(site: DetailedSiteInfo): Promise<void>;
