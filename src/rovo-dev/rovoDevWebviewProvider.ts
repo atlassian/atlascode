@@ -26,7 +26,7 @@ import {
 } from 'vscode';
 
 import { Container } from '../../src/container';
-import { RovoDevLogger } from '../../src/logger';
+import { Logger, RovoDevLogger } from '../../src/logger';
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { Commands, rovodevInfo } from '../constants';
 import {
@@ -1252,8 +1252,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         this.setRovoDevTerminated(RovoDevProcessState.Disabled, reason);
 
-        const webView = this._webView!;
-        await webView.postMessage({
+        if (!this._webView) {
+            Logger.warn('signalRovoDevDisabled called but webView is not initialized');
+            return;
+        }
+        await this._webView.postMessage({
             type: RovoDevProviderMessageType.RovoDevDisabled,
             reason,
             detail,
