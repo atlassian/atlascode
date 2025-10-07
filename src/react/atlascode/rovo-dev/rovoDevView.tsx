@@ -667,11 +667,15 @@ const RovoDevView: React.FC = () => {
     }, []);
 
     const onToolPermissionChoice = useCallback(
-        (toolCallId: string, choice: ToolPermissionChoice) => {
+        (toolCallId: string, choice: ToolPermissionChoice | 'allowAll' | 'enableYolo') => {
             // remove the dialog after the choice is submitted
-            setModalDialogs((prev) =>
-                prev.filter((x) => x.type !== 'toolPermissionRequest' || x.toolCallId !== toolCallId),
-            );
+            if (choice === 'enableYolo' || choice === 'allowAll') {
+                setModalDialogs([]);
+            } else {
+                setModalDialogs((prev) =>
+                    prev.filter((x) => x.type !== 'toolPermissionRequest' || x.toolCallId !== toolCallId),
+                );
+            }
 
             postMessage({
                 type: RovoDevViewResponseType.ToolPermissionChoiceSubmit,

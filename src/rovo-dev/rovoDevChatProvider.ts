@@ -415,7 +415,7 @@ export class RovoDevChatProvider {
         }
     }
 
-    public async signalToolRequestChoiceSubmit(toolCallId: string, choice: ToolPermissionChoice) {
+    public async signalToolRequestChoiceSubmit(toolCallId: string, choice: ToolPermissionChoice | 'allowAll') {
         if (!this._pendingToolConfirmation[toolCallId]) {
             throw new Error('Received an unexpected tool confirmation: not found.');
         }
@@ -423,9 +423,17 @@ export class RovoDevChatProvider {
             throw new Error('Received an unexpected tool confirmation: already confirmed.');
         }
 
-        this._pendingToolConfirmation[toolCallId] = choice;
+        this._pendingToolConfirmation[toolCallId] = choice === 'allowAll' ? 'allow' : choice;
 
-        if (--this._pendingToolConfirmationLeft <= 0) {
+        if (--this._pendingToolConfirmationLeft <= 0 || choice === 'allowAll') {
+            if (choice === 'allowAll') {
+                for (const key in this._pendingToolConfirmation) {
+                    if (this._pendingToolConfirmation[key] === 'undecided') {
+                        this._pendingToolConfirmation[key] = 'allow';
+                    }
+                }
+                this._pendingToolConfirmationLeft = 0;
+            }
             await this._rovoDevApiClient!.resumeToolCall(this._pendingToolConfirmation);
             this._pendingToolConfirmation = {};
         }

@@ -70,6 +70,6 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.CheckFileExists, { filePath: string; requestId: string }>
     | ReducerAction<
           RovoDevViewResponseType.ToolPermissionChoiceSubmit,
-          { choice: ToolPermissionChoice; toolCallId: string }
+          { choice: ToolPermissionChoice | 'allowAll' | 'enableYolo'; toolCallId: string }
       >
     | ReducerAction<RovoDevViewResponseType.YoloModeToggled, { value: boolean }>;

@@ -13,6 +13,7 @@ import { PullRequestChatItem, PullRequestForm } from '../create-pr/PullRequestFo
 import { FeedbackForm, FeedbackType } from '../feedback-form/FeedbackForm';
 import { RovoDevLanding } from '../landing-page/RovoDevLanding';
 import { McpConsentChoice, RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
+import { inChatButtonStyles } from '../rovoDevViewStyles';
 import { CodePlanButton } from '../technical-plan/CodePlanButton';
 import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolCallItem } from '../tools/ToolCallItem';
@@ -48,7 +49,7 @@ interface ChatStreamProps {
     onSendMessage: (message: string) => void;
     jiraWorkItems: MinimalIssue<DetailedSiteInfo>[] | undefined;
     onJiraItemClick: (issue: MinimalIssue<DetailedSiteInfo>) => void;
-    onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionChoice) => void;
+    onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionChoice | 'allowAll' | 'enableYolo') => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -313,15 +314,41 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                 </div>
             )}
 
-            {!isChatHistoryDisabled &&
-                modalDialogs.map((dialog) => (
-                    <DialogMessageItem
-                        msg={dialog}
-                        isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
-                        retryAfterError={renderProps.retryPromptAfterError}
-                        onToolPermissionChoice={onToolPermissionChoice}
-                    />
-                ))}
+            {!isChatHistoryDisabled && (
+                <div>
+                    {modalDialogs.map((dialog) => (
+                        <DialogMessageItem
+                            msg={dialog}
+                            isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
+                            retryAfterError={renderProps.retryPromptAfterError}
+                            onToolPermissionChoice={onToolPermissionChoice}
+                        />
+                    ))}
+                    {modalDialogs.length > 1 && modalDialogs.every((d) => d.type === 'toolPermissionRequest') && (
+                        <div style={{ width: '100%', textAlign: 'right' }}>
+                            <div>
+                                <select
+                                    onSelect={(e) => {
+                                        const value = e.currentTarget.value;
+                                        if (value === 'enableYolo' || value === 'allowAll') {
+                                            onToolPermissionChoice(modalDialogs[0].toolCallId, value);
+                                        }
+                                    }}
+                                >
+                                    <option value="allowAll">Allow all</option>
+                                    <option value="enableYolo">Enable YOLO mode</option>
+                                </select>
+                                <button
+                                    style={inChatButtonStyles}
+                                    onClick={() => onToolPermissionChoice(modalDialogs[0].toolCallId, 'allowAll')}
+                                >
+                                    Allow all
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {!isChatHistoryDisabled && currentState.state === 'WaitingForPrompt' && (
                 <FollowUpActionFooter>
