@@ -670,6 +670,9 @@ const RovoDevView: React.FC = () => {
         (toolCallId: string, choice: ToolPermissionChoice | 'allowAll' | 'enableYolo') => {
             // remove the dialog after the choice is submitted
             if (choice === 'enableYolo' || choice === 'allowAll') {
+                if (choice === 'enableYolo' && !isYoloModeToggled) {
+                    setIsYoloModeToggled(true);
+                }
                 setModalDialogs([]);
             } else {
                 setModalDialogs((prev) =>
@@ -683,7 +686,7 @@ const RovoDevView: React.FC = () => {
                 toolCallId,
             });
         },
-        [postMessage],
+        [isYoloModeToggled, postMessage],
     );
 
     const onYoloModeToggled = useCallback(() => setIsYoloModeToggled((prev) => !prev), [setIsYoloModeToggled]);

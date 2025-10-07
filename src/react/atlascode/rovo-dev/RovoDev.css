@@ -3,6 +3,11 @@ body {
     background-color: var(--vscode-sideBar-background) !important;
 }
 
+.atlaskit-portal-container {
+    --ds-background-neutral-subtle: var(--vscode-dropdown-background);
+    --ds-background-neutral-subtle-hovered: var(--vscode-list-hoverBackground);
+}
+
 .rovoDevChat * {
     scrollbar-width: auto;
     scrollbar-color: var(--vscode-scrollbarSlider-background) transparent;

@@ -13,13 +13,13 @@ import { PullRequestChatItem, PullRequestForm } from '../create-pr/PullRequestFo
 import { FeedbackForm, FeedbackType } from '../feedback-form/FeedbackForm';
 import { RovoDevLanding } from '../landing-page/RovoDevLanding';
 import { McpConsentChoice, RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
-import { inChatButtonStyles } from '../rovoDevViewStyles';
 import { CodePlanButton } from '../technical-plan/CodePlanButton';
 import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolCallItem } from '../tools/ToolCallItem';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
 import { DefaultMessage, DialogMessage, parseToolReturnMessage, Response, scrollToEnd } from '../utils';
 import { ChatMessageItem } from './ChatMessageItem';
+import { DropdownButton } from './dropdown-button/DropdownButton';
 import { MessageDrawer } from './MessageDrawer';
 
 interface ChatStreamProps {
@@ -325,27 +325,22 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                         />
                     ))}
                     {modalDialogs.length > 1 && modalDialogs.every((d) => d.type === 'toolPermissionRequest') && (
-                        <div style={{ width: '100%', textAlign: 'right' }}>
-                            <div>
-                                <select
-                                    onSelect={(e) => {
-                                        const value = e.currentTarget.value;
-                                        if (value === 'enableYolo' || value === 'allowAll') {
-                                            onToolPermissionChoice(modalDialogs[0].toolCallId, value);
-                                        }
-                                    }}
-                                >
-                                    <option value="allowAll">Allow all</option>
-                                    <option value="enableYolo">Enable YOLO mode</option>
-                                </select>
-                                <button
-                                    style={inChatButtonStyles}
-                                    onClick={() => onToolPermissionChoice(modalDialogs[0].toolCallId, 'allowAll')}
-                                >
-                                    Allow all
-                                </button>
-                            </div>
-                        </div>
+                        <DropdownButton
+                            buttonItem={{
+                                label: 'Allow all',
+                                onSelect: () => onToolPermissionChoice(modalDialogs[0].toolCallId, 'allowAll'),
+                            }}
+                            items={[
+                                {
+                                    label: 'Allow all',
+                                    onSelect: () => onToolPermissionChoice(modalDialogs[0].toolCallId, 'allowAll'),
+                                },
+                                {
+                                    label: 'Enable YOLO mode',
+                                    onSelect: () => onToolPermissionChoice(modalDialogs[0].toolCallId, 'enableYolo'),
+                                },
+                            ]}
+                        />
                     )}
                 </div>
             )}
