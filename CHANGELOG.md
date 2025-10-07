@@ -1,23 +1,24 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
 ## What's new in 4.0.1
-### Bug Fixes
-- Cleaned up user facing error messages 
 
+- Internal changes only.
 
 ## What's new in 4.0.0
 
 ### Features
+
 - **Rovo Dev: Atlassian AI Agent** is now available in beta
     - New sidebar icon that opens the Rovo Dev view. Rovo Dev can answer questions about your codebase and complete tasks for you 
     - Read our docs here: https://github.com/atlassian/atlascode/wiki
 
-
-## What's new in 3.8.21
-
 ### Bug Fixes
 
 - Fix issue when logging out from api token does not restore the corresponding oauth site
+
+## What's new in 3.8.20
+
+- Internal changes only.
 
 ## What's new in 3.8.19
 
@@ -26,12 +27,20 @@
 - Fix error while connecting several jira sites with an API token
 - Fix issue when pressing enter to submit the form does not work
 
+## What's new in 3.8.18
+
+- Internal changes only.
+
 ## What's new in 3.8.17
 
 ### Features
 
 - Update pipeline schema to the current latest version
 - Add the ability to search issue through all connected sites
+
+## What's new in 3.8.16
+
+- Internal changes only.
 
 ## What's new in 3.8.15
 
