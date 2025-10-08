@@ -1,3 +1,4 @@
+import { setGlobalTheme } from '@atlaskit/tokens';
 import { InlineTextEditor } from '@atlassianlabs/guipi-core-components';
 import {
     Box,
@@ -13,7 +14,7 @@ import {
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';
 
 import { User } from '../../../bitbucket/model';
@@ -137,6 +138,32 @@ function PullRequestDetailsPageContent({ state, controller }: PullRequestDetails
     const classes = useStyles();
     const theme = useTheme();
     const isWideScreen = useMediaQuery(theme.breakpoints.up('md'));
+
+    useEffect(() => {
+        // Add atlaskit theme for Atlaskit editor
+        const initializeTheme = () => {
+            const body = document.body;
+            const isDark: boolean =
+                body.getAttribute('class') === 'vscode-dark' ||
+                (body.classList.contains('vscode-high-contrast') &&
+                    !body.classList.contains('vscode-high-contrast-light'));
+
+            setGlobalTheme({
+                light: 'light',
+                dark: 'dark',
+                colorMode: isDark ? 'dark' : 'light',
+                typography: 'typography-modernized',
+            });
+        };
+
+        initializeTheme();
+
+        const observer = new MutationObserver(initializeTheme);
+        observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+        return () => observer.disconnect();
+    }, []);
+
     const handleFetchUsers = AwesomeDebouncePromise(
         async (input: string, abortSignal?: AbortSignal): Promise<User[]> => {
             return await controller.fetchUsers(state.pr.site, input, abortSignal);

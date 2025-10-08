@@ -2,9 +2,10 @@ import EditIcon from '@mui/icons-material/Edit';
 import { Box, darken, Grid, lighten, Theme, Tooltip, Typography } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import React, { useCallback, useState } from 'react';
+import { AtlascodeMentionProvider } from 'src/webviews/components/issue/common/AtlaskitEditor/AtlascodeMentionsProvider';
+import AtlaskitEditor from 'src/webviews/components/issue/common/AtlaskitEditor/AtlaskitEditor';
 
 import { User } from '../../../bitbucket/model';
-import { MarkdownEditor } from '../common/editor/MarkdownEditor';
 
 const useStyles = makeStyles(
     (theme: Theme) =>
@@ -58,12 +59,15 @@ const InlineRenderedTextEditor: React.FC<InlineTextEditorProps> = (props: Inline
     );
 
     return editMode ? (
-        <MarkdownEditor
-            initialContent={props.rawContent}
-            onSave={handleSave}
-            onCancel={exitEditMode}
-            fetchUsers={props.fetchUsers}
-        />
+        <div suppressContentEditableWarning={true}>
+            <AtlaskitEditor
+                defaultValue={props.htmlContent}
+                onSave={handleSave}
+                onCancel={exitEditMode}
+                mentionProvider={Promise.resolve({ unsubscribe: () => {} } as any as AtlascodeMentionProvider)}
+                isBitbucket={true}
+            />
+        </div>
     ) : (
         <Grid
             container

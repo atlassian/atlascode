@@ -2,7 +2,7 @@ import { Avatar, Grid } from '@mui/material';
 import React from 'react';
 
 import { User } from '../../../bitbucket/model';
-import { MarkdownEditor } from './editor/MarkdownEditor';
+// import { MarkdownEditor } from './editor/MarkdownEditor';
 
 type CommentFormProps = {
     currentUser: User;
@@ -21,12 +21,12 @@ const CommentForm: React.FC<CommentFormProps> = (props: CommentFormProps) => {
             <Grid item xs={10}>
                 <Grid container spacing={1} direction="column">
                     <Grid item>
-                        <MarkdownEditor
+                        {/* <MarkdownEditor
                             initialContent={props.initialContent}
                             onSave={props.onSave}
                             onCancel={props.onCancel}
                             fetchUsers={props.fetchUsers}
-                        />
+                        /> */}
                     </Grid>
                 </Grid>
             </Grid>
