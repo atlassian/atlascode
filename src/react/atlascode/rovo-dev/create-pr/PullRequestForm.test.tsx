@@ -174,6 +174,51 @@ describe('PullRequestForm', () => {
             );
         });
     });
+
+    describe('form validation with optional commit message', () => {
+        it('should show helpful label text for commit message field', () => {
+            render(
+                <PullRequestForm
+                    onCancel={mockOnCancel}
+                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    onPullRequestCreated={mockOnPullRequestCreated}
+                    isFormVisible={true}
+                />,
+            );
+
+            const commitMessageLabel = screen.getByText(/commit message/i);
+            expect(commitMessageLabel).toBeTruthy();
+            expect(screen.getByText(/optional if already committed/i)).toBeTruthy();
+        });
+
+        it('should not have required attribute on commit message field', () => {
+            render(
+                <PullRequestForm
+                    onCancel={mockOnCancel}
+                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    onPullRequestCreated={mockOnPullRequestCreated}
+                    isFormVisible={true}
+                />,
+            );
+
+            const commitMessageInput = screen.getByLabelText(/commit message/i);
+            expect(commitMessageInput.hasAttribute('required')).toBe(false);
+        });
+
+        it('should still have required attribute on branch name field', () => {
+            render(
+                <PullRequestForm
+                    onCancel={mockOnCancel}
+                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    onPullRequestCreated={mockOnPullRequestCreated}
+                    isFormVisible={true}
+                />,
+            );
+
+            const branchNameInput = screen.getByLabelText(/branch name/i);
+            expect(branchNameInput.hasAttribute('required')).toBe(true);
+        });
+    });
 });
 
 describe('PullRequestChatItem', () => {
