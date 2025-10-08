@@ -665,6 +665,10 @@ const RovoDevView: React.FC = () => {
         setPromptText(template);
     }, []);
 
+    const setPromptTextFromAction = useCallback((context: string) => {
+        setPromptText(context);
+    }, []);
+
     const onToolPermissionChoice = useCallback(
         (toolCallId: string, choice: ToolPermissionChoice) => {
             // remove the dialog after the choice is submitted
@@ -733,7 +737,7 @@ const RovoDevView: React.FC = () => {
                 onLoginClick={onLoginClick}
                 onOpenFolder={onOpenFolder}
                 onMcpChoice={onMcpChoice}
-                onSendMessage={sendPrompt}
+                setPromptText={setPromptTextFromAction}
                 jiraWorkItems={jiraWorkItems}
                 onJiraItemClick={onJiraItemClick}
                 onToolPermissionChoice={onToolPermissionChoice}

@@ -45,7 +45,7 @@ interface ChatStreamProps {
     onLoginClick: () => void;
     onOpenFolder: () => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
-    onSendMessage: (message: string) => void;
+    setPromptText: (context: string) => void;
     jiraWorkItems: MinimalIssue<DetailedSiteInfo>[] | undefined;
     onJiraItemClick: (issue: MinimalIssue<DetailedSiteInfo>) => void;
     onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionChoice) => void;
@@ -68,7 +68,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     onLoginClick,
     onOpenFolder,
     onMcpChoice,
-    onSendMessage,
+    setPromptText,
     jiraWorkItems,
     onJiraItemClick,
     onToolPermissionChoice,
@@ -241,7 +241,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     onLoginClick={onLoginClick}
                     onOpenFolder={onOpenFolder}
                     onMcpChoice={onMcpChoice}
-                    onSendMessage={onSendMessage}
+                    setPromptText={setPromptText}
                     jiraWorkItems={jiraWorkItems}
                     onJiraItemClick={onJiraItemClick}
                 />

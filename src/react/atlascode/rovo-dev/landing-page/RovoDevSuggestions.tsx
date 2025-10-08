@@ -15,8 +15,8 @@ const titleStyles: React.CSSProperties = {
 };
 
 export const RovoDevActions: React.FC<{
-    onSendMessage: (message: string) => void;
-}> = ({ onSendMessage }) => {
+    setPromptText: (context: string) => void;
+}> = ({ setPromptText }) => {
     return (
         <div style={{ marginTop: '32px', width: '100%', maxWidth: '270px' }}>
             <div style={titleStyles}>Actions</div>
@@ -25,17 +25,17 @@ export const RovoDevActions: React.FC<{
                 <ActionItem
                     icon={<AiChatIcon size="small" spacing="none" label="Explain this repository" />}
                     text="Explain this repository"
-                    onClick={() => onSendMessage('Explain this repository')}
+                    onClick={() => setPromptText('Explain this repository')}
                 />
                 <ActionItem
                     icon={<AiChatIcon size="small" spacing="none" label="Find bugs in this repository" />}
                     text="Find bugs in this repository"
-                    onClick={() => onSendMessage('Find bugs in this repository')}
+                    onClick={() => setPromptText('Find bugs in this repository')}
                 />
                 <ActionItem
                     icon={<AiChatIcon size="small" spacing="none" label="List my assigned Jira work items" />}
                     text="List my assigned Jira work items"
-                    onClick={() => onSendMessage('List my assigned Jira work items')}
+                    onClick={() => setPromptText('List my assigned Jira work items')}
                 />
             </div>
         </div>

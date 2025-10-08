@@ -33,7 +33,7 @@ export const RovoDevLanding: React.FC<{
     onLoginClick: () => void;
     onOpenFolder: () => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
-    onSendMessage: (message: string) => void;
+    setPromptText: (context: string) => void;
     jiraWorkItems: MinimalIssue<DetailedSiteInfo>[] | undefined;
     onJiraItemClick: (issue: MinimalIssue<DetailedSiteInfo>) => void;
 }> = ({
@@ -42,7 +42,7 @@ export const RovoDevLanding: React.FC<{
     onLoginClick,
     onOpenFolder,
     onMcpChoice,
-    onSendMessage,
+    setPromptText,
     jiraWorkItems,
     onJiraItemClick,
 }) => {
@@ -77,7 +77,7 @@ export const RovoDevLanding: React.FC<{
 
             {!shouldHideSuggestions && (
                 <>
-                    <RovoDevActions onSendMessage={onSendMessage} />
+                    <RovoDevActions setPromptText={setPromptText} />
                     <RovoDevJiraWorkItems jiraWorkItems={jiraWorkItems} onJiraItemClick={onJiraItemClick} />
                 </>
             )}
