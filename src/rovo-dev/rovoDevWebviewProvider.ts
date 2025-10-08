@@ -435,12 +435,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.ToolPermissionChoiceSubmit:
-                        if (e.choice === 'enableYolo') {
-                            this._chatProvider.yoloMode = true;
-                            this.saveYoloModeToStorage(true);
-                        } else {
-                            await this._chatProvider.signalToolRequestChoiceSubmit(e.toolCallId, e.choice);
+                        if (e.choice === 'allowAll') {
+                            await this._chatProvider.signalToolRequestAllowAll();
+                            break;
                         }
+                        await this._chatProvider.signalToolRequestChoiceSubmit(e.toolCallId, e.choice);
+
                         break;
 
                     case RovoDevViewResponseType.YoloModeToggled:

@@ -46,7 +46,7 @@ export class RovoDevChatProvider {
     public set yoloMode(value: boolean) {
         this._yoloMode = value;
         if (value) {
-            this.signalYoloModeEngaged();
+            this.signalToolRequestAllowAll();
         }
     }
 
@@ -425,7 +425,7 @@ export class RovoDevChatProvider {
         }
     }
 
-    public async signalToolRequestChoiceSubmit(toolCallId: string, choice: ToolPermissionChoice | 'allowAll') {
+    public async signalToolRequestChoiceSubmit(toolCallId: string, choice: ToolPermissionChoice) {
         if (!this._pendingToolConfirmation[toolCallId]) {
             throw new Error('Received an unexpected tool confirmation: not found.');
         }
@@ -433,23 +433,15 @@ export class RovoDevChatProvider {
             throw new Error('Received an unexpected tool confirmation: already confirmed.');
         }
 
-        this._pendingToolConfirmation[toolCallId] = choice === 'allowAll' ? 'allow' : choice;
+        this._pendingToolConfirmation[toolCallId] = choice;
 
-        if (--this._pendingToolConfirmationLeft <= 0 || choice === 'allowAll') {
-            if (choice === 'allowAll') {
-                for (const key in this._pendingToolConfirmation) {
-                    if (this._pendingToolConfirmation[key] === 'undecided') {
-                        this._pendingToolConfirmation[key] = 'allow';
-                    }
-                }
-                this._pendingToolConfirmationLeft = 0;
-            }
+        if (--this._pendingToolConfirmationLeft <= 0) {
             await this._rovoDevApiClient!.resumeToolCall(this._pendingToolConfirmation);
             this._pendingToolConfirmation = {};
         }
     }
 
-    private async signalYoloModeEngaged() {
+    public async signalToolRequestAllowAll() {
         if (this._pendingToolConfirmationLeft > 0) {
             for (const key in this._pendingToolConfirmation) {
                 if (this._pendingToolConfirmation[key] === 'undecided') {

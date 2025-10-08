@@ -7,8 +7,7 @@ import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
 import * as React from 'react';
-import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
-import { RovoDevContextItem, State } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevContextItem, State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
@@ -667,16 +666,21 @@ const RovoDevView: React.FC = () => {
     }, []);
 
     const onToolPermissionChoice = useCallback(
-        (toolCallId: string, choice: ToolPermissionChoice | 'allowAll' | 'enableYolo') => {
+        (toolCallId: string, choice: ToolPermissionDialogChoice | 'enableYolo') => {
             // remove the dialog after the choice is submitted
-            if (choice === 'enableYolo' || choice === 'allowAll') {
-                if (choice === 'enableYolo' && !isYoloModeToggled) {
-                    setIsYoloModeToggled(true);
-                }
+            if (choice === 'enableYolo') {
+                setIsYoloModeToggled(true);
                 setModalDialogs([]);
+                postMessage({
+                    type: RovoDevViewResponseType.YoloModeToggled,
+                    value: true,
+                });
+                return;
             } else {
                 setModalDialogs((prev) =>
-                    prev.filter((x) => x.type !== 'toolPermissionRequest' || x.toolCallId !== toolCallId),
+                    choice === 'allowAll'
+                        ? []
+                        : prev.filter((x) => x.type !== 'toolPermissionRequest' || x.toolCallId !== toolCallId),
                 );
             }
 
@@ -686,7 +690,7 @@ const RovoDevView: React.FC = () => {
                 toolCallId,
             });
         },
-        [isYoloModeToggled, postMessage],
+        [postMessage],
     );
 
     const onYoloModeToggled = useCallback(() => setIsYoloModeToggled((prev) => !prev), [setIsYoloModeToggled]);

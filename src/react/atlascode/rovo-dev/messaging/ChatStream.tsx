@@ -1,7 +1,6 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
-import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
-import { State } from 'src/rovo-dev/rovoDevTypes';
+import { State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 import { ConnectionTimeout } from 'src/util/time';
 
@@ -49,7 +48,7 @@ interface ChatStreamProps {
     onSendMessage: (message: string) => void;
     jiraWorkItems: MinimalIssue<DetailedSiteInfo>[] | undefined;
     onJiraItemClick: (issue: MinimalIssue<DetailedSiteInfo>) => void;
-    onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionChoice | 'allowAll' | 'enableYolo') => void;
+    onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionDialogChoice | 'enableYolo') => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
