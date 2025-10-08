@@ -57,10 +57,12 @@ if [[ -z "\${ONLYSERVER:-}" ]]; then
     SUPPORTED_TARGETS=("jira-cloud" "jira-dc" "bitbucket-cloud" "bitbucket-dc" "all")
     
     if [[ " \${SUPPORTED_TARGETS[*]} " =~ " \${TARGET} " ]]; then
-        echo ">> Running \${TARGET} tests"
         if [[ "\${TARGET}" == "all" ]]; then
+            echo ">> WARNING: TARGET=all is not expected in CI - a specific target should be provided"
+            echo ">> Running all tests as fallback"
             npx playwright test --workers=1
         else
+            echo ">> Running \${TARGET} tests"
             npx playwright test --project=\${TARGET} --workers=1
         fi
     else
