@@ -34,11 +34,13 @@ import {
     RovoDevViewResponse,
     RovoDevViewResponseType,
 } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
+import { modifyFileTitleMap } from '../react/atlascode/rovo-dev/utils';
 import { GitErrorCodes } from '../typings/git';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { RovoDevApiClient } from './rovoDevApiClient';
 import { RovoDevHealthcheckResponse } from './rovoDevApiClientInterfaces';
 import { RovoDevChatProvider } from './rovoDevChatProvider';
+import { RovoDevContentTracker } from './rovoDevContentTracker';
 import { RovoDevDwellTracker } from './rovoDevDwellTracker';
 import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
 import { RovoDevJiraItemsProvider } from './rovoDevJiraItemsProvider';
@@ -103,6 +105,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _disposables: Disposable[] = [];
 
     private _dwellTracker?: RovoDevDwellTracker;
+    private _contentTracker?: RovoDevContentTracker;
 
     private _extensionPath: string;
     private _extensionUri: Uri;
@@ -334,6 +337,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             type: RovoDevProviderMessageType.CheckGitChangesComplete,
                             hasChanges: !isClean,
                         });
+                        break;
+
+                    case RovoDevViewResponseType.FilterModifiedFilesByContent:
+                        await this.executeFilterModifiedFilesByContent(e.files);
                         break;
 
                     case RovoDevViewResponseType.ReportThinkingDrawerExpanded:
@@ -860,6 +867,43 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
+    private async executeFilterModifiedFilesByContent(files: ModifiedFile[]) {
+        const webview = this._webView!;
+
+        if (!this._contentTracker) {
+            // If content tracker is not available, return all files (fallback behavior)
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.FilterModifiedFilesByContentComplete,
+                filteredFiles: files,
+            });
+            return;
+        }
+
+        try {
+            const filePaths = files.map((file) => file.filePath);
+            const filesWithContentChanges = await this._contentTracker.filterFilesWithChanges(filePaths);
+
+            const filteredFiles = files.filter(
+                (file) =>
+                    filesWithContentChanges.includes(file.filePath) ||
+                    file.type === modifyFileTitleMap.created.type ||
+                    file.type === modifyFileTitleMap.deleted.type,
+            );
+
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.FilterModifiedFilesByContentComplete,
+                filteredFiles: filteredFiles,
+            });
+        } catch (error) {
+            // On error, return all files
+            RovoDevLogger.debug('Error filtering files by content:', error);
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.FilterModifiedFilesByContentComplete,
+                filteredFiles: files,
+            });
+        }
+    }
+
     private async createPR(commitMessage?: string, branchName?: string): Promise<void> {
         const prHandler = this._prHandler;
 
@@ -1229,6 +1273,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             await this._chatProvider.executeReplay();
         }
 
+        // Initialize content tracker with the API client
+        this._contentTracker?.dispose();
+        this._contentTracker = new RovoDevContentTracker(this._rovoDevApiClient);
+
         // extra sanity checks here
 
         if (!this.appInstanceId) {
@@ -1317,6 +1365,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._telemetryProvider.shutdown();
         this._dwellTracker?.dispose();
         this._dwellTracker = undefined;
+        this._contentTracker?.dispose();
+        this._contentTracker = undefined;
 
         return this.refreshDebugPanel();
     }

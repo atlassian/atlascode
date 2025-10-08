@@ -2,6 +2,7 @@ import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
+import { ModifiedFile } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
 import { DialogMessage } from '../react/atlascode/rovo-dev/utils';
 import { RovoDevTextResponse, RovoDevToolCallResponse, RovoDevToolReturnResponse } from './responseParserInterfaces';
 import { EntitlementCheckRovoDevHealthcheckResponse } from './rovoDevApiClientInterfaces';
@@ -25,6 +26,7 @@ export const enum RovoDevProviderMessageType {
     ContextAdded = 'contextAdded',
     ContextRemoved = 'contextRemoved',
     CheckGitChangesComplete = 'checkGitChangesComplete',
+    FilterModifiedFilesByContentComplete = 'filterModifiedFilesByContentComplete',
     ForceStop = 'forceStop',
     ShowFeedbackForm = 'showFeedbackForm',
     SetDebugPanel = 'setDebugPanel',
@@ -82,6 +84,7 @@ export type RovoDevProviderMessage =
           FocusedContextRemovedResponse | NonFocusedContextRemovedResponse
       >
     | ReducerAction<RovoDevProviderMessageType.CheckGitChangesComplete, { hasChanges: boolean }>
+    | ReducerAction<RovoDevProviderMessageType.FilterModifiedFilesByContentComplete, { filteredFiles: ModifiedFile[] }>
     | ReducerAction<RovoDevProviderMessageType.ForceStop>
     | ReducerAction<RovoDevProviderMessageType.ShowFeedbackForm>
     | ReducerAction<
