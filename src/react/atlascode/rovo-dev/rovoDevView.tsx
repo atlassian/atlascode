@@ -7,6 +7,7 @@ import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
 import * as React from 'react';
+import { RovoDevToolReturnResponse } from 'src/rovo-dev/responseParserInterfaces';
 import { RovoDevContextItem, State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
@@ -24,15 +25,13 @@ import { DebugPanel } from './tools/DebugPanel';
 import { parseToolCallMessage } from './tools/ToolCallItem';
 import {
     appendResponse,
-    ChatMessage,
     CODE_PLAN_EXECUTE_PROMPT,
-    DefaultMessage,
     DialogMessage,
     extractLastNMessages,
     isCodeChangeTool,
     parseToolReturnMessage,
+    PullRequestMessage,
     Response,
-    ToolReturnGenericMessage,
     ToolReturnParseResult,
 } from './utils';
 
@@ -144,7 +143,7 @@ const RovoDevView: React.FC = () => {
         setPendingToolCallMessage('');
     }, [keepFiles, totalModifiedFiles]);
 
-    const handleAppendModifiedFileToolReturns = useCallback((toolReturn: ToolReturnGenericMessage) => {
+    const handleAppendModifiedFileToolReturns = useCallback((toolReturn: RovoDevToolReturnResponse) => {
         if (isCodeChangeTool(toolReturn.tool_name)) {
             const msg = parseToolReturnMessage(toolReturn).filter((msg) => msg.filePath !== undefined);
 
@@ -180,10 +179,21 @@ const RovoDevView: React.FC = () => {
     }, []);
 
     const handleAppendResponse = useCallback(
-        (response: Response) => {
-            setHistory((prev) =>
-                appendResponse(response, prev, handleAppendModifiedFileToolReturns, setIsDeepPlanCreated),
-            );
+        (response: Response | Response[]) => {
+            setHistory((prev) => {
+                prev = appendResponse(prev, response, handleAppendModifiedFileToolReturns);
+
+                const last = prev.at(-1);
+                if (
+                    !Array.isArray(last) &&
+                    last?.event_kind === 'tool-return' &&
+                    last.tool_name === 'create_technical_plan'
+                ) {
+                    setIsDeepPlanCreated(true);
+                }
+
+                return prev;
+            });
         },
         [handleAppendModifiedFileToolReturns],
     );
@@ -195,7 +205,11 @@ const RovoDevView: React.FC = () => {
                     setIsDeepPlanToggled(event.enable_deep_plan || false);
                     setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE);
                     if (event.echoMessage) {
-                        handleAppendResponse({ source: 'User', text: event.text, context: event.context });
+                        handleAppendResponse({
+                            event_kind: '_RovoDevUserPrompt',
+                            content: event.text,
+                            context: event.context,
+                        });
                     }
                     break;
 
@@ -204,28 +218,17 @@ const RovoDevView: React.FC = () => {
                         prev.state === 'WaitingForPrompt' ? { state: 'GeneratingResponse' } : prev,
                     );
 
-                    const object = event.message;
-                    if (object.event_kind === 'text' && object.content) {
-                        const msg: ChatMessage = {
-                            text: object.content || '',
-                            source: 'RovoDev',
-                        };
-                        handleAppendResponse(msg);
-                    } else if (object.event_kind === 'tool-call') {
-                        setPendingToolCallMessage(parseToolCallMessage(object.tool_name));
-                    } else if (object.event_kind === 'tool-return') {
-                        const returnMessage: ToolReturnGenericMessage = {
-                            source: 'ToolReturn',
-                            tool_name: object.tool_name,
-                            content: object.content || '',
-                            parsedContent: object.parsedContent,
-                            tool_call_id: object.tool_call_id, // Optional ID for tracking
-                            args: object.toolCallMessage.args,
-                        };
+                    const messages = Array.isArray(event.message) ? event.message : [event.message];
 
+                    const last = messages.at(-1);
+                    if (last?.event_kind === 'tool-call') {
+                        setPendingToolCallMessage(parseToolCallMessage(last.tool_name));
+                    } else if (last?.event_kind === 'tool-return') {
                         setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE); // Clear pending tool call
-                        handleAppendResponse(returnMessage);
                     }
+
+                    // tool calls are used only to set the pending tool call message, so we don't need to append them
+                    handleAppendResponse(messages.filter((x) => x.event_kind !== 'tool-call'));
                     break;
 
                 case RovoDevProviderMessageType.CompleteMessage:
@@ -390,7 +393,7 @@ const RovoDevView: React.FC = () => {
                 default:
                     // this is never supposed to happen since there aren't other type of messages
                     handleAppendResponse({
-                        source: 'RovoDevDialog',
+                        event_kind: '_RovoDevDialog',
                         type: 'error',
                         // @ts-expect-error ts(2339) - event here should be 'never'
                         text: `Unknown message type: ${event.type}`,
@@ -431,9 +434,7 @@ const RovoDevView: React.FC = () => {
                 return false;
             }
 
-            if (isDeepPlanCreated) {
-                setIsDeepPlanCreated(false);
-            }
+            setIsDeepPlanCreated(false);
 
             // Disable the send button, and enable the pause button
             setCurrentState((prev) => {
@@ -454,7 +455,7 @@ const RovoDevView: React.FC = () => {
 
             return true;
         },
-        [currentState, isDeepPlanCreated, isDeepPlanToggled, promptContextCollection, postMessage],
+        [currentState, isDeepPlanToggled, promptContextCollection, postMessage],
     );
 
     React.useEffect(() => {
@@ -495,15 +496,13 @@ const RovoDevView: React.FC = () => {
         }
 
         setCurrentState({ state: 'CancellingResponse' });
-        if (isDeepPlanCreated) {
-            setIsDeepPlanCreated(false);
-        }
+        setIsDeepPlanCreated(false);
 
         // Send the signal to cancel the response
         postMessage({
             type: RovoDevViewResponseType.CancelResponse,
         });
-    }, [postMessage, currentState, isDeepPlanCreated]);
+    }, [postMessage, currentState]);
 
     const openFile = useCallback(
         (filePath: string, tryShowDiff?: boolean, range?: number[]) => {
@@ -541,7 +540,7 @@ const RovoDevView: React.FC = () => {
     );
 
     const onChangesGitPushed = useCallback(
-        (msg: DefaultMessage, pullRequestCreated: boolean) => {
+        (msg: PullRequestMessage, pullRequestCreated: boolean) => {
             if (totalModifiedFiles.length > 0) {
                 keepFiles(totalModifiedFiles);
             }
@@ -570,11 +569,11 @@ const RovoDevView: React.FC = () => {
             return;
         }
 
-        if (lastMessage.source !== 'RovoDev' || !lastMessage.text) {
+        if (lastMessage.event_kind !== 'text' || !lastMessage.content) {
             return;
         }
 
-        navigator.clipboard?.writeText(lastMessage.text);
+        navigator.clipboard?.writeText(lastMessage.content);
     }, [currentState, history]);
 
     const executeGetAgentMemory = useCallback(() => {

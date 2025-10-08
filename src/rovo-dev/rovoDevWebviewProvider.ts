@@ -540,10 +540,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         return webview.postMessage({
             type: RovoDevProviderMessageType.ShowDialog,
             message: {
+                event_kind: '_RovoDevDialog',
                 type: 'error',
                 text: `${error.message}${error.gitErrorCode ? `\n ${error.gitErrorCode}` : ''}`,
                 title,
-                source: 'RovoDevDialog',
                 isRetriable,
                 isProcessTerminated,
                 uid: v4(),

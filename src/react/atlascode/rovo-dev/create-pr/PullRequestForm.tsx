@@ -6,7 +6,7 @@ import { ConnectionTimeout } from 'src/util/time';
 import { useMessagingApi } from '../../messagingApi';
 import { MarkedDown } from '../common/common';
 import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
-import { DefaultMessage } from '../utils';
+import { PullRequestMessage } from '../utils';
 
 const PullRequestButton: React.FC<{
     onClick: (event: React.MouseEvent<HTMLButtonElement>) => Promise<void>;
@@ -146,7 +146,7 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
     );
 };
 
-export const PullRequestChatItem: React.FC<{ msg: DefaultMessage }> = ({ msg }) => {
+export const PullRequestChatItem: React.FC<{ msg: PullRequestMessage }> = ({ msg }) => {
     const content = (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
             <MarkedDown value={msg.text || ''} />
