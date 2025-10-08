@@ -1,6 +1,20 @@
 
 # Atlassian: Jira, Rovo Dev, Bitbucket
 
+```
+        ∩───∩
+       (  ◕   ◕ )
+      /           \
+     (  ~~~   ~~~  )    🐩 Poodle says: "Woof! Welcome to Atlascode!"
+      \  \_____/  /
+       \         /
+        \_______/
+         |     |
+         |     |
+        /       \
+       /         \
+      ~~         ~~
+```
 
 Stay in your IDE; don't switch contexts. 
 
