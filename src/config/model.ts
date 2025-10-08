@@ -44,6 +44,7 @@ export interface IConfig {
 }
 
 export interface RovoDevConfig {
+    enabled: boolean;
     showKeybinding: boolean;
     debugPanelEnabled: boolean;
 }
@@ -217,6 +218,7 @@ const emptyJiraConfig: JiraConfig = {
 };
 
 const emptyRovoDevConfig: RovoDevConfig = {
+    enabled: false,
     showKeybinding: false,
     debugPanelEnabled: false,
 };

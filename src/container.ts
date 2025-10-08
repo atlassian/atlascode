@@ -82,6 +82,9 @@ export class Container {
     private static _assignedWorkItemsView: AssignedWorkItemsViewProvider;
     private static _helpExplorer: HelpExplorer;
 
+    // Container for all rovodev components that might get toggled by feature flags
+    private static _rovodevDisposable?: vscode.Disposable = undefined;
+
     static async initialize(context: ExtensionContext, version: string) {
         canFetchInternalUrl().then((success) => {
             this._isInAtlassianNetwork = success;
@@ -241,8 +244,7 @@ export class Container {
             // refresh Rovo Dev when Jira gets enabled or disabled
             context.subscriptions.push(
                 configuration.onDidChange(async (e) => {
-                    if (configuration.changed(e, 'jira.enabled')) {
-                        await this.updateFeatureFlagTenantId();
+                    if (configuration.changed(e, 'jira.enabled') || configuration.changed(e, 'rovodev.enabled')) {
                         await this.refreshRovoDev(context);
                     }
                 }, this),
@@ -291,18 +293,18 @@ export class Container {
 
     private static async refreshRovoDev(context: ExtensionContext) {
         const isBoysenberryMode = !!process.env.ROVODEV_BBY;
-        const shouldEnableRovoDev = this.config.jira.enabled || isBoysenberryMode;
+        const shouldEnableRovoDev = (this.config.rovodev.enabled && this.config.jira.enabled) || isBoysenberryMode;
 
         if (shouldEnableRovoDev) {
-            this._isRovoDevEnabled = true;
             await this.enableRovoDev(context);
         } else {
-            this._isRovoDevEnabled = false;
             await this.disableRovoDev();
         }
     }
 
     private static async enableRovoDev(context: ExtensionContext) {
+        this._isRovoDevEnabled = true;
+
         if (this._rovodevDisposable) {
             try {
                 // Already enabled
@@ -343,6 +345,8 @@ export class Container {
     }
 
     private static async disableRovoDev() {
+        this._isRovoDevEnabled = false;
+
         if (!this._rovodevDisposable) {
             // Already disabled
             return;
@@ -425,7 +429,7 @@ export class Container {
         }, 2000);
     }
 
-    static get machineId() {
+    public static get machineId() {
         return env.machineId;
     }
 
@@ -449,9 +453,6 @@ export class Container {
 
         return !!this._isDebugging;
     }
-
-    // Container for all rovodev components that might get toggled by feature flags
-    private static _rovodevDisposable?: vscode.Disposable = undefined;
 
     public static get configTarget(): ConfigTarget {
         return this._context.globalState.get<ConfigTarget>(ConfigTargetKey, ConfigTarget.User);
@@ -488,7 +489,7 @@ export class Container {
         return this._isRovoDevEnabled;
     }
 
-    public static isRovoDevActive(): boolean {
+    public static get isRovoDevActive(): boolean {
         return this._isRovoDevEnabled && this._rovodevWebviewProvider && !this._rovodevWebviewProvider.isDisabled;
     }
 

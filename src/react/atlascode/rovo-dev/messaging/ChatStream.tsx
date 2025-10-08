@@ -17,7 +17,7 @@ import { CodePlanButton } from '../technical-plan/CodePlanButton';
 import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolCallItem } from '../tools/ToolCallItem';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
-import { DefaultMessage, DialogMessage, parseToolReturnMessage, Response, scrollToEnd } from '../utils';
+import { DialogMessage, parseToolReturnMessage, PullRequestMessage, Response, scrollToEnd } from '../utils';
 import { ChatMessageItem } from './ChatMessageItem';
 import { MessageDrawer } from './MessageDrawer';
 
@@ -37,7 +37,7 @@ interface ChatStreamProps {
     deepPlanCreated: boolean;
     executeCodePlan: () => void;
     currentState: State;
-    onChangesGitPushed: (msg: DefaultMessage, pullRequestCreated: boolean) => void;
+    onChangesGitPushed: (msg: PullRequestMessage, pullRequestCreated: boolean) => void;
     onCollapsiblePanelExpanded: () => void;
     feedbackVisible: boolean;
     setFeedbackVisible: (visible: boolean) => void;
@@ -166,7 +166,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         if (chatHistory.length > prevChatHistoryLengthRef.current) {
             const newMessage = chatHistory[chatHistory.length - 1];
             // Check if the new message is a user message (not an array of thinking messages)
-            if (!Array.isArray(newMessage) && newMessage?.source === 'User') {
+            if (!Array.isArray(newMessage) && newMessage?.event_kind === '_RovoDevUserPrompt') {
                 setAutoScrollEnabled(true);
                 // Clear scroll events to reset direction tracking when user sends a message
                 scrollEvents = [];
@@ -263,19 +263,19 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                     onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
                                 />
                             );
-                        } else if (block.source === 'User' || block.source === 'RovoDev') {
+                        } else if (block.event_kind === '_RovoDevUserPrompt' || block.event_kind === 'text') {
                             return (
                                 <ChatMessageItem
                                     msg={block}
                                     enableActions={
-                                        block.source === 'RovoDev' && currentState.state === 'WaitingForPrompt'
+                                        block.event_kind === 'text' && currentState.state === 'WaitingForPrompt'
                                     }
                                     onCopy={handleCopyResponse}
                                     onFeedback={handleFeedbackTrigger}
                                     openFile={renderProps.openFile}
                                 />
                             );
-                        } else if (block.source === 'ToolReturn') {
+                        } else if (block.event_kind === 'tool-return') {
                             const parsedMessages = parseToolReturnMessage(block);
 
                             return parsedMessages.map((message) => {
@@ -290,7 +290,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                 }
                                 return <ToolReturnParsedItem msg={message} openFile={renderProps.openFile} />;
                             });
-                        } else if (block.source === 'RovoDevDialog') {
+                        } else if (block.event_kind === '_RovoDevDialog') {
                             return (
                                 <DialogMessageItem
                                     msg={block}
@@ -299,7 +299,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                     onToolPermissionChoice={onToolPermissionChoice}
                                 />
                             );
-                        } else if (block.source === 'PullRequest') {
+                        } else if (block.event_kind === '_RovoDevPullRequest') {
                             return <PullRequestChatItem msg={block} />;
                         }
                     }
@@ -340,7 +340,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                 const pullRequestCreated = !!url;
                                 onChangesGitPushed(
                                     {
-                                        source: 'PullRequest',
+                                        event_kind: '_RovoDevPullRequest',
                                         text: url
                                             ? `Pull request ready: ${url}`
                                             : 'Successfully pushed changes to the remote repository.',

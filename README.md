@@ -6,14 +6,14 @@ Stay in your IDE; don't switch contexts.
 
 Browse, View, Create, and Manage your Jira Work Items, Bitbucket PRs, Bitbucket Pipelines. 
 
-Use Rovo Dev (closed beta), our AI Coding Agent, to complete tasks, ask questions, and fix up PRs & Pipelines. 
+Use Rovo Dev (beta), our AI Coding Agent, to complete tasks, ask questions, and fix up PRs & Pipelines. 
 
 Compatible with VS Code, Cursor, Windsurf and other forks.
 
 ## Jira
 <img src="https://raw.githubusercontent.com/atlassian/atlascode/main/.readme/image-4.png" alt="alt text" style="max-height: 500px;">
 
-## Rovo Dev (closed beta)
+## Rovo Dev (beta)
 <img src="https://raw.githubusercontent.com/atlassian/atlascode/main/.readme/image-5.png" alt="alt text" style="max-height: 500px;">
 
 ## Bitbucket
@@ -59,7 +59,7 @@ As of now, Rovo Dev in VS Code (and it's forks) is only available for internal d
 |----------|---------|---------|
 | Jira Cloud | - | ✅ |
 | Bitbucket Cloud | - | ✅ |
-| Rovo Dev | via Jira Cloud API Tokens | ✅ - closed beta |
+| Rovo Dev | via Jira Cloud API Tokens | ✅ - beta |
 | RDE / WSL | via API Tokens |  ✅Jira <br> ❌ Bitbucket  |
 | Jira & Bitbucket DC / Server | [Atlassian End of Support Policy](https://confluence.atlassian.com/support/atlassian-support-end-of-life-policy-201851003.html) | ✅
 | VS Code | >= 1.77.0 | ✅

@@ -96,3 +96,16 @@ jobs:
              -p ${{ secrets.OPENVSX_KEY }} \
             "atlascode-${PACKAGE_VERSION}.vsix"
 
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: Release ${{ env.RELEASE_TAG }}
+          draft: false
+          prerelease: false
+          files: |
+            atlascode-${{ env.PACKAGE_VERSION }}.vsix
+          fail_on_unmatched_files: true
