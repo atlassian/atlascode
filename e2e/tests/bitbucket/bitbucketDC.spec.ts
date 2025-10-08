@@ -5,7 +5,7 @@ import { bitbucketScenariosDC } from 'e2e/scenarios/bitbucket';
 
 test.describe('Bitbucket DC', () => {
     for (const scenario of bitbucketScenariosDC) {
-        test.only(scenario.name, async ({ page, request }) => {
+        test(scenario.name, async ({ page, request }) => {
             await authenticateWithBitbucketDC(page);
             await closeOnboardingQuickPick(page);
             await scenario.run(page, BitbucketTypes.DC, request);

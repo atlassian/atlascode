@@ -17,9 +17,11 @@ jest.mock('../../startWorkController', () => ({
 jest.mock('../utils/branchUtils', () => ({
     getDefaultSourceBranch: jest.fn().mockReturnValue({ type: 0, name: 'main' }),
     generateBranchName: jest.fn().mockReturnValue('generated-branch-name'),
+    getBranchTypeForRepo: jest.fn(),
 }));
 
 const mockGenerateBranchName = require('../utils/branchUtils').generateBranchName;
+const mockGetBranchTypeForRepo = require('../utils/branchUtils').getBranchTypeForRepo;
 
 describe('useStartWorkFormState', () => {
     const mockController = {
@@ -73,63 +75,63 @@ describe('useStartWorkFormState', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         mockGenerateBranchName.mockReturnValue('generated-branch-name');
+
+        mockGetBranchTypeForRepo.mockImplementation((repo: RepoData, customPrefixes: string[]) => {
+            if (repo.branchTypes?.length > 0) {
+                return repo.branchTypes[0];
+            } else if (customPrefixes.length > 0) {
+                return { kind: customPrefixes[0], prefix: customPrefixes[0] + '/' };
+            } else {
+                return { kind: '', prefix: '' };
+            }
+        });
     });
 
-    describe('handleRepositoryChange', () => {
-        it('should reset selectedBranchType to first branchType when switching to Bitbucket repo', () => {
+    describe('hook behavior', () => {
+        it('should initialize with correct branch type from utils', () => {
             const { result } = renderHook(() => useStartWorkFormState(mockState, mockController));
 
-            act(() => {
-                result.current.formActions.onRepositoryChange(mockBitbucketRepo);
-            });
-
+            // Hook should use the result from getBranchTypeForRepo
             expect(result.current.formState.selectedBranchType).toEqual({
                 kind: 'Feature',
                 prefix: 'feature/',
             });
         });
 
-        it('should reset selectedBranchType to empty when switching to non-Bitbucket repo without custom prefixes', () => {
+        it('should update branch type when repository changes', () => {
             const { result } = renderHook(() => useStartWorkFormState(mockState, mockController));
 
             act(() => {
                 result.current.formActions.onRepositoryChange(mockGitHubRepo);
             });
 
+            // Hook should call utils and update state accordingly
             expect(result.current.formState.selectedBranchType).toEqual({
                 kind: '',
                 prefix: '',
             });
         });
+    });
 
-        it('should reset selectedBranchType to first custom prefix when switching to non-Bitbucket repo with custom prefixes', () => {
-            const stateWithCustomPrefixes = {
-                ...mockState,
-                customPrefixes: ['hotfix', 'chore'],
-            };
+    describe('integration with utils', () => {
+        it('should call getBranchTypeForRepo with correct parameters on initialization', () => {
+            renderHook(() => useStartWorkFormState(mockState, mockController));
 
-            const { result } = renderHook(() => useStartWorkFormState(stateWithCustomPrefixes, mockController));
+            expect(mockGetBranchTypeForRepo).toHaveBeenCalledWith(mockBitbucketRepo, mockState.customPrefixes);
+        });
+
+        it('should call getBranchTypeForRepo when repository changes', () => {
+            const { result } = renderHook(() => useStartWorkFormState(mockState, mockController));
 
             act(() => {
                 result.current.formActions.onRepositoryChange(mockGitHubRepo);
             });
 
-            expect(result.current.formState.selectedBranchType).toEqual({
-                kind: 'hotfix',
-                prefix: 'hotfix/',
-            });
+            expect(mockGetBranchTypeForRepo).toHaveBeenCalledWith(mockGitHubRepo, mockState.customPrefixes);
         });
-    });
 
-    describe('branch name generation', () => {
-        it('should generate branch name with prefix when selectedBranchType has prefix', () => {
-            mockGenerateBranchName.mockReturnValue('feature/TEST-123-test-issue');
-
+        it('should call generateBranchName when repository or branch type changes', () => {
             const { result } = renderHook(() => useStartWorkFormState(mockState, mockController));
-
-            act(() => {
-                result.current.formActions.onRepositoryChange(mockBitbucketRepo);
-            });
 
             expect(mockGenerateBranchName).toHaveBeenCalledWith(
                 mockBitbucketRepo,
@@ -137,12 +139,6 @@ describe('useStartWorkFormState', () => {
                 mockState.issue,
                 mockState.customTemplate,
             );
-        });
-
-        it('should generate branch name without prefix when selectedBranchType has no prefix', () => {
-            mockGenerateBranchName.mockReturnValue('TEST-123-test-issue');
-
-            const { result } = renderHook(() => useStartWorkFormState(mockState, mockController));
 
             act(() => {
                 result.current.formActions.onRepositoryChange(mockGitHubRepo);
@@ -152,7 +148,7 @@ describe('useStartWorkFormState', () => {
                 mockGitHubRepo,
                 { kind: '', prefix: '' },
                 mockState.issue,
-                '{{issueKey}}-{{summary}}', // Template without prefix
+                mockState.customTemplate,
             );
         });
     });
