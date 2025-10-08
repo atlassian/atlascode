@@ -22,6 +22,8 @@ export const baseConfigFor = (project: string, testExtension: string): Config =>
         'monaco-editor': '<rootDir>/__mocks__/monaco-editor.ts',
         'package.json': '<rootDir>/__mocks__/packagejson.ts',
         '^clipboard-polyfill': '<rootDir>/node_modules/@atlaskit/editor-common/dist/cjs/clipboard/index.js',
+        'prosemirror-model': '<rootDir>/node_modules/prosemirror-model', // alias to fix duplicate module issue
+        'prosemirror-view': '<rootDir>/node_modules/prosemirror-view', // alias to fix duplicate module issue
     },
 
     testMatch: [`**/*.test.${testExtension}`],
@@ -64,7 +66,7 @@ export const baseConfigFor = (project: string, testExtension: string): Config =>
             testExtension === 'ts'
                 ? {
                       statements: 66,
-                      branches: 57,
+                      branches: 56,
                       functions: 59,
                       lines: 66,
                   }

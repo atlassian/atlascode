@@ -70,6 +70,8 @@ export interface RovoDevPruneResponse {
 export interface RovoDevOnCallToolStartResponse {
     event_kind: 'on_call_tools_start';
     tools: RovoDevToolCallResponse[];
+    permission_required: boolean;
+    permissions: Record<string, RovoDevToolPemissionScenario>;
 }
 
 export interface RovoDevCloseResponse {
@@ -102,3 +104,5 @@ export type RovoDevToolName =
     | 'bash'
     | 'create_technical_plan'
     | 'mcp_invoke_tool';
+
+export type RovoDevToolPemissionScenario = 'ASK' | 'ALLOWED' | 'DENIED';

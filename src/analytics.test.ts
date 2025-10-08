@@ -146,6 +146,9 @@ describe('analytics', () => {
             const numJiraDcAuthed = 2;
             const numBitbucketCloudAuthed = 3;
             const numBitbucketDcAuthed = 4;
+            const isJiraEnabled = true;
+            const isBitbucketEnabled = false;
+            const isRovoDevEnabled = true;
 
             const event = await analytics.launchedEvent(
                 location,
@@ -154,16 +157,22 @@ describe('analytics', () => {
                 numJiraDcAuthed,
                 numBitbucketCloudAuthed,
                 numBitbucketDcAuthed,
+                isJiraEnabled,
+                isBitbucketEnabled,
+                isRovoDevEnabled,
             );
 
             expect(event.trackEvent.action).toEqual('launched');
             expect(event.trackEvent.actionSubject).toEqual('atlascode');
+            expect(event.trackEvent.attributes.machineId).toEqual('test-machine-id');
             expect(event.trackEvent.attributes.extensionLocation).toEqual(location);
             expect(event.trackEvent.attributes.numJiraCloudAuthed).toEqual(numJiraCloudAuthed);
             expect(event.trackEvent.attributes.numJiraDcAuthed).toEqual(numJiraDcAuthed);
             expect(event.trackEvent.attributes.numBitbucketCloudAuthed).toEqual(numBitbucketCloudAuthed);
             expect(event.trackEvent.attributes.numBitbucketDcAuthed).toEqual(numBitbucketDcAuthed);
-            expect(event.trackEvent.attributes.machineId).toEqual('test-machine-id');
+            expect(event.trackEvent.attributes.isJiraEnabled).toEqual(true);
+            expect(event.trackEvent.attributes.isBitbucketEnabled).toEqual(false);
+            expect(event.trackEvent.attributes.isRovoDevEnabled).toEqual(true);
         });
 
         it('should create featureChangeEvent when feature is enabled', async () => {

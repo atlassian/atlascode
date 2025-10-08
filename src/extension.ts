@@ -199,6 +199,9 @@ async function sendAnalytics(version: string, globalState: Memento) {
         Container.siteManager.numberOfAuthedSites(ProductJira, false),
         Container.siteManager.numberOfAuthedSites(ProductBitbucket, true),
         Container.siteManager.numberOfAuthedSites(ProductBitbucket, false),
+        Container.config.jira.enabled,
+        Container.config.bitbucket.enabled,
+        Container.config.rovodev.enabled,
     ).then((e) => {
         Container.analyticsClient.sendTrackEvent(e);
     });

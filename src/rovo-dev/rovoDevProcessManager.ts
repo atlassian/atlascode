@@ -295,6 +295,12 @@ export abstract class RovoDevProcessManager {
             return;
         }
 
+        // don't do anything if the provider isn't ready yet - the initialization will be called
+        // by the provider when it becomes ready
+        if (!this.rovoDevWebviewProvider || !this.rovoDevWebviewProvider.isReady) {
+            return;
+        }
+
         if (this.rovoDevInstance) {
             this.asyncLocked = true;
 
@@ -395,7 +401,15 @@ class RovoDevTerminalInstance extends Disposable {
 
                 try {
                     const siteUrl = `https://${credentials.host}`;
-                    const shellArgs = ['serve', `${port}`, '--xid', 'rovodev-ide-vscode', '--site-url', siteUrl];
+                    const shellArgs = [
+                        'serve',
+                        `${port}`,
+                        '--xid',
+                        'rovodev-ide-vscode',
+                        '--site-url',
+                        siteUrl,
+                        '--respect-configured-permissions',
+                    ];
 
                     if (credentials.isStaging) {
                         shellArgs.push('--server-env', 'staging');

@@ -4,6 +4,8 @@ import React from 'react';
 import { DetailedSiteInfo, Product } from 'src/atlclients/authInfo';
 import { disableConsole } from 'testsutil/console';
 
+import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
+import { EditorStateProvider } from '../EditorStateContext';
 import IssueMainPanel from './IssueMainPanel';
 
 const mockSiteDetails: DetailedSiteInfo = {
@@ -50,6 +52,13 @@ const mockOnFetchIssues = jest.fn();
 const mockFetchUsers = jest.fn();
 const mockFetchImage = jest.fn();
 
+// Helper function to wrap components with EditorStateProvider for testing
+const renderWithEditorProvider = (component: React.ReactElement) => {
+    return render(<EditorStateProvider>{component}</EditorStateProvider>);
+};
+// Mock mention provider for regular tests
+const mockMentionProvider = AtlascodeMentionProvider.init({ url: '' }, jest.fn().mockResolvedValue([]));
+
 describe('IssueMainPanel', () => {
     beforeAll(() => {
         disableConsole('warn', 'error');
@@ -57,7 +66,7 @@ describe('IssueMainPanel', () => {
 
     it('renders the main panel', async () => {
         await act(() =>
-            render(
+            renderWithEditorProvider(
                 <IssueMainPanel
                     fields={mockFields}
                     fieldValues={mockFieldValues}
@@ -74,6 +83,7 @@ describe('IssueMainPanel', () => {
                     fetchUsers={mockFetchUsers}
                     fetchImage={mockFetchImage}
                     isAtlaskitEditorEnabled={false}
+                    mentionProvider={mockMentionProvider}
                 />,
             ),
         );
@@ -83,7 +93,7 @@ describe('IssueMainPanel', () => {
 
     it('renders editing description area', async () => {
         await act(() =>
-            render(
+            renderWithEditorProvider(
                 <IssueMainPanel
                     fields={mockFields}
                     fieldValues={mockFieldValues}
@@ -100,6 +110,7 @@ describe('IssueMainPanel', () => {
                     fetchUsers={mockFetchUsers}
                     fetchImage={mockFetchImage}
                     isAtlaskitEditorEnabled={false}
+                    mentionProvider={mockMentionProvider}
                 />,
             ),
         );

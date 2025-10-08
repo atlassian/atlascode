@@ -13,8 +13,12 @@ import {
     ToolPermissionChoice,
 } from './rovoDevApiClientInterfaces';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
-import { RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
-import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
+import { RovoDevContextItem, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
+import {
+    RovoDevProviderMessage,
+    RovoDevProviderMessageType,
+    RovoDevResponseMessageType,
+} from './rovoDevWebviewProviderMessages';
 
 interface TypedWebview<MessageOut, MessageIn> extends Webview {
     readonly onDidReceiveMessage: Event<MessageIn>;
@@ -34,6 +38,10 @@ export class RovoDevChatProvider {
     private _webView: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse> | undefined;
 
     private _replayInProgress = false;
+
+    private get isDebugPanelEnabled() {
+        return Container.config.rovodev.debugPanelEnabled;
+    }
 
     private _yoloMode = false;
     public get yoloMode() {
@@ -153,7 +161,7 @@ export class RovoDevChatProvider {
                 !!requestPayload.enable_deep_plan,
             );
 
-            return this.processChatResponse('chat', response);
+            return this.processChatResponse(response);
         };
 
         await this.executeStreamingApiWithErrorHandling('chat', fetchOp);
@@ -170,7 +178,7 @@ export class RovoDevChatProvider {
 
         const fetchOp = async (client: RovoDevApiClient) => {
             const response = client.replay();
-            return this.processChatResponse('replay', response);
+            return this.processReplayResponse(response);
         };
 
         await this.executeStreamingApiWithErrorHandling('replay', fetchOp);
@@ -233,21 +241,48 @@ export class RovoDevChatProvider {
         this._telemetryProvider.startNewPrompt(this._currentPromptId);
     }
 
-    private async processChatResponse(sourceApi: StreamingApi, fetchOp: Promise<Response> | Response) {
-        const fireTelemetry = sourceApi === 'chat';
+    private async processReplayResponse(fetchOp: Promise<Response> | Response) {
         const response = await fetchOp;
         if (!response.body) {
             throw new Error("Error processing the Rovo Dev's response: response is empty.");
         }
 
-        if (fireTelemetry) {
-            this._telemetryProvider.perfLogger.promptStarted(this._currentPromptId);
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        const parser = new RovoDevResponseParser({ mergeAllChunks: true });
+
+        const allMessages: RovoDevResponse[] = [];
+
+        while (true) {
+            const { done, value } = await reader.read();
+
+            if (done) {
+                for (const msg of parser.flush()) {
+                    allMessages.push(msg);
+                }
+                break;
+            }
+
+            const data = decoder.decode(value);
+            for (const msg of parser.parse(data)) {
+                allMessages.push(msg);
+            }
         }
+
+        await this.processRovoDevReplayResponse(allMessages);
+    }
+
+    private async processChatResponse(fetchOp: Promise<Response> | Response) {
+        const response = await fetchOp;
+        if (!response.body) {
+            throw new Error("Error processing the Rovo Dev's response: response is empty.");
+        }
+
+        this._telemetryProvider.perfLogger.promptStarted(this._currentPromptId);
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        const parser =
-            sourceApi === 'replay' ? new RovoDevResponseParser({ mergeAllChunks: true }) : new RovoDevResponseParser();
+        const parser = new RovoDevResponseParser();
 
         let isFirstByte = true;
         let isFirstMessage = true;
@@ -255,40 +290,77 @@ export class RovoDevChatProvider {
         while (true) {
             const { done, value } = await reader.read();
 
-            if (fireTelemetry && isFirstByte) {
+            if (isFirstByte) {
                 this._telemetryProvider.perfLogger.promptFirstByteReceived(this._currentPromptId);
                 isFirstByte = false;
             }
 
             if (done) {
                 // last response of the stream -> fire performance telemetry event
-                if (fireTelemetry) {
-                    this._telemetryProvider.perfLogger.promptLastMessageReceived(this._currentPromptId);
-                }
+                this._telemetryProvider.perfLogger.promptLastMessageReceived(this._currentPromptId);
 
                 for (const msg of parser.flush()) {
-                    await this.processRovoDevResponse(sourceApi, msg);
+                    await this.processRovoDevResponse('chat', msg);
                 }
                 break;
             }
 
             const data = decoder.decode(value, { stream: true });
             for (const msg of parser.parse(data)) {
-                if (fireTelemetry && isFirstMessage) {
+                if (isFirstMessage) {
                     this._telemetryProvider.perfLogger.promptFirstMessageReceived(this._currentPromptId);
                     isFirstMessage = false;
                 }
 
-                await this.processRovoDevResponse(sourceApi, msg);
+                await this.processRovoDevResponse('chat', msg);
             }
         }
     }
 
-    private processRovoDevResponse(sourceApi: StreamingApi, response: RovoDevResponse): Thenable<unknown> {
-        // if (this._processState === RovoDevProcessState.Disabled) {
-        //     return Promise.resolve(false);
-        // }
+    private async processRovoDevReplayResponse(responses: RovoDevResponse[]): Promise<void> {
+        const webview = this._webView!;
 
+        let group: RovoDevResponseMessageType[] = [];
+
+        const flush = async () => {
+            if (group.length > 0) {
+                await webview.postMessage({
+                    type: RovoDevProviderMessageType.RovoDevResponseMessage,
+                    message: group,
+                });
+                group = [];
+            }
+        };
+
+        const firstMessage = responses.shift();
+        if (!firstMessage) {
+            return;
+        }
+
+        // send the fist item individually, just to get a feeling when the replay startd
+        this.processRovoDevResponse('replay', firstMessage);
+
+        // group all contiguous messages of type 'text', 'tool-call', 'tool-return',
+        // and send them in batch. send all other type of messages normally.
+        for (const response of responses) {
+            switch (response.event_kind) {
+                case 'text':
+                case 'tool-call':
+                case 'tool-return':
+                    group.push(response);
+                    break;
+
+                default:
+                    await flush();
+                    this.processRovoDevResponse('replay', response);
+                    break;
+            }
+        }
+
+        await flush();
+    }
+
+    private async processRovoDevResponse(sourceApi: StreamingApi, response: RovoDevResponse): Promise<void> {
         const fireTelemetry = sourceApi === 'chat';
         const webview = this._webView!;
 
@@ -321,77 +393,95 @@ export class RovoDevChatProvider {
             case 'text':
             case 'tool-call':
             case 'tool-return':
-            case 'retry-prompt':
-                return webview.postMessage({
+                await webview.postMessage({
                     type: RovoDevProviderMessageType.RovoDevResponseMessage,
                     message: response,
                 });
+                break;
+
+            case 'retry-prompt':
+                // ignore it as we are not consuming it
+                break;
 
             case 'user-prompt':
                 if (this._replayInProgress) {
+                    const { text, context } = this.parseUserPromptReplay(response.content || '');
                     this._currentPrompt = {
-                        text: response.content,
+                        text: text,
                         enable_deep_plan: false,
-                        context: [],
+                        context: context,
                     };
-                    return this.signalPromptSent(
-                        { text: response.content, enable_deep_plan: false, context: [] },
-                        true,
-                    );
+                    await this.signalPromptSent({ text, enable_deep_plan: false, context }, true);
                 }
-                return Promise.resolve(false);
+                break;
 
             case '_parsing_error':
-                return this.processError(response.error, { showOnlyInDebug: true });
+                await this.processError(response.error, { showOnlyInDebug: true });
+                break;
 
             case 'exception':
                 const msg = response.title ? `${response.title} - ${response.message}` : response.message;
-                return this.processError(new Error(msg));
+                await this.processError(new Error(msg));
+                break;
 
             case 'warning':
-                return webview.postMessage({
+                await webview.postMessage({
                     type: RovoDevProviderMessageType.ShowDialog,
                     message: {
                         type: 'warning',
                         text: response.message,
                         title: response.title,
-                        source: 'RovoDevDialog',
+                        event_kind: '_RovoDevDialog',
                     },
                 });
+                break;
 
             case 'clear':
-                return webview.postMessage({
+                await webview.postMessage({
                     type: RovoDevProviderMessageType.ClearChat,
                 });
+                break;
 
             case 'prune':
-                return webview.postMessage({
+                await webview.postMessage({
                     type: RovoDevProviderMessageType.ShowDialog,
                     message: {
                         type: 'info',
                         text: response.message,
-                        source: 'RovoDevDialog',
+                        event_kind: '_RovoDevDialog',
                     },
                 });
+                break;
 
             case 'on_call_tools_start':
                 this._pendingToolConfirmation = {};
                 this._pendingToolConfirmationLeft = 0;
 
+                if (!response.permission_required) {
+                    break;
+                }
+
+                const toolsToAskForPermission = response.tools.filter(
+                    (x) => response.permissions[x.tool_call_id] === 'ASK',
+                );
+
                 if (this.yoloMode) {
                     const yoloChoices: RovoDevChatProvider['_pendingToolConfirmation'] = {};
-                    response.tools.forEach((x) => (yoloChoices[x.tool_call_id] = 'allow'));
-                    return this._rovoDevApiClient!.resumeToolCall(yoloChoices);
+                    toolsToAskForPermission.forEach((x) => (yoloChoices[x.tool_call_id] = 'allow'));
+                    await this._rovoDevApiClient!.resumeToolCall(yoloChoices);
+                    break;
                 } else {
-                    response.tools.forEach((x) => (this._pendingToolConfirmation[x.tool_call_id] = 'undecided'));
-                    this._pendingToolConfirmationLeft = response.tools.length;
+                    toolsToAskForPermission.forEach(
+                        (x) => (this._pendingToolConfirmation[x.tool_call_id] = 'undecided'),
+                    );
+                    this._pendingToolConfirmationLeft = toolsToAskForPermission.length;
 
-                    const promises = response.tools.map((tool) => {
+                    const promises = toolsToAskForPermission.map((tool) => {
                         return webview.postMessage({
                             type: RovoDevProviderMessageType.ShowDialog,
                             message: {
+                                event_kind: '_RovoDevDialog',
                                 type: 'toolPermissionRequest',
-                                source: 'RovoDevDialog',
                                 toolName: tool.tool_name,
                                 toolArgs: tool.args,
                                 mcpServer: tool.mcp_server,
@@ -400,14 +490,18 @@ export class RovoDevChatProvider {
                             },
                         });
                     });
-                    return Promise.all(promises);
+                    await Promise.all(promises);
                 }
+                break;
 
             case 'close':
                 // response terminated
-                return Promise.resolve(true);
+                break;
 
             default:
+                // this should really never happen, as unknown messages are caugh and wrapped into the
+                // message `_parsing_error`
+
                 // @ts-expect-error ts(2339) - response here should be 'never'
                 throw new Error(`Rovo Dev response error: unknown event kind: ${response.event_kind}`);
         }
@@ -477,24 +571,20 @@ export class RovoDevChatProvider {
     ) {
         RovoDevLogger.error(error);
 
-        if (this.isDebugging) {
-            // since we are running in debug mode, make this always visible
-            showOnlyInDebug = false;
+        if (!showOnlyInDebug || this.isDebugging || this.isDebugPanelEnabled) {
+            const webview = this._webView!;
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.ShowDialog,
+                message: {
+                    event_kind: '_RovoDevDialog',
+                    type: 'error',
+                    text: error.message,
+                    isRetriable,
+                    isProcessTerminated,
+                    uid: v4(),
+                },
+            });
         }
-
-        const webview = this._webView!;
-        await webview.postMessage({
-            type: RovoDevProviderMessageType.ShowDialog,
-            message: {
-                type: 'error',
-                text: error.message,
-                source: 'RovoDevDialog',
-                isRetriable,
-                isProcessTerminated,
-                showOnlyInDebug,
-                uid: v4(),
-            },
-        });
     }
 
     private async signalPromptSent({ text, enable_deep_plan, context }: RovoDevPrompt, echoMessage: boolean) {
@@ -541,5 +631,54 @@ export class RovoDevChatProvider {
             content:
                 'The previous response interrupted prematurely because of an error. Continue processing the previous prompt from the point where it was interrupted.',
         });
+    }
+
+    // Rovo Dev CLI inserts context into the response during replay
+    // we need to parse it out to reconstruct the prompt
+    // TODO: get a proper solution for this from the CLI team :)
+    private parseUserPromptReplay(source: string): { text: string; context: RovoDevContextItem[] } {
+        // Let's target the specific pattern from `/replay` to minimize the risk of
+        // accidentally matching something in the user's prompt.
+        const contextRegex =
+            /<context>\nWhen relevant, use the context below to better respond to the message above([\s\S]*?)<\/context>$/g;
+        const contextMatch = contextRegex.exec(source);
+
+        if (!contextMatch) {
+            return { text: source.trim(), context: [] };
+        }
+
+        const contextContent = contextMatch[1];
+        const context: RovoDevContextItem[] = [];
+
+        // Parse individual file entries within context
+        const fileRegex = /<file path="([^"]+)"[^>]*>\s*([^<]*)\s*<\/file>/g;
+        let fileMatch;
+
+        while ((fileMatch = fileRegex.exec(contextContent)) !== null) {
+            const filePath = fileMatch[1];
+
+            // Parse selection info if available (format: "path" selection="start-end")
+            const selectionMatch = fileMatch[0].match(/selection="(\d+-\d+)"/);
+            let selection: { start: number; end: number } | undefined;
+
+            if (selectionMatch) {
+                const [start, end] = selectionMatch[1].split('-').map(Number);
+                selection = { start, end };
+            }
+
+            // Create context item for each file
+            context.push({
+                isFocus: false,
+                enabled: true,
+                file: {
+                    name: filePath.split('/').pop() || filePath,
+                    absolutePath: filePath,
+                    relativePath: filePath.split('/').pop() || filePath, // Use basename as relative path
+                },
+                selection: selection,
+            });
+        }
+
+        return { text: source.replace(contextRegex, '').trim(), context };
     }
 }

@@ -69,6 +69,9 @@ export async function launchedEvent(
     numJiraDcAuthed: number,
     numBitbucketCloudAuthed: number,
     numBitbucketDcAuthed: number,
+    isJiraEnabled: boolean,
+    isBitbucketEnabled: boolean,
+    isRovoDevEnabled: boolean,
 ): Promise<TrackEvent> {
     return trackEvent('launched', 'atlascode', {
         attributes: {
@@ -79,6 +82,9 @@ export async function launchedEvent(
             numJiraDcAuthed,
             numBitbucketCloudAuthed,
             numBitbucketDcAuthed,
+            isJiraEnabled,
+            isBitbucketEnabled,
+            isRovoDevEnabled,
         },
     });
 }

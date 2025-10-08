@@ -4,13 +4,14 @@ import ThumbsDownIcon from '@atlaskit/icon/core/thumbs-down';
 import ThumbsUpIcon from '@atlaskit/icon/core/thumbs-up';
 import Tooltip from '@atlaskit/tooltip';
 import React, { useCallback, useState } from 'react';
+import { RovoDevTextResponse } from 'src/rovo-dev/responseParserInterfaces';
 
 import { MarkedDown, OpenFileFunc } from '../common/common';
 import { PromptContextCollection } from '../prompt-box/promptContext/promptContextCollection';
-import { DefaultMessage } from '../utils';
+import { UserPromptMessage } from '../utils';
 
 export const ChatMessageItem: React.FC<{
-    msg: DefaultMessage;
+    msg: UserPromptMessage | RovoDevTextResponse;
     icon?: React.ReactNode;
     enableActions?: boolean;
     onCopy?: (text: string) => void;
@@ -18,18 +19,18 @@ export const ChatMessageItem: React.FC<{
     openFile?: OpenFileFunc;
 }> = ({ msg, icon, enableActions, onCopy, onFeedback, openFile }) => {
     const [isCopied, setIsCopied] = useState(false);
-    const messageTypeStyles = msg.source === 'User' ? 'user-message' : 'agent-message';
+    const messageTypeStyles = msg.event_kind === '_RovoDevUserPrompt' ? 'user-message' : 'agent-message';
 
     const handleCopyClick = useCallback(() => {
-        if (onCopy && msg.text) {
-            onCopy(msg.text);
+        if (onCopy && msg.content) {
+            onCopy(msg.content);
             setIsCopied(true);
             // Reset the copied state and remove the check icon after 2 seconds
             setTimeout(() => {
                 setIsCopied(false);
             }, 2000);
         }
-    }, [onCopy, msg.text]);
+    }, [onCopy, msg.content]);
 
     return (
         <>
@@ -40,11 +41,11 @@ export const ChatMessageItem: React.FC<{
                 {icon && <div className="message-icon">{icon}</div>}
                 <div className="message-content">
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <MarkedDown value={msg.text || ''} />
+                        <MarkedDown value={msg.content || ''} />
                     </div>
                 </div>
             </div>
-            {msg.source === 'User' && msg.context && (
+            {msg.event_kind === '_RovoDevUserPrompt' && msg.context && (
                 <div className="message-context">
                     <PromptContextCollection
                         content={msg.context}
@@ -55,7 +56,7 @@ export const ChatMessageItem: React.FC<{
                     />
                 </div>
             )}
-            {msg.source === 'RovoDev' && enableActions && (
+            {msg.event_kind === 'text' && enableActions && (
                 <div className="chat-message-actions">
                     <Tooltip content="Helpful">
                         <button

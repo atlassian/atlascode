@@ -48,10 +48,8 @@ export const DialogMessageItem: React.FC<{
         }
     }, [msg.type, msg.title]);
 
-    const showInDebugOnly = React.useMemo(() => msg.type === 'error' && msg.showOnlyInDebug, [msg]);
-
     return (
-        <div className={showInDebugOnly ? 'debugOnly' : ''} style={{ ...chatMessageStyles, ...errorMessageStyles }}>
+        <div style={{ ...chatMessageStyles, ...errorMessageStyles }}>
             <div style={{ display: 'flex', flexDirection: 'row' }}>
                 {icon}
                 <div

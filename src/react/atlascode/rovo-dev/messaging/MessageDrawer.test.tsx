@@ -18,11 +18,7 @@ jest.mock('@atlaskit/icon/glyph/chevron-right', () => {
 });
 
 jest.mock('../common/common', () => ({
-    renderChatHistory: jest.fn((msg, index) => (
-        <div key={index} data-testid={`chat-message-${index}`}>
-            {msg.content}
-        </div>
-    )),
+    renderChatHistory: jest.fn((msg) => <div data-testid={`chat-message-${msg.event_kind}`}>{msg.content}</div>),
 }));
 
 jest.mock('../tools/ToolCallItem', () => ({
@@ -39,8 +35,8 @@ describe('MessageDrawer', () => {
     };
 
     const mockMessages: ChatMessage[] = [
-        { text: 'Message 1', source: 'User' },
-        { text: 'Message 2', source: 'RovoDev' },
+        { event_kind: '_RovoDevUserPrompt', content: 'Message 1' },
+        { event_kind: 'text', content: 'Message 2', index: 0 },
     ];
 
     beforeEach(() => {
@@ -75,8 +71,8 @@ describe('MessageDrawer', () => {
 
         expect(screen.getByTestId('chevron-down')).toBeTruthy();
         expect(screen.queryByTestId('chevron-right')).not.toBeTruthy();
-        expect(screen.getByTestId('chat-message-0')).toBeTruthy();
-        expect(screen.getByTestId('chat-message-1')).toBeTruthy();
+        expect(screen.getByTestId('chat-message-_RovoDevUserPrompt')).toBeTruthy();
+        expect(screen.getByTestId('chat-message-text')).toBeTruthy();
     });
 
     it('toggles open state when header is clicked', () => {
@@ -97,7 +93,7 @@ describe('MessageDrawer', () => {
         // Click to open
         fireEvent.click(header!);
         expect(screen.getByTestId('chevron-down')).toBeTruthy();
-        expect(screen.getByTestId('chat-message-0')).toBeTruthy();
+        expect(screen.getByTestId('chat-message-_RovoDevUserPrompt')).toBeTruthy();
 
         // Click to close
         fireEvent.click(header!);

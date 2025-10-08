@@ -11,6 +11,7 @@ import {
     RovoDevTextResponse,
     RovoDevToolCallResponse,
     RovoDevToolName,
+    RovoDevToolPemissionScenario,
     RovoDevToolReturnResponse,
     RovoDevUserPromptResponse,
     RovoDevWarningResponse,
@@ -128,6 +129,8 @@ interface RovoDevPruneChunk {
 // https://bitbucket.org/atlassian/acra-python/src/9ce5910e61d00e91f70c7978e067bde2690a1c97/packages/cli-rovodev/docs/serve/streaming-events.md?at=RDA-307-emit-warning-events-related-to-rate-limits-and-other-api-request-problems#:~:text=Server%20Error%20Warnings
 interface RovoDevOnCallToolStartResponseRaw {
     parts: RovoDevToolCallResponseRaw[];
+    permission_required?: boolean;
+    permissions?: Record<string, RovoDevToolPemissionScenario>;
 }
 
 interface RovoDevOnCallToolStartChunk {
@@ -302,6 +305,8 @@ function parseOnCallToolStart(data: RovoDevOnCallToolStartResponseRaw): RovoDevO
     return {
         event_kind: 'on_call_tools_start',
         tools: data.parts.map((part) => parseResponseToolCall(part)),
+        permission_required: !!data.permission_required,
+        permissions: data.permissions ?? {},
     };
 }
 

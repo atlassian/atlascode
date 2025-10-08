@@ -119,7 +119,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                 ...this.initData!,
                 repoData,
                 ...this.api.getStartWorkConfig(),
-                isRovoDevEnabled: Container.isRovoDevActive(),
+                isRovoDevEnabled: Container.isRovoDevActive,
             });
         } catch (e) {
             this.logger.error(e, 'Error updating start work page');
@@ -253,7 +253,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
             }
             case StartWorkActionType.OpenRovoDev: {
                 try {
-                    await this.api.openRovoDev();
+                    await this.api.openRovoDev(this.initData.issue);
                 } catch (e) {
                     this.logger.error(e, 'Error opening RovoDev');
                     this.postMessage({

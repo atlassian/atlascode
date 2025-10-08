@@ -1,11 +1,10 @@
-import StatusErrorIcon from '@atlaskit/icon/core/error';
 import MarkdownIt from 'markdown-it';
 import React from 'react';
 
 import { ChatMessageItem } from '../messaging/ChatMessageItem';
 import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
-import { ChatMessage, DefaultMessage, parseToolReturnMessage } from '../utils';
+import { ChatMessage, parseToolReturnMessage } from '../utils';
 import { DialogMessageItem } from './DialogMessage';
 
 const mdParser = new MarkdownIt({
@@ -46,14 +45,13 @@ export const FollowUpActionFooter: React.FC<{ children?: React.ReactNode }> = ({
 
 export const renderChatHistory = (
     msg: ChatMessage,
-    index: number,
     openFile: OpenFileFunc,
     checkFileExists: CheckFileExistsFunc,
     isRetryAfterErrorButtonEnabled: (uid: string) => boolean,
     retryAfterError: () => void,
 ) => {
-    switch (msg.source) {
-        case 'ToolReturn':
+    switch (msg.event_kind) {
+        case 'tool-return':
             const parsedMessages = parseToolReturnMessage(msg);
             return parsedMessages.map((message) => {
                 if (message.technicalPlan) {
@@ -67,7 +65,7 @@ export const renderChatHistory = (
                 }
                 return <ToolReturnParsedItem msg={message} openFile={openFile} />;
             });
-        case 'RovoDevDialog':
+        case '_RovoDevDialog':
             return (
                 <DialogMessageItem
                     msg={msg}
@@ -78,21 +76,9 @@ export const renderChatHistory = (
                     }
                 />
             );
-        case 'RovoDev':
-        case 'User':
+        case 'text':
+        case '_RovoDevUserPrompt':
             return <ChatMessageItem msg={msg} openFile={openFile} />;
-        case 'RovoDevRetry':
-            const retryMsg: DefaultMessage = {
-                text: msg.content,
-                source: 'RovoDev',
-            };
-            return (
-                <ChatMessageItem
-                    msg={retryMsg}
-                    icon={<StatusErrorIcon color="var(--ds-icon-danger)" label="error-icon" spacing="none" />}
-                    openFile={openFile}
-                />
-            );
         default:
             return <div>Unknown message type</div>;
     }
