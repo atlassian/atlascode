@@ -972,7 +972,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
      * @returns A promise that resolves when the context item has been added.
      */
     public async addToContext(contextItem: RovoDevContextItem): Promise<void> {
-        if (!this.isDisabled) {
+        if (this.isDisabled) {
             return;
         }
 
