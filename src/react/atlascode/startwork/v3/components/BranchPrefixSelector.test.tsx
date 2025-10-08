@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 
 import { RepoData } from '../../../../../lib/ipc/toUI/startWork';
@@ -83,5 +83,24 @@ describe('BranchPrefixSelector', () => {
         );
 
         expect(screen.getByText('Branch prefix')).toBeTruthy();
+    });
+
+    it('should clear selection when clear button is clicked', () => {
+        const mockOnBranchTypeChange = jest.fn();
+
+        render(
+            <BranchPrefixSelector
+                selectedRepository={mockRepoData}
+                selectedBranchType={{ kind: 'Feature', prefix: 'feature/' }}
+                customPrefixes={[]}
+                onBranchTypeChange={mockOnBranchTypeChange}
+            />,
+        );
+
+        const clearButton = screen.getByLabelText('Clear');
+
+        fireEvent.click(clearButton);
+
+        expect(mockOnBranchTypeChange).toHaveBeenCalledWith({ kind: '', prefix: '' });
     });
 });

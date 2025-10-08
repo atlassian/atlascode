@@ -22,10 +22,23 @@ export const BranchPrefixSelector: React.FC<BranchPrefixSelectorProps> = ({
         return { prefix: normalizedCustomPrefix, kind: prefix };
     });
 
+    const allOptions = [...(selectedRepository?.branchTypes || []), ...convertedCustomPrefixes];
+
+    const getOptionGroup = useCallback(
+        (option: { kind: string; prefix: string }) => {
+            const repoBranchTypes = selectedRepository?.branchTypes || [];
+            const isRepoBranchType = repoBranchTypes.some((type) => type.kind === option.kind);
+            return isRepoBranchType ? 'Repo Branch Type' : 'Custom Prefix';
+        },
+        [selectedRepository?.branchTypes],
+    );
+
     const handleBranchTypeChange = useCallback(
         (event: React.ChangeEvent<{}>, value: { kind: string; prefix: string } | null) => {
             if (value) {
                 onBranchTypeChange(value);
+            } else {
+                onBranchTypeChange({ kind: '', prefix: '' });
             }
         },
         [onBranchTypeChange],
@@ -41,16 +54,11 @@ export const BranchPrefixSelector: React.FC<BranchPrefixSelectorProps> = ({
         <Grid item xs={6}>
             <Typography variant="body2">Branch prefix</Typography>
             <Autocomplete
-                options={[...(selectedRepository?.branchTypes || []), ...convertedCustomPrefixes]}
-                groupBy={(option) =>
-                    (selectedRepository?.branchTypes || []).map((type) => type.kind).includes(option.kind)
-                        ? 'Repo Branch Type'
-                        : 'Custom Prefix'
-                }
+                options={allOptions}
+                groupBy={getOptionGroup}
                 getOptionLabel={(option) => option.kind}
                 renderInput={(params) => <TextField {...params} size="small" variant="outlined" />}
                 size="small"
-                disableClearable
                 value={selectedBranchType}
                 onChange={handleBranchTypeChange}
             />
