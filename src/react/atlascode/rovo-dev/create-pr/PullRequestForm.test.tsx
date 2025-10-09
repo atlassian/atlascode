@@ -356,6 +356,152 @@ describe('PullRequestForm', () => {
             });
         });
     });
+
+    describe('form submission edge cases', () => {
+        it('should handle form submission with empty commit message', async () => {
+            mockPostMessagePromise.mockResolvedValue({ data: { url: 'http://pr-url.com' } });
+
+            render(
+                <PullRequestForm
+                    onCancel={mockOnCancel}
+                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    onPullRequestCreated={mockOnPullRequestCreated}
+                    isFormVisible={true}
+                />,
+            );
+
+            fireEvent.change(screen.getByLabelText(/commit message/i), {
+                target: { value: '' },
+            });
+            fireEvent.change(screen.getByLabelText(/branch name/i), {
+                target: { value: 'test-branch' },
+            });
+
+            fireEvent.click(screen.getByRole('button', { name: /create pull request/i }));
+
+            await waitFor(() => {
+                expect(mockPostMessagePromise).toHaveBeenCalledWith(
+                    {
+                        type: RovoDevViewResponseType.CreatePR,
+                        payload: { branchName: 'test-branch', commitMessage: undefined },
+                    },
+                    RovoDevProviderMessageType.CreatePRComplete,
+                    expect.any(Number),
+                );
+            });
+        });
+
+        it('should handle form submission with whitespace-only commit message', async () => {
+            mockPostMessagePromise.mockResolvedValue({ data: { url: 'http://pr-url.com' } });
+
+            render(
+                <PullRequestForm
+                    onCancel={mockOnCancel}
+                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    onPullRequestCreated={mockOnPullRequestCreated}
+                    isFormVisible={true}
+                />,
+            );
+
+            fireEvent.change(screen.getByLabelText(/commit message/i), {
+                target: { value: '   ' },
+            });
+            fireEvent.change(screen.getByLabelText(/branch name/i), {
+                target: { value: 'test-branch' },
+            });
+
+            fireEvent.click(screen.getByRole('button', { name: /create pull request/i }));
+
+            await waitFor(() => {
+                expect(mockPostMessagePromise).toHaveBeenCalledWith(
+                    {
+                        type: RovoDevViewResponseType.CreatePR,
+                        payload: { branchName: 'test-branch', commitMessage: undefined },
+                    },
+                    RovoDevProviderMessageType.CreatePRComplete,
+                    expect.any(Number),
+                );
+            });
+        });
+
+        it('should handle form submission with null commit message', async () => {
+            mockPostMessagePromise.mockResolvedValue({ data: { url: 'http://pr-url.com' } });
+
+            render(
+                <PullRequestForm
+                    onCancel={mockOnCancel}
+                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    onPullRequestCreated={mockOnPullRequestCreated}
+                    isFormVisible={true}
+                />,
+            );
+
+            fireEvent.change(screen.getByLabelText(/commit message/i), {
+                target: { value: null },
+            });
+            fireEvent.change(screen.getByLabelText(/branch name/i), {
+                target: { value: 'test-branch' },
+            });
+
+            fireEvent.click(screen.getByRole('button', { name: /create pull request/i }));
+
+            await waitFor(() => {
+                expect(mockPostMessagePromise).toHaveBeenCalledWith(
+                    {
+                        type: RovoDevViewResponseType.CreatePR,
+                        payload: { branchName: 'test-branch', commitMessage: undefined },
+                    },
+                    RovoDevProviderMessageType.CreatePRComplete,
+                    expect.any(Number),
+                );
+            });
+        });
+    });
+
+    describe('button states and interactions', () => {
+        it('should handle button click without setFormVisible', () => {
+            render(
+                <PullRequestForm
+                    onCancel={mockOnCancel}
+                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    onPullRequestCreated={mockOnPullRequestCreated}
+                    isFormVisible={false}
+                />,
+            );
+
+            fireEvent.click(screen.getByRole('button', { name: /create pull request/i }));
+
+            expect(screen.getByRole('button', { name: /create pull request/i })).toBeTruthy();
+        });
+
+        it('should handle form visibility toggle', () => {
+            const { rerender } = render(
+                <PullRequestForm
+                    onCancel={mockOnCancel}
+                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    onPullRequestCreated={mockOnPullRequestCreated}
+                    isFormVisible={false}
+                    setFormVisible={mockSetFormVisible}
+                />,
+            );
+
+            expect(screen.getByRole('button', { name: /create pull request/i })).toBeTruthy();
+            expect(screen.queryByLabelText(/commit message/i)).toBeFalsy();
+
+            rerender(
+                <PullRequestForm
+                    onCancel={mockOnCancel}
+                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    onPullRequestCreated={mockOnPullRequestCreated}
+                    isFormVisible={true}
+                    setFormVisible={mockSetFormVisible}
+                />,
+            );
+
+            expect(screen.getByLabelText(/commit message/i)).toBeTruthy();
+            expect(screen.getByLabelText(/branch name/i)).toBeTruthy();
+        });
+    });
 });
 
 describe('PullRequestChatItem', () => {

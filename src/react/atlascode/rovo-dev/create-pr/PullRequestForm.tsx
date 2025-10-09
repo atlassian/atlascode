@@ -78,7 +78,7 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
         const response = await postMessagePromise(
             {
                 type: RovoDevViewResponseType.CreatePR,
-                payload: { branchName, commitMessage: message || undefined },
+                payload: { branchName, commitMessage: message?.trim() || undefined },
             },
             RovoDevProviderMessageType.CreatePRComplete,
             ConnectionTimeout,
