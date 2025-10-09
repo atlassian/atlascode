@@ -219,21 +219,15 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         [setFeedbackVisible],
     );
 
-    const isChatHistoryDisabled = React.useMemo(
-        () =>
-            (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance') ||
-            (currentState.state === 'Disabled' && currentState.subState !== 'Other'),
-        [currentState],
-    );
+    const isChatHistoryDisabled =
+        (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance') ||
+        (currentState.state === 'Disabled' && currentState.subState !== 'Other');
 
-    const shouldShowToolCall = React.useMemo(
-        () =>
-            currentState.state !== 'Disabled' &&
-            currentState.state !== 'ProcessTerminated' &&
-            currentState.state !== 'WaitingForPrompt' &&
-            (currentState.state !== 'Initializing' || currentState.isPromptPending),
-        [currentState],
-    );
+    const shouldShowToolCall =
+        currentState.state !== 'Disabled' &&
+        currentState.state !== 'ProcessTerminated' &&
+        currentState.state !== 'WaitingForPrompt' &&
+        (currentState.state !== 'Initializing' || currentState.isPromptPending);
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
