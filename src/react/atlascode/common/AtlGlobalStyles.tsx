@@ -250,9 +250,9 @@ const useStyles = makeStyles(
                 // },
                 // '.ProseMirror-prompt-buttons': { marginTop: '5px', display: 'none' },
                 // '.ProseMirror p:first-child,.ProseMirror h1:first-child,.ProseMirror h2:first-child,.ProseMirror h3:first-child,.ProseMirror h4:first-child,.ProseMirror h5:first-child,.ProseMirror h6:first-child':
-                //     {
-                //         marginTop: '10px',
-                //     },
+                // {
+                //     marginTop: '11px',
+                // },
                 // '.ProseMirror p': { marginBottom: '1em' },
                 // '.suggestion-item-active': { background: '#08c', color: '#fff' },
                 // '.prosemirror-mention-node': {
@@ -266,11 +266,17 @@ const useStyles = makeStyles(
                 //     background: 'rgba(0, 0, 0, 0.05)',
                 //     border: '1px solid #999',
                 // },
-                '.suggestion-item-list': { background: '#fff', border: '1px solid #999' },
-                '.suggestion-item': { padding: '5px' },
-                '.suggestion-item:before': { borderTop: '1px solid' },
+                // '.suggestion-item-list': { background: '#fff', border: '1px solid #999' },
+                // '.suggestion-item': { padding: '5px' },
+                // '.suggestion-item:before': { borderTop: '1px solid' },
+
+                // fix vertical alignment of headings in dropdown for formatting text (atlaskit editor)
+                '.akEditor span[role="menuitem"] :is(h1, h2, h3, h4, h5, h6)': {
+                    'margin-block-end': 0,
+                    'font-weight': 'var(--ds-font-weight-medium, 500)',
+                },
                 // hide assistive element in atlaskit editor toolbar
-                '.assistive': {
+                '.akEditor .assistive': {
                     border: '0 !important',
                     clip: 'rect(1px, 1px, 1px, 1px) !important',
                     height: '1px !important',
