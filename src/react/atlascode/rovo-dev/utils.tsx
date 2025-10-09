@@ -291,8 +291,10 @@ export const appendResponse = (
     if (!Array.isArray(latest)) {
         // Streaming text response, append to current message
         if (latest?.event_kind === 'text' && response?.event_kind === 'text') {
-            latest.content += response.content;
-            return [...prev, latest];
+            const appendedMessage = { ...latest };
+            appendedMessage.content += response.content;
+
+            return [...prev, appendedMessage];
         }
         // Group tool return with previous message if applicable
         if (response.event_kind === 'tool-return') {
