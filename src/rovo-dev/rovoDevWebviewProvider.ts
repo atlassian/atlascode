@@ -82,6 +82,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _webView?: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse>;
     private _webviewView?: WebviewView;
     private _rovoDevApiClient?: RovoDevApiClient;
+    private _isProviderDisabled = false;
     private _disabledReason: RovoDevDisabledReason | 'none' = 'none';
     private _webviewReady = false;
     private _debugPanelEnabled = false;
@@ -141,8 +142,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         return this.processState === 'Disabled' || this.processState === 'Terminated';
     }
 
-    private get processState(): RovoDevProcessState['state'] | 'External' {
-        return this.isBoysenberry ? 'External' : RovoDevProcessManager.state.state;
+    private get processState(): RovoDevProcessState['state'] {
+        return RovoDevProcessManager.state.state;
     }
 
     constructor(context: ExtensionContext, extensionPath: string) {
@@ -503,13 +504,17 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             title,
             isRetriable,
             isProcessTerminated,
+            skipLogError,
         }: {
             title?: string;
             isRetriable?: boolean;
             isProcessTerminated?: boolean;
+            skipLogError?: boolean;
         } = {},
     ) {
-        RovoDevLogger.error(error);
+        if (!skipLogError) {
+            RovoDevLogger.error(error);
+        }
 
         const webview = this._webView!;
         return webview.postMessage({
@@ -621,17 +626,26 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     public async executeNewSession(): Promise<void> {
         const webview = this._webView!;
 
-        // for these states, we shouldn't do anything
+        // new session is disabled for these process states,
+        // of if there are no folders open,
+        // or a cancellation is in progress
         if (
-            this.processState === 'Disabled' ||
+            this.processState === 'NotStarted' ||
             this.processState === 'Starting' ||
-            this.processState === 'NotStarted'
+            this.processState === 'Downloading' ||
+            this.processState === 'Disabled' ||
+            !workspace.workspaceFolders?.length ||
+            this._chatProvider.pendingCancellation
         ) {
             return;
         }
 
-        // special handling for when the Rovo Dev process has been terminated
-        if (this.processState === 'Terminated') {
+        // special handling for when the Rovo Dev process has been terminated, or failed to initialize
+        if (
+            this.processState === 'Terminated' ||
+            this.processState === 'DownloadingFailed' ||
+            this.processState === 'StartingFailed'
+        ) {
             this.refreshDebugPanel();
 
             await webview.postMessage({
@@ -639,16 +653,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             });
 
             await RovoDevProcessManager.initializeRovoDev(this._context, true);
-            return;
-        }
-
-        // new session is a no-op if there are no folders opened or if the process is not started
-        if (
-            this.isDisabled ||
-            !workspace.workspaceFolders?.length ||
-            this.processState !== 'Started' ||
-            this._chatProvider.pendingCancellation
-        ) {
             return;
         }
 
@@ -1009,14 +1013,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await this.initializeWithHealthcheck(10000);
     }
 
-    /**
-     * Sends an error message to the chat history instead of showing a VS Code notification
-     * @param errorMessage The error message to display in chat
-     */
-    public sendErrorToChat(errorMessage: string) {
-        return this.processError(new Error(errorMessage));
-    }
-
     private async handleProcessStateChanged(newState: RovoDevProcessState) {
         if (newState.state === 'Downloading' || newState.state === 'Starting' || newState.state === 'Started') {
             this._jiraItemsProvider.setJiraSite(newState.jiraSiteHostname);
@@ -1027,6 +1023,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         switch (newState.state) {
             case 'NotStarted':
             case 'Starting':
+                this._isProviderDisabled = false;
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.SetInitializing,
                     isPromptPending: this._chatProvider.isPromptPending,
@@ -1040,6 +1037,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     totalBytes: newState.totalBytes,
                     downloadedBytes: newState.downloadedBytes,
                 });
+                break;
+
+            case 'DownloadingFailed':
+                this.signalProcessFailedToInitialize('Unable to update Rovo Dev.');
+                break;
+
+            case 'StartingFailed':
+                this.signalProcessFailedToInitialize('Unable to start Rovo Dev.');
                 break;
 
             case 'Started':
@@ -1061,6 +1066,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 } else {
                     this.signalProcessStarted(newState.hostname, newState.httpPort);
                 }
+                break;
+
+            default:
+                // @ts-expect-error ts(2339) - newState here should be 'never'
+                this.processError(`Unknown process state: ${newState.state}`);
                 break;
         }
     }
@@ -1107,9 +1117,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // TODO - this scenario needs a better handling
         if (!result || result.status === 'unknown') {
             const msg = result ? 'Rovo Dev service is unhealthy/unknown.' : 'Rovo Dev service is unreachable.';
+            RovoDevLogger.error(new Error(msg));
+
             if (this.isBoysenberry) {
                 await this.processError(new Error(`${msg}\rTry closing and reopening the session to retry.`), {
                     title: 'Failed to initialize Rovo Dev',
+                    skipLogError: true,
                 });
                 this.signalRovoDevDisabled('Other');
             } else {
@@ -1121,10 +1134,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // if result is unhealthy, it means Rovo Dev has failed during initialization (e.g., some MCP servers failed to start)
         // we can't continue - shutdown and set the process as terminated so the user can try again.
         if (result.status === 'unhealthy') {
+            const msg = 'Rovo Dev service is unhealthy.';
+            RovoDevLogger.error(new Error(msg));
+
             if (this.isBoysenberry) {
                 await this.processError(
                     new Error(`Rovo Dev service is unhealthy.\nTry closing and reopening the session to retry.`),
-                    { title: 'Failed to initialize Rovo Dev' },
+                    { title: 'Failed to initialize Rovo Dev', skipLogError: true },
                 );
                 this.signalRovoDevDisabled('Other');
             } else {
@@ -1140,6 +1156,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     new Error(`${result.detail.payload.message}\nCode: ${result.detail.payload.status}`),
                     {
                         title: result.detail.payload.title || 'Entitlement check failed',
+                        skipLogError: true,
                     },
                 );
                 this.signalRovoDevDisabled('Other');
@@ -1157,7 +1174,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             if (this.isBoysenberry) {
                 await this.processError(
                     new Error(`Cannot start third party MCP servers: ${serversToReview.join(', ')}.`),
-                    { title: 'Failed to initialize Rovo Dev' },
+                    { title: 'Failed to initialize Rovo Dev', skipLogError: true },
                 );
                 this.signalRovoDevDisabled('Other');
             } else {
@@ -1220,6 +1237,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         if (RovoDevDisabledPriority[this._disabledReason] >= RovoDevDisabledPriority[reason]) {
             return;
         }
+        this._isProviderDisabled = true;
 
         this.setRovoDevTerminated();
 
@@ -1232,9 +1250,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async signalProcessFailedToInitialize(errorMessage?: string) {
-        if (this.isDisabled) {
+        if (this._isProviderDisabled) {
             return;
         }
+        this._isProviderDisabled = true;
 
         this.setRovoDevTerminated();
 
@@ -1245,13 +1264,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             : 'Please start a new chat session to try again.';
 
         const error = new Error(errorMessage);
-        await this.processError(error, { title, isProcessTerminated: true });
+        // we assume that the real error has been logged somehwere else, so we don't log this one
+        await this.processError(error, { title, isProcessTerminated: true, skipLogError: true });
     }
 
     private async signalProcessTerminated(code?: number) {
-        if (this.isDisabled) {
+        if (this._isProviderDisabled) {
             return;
         }
+        this._isProviderDisabled = true;
 
         this.setRovoDevTerminated();
 
@@ -1262,7 +1283,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 : 'Please start a new chat session to continue.';
 
         const error = new Error(errorMessage);
-        await this.processError(error, { title, isProcessTerminated: true });
+        // we assume that the real error has been logged somehwere else, so we don't log this one
+        await this.processError(error, { title, isProcessTerminated: true, skipLogError: true });
     }
 
     // Disabled and Terminated states are almost identical, except that

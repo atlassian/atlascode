@@ -484,7 +484,7 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
             const context = buildContext(window.activeTextEditor, vscodeContext);
 
             const prompt = await window.showInputBox({
-                placeHolder: 'Type your RovoDev command',
+                placeHolder: 'Type your Rovo Dev command',
                 prompt: 'Send a command to RovoDev for the selected code',
             });
 

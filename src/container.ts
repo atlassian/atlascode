@@ -304,11 +304,11 @@ export class Container {
     private static async enableRovoDev(context: ExtensionContext) {
         this._isRovoDevEnabled = true;
 
-        if (this.isBoysenberryMode) {
-            return;
-        }
-
         if (this._rovodevDisposable) {
+            if (this.isBoysenberryMode) {
+                return;
+            }
+
             try {
                 // The process should be already running, so we signal that the credentials may have changed
                 await RovoDevProcessManager.refreshRovoDevCredentials(context);
@@ -331,11 +331,13 @@ export class Container {
 
                 context.subscriptions.push(this._rovodevDisposable);
 
-                // Update help explorer to show Rovo Dev content
-                this._helpExplorer.refresh();
+                if (!this.isBoysenberryMode) {
+                    // Update help explorer to show Rovo Dev content
+                    this._helpExplorer.refresh();
 
-                // Start the Rovo Dev process
-                await RovoDevProcessManager.initializeRovoDev(context);
+                    // Start the Rovo Dev process
+                    await RovoDevProcessManager.initializeRovoDev(context);
+                }
             } catch (error) {
                 RovoDevLogger.error(error, 'Enabling Rovo Dev');
             }

@@ -212,6 +212,11 @@ export interface RovoDevProcessDisabledState {
     entitlementDetail?: RovoDevEntitlementCheckFailedDetail;
 }
 
+export interface RovoDevProcessFailedState {
+    state: 'DownloadingFailed' | 'StartingFailed';
+    error: Error;
+}
+
 export interface RovoDevProcessBoysenberryState {
     state: 'Boysenberry';
     hostname: string;
@@ -226,17 +231,13 @@ export type RovoDevProcessState =
     | RovoDevProcessTerminatedState
     | RovoDevProcessEntitlementCheckFailedState
     | RovoDevProcessDisabledState
+    | RovoDevProcessFailedState
     | RovoDevProcessBoysenberryState;
 
 export abstract class RovoDevProcessManager {
     private static _onStateChanged = new EventEmitter<RovoDevProcessState>();
     public static get onStateChanged(): Event<RovoDevProcessState> {
         return this._onStateChanged.event;
-    }
-
-    private static _onError = new EventEmitter<Error>();
-    public static get onError(): Event<Error> {
-        return this._onError.event;
     }
 
     private static currentCredentials: CloudCredentials | undefined;
@@ -288,7 +289,7 @@ export abstract class RovoDevProcessManager {
             return;
         }
 
-        // setting totalBytes to 1 because we don't know how its size yet,
+        // setting totalBytes to 1 because we don't know its size yet,
         // and we want to show 0% downloaded
         this.setState({
             state: 'Downloading',
@@ -297,35 +298,24 @@ export abstract class RovoDevProcessManager {
             downloadedBytes: 0,
         });
 
-        try {
-            if (fs.existsSync(baseDir)) {
-                await getFsPromise((callback) => fs.rm(baseDir, { recursive: true, force: true }, callback));
-            }
-
-            const onProgressChange = (downloadedBytes: number, totalBytes: number | undefined) => {
-                if (totalBytes) {
-                    this.setState({
-                        state: 'Downloading',
-                        jiraSiteHostname: credentialsHost,
-                        totalBytes,
-                        downloadedBytes,
-                    });
-                }
-            };
-
-            await downloadAndUnzip(zipUrl, baseDir, versionDir, true, onProgressChange);
-
-            await getFsPromise((callback) => fs.mkdir(versionDir, { recursive: true }, callback));
-        } catch (error) {
-            this._onError.fire(
-                new Error(
-                    `Unable to update Rovo Dev:\n${error.message}\n\nTo try again, please close VS Code and reopen it.`,
-                ),
-            );
-
-            // TODO - who is catching this?
-            throw error;
+        if (fs.existsSync(baseDir)) {
+            await getFsPromise((callback) => fs.rm(baseDir, { recursive: true, force: true }, callback));
         }
+
+        const onProgressChange = (downloadedBytes: number, totalBytes: number | undefined) => {
+            if (totalBytes) {
+                this.setState({
+                    state: 'Downloading',
+                    jiraSiteHostname: credentialsHost,
+                    totalBytes,
+                    downloadedBytes,
+                });
+            }
+        };
+
+        await downloadAndUnzip(zipUrl, baseDir, versionDir, true, onProgressChange);
+
+        await getFsPromise((callback) => fs.mkdir(versionDir, { recursive: true }, callback));
 
         this.setState({
             state: 'Starting',
@@ -367,16 +357,32 @@ export abstract class RovoDevProcessManager {
             jiraSiteHostname: credentials.host,
         });
 
-        const rovoDevURIs = GetRovoDevURIs(context);
+        let rovoDevURIs: ReturnType<typeof GetRovoDevURIs>;
 
         try {
+            rovoDevURIs = GetRovoDevURIs(context);
+
             if (!fs.existsSync(rovoDevURIs.RovoDevBinPath)) {
                 await this.downloadBinaryThenInitialize(credentials.host, rovoDevURIs);
             }
+        } catch (error) {
+            RovoDevLogger.error(error);
+            this.setState({
+                state: 'DownloadingFailed',
+                error,
+            });
+            return;
+        }
 
+        try {
             await this.startRovoDev(context, credentials, rovoDevURIs);
         } catch (error) {
-            this._onError.fire(error);
+            RovoDevLogger.error(error);
+            this.setState({
+                state: 'StartingFailed',
+                error,
+            });
+            return;
         }
     }
 
@@ -539,6 +545,12 @@ class RovoDevTerminalInstance extends Disposable {
                     const onDidCloseTerminal = window.onDidCloseTerminal((event) => {
                         if (event === this.rovoDevTerminal) {
                             this.finalizeStop();
+
+                            if (event.exitStatus?.code) {
+                                RovoDevLogger.error(
+                                    new Error(`Rovo Dev process terminated with exit code ${event.exitStatus.code}.`),
+                                );
+                            }
 
                             // we don't want to pass the 0 code as a number, as it's not an error
                             setState({
