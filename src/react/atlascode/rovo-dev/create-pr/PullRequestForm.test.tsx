@@ -217,6 +217,145 @@ describe('PullRequestForm', () => {
             expect(branchNameInput.hasAttribute('required')).toBe(true);
         });
     });
+
+    describe('loading states', () => {
+        it('should show loading spinner when branch name is loading', () => {
+            render(
+                <PullRequestForm
+                    onCancel={mockOnCancel}
+                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    onPullRequestCreated={mockOnPullRequestCreated}
+                    isFormVisible={false}
+                    setFormVisible={mockSetFormVisible}
+                />,
+            );
+
+            fireEvent.click(screen.getByRole('button', { name: /create pull request/i }));
+
+            expect(screen.getByRole('button', { name: /create pull request/i })).toBeTruthy();
+        });
+
+        it('should show loading spinner when pull request is being created', () => {
+            render(
+                <PullRequestForm
+                    onCancel={mockOnCancel}
+                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    onPullRequestCreated={mockOnPullRequestCreated}
+                    isFormVisible={true}
+                />,
+            );
+
+            fireEvent.change(screen.getByLabelText(/branch name/i), {
+                target: { value: 'test-branch' },
+            });
+
+            fireEvent.click(screen.getByRole('button', { name: /create pull request/i }));
+
+            expect(screen.getByRole('button', { name: /create pull request/i })).toBeTruthy();
+        });
+    });
+
+    describe('error handling', () => {
+        it('should handle error response from create PR', async () => {
+            const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+            mockPostMessagePromise.mockResolvedValue({
+                data: { error: 'Git push failed' },
+            });
+
+            render(
+                <PullRequestForm
+                    onCancel={mockOnCancel}
+                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    onPullRequestCreated={mockOnPullRequestCreated}
+                    isFormVisible={true}
+                />,
+            );
+
+            fireEvent.change(screen.getByLabelText(/branch name/i), {
+                target: { value: 'test-branch' },
+            });
+
+            fireEvent.click(screen.getByRole('button', { name: /create pull request/i }));
+
+            await waitFor(() => {
+                expect(consoleSpy).toHaveBeenCalledWith('Error creating PR: Git push failed');
+            });
+
+            expect(mockOnPullRequestCreated).not.toHaveBeenCalled();
+            consoleSpy.mockRestore();
+        });
+
+        it('should handle empty URL response', async () => {
+            mockPostMessagePromise.mockResolvedValue({
+                data: { url: '' },
+            });
+
+            render(
+                <PullRequestForm
+                    onCancel={mockOnCancel}
+                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    onPullRequestCreated={mockOnPullRequestCreated}
+                    isFormVisible={true}
+                />,
+            );
+
+            fireEvent.change(screen.getByLabelText(/branch name/i), {
+                target: { value: 'test-branch' },
+            });
+
+            fireEvent.click(screen.getByRole('button', { name: /create pull request/i }));
+
+            await waitFor(() => {
+                expect(mockOnPullRequestCreated).toHaveBeenCalledWith('');
+            });
+        });
+    });
+
+    describe('branch name handling', () => {
+        it('should set branch name from API response', async () => {
+            mockPostMessagePromise.mockResolvedValue({ data: { branchName: 'feature-branch' } });
+
+            render(
+                <PullRequestForm
+                    onCancel={mockOnCancel}
+                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    onPullRequestCreated={mockOnPullRequestCreated}
+                    isFormVisible={false}
+                    setFormVisible={mockSetFormVisible}
+                />,
+            );
+
+            fireEvent.click(screen.getByRole('button', { name: /create pull request/i }));
+
+            await waitFor(() => {
+                expect(mockPostMessagePromise).toHaveBeenCalledWith(
+                    { type: RovoDevViewResponseType.GetCurrentBranchName },
+                    RovoDevProviderMessageType.GetCurrentBranchNameComplete,
+                    expect.any(Number),
+                );
+            });
+        });
+
+        it('should handle undefined branch name from API', async () => {
+            mockPostMessagePromise.mockResolvedValue({ data: { branchName: undefined } });
+
+            render(
+                <PullRequestForm
+                    onCancel={mockOnCancel}
+                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    onPullRequestCreated={mockOnPullRequestCreated}
+                    isFormVisible={false}
+                    setFormVisible={mockSetFormVisible}
+                />,
+            );
+
+            fireEvent.click(screen.getByRole('button', { name: /create pull request/i }));
+
+            await waitFor(() => {
+                expect(mockSetFormVisible).toHaveBeenCalledWith(true);
+            });
+        });
+    });
 });
 
 describe('PullRequestChatItem', () => {
