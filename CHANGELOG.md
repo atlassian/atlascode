@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.2
+
+### Improvements
+
+- Removed the hint on code selection to send the text to Rovo Dev
+
 ## What's new in 4.0.1
 
 ### Features
