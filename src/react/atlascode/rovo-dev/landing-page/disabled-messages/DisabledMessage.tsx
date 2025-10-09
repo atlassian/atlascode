@@ -18,7 +18,7 @@ export const DisabledMessage: React.FC<{
     if (currentState.state === 'Disabled' && currentState.subState === 'NeedAuth') {
         return (
             <div style={messageOuterStyles}>
-                <div>Create an API token and add it here to use Rovo Dev beta</div>
+                <div>Create an API token in Jira Cloud and add it here to use Rovo Dev beta</div>
                 <button style={{ ...inChatButtonStyles, marginTop: '8px' }} onClick={onLoginClick}>
                     Add API Token
                 </button>
