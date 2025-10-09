@@ -329,10 +329,17 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.CheckGitChanges:
-                        const isClean = await this._prHandler?.isGitStateClean();
+                        if (!this._prHandler) {
+                            await webview.postMessage({
+                                type: RovoDevProviderMessageType.CheckGitChangesComplete,
+                                hasChanges: false,
+                            });
+                            break;
+                        }
+                        const hasChanges = await this._prHandler.hasChangesOrUnpushedCommits();
                         await webview.postMessage({
                             type: RovoDevProviderMessageType.CheckGitChangesComplete,
-                            hasChanges: !isClean,
+                            hasChanges: hasChanges,
                         });
                         break;
 
@@ -871,13 +878,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         let prLink: string | undefined;
         const webview = this._webView!;
         try {
-            if (!prHandler) {
-                throw new Error('Pull Request handler not initialized');
+            if (!branchName || branchName.trim() === '') {
+                throw new Error('Branch name is required to create a PR');
             }
-            if (!commitMessage || !branchName) {
-                throw new Error('Commit message and branch name are required to create a PR');
-            }
-            prLink = await prHandler.createPR(branchName, commitMessage);
+            prLink = await prHandler!.createPR(branchName, commitMessage);
 
             await webview.postMessage({
                 type: RovoDevProviderMessageType.CreatePRComplete,
@@ -907,13 +911,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         const prHandler = this._prHandler;
 
         try {
-            if (!prHandler) {
-                throw new Error('Pull Request handler not initialized');
-            }
             if (!webview) {
                 throw new Error('Webview not initialized');
             }
-            const branchName = await prHandler.getCurrentBranchName();
+            const branchName = await prHandler!.getCurrentBranchName();
             await webview.postMessage({
                 type: RovoDevProviderMessageType.GetCurrentBranchNameComplete,
                 data: {
