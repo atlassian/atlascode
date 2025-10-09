@@ -35,7 +35,6 @@ import OnboardingProvider from './onboarding/onboardingProvider';
 import { registerQuickAuthCommand } from './onboarding/quickFlow';
 import { Pipeline } from './pipelines/model';
 import { RovoDevCodeActionProvider } from './rovo-dev/rovoDevCodeActionProvider';
-import { RovoDevDecorator } from './rovo-dev/rovoDevDecorator';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { SiteManager } from './siteManager';
@@ -319,7 +318,6 @@ export class Container {
                 await setCommandContext(CommandContext.RovoDevEnabled, true);
 
                 this._rovodevDisposable = vscode.Disposable.from(
-                    new RovoDevDecorator(),
                     languages.registerCodeActionsProvider({ scheme: 'file' }, new RovoDevCodeActionProvider(), {
                         providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
                     }),

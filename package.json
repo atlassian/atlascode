@@ -1006,12 +1006,6 @@
                     "scope": "window",
                     "order": 1
                 },
-                "atlascode.rovodev.showKeybinding": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Show the Rovo Dev keybinding annotation in the editor when a selection is present.",
-                    "scope": "window"
-                },
                 "atlascode.rovodev.debugPanelEnabled": {
                     "type": "boolean",
                     "description": "Enable Rovo Dev debug panel",
