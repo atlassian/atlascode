@@ -6,7 +6,7 @@ import { RepoData } from '../../../../../lib/ipc/toUI/startWork';
 import { Branch } from '../../../../../typings/git';
 import { ErrorControllerContext } from '../../../common/errorController';
 import { useStartWorkController } from '../../startWorkController';
-import { generateBranchName, getDefaultSourceBranch } from '../utils/branchUtils';
+import { generateBranchName, getBranchTypeForRepo, getDefaultSourceBranch } from '../utils/branchUtils';
 
 export function useStartWorkFormState(
     state: ReturnType<typeof useStartWorkController>[0],
@@ -34,6 +34,10 @@ export function useStartWorkFormState(
     }>({});
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [startWithRovoDev, setStartWithRovoDev] = useState(state.rovoDevPreference || false);
+    const getBranchTypeForCurrentRepo = useCallback(
+        (repo: RepoData) => getBranchTypeForRepo(repo, state.customPrefixes),
+        [state.customPrefixes],
+    );
 
     useEffect(() => {
         controller.postMessage({
@@ -53,31 +57,22 @@ export function useStartWorkFormState(
             const defaultRepo = state.repoData[0];
             setSelectedRepository(defaultRepo);
             setSourceBranch(getDefaultSourceBranch(defaultRepo));
-            if (defaultRepo.branchTypes?.length > 0) {
-                setSelectedBranchType(defaultRepo.branchTypes[0]);
-            }
+
+            // Set branch type based on repo's branch types or custom prefixes
+            setSelectedBranchType(getBranchTypeForCurrentRepo(defaultRepo));
+
             if (!upstream) {
                 setUpstream(defaultRepo.workspaceRepo.mainSiteRemote.remote.name);
             }
         }
-    }, [state.repoData, upstream]);
+    }, [state.repoData, upstream, getBranchTypeForCurrentRepo]);
 
     // useEffect: auto-generate branch name
     useEffect(() => {
         if (selectedRepository) {
-            if (selectedBranchType.prefix) {
-                // Generate branch name with prefix using the custom template
-                setLocalBranch(
-                    generateBranchName(selectedRepository, selectedBranchType, state.issue, state.customTemplate),
-                );
-            } else {
-                // No prefix available, generate branch name without prefix using a template without prefix
-                const emptyBranchType = { kind: '', prefix: '' };
-                const templateWithoutPrefix = '{{issueKey}}-{{summary}}';
-                setLocalBranch(
-                    generateBranchName(selectedRepository, emptyBranchType, state.issue, templateWithoutPrefix),
-                );
-            }
+            setLocalBranch(
+                generateBranchName(selectedRepository, selectedBranchType, state.issue, state.customTemplate),
+            );
         }
     }, [selectedRepository, selectedBranchType, state.issue, state.customTemplate]);
 
@@ -85,27 +80,13 @@ export function useStartWorkFormState(
         (repository: RepoData) => {
             setSelectedRepository(repository);
             setSourceBranch(getDefaultSourceBranch(repository));
-
-            if (repository.branchTypes?.length > 0) {
-                setSelectedBranchType(repository.branchTypes[0]);
-            } else {
-                const convertedCustomPrefixes = state.customPrefixes.map((prefix) => {
-                    const normalizedCustomPrefix = prefix.endsWith('/') ? prefix : prefix + '/';
-                    return { prefix: normalizedCustomPrefix, kind: prefix };
-                });
-
-                if (convertedCustomPrefixes.length > 0) {
-                    setSelectedBranchType(convertedCustomPrefixes[0]);
-                } else {
-                    setSelectedBranchType({ kind: '', prefix: '' });
-                }
-            }
+            setSelectedBranchType(getBranchTypeForCurrentRepo(repository));
 
             if (!upstream) {
                 setUpstream(repository.workspaceRepo.mainSiteRemote.remote.name);
             }
         },
-        [upstream, state.customPrefixes],
+        [upstream, getBranchTypeForCurrentRepo],
     );
 
     const handleBranchTypeChange = useCallback((branchType: { kind: string; prefix: string }) => {

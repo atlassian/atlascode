@@ -1,7 +1,6 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
-import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
-import { State } from 'src/rovo-dev/rovoDevTypes';
+import { State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 import { ConnectionTimeout } from 'src/util/time';
 
@@ -17,6 +16,7 @@ import { CodePlanButton } from '../technical-plan/CodePlanButton';
 import { ToolCallItem } from '../tools/ToolCallItem';
 import { DialogMessage, PullRequestMessage, Response, scrollToEnd } from '../utils';
 import { ChatStreamMessageRenderer } from './ChatStreamMessageRenderer';
+import { DropdownButton } from './dropdown-button/DropdownButton';
 
 interface ChatStreamProps {
     chatHistory: Response[];
@@ -42,10 +42,10 @@ interface ChatStreamProps {
     onLoginClick: () => void;
     onOpenFolder: () => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
-    onSendMessage: (message: string) => void;
+    setPromptText: (context: string) => void;
     jiraWorkItems: MinimalIssue<DetailedSiteInfo>[] | undefined;
     onJiraItemClick: (issue: MinimalIssue<DetailedSiteInfo>) => void;
-    onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionChoice) => void;
+    onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionDialogChoice | 'enableYolo') => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -65,7 +65,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     onLoginClick,
     onOpenFolder,
     onMcpChoice,
-    onSendMessage,
+    setPromptText,
     jiraWorkItems,
     onJiraItemClick,
     onToolPermissionChoice,
@@ -244,7 +244,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     onLoginClick={onLoginClick}
                     onOpenFolder={onOpenFolder}
                     onMcpChoice={onMcpChoice}
-                    onSendMessage={onSendMessage}
+                    setPromptText={setPromptText}
                     jiraWorkItems={jiraWorkItems}
                     onJiraItemClick={onJiraItemClick}
                 />
@@ -267,15 +267,36 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                 </div>
             )}
 
-            {!isChatHistoryDisabled &&
-                modalDialogs.map((dialog) => (
-                    <DialogMessageItem
-                        msg={dialog}
-                        isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
-                        retryAfterError={renderProps.retryPromptAfterError}
-                        onToolPermissionChoice={onToolPermissionChoice}
-                    />
-                ))}
+            {!isChatHistoryDisabled && (
+                <div>
+                    {modalDialogs.map((dialog) => (
+                        <DialogMessageItem
+                            msg={dialog}
+                            isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
+                            retryAfterError={renderProps.retryPromptAfterError}
+                            onToolPermissionChoice={onToolPermissionChoice}
+                        />
+                    ))}
+                    {modalDialogs.length > 1 && modalDialogs.every((d) => d.type === 'toolPermissionRequest') && (
+                        <DropdownButton
+                            buttonItem={{
+                                label: 'Allow all',
+                                onSelect: () => onToolPermissionChoice(modalDialogs[0].toolCallId, 'allowAll'),
+                            }}
+                            items={[
+                                {
+                                    label: 'Allow all',
+                                    onSelect: () => onToolPermissionChoice(modalDialogs[0].toolCallId, 'allowAll'),
+                                },
+                                {
+                                    label: 'Enable YOLO mode',
+                                    onSelect: () => onToolPermissionChoice(modalDialogs[0].toolCallId, 'enableYolo'),
+                                },
+                            ]}
+                        />
+                    )}
+                </div>
+            )}
 
             {!isChatHistoryDisabled && currentState.state === 'WaitingForPrompt' && (
                 <FollowUpActionFooter>

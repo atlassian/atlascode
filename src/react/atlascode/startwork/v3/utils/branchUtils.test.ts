@@ -7,7 +7,7 @@ jest.mock('mustache', () => ({
 
 const mockMustacheRender = require('mustache').default.render;
 
-import { generateBranchName, getAllBranches, getDefaultSourceBranch } from './branchUtils';
+import { generateBranchName, getAllBranches, getBranchTypeForRepo, getDefaultSourceBranch } from './branchUtils';
 
 describe('branchUtils', () => {
     const mockRepoData = {
@@ -153,6 +153,82 @@ describe('branchUtils', () => {
                 }),
             );
             expect(result).toBe('TEST-123-Test-issue-summary');
+        });
+
+        it('should use custom template even when prefix is empty', () => {
+            mockMustacheRender.mockReturnValue('test.user/TEST-123-Test-issue-summary');
+            const emptyBranchType = {
+                kind: '',
+                prefix: '',
+            };
+            const customTemplateWithUsername = '{{username}}/{{issueKey}}-{{summary}}';
+            const result = generateBranchName(mockRepo, emptyBranchType, mockIssue, customTemplateWithUsername);
+            expect(mockMustacheRender).toHaveBeenCalledWith(
+                customTemplateWithUsername,
+                expect.objectContaining({
+                    username: 'test.user',
+                    prefix: '',
+                    issueKey: 'TEST-123',
+                    summary: 'test-issue-summary',
+                }),
+            );
+            expect(result).toBe('test.user/TEST-123-Test-issue-summary');
+        });
+    });
+
+    describe('getBranchTypeForRepo', () => {
+        const mockRepoWithBranchTypes = {
+            branchTypes: [
+                { kind: 'Feature', prefix: 'feature/' },
+                { kind: 'Bugfix', prefix: 'bugfix/' },
+            ],
+        } as any;
+
+        const mockRepoWithoutBranchTypes = {
+            branchTypes: [],
+        } as any;
+
+        const mockRepoWithUndefinedBranchTypes = {
+            branchTypes: undefined,
+        } as any;
+
+        it('should return first branch type when repo has branch types', () => {
+            const result = getBranchTypeForRepo(mockRepoWithBranchTypes, []);
+            expect(result).toEqual({ kind: 'Feature', prefix: 'feature/' });
+        });
+
+        it('should return first custom prefix when repo has no branch types', () => {
+            const customPrefixes = ['hotfix', 'release'];
+            const result = getBranchTypeForRepo(mockRepoWithoutBranchTypes, customPrefixes);
+            expect(result).toEqual({ kind: 'hotfix', prefix: 'hotfix/' });
+        });
+
+        it('should normalize custom prefix by adding slash', () => {
+            const customPrefixes = ['hotfix'];
+            const result = getBranchTypeForRepo(mockRepoWithoutBranchTypes, customPrefixes);
+            expect(result).toEqual({ kind: 'hotfix', prefix: 'hotfix/' });
+        });
+
+        it('should not add slash if custom prefix already ends with slash', () => {
+            const customPrefixes = ['hotfix/'];
+            const result = getBranchTypeForRepo(mockRepoWithoutBranchTypes, customPrefixes);
+            expect(result).toEqual({ kind: 'hotfix/', prefix: 'hotfix/' });
+        });
+
+        it('should return empty branch type when no branch types and no custom prefixes', () => {
+            const result = getBranchTypeForRepo(mockRepoWithoutBranchTypes, []);
+            expect(result).toEqual({ kind: '', prefix: '' });
+        });
+
+        it('should return empty branch type when branch types is undefined and no custom prefixes', () => {
+            const result = getBranchTypeForRepo(mockRepoWithUndefinedBranchTypes, []);
+            expect(result).toEqual({ kind: '', prefix: '' });
+        });
+
+        it('should prioritize repo branch types over custom prefixes', () => {
+            const customPrefixes = ['hotfix', 'release'];
+            const result = getBranchTypeForRepo(mockRepoWithBranchTypes, customPrefixes);
+            expect(result).toEqual({ kind: 'Feature', prefix: 'feature/' });
         });
     });
 });

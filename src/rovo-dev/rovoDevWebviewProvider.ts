@@ -435,7 +435,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.ToolPermissionChoiceSubmit:
+                        if (e.choice === 'allowAll') {
+                            await this._chatProvider.signalToolRequestAllowAll();
+                            break;
+                        }
                         await this._chatProvider.signalToolRequestChoiceSubmit(e.toolCallId, e.choice);
+
                         break;
 
                     case RovoDevViewResponseType.YoloModeToggled:
@@ -972,7 +977,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
      * @returns A promise that resolves when the context item has been added.
      */
     public async addToContext(contextItem: RovoDevContextItem): Promise<void> {
-        if (!this.isDisabled) {
+        if (this.isDisabled) {
             return;
         }
 

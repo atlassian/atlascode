@@ -1,0 +1,40 @@
+.dropdown-button-container {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.dropdown-button {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+    border: 1px solid var(--vscode-editorWidget-border);
+    border-radius: 4px;
+    background: var(--vscode-button-background);
+}
+
+.dropdown-button-trigger {
+    display: flex;
+    background: inherit;
+    border: none;
+    padding: 6px 8px;
+    color: var(--vscode-button-foreground);
+}
+.dropdown-button-trigger:hover {
+    background: var(--vscode-button-hoverBackground);
+}
+
+.dropdown-button-separator {
+    width: 1px;
+    height: var(--vscode-font-size);
+    background-color: var(--vscode-button-foreground);
+}
+
+.dropdown-item-container {
+    background-color: var(--vscode-dropdown-background);
+    border: 1px solid var(--vscode-editorWidget-border);
+}

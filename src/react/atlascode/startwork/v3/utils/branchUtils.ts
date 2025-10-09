@@ -27,13 +27,15 @@ export const generateBranchName = (
     issue: MinimalIssue<any>,
     customTemplate: string,
 ): string => {
+    // Use branchType if it has a prefix, otherwise use empty prefix
+    const branchTypeToUse = branchType.prefix ? branchType : { kind: '', prefix: '' };
     const usernameBase = repo.userEmail
         ? repo.userEmail
               .split('@')[0]
               .normalize('NFD') // Convert accented characters to two characters where the accent is separated out
               .replace(/[\u0300-\u036f]/g, '') // Remove the separated accent marks
         : 'username';
-    const prefixBase = branchType.prefix.replace(/ /g, '-');
+    const prefixBase = branchTypeToUse.prefix.replace(/ /g, '-');
     const summaryBase = issue.summary
         .substring(0, 50)
         .trim()
@@ -63,5 +65,22 @@ export const generateBranchName = (
         return Mustache.render(customTemplate, view);
     } catch {
         return 'Invalid template: please follow the format described above';
+    }
+};
+
+export const getBranchTypeForRepo = (repo: RepoData, customPrefixes: string[]): { kind: string; prefix: string } => {
+    if (repo.branchTypes?.length > 0) {
+        return repo.branchTypes[0];
+    } else {
+        const convertedCustomPrefixes = customPrefixes.map((prefix) => {
+            const normalizedCustomPrefix = prefix.endsWith('/') ? prefix : prefix + '/';
+            return { prefix: normalizedCustomPrefix, kind: prefix };
+        });
+
+        if (convertedCustomPrefixes.length > 0) {
+            return convertedCustomPrefixes[0];
+        } else {
+            return { kind: '', prefix: '' };
+        }
     }
 };
