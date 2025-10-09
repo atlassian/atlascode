@@ -1006,7 +1006,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             await this.rovoDevApiClient!.acceptMcpTerms(serverName!, decision!);
         }
 
-        await this.initializeWithHealthcheck({ timeout: 10000, timestamp: Date.now() });
+        await this.initializeWithHealthcheck(10000);
     }
 
     /**
@@ -1043,7 +1043,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 break;
 
             case 'Started':
-                await this.signalProcessStarted(newState.hostname, newState.httpPort, newState.timeStarted);
+                await this.signalProcessStarted(newState.hostname, newState.httpPort);
                 break;
 
             case 'Terminated':
@@ -1065,7 +1065,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
-    private signalProcessStarted(hostname: string, rovoDevPort: number, timestamp?: number) {
+    private signalProcessStarted(hostname: string, rovoDevPort: number) {
         // initialize the API client
         this._rovoDevApiClient = new RovoDevApiClient(hostname, rovoDevPort);
 
@@ -1075,15 +1075,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // enable the 'show terminal' button only when in debugging
         setCommandContext(CommandContext.RovoDevTerminalEnabled, !this.isBoysenberry && Container.isDebugging);
 
-        return this.initializeWithHealthcheck({ timestamp });
+        return this.initializeWithHealthcheck();
     }
 
     // timeout defaulted to 1 minute.
     // yes, 1 minute is huge, but Rovo Dev has been acting weird with extremely delayed start-ups recently.
-    private async initializeWithHealthcheck({
-        timeout = 60000,
-        timestamp,
-    }: { timeout?: number; timestamp?: number } = {}) {
+    private async initializeWithHealthcheck(timeout = 60000) {
         const result = await safeWaitFor({
             condition: (info) =>
                 !!info &&
@@ -1094,12 +1091,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             interval: 500,
             abortIf: () => !this.rovoDevApiClient,
         });
-
-        if (timestamp) {
-            this._debugPanelContext['RovoDevInitTime'] = `${new Date().getTime() - timestamp} ms`;
-        } else {
-            delete this._debugPanelContext['RovoDevInitTime'];
-        }
 
         const webView = this._webView!;
         const rovoDevClient = this._rovoDevApiClient;
