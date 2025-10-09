@@ -90,6 +90,8 @@ export interface JiraExplorer {
 export interface StartWorkBranchTemplate {
     customPrefixes: string[];
     customTemplate: string;
+    enableIssueTransition: boolean;
+    defaultTransitionName: string;
 }
 
 export interface JiraHover {
@@ -202,6 +204,8 @@ const emptyTodoIssues: TodoIssues = {
 const emptyStartWorkBranchTemplate: StartWorkBranchTemplate = {
     customPrefixes: [],
     customTemplate: '{{prefix}}/{{issueKey}}-{{summary}}',
+    enableIssueTransition: true,
+    defaultTransitionName: '',
 };
 
 const emptyJiraConfig: JiraConfig = {

@@ -26,6 +26,8 @@ export interface StartWorkInitMessage {
     customTemplate: string;
     customPrefixes: string[];
     isRovoDevEnabled: boolean;
+    enableIssueTransition: boolean;
+    defaultTransitionName: string;
 }
 
 export interface StartWorkResponseMessage {
