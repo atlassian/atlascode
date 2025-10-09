@@ -1,3 +1,4 @@
+import { ToolPermissionChoice } from './rovoDevApiClientInterfaces';
 import { RovoDevEntitlementCheckFailedDetail } from './rovoDevWebviewProviderMessages';
 
 export type RovoDevContextFileInfo = {
@@ -88,3 +89,5 @@ export interface BasicState {
 }
 
 export type State = BasicState | InitializingState | DisabledState;
+
+export type ToolPermissionDialogChoice = ToolPermissionChoice | 'allowAll';

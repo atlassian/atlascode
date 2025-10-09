@@ -50,7 +50,7 @@ export class RovoDevChatProvider {
     public set yoloMode(value: boolean) {
         this._yoloMode = value;
         if (value) {
-            this.signalYoloModeEngaged();
+            this.signalToolRequestAllowAll();
         }
     }
 
@@ -523,7 +523,7 @@ export class RovoDevChatProvider {
         }
     }
 
-    private async signalYoloModeEngaged() {
+    public async signalToolRequestAllowAll() {
         if (this._pendingToolConfirmationLeft > 0) {
             for (const key in this._pendingToolConfirmation) {
                 if (this._pendingToolConfirmation[key] === 'undecided') {
