@@ -54,6 +54,22 @@ export const DisabledMessage: React.FC<{
         );
     }
 
+    if (currentState.state === 'Disabled' && currentState.subState === 'UnsupportedArch') {
+        return (
+            <div style={{ ...messageOuterStyles, width: '100%' }}>
+                <DialogMessageItem
+                    msg={{
+                        event_kind: '_RovoDevDialog',
+                        type: 'error',
+                        title: 'Unsupported architecture',
+                        text: `Sorry, Rovo Dev is not supported for the following architecture: ${process.platform}/${process.arch}.`,
+                        uid: '',
+                    }}
+                />
+            </div>
+        );
+    }
+
     if (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance') {
         return (
             <div className="form-container" style={{ ...messageOuterStyles, textAlign: 'left', gap: '18px' }}>

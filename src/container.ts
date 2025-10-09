@@ -292,8 +292,7 @@ export class Container {
     }
 
     private static async refreshRovoDev(context: ExtensionContext) {
-        const isBoysenberryMode = !!process.env.ROVODEV_BBY;
-        const shouldEnableRovoDev = (this.config.rovodev.enabled && this.config.jira.enabled) || isBoysenberryMode;
+        const shouldEnableRovoDev = (this.config.rovodev.enabled && this.config.jira.enabled) || this.isBoysenberryMode;
 
         if (shouldEnableRovoDev) {
             await this.enableRovoDev(context);
@@ -305,9 +304,13 @@ export class Container {
     private static async enableRovoDev(context: ExtensionContext) {
         this._isRovoDevEnabled = true;
 
+        if (this.isBoysenberryMode) {
+            return;
+        }
+
         if (this._rovodevDisposable) {
             try {
-                // Already enabled
+                // The process should be already running, so we signal that the credentials may have changed
                 await RovoDevProcessManager.refreshRovoDevCredentials(context);
             } catch (error) {
                 RovoDevLogger.error(error, 'Refreshing Rovo Dev credentials');
@@ -330,6 +333,9 @@ export class Container {
 
                 // Update help explorer to show Rovo Dev content
                 this._helpExplorer.refresh();
+
+                // Start the Rovo Dev process
+                await RovoDevProcessManager.initializeRovoDev(context);
             } catch (error) {
                 RovoDevLogger.error(error, 'Enabling Rovo Dev');
             }
@@ -345,6 +351,11 @@ export class Container {
     }
 
     private static async disableRovoDev() {
+        if (this.isBoysenberryMode) {
+            RovoDevLogger.error(new Error('disableRovoDev called in Boysenberry mode'));
+            return;
+        }
+
         this._isRovoDevEnabled = false;
 
         if (!this._rovodevDisposable) {
@@ -452,6 +463,10 @@ export class Container {
         }
 
         return !!this._isDebugging;
+    }
+
+    public static get isBoysenberryMode() {
+        return !!process.env.ROVODEV_BBY;
     }
 
     public static get configTarget(): ConfigTarget {

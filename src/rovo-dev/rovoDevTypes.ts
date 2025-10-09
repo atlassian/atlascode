@@ -73,7 +73,7 @@ export type InitializingState = InitializingOtherState | InitializingDownladingS
 
 export interface BasicDisabledState {
     state: 'Disabled';
-    subState: 'NeedAuth' | 'NoWorkspaceOpen' | 'Other';
+    subState: 'NeedAuth' | 'NoWorkspaceOpen' | 'UnsupportedArch' | 'Other';
 }
 
 export interface EntitlementCheckDisabledState {
