@@ -2,6 +2,12 @@
 
 ## What's new in 4.0.1
 
+### Improvement
+
+- Improved the initialization time for Rovo Dev, allowing the process to start before its webview is ready
+
+## What's new in 4.0.1
+
 ### Features
 
 - Added a config option to enable/disable the Rovo Dev feature
