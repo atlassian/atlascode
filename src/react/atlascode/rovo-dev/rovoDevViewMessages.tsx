@@ -1,6 +1,5 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
-import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
-import { RovoDevPrompt } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevPrompt, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 
 import { FeedbackType } from './feedback-form/FeedbackForm';
 
@@ -70,6 +69,6 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.CheckFileExists, { filePath: string; requestId: string }>
     | ReducerAction<
           RovoDevViewResponseType.ToolPermissionChoiceSubmit,
-          { choice: ToolPermissionChoice; toolCallId: string }
+          { choice: ToolPermissionDialogChoice; toolCallId: string }
       >
     | ReducerAction<RovoDevViewResponseType.YoloModeToggled, { value: boolean }>;
