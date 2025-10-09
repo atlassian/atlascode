@@ -497,6 +497,7 @@ describe('StartWorkWebviewController', () => {
                     localBranches: [{ name: 'main', type: 0, commit: 'abc123' }],
                     remoteBranches: [{ name: 'origin/main', type: 1, commit: 'abc123' }],
                     hasSubmodules: false,
+                    currentBranch: 'main',
                 });
                 mockApi.getStartWorkConfig.mockReturnValue({
                     customTemplate: '{issueKey}',
@@ -675,6 +676,7 @@ describe('StartWorkWebviewController', () => {
                 localBranches: [],
                 remoteBranches: [],
                 hasSubmodules: false,
+                currentBranch: undefined,
             });
             mockApi.getStartWorkConfig.mockReturnValue({
                 customTemplate: '{issueKey}',
@@ -725,6 +727,7 @@ describe('StartWorkWebviewController', () => {
                 localBranches: [],
                 remoteBranches: [],
                 hasSubmodules: false,
+                currentBranch: undefined,
             });
             mockApi.getStartWorkConfig.mockReturnValue({
                 customTemplate: '{issueKey}',

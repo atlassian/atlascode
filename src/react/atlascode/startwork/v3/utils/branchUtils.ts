@@ -13,6 +13,15 @@ export const getDefaultSourceBranch = (repoData: RepoData | undefined): Branch =
         return { type: 0, name: '' };
     }
 
+    // First, try to use the current branch if it exists
+    if (repoData.currentBranch) {
+        const currentBranch = repoData.localBranches?.find((b) => b.name === repoData.currentBranch);
+        if (currentBranch) {
+            return currentBranch;
+        }
+    }
+
+    // Fallback to development branch or first local branch
     const defaultBranch = repoData.localBranches?.find(
         (b) => repoData.developmentBranch && b.name === repoData.developmentBranch,
     ) ||

@@ -107,6 +107,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                             localBranches: repoScmState.localBranches,
                             remoteBranches: repoScmState.remoteBranches,
                             hasSubmodules: repoScmState.hasSubmodules,
+                            currentBranch: repoScmState.currentBranch,
                         };
                     }),
             );

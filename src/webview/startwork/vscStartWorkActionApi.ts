@@ -34,6 +34,7 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         localBranches: Branch[];
         remoteBranches: Branch[];
         hasSubmodules: boolean;
+        currentBranch: string | undefined;
     }> {
         const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri)!;
 
@@ -43,6 +44,7 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
             localBranches: await scm.getBranches({ remote: false }),
             remoteBranches: await scm.getBranches({ remote: true }),
             hasSubmodules: scm.state.submodules.length > 0,
+            currentBranch: scm.state.HEAD?.name,
         };
     }
 
