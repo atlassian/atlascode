@@ -1,18 +1,21 @@
 import { LoadingButton } from '@atlaskit/button';
 import Button, { IconButton } from '@atlaskit/button/new';
 import ClockIcon from '@atlaskit/icon/core/clock';
+import CopyIcon from '@atlaskit/icon/core/copy';
 import EyeOpenIcon from '@atlaskit/icon/core/eye-open';
 import EyeOpenFilledIcon from '@atlaskit/icon/core/eye-open-filled';
 import RefreshIcon from '@atlaskit/icon/core/refresh';
 import ThumbsUpIcon from '@atlaskit/icon/core/thumbs-up';
 import AssetsSchemaIcon from '@atlaskit/icon-lab/core/assets-schema';
 import InlineDialog from '@atlaskit/inline-dialog';
+import Popup from '@atlaskit/popup';
 import Tooltip from '@atlaskit/tooltip';
 import { Transition, User } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, FieldUIs, FieldValues } from '@atlassianlabs/jira-pi-meta-models';
 import { Box } from '@mui/material';
 import React from 'react';
 
+import CloneForm from '../../CloneForm';
 import VotesForm from '../../VotesForm';
 import WatchesForm from '../../WatchesForm';
 import WorklogForm from '../../WorklogForm';
@@ -32,6 +35,7 @@ type Props = {
     fetchUsers: (input: string) => Promise<any[]>;
     handleStatusChange: (t: Transition) => void;
     handleStartWork: () => void;
+    handleCloneIssue: (cloneData: any) => void;
     transitions: Transition[];
 };
 
@@ -49,6 +53,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
     fetchUsers,
     handleStatusChange,
     handleStartWork,
+    handleCloneIssue,
     transitions,
 }) => {
     const originalEstimate: string = fieldValues['timetracking'] ? fieldValues['timetracking'].originalEstimate : '';
@@ -62,6 +67,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
     const [worklogDialogOpen, setWorklogDialogOpen] = React.useState(false);
     const [votesDialogOpen, setVotesDialogOpen] = React.useState(false);
     const [watchesDialogOpen, setWatchesDialogOpen] = React.useState(false);
+    const [cloneDialogOpen, setCloneDialogOpen] = React.useState(false);
 
     return (
         <Box
@@ -246,6 +252,38 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                         </InlineDialog>
                     </div>
                 )}
+                <div className={`ac-inline-dialog ${cloneDialogOpen ? 'active' : ''}`}>
+                    <Popup
+                        content={({ isOpen, onClose }) => (
+                            <CloneForm
+                                onClone={(cloneData) => {
+                                    handleCloneIssue(cloneData);
+                                    setCloneDialogOpen(false);
+                                }}
+                                onCancel={() => setCloneDialogOpen(false)}
+                                currentUser={currentUser}
+                                originalSummary={fieldValues['summary'] || ''}
+                                originalAssignee={fieldValues['assignee']}
+                                isLoading={loadingField === 'clone'}
+                            />
+                        )}
+                        isOpen={cloneDialogOpen}
+                        onClose={() => setCloneDialogOpen(false)}
+                        placement="bottom-end"
+                        trigger={(triggerProps) => (
+                            <Tooltip content="Clone issue">
+                                <IconButton
+                                    {...triggerProps}
+                                    label="Clone issue"
+                                    onClick={() => setCloneDialogOpen(true)}
+                                    icon={() => <CopyIcon label="Clone issue" />}
+                                    isLoading={loadingField === 'clone'}
+                                    spacing="compact"
+                                />
+                            </Tooltip>
+                        )}
+                    />
+                </div>
             </Box>
         </Box>
     );

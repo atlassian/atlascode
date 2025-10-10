@@ -172,6 +172,15 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
     };
 
+    handleCloneIssue = (cloneData: any) => {
+        this.setState({ isSomethingLoading: true, loadingField: 'clone' });
+        this.postMessage({
+            action: 'cloneIssue',
+            site: this.state.siteDetails,
+            issueData: cloneData,
+        });
+    };
+
     fetchAndTransformUsers = async (input: string, accountId?: string): Promise<MentionInfo[]> =>
         (await this.fetchUsers(input, accountId)).map((user) => {
             return {
@@ -745,6 +754,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     transitions={this.state.selectFieldOptions['transitions']}
                     handleStatusChange={this.handleStatusChange}
                     handleStartWork={this.handleStartWorkOnIssue}
+                    handleCloneIssue={(cloneData: any) => this.handleCloneIssue(cloneData)}
                 />
                 <IssueSidebarCollapsible label="Details" items={commonItems} defaultOpen />
                 <IssueSidebarCollapsible label="More fields" items={advancedItems} />

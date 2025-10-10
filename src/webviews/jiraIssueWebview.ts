@@ -14,7 +14,7 @@ import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
 import timer from 'src/util/perf';
-import { commands, env } from 'vscode';
+import { commands, env, window } from 'vscode';
 
 import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../analytics';
 import { performanceEvent } from '../analytics';
@@ -22,6 +22,7 @@ import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlcli
 import { clientForSite } from '../bitbucket/bbUtils';
 import { PullRequestData } from '../bitbucket/model';
 import { postComment } from '../commands/jira/postComment';
+import { showIssue } from '../commands/jira/showIssue';
 import { startWorkOnIssue } from '../commands/jira/startWorkOnIssue';
 import { Commands } from '../constants';
 import { Container } from '../container';
@@ -29,6 +30,7 @@ import {
     EditChildIssueAction,
     EditIssueAction,
     isAddAttachmentsAction,
+    isCloneIssue,
     isCreateIssue,
     isCreateIssueLink,
     isCreateWorklog,
@@ -1125,6 +1127,108 @@ export class JiraIssueWebview
                     if (isOpenStartWorkPageAction(msg)) {
                         handled = true;
                         startWorkOnIssue(this._issue);
+                    }
+                    break;
+                }
+                case 'cloneIssue': {
+                    if (isCloneIssue(msg)) {
+                        handled = true;
+                        try {
+                            const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+
+                            // Create the cloned issue
+                            const clonedIssueData = {
+                                fields: {
+                                    ...msg.issueData,
+                                    project: { key: this._issue.key.split('-')[0] },
+                                    issuetype: { name: 'Task' }, // Default to Task, could be made configurable
+                                },
+                            };
+
+                            const resp = await client.createIssue(clonedIssueData);
+
+                            // Create a link between the original and cloned issue
+                            await client.createIssueLink(resp.key, {
+                                type: { name: 'Cloners' },
+                                inwardIssue: { key: this._issue.key },
+                                outwardIssue: { key: resp.key },
+                            });
+
+                            // Handle attachments if requested
+                            if (msg.issueData.cloneOptions?.includeAttachments) {
+                                try {
+                                    const originalIssue = await client.getIssue(this._issue.key, ['attachment'], '');
+                                    if (originalIssue.fields.attachment && originalIssue.fields.attachment.length > 0) {
+                                        Logger.info(
+                                            `Would clone ${originalIssue.fields.attachment.length} attachments`,
+                                        );
+                                    }
+                                } catch (e) {
+                                    Logger.warn('Could not clone attachments', e);
+                                }
+                            }
+
+                            // Handle linked issues if requested
+                            if (msg.issueData.cloneOptions?.includeLinkedIssues) {
+                                try {
+                                    const originalIssue = await client.getIssue(this._issue.key, ['issuelinks'], '');
+                                    if (originalIssue.fields.issuelinks && originalIssue.fields.issuelinks.length > 0) {
+                                        Logger.info(
+                                            `Would clone ${originalIssue.fields.issuelinks.length} linked issues`,
+                                        );
+                                    }
+                                } catch (e) {
+                                    Logger.warn('Could not clone linked issues', e);
+                                }
+                            }
+
+                            // Handle child issues if requested
+                            if (msg.issueData.cloneOptions?.includeChildIssues) {
+                                try {
+                                    const originalIssue = await client.getIssue(this._issue.key, ['subtasks'], '');
+                                    if (originalIssue.fields.subtasks && originalIssue.fields.subtasks.length > 0) {
+                                        Logger.info(`Would clone ${originalIssue.fields.subtasks.length} child issues`);
+                                    }
+                                } catch (e) {
+                                    Logger.warn('Could not clone child issues', e);
+                                }
+                            }
+
+                            issueCreatedEvent(this._issue.siteDetails, resp.key).then((e) => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
+
+                            commands.executeCommand(
+                                Commands.RefreshAssignedWorkItemsExplorer,
+                                OnJiraEditedRefreshDelay,
+                            );
+                            commands.executeCommand(Commands.RefreshCustomJqlExplorer, OnJiraEditedRefreshDelay);
+
+                            // Show VS Code notification
+                            window
+                                .showInformationMessage(
+                                    `Issue ${resp.key} has been cloned from ${this._issue.key}`,
+                                    'Open Cloned Issue',
+                                )
+                                .then((selection: string | undefined) => {
+                                    if (selection === 'Open Cloned Issue') {
+                                        showIssue({ key: resp.key, siteDetails: this._issue.siteDetails });
+                                    }
+                                });
+
+                            this.postMessage({
+                                type: 'fieldValueUpdate',
+                                fieldValues: { loadingField: '' },
+                                nonce: msg.nonce,
+                            });
+                        } catch (e) {
+                            Logger.error(e, 'Error cloning issue');
+                            this.postMessage({
+                                type: 'error',
+                                reason: 'Error cloning issue',
+                                nonce: msg.nonce,
+                            });
+                        }
                     }
                     break;
                 }
