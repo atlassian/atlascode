@@ -14,11 +14,7 @@ import {
 } from './rovoDevApiClientInterfaces';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import { RovoDevContextItem, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
-import {
-    RovoDevProviderMessage,
-    RovoDevProviderMessageType,
-    RovoDevResponseMessageType,
-} from './rovoDevWebviewProviderMessages';
+import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 
 interface TypedWebview<MessageOut, MessageIn> extends Webview {
     readonly onDidReceiveMessage: Event<MessageIn>;
@@ -251,25 +247,21 @@ export class RovoDevChatProvider {
         const decoder = new TextDecoder();
         const parser = new RovoDevResponseParser({ mergeAllChunks: true });
 
-        const allMessages: RovoDevResponse[] = [];
-
         while (true) {
             const { done, value } = await reader.read();
 
             if (done) {
                 for (const msg of parser.flush()) {
-                    allMessages.push(msg);
+                    await this.processRovoDevResponse('replay', msg);
                 }
                 break;
             }
 
-            const data = decoder.decode(value);
+            const data = decoder.decode(value, { stream: true });
             for (const msg of parser.parse(data)) {
-                allMessages.push(msg);
+                await this.processRovoDevResponse('replay', msg);
             }
         }
-
-        await this.processRovoDevReplayResponse(allMessages);
     }
 
     private async processChatResponse(fetchOp: Promise<Response> | Response) {
@@ -315,49 +307,6 @@ export class RovoDevChatProvider {
                 await this.processRovoDevResponse('chat', msg);
             }
         }
-    }
-
-    private async processRovoDevReplayResponse(responses: RovoDevResponse[]): Promise<void> {
-        const webview = this._webView!;
-
-        let group: RovoDevResponseMessageType[] = [];
-
-        const flush = async () => {
-            if (group.length > 0) {
-                await webview.postMessage({
-                    type: RovoDevProviderMessageType.RovoDevResponseMessage,
-                    message: group,
-                });
-                group = [];
-            }
-        };
-
-        const firstMessage = responses.shift();
-        if (!firstMessage) {
-            return;
-        }
-
-        // send the fist item individually, just to get a feeling when the replay startd
-        this.processRovoDevResponse('replay', firstMessage);
-
-        // group all contiguous messages of type 'text', 'tool-call', 'tool-return',
-        // and send them in batch. send all other type of messages normally.
-        for (const response of responses) {
-            switch (response.event_kind) {
-                case 'text':
-                case 'tool-call':
-                case 'tool-return':
-                    group.push(response);
-                    break;
-
-                default:
-                    await flush();
-                    this.processRovoDevResponse('replay', response);
-                    break;
-            }
-        }
-
-        await flush();
     }
 
     private async processRovoDevResponse(sourceApi: StreamingApi, response: RovoDevResponse): Promise<void> {
