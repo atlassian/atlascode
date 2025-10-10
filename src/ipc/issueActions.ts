@@ -127,11 +127,6 @@ export interface OpenStartWorkPageAction extends Action {
     issue: MinimalIssue<DetailedSiteInfo>;
 }
 
-export interface OpenCloneIssuePageAction extends Action {
-    action: 'openCloneIssuePage';
-    issue: MinimalIssue<DetailedSiteInfo>;
-}
-
 export interface CloneIssueAction extends Action {
     action: 'cloneIssue';
     site: DetailedSiteInfo;
@@ -305,10 +300,6 @@ export function isStartWork(a: Action): a is StartWorkAction {
 
 export function isOpenStartWorkPageAction(a: Action): a is OpenStartWorkPageAction {
     return (<OpenStartWorkPageAction>a).issue !== undefined;
-}
-
-export function isOpenCloneIssuePageAction(a: Action): a is OpenCloneIssuePageAction {
-    return (<OpenCloneIssuePageAction>a).issue !== undefined;
 }
 
 export function isCloneIssue(a: Action): a is CloneIssueAction {

@@ -7,6 +7,8 @@ import { User } from '@atlassianlabs/jira-pi-common-models';
 import { Box, Typography } from '@mui/material';
 import React from 'react';
 
+import UserPickerField from './UserPickerField';
+
 type Props = {
     onClone: (cloneData: {
         summary: string;
@@ -22,6 +24,7 @@ type Props = {
     currentUser: User;
     originalSummary: string;
     originalAssignee?: any;
+    fetchUsers: (input: string) => Promise<User[]>;
     isLoading?: boolean;
 };
 
@@ -57,7 +60,7 @@ export default class CloneForm extends React.Component<Props, any> {
                         this.props.onClone({
                             summary: data.summary,
                             assignee: data.assignee,
-                            reporter: data.reporter,
+                            reporter: data.reporter || this.props.currentUser,
                             cloneOptions: {
                                 includeAttachments: data.includeAttachments || false,
                                 includeLinkedIssues: data.includeLinkedIssues || false,
@@ -70,28 +73,41 @@ export default class CloneForm extends React.Component<Props, any> {
                     {({ formProps, submitting }: any) => (
                         <form {...formProps}>
                             <FormSection>
-                                <Field name="summary" label="Summary *" isRequired defaultValue={this.state.summary}>
+                                <Field name="summary" label="Summary" isRequired defaultValue={this.state.summary}>
                                     {({ fieldProps }: any) => <TextField {...fieldProps} placeholder="Enter summary" />}
                                 </Field>
 
                                 <Field
                                     name="assignee"
                                     label="Assignee"
-                                    defaultValue={this.state.assignee?.displayName || ''}
+                                    defaultValue={this.props.originalAssignee || this.props.currentUser}
                                 >
                                     {({ fieldProps }: any) => (
-                                        <TextField {...fieldProps} placeholder="Enter assignee" />
+                                        <UserPickerField
+                                            value={fieldProps.value}
+                                            onChange={fieldProps.onChange}
+                                            fetchUsers={this.props.fetchUsers}
+                                            placeholder="Type to search"
+                                            // label="Assignee"
+                                        />
                                     )}
                                 </Field>
 
                                 <Field
                                     name="reporter"
-                                    label="Reporter *"
+                                    label="Reporter"
                                     isRequired
-                                    defaultValue={this.state.reporter?.displayName || ''}
+                                    defaultValue={this.props.currentUser}
                                 >
                                     {({ fieldProps }: any) => (
-                                        <TextField {...fieldProps} placeholder="Enter reporter" />
+                                        <UserPickerField
+                                            value={fieldProps.value}
+                                            onChange={fieldProps.onChange}
+                                            fetchUsers={this.props.fetchUsers}
+                                            placeholder="Type to search"
+                                            // label="Reporter"
+                                            required
+                                        />
                                     )}
                                 </Field>
                             </FormSection>

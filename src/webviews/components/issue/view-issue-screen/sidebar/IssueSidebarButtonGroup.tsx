@@ -264,6 +264,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                                 currentUser={currentUser}
                                 originalSummary={fieldValues['summary'] || ''}
                                 originalAssignee={fieldValues['assignee']}
+                                fetchUsers={fetchUsers}
                                 isLoading={loadingField === 'clone'}
                             />
                         )}
