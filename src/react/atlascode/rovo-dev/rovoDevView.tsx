@@ -1,6 +1,7 @@
 import './RovoDev.css';
 import './RovoDevCodeHighlighting.css';
 
+import InformationCircleIcon from '@atlaskit/icon/core/information-circle';
 import { setGlobalTheme } from '@atlaskit/tokens';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { highlightElement } from '@speed-highlight/core';
@@ -805,7 +806,10 @@ const RovoDevView: React.FC = () => {
                             />
                         </div>
                     </div>
-                    <div className="ai-disclaimer">Uses AI. Verify results.</div>
+                    <div className="ai-disclaimer">
+                        <InformationCircleIcon label="Disclaimer logo" size="small" />
+                        Uses AI. Verify results.
+                    </div>
                 </div>
             )}
         </div>
