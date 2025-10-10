@@ -36,25 +36,34 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: .yarn/cache
+          key: yarn-cache-${{ hashFiles('yarn.lock') }}
+          restore-keys: yarn-cache-
 
       - name: Set version in package.json
-        run: npm version $PACKAGE_VERSION --no-git-tag-version --allow-same-version -f
+        run: yarn version $PACKAGE_VERSION --immediate
 
       - name: Install dependencies
-        run: npm ci --no-audit
+        run: yarn install --immutable
 
       - name: Build and package the extension for pre-release
-        run: npm run extension:package:prerelease
+        run: yarn extension:package:prerelease
 
       - name: Run linter
-        run: npm run lint
+        run: yarn lint
 
       - name: Run unit tests
-        run: npm run test:nocoverage
+        run: yarn test:nocoverage
 
       - name: Generate SSL certs for E2E test
-        run: npm run test:e2e:sslcerts
+        run: yarn test:e2e:sslcerts
 
       - name: Fetch E2E image
         run: |
