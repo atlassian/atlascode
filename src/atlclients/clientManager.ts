@@ -153,6 +153,7 @@ export class ClientManager implements Disposable {
 
                     if (isOAuthInfo(info)) {
                         Logger.debug(`${tag}: creating client for ${site.baseApiUrl}`);
+                        Logger.debug(`${tag}: Sites123: ${JSON.stringify(site)}`);
                         client = new JiraCloudClient(
                             site,
                             oauthJiraTransportFactory(site),
