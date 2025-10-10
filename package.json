@@ -1495,7 +1495,7 @@
         "@atlaskit/editor-wikimarkup-transformer": "^11.16.4",
         "@atlaskit/feature-gate-js-client": "^5.5.5",
         "@atlaskit/form": "^12.2.1",
-        "@atlaskit/icon": "^27.12.0",
+        "@atlaskit/icon": "^28.3.0",
         "@atlaskit/icon-lab": "^5.7.0",
         "@atlaskit/inline-dialog": "^17.2.6",
         "@atlaskit/layering": "^3.0.0",
