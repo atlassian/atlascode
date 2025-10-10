@@ -208,14 +208,16 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
                                 </Box>
                             </Grid>
                             <Grid item>
-                                <Box hidden={!isReplying}>
-                                    <CommentForm
-                                        currentUser={currentUser}
-                                        onSave={handleSave}
-                                        onCancel={handleCancel}
-                                        fetchUsers={fetchUsers}
-                                    />
-                                </Box>
+                                {isReplying && (
+                                    <Box hidden={!isReplying}>
+                                        <CommentForm
+                                            currentUser={currentUser}
+                                            onSave={handleSave}
+                                            onCancel={handleCancel}
+                                            fetchUsers={fetchUsers}
+                                        />
+                                    </Box>
+                                )}
                             </Grid>
                             <Grid item>
                                 <Box hidden={comment.children.length === 0}>
@@ -233,15 +235,17 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
                 </Grid>
             </Box>
             {/* Edit form */}
-            <Box hidden={!isEditing}>
-                <CommentForm
-                    initialContent={comment.rawContent}
-                    currentUser={currentUser}
-                    onSave={handleEdit}
-                    onCancel={handleCancelEdit}
-                    fetchUsers={fetchUsers}
-                />
-            </Box>
+            {isEditing && (
+                <Box hidden={!isEditing}>
+                    <CommentForm
+                        initialContent={comment.htmlContent}
+                        currentUser={currentUser}
+                        onSave={handleEdit}
+                        onCancel={handleCancelEdit}
+                        fetchUsers={fetchUsers}
+                    />
+                </Box>
+            )}
         </React.Fragment>
     );
 };
