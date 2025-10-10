@@ -5,8 +5,11 @@ import { ComposableEditor, EditorNextProps } from '@atlaskit/editor-core/composa
 import { createDefaultPreset } from '@atlaskit/editor-core/preset-default';
 import { usePreset } from '@atlaskit/editor-core/use-preset';
 import { JSONTransformer } from '@atlaskit/editor-json-transformer';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { gridPlugin } from '@atlaskit/editor-plugin-grid';
 import { insertBlockPlugin } from '@atlaskit/editor-plugin-insert-block';
 import { listPlugin } from '@atlaskit/editor-plugin-list';
+import { mediaPlugin } from '@atlaskit/editor-plugin-media';
 import { mentionsPlugin } from '@atlaskit/editor-plugin-mentions';
 import { tasksAndDecisionsPlugin } from '@atlaskit/editor-plugin-tasks-and-decisions';
 import { textColorPlugin } from '@atlaskit/editor-plugin-text-color';
@@ -68,7 +71,67 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
         onContentChange,
         mentionProvider,
         isSaveOnBlur,
+        getMediaAuth,
+        issueKey,
     } = props;
+
+    // Media plugin options with Jira API token provider
+    const mediaOptions = React.useMemo(() => {
+        const base: any = {
+            allowMediaSingle: true,
+            allowMediaGroup: true,
+            allowResizing: true,
+            allowAnnotation: true,
+            allowLinking: true,
+            allowResizingInTables: true,
+            allowMediaInline: true,
+            allowCaptions: true,
+            allowAltTextOnImages: true,
+            featureFlags: { mediaInline: true },
+        };
+
+        // Only provide media provider if we have auth function
+        if (!getMediaAuth) {
+            return base;
+        }
+
+        const provider = Promise.resolve({
+            uploadMediaClientConfig: {
+                authProvider: async () => {
+                    try {
+                        const auth = await getMediaAuth();
+                        return {
+                            token: auth.token,
+                            clientId: auth.clientId,
+                            baseUrl: auth.baseUrl ?? 'https://api.media.atlassian.com',
+                        } as any;
+                    } catch (error) {
+                        console.error('Error getting media auth for upload:', error);
+                        throw error;
+                    }
+                },
+            },
+            viewMediaClientConfig: {
+                authProvider: async () => {
+                    try {
+                        const auth = await getMediaAuth();
+                        return {
+                            token: auth.token,
+                            clientId: auth.clientId,
+                            baseUrl: auth.baseUrl ?? 'https://api.media.atlassian.com',
+                        } as any;
+                    } catch (error) {
+                        console.error('Error getting media auth for view:', error);
+                        throw error;
+                    }
+                },
+            },
+            uploadParams: {
+                collection: issueKey ?? 'atlascode',
+            },
+        });
+        return { ...base, provider };
+    }, [getMediaAuth, issueKey]);
 
     const { preset, editorApi } = usePreset(() => {
         return (
@@ -83,13 +146,15 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                     platform: 'web',
                 },
             })
-                // You can extend this with other plugins if you need them
+                // Add additional plugins
+                .add(gridPlugin)
                 .add(listPlugin)
                 .add([
                     toolbarListsIndentationPlugin,
                     { showIndentationButtons: false, allowHeadingAndParagraphIndentation: false },
                 ])
                 .add(textColorPlugin)
+                .add([mediaPlugin, mediaOptions])
                 .add([
                     insertBlockPlugin,
                     { toolbarShowPlusInsertOnly: true, appearance: appearance, allowExpand: true },
@@ -97,7 +162,7 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                 .add(mentionsPlugin)
                 .add(tasksAndDecisionsPlugin)
         );
-    }, []);
+    }, [mediaOptions, mentionProvider]);
     // Helper function to get current document content
     const getCurrentContent = React.useCallback(async (): Promise<any | null> => {
         try {
