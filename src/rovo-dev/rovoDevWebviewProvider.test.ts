@@ -55,6 +55,9 @@ jest.mock('../../src/rovo-dev/rovoDevProcessManager', () => ({
     RovoDevProcessManager: {
         setRovoDevWebviewProvider: jest.fn(),
         initializeRovoDev: jest.fn(),
+        state: {
+            state: 'NotStarted',
+        },
     },
 }));
 
