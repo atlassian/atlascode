@@ -69,7 +69,6 @@ import { VSCStartWorkWebviewControllerFactory } from './webview/startwork/vscSta
 import { CreateIssueProblemsWebview } from './webviews/createIssueProblemsWebview';
 import { CreateIssueWebview } from './webviews/createIssueWebview';
 import { JiraIssueViewManager } from './webviews/jiraIssueViewManager';
-import { StartWorkOnIssueWebview } from './webviews/startWorkOnIssueWebview';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
@@ -123,7 +122,6 @@ export class Container {
             (this._createIssueProblemsWebview = new CreateIssueProblemsWebview(context.extensionPath)),
         );
         context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
-        context.subscriptions.push(new StartWorkOnIssueWebview(context.extensionPath));
         context.subscriptions.push(new IssueHoverProviderManager());
         context.subscriptions.push(new AuthStatusBar());
         context.subscriptions.push((this._jqlManager = new JQLManager()));
