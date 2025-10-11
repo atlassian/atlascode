@@ -18,9 +18,6 @@ const routes: Record<string, any> = {
         () =>
             import(/* webpackChunkName: "atlascodeCreateIssueScreen" */ './issue/create-issue-screen/CreateIssuePage'),
     ),
-    startWorkOnIssueScreen: React.lazy(
-        () => import(/* webpackChunkName: "startWorkOnIssueScreen" */ './issue/StartWorkPage'),
-    ),
     atlascodeCreateIssueProblemsScreen: React.lazy(
         () => import(/* webpackChunkName: "atlascodeCreateIssueProblemsScreen" */ './issue/CreateIssueProblems'),
     ),
