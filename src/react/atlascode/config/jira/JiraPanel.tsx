@@ -94,6 +94,12 @@ export const JiraPanel: React.FunctionComponent<JiraPanelProps> = ({
                                 onSubsectionChange={onSubsectionChange}
                                 customPrefixes={config[`${ConfigSection.Jira}.startWorkBranchTemplate.customPrefixes`]}
                                 customTemplate={config[`${ConfigSection.Jira}.startWorkBranchTemplate.customTemplate`]}
+                                enableIssueTransition={
+                                    config[`${ConfigSection.Jira}.startWorkBranchTemplate.enableIssueTransition`]
+                                }
+                                defaultTransitionName={
+                                    config[`${ConfigSection.Jira}.startWorkBranchTemplate.defaultTransitionName`]
+                                }
                             />
                         </Grid>
                         <Grid item>

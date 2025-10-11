@@ -354,14 +354,24 @@ const StartWorkPage: React.FunctionComponent = () => {
     }, [controller]);
 
     useEffect(() => {
+        setTransitionIssueEnabled(state.enableIssueTransition);
+    }, [state.enableIssueTransition]);
+
+    useEffect(() => {
         // best effort to default to a transition that will move the issue to `In progress` state
         const inProgressTransitionGuess: Transition =
+            (state.defaultTransitionName !== '' &&
+                state.issue.transitions.find(
+                    (t) =>
+                        !t.isInitial &&
+                        t.to.name.toLocaleLowerCase() === state.defaultTransitionName.toLocaleLowerCase(),
+                )) ||
             state.issue.transitions.find((t) => !t.isInitial && t.to.name.toLocaleLowerCase().includes('progress')) ||
             state.issue.transitions.find((t) => !t.isInitial) ||
             state.issue.transitions?.[0] ||
             emptyTransition;
         setTransition(inProgressTransitionGuess);
-    }, [state.issue]);
+    }, [state.defaultTransitionName, state.issue]);
 
     useEffect(() => {
         if (state.rovoDevPreference !== undefined) {
