@@ -126,6 +126,11 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
     }
 
     public async getChildren(element?: TreeItem): Promise<TreeItem[]> {
+        // Show viewsWelcome with login button if user is not authenticated
+        if (!Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
+            return [];
+        }
+
         // this branch should never be triggered
         if (element) {
             return [];

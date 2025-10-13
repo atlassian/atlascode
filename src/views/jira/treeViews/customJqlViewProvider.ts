@@ -21,7 +21,7 @@ import { fetchMinimalIssue } from '../../../jira/fetchIssue';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
 import { RefreshTimer } from '../../RefreshTimer';
 import { SearchJiraHelper } from '../searchJiraHelper';
-import { createLabelItem, executeJqlQuery, JiraIssueNode, loginToJiraMessageNode, TreeViewIssue } from './utils';
+import { createLabelItem, executeJqlQuery, JiraIssueNode, TreeViewIssue } from './utils';
 
 const enum ViewStrings {
     ConfigureJqlMessage = 'Configure JQL entries in settings to view Jira issues',
@@ -31,7 +31,6 @@ const enum ViewStrings {
 const CustomJQLViewProviderId = 'atlascode.views.jira.customJqlTreeView';
 
 export class CustomJQLViewProvider extends Disposable implements TreeDataProvider<TreeItem> {
-    private static readonly _treeItemLoginToJiraMessage = loginToJiraMessageNode;
     private static readonly _treeItemConfigureJqlMessage = createLabelItem(ViewStrings.ConfigureJqlMessage, {
         command: Commands.ShowJiraIssueSettings,
         title: 'Configure Filters',
@@ -117,7 +116,8 @@ export class CustomJQLViewProvider extends Disposable implements TreeDataProvide
         if (element instanceof JiraIssueQueryNode || element instanceof JiraIssueNode) {
             return await element.getChildren();
         } else if (!Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
-            return [CustomJQLViewProvider._treeItemLoginToJiraMessage];
+            // Show viewsWelcome with login button if user is not authenticated
+            return [];
         } else {
             SearchJiraHelper.clearIssues(CustomJQLViewProviderId);
 

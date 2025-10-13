@@ -995,6 +995,18 @@
                 }
             ]
         },
+        "viewsWelcome": [
+            {
+                "view": "atlascode.views.jira.assignedWorkItemsTreeView",
+                "contents": "[$(sign-in) Login to Jira](command:atlascode.jira.login)",
+                "when": "!atlascode:isJiraAuthenticated"
+            },
+            {
+                "view": "atlascode.views.jira.customJqlTreeView",
+                "contents": "[$(sign-in) Login to Jira](command:atlascode.jira.login)",
+                "when": "!atlascode:isJiraAuthenticated"
+            }
+        ],
         "configuration": {
             "type": "object",
             "title": "Atlassian",
