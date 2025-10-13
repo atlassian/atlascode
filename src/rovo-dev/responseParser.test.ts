@@ -561,6 +561,54 @@ describe('RovoDevResponseParser', () => {
             expect(allResults[2]).toEqual({ event_kind: 'text', index: 0, content: ' sunny' });
         });
 
+        it('should stream text immediately for fast LLM responses (SCRUM-69 fix)', () => {
+            const allResults: RovoDevResponse[] = [];
+            const parser = new RovoDevResponseParser({ mergeAllChunks: false });
+
+            // Simulate fast LLM streaming with small chunks (typical streaming scenario)
+            const textChunks = ['Hello', ' there', '!', ' How', ' can', ' I', ' help', ' you', ' today', '?'];
+            
+            textChunks.forEach((chunk, index) => {
+                const input = `event: part_start\ndata: {"part": {"part_kind": "text", "index": 0, "content_delta": "${chunk}"}}\n\n`;
+                const results = Array.from(parser.parse(input));
+                allResults.push(...results);
+                
+                // Each chunk should be emitted immediately, not buffered
+                expect(results).toHaveLength(1);
+                expect(results[0]).toEqual({
+                    event_kind: 'text',
+                    index: 0,
+                    content: chunk
+                });
+            });
+
+            // Verify all chunks were streamed individually
+            expect(allResults).toHaveLength(textChunks.length);
+            
+            // Verify the content is correct
+            const fullText = allResults.map(r => r.content).join('');
+            expect(fullText).toBe('Hello there! How can I help you today?');
+        });
+
+        it('should emit text deltas immediately regardless of mergeAllChunks setting', () => {
+            const results1: RovoDevResponse[] = [];
+            const results2: RovoDevResponse[] = [];
+            
+            const parserNoMerge = new RovoDevResponseParser({ mergeAllChunks: false });
+            const parserWithMerge = new RovoDevResponseParser({ mergeAllChunks: true });
+
+            const input = 'event: part_start\ndata: {"part": {"part_kind": "text", "index": 0, "content_delta": "Fast"}}\n\n';
+            
+            // Both parsers should emit text immediately
+            results1.push(...Array.from(parserNoMerge.parse(input)));
+            results2.push(...Array.from(parserWithMerge.parse(input)));
+
+            expect(results1).toHaveLength(1);
+            expect(results2).toHaveLength(1);
+            expect(results1[0].content).toBe('Fast');
+            expect(results2[0].content).toBe('Fast');
+        });
+
         it('should handle streaming tool call with deltas', () => {
             const allResults: RovoDevResponse[] = [];
 

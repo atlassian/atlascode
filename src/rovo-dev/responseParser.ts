@@ -383,10 +383,10 @@ export class RovoDevResponseParser {
 
                 // send out immediately:
                 // - errors
-                // - text messages unless we'd like to reconstruct them fully
+                // - text messages (always send immediately for better streaming UX)
                 if (
                     this.previousChunk.event_kind === '_parsing_error' ||
-                    (!this.mergeAllChunks && event_kind_inner === 'text')
+                    event_kind_inner === 'text'
                 ) {
                     tmpChunkToFlush = this.flushPreviousChunk();
                     if (tmpChunkToFlush) {
@@ -406,10 +406,10 @@ export class RovoDevResponseParser {
 
                 // send out immediately:
                 // - errors
-                // - text messages unless we'd like to reconstruct them fully
+                // - text messages (always send immediately for better streaming UX)
                 if (
                     this.previousChunk.event_kind === '_parsing_error' ||
-                    (!this.mergeAllChunks && event_kind_inner === 'text')
+                    event_kind_inner === 'text'
                 ) {
                     tmpChunkToFlush = this.flushPreviousChunk();
                     if (tmpChunkToFlush) {
