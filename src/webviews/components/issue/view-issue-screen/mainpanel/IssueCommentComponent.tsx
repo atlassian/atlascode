@@ -17,7 +17,7 @@ import { RenderedContent } from '../../../RenderedContent';
 import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
 import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
-import { useEditorState } from '../EditorStateContext';
+import { EditorType, useEditorState } from '../EditorStateContext';
 import { useEditorForceClose } from '../hooks/useEditorForceClose';
 
 export type IssueCommentComponentProps = {
@@ -62,7 +62,7 @@ const CommentComponent: React.FC<{
     handleEditorFocus,
 }) => {
     const { openEditor, closeEditor, isEditorActive } = useEditorState();
-    const editorId = `edit-comment-${comment.id}` as const;
+    const editorId = `edit-comment-${comment.id}` as EditorType;
     const [localIsEditing, setLocalIsEditing] = React.useState(false);
     const isEditing = isAtlaskitEditorEnabled ? isEditorActive(editorId) : localIsEditing;
 

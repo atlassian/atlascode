@@ -13,7 +13,7 @@ import { textColorPlugin } from '@atlaskit/editor-plugin-text-color';
 import { toolbarListsIndentationPlugin } from '@atlaskit/editor-plugin-toolbar-lists-indentation';
 import { WikiMarkupTransformer } from '@atlaskit/editor-wikimarkup-transformer';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 interface AtlaskitEditorProps extends Omit<Partial<EditorNextProps>, 'onChange' | 'onSave'> {
     onSave?: (content: string) => void;
@@ -41,7 +41,7 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
         isSaveOnBlur,
         isBitbucket = false,
     } = props;
-    const TextTransformer = isBitbucket ? BitbucketTransformer : WikiMarkupTransformer;
+    const TextTransformer = useMemo(() => (isBitbucket ? BitbucketTransformer : WikiMarkupTransformer), [isBitbucket]);
     const { preset, editorApi } = usePreset(() => {
         return (
             createDefaultPreset({
@@ -177,7 +177,7 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
     return (
         <div ref={editorContainerRef}>
             <ComposableEditor
-                useStickyToolbar={true}
+                useStickyToolbar={!isBitbucket}
                 assistiveLabel="Rich text editor for comments"
                 preset={preset}
                 defaultValue={defaultValue}

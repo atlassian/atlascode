@@ -1,8 +1,9 @@
 import { Avatar, Grid } from '@mui/material';
 import React from 'react';
+import { AtlascodeMentionProvider } from 'src/webviews/components/issue/common/AtlaskitEditor/AtlascodeMentionsProvider';
+import AtlaskitEditor from 'src/webviews/components/issue/common/AtlaskitEditor/AtlaskitEditor';
 
 import { User } from '../../../bitbucket/model';
-// import { MarkdownEditor } from './editor/MarkdownEditor';
 
 type CommentFormProps = {
     currentUser: User;
@@ -22,14 +23,17 @@ const CommentForm: React.FC<CommentFormProps> = (props: CommentFormProps) => {
             <Grid item xs={10}>
                 <Grid container spacing={1} direction="column">
                     <Grid item>
-                        {/* <MarkdownEditor
-                            initialContent={props.initialContent}
+                        <AtlaskitEditor
+                            defaultValue={props.initialContent}
                             onSave={props.onSave}
                             onCancel={props.onCancel}
-                            fetchUsers={props.fetchUsers}
+                            mentionProvider={Promise.resolve({
+                                unsubscribe: () => {},
+                            } as any as AtlascodeMentionProvider)}
+                            isBitbucket={true}
                             onFocus={() => props.handleEditorFocus(true)}
                             onBlur={() => props.handleEditorFocus(false)}
-                        /> */}
+                        />
                     </Grid>
                 </Grid>
             </Grid>
