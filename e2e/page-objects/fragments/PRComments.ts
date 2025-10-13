@@ -12,7 +12,6 @@ export class PRComments {
     readonly editor: Locator;
     readonly editorContent: Locator;
     readonly editorConfirmButton: Locator;
-    readonly editorCancelButton: Locator;
     readonly commentList: Locator;
     readonly testComment: Locator;
 
@@ -24,7 +23,6 @@ export class PRComments {
         this.editor = this.form.getByTestId(RICH_EDITOR_TEST_ID);
         this.editorContent = this.editor.locator('div.ProseMirror[contenteditable="true"]');
         this.editorConfirmButton = this.form.getByRole('button', { name: /save/i });
-        this.editorCancelButton = this.form.getByRole('button', { name: /cancel/i });
         this.commentList = this.frame.getByTestId(COMMENT_LIST_TES_ID);
         this.testComment = this.commentList.locator('div.MuiBox-root p').filter({ hasText: 'test comment' }).first();
     }
