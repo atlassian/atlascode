@@ -2,7 +2,7 @@ import { expect, FrameLocator, Locator } from '@playwright/test';
 
 const COMMENT_LIST_TES_ID = 'pullrequest.comment-list';
 const FORM_TEST_ID = 'common.comment-form';
-const RICH_EDITOR_TEST_ID = 'common.rich-markdown-editor';
+const RICH_EDITOR_TEST_ID = 'common.atlaskit-editor';
 
 export class PRComments {
     readonly frame: FrameLocator;
@@ -13,7 +13,6 @@ export class PRComments {
     readonly editorContent: Locator;
     readonly editorConfirmButton: Locator;
     readonly editorCancelButton: Locator;
-    readonly richEditorCheckbox: Locator;
     readonly commentList: Locator;
     readonly testComment: Locator;
 
@@ -24,9 +23,8 @@ export class PRComments {
         this.form = this.frame.getByTestId(FORM_TEST_ID);
         this.editor = this.form.getByTestId(RICH_EDITOR_TEST_ID);
         this.editorContent = this.editor.locator('div.ProseMirror[contenteditable="true"]');
-        this.editorConfirmButton = this.form.getByRole('button', { name: 'save' });
-        this.editorCancelButton = this.form.getByRole('button', { name: 'cancel' });
-        this.richEditorCheckbox = this.form.getByRole('checkbox');
+        this.editorConfirmButton = this.form.getByRole('button', { name: /save/i });
+        this.editorCancelButton = this.form.getByRole('button', { name: /cancel/i });
         this.commentList = this.frame.getByTestId(COMMENT_LIST_TES_ID);
         this.testComment = this.commentList.locator('div.MuiBox-root p').filter({ hasText: 'test comment' }).first();
     }
@@ -41,6 +39,5 @@ export class PRComments {
         await expect(this.editorContent).toBeVisible();
         await expect(this.editorConfirmButton).toBeVisible();
         await expect(this.editorCancelButton).toBeVisible();
-        await expect(this.richEditorCheckbox).toBeVisible();
     }
 }
