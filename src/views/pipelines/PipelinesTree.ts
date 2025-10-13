@@ -11,7 +11,6 @@ import {
     Uri,
 } from 'vscode';
 
-import { ProductBitbucket } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { WorkspaceRepo } from '../../bitbucket/model';
 import { configuration } from '../../config/configuration';
@@ -131,13 +130,8 @@ class PipelinesRepoNode extends AbstractBaseNode {
 
     override async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         if (!this.workspaceRepo.mainSiteRemote.site) {
-            return Promise.resolve([
-                new SimpleNode(`Please login to ${ProductBitbucket.name}`, {
-                    command: Commands.ShowConfigPage,
-                    title: 'Login to Bitbucket',
-                    arguments: [ProductBitbucket],
-                }),
-            ]);
+            // Show viewsWelcome with login button if user is not authenticated
+            return Promise.resolve([]);
         }
         if (!element || element instanceof PipelinesRepoNode) {
             if (!this._pipelines) {
