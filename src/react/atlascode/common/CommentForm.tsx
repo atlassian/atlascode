@@ -23,17 +23,19 @@ const CommentForm: React.FC<CommentFormProps> = (props: CommentFormProps) => {
             <Grid item xs={10}>
                 <Grid container spacing={1} direction="column">
                     <Grid item>
-                        <AtlaskitEditor
-                            defaultValue={props.initialContent}
-                            onSave={props.onSave}
-                            onCancel={props.onCancel}
-                            mentionProvider={Promise.resolve({
-                                unsubscribe: () => {},
-                            } as any as AtlascodeMentionProvider)}
-                            isBitbucket={true}
-                            onFocus={() => props.handleEditorFocus(true)}
-                            onBlur={() => props.handleEditorFocus(false)}
-                        />
+                        <div data-testid="common.atlaskit-editor">
+                            <AtlaskitEditor
+                                defaultValue={props.initialContent}
+                                onSave={props.onSave}
+                                onCancel={props.onCancel}
+                                mentionProvider={Promise.resolve({
+                                    unsubscribe: () => {},
+                                } as any as AtlascodeMentionProvider)}
+                                isBitbucket={true}
+                                onFocus={() => props.handleEditorFocus(true)}
+                                onBlur={() => props.handleEditorFocus(false)}
+                            />
+                        </div>
                     </Grid>
                 </Grid>
             </Grid>
