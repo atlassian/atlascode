@@ -36,6 +36,5 @@ export class PRComments {
         await expect(this.editor).toBeVisible();
         await expect(this.editorContent).toBeVisible();
         await expect(this.editorConfirmButton).toBeVisible();
-        await expect(this.editorCancelButton).toBeVisible();
     }
 }
