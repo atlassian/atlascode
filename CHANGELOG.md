@@ -6,6 +6,10 @@
 
 - Improved the initialization time for Rovo Dev, allowing the process to start before its webview is ready
 
+### Bug Fixes
+
+- Fixed issue with infinite loading when searching labels
+
 ## What's new in 4.0.2
 
 ### Improvements
@@ -23,7 +27,7 @@
 ### Features
 
 - **Rovo Dev: Atlassian AI Agent** is now available in beta
-    - New sidebar icon that opens the Rovo Dev view. Rovo Dev can answer questions about your codebase and complete tasks for you 
+    - New sidebar icon that opens the Rovo Dev view. Rovo Dev can answer questions about your codebase and complete tasks for you
     - Read our docs here: https://github.com/atlassian/atlascode/wiki
 
 ### Bug Fixes

@@ -455,10 +455,10 @@ export abstract class AbstractIssueEditorPage<
                         nonce,
                     );
 
-                    this.setState({ isSomethingLoading: false });
-                    resolve(listEvent.options);
+                    this.setState({ isSomethingLoading: false, loadingField: '' });
+                    resolve(listEvent.options || []);
                 } catch {
-                    this.setState({ isSomethingLoading: false });
+                    this.setState({ isSomethingLoading: false, loadingField: '' });
                     resolve([]);
                 }
             })();
