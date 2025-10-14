@@ -1,4 +1,6 @@
 import {
+    aiInstallCompletedEvent,
+    aiInstallInitiatedEvent,
     apiTokenNudgeClickedEvent,
     apiTokenRetainedEvent,
     authenticateButtonEvent,
@@ -75,6 +77,12 @@ export class VSCAnalyticsApi implements AnalyticsApi {
         });
     }
 
+    public async fireAiInstallInitiatedEvent(): Promise<void> {
+        return aiInstallInitiatedEvent().then((e) => {
+            this._analyticsClient.sendTrackEvent(e);
+        });
+    }
+
     public async fireUpgradedEvent(version: string, previousVersion: string): Promise<void> {
         return upgradedEvent(version, previousVersion).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
@@ -115,6 +123,12 @@ export class VSCAnalyticsApi implements AnalyticsApi {
 
     public async fireAuthenticatedEvent(site: DetailedSiteInfo, isOnboarding?: boolean): Promise<void> {
         return authenticatedEvent(site, isOnboarding).then((e) => {
+            this._analyticsClient.sendTrackEvent(e);
+        });
+    }
+
+    public async fireAiInstallCompletedEvent(site: DetailedSiteInfo): Promise<void> {
+        return aiInstallCompletedEvent(site).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }

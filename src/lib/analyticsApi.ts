@@ -7,6 +7,7 @@ import { DetailedSiteInfo, Product, SiteInfo } from '../atlclients/authInfo';
 
 export interface AnalyticsApi {
     fireInstalledEvent(version: string): Promise<void>;
+    fireAiInstallInitiatedEvent(): Promise<void>;
     fireUpgradedEvent(version: string, previousVersion: string): Promise<void>;
     fireLaunchedEvent(
         location: string,
@@ -21,6 +22,7 @@ export interface AnalyticsApi {
     ): Promise<void>;
     fireFeatureChangeEvent(featureId: string, enabled: boolean): Promise<void>;
     fireAuthenticatedEvent(site: DetailedSiteInfo): Promise<void>;
+    fireAiInstallCompletedEvent(site: DetailedSiteInfo): Promise<void>;
     fireLoggedOutEvent(site: DetailedSiteInfo): Promise<void>;
     fireIssueCreatedEvent(site: DetailedSiteInfo, issueKey: string): Promise<void>;
     fireIssueTransitionedEvent(site: DetailedSiteInfo, issueKey: string): Promise<void>;
