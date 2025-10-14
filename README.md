@@ -1,6 +1,30 @@
 
 # Atlassian: Jira, Rovo Dev, Bitbucket
 
+```
+                    🐩 Welcome to Atlascode! 🐩
+                         ___
+                        /   \
+                       | o o |
+                        \___/
+                         |||
+                    .----|---|----.
+                   /              \
+                  |  ~~~~~~~~~~~~  |
+                  |  ~~~~~~~~~~~~  |
+                   \              /
+                    '--._______.--'
+                        |     |
+                        |     |
+                    .---'     '---.
+                   /               \
+                  |  ~~~~~~~~~~~~~  |
+                   \_______________/
+                        |     |
+                        |     |
+                        '-----'
+           A fluffy poodle coding companion! 🚀
+```
 
 Stay in your IDE; don't switch contexts. 
 
