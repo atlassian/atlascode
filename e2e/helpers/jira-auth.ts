@@ -17,7 +17,7 @@ export const authenticateWithJiraCloud = async (
     username: string = USERNAME,
     password: string = PASSWORD,
 ) => {
-    const settingsFrame = await openAtlassianSettings(page, 'Please login to Jira');
+    const settingsFrame = await openAtlassianSettings(page, 'Log in to Jira');
 
     await expect(settingsFrame.getByRole('button', { name: 'Authentication authenticate' })).toBeVisible();
     await expect(settingsFrame.getByRole('button', { name: 'Login with API Token' })).toBeVisible();
@@ -61,7 +61,7 @@ export const authenticateWithJiraDC = async (
     username: string = USERNAME,
     password: string = PASSWORD,
 ) => {
-    const settingsFrame = await openAtlassianSettings(page, 'Please login to Jira');
+    const settingsFrame = await openAtlassianSettings(page, 'Log in to Jira');
 
     await expect(settingsFrame.getByRole('button', { name: 'Authentication authenticate' })).toBeVisible();
     await expect(settingsFrame.getByRole('button', { name: 'Login with API Token' })).toBeVisible();
