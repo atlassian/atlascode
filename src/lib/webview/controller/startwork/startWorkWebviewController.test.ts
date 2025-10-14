@@ -120,6 +120,8 @@ describe('StartWorkWebviewController', () => {
         customTemplate: '{issueKey}',
         customPrefixes: ['feature/', 'bugfix/'],
         isRovoDevEnabled: true,
+        enableIssueTransition: true,
+        defaultTransitionName: '',
     };
 
     beforeEach(() => {
@@ -501,6 +503,8 @@ describe('StartWorkWebviewController', () => {
                 mockApi.getStartWorkConfig.mockReturnValue({
                     customTemplate: '{issueKey}',
                     customPrefixes: ['feature/', 'bugfix/'],
+                    enableIssueTransition: true,
+                    defaultTransitionName: '',
                 });
             });
 
@@ -534,6 +538,8 @@ describe('StartWorkWebviewController', () => {
                     ]),
                     customTemplate: '{issueKey}',
                     customPrefixes: ['feature/', 'bugfix/'],
+                    enableIssueTransition: true,
+                    defaultTransitionName: '',
                 });
             });
 
@@ -566,6 +572,8 @@ describe('StartWorkWebviewController', () => {
                     ]),
                     customTemplate: '{issueKey}',
                     customPrefixes: ['feature/', 'bugfix/'],
+                    enableIssueTransition: true,
+                    defaultTransitionName: '',
                 });
             });
 
@@ -582,6 +590,8 @@ describe('StartWorkWebviewController', () => {
                     repoData: [],
                     customTemplate: '{issueKey}',
                     customPrefixes: ['feature/', 'bugfix/'],
+                    enableIssueTransition: true,
+                    defaultTransitionName: '',
                 });
             });
 
@@ -679,6 +689,8 @@ describe('StartWorkWebviewController', () => {
             mockApi.getStartWorkConfig.mockReturnValue({
                 customTemplate: '{issueKey}',
                 customPrefixes: [],
+                enableIssueTransition: true,
+                defaultTransitionName: '',
             });
 
             await controller.onMessageReceived({ type: CommonActionType.Refresh });
@@ -693,6 +705,8 @@ describe('StartWorkWebviewController', () => {
                 ]),
                 customTemplate: '{issueKey}',
                 customPrefixes: [],
+                enableIssueTransition: true,
+                defaultTransitionName: '',
             });
         });
 
@@ -729,6 +743,8 @@ describe('StartWorkWebviewController', () => {
             mockApi.getStartWorkConfig.mockReturnValue({
                 customTemplate: '{issueKey}',
                 customPrefixes: [],
+                enableIssueTransition: true,
+                defaultTransitionName: '',
             });
 
             await controller.onMessageReceived({ type: CommonActionType.Refresh });
@@ -743,6 +759,8 @@ describe('StartWorkWebviewController', () => {
                 ]),
                 customTemplate: '{issueKey}',
                 customPrefixes: [],
+                enableIssueTransition: true,
+                defaultTransitionName: '',
             });
         });
     });

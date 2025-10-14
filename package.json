@@ -1116,6 +1116,18 @@
                     "description": "Custom prefixes for branch names on start work screen",
                     "scope": "window"
                 },
+                "atlascode.jira.startWorkBranchTemplate.enableIssueTransition": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables the issue transition toggle on start work screen",
+                    "scope": "window"
+                },
+                "atlascode.jira.startWorkBranchTemplate.defaultTransitionName": {
+                    "type": "string",
+                    "default": "",
+                    "description": "The default transition name to use when starting work on an issue",
+                    "scope": "window"
+                },
                 "atlascode.jira.showCreateIssueProblems": {
                     "type": "boolean",
                     "default": false,

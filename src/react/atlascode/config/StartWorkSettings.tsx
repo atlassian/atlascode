@@ -1,5 +1,5 @@
 import { InlineTextEditor, InlineTextEditorList } from '@atlassianlabs/guipi-core-components';
-import { Box, FormHelperText, Grid, Link, Typography } from '@mui/material';
+import { Box, FormHelperText, Grid, Link, Switch, Tooltip, Typography } from '@mui/material';
 import Mustache from 'mustache';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
@@ -9,9 +9,16 @@ import { ConfigControllerContext } from './configController';
 type StartWorkSettings = {
     customTemplate: string;
     customPrefixes: string[];
+    enableIssueTransition: boolean;
+    defaultTransitionName: string;
 };
 
-export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ customTemplate, customPrefixes }) => {
+export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({
+    customTemplate,
+    customPrefixes,
+    enableIssueTransition,
+    defaultTransitionName,
+}) => {
     const controller = useContext(ConfigControllerContext);
     const boxClass = useBorderBoxStyles();
     const [changes, setChanges] = useState<{ [key: string]: any }>({});
@@ -20,6 +27,10 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ 
     useEffect(() => {
         setTemplate(customTemplate);
     }, [customTemplate]);
+
+    const stopProp = useCallback((event: React.MouseEvent<HTMLElement>) => {
+        event.stopPropagation();
+    }, []);
 
     const handlePrefixesChange = useCallback((newOptions: string[]) => {
         const changes = Object.create(null);
@@ -31,6 +42,25 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ 
         setTemplate(template);
         const changes = Object.create(null);
         changes['jira.startWorkBranchTemplate.customTemplate'] = template;
+        setChanges(changes);
+    }, []);
+
+    const handleEnableIssueTransitionChange = useCallback((enable: boolean) => {
+        const changes = Object.create(null);
+        changes['jira.startWorkBranchTemplate.enableIssueTransition'] = enable;
+        setChanges(changes);
+    }, []);
+
+    const toggleIssueTransition = useCallback(
+        (event: React.ChangeEvent<HTMLInputElement>) => {
+            handleEnableIssueTransitionChange(event.target.checked);
+        },
+        [handleEnableIssueTransitionChange],
+    );
+
+    const handleTransitionNameChange = useCallback((name: string) => {
+        const changes = Object.create(null);
+        changes['jira.startWorkBranchTemplate.defaultTransitionName'] = name;
         setChanges(changes);
     }, []);
 
@@ -141,6 +171,44 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ 
                                     <Typography align="center">No prefixes found.</Typography>
                                 </Box>
                             }
+                        />
+                    </Box>
+                </Box>
+            </Grid>
+            <Grid item>
+                <Box margin={2}>
+                    <Typography variant="h4">Enable Issue Transition</Typography>
+                    <Typography variant="caption">
+                        If enabled, the "Transition issue" dropdown on the Start Work page will be shown. This allows
+                        you to choose which status the issue should move to when starting work.
+                    </Typography>
+                    <Box marginTop={1} paddingBottom={2}>
+                        <Tooltip title={enableIssueTransition ? 'Disable issue transition' : 'Enable issue transition'}>
+                            <Switch
+                                color="primary"
+                                size="small"
+                                checked={enableIssueTransition}
+                                onClick={stopProp}
+                                onChange={toggleIssueTransition}
+                            />
+                        </Tooltip>
+                    </Box>
+                </Box>
+            </Grid>
+            <Grid item>
+                <Box margin={2}>
+                    <Typography variant="h4">Default Issue Transition</Typography>
+                    <Typography variant="caption">
+                        The "Transition issue" dropdown on the Start Work page lets you choose which status the issue
+                        should move to. By default, it is set to "In Progress". To change the default selection in the
+                        dropdown, enter a transition name below.
+                    </Typography>
+                    <Box marginTop={1} paddingBottom={2}>
+                        <InlineTextEditor
+                            fullWidth
+                            label="Default Transition Name"
+                            defaultValue={defaultTransitionName}
+                            onSave={handleTransitionNameChange}
                         />
                     </Box>
                 </Box>

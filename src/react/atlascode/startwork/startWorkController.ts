@@ -66,6 +66,8 @@ const emptyState: StartWorkState = {
     customTemplate: '{{prefix}}/{{issueKey}}-{{summary}}',
     customPrefixes: [],
     rovoDevPreference: false,
+    enableIssueTransition: true,
+    defaultTransitionName: '',
 };
 
 enum StartWorkUIActionType {
