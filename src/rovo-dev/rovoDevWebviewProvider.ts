@@ -1138,10 +1138,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     // yes, 1 minute is huge, but Rovo Dev has been acting weird with extremely delayed start-ups recently.
     private async initializeWithHealthcheck(timeout = 60000) {
         const result = await safeWaitFor({
-            condition: (info) =>
-                !!info &&
-                info.status !== 'unknown' &&
-                (info.status !== 'healthy' || info.mcp_servers?.['filesystem-tools'] === 'running'),
+            condition: (info) => !!info && info.status !== 'unknown',
             check: () => this.executeHealthcheckInfo(),
             timeout,
             interval: 500,

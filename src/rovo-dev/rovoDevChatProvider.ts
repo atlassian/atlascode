@@ -369,8 +369,18 @@ export class RovoDevChatProvider {
                 break;
 
             case 'exception':
-                const msg = response.title ? `${response.title} - ${response.message}` : response.message;
-                await this.processError(new Error(msg));
+                RovoDevLogger.error(new Error(`${response.type} ${response.message}`), response.title || undefined);
+                await webview.postMessage({
+                    type: RovoDevProviderMessageType.ShowDialog,
+                    message: {
+                        event_kind: '_RovoDevDialog',
+                        type: 'error',
+                        title: response.title || undefined,
+                        text: response.message,
+                        statusCode: `Error code: ${response.type}`,
+                        uid: v4(),
+                    },
+                });
                 break;
 
             case 'warning':
