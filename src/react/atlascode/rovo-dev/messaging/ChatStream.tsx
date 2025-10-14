@@ -18,6 +18,8 @@ import { DialogMessage, PullRequestMessage, Response, scrollToEnd } from '../uti
 import { ChatStreamMessageRenderer } from './ChatStreamMessageRenderer';
 import { DropdownButton } from './dropdown-button/DropdownButton';
 
+const IsBoysenberry = process.env.ROVODEV_BBY === 'true';
+
 interface ChatStreamProps {
     chatHistory: Response[];
     modalDialogs: DialogMessage[];
@@ -192,16 +194,18 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     ]);
 
     // Other state management effect
-    React.useEffect(() => {
-        if (process.env.ROVODEV_BBY && currentState.state === 'WaitingForPrompt') {
-            const canCreatePR = chatHistory.length > 0;
-            setCanCreatePR(canCreatePR);
-            if (canCreatePR) {
-                // Only check git changes if there's something in the chat
-                checkGitChanges();
+    if (IsBoysenberry) {
+        React.useEffect(() => {
+            if (currentState.state === 'WaitingForPrompt') {
+                const canCreatePR = chatHistory.length > 0;
+                setCanCreatePR(canCreatePR);
+                if (canCreatePR) {
+                    // Only check git changes if there's something in the chat
+                    checkGitChanges();
+                }
             }
-        }
-    }, [currentState, chatHistory, isFormVisible, checkGitChanges]);
+        }, [currentState, chatHistory, isFormVisible, checkGitChanges]);
+    }
 
     const handleCopyResponse = React.useCallback((text: string) => {
         if (!navigator.clipboard) {
@@ -231,7 +235,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
-            {!process.env.ROVODEV_BBY && (
+            {!IsBoysenberry && (
                 <RovoDevLanding
                     currentState={currentState}
                     isHistoryEmpty={chatHistory.length === 0}

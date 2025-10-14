@@ -73,7 +73,7 @@ const RovoDevDisabledPriority: Record<RovoDevDisabledReason | 'none', number> = 
 
 export class RovoDevWebviewProvider extends Disposable implements WebviewViewProvider {
     private readonly viewType = 'atlascodeRovoDev';
-    private readonly isBoysenberry = process.env.ROVODEV_BBY === 'true';
+    private readonly isBoysenberry = Container.isBoysenberryMode;
     private readonly appInstanceId: string;
 
     private readonly _prHandler: RovoDevPullRequestHandler | undefined;
@@ -1163,11 +1163,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             RovoDevLogger.error(new Error(msg));
 
             if (this.isBoysenberry) {
+                await this.signalRovoDevDisabled('Other');
                 await this.processError(new Error(`${msg}\rTry closing and reopening the session to retry.`), {
                     title: 'Failed to initialize Rovo Dev',
                     skipLogError: true,
                 });
-                this.signalRovoDevDisabled('Other');
             } else {
                 await this.signalProcessFailedToInitialize(msg);
             }
@@ -1181,11 +1181,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             RovoDevLogger.error(new Error(msg));
 
             if (this.isBoysenberry) {
+                await this.signalRovoDevDisabled('Other');
                 await this.processError(
                     new Error(`Rovo Dev service is unhealthy.\nTry closing and reopening the session to retry.`),
                     { title: 'Failed to initialize Rovo Dev', skipLogError: true },
                 );
-                this.signalRovoDevDisabled('Other');
             } else {
                 await this.signalProcessFailedToInitialize();
             }
@@ -1195,6 +1195,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // this scenario is when the user is not allowed to run Rovo Dev because it's disabled by the Jira administrator
         if (result.status === 'entitlement check failed') {
             if (this.isBoysenberry) {
+                await this.signalRovoDevDisabled('Other');
                 await this.processError(
                     new Error(`${result.detail.payload.message}\nCode: ${result.detail.payload.status}`),
                     {
@@ -1202,9 +1203,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         skipLogError: true,
                     },
                 );
-                this.signalRovoDevDisabled('Other');
             } else {
-                await this.signalRovoDevDisabled('EntitlementCheckFailed', result.detail);
             }
             return;
         }
@@ -1215,11 +1214,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             const serversToReview = Object.keys(mcp_servers).filter((x) => mcp_servers[x] === 'pending user review');
 
             if (this.isBoysenberry) {
+                await this.signalRovoDevDisabled('Other');
                 await this.processError(
-                    new Error(`Cannot start third party MCP servers: ${serversToReview.join(', ')}.`),
+                    new Error(`Cannot start third party MCP servers:${serversToReview.map((name) => `\n- ${name}`)}`),
                     { title: 'Failed to initialize Rovo Dev', skipLogError: true },
                 );
-                this.signalRovoDevDisabled('Other');
             } else {
                 if (serversToReview.length === 0) {
                     await this.signalProcessFailedToInitialize(
