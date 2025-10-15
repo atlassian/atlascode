@@ -14,7 +14,13 @@ export async function fetchIssueWithTransitions(
     const fieldIds = Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(epicInfo);
 
     const res = await client.getIssue(issueKey, fieldIds, 'transitions,renderedFields,transitions.fields');
-    return minimalIssueFromJsonObject(res, siteDetails, epicInfo);
+    const result = minimalIssueFromJsonObject(res, siteDetails, epicInfo);
+
+    if (res.fields?.assignee) {
+        (result as any).assignee = res.fields.assignee;
+    }
+
+    return result;
 }
 
 export async function fetchMultipleIssuesWithTransitions(

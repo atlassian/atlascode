@@ -5,6 +5,7 @@
 ### Improvement
 
 - Improved the initialization time for Rovo Dev, allowing the process to start before its webview is ready
+- Added assignee column for child and linked issues
 
 ### Bug Fixes
 

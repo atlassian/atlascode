@@ -41,6 +41,6 @@ export async function startWorkFlow(page: Page, type: BitbucketTypes) {
     // check new branch was created
     // it can be mock-repository... for Cloud or dc-repository... for DC
     await expect(
-        page.getByRole('button', { name: '-repository (Git) - bugfix/BTS-1-sample-user-interface-bugs' }),
+        page.getByRole('button', { name: '-repository (Git) - bugfix/BTS-1-user-interface-bugs' }),
     ).toBeVisible();
 }
