@@ -12,7 +12,7 @@ type FetchJiraUsersFunc = (input: string, accountId?: string) => Promise<Mention
 type FetchBBUsersFunc = (input: string, abortSignal?: AbortSignal) => Promise<User[]>;
 
 type ExtendedMentionResourceConfig = MentionResourceConfig & {
-    isBitbucket?: boolean;
+    isBitbucketCloud?: boolean;
 };
 
 export class AtlascodeMentionProvider extends AbstractMentionResource implements ResolvingMentionProvider {
@@ -48,12 +48,12 @@ export class AtlascodeMentionProvider extends AbstractMentionResource implements
     }
 
     override filter(query?: string): void {
-        const isBitbucket = this.config.isBitbucket;
+        const isBitbucketCloud = this.config.isBitbucketCloud;
         setTimeout(async () => {
             const users = await this.fetchUsers(query || '');
             const mentions = users.map((user) => {
                 const mention = {
-                    id: isBitbucket ? `{${user.accountId}}` : `${user.accountId}`,
+                    id: isBitbucketCloud ? `{${user.accountId}}` : `${user.accountId}`,
                     name: user.displayName,
                     mentionName: user.mention,
                     avatarUrl: user.avatarUrl,

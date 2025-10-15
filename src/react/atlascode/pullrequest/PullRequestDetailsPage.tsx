@@ -210,11 +210,11 @@ function PullRequestDetailsPageContent({ state, controller }: PullRequestDetails
                         // currently this method is never called by Atlaskit. So it is implemented only to satisfy the interface
                     },
                 },
-                isBitbucket: true,
+                isBitbucketCloud: state.pr.site.details.isCloud,
             },
             handleFetchUsers,
         );
-    }, [state?.pr?.site.details.baseApiUrl, handleFetchUsers]);
+    }, [state?.pr?.site.details, handleFetchUsers]);
 
     return (
         <>
