@@ -66,39 +66,3 @@ export function statusJsonResponseToMarkdown(response: RovoDevStatusResponse): s
 
     return buffer;
 }
-
-export function JsonToMarkdown(data: Record<string, any>): string {
-    return parse(0, data);
-}
-
-function mdIndent(indent: number, text: string) {
-    return indent ? ' '.repeat(indent) + `- ${text}` : text;
-}
-
-function parse(indent: number, data: Record<string, any>): string {
-    let buffer = '';
-
-    for (const key in data) {
-        const value = data[key];
-        switch (typeof value) {
-            case 'string':
-            case 'boolean':
-            case 'number':
-            case 'bigint':
-            case 'undefined':
-                buffer += mdIndent(indent, `**${key}**: ${value}\n`);
-                break;
-
-            case 'object':
-                if (value === null) {
-                    buffer += mdIndent(indent, `**${key}**: null\n`);
-                } else {
-                    buffer += mdIndent(indent, `**${key}**:\n`);
-                    buffer += parse(indent + 2, value) + '\n';
-                }
-                break;
-        }
-    }
-
-    return buffer;
-}
