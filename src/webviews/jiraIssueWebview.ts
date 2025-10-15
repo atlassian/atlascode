@@ -1114,9 +1114,7 @@ export class JiraIssueWebview
                 case 'refreshIssue': {
                     handled = true;
                     try {
-                        // Use the same approach as after save - refetch without the parameter
-                        // This ensures editIssueUI fetches fresh data including rendered fields
-                        await this.forceUpdateIssue();
+                        await this.forceUpdateIssue(true);
                     } catch (e) {
                         Logger.error(e, 'Error refeshing issue');
                         this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error refeshing issue') });

@@ -3,7 +3,7 @@ import { filter, traverse } from '@atlaskit/adf-utils/traverse';
 import { WikiMarkupTransformer } from '@atlaskit/editor-wikimarkup-transformer';
 import { MentionNameDetails } from '@atlaskit/mention';
 import { ADFEncoder, ReactRenderer } from '@atlaskit/renderer';
-import React, { useLayoutEffect, useState } from 'react';
+import React, { memo, useLayoutEffect, useState } from 'react';
 import { IntlProvider } from 'react-intl-next';
 
 import { AtlascodeMentionProvider } from './issue/common/AtlaskitEditor/AtlascodeMentionsProvider';
@@ -15,7 +15,7 @@ interface AdfAwareContentProps {
 /**
  * Smart component that detects and renders wiki markup
  */
-export const AdfAwareContent: React.FC<AdfAwareContentProps> = ({ content, mentionProvider }) => {
+export const AdfAwareContent: React.FC<AdfAwareContentProps> = memo(({ content, mentionProvider }) => {
     const [traversedDocument, setTraversedDocument] = useState<any>(null);
     const [lastContent, setLastContent] = useState<string>(content);
 
@@ -74,4 +74,4 @@ export const AdfAwareContent: React.FC<AdfAwareContentProps> = ({ content, menti
         console.error('Failed to parse WikiMarkup, falling back to text:', error);
         return <p>{content}</p>;
     }
-};
+});

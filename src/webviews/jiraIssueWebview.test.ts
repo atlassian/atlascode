@@ -1188,8 +1188,7 @@ describe('JiraIssueWebview', () => {
 
             await jiraIssueWebview['onMessageReceived'](msg);
 
-            // Refresh now uses the same approach as after save - no parameter
-            expect(forceUpdateSpy).toHaveBeenCalledWith();
+            expect(forceUpdateSpy).toHaveBeenCalledWith(true);
         });
 
         test('should handle openStartWorkPage action', async () => {
