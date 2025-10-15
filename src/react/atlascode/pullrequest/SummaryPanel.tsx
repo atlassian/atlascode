@@ -1,4 +1,5 @@
 import React, { memo, useCallback } from 'react';
+import { AtlascodeMentionProvider } from 'src/webviews/components/issue/common/AtlaskitEditor/AtlascodeMentionsProvider';
 
 import { User } from '../../../bitbucket/model';
 import { BasicPanel } from '../common/BasicPanel';
@@ -11,10 +12,11 @@ interface SummaryPanelProps {
     summaryChange: (text: string) => void;
     isLoading: boolean;
     isDefaultExpanded?: boolean;
+    mentionsProvider?: AtlascodeMentionProvider;
 }
 
 export const SummaryPanel: React.FC<SummaryPanelProps> = memo(
-    ({ rawSummary, htmlSummary, fetchUsers, summaryChange, isLoading, isDefaultExpanded }) => {
+    ({ rawSummary, htmlSummary, fetchUsers, summaryChange, isLoading, isDefaultExpanded, mentionsProvider }) => {
         const handleFetchUsers = useCallback(
             async (input: string) => {
                 return await fetchUsers(input);
@@ -41,6 +43,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = memo(
                     htmlContent={htmlSummary}
                     onSave={handleSummaryChange}
                     fetchUsers={handleFetchUsers}
+                    mentionsProvider={mentionsProvider}
                 />
             </BasicPanel>
         );
