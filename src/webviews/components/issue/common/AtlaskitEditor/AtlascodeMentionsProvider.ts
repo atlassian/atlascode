@@ -1,5 +1,6 @@
 import {
     AbstractMentionResource,
+    MentionDescription,
     MentionNameDetails,
     MentionNameStatus,
     MentionResourceConfig,
@@ -90,6 +91,10 @@ export class AtlascodeMentionProvider extends AbstractMentionResource implements
 
     supportsMentionNameResolving() {
         return true;
+    }
+
+    override shouldHighlightMention(_mention: MentionDescription) {
+        return false;
     }
 
     cacheMentionName(id: string, name: string) {
