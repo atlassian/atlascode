@@ -18,7 +18,7 @@ export const DisabledMessage: React.FC<{
     if (currentState.state === 'Disabled' && currentState.subState === 'NeedAuth') {
         return (
             <div style={messageOuterStyles}>
-                <div>Create an API token and add it here to use Rovo Dev beta</div>
+                <div>Create an API token in Jira Cloud and add it here to use Rovo Dev beta</div>
                 <button style={{ ...inChatButtonStyles, marginTop: '8px' }} onClick={onLoginClick}>
                     Add API Token
                 </button>
@@ -47,6 +47,22 @@ export const DisabledMessage: React.FC<{
                         title: currentState.detail.payload.title,
                         text: currentState.detail.payload.message,
                         statusCode: `Failure code: ${currentState.detail.payload.status}`,
+                        uid: '',
+                    }}
+                />
+            </div>
+        );
+    }
+
+    if (currentState.state === 'Disabled' && currentState.subState === 'UnsupportedArch') {
+        return (
+            <div style={{ ...messageOuterStyles, width: '100%' }}>
+                <DialogMessageItem
+                    msg={{
+                        event_kind: '_RovoDevDialog',
+                        type: 'error',
+                        title: 'Unsupported architecture',
+                        text: `Sorry, Rovo Dev is not supported for the following architecture: ${process.platform}/${process.arch}.`,
                         uid: '',
                     }}
                 />

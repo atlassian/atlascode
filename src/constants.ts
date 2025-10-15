@@ -105,16 +105,3 @@ export const enum Commands {
     DebugQuickLogin = 'atlascode.debug.quickLogin',
     DebugQuickLogout = 'atlascode.debug.quickLogout',
 }
-
-// Rovodev port mapping settings
-export const rovodevInfo = {
-    mappingKey: 'workspacePortMapping',
-    envVars: {
-        port: 'ROVODEV_PORT',
-        host: 'ROVODEV_HOST',
-    },
-    portRange: {
-        start: 40000,
-        end: 41000,
-    },
-};

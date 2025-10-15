@@ -836,6 +836,11 @@ body {
 }
 
 .ai-disclaimer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+    gap: 4px;
     text-align: center;
     font-size: 11px;
     color: var(--vscode-descriptionForeground);

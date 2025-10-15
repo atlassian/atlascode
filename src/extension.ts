@@ -32,6 +32,8 @@ import { Features } from './util/featureFlags';
 import Performance from './util/perf';
 import { NotificationManagerImpl } from './views/notifications/notificationManager';
 
+const IsBoysenberry = process.env.ROVODEV_BBY === 'true';
+
 const AnalyticDelay = 5000;
 const PerfStartMarker = 'extension.start';
 
@@ -49,8 +51,8 @@ export async function activate(context: ExtensionContext) {
     Configuration.configure(context);
     Logger.configure(context);
 
-    // this disables the main Atlassian activity bar when we are in BBY
-    setCommandContext(CommandContext.BbyEnvironmentActive, !!process.env.ROVODEV_BBY);
+    // this disables the main Atlassian activity bar when we are in Boysenberry,
+    setCommandContext(CommandContext.BbyEnvironmentActive, IsBoysenberry);
 
     // Mark ourselves as the PID in charge of refreshing credentials and start listening for pings.
     context.globalState.update('rulingPid', pid);
@@ -61,7 +63,7 @@ export async function activate(context: ExtensionContext) {
         activateErrorReporting();
         registerRovoDevCommands(context);
 
-        if (!process.env.ROVODEV_BBY) {
+        if (!IsBoysenberry) {
             registerCommands(context);
             activateCodebucket(context);
 
@@ -84,7 +86,7 @@ export async function activate(context: ExtensionContext) {
         Container.clientManager.requestSite(site);
     });
 
-    if (!process.env.ROVODEV_BBY) {
+    if (!IsBoysenberry) {
         if (previousVersion === undefined) {
             commands.executeCommand(Commands.ShowOnboardingFlow);
         } else {
@@ -97,7 +99,7 @@ export async function activate(context: ExtensionContext) {
         sendAnalytics(atlascodeVersion, context.globalState);
     }, delay);
 
-    if (!process.env.ROVODEV_BBY) {
+    if (!IsBoysenberry) {
         context.subscriptions.push(languages.registerCodeLensProvider({ scheme: 'file' }, { provideCodeLenses }));
 
         // Following are async functions called without await so that they are run
@@ -209,7 +211,7 @@ async function sendAnalytics(version: string, globalState: Memento) {
 
 // this method is called when your extension is deactivated
 export function deactivate() {
-    if (!process.env.ROVODEV_BBY) {
+    if (!IsBoysenberry) {
         RovoDevProcessManager.deactivateRovoDevProcessManager();
         NotificationManagerImpl.getInstance().stopListening();
     }

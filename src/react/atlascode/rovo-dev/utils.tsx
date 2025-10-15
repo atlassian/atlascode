@@ -70,7 +70,7 @@ interface ToolReturnInfo {
     type: 'modify' | 'create' | 'delete' | 'open' | 'bash';
 }
 
-const modifyFileTitleMap: Record<string, ToolReturnInfo> = {
+export const modifyFileTitleMap: Record<string, ToolReturnInfo> = {
     expanded_code_chunks: { title: 'Expanded code', type: 'open' },
     replaced_code: { title: 'Replaced code', type: 'modify' },
     opened: { title: 'Opened file', type: 'open' },

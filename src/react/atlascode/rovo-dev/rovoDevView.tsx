@@ -1,6 +1,7 @@
 import './RovoDev.css';
 import './RovoDevCodeHighlighting.css';
 
+import InformationCircleIcon from '@atlaskit/icon/core/information-circle';
 import { setGlobalTheme } from '@atlaskit/tokens';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { highlightElement } from '@speed-highlight/core';
@@ -20,7 +21,13 @@ import { ChatStream } from './messaging/ChatStream';
 import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
 import { PromptContextCollection } from './prompt-box/promptContext/promptContextCollection';
 import { UpdatedFilesComponent } from './prompt-box/updated-files/UpdatedFilesComponent';
-import { McpConsentChoice, ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
+import {
+    FileOperationType,
+    McpConsentChoice,
+    ModifiedFile,
+    RovoDevViewResponse,
+    RovoDevViewResponseType,
+} from './rovoDevViewMessages';
 import { DebugPanel } from './tools/DebugPanel';
 import { parseToolCallMessage } from './tools/ToolCallItem';
 import {
@@ -29,6 +36,7 @@ import {
     DialogMessage,
     extractLastNMessages,
     isCodeChangeTool,
+    modifyFileTitleMap,
     parseToolReturnMessage,
     PullRequestMessage,
     Response,
@@ -60,6 +68,7 @@ const RovoDevView: React.FC = () => {
     const [promptText, setPromptText] = useState<string | undefined>(undefined);
     const [fileExistenceMap, setFileExistenceMap] = useState<Map<string, boolean>>(new Map());
     const [jiraWorkItems, setJiraWorkItems] = useState<MinimalIssue<DetailedSiteInfo>[] | undefined>(undefined);
+    const [pendingFilesForFiltering, setPendingFilesForFiltering] = useState<ModifiedFile[] | null>(null);
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -173,7 +182,25 @@ const RovoDevView: React.FC = () => {
                     }
                 });
 
-                return Array.from(filesMap.values());
+                const allFiles = Array.from(filesMap.values());
+                const modifiedFiles = allFiles
+                    .filter((file) =>
+                        [
+                            modifyFileTitleMap.updated.type,
+                            modifyFileTitleMap.created.type,
+                            modifyFileTitleMap.deleted.type,
+                        ].includes(file.type!),
+                    )
+                    .map((file) => ({
+                        filePath: file.filePath!,
+                        type: file.type as FileOperationType,
+                    }));
+
+                if (modifiedFiles.length > 0) {
+                    setPendingFilesForFiltering(modifiedFiles);
+                }
+
+                return allFiles;
             });
         }
     }, []);
@@ -390,6 +417,20 @@ const RovoDevView: React.FC = () => {
                     setJiraWorkItems(event.issues);
                     break;
 
+                case RovoDevProviderMessageType.FilterModifiedFilesByContentComplete: {
+                    const convertedFiles: ToolReturnParseResult[] = event.filteredFiles.map((file) => {
+                        const content = modifyFileTitleMap[file.type]?.title || modifyFileTitleMap.updated.title;
+
+                        return {
+                            content,
+                            filePath: file.filePath,
+                            title: file.filePath.split('/').pop() || file.filePath,
+                            type: file.type,
+                        };
+                    });
+                    setTotalModifiedFiles(convertedFiles);
+                    break;
+                }
                 default:
                     // this is never supposed to happen since there aren't other type of messages
                     handleAppendResponse({
@@ -420,6 +461,18 @@ const RovoDevView: React.FC = () => {
             dispatch(undefined);
         }
     }, [postMessage, dispatch, outgoingMessage]);
+
+    // Effect to trigger content filtering when files are pending
+    React.useEffect(() => {
+        if (pendingFilesForFiltering !== null) {
+            postMessage({
+                type: RovoDevViewResponseType.FilterModifiedFilesByContent,
+                files: pendingFilesForFiltering,
+            });
+            // Set to null to indicate filtering is in progress (prevents duplicate requests)
+            setPendingFilesForFiltering(null);
+        }
+    }, [pendingFilesForFiltering, postMessage]);
 
     const sendPrompt = useCallback(
         (text: string): boolean => {
@@ -805,7 +858,10 @@ const RovoDevView: React.FC = () => {
                             />
                         </div>
                     </div>
-                    <div className="ai-disclaimer">Uses AI. Verify results.</div>
+                    <div className="ai-disclaimer">
+                        <InformationCircleIcon label="Disclaimer logo" size="small" />
+                        Uses AI. Verify results.
+                    </div>
                 </div>
             )}
         </div>

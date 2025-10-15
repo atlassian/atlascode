@@ -15,6 +15,7 @@ export interface StartWorkActionApi {
         localBranches: Branch[];
         remoteBranches: Branch[];
         hasSubmodules: boolean;
+        currentBranch: string | undefined;
     }>;
     assignAndTransitionIssue(issue: MinimalIssue<DetailedSiteInfo>, transition?: Transition): Promise<void>;
     createOrCheckoutBranch(

@@ -69,7 +69,7 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
         const message = formData.get('pr-commit-message') as string | null;
         const branchName = formData.get('pr-branch-name') as string | null;
 
-        if (!message || !branchName) {
+        if (!branchName) {
             return;
         }
 
@@ -78,7 +78,7 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
         const response = await postMessagePromise(
             {
                 type: RovoDevViewResponseType.CreatePR,
-                payload: { branchName, commitMessage: message },
+                payload: { branchName, commitMessage: message?.trim() || undefined },
             },
             RovoDevProviderMessageType.CreatePRComplete,
             ConnectionTimeout,
@@ -103,13 +103,18 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
                         </div>
                         <div className="form-fields">
                             <div className="form-field">
-                                <label htmlFor="pr-commit-message">Commit message</label>
+                                <label htmlFor="pr-commit-message">
+                                    Commit message
+                                    <span style={{ fontSize: '0.85em', opacity: 0.7 }}>
+                                        {' '}
+                                        (optional if already committed)
+                                    </span>
+                                </label>
                                 <input
                                     type="text"
                                     id="pr-commit-message"
                                     name="pr-commit-message"
                                     placeholder="Enter a commit message"
-                                    required
                                 />
                             </div>
                             <div className="form-field">

@@ -52,6 +52,7 @@ export interface RepoData {
     hasLocalChanges?: boolean;
     branchingModel?: BitbucketBranchingModel;
     isCloud: boolean;
+    currentBranch?: string;
 }
 
 export const emptyStartWorkIssueMessage = {
@@ -89,4 +90,5 @@ export const emptyRepoData: RepoData = {
     hasLocalChanges: undefined,
     branchingModel: undefined,
     isCloud: false,
+    currentBranch: undefined,
 };

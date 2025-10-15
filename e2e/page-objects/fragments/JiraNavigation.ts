@@ -35,6 +35,6 @@ export class JiraNavigation {
     }
 
     async expectLoginToJiraItemExists() {
-        await expect(this.page.getByRole('treeitem', { name: 'Please login to Jira' })).toBeVisible();
+        await expect(this.page.getByRole('button', { name: 'Log in to Jira' })).toBeVisible();
     }
 }

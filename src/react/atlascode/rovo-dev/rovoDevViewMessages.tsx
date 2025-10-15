@@ -30,11 +30,14 @@ export const enum RovoDevViewResponseType {
     CheckFileExists = 'checkFileExists',
     ToolPermissionChoiceSubmit = 'toolPermissionChoiceSubmit',
     YoloModeToggled = 'yoloModeToggled',
+    FilterModifiedFilesByContent = 'filterModifiedFilesByContent',
 }
+
+export type FileOperationType = 'modify' | 'create' | 'delete';
 
 export interface ModifiedFile {
     filePath: string;
-    type: 'modify' | 'create' | 'delete';
+    type: FileOperationType;
 }
 
 export type McpConsentChoice = 'accept' | 'acceptAll' | 'deny';
@@ -47,7 +50,7 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.OpenFolder>
     | ReducerAction<RovoDevViewResponseType.UndoFileChanges, { files: ModifiedFile[] }>
     | ReducerAction<RovoDevViewResponseType.KeepFileChanges, { files: ModifiedFile[] }>
-    | ReducerAction<RovoDevViewResponseType.CreatePR, { payload: { branchName: string; commitMessage: string } }>
+    | ReducerAction<RovoDevViewResponseType.CreatePR, { payload: { branchName: string; commitMessage?: string } }>
     | ReducerAction<RovoDevViewResponseType.RetryPromptAfterError>
     | ReducerAction<RovoDevViewResponseType.GetCurrentBranchName>
     | ReducerAction<RovoDevViewResponseType.AddContext>
@@ -71,4 +74,5 @@ export type RovoDevViewResponse =
           RovoDevViewResponseType.ToolPermissionChoiceSubmit,
           { choice: ToolPermissionDialogChoice; toolCallId: string }
       >
-    | ReducerAction<RovoDevViewResponseType.YoloModeToggled, { value: boolean }>;
+    | ReducerAction<RovoDevViewResponseType.YoloModeToggled, { value: boolean }>
+    | ReducerAction<RovoDevViewResponseType.FilterModifiedFilesByContent, { files: ModifiedFile[] }>;

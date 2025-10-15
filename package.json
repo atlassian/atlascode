@@ -46,7 +46,7 @@
     ],
     "main": "./build/extension/extension",
     "rovoDev": {
-        "version": "0.12.2"
+        "version": "0.12.4"
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
@@ -995,6 +995,28 @@
                 }
             ]
         },
+        "viewsWelcome": [
+            {
+                "view": "atlascode.views.jira.assignedWorkItemsTreeView",
+                "contents": "[Log in to Jira](command:atlascode.jira.login)",
+                "when": "!atlascode:isJiraAuthenticated"
+            },
+            {
+                "view": "atlascode.views.jira.customJqlTreeView",
+                "contents": "[Log in to Jira](command:atlascode.jira.login)",
+                "when": "!atlascode:isJiraAuthenticated"
+            },
+            {
+                "view": "atlascode.views.bb.pullrequestsTreeView",
+                "contents": "[Log in to Bitbucket](command:atlascode.showBitbucketAuth)",
+                "when": "!atlascode:isBBAuthenticated"
+            },
+            {
+                "view": "atlascode.views.bb.pipelinesTreeView",
+                "contents": "[Log in to Bitbucket](command:atlascode.showBitbucketAuth)",
+                "when": "!atlascode:isBBAuthenticated"
+            }
+        ],
         "configuration": {
             "type": "object",
             "title": "Atlassian",
@@ -1005,12 +1027,6 @@
                     "description": "Rovo Dev Agentic AI enabled.\nIt requires Jira to be enabled.",
                     "scope": "window",
                     "order": 1
-                },
-                "atlascode.rovodev.showKeybinding": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Show the Rovo Dev keybinding annotation in the editor when a selection is present.",
-                    "scope": "window"
                 },
                 "atlascode.rovodev.debugPanelEnabled": {
                     "type": "boolean",

@@ -23,7 +23,6 @@ export enum AnalyticsView {
 
     CreateJiraIssuePage = 'page:v1:jira:createIssue',
     JiraIssuePage = 'page:v1:jira:issue',
-    OldStartWorkPage = 'page:v1:bitbucket:startWork',
 
     // v2
 

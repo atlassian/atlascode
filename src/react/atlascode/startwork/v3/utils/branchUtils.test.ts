@@ -70,6 +70,34 @@ describe('branchUtils', () => {
             const result = getDefaultSourceBranch(repoDataWithoutLocalBranches);
             expect(result).toEqual({ type: 0, name: '' });
         });
+
+        it('should return current branch when available', () => {
+            const repoDataWithCurrentBranch = {
+                ...mockRepoData,
+                currentBranch: 'feature/test',
+            };
+            const result = getDefaultSourceBranch(repoDataWithCurrentBranch);
+            expect(result).toEqual(mockRepoData.localBranches[2]); // feature/test branch
+        });
+
+        it('should fallback to development branch when current branch is not in local branches', () => {
+            const repoDataWithInvalidCurrentBranch = {
+                ...mockRepoData,
+                currentBranch: 'non-existent-branch',
+            };
+            const result = getDefaultSourceBranch(repoDataWithInvalidCurrentBranch);
+            expect(result).toEqual(mockRepoData.localBranches[1]); // develop branch
+        });
+
+        it('should fallback to first local branch when current branch is not in local branches and no development branch', () => {
+            const repoDataWithInvalidCurrentBranch = {
+                ...mockRepoData,
+                currentBranch: 'non-existent-branch',
+                developmentBranch: 'non-existent',
+            };
+            const result = getDefaultSourceBranch(repoDataWithInvalidCurrentBranch);
+            expect(result).toEqual(mockRepoData.localBranches[0]); // main branch
+        });
     });
 
     describe('generateBranchName', () => {
