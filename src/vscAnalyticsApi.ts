@@ -1,6 +1,5 @@
 import {
     aiInstallCompletedEvent,
-    aiInstallInitiatedEvent,
     apiTokenNudgeClickedEvent,
     apiTokenRetainedEvent,
     authenticateButtonEvent,
@@ -73,12 +72,6 @@ export class VSCAnalyticsApi implements AnalyticsApi {
 
     public async fireInstalledEvent(version: string): Promise<void> {
         return installedEvent(version).then((e) => {
-            this._analyticsClient.sendTrackEvent(e);
-        });
-    }
-
-    public async fireAiInstallInitiatedEvent(): Promise<void> {
-        return aiInstallInitiatedEvent().then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }

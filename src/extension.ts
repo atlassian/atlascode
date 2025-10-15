@@ -6,7 +6,7 @@ import { pid } from 'process';
 import { gt as semver_gt } from 'semver';
 import { commands, env, ExtensionContext, extensions, languages, Memento, window } from 'vscode';
 
-import { aiInstallInitiatedEvent, installedEvent, launchedEvent, upgradedEvent } from './analytics';
+import { installedEvent, launchedEvent, upgradedEvent } from './analytics';
 import { DetailedSiteInfo, ProductBitbucket, ProductJira } from './atlclients/authInfo';
 import { startListening } from './atlclients/negotiate';
 import { BitbucketContext } from './bitbucket/bbContext';
@@ -185,9 +185,6 @@ async function sendAnalytics(version: string, globalState: Memento) {
             Container.analyticsClient.sendTrackEvent(e);
         });
 
-        aiInstallInitiatedEvent().then((e) => {
-            Container.analyticsClient.sendTrackEvent(e);
-        });
         return;
     }
 

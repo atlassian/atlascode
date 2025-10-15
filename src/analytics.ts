@@ -56,17 +56,6 @@ export async function installedEvent(version: string): Promise<TrackEvent> {
     return trackEvent('installed', 'atlascode', { attributes: { machineId: Container.machineId, version: version } });
 }
 
-export async function aiInstallInitiatedEvent(): Promise<TrackEvent> {
-    return trackEvent('initiated', 'aiInstall', {
-        attributes: {
-            targetProduct: 'rovodev',
-            productStage: 'onboarding',
-            onboardingStep: 'install',
-            xid: 'rovodev-ide-vscode',
-        },
-    });
-}
-
 export async function upgradedEvent(version: string, previousVersion: string): Promise<TrackEvent> {
     return trackEvent('upgraded', 'atlascode', {
         attributes: { machineId: Container.machineId, version: version, previousVersion: previousVersion },
