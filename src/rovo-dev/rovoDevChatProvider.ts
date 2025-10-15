@@ -274,7 +274,7 @@ export class RovoDevChatProvider {
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        const parser = new RovoDevResponseParser();
+        const parser = new RovoDevResponseParser({ mergeAllChunks: false });
 
         let isFirstByte = true;
         let isFirstMessage = true;

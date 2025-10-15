@@ -405,11 +405,13 @@ export class RovoDevResponseParser {
                 this.previousChunk = this.parseGenericReponse(partDeltaChunk, this.previousChunk);
 
                 // send out immediately:
-                // - errors
-                // - text messages unless we'd like to reconstruct them fully
+                // - errors  
+                // - text messages for smooth streaming (every delta when not merging)
+                // - tool-call messages for real-time updates
                 if (
                     this.previousChunk.event_kind === '_parsing_error' ||
-                    (!this.mergeAllChunks && event_kind_inner === 'text')
+                    (!this.mergeAllChunks && event_kind_inner === 'text') ||
+                    (!this.mergeAllChunks && event_kind_inner === 'tool-call')
                 ) {
                     tmpChunkToFlush = this.flushPreviousChunk();
                     if (tmpChunkToFlush) {
