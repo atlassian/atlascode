@@ -2,6 +2,7 @@ import { Avatar, Box, Button, CircularProgress, Grid, Tooltip, Typography } from
 import { makeStyles } from '@mui/styles';
 import { format, parseISO } from 'date-fns';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
+import { AtlascodeMentionProvider } from 'src/webviews/components/issue/common/AtlaskitEditor/AtlascodeMentionsProvider';
 
 import { Comment, PullRequestState, User } from '../../../bitbucket/model';
 import CommentForm from '../common/CommentForm';
@@ -55,6 +56,7 @@ type NestedCommentProps = {
     fetchUsers: (input: string) => Promise<User[]>;
     onDelete: (comment: Comment) => Promise<void>;
     pullRequestState: PullRequestState;
+    mentionsProvider?: AtlascodeMentionProvider;
 };
 
 export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
@@ -63,6 +65,7 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
     fetchUsers,
     onDelete,
     pullRequestState,
+    mentionsProvider,
 }) => {
     const classes = useStyles();
     const [isReplying, setIsReplying] = useState(false);
@@ -215,6 +218,7 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
                                             onSave={handleSave}
                                             onCancel={handleCancel}
                                             fetchUsers={fetchUsers}
+                                            mentionsProvider={mentionsProvider}
                                         />
                                     </Box>
                                 )}
@@ -227,6 +231,7 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
                                         onDelete={onDelete}
                                         fetchUsers={fetchUsers}
                                         pullRequestState={pullRequestState}
+                                        mentionsProvider={mentionsProvider}
                                     />
                                 </Box>
                             </Grid>
@@ -243,6 +248,7 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
                         onSave={handleEdit}
                         onCancel={handleCancelEdit}
                         fetchUsers={fetchUsers}
+                        mentionsProvider={mentionsProvider}
                     />
                 </Box>
             )}

@@ -11,6 +11,7 @@ type CommentFormProps = {
     onSave: (content: string) => Promise<void>;
     onCancel?: () => void;
     fetchUsers?: (input: string) => Promise<User[]>;
+    mentionsProvider: AtlascodeMentionProvider | undefined;
 };
 
 const CommentForm: React.FC<CommentFormProps> = (props: CommentFormProps) => {
@@ -27,9 +28,9 @@ const CommentForm: React.FC<CommentFormProps> = (props: CommentFormProps) => {
                                 defaultValue={props.initialContent}
                                 onSave={props.onSave}
                                 onCancel={props.onCancel}
-                                mentionProvider={Promise.resolve({
-                                    unsubscribe: () => {},
-                                } as any as AtlascodeMentionProvider)}
+                                mentionProvider={
+                                    props.mentionsProvider ? Promise.resolve(props.mentionsProvider) : undefined
+                                }
                                 isBitbucket={true}
                             />
                         </div>
