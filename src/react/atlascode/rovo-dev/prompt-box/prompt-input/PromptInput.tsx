@@ -9,7 +9,6 @@ import Tooltip from '@atlaskit/tooltip';
 import * as monaco from 'monaco-editor';
 import React from 'react';
 import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
-type NonDisabledState = Exclude<State, DisabledState>;
 
 import { rovoDevTextareaStyles } from '../../rovoDevViewStyles';
 import PromptSettingsPopup from '../prompt-settings-popup/PromptSettingsPopup';
@@ -21,6 +20,8 @@ import {
     setupMonacoCommands,
     setupPromptKeyBindings,
 } from './utils';
+
+type NonDisabledState = Exclude<State, DisabledState>;
 
 interface PromptInputBoxProps {
     disabled?: boolean;
@@ -57,14 +58,22 @@ const getTextAreaPlaceholder = (isGeneratingResponse: boolean, currentState: Non
     }
 };
 
+let monacoInitialized = false;
+
+function initMonaco() {
+    if (!monacoInitialized) {
+        monaco.languages.registerCompletionItemProvider('plaintext', createSlashCommandProvider());
+        monacoInitialized = true;
+    }
+}
+
 function createEditor(setIsEmpty?: (isEmpty: boolean) => void) {
     const container = document.getElementById('prompt-editor-container');
     if (!container) {
         return undefined;
     }
 
-    monaco.languages.registerCompletionItemProvider('plaintext', createSlashCommandProvider());
-
+    initMonaco();
     const editor = createMonacoPromptEditor(container);
     editor.onDidChangeModelContent(() => {
         if (editor.getValue().trim().length === 0) {
