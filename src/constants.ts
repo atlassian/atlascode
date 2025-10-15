@@ -95,6 +95,7 @@ export const enum Commands {
     OpenRovoDevConfig = 'atlascode.openRovoDevConfig',
     OpenRovoDevMcpJson = 'atlascode.openRovoDevMcpJson',
     OpenRovoDevGlobalMemory = 'atlascode.openRovoDevGlobalMemory',
+    OpenRovoDevLogFile = 'atlascode.openRovoDevLogFile',
     OpenNativeSettings = 'atlascode.openNativeSettings',
     QuickAuth = 'atlascode.rovodev.quickAuth',
     JiraLogin = 'atlascode.jira.login',
