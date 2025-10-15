@@ -8,6 +8,7 @@ import {
     RovoDevPruneResponse,
     RovoDevResponse,
     RovoDevRetryPromptResponse,
+    RovoDevStatusResponse,
     RovoDevTextResponse,
     RovoDevToolCallResponse,
     RovoDevToolName,
@@ -138,6 +139,9 @@ interface RovoDevOnCallToolStartChunk {
     data: RovoDevOnCallToolStartResponseRaw;
 }
 
+// doc missing
+type RovoDevStatusChunk = RovoDevStatusResponse;
+
 // https://bitbucket.org/atlassian/acra-python/src/9ce5910e61d00e91f70c7978e067bde2690a1c97/packages/cli-rovodev/docs/serve/streaming-events.md?at=RDA-307-emit-warning-events-related-to-rate-limits-and-other-api-request-problems#:~:text=Server%20Error%20Warnings
 interface RovoDevCloseChunk {
     event_kind: 'close';
@@ -166,6 +170,7 @@ type RovoDevSingleChunk =
     | RovoDevClearChunk
     | RovoDevPruneChunk
     | RovoDevOnCallToolStartChunk
+    | RovoDevStatusChunk
     | RovoDevCloseChunk;
 
 // https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.PartStartEvent
@@ -502,6 +507,11 @@ export class RovoDevResponseParser {
                 return buffer
                     ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
                     : parseOnCallToolStart(chunk.data);
+
+            case 'status':
+                return buffer
+                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
+                    : chunk;
 
             case 'close':
                 return buffer
