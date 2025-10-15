@@ -5,14 +5,21 @@ import {
     MentionResourceConfig,
     ResolvingMentionProvider,
 } from '@atlaskit/mention';
+import { User } from 'src/bitbucket/model';
 
 import { MentionInfo } from '../../AbstractIssueEditorPage';
+type FetchJiraUsersFunc = (input: string, accountId?: string) => Promise<MentionInfo[]>;
+type FetchBBUsersFunc = (input: string, abortSignal?: AbortSignal) => Promise<User[]>;
+
+type ExtendedMentionResourceConfig = MentionResourceConfig & {
+    isBitbucketCloud?: boolean;
+};
 
 export class AtlascodeMentionProvider extends AbstractMentionResource implements ResolvingMentionProvider {
     static #instance: AtlascodeMentionProvider;
 
-    private config: MentionResourceConfig;
-    private fetchUsers: (input: string, accountId?: string) => Promise<MentionInfo[]>;
+    private config: ExtendedMentionResourceConfig;
+    private fetchUsers: FetchJiraUsersFunc | FetchBBUsersFunc;
     private mentionRequests: Map<
         string,
         {
@@ -23,8 +30,8 @@ export class AtlascodeMentionProvider extends AbstractMentionResource implements
     private cacheDuration = 300000; // 5 minutes
 
     public static init(
-        config: MentionResourceConfig,
-        fetchUsers: (input: string, accountId?: string) => Promise<MentionInfo[]>,
+        config: ExtendedMentionResourceConfig,
+        fetchUsers: FetchJiraUsersFunc | FetchBBUsersFunc,
     ): AtlascodeMentionProvider {
         if (!AtlascodeMentionProvider.#instance) {
             AtlascodeMentionProvider.#instance = new AtlascodeMentionProvider(config, fetchUsers);
@@ -34,24 +41,25 @@ export class AtlascodeMentionProvider extends AbstractMentionResource implements
     }
 
     // Making the constructor private to enforce singleton pattern
-    private constructor(
-        _config: MentionResourceConfig,
-        _fetchUsers: (input: string, accountId?: string) => Promise<MentionInfo[]>,
-    ) {
+    private constructor(_config: ExtendedMentionResourceConfig, _fetchUsers: FetchJiraUsersFunc | FetchBBUsersFunc) {
         super();
         this.config = _config;
         this.fetchUsers = _fetchUsers;
     }
 
     override filter(query?: string): void {
+        const isBitbucketCloud = this.config.isBitbucketCloud;
         setTimeout(async () => {
             const users = await this.fetchUsers(query || '');
-            const mentions = users.map((user) => ({
-                id: `${user.accountId}`,
-                name: user.displayName,
-                mentionName: user.mention,
-                avatarUrl: user.avatarUrl,
-            }));
+            const mentions = users.map((user) => {
+                const mention = {
+                    id: isBitbucketCloud ? `{${user.accountId}}` : `${user.accountId}`,
+                    name: user.displayName,
+                    mentionName: user.mention,
+                    avatarUrl: user.avatarUrl,
+                };
+                return mention;
+            });
             this._notifyListeners({ mentions, query: query || '' }, {});
             this._notifyAllResultsListeners({ mentions, query: query || '' });
         }, 30 + 1);
