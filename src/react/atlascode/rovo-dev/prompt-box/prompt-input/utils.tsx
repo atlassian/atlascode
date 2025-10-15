@@ -1,6 +1,22 @@
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 export const createMonacoPromptEditor = (container: HTMLElement) => {
+    /* Disable web workers in Monaco by providing a dummy implementation 
+        Monaco web workers cannot be instantiated in vscode webview */
+    window.MonacoEnvironment = {
+        getWorker: function (_moduleId, label) {
+            return {
+                postMessage: () => {},
+                terminate: () => {},
+                addEventListener: () => {},
+                removeEventListener: () => {},
+                onmessage: () => {},
+                dispatchEvent: () => false,
+                onmessageerror: () => {},
+                onerror: () => {},
+            };
+        },
+    };
     return monaco.editor.create(container, {
         value: '',
         language: 'plaintext',
