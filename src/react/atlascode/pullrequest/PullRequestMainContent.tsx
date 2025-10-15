@@ -1,5 +1,6 @@
 import { Box, Grid } from '@mui/material';
 import React from 'react';
+import { AtlascodeMentionProvider } from 'src/webviews/components/issue/common/AtlaskitEditor/AtlascodeMentionsProvider';
 
 import { User } from '../../../bitbucket/model';
 import { BasicPanel } from '../common/BasicPanel';
@@ -16,12 +17,14 @@ interface PullRequestMainContentProps {
     state: PullRequestDetailsState;
     controller: PullRequestDetailsControllerApi;
     handleFetchUsers: (input: string, abortSignal?: AbortSignal) => Promise<User[]>;
+    mentionsProvider?: AtlascodeMentionProvider;
 }
 
 export const PullRequestMainContent: React.FC<PullRequestMainContentProps> = ({
     state,
     controller,
     handleFetchUsers,
+    mentionsProvider,
 }) => {
     return (
         <Box margin={2}>
@@ -36,6 +39,7 @@ export const PullRequestMainContent: React.FC<PullRequestMainContentProps> = ({
                         isLoading={state.loadState.basicData}
                         summaryChange={controller.updateSummary}
                         handleEditorFocus={controller.handleEditorFocus}
+                        mentionsProvider={mentionsProvider}
                     />
                 </Grid>
                 {state.relatedJiraIssues.length > 0 && (
@@ -88,6 +92,7 @@ export const PullRequestMainContent: React.FC<PullRequestMainContentProps> = ({
                                     onDelete={controller.deleteComment}
                                     pullRequestState={state.pr.data.state}
                                     handleEditorFocus={controller.handleEditorFocus}
+                                    mentionsProvider={mentionsProvider}
                                 />
                             </Grid>
                             <Grid item>
@@ -96,6 +101,7 @@ export const PullRequestMainContent: React.FC<PullRequestMainContentProps> = ({
                                     fetchUsers={handleFetchUsers}
                                     onSave={controller.postComment}
                                     handleEditorFocus={controller.handleEditorFocus}
+                                    mentionsProvider={mentionsProvider}
                                 />
                             </Grid>
                         </Grid>

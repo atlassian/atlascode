@@ -12,6 +12,7 @@ type CommentFormProps = {
     onCancel?: () => void;
     fetchUsers?: (input: string) => Promise<User[]>;
     handleEditorFocus: (isFocused: boolean) => void;
+    mentionsProvider: AtlascodeMentionProvider | undefined;
 };
 
 const CommentForm: React.FC<CommentFormProps> = (props: CommentFormProps) => {
@@ -28,9 +29,9 @@ const CommentForm: React.FC<CommentFormProps> = (props: CommentFormProps) => {
                                 defaultValue={props.initialContent}
                                 onSave={props.onSave}
                                 onCancel={props.onCancel}
-                                mentionProvider={Promise.resolve({
-                                    unsubscribe: () => {},
-                                } as any as AtlascodeMentionProvider)}
+                                mentionProvider={
+                                    props.mentionsProvider ? Promise.resolve(props.mentionsProvider) : undefined
+                                }
                                 isBitbucket={true}
                                 onFocus={() => props.handleEditorFocus(true)}
                                 onBlur={() => props.handleEditorFocus(false)}

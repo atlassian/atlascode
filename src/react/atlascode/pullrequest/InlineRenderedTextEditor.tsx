@@ -38,6 +38,7 @@ type InlineTextEditorProps = {
     onSave?: (value: string) => void;
     fetchUsers?: (input: string) => Promise<User[]>;
     handleEditorFocus: (isFocused: boolean) => void;
+    mentionsProvider?: AtlascodeMentionProvider;
 };
 
 const InlineRenderedTextEditor: React.FC<InlineTextEditorProps> = (props: InlineTextEditorProps) => {
@@ -65,7 +66,7 @@ const InlineRenderedTextEditor: React.FC<InlineTextEditorProps> = (props: Inline
                 defaultValue={props.htmlContent}
                 onSave={handleSave}
                 onCancel={exitEditMode}
-                mentionProvider={Promise.resolve({ unsubscribe: () => {} } as any as AtlascodeMentionProvider)}
+                mentionProvider={props.mentionsProvider ? Promise.resolve(props.mentionsProvider) : undefined}
                 isBitbucket={true}
             />
         </div>
