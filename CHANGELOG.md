@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.4
+
+### Improvement
+
+- Added support for Rovo Dev /status command
+
 ## What's new in 4.0.3
 
 ### Improvement
