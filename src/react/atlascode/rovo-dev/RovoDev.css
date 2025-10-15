@@ -751,6 +751,13 @@ body {
     background-color: var(--vscode-input-background) !important;
 }
 
+.monaco-list .monaco-list-row .codicon {
+    display: none !important;
+}
+
+.monaco-list .monaco-list-row {
+    padding-left: 4px;
+}
 .prompt-container:focus-within {
     outline: var(--vscode-focusBorder) solid 1px;
 }
