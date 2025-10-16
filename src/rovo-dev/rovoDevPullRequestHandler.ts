@@ -1,25 +1,33 @@
 import { exec } from 'child_process';
 import { RovoDevLogger } from 'src/logger';
-import { GitExtension, Repository } from 'src/typings/git';
+import { API, GitExtension, Repository } from 'src/typings/git';
 import { promisify } from 'util';
 import { env, extensions, Uri } from 'vscode';
 
 export class RovoDevPullRequestHandler {
-    private async getGitExtension(): Promise<GitExtension> {
-        try {
-            const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
-            if (!gitExtension) {
-                throw new Error('vscode.git extension not found');
-            }
-            return await gitExtension.activate();
-        } catch (e) {
-            console.error('Error activating git extension:', e);
-            throw e;
+    private readonly gitExtensionPromise: Thenable<GitExtension>;
+    private gitApiCache: API | undefined;
+
+    constructor() {
+        const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
+        if (!gitExtension) {
+            throw new Error('vscode.git extension not found');
         }
+
+        this.gitExtensionPromise = gitExtension.activate();
     }
 
-    private async getGitRepository(gitExt: GitExtension): Promise<Repository> {
-        const gitApi = gitExt.getAPI(1);
+    private async getGitAPI(): Promise<API> {
+        if (!this.gitApiCache) {
+            const gitExt = await this.gitExtensionPromise;
+            this.gitApiCache = gitExt.getAPI(1);
+        }
+
+        return this.gitApiCache;
+    }
+
+    private async getGitRepository(): Promise<Repository> {
+        const gitApi = await this.getGitAPI();
 
         if (gitApi.repositories.length === 0) {
             throw new Error('No Git repositories found');
@@ -29,7 +37,7 @@ export class RovoDevPullRequestHandler {
         return gitApi.repositories[0];
     }
 
-    public findPRLink(output: string): string | undefined {
+    private findPRLink(output: string): string | undefined {
         if (!output) {
             return undefined;
         }
@@ -61,18 +69,10 @@ export class RovoDevPullRequestHandler {
     // This is the happy path for single small repository
     // There would probably need to be a lot of logic in monorepos/multiple repos etc.
     public async createPR(branchName: string, commitMessage?: string): Promise<string | undefined> {
-        const gitExt = await this.getGitExtension();
-        const repo = await this.getGitRepository(gitExt);
-
+        const repo = await this.getGitRepository();
         await repo.fetch();
 
         const hasUncommitted = await this.hasUncommittedChanges();
-        const hasUnpushed = await this.hasUnpushedCommits();
-
-        if (!hasUncommitted && !hasUnpushed) {
-            throw new Error('No changes to create PR. Please make changes or commit them first.');
-        }
-
         if (hasUncommitted) {
             if (!commitMessage || commitMessage.trim() === '') {
                 throw new Error('Commit message is required when you have uncommitted changes.');
@@ -93,6 +93,11 @@ export class RovoDevPullRequestHandler {
                 throw new Error(`Failed to commit changes: ${error.message || 'Unknown error'}`);
             }
         } else {
+            const hasUnpushed = await this.hasUnpushedCommits();
+            if (!hasUnpushed) {
+                throw new Error('No changes to create PR. Please make changes or commit them first.');
+            }
+
             const curBranch = repo.state.HEAD?.name;
             if (curBranch !== branchName) {
                 try {
@@ -141,34 +146,13 @@ export class RovoDevPullRequestHandler {
     }
 
     public async getCurrentBranchName(): Promise<string | undefined> {
-        const gitExt = await this.getGitExtension();
-        const repo = await this.getGitRepository(gitExt);
-
+        const repo = await this.getGitRepository();
         return repo.state.HEAD?.name;
     }
 
-    public async isGitStateClean(): Promise<boolean> {
+    private async hasUncommittedChanges(): Promise<boolean> {
         try {
-            const gitExt = await this.getGitExtension();
-            const repo = await this.getGitRepository(gitExt);
-
-            // A repo is clean if there are no unstaged, staged, or merge changes
-            return (
-                repo.state.workingTreeChanges.length === 0 &&
-                repo.state.indexChanges.length === 0 &&
-                repo.state.mergeChanges.length === 0
-            );
-        } catch (error) {
-            RovoDevLogger.error(error, 'Error checking git state');
-            return true; // If we can't determine the state, assume it's clean
-        }
-    }
-
-    public async hasUncommittedChanges(): Promise<boolean> {
-        try {
-            const gitExt = await this.getGitExtension();
-            const repo = await this.getGitRepository(gitExt);
-
+            const repo = await this.getGitRepository();
             return (
                 repo.state.workingTreeChanges.length > 0 ||
                 repo.state.indexChanges.length > 0 ||
@@ -180,13 +164,10 @@ export class RovoDevPullRequestHandler {
         }
     }
 
-    public async hasUnpushedCommits(): Promise<boolean> {
+    private async hasUnpushedCommits(): Promise<boolean> {
         try {
-            const gitExt = await this.getGitExtension();
-            const repo = await this.getGitRepository(gitExt);
-
-            const hasUnpushed = repo.state.HEAD?.ahead && repo.state.HEAD.ahead > 0;
-            return !!hasUnpushed;
+            const repo = await this.getGitRepository();
+            return !!repo.state.HEAD?.ahead && repo.state.HEAD.ahead > 0;
         } catch (error) {
             RovoDevLogger.error(error, 'Error checking for unpushed commits');
             return false;
@@ -195,9 +176,10 @@ export class RovoDevPullRequestHandler {
 
     public async hasChangesOrUnpushedCommits(): Promise<boolean> {
         try {
-            const hasUncommitted = await this.hasUncommittedChanges();
-            const hasUnpushed = await this.hasUnpushedCommits();
-            return hasUncommitted || hasUnpushed;
+            const repo = await this.getGitRepository();
+            await repo.status();
+
+            return (await this.hasUncommittedChanges()) || (await this.hasUnpushedCommits());
         } catch (error) {
             RovoDevLogger.error(error, 'Error checking git changes and unpushed commits');
             return false;

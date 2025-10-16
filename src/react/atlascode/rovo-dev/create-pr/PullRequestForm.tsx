@@ -151,10 +151,13 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
     );
 };
 
-export const PullRequestChatItem: React.FC<{ msg: PullRequestMessage }> = ({ msg }) => {
+export const PullRequestChatItem: React.FC<{ msg: PullRequestMessage; onLinkClick: (href: string) => void }> = ({
+    msg,
+    onLinkClick,
+}) => {
     const content = (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <MarkedDown value={msg.text || ''} />
+            <MarkedDown value={msg.text || ''} onLinkClick={onLinkClick} />
         </div>
     );
     return (

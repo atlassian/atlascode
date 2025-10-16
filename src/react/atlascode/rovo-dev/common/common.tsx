@@ -16,9 +16,56 @@ const mdParser = new MarkdownIt({
 
 mdParser.linkify.set({ fuzzyLink: false });
 
-export const MarkedDown: React.FC<{ value: string }> = ({ value }) => {
+mdParser.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+    const token = tokens[idx];
+    const hrefIndex = token.attrIndex('href');
+    if (hrefIndex >= 0) {
+        const hrefAttr = token.attrs ? token.attrs[hrefIndex] : null;
+        if (hrefAttr && hrefAttr[1]) {
+            const hrefValue = hrefAttr[1];
+
+            token.attrs!.splice(hrefIndex, 1);
+            token.attrSet('data-href', hrefValue);
+            token.attrSet(
+                'style',
+                'cursor: pointer; color: var(--vscode-textLink-foreground); text-decoration: underline;',
+            );
+        }
+    }
+    return self.renderToken(tokens, idx, options);
+};
+
+export const MarkedDown: React.FC<{ value: string; onLinkClick?: (href: string) => void }> = ({
+    value,
+    onLinkClick,
+}) => {
+    const spanRef = React.useRef<HTMLSpanElement>(null);
+
+    React.useEffect(() => {
+        if (!spanRef.current) {
+            return;
+        }
+
+        const handleClick = (event: Event) => {
+            const target = event.target as HTMLElement;
+            if (target.tagName === 'A' && onLinkClick) {
+                const href = target.getAttribute('data-href');
+                if (href) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onLinkClick(href);
+                }
+            }
+        };
+
+        const currentSpan = spanRef.current;
+        currentSpan.addEventListener('click', handleClick);
+        return () => {
+            currentSpan.removeEventListener('click', handleClick);
+        };
+    }, [onLinkClick]);
     // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- necessary to apply MarkDown formatting
-    return <span dangerouslySetInnerHTML={{ __html: mdParser.render(value) }} />;
+    return <span ref={spanRef} dangerouslySetInnerHTML={{ __html: mdParser.render(value) }} />;
 };
 
 export interface OpenFileFunc {

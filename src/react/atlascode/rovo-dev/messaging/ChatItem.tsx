@@ -25,6 +25,7 @@ interface ChatItemProps {
     };
     currentState: State;
     drawerOpen: boolean;
+    onLinkClick: (href: string) => void;
 }
 
 export const ChatItem = React.memo<ChatItemProps>(
@@ -37,6 +38,7 @@ export const ChatItem = React.memo<ChatItemProps>(
         renderProps,
         currentState,
         drawerOpen,
+        onLinkClick,
     }) => {
         if (!block) {
             return null;
@@ -59,6 +61,7 @@ export const ChatItem = React.memo<ChatItemProps>(
                     onCopy={handleCopyResponse}
                     onFeedback={handleFeedbackTrigger}
                     openFile={renderProps.openFile}
+                    onLinkClick={onLinkClick}
                 />
             );
         } else if (block.event_kind === 'tool-return') {
@@ -86,7 +89,7 @@ export const ChatItem = React.memo<ChatItemProps>(
                 />
             );
         } else if (block.event_kind === '_RovoDevPullRequest') {
-            return <PullRequestChatItem msg={block} />;
+            return <PullRequestChatItem msg={block} onLinkClick={onLinkClick} />;
         } else {
             return null;
         }

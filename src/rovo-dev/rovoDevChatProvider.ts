@@ -14,6 +14,7 @@ import {
 } from './rovoDevApiClientInterfaces';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import { RovoDevContextItem, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
+import { statusJsonResponseToMarkdown } from './rovoDevUtils';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 
 interface TypedWebview<MessageOut, MessageIn> extends Webview {
@@ -22,6 +23,8 @@ interface TypedWebview<MessageOut, MessageIn> extends Webview {
 }
 
 type StreamingApi = 'chat' | 'replay';
+
+const PromptCommands = ['/prune', '/clear', '/status'];
 
 export class RovoDevChatProvider {
     private readonly isDebugging = Container.isDebugging;
@@ -101,7 +104,7 @@ export class RovoDevChatProvider {
             return;
         }
 
-        const isCommand = text.trim() === '/clear' || text.trim() === '/prune';
+        const isCommand = PromptCommands.includes(text.trim());
         if (isCommand) {
             enable_deep_plan = false;
             context = [];
@@ -451,6 +454,18 @@ export class RovoDevChatProvider {
                     });
                     await Promise.all(promises);
                 }
+                break;
+
+            case 'status':
+                await webview.postMessage({
+                    type: RovoDevProviderMessageType.ShowDialog,
+                    message: {
+                        type: 'info',
+                        title: 'Status response',
+                        text: statusJsonResponseToMarkdown(response),
+                        event_kind: '_RovoDevDialog',
+                    },
+                });
                 break;
 
             case 'close':
