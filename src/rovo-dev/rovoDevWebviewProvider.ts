@@ -1204,6 +1204,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     },
                 );
             } else {
+                await this.signalRovoDevDisabled('EntitlementCheckFailed', result.detail);
             }
             return;
         }
