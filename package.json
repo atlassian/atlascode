@@ -1624,7 +1624,7 @@
         "concurrently": "^9.1.2",
         "css-loader": "^7.1.2",
         "css-minimizer-webpack-plugin": "^7.0.2",
-        "dotenv": "^16.4.5",
+        "dotenv": "^17.2.3",
         "eslint": "^9.27.0",
         "eslint-import-resolver-typescript": "^4.4.1",
         "eslint-plugin-import": "^2.30.0",
