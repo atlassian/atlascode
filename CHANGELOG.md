@@ -6,6 +6,10 @@
 
 - Added support for Rovo Dev /status command
 
+### Bug Fixes
+
+- Fixed broken entitlement check disabled view in 4.0.3
+
 ## What's new in 4.0.3
 
 ### Improvements
