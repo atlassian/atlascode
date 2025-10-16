@@ -91,7 +91,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     const onLinkClick = React.useCallback(
         (href: string) => {
-            console.log('Opening external link:', href);
             messagingApi.postMessage({ type: RovoDevViewResponseType.OpenExternalLink, href });
         },
         [messagingApi],
