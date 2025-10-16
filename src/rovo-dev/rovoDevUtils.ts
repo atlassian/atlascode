@@ -3,6 +3,7 @@ import path from 'path';
 import { window, workspace } from 'vscode';
 
 import { RovoDevStatusResponse } from './responseParserInterfaces';
+
 export type SupportedConfigFiles = 'config.yml' | 'mcp.json' | '.agent.md' | 'rovodev.log';
 
 const FriendlyName: Record<SupportedConfigFiles, string> = {
