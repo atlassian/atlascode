@@ -161,7 +161,7 @@
             },
             {
                 "command": "atlascode.openRovoDevLogFile",
-                "title": "Open Rovo Dev logs",
+                "title": "Open logs",
                 "category": "Rovo Dev",
                 "description": "Opens the ~/.rovodev/rovodev.log file in the editor.",
                 "enablement": "atlascode:rovoDevEnabled"
