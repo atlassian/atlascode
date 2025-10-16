@@ -43,6 +43,8 @@ export class RovoDevPullRequestHandler {
             /https:\/\/github\.com\/[^\s]+\/pull\/new\/[^\s]+/g,
             // Bitbucket: https://bitbucket.org/my-org/my-repo/pull-requests/new?source=my-branch
             /https:\/\/bitbucket\.org\/[^\s]+\/pull-requests\/new\?[^\s]+/g,
+            // Internal staging instance of Bitbucket
+            /https:\/\/integration\.bb-inf\.net\/[^\s]+\/pull-requests\/new\?[^\s]+/g,
             // Generic
             /https:\/\/[^\s]+\/pull[^\s]*\/new\/[^\s]+/g,
         ];
