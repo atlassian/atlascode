@@ -5,7 +5,7 @@ import { promisify } from 'util';
 import { env, extensions, Uri } from 'vscode';
 
 export class RovoDevPullRequestHandler {
-    constructor(private isBoysenberry: boolean) {}
+    constructor() {}
 
     private async getGitExtension(): Promise<GitExtension> {
         try {
@@ -177,8 +177,10 @@ export class RovoDevPullRequestHandler {
         const prLink = this.findPRLink(stderr) || this.buildCreatePrLinkFromGitOutput(stderr, branchName);
         if (prLink) {
             RovoDevLogger.info(`Found PR link: ${prLink}`);
-            if (!this.isBoysenberry) {
-                env.openExternal(Uri.parse(prLink));
+            try {
+                await env.openExternal(Uri.parse(prLink));
+            } catch (ex) {
+                RovoDevLogger.info('Failed to open PR link.', ex);
             }
         } else {
             RovoDevLogger.info('No PR link found in push output. Changes pushed successfully.');
