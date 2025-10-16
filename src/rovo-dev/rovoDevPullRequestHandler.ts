@@ -60,6 +60,47 @@ export class RovoDevPullRequestHandler {
         return undefined;
     }
 
+    public buildCreatePrLinkFromGitOutput(output: string, branch: string): string | undefined {
+        // If no PR creation link found, try to extract one from the git remote URL
+        // example text: "To bitbucket.org:atlassian/devai-services.git"
+        const gitRemoteMatchers = [
+            // SSH Github: git@github.com:my-org/my-repo.git
+            /(github)\.com:([^\s]+)\/([^\s]+)(\.git)?/g,
+            // SSH Bitbucket:
+            /(bitbucket)\.org:([^\s]+)\/([^\s]+)(\.git)?/g,
+            // Internal staging instance of Bitbucket
+            /(integration\.bb-inf)\.net:([^\s]+)\/([^\s]+)(\.git)?/g,
+        ];
+        for (const gitRemoteMatcher of gitRemoteMatchers) {
+            const gitRemoteMatch = output.match(gitRemoteMatcher);
+            if (gitRemoteMatch && gitRemoteMatch[1] && gitRemoteMatch[2]) {
+                const org = gitRemoteMatch[2];
+                const repo = gitRemoteMatch[3].replace(/\.git$/, '');
+                const knownSource = gitRemoteMatch[1];
+
+                let prLink: string;
+                switch (knownSource) {
+                    case 'github':
+                        prLink = `https://github.com/${org}/${repo}/pull/new/${branch}`;
+                        break;
+                    case 'bitbucket':
+                        prLink = `https://bitbucket.org/${org}/${repo}/pull-requests/new?source=${branch}`;
+                        break;
+                    case 'integration.bb-inf':
+                        prLink = `https://integration.bb-inf.net/${org}/${repo}/pull-requests/new?source=${branch}`;
+                        break;
+                    default:
+                        continue;
+                }
+
+                RovoDevLogger.info(`Create PR from git remote: ${prLink}`);
+                return prLink;
+            }
+        }
+
+        return undefined;
+    }
+
     // This is the happy path for single small repository
     // There would probably need to be a lot of logic in monorepos/multiple repos etc.
     public async createPR(branchName: string, commitMessage?: string): Promise<string | undefined> {
@@ -131,10 +172,12 @@ export class RovoDevPullRequestHandler {
             throw new Error(`Failed to push changes: ${errorMessage}`);
         }
 
-        const prLink = this.findPRLink(stderr);
+        const prLink = this.findPRLink(stderr) || this.buildCreatePrLinkFromGitOutput(stderr, branchName);
         if (prLink) {
-            env.openExternal(Uri.parse(prLink));
             RovoDevLogger.info(`Found PR link: ${prLink}`);
+            if (!this.isBoysenberry) {
+                env.openExternal(Uri.parse(prLink));
+            }
         } else {
             RovoDevLogger.info('No PR link found in push output. Changes pushed successfully.');
         }
