@@ -15,6 +15,14 @@ const mdParser = new MarkdownIt({
 });
 
 mdParser.linkify.set({ fuzzyLink: false });
+if (process.env.ROVODEV_BBY === 'true') {
+    mdParser.renderer.rules.link_open = function (tokens, idx, options, env, renderer) {
+        const token = tokens[idx];
+        token.attrSet('target', '_blank');
+        token.attrSet('rel', 'noopener noreferrer');
+        return renderer.renderToken(tokens, idx, options);
+    };
+}
 
 export const MarkedDown: React.FC<{ value: string }> = ({ value }) => {
     // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- necessary to apply MarkDown formatting
