@@ -101,6 +101,12 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         command: { title: 'Agent Memory', id: 'rovo-dev.agentMemory', tooltip: 'Show agent memory' },
     },
     {
+        label: '/yolo',
+        insertText: '/yolo',
+        description: 'Toggle tool confirmations',
+        command: { title: 'Yolo Mode', id: 'rovo-dev.toggleYoloMode', tooltip: 'Toggle tool confirmations' },
+    },
+    {
         label: '/status',
         insertText: '/status',
         description: 'Show Rovo Dev CLI status including version, account details and model',
@@ -118,7 +124,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     },
 ];
 
-export const createSlashCommandProvider = (): monaco.languages.CompletionItemProvider => {
+export const createSlashCommandProvider = (commands: SlashCommand[]): monaco.languages.CompletionItemProvider => {
     return {
         triggerCharacters: ['/'],
         provideCompletionItems: (model, position) => {
@@ -142,7 +148,7 @@ export const createSlashCommandProvider = (): monaco.languages.CompletionItemPro
 
             const startColumn = position.column - match[0].length;
 
-            const suggestions: monaco.languages.CompletionItem[] = SLASH_COMMANDS.map((command, index) => ({
+            const suggestions: monaco.languages.CompletionItem[] = commands.map((command, index) => ({
                 label: command.label,
                 kind: monaco.languages.CompletionItemKind.Method,
                 insertText: command.insertText,
@@ -182,6 +188,7 @@ export function setupMonacoCommands(
     onCopy: () => void,
     handleMemoryCommand: () => void,
     handleTriggerFeedbackCommand: () => void,
+    onYoloModeToggled?: () => void,
 ) {
     monaco.editor.registerCommand('rovo-dev.clearChat', () => {
         if (onSend('/clear')) {
@@ -210,6 +217,13 @@ export function setupMonacoCommands(
             editor.setValue('');
         }
     });
+
+    if (onYoloModeToggled) {
+        monaco.editor.registerCommand('rovo-dev.toggleYoloMode', () => {
+            onYoloModeToggled();
+            editor.setValue('');
+        });
+    }
 
     monaco.editor.registerCommand('rovo-dev.triggerFeedback', () => {
         handleTriggerFeedbackCommand();
