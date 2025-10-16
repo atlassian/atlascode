@@ -5,6 +5,8 @@ import { promisify } from 'util';
 import { env, extensions, Uri } from 'vscode';
 
 export class RovoDevPullRequestHandler {
+    constructor(private isBoysenberry: boolean) {}
+
     private async getGitExtension(): Promise<GitExtension> {
         try {
             const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
