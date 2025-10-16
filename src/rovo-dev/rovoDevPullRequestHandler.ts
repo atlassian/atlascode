@@ -5,8 +5,6 @@ import { promisify } from 'util';
 import { env, extensions, Uri } from 'vscode';
 
 export class RovoDevPullRequestHandler {
-    constructor() {}
-
     private async getGitExtension(): Promise<GitExtension> {
         try {
             const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
@@ -75,13 +73,16 @@ export class RovoDevPullRequestHandler {
         ];
         for (const gitRemoteMatcher of gitRemoteMatchers) {
             const gitRemoteMatch = output.match(gitRemoteMatcher);
-            if (gitRemoteMatch && gitRemoteMatch[1] && gitRemoteMatch[2]) {
+            if (gitRemoteMatch && gitRemoteMatch[2] && gitRemoteMatch[3]) {
                 const org = gitRemoteMatch[2];
                 const repo = gitRemoteMatch[3].replace(/\.git$/, '');
-                const knownSource = gitRemoteMatch[1];
+                const host = gitRemoteMatch[1];
+                if (!host) {
+                    return undefined;
+                }
 
                 let prLink: string;
-                switch (knownSource) {
+                switch (host) {
                     case 'github':
                         prLink = `https://github.com/${org}/${repo}/pull/new/${branch}`;
                         break;
