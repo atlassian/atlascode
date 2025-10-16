@@ -9,6 +9,7 @@
 ### Bug Fixes
 
 - Fixed duplicated slash commands in Rovo Dev's prompt box
+- Fixed broken entitlement check disabled view in 4.0.3
 
 ## What's new in 4.0.3
 

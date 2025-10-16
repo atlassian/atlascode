@@ -19,6 +19,7 @@ import {
     setupAutoResize,
     setupMonacoCommands,
     setupPromptKeyBindings,
+    SLASH_COMMANDS,
 } from './utils';
 
 type NonDisabledState = Exclude<State, DisabledState>;
@@ -60,20 +61,27 @@ const getTextAreaPlaceholder = (isGeneratingResponse: boolean, currentState: Non
 
 let monacoInitialized = false;
 
-function initMonaco() {
+function initMonaco(isBBY: boolean) {
     if (!monacoInitialized) {
-        monaco.languages.registerCompletionItemProvider('plaintext', createSlashCommandProvider());
+        let commands = SLASH_COMMANDS;
+        if (isBBY) {
+            commands = commands.filter((command) => command.label !== '/yolo');
+        }
+
+        monaco.languages.registerCompletionItemProvider('plaintext', createSlashCommandProvider(commands));
+
         monacoInitialized = true;
     }
 }
 
-function createEditor(setIsEmpty?: (isEmpty: boolean) => void) {
+function createEditor(setIsEmpty?: (isEmpty: boolean) => void, isBBY: boolean = false) {
     const container = document.getElementById('prompt-editor-container');
     if (!container) {
         return undefined;
     }
 
     initMonaco();
+
     const editor = createMonacoPromptEditor(container);
     editor.onDidChangeModelContent(() => {
         if (editor.getValue().trim().length === 0) {
@@ -106,7 +114,10 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     const [isEmpty, setIsEmpty] = React.useState(true);
 
     // create the editor only once - use onSend hook to retry
-    React.useEffect(() => setEditor((prev) => prev ?? createEditor(setIsEmpty)), [onSend]);
+    React.useEffect(
+        () => setEditor((prev) => prev ?? createEditor(setIsEmpty, onYoloModeToggled === undefined)),
+        [onSend, onYoloModeToggled],
+    );
 
     React.useEffect(() => {
         // Remove Monaco's color stylesheet
@@ -128,9 +139,16 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
 
     React.useEffect(() => {
         if (editor) {
-            setupMonacoCommands(editor, onSend, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand);
+            setupMonacoCommands(
+                editor,
+                onSend,
+                onCopy,
+                handleMemoryCommand,
+                handleTriggerFeedbackCommand,
+                onYoloModeToggled,
+            );
         }
-    }, [editor, onSend, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand]);
+    }, [editor, onSend, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand, onYoloModeToggled]);
 
     // Handle setting prompt text from external source
     React.useEffect(() => {
