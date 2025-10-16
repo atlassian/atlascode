@@ -29,7 +29,7 @@ interface PullRequestFormProps {
     messagingApi: ReturnType<
         typeof useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>
     >;
-    onPullRequestCreated: (url: string) => void;
+    onPullRequestCreated: (url: string, branchName: string) => void;
     isFormVisible?: boolean;
     setFormVisible?: (visible: boolean) => void;
 }
@@ -89,7 +89,7 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
             console.error(`Error creating PR: ${response.data.error}`);
             return;
         }
-        onPullRequestCreated(response.data.url || '');
+        onPullRequestCreated(response.data.url || '', branchName);
     };
 
     return (

@@ -306,7 +306,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                 setIsFormVisible(false);
                             }}
                             messagingApi={messagingApi}
-                            onPullRequestCreated={(url) => {
+                            onPullRequestCreated={(url, branchName) => {
                                 setCanCreatePR(false);
                                 setIsFormVisible(false);
 
@@ -315,8 +315,8 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                     {
                                         event_kind: '_RovoDevPullRequest',
                                         text: url
-                                            ? `Pull request ready: ${url}`
-                                            : 'Successfully pushed changes to the remote repository.',
+                                            ? `Successfully pushed changes to the remote repository with branch "${branchName}". Click to create PR: ${url}`
+                                            : `Successfully pushed changes to the remote repository with branch "${branchName}".`,
                                     },
                                     pullRequestCreated,
                                 );
