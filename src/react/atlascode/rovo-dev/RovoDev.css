@@ -932,3 +932,8 @@ body {
 .vscode-high-contrast .deep-plan-indicator:hover {
     border: 2px solid var(--vscode-focusBorder);
 }
+/* Streaming cursor animation for smooth LLM text streaming */
+@keyframes streaming-cursor-blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}

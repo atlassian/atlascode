@@ -52,6 +52,9 @@ export const ChatItem = React.memo<ChatItemProps>(
                 />
             );
         } else if (block.event_kind === '_RovoDevUserPrompt' || block.event_kind === 'text') {
+            // Determine if we're actively streaming (not waiting for prompt and it's a text response)
+            const isStreaming = block.event_kind === 'text' && currentState.state !== 'WaitingForPrompt';
+            
             return (
                 <ChatMessageItem
                     msg={block}
@@ -59,6 +62,7 @@ export const ChatItem = React.memo<ChatItemProps>(
                     onCopy={handleCopyResponse}
                     onFeedback={handleFeedbackTrigger}
                     openFile={renderProps.openFile}
+                    isStreaming={isStreaming}
                 />
             );
         } else if (block.event_kind === 'tool-return') {
