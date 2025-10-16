@@ -4,7 +4,7 @@ describe('RovoDevPullRequestHandler', () => {
     let handler: RovoDevPullRequestHandler;
 
     beforeEach(() => {
-        handler = new RovoDevPullRequestHandler();
+        handler = new RovoDevPullRequestHandler(true);
     });
 
     describe('findPRLink', () => {
