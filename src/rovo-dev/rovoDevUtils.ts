@@ -50,7 +50,7 @@ export function statusJsonResponseToMarkdown(response: RovoDevStatusResponse): s
     buffer += '**Account**\n';
     buffer += `- Email: ${data.account.email}\n`;
     buffer += `- Atlassian account ID: ${data.account.accountId}\n`;
-    buffer += `- Atlassian organisation ID: ${data.account.orgId}\n`;
+    buffer += `- Atlassian organization ID: ${data.account.orgId}\n`;
     buffer += '\n';
 
     if (data.memory.hasMemoryFiles) {
@@ -62,7 +62,51 @@ export function statusJsonResponseToMarkdown(response: RovoDevStatusResponse): s
     }
 
     buffer += '**Model**\n';
-    buffer += `- ${data.model.humanReadableName}`;
+    buffer += `- ${parseCustomCliTagsForMarkdown(data.model.humanReadableName)}`;
 
     return buffer;
+}
+
+function formatText(text: string, cliTags: string[]) {
+    if (cliTags.includes('italic')) {
+        text = `*${text}*`;
+    }
+    if (cliTags.includes('bold')) {
+        text = `**${text}**`;
+    }
+    return text;
+}
+
+// this function doesn't work well with nested identical tags - hopefully we don't need that
+export function parseCustomCliTagsForMarkdown(text: string): string {
+    // no valid tags
+    if (!text || !text.includes('[/') || !text.includes(']', text.indexOf('['))) {
+        return text;
+    }
+
+    const firstTagPosition = text.indexOf('[');
+
+    // handle unopened tags
+    if (text[firstTagPosition + 1] === '/') {
+        const startingPosition = text.indexOf(']', firstTagPosition) + 1;
+        return text.substring(0, startingPosition) + parseCustomCliTagsForMarkdown(text.substring(startingPosition));
+    }
+
+    const firstTagContent = text.substring(firstTagPosition + 1, text.indexOf(']'));
+    const closingTagPosition = text.indexOf('[/' + firstTagContent + ']');
+
+    // handle unclosed tags
+    if (closingTagPosition === -1) {
+        const startingPosition = text.indexOf(']', firstTagPosition) + 1;
+        return text.substring(0, startingPosition) + parseCustomCliTagsForMarkdown(text.substring(startingPosition));
+    }
+
+    const contentWithinTags = text.substring(text.indexOf(']', firstTagPosition) + 1, closingTagPosition);
+    const afterTags = text.indexOf(']', closingTagPosition) + 1;
+
+    return (
+        text.substring(0, firstTagPosition) +
+        formatText(parseCustomCliTagsForMarkdown(contentWithinTags), firstTagContent.split(' ')) +
+        parseCustomCliTagsForMarkdown(text.substring(afterTags))
+    );
 }
