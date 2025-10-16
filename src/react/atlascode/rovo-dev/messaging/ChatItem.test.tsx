@@ -49,6 +49,7 @@ describe('ChatItem', () => {
         },
         currentState: { state: 'WaitingForPrompt' } as State,
         drawerOpen: false,
+        onLinkClick: jest.fn(),
     };
 
     beforeEach(() => {

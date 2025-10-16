@@ -511,7 +511,7 @@ describe('PullRequestChatItem', () => {
             text: 'This is a **Bold text** and normal text',
         };
 
-        render(<PullRequestChatItem msg={mockMessage} />);
+        render(<PullRequestChatItem msg={mockMessage} onLinkClick={jest.fn()} />);
 
         expect(screen.getByText(/Bold text/)).toBeTruthy();
         expect(screen.getByText(/and normal text/)).toBeTruthy();

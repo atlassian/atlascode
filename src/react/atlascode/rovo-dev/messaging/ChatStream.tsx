@@ -89,6 +89,13 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         setHasChangesInGit(response.hasChanges);
     }, [messagingApi]);
 
+    const onLinkClick = React.useCallback(
+        (href: string) => {
+            console.log('Opening external link:', href);
+            messagingApi.postMessage({ type: RovoDevViewResponseType.OpenExternalLink, href });
+        },
+        [messagingApi],
+    );
     const [autoScrollEnabled, setAutoScrollEnabled] = React.useState(true);
 
     // Helper to perform auto-scroll when enabled
@@ -256,6 +263,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     onToolPermissionChoice={onToolPermissionChoice}
                     onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
                     renderProps={renderProps}
+                    onLinkClick={onLinkClick}
                 />
             )}
 

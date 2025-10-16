@@ -17,7 +17,8 @@ export const ChatMessageItem: React.FC<{
     onCopy?: (text: string) => void;
     onFeedback?: (isPositive: boolean) => void;
     openFile?: OpenFileFunc;
-}> = ({ msg, icon, enableActions, onCopy, onFeedback, openFile }) => {
+    onLinkClick?: (href: string) => void;
+}> = ({ msg, icon, enableActions, onCopy, onFeedback, openFile, onLinkClick }) => {
     const [isCopied, setIsCopied] = useState(false);
     const messageTypeStyles = msg.event_kind === '_RovoDevUserPrompt' ? 'user-message' : 'agent-message';
 
@@ -41,7 +42,7 @@ export const ChatMessageItem: React.FC<{
                 {icon && <div className="message-icon">{icon}</div>}
                 <div className="message-content">
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <MarkedDown value={msg.content || ''} />
+                        <MarkedDown value={msg.content || ''} onLinkClick={onLinkClick} />
                     </div>
                 </div>
             </div>

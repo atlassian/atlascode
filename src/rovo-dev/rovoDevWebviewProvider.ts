@@ -11,6 +11,7 @@ import {
     commands,
     ConfigurationChangeEvent,
     Disposable,
+    env,
     Event,
     ExtensionContext,
     Position,
@@ -438,6 +439,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         this.saveYoloModeToStorage(e.value);
                         break;
 
+                    case RovoDevViewResponseType.OpenExternalLink:
+                        await env.openExternal(Uri.parse(e.href));
+                        break;
                     default:
                         // @ts-expect-error ts(2339) - e here should be 'never'
                         this.processError(new Error(`Unknown message type: ${e.type}`));
