@@ -1,6 +1,25 @@
 
 # Atlassian: Jira, Rovo Dev, Bitbucket
 
+## 🧹 Developer's Dustpan Meme Corner 🧹
+
+*When your code is so messy, even a dustpan can't help:*
+
+```
+    🧹 "I sweep bugs under the rug"
+       👨‍💻 "I use a dustpan called git commit"
+          🗑️ "My code is so clean, dustpans are jealous"
+             🐛 "Bugs everywhere! Someone grab the dustpan!"
+```
+
+**Fun Fact:** Just like how a dustpan collects all the dust and debris, Atlassian extensions collect all your development chaos and organize it neatly! 
+- Jira = Your task dustpan 📋
+- Bitbucket = Your code dustpan 💻  
+- Rovo Dev = Your AI dustpan that sweeps away confusion 🤖
+
+*Remember: A good developer always cleans up after themselves... with the right tools! 🧹✨*
+
+---
 
 Stay in your IDE; don't switch contexts. 
 
