@@ -101,6 +101,16 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         command: { title: 'Agent Memory', id: 'rovo-dev.agentMemory', tooltip: 'Show agent memory' },
     },
     {
+        label: '/status',
+        insertText: '/status',
+        description: 'Show Rovo Dev CLI status including version, account details and model',
+        command: {
+            title: 'Status',
+            id: 'rovo-dev.triggerStatus',
+            tooltip: 'Show Rovo Dev CLI status including version, account details and model',
+        },
+    },
+    {
         label: '/feedback',
         insertText: '/feedback',
         description: 'Provide feedback on Rovo Dev',
@@ -193,6 +203,12 @@ export function setupMonacoCommands(
     monaco.editor.registerCommand('rovo-dev.agentMemory', () => {
         handleMemoryCommand();
         editor.setValue('');
+    });
+
+    monaco.editor.registerCommand('rovo-dev.triggerStatus', () => {
+        if (onSend('/status')) {
+            editor.setValue('');
+        }
     });
 
     monaco.editor.registerCommand('rovo-dev.triggerFeedback', () => {

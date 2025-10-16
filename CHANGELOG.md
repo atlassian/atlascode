@@ -2,13 +2,17 @@
 
 ## What's new in 4.0.4
 
+### Improvements
+
+- Added support for Rovo Dev /status command
+
 ### Bug Fixes
 
 - Fixed duplicated slash commands in Rovo Dev's prompt box
 
 ## What's new in 4.0.3
 
-### Improvement
+### Improvements
 
 - Improved the initialization time for Rovo Dev, allowing the process to start before its webview is ready
 - Added assignee column for child and linked issues

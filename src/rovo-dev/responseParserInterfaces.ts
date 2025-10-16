@@ -78,6 +78,22 @@ export interface RovoDevCloseResponse {
     event_kind: 'close';
 }
 
+export interface RovoDevStatusResponse {
+    event_kind: 'status';
+    data: {
+        cliVersion: { version: string; sessionId: string };
+        workingDirectory: string;
+        account: {
+            email: string;
+            accountId: string;
+            orgId: string;
+            isServerAvailable: boolean;
+        };
+        memory: { memoryPaths: string[]; hasMemoryFiles: boolean; errorMessage: string | null };
+        model: { modelName: string; humanReadableName: string; errorMessage: string | null };
+    };
+}
+
 export type RovoDevResponse =
     | RovoDevParsingError
     | RovoDevUserPromptResponse
@@ -90,6 +106,7 @@ export type RovoDevResponse =
     | RovoDevClearResponse
     | RovoDevPruneResponse
     | RovoDevOnCallToolStartResponse
+    | RovoDevStatusResponse
     | RovoDevCloseResponse;
 
 export type RovoDevToolName =
