@@ -80,7 +80,7 @@ function createEditor(setIsEmpty?: (isEmpty: boolean) => void, isBBY: boolean = 
         return undefined;
     }
 
-    initMonaco();
+    initMonaco(isBBY);
 
     const editor = createMonacoPromptEditor(container);
     editor.onDidChangeModelContent(() => {
