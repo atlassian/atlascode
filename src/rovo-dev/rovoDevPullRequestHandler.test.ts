@@ -142,7 +142,7 @@ To unknown-host.com:atlassian/atlascode.git
             const mockCommit = jest.fn().mockResolvedValue(undefined);
             const mockCreateBranch = jest.fn().mockResolvedValue(undefined);
             const mockFetch = jest.fn().mockResolvedValue(undefined);
-            
+
             const mockRepo = {
                 state: {
                     HEAD: { name: 'main', ahead: 0 },
@@ -174,7 +174,20 @@ To unknown-host.com:atlassian/atlascode.git
                 if (typeof options === 'function') {
                     callback = options;
                 }
-                callback(null, { stdout: '', stderr: 'remote: https://github.com/test/repo/pull/new/my-branch' });
+
+                // Only respond to the expected git push command
+                if (command.includes('git push origin my-branch')) {
+                    callback(null, {
+                        stdout: '',
+                        stderr: `
+remote:      https://github.com/test/repo/pull/new/my-branch
+To unknown-host.com:atlassian/atlascode.git
+   4bc73e86..71548ad9  FLOW-729-boysenberry-pr-create-messaging -> FLOW-729-boysenberry-pr-create-messaging
+`,
+                    });
+                } else {
+                    callback(new Error(`Unhandled command: ${command}`), null);
+                }
             });
 
             // Mock env.openExternal
