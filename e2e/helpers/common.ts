@@ -1,5 +1,7 @@
 import type { Page } from '@playwright/test';
 
+const ATLASCODE_DRAWER_ID = 'workbench.view.extension.atlascode-drawer';
+
 /**
  * Helper function to open atlassian settings with provided credentials
  */
@@ -9,7 +11,9 @@ export const openAtlassianSettings = async (page: Page, itemName: string) => {
     await page.getByRole('tab', { name: 'Atlassian' }).click();
     await page.waitForTimeout(250);
 
-    await page.getByRole('button', { name: itemName }).click();
+    // Scope the button click to the Atlassian sidebar panel to avoid conflicts with notifications
+    const atlassianPanel = page.locator(`[id="${ATLASCODE_DRAWER_ID}"]`);
+    await atlassianPanel.getByRole('button', { name: itemName }).click();
     await page.waitForTimeout(250);
 
     return page.frameLocator('iframe.webview').frameLocator('iframe[title="Atlassian Settings"]');
