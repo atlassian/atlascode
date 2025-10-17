@@ -2,6 +2,7 @@ import { emptyProject, Project } from '@atlassianlabs/jira-pi-common-models';
 import { Disposable } from 'vscode';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
+import { ProjectsPagination } from '../constants';
 import { Container } from '../container';
 import { Logger } from '../logger';
 
@@ -68,6 +69,69 @@ export class JiraProjectManager extends Disposable {
         }
 
         return foundProjects;
+    }
+
+    async getProjectsPaginated(
+        site: DetailedSiteInfo,
+        maxResults: number = ProjectsPagination.pageSize,
+        startAt: number = ProjectsPagination.startAt,
+        orderBy?: OrderBy,
+        query?: string,
+        action?: 'view' | 'browse' | 'edit' | 'create',
+    ): Promise<{ projects: Project[]; total: number; hasMore: boolean }> {
+        try {
+            const client = await Container.clientManager.jiraClient(site);
+            const order = orderBy !== undefined ? orderBy : 'key';
+            const url = site.baseApiUrl + '/rest/api/2/project/search';
+            const auth = await client.authorizationProvider('GET', url);
+
+            const queryParams: {
+                maxResults: number;
+                startAt: number;
+                orderBy: string;
+                query?: string;
+                action?: string;
+            } = {
+                maxResults,
+                startAt,
+                orderBy: order,
+            };
+
+            if (query) {
+                queryParams.query = query;
+            }
+
+            if (action) {
+                queryParams.action = action;
+            }
+
+            const response = await client.transportFactory().get(url, {
+                headers: {
+                    Authorization: auth,
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                },
+                method: 'GET',
+                params: queryParams,
+            });
+
+            const projects = response.data?.values || [];
+            const total = response.data?.total || 0;
+            const hasMore = startAt + maxResults < total;
+
+            return {
+                projects,
+                total,
+                hasMore,
+            };
+        } catch (e) {
+            Logger.debug(`Failed to fetch paginated projects ${e}`);
+            return {
+                projects: [],
+                total: 0,
+                hasMore: false,
+            };
+        }
     }
 
     public async checkProjectPermission(

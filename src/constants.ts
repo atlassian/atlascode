@@ -106,3 +106,9 @@ export const enum Commands {
     DebugQuickLogin = 'atlascode.debug.quickLogin',
     DebugQuickLogout = 'atlascode.debug.quickLogout',
 }
+
+// Jira projects field pagination
+export const ProjectsPagination = {
+    pageSize: 50,
+    startAt: 0,
+} as const;
