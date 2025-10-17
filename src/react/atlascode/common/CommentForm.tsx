@@ -1,8 +1,9 @@
 import { Avatar, Grid } from '@mui/material';
 import React from 'react';
+import { AtlascodeMentionProvider } from 'src/webviews/components/issue/common/AtlaskitEditor/AtlascodeMentionsProvider';
+import AtlaskitEditor from 'src/webviews/components/issue/common/AtlaskitEditor/AtlaskitEditor';
 
 import { User } from '../../../bitbucket/model';
-import { MarkdownEditor } from './editor/MarkdownEditor';
 
 type CommentFormProps = {
     currentUser: User;
@@ -10,6 +11,7 @@ type CommentFormProps = {
     onSave: (content: string) => Promise<void>;
     onCancel?: () => void;
     fetchUsers?: (input: string) => Promise<User[]>;
+    mentionsProvider: AtlascodeMentionProvider | undefined;
 };
 
 const CommentForm: React.FC<CommentFormProps> = (props: CommentFormProps) => {
@@ -21,12 +23,17 @@ const CommentForm: React.FC<CommentFormProps> = (props: CommentFormProps) => {
             <Grid item xs={10}>
                 <Grid container spacing={1} direction="column">
                     <Grid item>
-                        <MarkdownEditor
-                            initialContent={props.initialContent}
-                            onSave={props.onSave}
-                            onCancel={props.onCancel}
-                            fetchUsers={props.fetchUsers}
-                        />
+                        <div data-testid="common.atlaskit-editor">
+                            <AtlaskitEditor
+                                defaultValue={props.initialContent}
+                                onSave={props.onSave}
+                                onCancel={props.onCancel}
+                                mentionProvider={
+                                    props.mentionsProvider ? Promise.resolve(props.mentionsProvider) : undefined
+                                }
+                                isBitbucket={true}
+                            />
+                        </div>
                     </Grid>
                 </Grid>
             </Grid>

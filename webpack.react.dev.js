@@ -31,25 +31,6 @@ module.exports = {
         filename: 'static/js/[name].js',
         devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]',
     },
-    optimization: {
-        splitChunks: {
-            cacheGroups: {
-                prosemirror: {
-                    name: 'prosemirror',
-                    test: /[\\/]node_modules[\\/]prosemirror-/,
-                    chunks: 'all',
-                    priority: 30,
-                    enforce: true,
-                },
-                atlaskit: {
-                    name: 'atlaskit',
-                    test: /[\\/]node_modules[\\/]@atlaskit[\\/]/,
-                    chunks: 'all',
-                    priority: 20,
-                },
-            },
-        },
-    },
     externals: ['utf-8-validate', 'bufferutil', 'vscode'],
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
@@ -58,24 +39,6 @@ module.exports = {
         fallback: {
             path: require.resolve('path-browserify'),
             process: false,
-        },
-        alias: {
-            // Resolve ProseMirror conflicts by using unified versions
-            'prosemirror-model': path.resolve(__dirname, 'node_modules/prosemirror-model'),
-            'prosemirror-state': path.resolve(__dirname, 'node_modules/prosemirror-state'),
-            'prosemirror-view': path.resolve(__dirname, 'node_modules/prosemirror-view'),
-            'prosemirror-commands': path.resolve(__dirname, 'node_modules/prosemirror-commands'),
-            'prosemirror-gapcursor': path.resolve(__dirname, 'node_modules/prosemirror-gapcursor'),
-            'prosemirror-history': path.resolve(__dirname, 'node_modules/prosemirror-history'),
-            'prosemirror-keymap': path.resolve(__dirname, 'node_modules/prosemirror-keymap'),
-            'prosemirror-dropcursor': path.resolve(__dirname, 'node_modules/prosemirror-dropcursor'),
-            'prosemirror-example-setup': path.resolve(__dirname, 'node_modules/prosemirror-example-setup'),
-            'prosemirror-inputrules': path.resolve(__dirname, 'node_modules/prosemirror-inputrules'),
-            'prosemirror-markdown': path.resolve(__dirname, 'node_modules/prosemirror-markdown'),
-            'prosemirror-mentions': path.resolve(__dirname, 'node_modules/prosemirror-mentions'),
-            'prosemirror-menu': path.resolve(__dirname, 'node_modules/prosemirror-menu'),
-            // Fix Atlaskit editor compatibility with newer ProseMirror versions
-            '@atlaskit/editor-prosemirror/view': path.resolve(__dirname, 'node_modules/prosemirror-view'),
         },
     },
     plugins: [
