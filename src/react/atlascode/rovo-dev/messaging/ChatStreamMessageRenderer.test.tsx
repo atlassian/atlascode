@@ -38,6 +38,7 @@ describe('ChatStreamMessageRenderer', () => {
         renderProps: mockRenderProps,
         onToolPermissionChoice: jest.fn(),
         onCollapsiblePanelExpanded: jest.fn(),
+        onLinkClick: jest.fn(),
     };
 
     beforeEach(() => {

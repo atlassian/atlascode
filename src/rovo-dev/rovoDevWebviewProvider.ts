@@ -11,6 +11,7 @@ import {
     commands,
     ConfigurationChangeEvent,
     Disposable,
+    env,
     Event,
     ExtensionContext,
     Position,
@@ -204,6 +205,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             this._debugPanelEnabled = Container.config.rovodev.debugPanelEnabled;
             this.refreshDebugPanel(true);
         }
+        if (configuration.changed(e, 'rovodev.thinkingBlockEnabled')) {
+            this.refreshThinkingBlock();
+        }
     }
 
     private async refreshDebugPanel(force?: boolean) {
@@ -221,6 +225,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 mcpContext: this._debugPanelMcpContext,
             });
         }
+    }
+
+    private async refreshThinkingBlock() {
+        const thinkingBlockEnabled = Container.config.rovodev.thinkingBlockEnabled;
+
+        await this._webView?.postMessage({
+            type: RovoDevProviderMessageType.SetThinkingBlockEnabled,
+            enabled: thinkingBlockEnabled,
+        });
     }
 
     public resolveWebviewView(
@@ -359,6 +372,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     case RovoDevViewResponseType.WebviewReady:
                         this._webviewReady = true;
                         this.refreshDebugPanel(true);
+                        this.refreshThinkingBlock();
 
                         if (!this.isBoysenberry) {
                             // listen to change of process state by the process manager
@@ -438,6 +452,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         this.saveYoloModeToStorage(e.value);
                         break;
 
+                    case RovoDevViewResponseType.OpenExternalLink:
+                        await env.openExternal(Uri.parse(e.href));
+                        break;
                     default:
                         // @ts-expect-error ts(2339) - e here should be 'never'
                         this.processError(new Error(`Unknown message type: ${e.type}`));

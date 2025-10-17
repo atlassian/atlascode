@@ -100,18 +100,18 @@
                 "command": "atlascode.rovodev.quickAuth",
                 "title": "Authenticate",
                 "category": "Jira",
-                "when": "atlascode:useNewAuthFlow"
+                "when": "atlascode:useNewAuthFlow && !atlascode:bbyEnvironmentActive"
             },
             {
                 "command": "atlascode.rovodev.askInteractive",
                 "title": "Ask & Open",
-                "enablement": "atlascode:rovoDevEnabled",
+                "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive",
                 "category": "Rovo Dev"
             },
             {
                 "command": "atlascode.rovodev.askRovoDev",
                 "title": "Open",
-                "enablement": "atlascode:rovoDevEnabled",
+                "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive",
                 "category": "Rovo Dev"
             },
             {
@@ -132,9 +132,10 @@
             },
             {
                 "command": "atlascode.rovodev.showTerminal",
-                "title": "Trail Logs",
+                "title": "Show in terminal",
                 "icon": "$(terminal)",
                 "category": "Rovo Dev",
+                "description": "Shows the Rovo Dev process in a terminal window.",
                 "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
             },
             {
@@ -158,6 +159,13 @@
                 "description": "Opens the ~/.rovodev/.agent.md file in the editor.",
                 "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
             },
+            {
+                "command": "atlascode.openRovoDevLogFile",
+                "title": "Open logs",
+                "category": "Rovo Dev",
+                "description": "Opens the ~/.rovodev/rovodev.log file in the editor.",
+                "enablement": "atlascode:rovoDevEnabled"
+            },            
             {
                 "command": "atlascode.rovodev.shareFeedback",
                 "title": "Share feedback",
@@ -1031,6 +1039,12 @@
                 "atlascode.rovodev.debugPanelEnabled": {
                     "type": "boolean",
                     "description": "Enable Rovo Dev debug panel",
+                    "scope": "window"
+                },
+                "atlascode.rovodev.thinkingBlockEnabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable Rovo Dev thinking block.\nThis collapses intermediate thinking steps into a single block.",
                     "scope": "window"
                 },
                 "atlascode.issueSuggestion.enabled": {

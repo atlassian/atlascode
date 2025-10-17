@@ -1,26 +1,34 @@
 import * as fs from 'fs';
+import path from 'path';
 import { window, workspace } from 'vscode';
 
 import { RovoDevStatusResponse } from './responseParserInterfaces';
 
-export type SupportedConfigFiles = '.rovodev/config.yml' | '.rovodev/mcp.json' | '.rovodev/.agent.md';
+export type SupportedConfigFiles = 'config.yml' | 'mcp.json' | '.agent.md' | 'rovodev.log';
 
-export async function openRovoDevConfigFile(configFile: SupportedConfigFiles, friendlyName: string) {
+const FriendlyName: Record<SupportedConfigFiles, string> = {
+    'config.yml': 'Rovo Dev settings file',
+    'mcp.json': 'Rovo Dev MCP configuration',
+    '.agent.md': 'Rovo Dev Global Memory file',
+    'rovodev.log': 'Rovo Dev log file',
+};
+
+export async function openRovoDevConfigFile(configFile: SupportedConfigFiles) {
     const home = process.env.HOME || process.env.USERPROFILE;
     if (!home) {
         window.showErrorMessage('Could not determine home directory.');
         return;
     }
 
-    const filePath = `${home}/${configFile}`;
+    const filePath = path.join(home, '.rovodev', configFile);
 
     // create the file if it doesn't exist
     if (!fs.existsSync(filePath)) {
         switch (configFile) {
-            case '.rovodev/mcp.json':
+            case 'mcp.json':
                 fs.writeFileSync(filePath, '{\n    "mcpServers": {}\n}', { flush: true });
                 break;
-            case '.rovodev/.agent.md':
+            case '.agent.md':
                 fs.writeFileSync(filePath, '', { flush: true });
                 break;
         }
@@ -30,7 +38,7 @@ export async function openRovoDevConfigFile(configFile: SupportedConfigFiles, fr
         const doc = await workspace.openTextDocument(filePath);
         await window.showTextDocument(doc);
     } catch (err) {
-        window.showErrorMessage(`Could not open ${friendlyName} (${filePath}): ${err}`);
+        window.showErrorMessage(`Could not open ${FriendlyName[configFile]} (${filePath}): ${err}`);
     }
 }
 
@@ -50,7 +58,7 @@ export function statusJsonResponseToMarkdown(response: RovoDevStatusResponse): s
     buffer += '**Account**\n';
     buffer += `- Email: ${data.account.email}\n`;
     buffer += `- Atlassian account ID: ${data.account.accountId}\n`;
-    buffer += `- Atlassian organisation ID: ${data.account.orgId}\n`;
+    buffer += `- Atlassian organization ID: ${data.account.orgId}\n`;
     buffer += '\n';
 
     if (data.memory.hasMemoryFiles) {
@@ -62,7 +70,51 @@ export function statusJsonResponseToMarkdown(response: RovoDevStatusResponse): s
     }
 
     buffer += '**Model**\n';
-    buffer += `- ${data.model.humanReadableName}`;
+    buffer += `- ${parseCustomCliTagsForMarkdown(data.model.humanReadableName)}`;
 
     return buffer;
+}
+
+function formatText(text: string, cliTags: string[]) {
+    if (cliTags.includes('italic')) {
+        text = `*${text}*`;
+    }
+    if (cliTags.includes('bold')) {
+        text = `**${text}**`;
+    }
+    return text;
+}
+
+// this function doesn't work well with nested identical tags - hopefully we don't need that
+export function parseCustomCliTagsForMarkdown(text: string): string {
+    // no valid tags
+    if (!text || !text.includes('[/') || !text.includes(']', text.indexOf('['))) {
+        return text;
+    }
+
+    const firstTagPosition = text.indexOf('[');
+
+    // handle unopened tags
+    if (text[firstTagPosition + 1] === '/') {
+        const startingPosition = text.indexOf(']', firstTagPosition) + 1;
+        return text.substring(0, startingPosition) + parseCustomCliTagsForMarkdown(text.substring(startingPosition));
+    }
+
+    const firstTagContent = text.substring(firstTagPosition + 1, text.indexOf(']'));
+    const closingTagPosition = text.indexOf('[/' + firstTagContent + ']');
+
+    // handle unclosed tags
+    if (closingTagPosition === -1) {
+        const startingPosition = text.indexOf(']', firstTagPosition) + 1;
+        return text.substring(0, startingPosition) + parseCustomCliTagsForMarkdown(text.substring(startingPosition));
+    }
+
+    const contentWithinTags = text.substring(text.indexOf(']', firstTagPosition) + 1, closingTagPosition);
+    const afterTags = text.indexOf(']', closingTagPosition) + 1;
+
+    return (
+        text.substring(0, firstTagPosition) +
+        formatText(parseCustomCliTagsForMarkdown(contentWithinTags), firstTagContent.split(' ')) +
+        parseCustomCliTagsForMarkdown(text.substring(afterTags))
+    );
 }

@@ -274,10 +274,11 @@ export const appendResponse = (
     prev: Response[],
     response: Response | Response[],
     handleAppendModifiedFileToolReturns: (tr: RovoDevToolReturnResponse) => void,
+    thinkingBlockEnabled: boolean,
 ): Response[] => {
     if (Array.isArray(response)) {
         for (const _resp of response) {
-            prev = appendResponse(prev, _resp, handleAppendModifiedFileToolReturns);
+            prev = appendResponse(prev, _resp, handleAppendModifiedFileToolReturns, thinkingBlockEnabled);
         }
         return prev;
     }
@@ -299,7 +300,7 @@ export const appendResponse = (
         // Group tool return with previous message if applicable
         if (response.event_kind === 'tool-return') {
             handleAppendModifiedFileToolReturns(response);
-            if (response.tool_name !== 'create_technical_plan') {
+            if (response.tool_name !== 'create_technical_plan' && thinkingBlockEnabled) {
                 // Do not group if User, Error message, or Pull Request message is the latest
                 const canGroup =
                     latest &&
@@ -331,7 +332,7 @@ export const appendResponse = (
     } else {
         if (response.event_kind === 'tool-return') {
             handleAppendModifiedFileToolReturns(response);
-            if (response.tool_name !== 'create_technical_plan') {
+            if (response.tool_name !== 'create_technical_plan' && thinkingBlockEnabled) {
                 latest.push(response);
                 return [...prev, latest];
             } else {

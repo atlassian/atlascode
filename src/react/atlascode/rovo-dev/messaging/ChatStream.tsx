@@ -89,6 +89,12 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         setHasChangesInGit(response.hasChanges);
     }, [messagingApi]);
 
+    const onLinkClick = React.useCallback(
+        (href: string) => {
+            messagingApi.postMessage({ type: RovoDevViewResponseType.OpenExternalLink, href });
+        },
+        [messagingApi],
+    );
     const [autoScrollEnabled, setAutoScrollEnabled] = React.useState(true);
 
     // Helper to perform auto-scroll when enabled
@@ -256,6 +262,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     onToolPermissionChoice={onToolPermissionChoice}
                     onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
                     renderProps={renderProps}
+                    onLinkClick={onLinkClick}
                 />
             )}
 
@@ -306,7 +313,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                 setIsFormVisible(false);
                             }}
                             messagingApi={messagingApi}
-                            onPullRequestCreated={(url) => {
+                            onPullRequestCreated={(url, branchName) => {
                                 setCanCreatePR(false);
                                 setIsFormVisible(false);
 
@@ -315,8 +322,8 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                     {
                                         event_kind: '_RovoDevPullRequest',
                                         text: url
-                                            ? `Pull request ready: ${url}`
-                                            : 'Successfully pushed changes to the remote repository.',
+                                            ? `Successfully pushed changes to the remote repository with branch "${branchName}". Click to create PR: ${url}`
+                                            : `Successfully pushed changes to the remote repository with branch "${branchName}".`,
                                     },
                                     pullRequestCreated,
                                 );

@@ -116,7 +116,7 @@ describe('PullRequestForm', () => {
                 RovoDevProviderMessageType.CreatePRComplete,
                 expect.any(Number),
             );
-            expect(mockOnPullRequestCreated).toHaveBeenCalledWith('http://pr-url.com');
+            expect(mockOnPullRequestCreated).toHaveBeenCalledWith('http://pr-url.com', 'test-branch');
         });
     });
 
@@ -306,7 +306,7 @@ describe('PullRequestForm', () => {
             fireEvent.click(screen.getByRole('button', { name: /create pull request/i }));
 
             await waitFor(() => {
-                expect(mockOnPullRequestCreated).toHaveBeenCalledWith('');
+                expect(mockOnPullRequestCreated).toHaveBeenCalledWith('', 'test-branch');
             });
         });
     });
@@ -511,7 +511,7 @@ describe('PullRequestChatItem', () => {
             text: 'This is a **Bold text** and normal text',
         };
 
-        render(<PullRequestChatItem msg={mockMessage} />);
+        render(<PullRequestChatItem msg={mockMessage} onLinkClick={jest.fn()} />);
 
         expect(screen.getByText(/Bold text/)).toBeTruthy();
         expect(screen.getByText(/and normal text/)).toBeTruthy();
