@@ -1459,15 +1459,59 @@ export abstract class AbstractIssueEditorPage<
                 );
                 const checkboxItems: any[] = [];
                 const checkField = field as OptionableFieldUI;
+
+                // FIX: Multi-select checkbox handling
+                // Previously, each checkbox used the same field name and called handleInlineEdit with a boolean,
+                // causing the field value to be overwritten as true/false instead of accumulating selected options.
+                // Now we properly manage an array of selected option objects/IDs.
+
+                // Get current selected values as an array of IDs
+                const currentSelectedValues = this.state.fieldValues[field.key] || [];
+                const selectedIds = Array.isArray(currentSelectedValues)
+                    ? currentSelectedValues.map((val: any) => val.id || val)
+                    : [];
+
+                // Create a custom onChange handler that manages the array of selected values
+                const handleCheckboxChange = (optionValue: any, isChecked: boolean) => {
+                    let newSelectedValues: any[];
+
+                    if (isChecked) {
+                        // Add the option to selected values if not already present
+                        const existingIndex = selectedIds.indexOf(optionValue.id);
+                        if (existingIndex === -1) {
+                            newSelectedValues = [...currentSelectedValues, optionValue];
+                        } else {
+                            newSelectedValues = currentSelectedValues;
+                        }
+                    } else {
+                        // Remove the option from selected values
+                        newSelectedValues = currentSelectedValues.filter(
+                            (val: any) => (val.id || val) !== optionValue.id,
+                        );
+                    }
+
+                    this.handleInlineEdit(field, newSelectedValues);
+                };
+
                 checkField.allowedValues.forEach((value) => {
+                    const isChecked = selectedIds.includes(value.id);
+
                     checkboxItems.push(
-                        <CheckboxField name={field.key} id={field.key} value={value.id} isRequired={field.required}>
+                        <CheckboxField
+                            key={`${field.key}-${value.id}`}
+                            // Use unique names for each checkbox to avoid Atlaskit form conflicts
+                            name={`${field.key}-${value.id}`}
+                            id={`${field.key}-${value.id}`}
+                            value={value.id}
+                            isRequired={field.required}
+                        >
                             {(fieldArgs: any) => {
                                 return (
                                     <Checkbox
                                         {...fieldArgs.fieldProps}
+                                        isChecked={isChecked}
                                         onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (e: any) => {
-                                            this.handleInlineEdit(field, e.target.checked);
+                                            handleCheckboxChange(value, e.target.checked);
                                         })}
                                         label={value.value}
                                     />
