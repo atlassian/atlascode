@@ -1,21 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "urlPath": "/rest/api/2/project/search",
-    "queryParameters": {
-      "orderBy": {
-        "matches": "[+-]?(key|name|category|owner)"
-      },
-      "maxResults": {
-        "matches": "\\d+"
-      },
-      "startAt": {
-        "matches": "\\d+"
-      },
-      "action": {
-        "matches": "create|view|browse|edit"
-      }
-    }
+    "urlPathPattern": "/rest/api/2/project/search"
   },
   "response": {
     "status": 200,
