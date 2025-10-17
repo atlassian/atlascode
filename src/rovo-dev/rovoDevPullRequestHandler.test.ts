@@ -132,19 +132,34 @@ To unknown-host.com:atlassian/atlascode.git
     });
 
     describe('createPR', () => {
-        it('Should commit the changes if there are uncommitted changes', async () => {
-            const branchName = 'my-branch';
-            const commitMessage = 'My commit message';
+        const setupCreatePRMocks = (options: {
+            branchName: string;
+            uncommittedChanges?: Array<{ relativePath: string }>;
+            hasUnpushedCommits?: boolean;
+            commitFails?: boolean;
+            gitPushOutput?: string;
+        }) => {
+            const {
+                branchName,
+                uncommittedChanges = [],
+                hasUnpushedCommits = false,
+                commitFails = false,
+                gitPushOutput = `remote: https://github.com/test/repo/pull/new/${branchName}`,
+            } = options;
 
-            // Mock repository with uncommitted changes
-            const mockCommit = jest.fn().mockResolvedValue(undefined);
+            const mockCommit = commitFails
+                ? jest.fn().mockRejectedValue(new Error('Commit failed'))
+                : jest.fn().mockResolvedValue(undefined);
             const mockCreateBranch = jest.fn().mockResolvedValue(undefined);
             const mockFetch = jest.fn().mockResolvedValue(undefined);
 
             const mockRepo = {
                 state: {
-                    HEAD: { name: 'main', ahead: 0 },
-                    workingTreeChanges: [{ uri: 'file1.txt' }], // Has uncommitted changes
+                    HEAD: { name: 'main', ahead: hasUnpushedCommits ? 2 : 0 },
+                    workingTreeChanges:
+                        uncommittedChanges?.map((change) => ({
+                            uri: change.relativePath,
+                        })) || [],
                     indexChanges: [],
                     mergeChanges: [],
                 },
@@ -167,29 +182,42 @@ To unknown-host.com:atlassian/atlascode.git
             // Mock extensions.getExtension to return our mock
             (extensions.getExtension as jest.Mock).mockReturnValue(mockGitExtension);
 
-            // Mock successful git push
+            // Mock git push
             (mockExec as any).mockImplementation((command: string, options: any, callback: any) => {
                 if (typeof options === 'function') {
                     callback = options;
                 }
 
                 // Only respond to the expected git push command
-                if (command.includes('git push origin my-branch')) {
-                    callback(null, {
-                        stdout: '',
-                        stderr: `
-remote:      https://github.com/test/repo/pull/new/my-branch
-To unknown-host.com:atlassian/atlascode.git
-   4bc73e86..71548ad9  FLOW-729-boysenberry-pr-create-messaging -> FLOW-729-boysenberry-pr-create-messaging
-`,
-                    });
+                if (command.includes(`git push origin ${branchName}`)) {
+                    callback(null, { stdout: '', stderr: gitPushOutput });
                 } else {
-                    callback(new Error(`Unhandled command: ${command}`), null);
+                    callback(new Error(`Unexpected command: ${command}`), null);
                 }
             });
 
             // Mock env.openExternal
-            (env.openExternal as jest.Mock).mockResolvedValue(undefined);
+            const mockOpenExternal = jest.fn().mockResolvedValue(undefined);
+            (env.openExternal as jest.Mock).mockImplementation(mockOpenExternal);
+
+            return {
+                mockCommit,
+                mockCreateBranch,
+                mockFetch,
+                mockOpenExternal,
+                mockRepo,
+            };
+        };
+
+        it('Should commit the changes if there are uncommitted changes', async () => {
+            const branchName = 'my-branch';
+            const commitMessage = 'My commit message';
+
+            // Setup mocks for repository with uncommitted changes
+            const { mockCommit, mockCreateBranch, mockFetch } = setupCreatePRMocks({
+                branchName,
+                uncommittedChanges: [{ relativePath: 'file1.txt' }],
+            });
 
             // Execute the method
             await handler.createPR(branchName, commitMessage);
@@ -204,57 +232,11 @@ To unknown-host.com:atlassian/atlascode.git
             const branchName = 'feature-branch';
             const commitMessage = 'Add new feature';
 
-            // Mock repository with no uncommitted changes (clean state)
-            const mockCommit = jest.fn().mockResolvedValue(undefined);
-            const mockCreateBranch = jest.fn().mockResolvedValue(undefined);
-            const mockFetch = jest.fn().mockResolvedValue(undefined);
-
-            const mockRepo = {
-                state: {
-                    HEAD: { name: 'main', ahead: 2 }, // Has unpushed commits
-                    workingTreeChanges: [], // No uncommitted changes
-                    indexChanges: [],
-                    mergeChanges: [],
-                },
-                rootUri: { fsPath: '/mock/path' },
-                commit: mockCommit,
-                createBranch: mockCreateBranch,
-                fetch: mockFetch,
-            };
-
-            const mockGitApi = {
-                repositories: [mockRepo],
-            };
-
-            const mockGitExtension = {
-                activate: jest.fn().mockResolvedValue({
-                    getAPI: jest.fn().mockReturnValue(mockGitApi),
-                }),
-            };
-
-            // Mock extensions.getExtension to return our mock
-            (extensions.getExtension as jest.Mock).mockReturnValue(mockGitExtension);
-
-            // Mock successful git push with PR link in stderr
-            (mockExec as any).mockImplementation((command: string, options: any, callback: any) => {
-                if (typeof options === 'function') {
-                    callback = options;
-                }
-
-                // Only respond to the expected git push command
-                if (command.includes('git push origin feature-branch')) {
-                    callback(null, {
-                        stdout: '',
-                        stderr: 'remote: https://github.com/test/repo/pull/new/feature-branch',
-                    });
-                } else {
-                    callback(new Error(`Unexpected command: ${command}`), null);
-                }
+            // Setup mocks for repository with unpushed commits but no uncommitted changes
+            const { mockCommit, mockCreateBranch, mockFetch, mockOpenExternal } = setupCreatePRMocks({
+                branchName,
+                hasUnpushedCommits: true,
             });
-
-            // Mock env.openExternal
-            const mockOpenExternal = jest.fn().mockResolvedValue(undefined);
-            (env.openExternal as jest.Mock).mockImplementation(mockOpenExternal);
 
             // Execute the method
             await handler.createPR(branchName, commitMessage);
