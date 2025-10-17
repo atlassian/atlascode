@@ -1033,6 +1033,12 @@
                     "description": "Enable Rovo Dev debug panel",
                     "scope": "window"
                 },
+                "atlascode.rovodev.thinkingBlockEnabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable Rovo Dev thinking block.\nThis collapses intermediate thinking steps into a single block.",
+                    "scope": "window"
+                },
                 "atlascode.issueSuggestion.enabled": {
                     "type": "boolean",
                     "default": true,

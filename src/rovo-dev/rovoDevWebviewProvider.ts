@@ -91,6 +91,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _debugPanelEnabled = false;
     private _debugPanelContext: Record<string, string> = {};
     private _debugPanelMcpContext: Record<string, string> = {};
+    private _thinkingBlockEnabled = true;
 
     // we keep the data in this collection so we can attach some metadata to the next
     // prompt informing Rovo Dev that those files has been reverted
@@ -159,7 +160,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._extensionUri = Uri.file(this._extensionPath);
         this._context = context;
         this._debugPanelEnabled = Container.config.rovodev.debugPanelEnabled;
-
+        this._thinkingBlockEnabled = Container.config.rovodev.thinkingBlockEnabled;
         // Register the webview view provider
         this._disposables.push(
             window.registerWebviewViewProvider('atlascode.views.rovoDev.webView', this, {
@@ -205,6 +206,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             this._debugPanelEnabled = Container.config.rovodev.debugPanelEnabled;
             this.refreshDebugPanel(true);
         }
+        if (configuration.changed(e, 'rovodev.thinkingBlockEnabled')) {
+            this._thinkingBlockEnabled = Container.config.rovodev.thinkingBlockEnabled;
+            this.refreshThinkingBlock(true);
+        }
     }
 
     private async refreshDebugPanel(force?: boolean) {
@@ -220,6 +225,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 enabled: this._debugPanelEnabled,
                 context: this._debugPanelContext,
                 mcpContext: this._debugPanelMcpContext,
+            });
+        }
+    }
+
+    private async refreshThinkingBlock(force?: boolean) {
+        if (this._thinkingBlockEnabled || force) {
+            await this._webView?.postMessage({
+                type: RovoDevProviderMessageType.SetThinkingBlockEnabled,
+                enabled: this._thinkingBlockEnabled,
             });
         }
     }
@@ -360,6 +374,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     case RovoDevViewResponseType.WebviewReady:
                         this._webviewReady = true;
                         this.refreshDebugPanel(true);
+                        this.refreshThinkingBlock(true);
 
                         if (!this.isBoysenberry) {
                             // listen to change of process state by the process manager
