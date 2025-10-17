@@ -1459,20 +1459,44 @@ export abstract class AbstractIssueEditorPage<
                 );
                 const checkboxItems: any[] = [];
                 const checkField = field as OptionableFieldUI;
+
+                // FIX: Multi-select checkbox handling - manage array of selected values instead of boolean
+                const currentSelectedValues = this.state.fieldValues[field.key] || [];
+                const selectedIds = Array.isArray(currentSelectedValues)
+                    ? currentSelectedValues.map((val: any) => val.id || val)
+                    : [];
+
+                const handleCheckboxChange = (optionValue: any, isChecked: boolean) => {
+                    const newSelectedValues = isChecked
+                        ? selectedIds.includes(optionValue.id)
+                            ? currentSelectedValues // Already selected, no change
+                            : [...currentSelectedValues, optionValue] // Add to selection
+                        : currentSelectedValues.filter((val: any) => (val.id || val) !== optionValue.id); // Remove from selection
+
+                    this.handleInlineEdit(field, newSelectedValues);
+                };
+
                 checkField.allowedValues.forEach((value) => {
+                    const isChecked = selectedIds.includes(value.id);
+
                     checkboxItems.push(
-                        <CheckboxField name={field.key} id={field.key} value={value.id} isRequired={field.required}>
-                            {(fieldArgs: any) => {
-                                return (
-                                    <Checkbox
-                                        {...fieldArgs.fieldProps}
-                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (e: any) => {
-                                            this.handleInlineEdit(field, e.target.checked);
-                                        })}
-                                        label={value.value}
-                                    />
-                                );
-                            }}
+                        <CheckboxField
+                            key={`${field.key}-${value.id}`}
+                            name={`${field.key}-${value.id}`}
+                            id={`${field.key}-${value.id}`}
+                            value={value.id}
+                            isRequired={field.required}
+                        >
+                            {(fieldArgs: any) => (
+                                <Checkbox
+                                    {...fieldArgs.fieldProps}
+                                    isChecked={isChecked}
+                                    onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (e: any) => {
+                                        handleCheckboxChange(value, e.target.checked);
+                                    })}
+                                    label={value.value}
+                                />
+                            )}
                         </CheckboxField>,
                     );
                 });
