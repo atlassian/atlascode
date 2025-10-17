@@ -1,6 +1,7 @@
-import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { exec } from 'child_process';
-import { extensions, env, Uri } from 'vscode';
+import { env, extensions } from 'vscode';
+
+import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 
 // Mock child_process
 jest.mock('child_process');
@@ -13,9 +14,6 @@ jest.mock('vscode', () => {
         ...originalModule.createVSCodeMock(jest),
         env: {
             openExternal: jest.fn(),
-        },
-        Uri: {
-            parse: jest.fn(),
         },
         extensions: {
             getExtension: jest.fn(),
@@ -192,13 +190,84 @@ To unknown-host.com:atlassian/atlascode.git
 
             // Mock env.openExternal
             (env.openExternal as jest.Mock).mockResolvedValue(undefined);
-            (Uri.parse as jest.Mock).mockReturnValue({});
 
             // Execute the method
             await handler.createPR(branchName, commitMessage);
 
             // Verify that commit was called with the correct parameters
             expect(mockCommit).toHaveBeenCalledWith(commitMessage, { all: true });
+            expect(mockCreateBranch).toHaveBeenCalledWith(branchName, true);
+            expect(mockFetch).toHaveBeenCalled();
+        });
+
+        it('Should call env.openExternal when a standard success git push occurs', async () => {
+            const branchName = 'feature-branch';
+            const commitMessage = 'Add new feature';
+
+            // Mock repository with no uncommitted changes (clean state)
+            const mockCommit = jest.fn().mockResolvedValue(undefined);
+            const mockCreateBranch = jest.fn().mockResolvedValue(undefined);
+            const mockFetch = jest.fn().mockResolvedValue(undefined);
+
+            const mockRepo = {
+                state: {
+                    HEAD: { name: 'main', ahead: 2 }, // Has unpushed commits
+                    workingTreeChanges: [], // No uncommitted changes
+                    indexChanges: [],
+                    mergeChanges: [],
+                },
+                rootUri: { fsPath: '/mock/path' },
+                commit: mockCommit,
+                createBranch: mockCreateBranch,
+                fetch: mockFetch,
+            };
+
+            const mockGitApi = {
+                repositories: [mockRepo],
+            };
+
+            const mockGitExtension = {
+                activate: jest.fn().mockResolvedValue({
+                    getAPI: jest.fn().mockReturnValue(mockGitApi),
+                }),
+            };
+
+            // Mock extensions.getExtension to return our mock
+            (extensions.getExtension as jest.Mock).mockReturnValue(mockGitExtension);
+
+            // Mock successful git push with PR link in stderr
+            (mockExec as any).mockImplementation((command: string, options: any, callback: any) => {
+                if (typeof options === 'function') {
+                    callback = options;
+                }
+
+                // Only respond to the expected git push command
+                if (command.includes('git push origin feature-branch')) {
+                    callback(null, {
+                        stdout: '',
+                        stderr: 'remote: https://github.com/test/repo/pull/new/feature-branch',
+                    });
+                } else {
+                    callback(new Error(`Unexpected command: ${command}`), null);
+                }
+            });
+
+            // Mock env.openExternal
+            const mockOpenExternal = jest.fn().mockResolvedValue(undefined);
+            (env.openExternal as jest.Mock).mockImplementation(mockOpenExternal);
+
+            // Execute the method
+            await handler.createPR(branchName, commitMessage);
+
+            // Verify that env.openExternal was called with the specific PR link
+            expect(mockOpenExternal).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    scheme: 'https',
+                    authority: 'github.com',
+                    path: '/test/repo/pull/new/feature-branch',
+                }),
+            );
+            expect(mockCommit).not.toHaveBeenCalled(); // Should not commit when no changes
             expect(mockCreateBranch).toHaveBeenCalledWith(branchName, true);
             expect(mockFetch).toHaveBeenCalled();
         });
