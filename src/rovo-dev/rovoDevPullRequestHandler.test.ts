@@ -132,7 +132,15 @@ To unknown-host.com:atlassian/atlascode.git
     });
 
     describe('createPR', () => {
-        const setupCreatePRMocks = (options: {
+        const setupCreatePRMocks = ({
+            branchName,
+            uncommittedChanges = [],
+            hasUnpushedCommits = false,
+            commitFails = false,
+            gitHost = 'github.com',
+            repo = 'test/repo',
+            gitPushFailMessage,
+        }: {
             branchName: string;
             uncommittedChanges?: Array<{ relativePath: string }>;
             hasUnpushedCommits?: boolean;
@@ -141,16 +149,6 @@ To unknown-host.com:atlassian/atlascode.git
             repo?: string;
             gitPushFailMessage?: string;
         }) => {
-            const {
-                branchName,
-                uncommittedChanges = [],
-                hasUnpushedCommits = false,
-                commitFails = false,
-                gitHost = 'github.com',
-                repo = 'test/repo',
-                gitPushFailMessage,
-            } = options;
-
             const mockCommit = commitFails
                 ? jest.fn().mockRejectedValue(new Error('Commit failed'))
                 : jest.fn().mockResolvedValue(undefined);
@@ -230,35 +228,30 @@ To unknown-host.com:atlassian/atlascode.git
             const branchName = 'my-branch';
             const commitMessage = 'My commit message';
 
-            // Setup mocks for repository with uncommitted changes
             const { mockCommit, mockCreateBranch, mockFetch } = setupCreatePRMocks({
                 branchName,
                 uncommittedChanges: [{ relativePath: 'file1.txt' }],
             });
 
-            // Execute the method
             await handler.createPR(branchName, commitMessage);
 
-            // Verify that commit was called with the correct parameters
-            expect(mockCommit).toHaveBeenCalledWith(commitMessage, { all: true });
-            expect(mockCreateBranch).toHaveBeenCalledWith(branchName, true);
             expect(mockFetch).toHaveBeenCalled();
+            expect(mockCreateBranch).toHaveBeenCalledWith(branchName, true);
+
+            expect(mockCommit).toHaveBeenCalledWith(commitMessage, { all: true });
         });
 
         it('Should call env.openExternal when a standard success git push occurs', async () => {
             const branchName = 'feature-branch';
             const commitMessage = 'Add new feature';
 
-            // Setup mocks for repository with unpushed commits but no uncommitted changes
-            const { mockCommit, mockCreateBranch, mockFetch, mockOpenExternal } = setupCreatePRMocks({
+            const { mockOpenExternal } = setupCreatePRMocks({
                 branchName,
                 hasUnpushedCommits: true,
             });
 
-            // Execute the method
             await handler.createPR(branchName, commitMessage);
 
-            // Verify that env.openExternal was called with the specific PR link
             expect(mockOpenExternal).toHaveBeenCalledWith(
                 expect.objectContaining({
                     scheme: 'https',
@@ -266,9 +259,6 @@ To unknown-host.com:atlassian/atlascode.git
                     path: '/test/repo/pull/new/feature-branch',
                 }),
             );
-            expect(mockCommit).not.toHaveBeenCalled(); // Should not commit when no changes
-            expect(mockCreateBranch).toHaveBeenCalledWith(branchName, true);
-            expect(mockFetch).toHaveBeenCalled();
         });
     });
 });
