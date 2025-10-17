@@ -3,11 +3,18 @@ import { env, extensions } from 'vscode';
 
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 
-// Mock child_process
+jest.mock('src/logger', () => ({
+    RovoDevLogger: {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+    },
+}));
+
 jest.mock('child_process');
 const mockExec = exec as jest.MockedFunction<typeof exec>;
 
-// Mock all dependencies
 jest.mock('vscode', () => {
     const originalModule = jest.requireActual('jest-mock-vscode');
     return {
@@ -23,47 +30,49 @@ jest.mock('vscode', () => {
 
 describe('RovoDevPullRequestHandler', () => {
     let handler: RovoDevPullRequestHandler;
+    let findPRLink: (output: string) => string | undefined;
 
     beforeEach(() => {
         handler = new RovoDevPullRequestHandler();
+        findPRLink = (output) => handler['findPRLink'](output);
     });
 
     describe('findPRLink', () => {
         it('Should match the link in GitHub push output', () => {
-            const link = handler.findPRLink(`
+            const link = findPRLink(`
 remote:      https://github.com/my-org/my-repo/pull/new/my-branch
 remote:`);
             expect(link).toBe('https://github.com/my-org/my-repo/pull/new/my-branch');
         });
 
         it('Should match the link in Bitbucket push output', () => {
-            const link = handler.findPRLink(`
+            const link = findPRLink(`
 remote:      https://bitbucket.org/my-org/my-repo/pull-requests/new?source=my-branch
 remote:`);
             expect(link).toBe('https://bitbucket.org/my-org/my-repo/pull-requests/new?source=my-branch');
         });
 
         it('Should match the link in internal Bitbucket push output', () => {
-            const link = handler.findPRLink(`
+            const link = findPRLink(`
 remote:      https://integration.bb-inf.net/my-org/my-repo/pull-requests/new?source=my-branch
 remote:`);
             expect(link).toBe('https://integration.bb-inf.net/my-org/my-repo/pull-requests/new?source=my-branch');
         });
 
         it('Should match the link in generic push output', () => {
-            const link = handler.findPRLink(`
+            const link = findPRLink(`
                 remote:      https://example.com/my-org/my-repo/pull/new/my-branch
 remote:`);
             expect(link).toBe('https://example.com/my-org/my-repo/pull/new/my-branch');
         });
 
         it('Should return undefined for empty output', () => {
-            const link = handler.findPRLink('');
+            const link = findPRLink('');
             expect(link).toBeUndefined();
         });
 
         it('Should not match anything to odd links', () => {
-            const link = handler.findPRLink(`
+            const link = findPRLink(`
                 remote:      https://example.com/my-org/my-repo/not-a-pr-link
 remote:`);
             expect(link).toBeUndefined();

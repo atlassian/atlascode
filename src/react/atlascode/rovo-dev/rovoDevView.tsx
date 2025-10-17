@@ -69,6 +69,7 @@ const RovoDevView: React.FC = () => {
     const [fileExistenceMap, setFileExistenceMap] = useState<Map<string, boolean>>(new Map());
     const [jiraWorkItems, setJiraWorkItems] = useState<MinimalIssue<DetailedSiteInfo>[] | undefined>(undefined);
     const [pendingFilesForFiltering, setPendingFilesForFiltering] = useState<ModifiedFile[] | null>(null);
+    const [thinkingBlockEnabled, setThinkingBlockEnabled] = useState(true);
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -208,7 +209,7 @@ const RovoDevView: React.FC = () => {
     const handleAppendResponse = useCallback(
         (response: Response | Response[]) => {
             setHistory((prev) => {
-                prev = appendResponse(prev, response, handleAppendModifiedFileToolReturns);
+                prev = appendResponse(prev, response, handleAppendModifiedFileToolReturns, thinkingBlockEnabled);
 
                 const last = prev.at(-1);
                 if (
@@ -222,7 +223,7 @@ const RovoDevView: React.FC = () => {
                 return prev;
             });
         },
-        [handleAppendModifiedFileToolReturns],
+        [handleAppendModifiedFileToolReturns, thinkingBlockEnabled],
     );
 
     const onMessageHandler = useCallback(
@@ -431,6 +432,11 @@ const RovoDevView: React.FC = () => {
                     setTotalModifiedFiles(convertedFiles);
                     break;
                 }
+
+                case RovoDevProviderMessageType.SetThinkingBlockEnabled:
+                    setThinkingBlockEnabled(() => event.enabled);
+                    break;
+
                 default:
                     // this is never supposed to happen since there aren't other type of messages
                     handleAppendResponse({
