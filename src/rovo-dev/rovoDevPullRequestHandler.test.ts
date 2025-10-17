@@ -1,5 +1,5 @@
 import { exec } from 'child_process';
-import { env, extensions } from 'vscode';
+import { env } from 'vscode';
 
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 
@@ -15,6 +15,10 @@ jest.mock('src/logger', () => ({
 jest.mock('child_process');
 const mockExec = exec as jest.MockedFunction<typeof exec>;
 
+const mockGitApi = jest.fn().mockReturnValue({
+    repositories: [],
+});
+
 jest.mock('vscode', () => {
     const originalModule = jest.requireActual('jest-mock-vscode');
     return {
@@ -23,7 +27,16 @@ jest.mock('vscode', () => {
             openExternal: jest.fn(),
         },
         extensions: {
-            getExtension: jest.fn(),
+            getExtension: jest.fn((extensionId: string) => {
+                if (extensionId === 'vscode.git') {
+                    return {
+                        activate: jest.fn().mockResolvedValue({
+                            getAPI: mockGitApi,
+                        }),
+                    };
+                }
+                return null;
+            }),
         },
     };
 });
@@ -180,31 +193,19 @@ To unknown-host.com:atlassian/atlascode.git
                 fetch: mockFetch,
             };
 
-            const mockGitApi = {
+            mockGitApi.mockReturnValue({
                 repositories: [mockRepo],
-            };
+            });
 
-            const mockGitExtension = {
-                activate: jest.fn().mockResolvedValue({
-                    getAPI: jest.fn().mockReturnValue(mockGitApi),
-                }),
-            };
-
-            // Mock extensions.getExtension to return our mock
-            (extensions.getExtension as jest.Mock).mockReturnValue(mockGitExtension);
-
-            // Mock git push
             (mockExec as any).mockImplementation((command: string, options: any, callback: any) => {
                 if (typeof options === 'function') {
                     callback = options;
                 }
 
-                // Only respond to the expected git push command
                 if (command.includes(`git push origin ${branchName}`)) {
                     if (gitPushFailMessage) {
                         callback(new Error('Git push failed'), { stdout: '', stderr: gitPushFailMessage });
                     } else {
-                        // Build appropriate success output based on git host
                         let gitPushOutput: string;
                         if (gitHost === 'github.com') {
                             gitPushOutput = `remote: https://${gitHost}/${repo}/pull/new/${branchName}`;
@@ -220,15 +221,10 @@ To unknown-host.com:atlassian/atlascode.git
                 }
             });
 
-            // Mock env.openExternal
-            const mockOpenExternal = jest.fn().mockResolvedValue(undefined);
-            (env.openExternal as jest.Mock).mockImplementation(mockOpenExternal);
-
             return {
                 mockCommit,
                 mockCreateBranch,
                 mockFetch,
-                mockOpenExternal,
                 mockRepo,
             };
         };
@@ -254,14 +250,14 @@ To unknown-host.com:atlassian/atlascode.git
             const branchName = 'feature-branch';
             const commitMessage = 'Add new feature';
 
-            const { mockOpenExternal } = setupCreatePRMocks({
+            setupCreatePRMocks({
                 branchName,
                 hasUnpushedCommits: true,
             });
 
             await handler.createPR(branchName, commitMessage);
 
-            expect(mockOpenExternal).toHaveBeenCalledWith(
+            expect(env.openExternal).toHaveBeenCalledWith(
                 expect.objectContaining({
                     scheme: 'https',
                     authority: 'github.com',
