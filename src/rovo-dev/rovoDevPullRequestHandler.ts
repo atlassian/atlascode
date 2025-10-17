@@ -65,11 +65,11 @@ export class RovoDevPullRequestHandler {
         // example text: "To bitbucket.org:atlassian/devai-services.git"
         const gitRemoteMatchers = [
             // SSH Github: git@github.com:my-org/my-repo.git
-            /(github)\.com:([^\s]+)\/([^\s]+)(\.git)?/g,
+            /(github)\.com:([^\s]+)\/([^\s]+)(\.git)?/,
             // SSH Bitbucket:
-            /(bitbucket)\.org:([^\s]+)\/([^\s]+)(\.git)?/g,
+            /(bitbucket)\.org:([^\s]+)\/([^\s]+)(\.git)?/,
             // Internal staging instance of Bitbucket
-            /(integration\.bb-inf)\.net:([^\s]+)\/([^\s]+)(\.git)?/g,
+            /(integration\.bb-inf)\.net:([^\s]+)\/([^\s]+)(\.git)?/,
         ];
         for (const gitRemoteMatcher of gitRemoteMatchers) {
             const gitRemoteMatch = output.match(gitRemoteMatcher);
@@ -78,7 +78,7 @@ export class RovoDevPullRequestHandler {
                 const repo = gitRemoteMatch[3].replace(/\.git$/, '');
                 const host = gitRemoteMatch[1];
                 if (!host) {
-                    return undefined;
+                    continue;
                 }
 
                 let prLink: string;
