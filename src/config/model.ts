@@ -220,7 +220,7 @@ const emptyJiraConfig: JiraConfig = {
 const emptyRovoDevConfig: RovoDevConfig = {
     enabled: false,
     debugPanelEnabled: false,
-    thinkingBlockEnabled: true,
+    thinkingBlockEnabled: false,
 };
 
 const emptyRelatedJiraIssues: BitbucketRelatedJiraIssues = {
