@@ -137,14 +137,18 @@ To unknown-host.com:atlassian/atlascode.git
             uncommittedChanges?: Array<{ relativePath: string }>;
             hasUnpushedCommits?: boolean;
             commitFails?: boolean;
-            gitPushOutput?: string;
+            gitHost?: string;
+            repo?: string;
+            gitPushFailMessage?: string;
         }) => {
             const {
                 branchName,
                 uncommittedChanges = [],
                 hasUnpushedCommits = false,
                 commitFails = false,
-                gitPushOutput = `remote: https://github.com/test/repo/pull/new/${branchName}`,
+                gitHost = 'github.com',
+                repo = 'test/repo',
+                gitPushFailMessage,
             } = options;
 
             const mockCommit = commitFails
@@ -190,7 +194,20 @@ To unknown-host.com:atlassian/atlascode.git
 
                 // Only respond to the expected git push command
                 if (command.includes(`git push origin ${branchName}`)) {
-                    callback(null, { stdout: '', stderr: gitPushOutput });
+                    if (gitPushFailMessage) {
+                        callback(new Error('Git push failed'), { stdout: '', stderr: gitPushFailMessage });
+                    } else {
+                        // Build appropriate success output based on git host
+                        let gitPushOutput: string;
+                        if (gitHost === 'github.com') {
+                            gitPushOutput = `remote: https://${gitHost}/${repo}/pull/new/${branchName}`;
+                        } else if (gitHost === 'bitbucket.org' || gitHost.includes('bb-inf.net')) {
+                            gitPushOutput = `remote: https://${gitHost}/${repo}/pull-requests/new?source=${branchName}`;
+                        } else {
+                            gitPushOutput = `remote: https://${gitHost}/${repo}/pull/new/${branchName}`;
+                        }
+                        callback(null, { stdout: '', stderr: gitPushOutput });
+                    }
                 } else {
                     callback(new Error(`Unexpected command: ${command}`), null);
                 }
