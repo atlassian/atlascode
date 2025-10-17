@@ -4,6 +4,8 @@ import { GitExtension, Repository } from 'src/typings/git';
 import { promisify } from 'util';
 import { env, extensions, Uri } from 'vscode';
 
+const execAsync = promisify(exec);
+
 export class RovoDevPullRequestHandler {
     private async getGitExtension(): Promise<GitExtension> {
         try {
@@ -150,7 +152,6 @@ export class RovoDevPullRequestHandler {
             }
         }
 
-        const execAsync = promisify(exec);
         let stderr: string;
         try {
             const result = await execAsync(`git push origin ${branchName}`, {

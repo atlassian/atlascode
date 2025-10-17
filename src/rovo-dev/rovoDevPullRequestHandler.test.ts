@@ -1,4 +1,27 @@
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
+import { exec } from 'child_process';
+import { extensions, env, Uri } from 'vscode';
+
+// Mock child_process
+jest.mock('child_process');
+const mockExec = exec as jest.MockedFunction<typeof exec>;
+
+// Mock all dependencies
+jest.mock('vscode', () => {
+    const originalModule = jest.requireActual('jest-mock-vscode');
+    return {
+        ...originalModule.createVSCodeMock(jest),
+        env: {
+            openExternal: jest.fn(),
+        },
+        Uri: {
+            parse: jest.fn(),
+        },
+        extensions: {
+            getExtension: jest.fn(),
+        },
+    };
+});
 
 describe('RovoDevPullRequestHandler', () => {
     let handler: RovoDevPullRequestHandler;
@@ -107,6 +130,64 @@ To unknown-host.com:atlassian/atlascode.git
                 'my-branch',
             );
             expect(link).toBeUndefined();
+        });
+    });
+
+    describe('createPR', () => {
+        it('Should commit the changes if there are uncommitted changes', async () => {
+            const branchName = 'my-branch';
+            const commitMessage = 'My commit message';
+
+            // Mock repository with uncommitted changes
+            const mockCommit = jest.fn().mockResolvedValue(undefined);
+            const mockCreateBranch = jest.fn().mockResolvedValue(undefined);
+            const mockFetch = jest.fn().mockResolvedValue(undefined);
+            
+            const mockRepo = {
+                state: {
+                    HEAD: { name: 'main', ahead: 0 },
+                    workingTreeChanges: [{ uri: 'file1.txt' }], // Has uncommitted changes
+                    indexChanges: [],
+                    mergeChanges: [],
+                },
+                rootUri: { fsPath: '/mock/path' },
+                commit: mockCommit,
+                createBranch: mockCreateBranch,
+                fetch: mockFetch,
+            };
+
+            const mockGitApi = {
+                repositories: [mockRepo],
+            };
+
+            const mockGitExtension = {
+                activate: jest.fn().mockResolvedValue({
+                    getAPI: jest.fn().mockReturnValue(mockGitApi),
+                }),
+            };
+
+            // Mock extensions.getExtension to return our mock
+            (extensions.getExtension as jest.Mock).mockReturnValue(mockGitExtension);
+
+            // Mock successful git push
+            (mockExec as any).mockImplementation((command: string, options: any, callback: any) => {
+                if (typeof options === 'function') {
+                    callback = options;
+                }
+                callback(null, { stdout: '', stderr: 'remote: https://github.com/test/repo/pull/new/my-branch' });
+            });
+
+            // Mock env.openExternal
+            (env.openExternal as jest.Mock).mockResolvedValue(undefined);
+            (Uri.parse as jest.Mock).mockReturnValue({});
+
+            // Execute the method
+            await handler.createPR(branchName, commitMessage);
+
+            // Verify that commit was called with the correct parameters
+            expect(mockCommit).toHaveBeenCalledWith(commitMessage, { all: true });
+            expect(mockCreateBranch).toHaveBeenCalledWith(branchName, true);
+            expect(mockFetch).toHaveBeenCalled();
         });
     });
 });
