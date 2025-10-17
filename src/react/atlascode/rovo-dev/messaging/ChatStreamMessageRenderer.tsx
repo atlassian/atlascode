@@ -19,6 +19,7 @@ interface ChatStreamMessageRendererProps {
     };
     onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionChoice) => void;
     onCollapsiblePanelExpanded: () => void;
+    onLinkClick: (href: string) => void;
 }
 
 export const ChatStreamMessageRenderer = React.memo<ChatStreamMessageRendererProps>(
@@ -30,6 +31,7 @@ export const ChatStreamMessageRenderer = React.memo<ChatStreamMessageRendererPro
         onToolPermissionChoice,
         onCollapsiblePanelExpanded,
         renderProps,
+        onLinkClick,
     }) => {
         if (!chatHistory) {
             return null;
@@ -59,6 +61,7 @@ export const ChatStreamMessageRenderer = React.memo<ChatStreamMessageRendererPro
                     renderProps={renderProps}
                     currentState={currentState}
                     drawerOpen={idx === openDrawerIdx}
+                    onLinkClick={onLinkClick}
                 />
             );
         });

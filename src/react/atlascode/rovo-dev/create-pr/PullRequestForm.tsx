@@ -29,7 +29,7 @@ interface PullRequestFormProps {
     messagingApi: ReturnType<
         typeof useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>
     >;
-    onPullRequestCreated: (url: string) => void;
+    onPullRequestCreated: (url: string, branchName: string) => void;
     isFormVisible?: boolean;
     setFormVisible?: (visible: boolean) => void;
 }
@@ -89,7 +89,7 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
             console.error(`Error creating PR: ${response.data.error}`);
             return;
         }
-        onPullRequestCreated(response.data.url || '');
+        onPullRequestCreated(response.data.url || '', branchName);
     };
 
     return (
@@ -151,10 +151,13 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
     );
 };
 
-export const PullRequestChatItem: React.FC<{ msg: PullRequestMessage }> = ({ msg }) => {
+export const PullRequestChatItem: React.FC<{ msg: PullRequestMessage; onLinkClick: (href: string) => void }> = ({
+    msg,
+    onLinkClick,
+}) => {
     const content = (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <MarkedDown value={msg.text || ''} />
+            <MarkedDown value={msg.text || ''} onLinkClick={onLinkClick} />
         </div>
     );
     return (

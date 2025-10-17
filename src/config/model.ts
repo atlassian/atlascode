@@ -46,6 +46,7 @@ export interface IConfig {
 export interface RovoDevConfig {
     enabled: boolean;
     debugPanelEnabled: boolean;
+    thinkingBlockEnabled: boolean;
 }
 
 export interface JiraConfig {
@@ -219,6 +220,7 @@ const emptyJiraConfig: JiraConfig = {
 const emptyRovoDevConfig: RovoDevConfig = {
     enabled: false,
     debugPanelEnabled: false,
+    thinkingBlockEnabled: false,
 };
 
 const emptyRelatedJiraIssues: BitbucketRelatedJiraIssues = {

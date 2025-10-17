@@ -33,6 +33,7 @@ export const enum RovoDevProviderMessageType {
     SetPromptText = 'setPromptText',
     SetJiraWorkItems = 'setJiraWorkItems',
     CheckFileExistsComplete = 'checkFileExistsComplete',
+    SetThinkingBlockEnabled = 'setThinkingBlockEnabled',
 }
 
 interface FocusedContextRemovedResponse {
@@ -99,4 +100,5 @@ export type RovoDevProviderMessage =
     | ReducerAction<
           RovoDevProviderMessageType.CheckFileExistsComplete,
           { requestId: string; filePath: string; exists: boolean }
-      >;
+      >
+    | ReducerAction<RovoDevProviderMessageType.SetThinkingBlockEnabled, { enabled: boolean }>;

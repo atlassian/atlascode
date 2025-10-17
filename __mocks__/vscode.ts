@@ -7,5 +7,12 @@ module.exports = {
             writeText: jest.fn(),
             readText: jest.fn(),
         },
-    }
+    },
+    extensions: {
+        getExtension: jest.fn(() => ({
+            isActive: true,
+            exports: {},
+            activate: jest.fn().mockResolvedValue({}),
+        })),
+    },    
 }

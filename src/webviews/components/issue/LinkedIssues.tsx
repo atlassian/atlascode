@@ -59,7 +59,7 @@ export const LinkedIssues: React.FunctionComponent<LinkedIssuesProps> = ({
     return (
         <TableTree
             columns={[IssueKey, Summary, Priority, AssigneeColumn, StatusColumn]}
-            columnWidths={['150px', '100px', '20px', '150px', '150px']}
+            columnWidths={['100px', '100%', '20px', '100%', '150px']}
             items={issuelinks.map((issuelink) => {
                 return {
                     id: issuelink.id,

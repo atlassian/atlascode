@@ -12,7 +12,7 @@ describe('appendResponse', () => {
 
     it('should return prev when response is null', () => {
         const prev: Response[] = [{ event_kind: '_RovoDevUserPrompt', content: 'test' }];
-        const result = appendResponse(prev, null, mockHandleAppendModifiedFileToolReturns);
+        const result = appendResponse(prev, null, mockHandleAppendModifiedFileToolReturns, true);
         expect(result).toEqual(prev);
     });
 
@@ -20,7 +20,7 @@ describe('appendResponse', () => {
         const prev: Response[] = [{ event_kind: 'text', content: 'Hello ', index: 0 }];
         const response = { event_kind: 'text', content: 'world', index: 0 } as const;
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns);
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
 
         expect(result).toHaveLength(1);
         expect(result[0]).toEqual({ event_kind: 'text', content: 'Hello world', index: 0 });
@@ -30,7 +30,7 @@ describe('appendResponse', () => {
         const prev: Response[] = [{ event_kind: '_RovoDevUserPrompt', content: 'Hello' }];
         const response = { event_kind: 'text', content: 'world', index: 0 } as const;
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns);
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
 
         expect(result).toHaveLength(2);
         expect(result[0]).toEqual({ event_kind: '_RovoDevUserPrompt', content: 'Hello' });
@@ -70,7 +70,7 @@ describe('appendResponse', () => {
             toolCallMessage: toolCallMessage2,
         };
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns);
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
 
         expect(mockHandleAppendModifiedFileToolReturns).toHaveBeenCalledWith(response);
         expect(result).toHaveLength(1);
@@ -96,7 +96,7 @@ describe('appendResponse', () => {
             toolCallMessage,
         };
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns);
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
 
         expect(result).toHaveLength(2);
         expect(result[0]).toEqual({ event_kind: '_RovoDevUserPrompt', content: 'user message' });
@@ -130,7 +130,7 @@ describe('appendResponse', () => {
             toolCallMessage,
         };
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns);
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
 
         expect(result).toHaveLength(2);
         expect(Array.isArray(result[1])).toBe(true);
@@ -155,7 +155,7 @@ describe('appendResponse', () => {
             toolCallMessage,
         };
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns);
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
 
         expect(result).toHaveLength(2);
         expect(result[1]).toEqual(response);
@@ -208,7 +208,7 @@ describe('appendResponse', () => {
             toolCallMessage: toolCallMessage3,
         };
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns);
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
 
         expect(result).toHaveLength(1);
         expect(Array.isArray(result[0])).toBe(true);
@@ -235,7 +235,7 @@ describe('appendResponse', () => {
             toolCallMessage,
         };
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns);
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
 
         expect(result).toHaveLength(2);
         expect(result[1]).toEqual(response);
@@ -262,7 +262,7 @@ describe('appendResponse', () => {
             },
         ] as const;
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns);
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
 
         expect(result).toHaveLength(2);
         expect(result[0]).toEqual({ event_kind: '_RovoDevUserPrompt', content: 'previous' });
@@ -275,7 +275,7 @@ describe('appendResponse', () => {
             { event_kind: 'tool-call', tool_name: 'grep', args: 'args1', tool_call_id: 'id1' },
         ] as const;
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns);
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
 
         expect(result).toHaveLength(1);
         expect(result[0]).toEqual(response[0]);
@@ -288,10 +288,50 @@ describe('appendResponse', () => {
         const prev: Response[] = [existingArray];
         const response = { event_kind: 'text', content: 'new message', index: 0 } as const;
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns);
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
 
         expect(result).toHaveLength(2);
         expect(result[0]).toEqual(existingArray);
+        expect(result[1]).toEqual(response);
+    });
+
+    it('should not group ToolReturn when thinkingBlockEnabled is false', () => {
+        const toolCallMessage1: RovoDevToolCallResponse = {
+            event_kind: 'tool-call',
+            tool_name: 'grep',
+            args: 'args1',
+            tool_call_id: 'id1',
+        };
+        const toolCallMessage2: RovoDevToolCallResponse = {
+            event_kind: 'tool-call',
+            tool_name: 'bash',
+            args: 'args1',
+            tool_call_id: 'id2',
+        };
+
+        const prev: RovoDevToolReturnResponse = {
+            event_kind: 'tool-return',
+            tool_name: 'grep',
+            content: 'prev result',
+            tool_call_id: 'id1',
+            timestamp: '0',
+            toolCallMessage: toolCallMessage1,
+        };
+
+        const response: RovoDevToolReturnResponse = {
+            event_kind: 'tool-return',
+            tool_name: 'bash',
+            content: 'result',
+            tool_call_id: 'id2',
+            timestamp: '0',
+            toolCallMessage: toolCallMessage2,
+        };
+
+        const result = appendResponse([prev], response, mockHandleAppendModifiedFileToolReturns, false);
+
+        expect(mockHandleAppendModifiedFileToolReturns).toHaveBeenCalledWith(response);
+        expect(result).toHaveLength(2);
+        expect(result[0]).toEqual(prev);
         expect(result[1]).toEqual(response);
     });
 });

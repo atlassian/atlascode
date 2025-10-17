@@ -31,6 +31,7 @@ export const enum RovoDevViewResponseType {
     ToolPermissionChoiceSubmit = 'toolPermissionChoiceSubmit',
     YoloModeToggled = 'yoloModeToggled',
     FilterModifiedFilesByContent = 'filterModifiedFilesByContent',
+    OpenExternalLink = 'openExternalLink',
 }
 
 export type FileOperationType = 'modify' | 'create' | 'delete';
@@ -75,4 +76,5 @@ export type RovoDevViewResponse =
           { choice: ToolPermissionDialogChoice; toolCallId: string }
       >
     | ReducerAction<RovoDevViewResponseType.YoloModeToggled, { value: boolean }>
-    | ReducerAction<RovoDevViewResponseType.FilterModifiedFilesByContent, { files: ModifiedFile[] }>;
+    | ReducerAction<RovoDevViewResponseType.FilterModifiedFilesByContent, { files: ModifiedFile[] }>
+    | ReducerAction<RovoDevViewResponseType.OpenExternalLink, { href: string }>;
