@@ -15,6 +15,7 @@ export interface StartWorkActionApi {
         localBranches: Branch[];
         remoteBranches: Branch[];
         hasSubmodules: boolean;
+        currentBranch: string | undefined;
     }>;
     assignAndTransitionIssue(issue: MinimalIssue<DetailedSiteInfo>, transition?: Transition): Promise<void>;
     createOrCheckoutBranch(
@@ -29,5 +30,5 @@ export interface StartWorkActionApi {
     openSettings(section?: ConfigSection | ConfigV3Section, subsection?: ConfigSubSection | ConfigV3SubSection): void;
     getRovoDevPreference(): Promise<boolean>;
     updateRovoDevPreference(enabled: boolean): Promise<void>;
-    openRovoDev(): Promise<void>;
+    openRovoDev(issue: MinimalIssue<DetailedSiteInfo>): Promise<void>;
 }

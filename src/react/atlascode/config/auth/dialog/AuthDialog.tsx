@@ -171,6 +171,13 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
             doClose();
         }, [doClose, updateWatches]);
 
+        const handleFormKeyDown = (event: React.KeyboardEvent) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                handleSubmit(handleSave)();
+            }
+        };
+
         const preventClickDefault = useCallback(
             (event: React.MouseEvent<HTMLButtonElement>) => event.preventDefault(),
             [],
@@ -251,6 +258,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                                 errors={errors}
                                 registerRequiredString={registerRequiredString}
                                 preventClickDefault={preventClickDefault}
+                                onPasswordKeyDown={handleFormKeyDown}
                             />
                         )}
 

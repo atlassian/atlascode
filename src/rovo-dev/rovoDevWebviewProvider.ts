@@ -1,3 +1,4 @@
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import * as fs from 'fs';
 import path from 'path';
 import { CommandContext, setCommandContext } from 'src/commandContext';
@@ -10,6 +11,7 @@ import {
     commands,
     ConfigurationChangeEvent,
     Disposable,
+    env,
     Event,
     ExtensionContext,
     Position,
@@ -26,24 +28,30 @@ import {
 
 import { Container } from '../../src/container';
 import { RovoDevLogger } from '../../src/logger';
-import { Commands, rovodevInfo } from '../constants';
+import { DetailedSiteInfo } from '../atlclients/authInfo';
+import { Commands } from '../constants';
 import {
     ModifiedFile,
     RovoDevViewResponse,
     RovoDevViewResponseType,
 } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
+import { modifyFileTitleMap } from '../react/atlascode/rovo-dev/utils';
 import { GitErrorCodes } from '../typings/git';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
-import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
+import { RovoDevApiClient } from './rovoDevApiClient';
+import { RovoDevHealthcheckResponse } from './rovoDevApiClientInterfaces';
 import { RovoDevChatProvider } from './rovoDevChatProvider';
+import { RovoDevContentTracker } from './rovoDevContentTracker';
 import { RovoDevDwellTracker } from './rovoDevDwellTracker';
 import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
-import { RovoDevProcessManager } from './rovoDevProcessManager';
+import { RovoDevJiraItemsProvider } from './rovoDevJiraItemsProvider';
+import { RovoDevProcessManager, RovoDevProcessState } from './rovoDevProcessManager';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import { RovoDevContextItem } from './rovoDevTypes';
 import {
     RovoDevDisabledReason,
+    RovoDevEntitlementCheckFailedDetail,
     RovoDevProviderMessage,
     RovoDevProviderMessageType,
 } from './rovoDevWebviewProviderMessages';
@@ -53,28 +61,32 @@ interface TypedWebview<MessageOut, MessageIn> extends Webview {
     postMessage(message: MessageOut): Thenable<boolean>;
 }
 
-enum RovoDevProcessState {
-    NotStarted,
-    Starting,
-    Started,
-    Terminated,
-    Disabled,
-}
+// this map sets the priority level of Disabled states
+// higher priority can override lower priority
+const RovoDevDisabledPriority: Record<RovoDevDisabledReason | 'none', number> = {
+    none: 0,
+    Other: 1,
+    EntitlementCheckFailed: 2,
+    NeedAuth: 3,
+    NoWorkspaceOpen: 4,
+    UnsupportedArch: 5,
+};
 
 export class RovoDevWebviewProvider extends Disposable implements WebviewViewProvider {
     private readonly viewType = 'atlascodeRovoDev';
-    private readonly isBoysenberry = process.env.ROVODEV_BBY === 'true';
+    private readonly isBoysenberry = Container.isBoysenberryMode;
     private readonly appInstanceId: string;
 
     private readonly _prHandler: RovoDevPullRequestHandler | undefined;
     private readonly _telemetryProvider: RovoDevTelemetryProvider;
+    private readonly _jiraItemsProvider: RovoDevJiraItemsProvider;
     private readonly _chatProvider: RovoDevChatProvider;
 
     private _webView?: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse>;
     private _webviewView?: WebviewView;
     private _rovoDevApiClient?: RovoDevApiClient;
-    private _processState = RovoDevProcessState.NotStarted;
-    private _initialized = false;
+    private _isProviderDisabled = false;
+    private _disabledReason: RovoDevDisabledReason | 'none' = 'none';
     private _webviewReady = false;
     private _debugPanelEnabled = false;
     private _debugPanelContext: Record<string, string> = {};
@@ -87,6 +99,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _disposables: Disposable[] = [];
 
     private _dwellTracker?: RovoDevDwellTracker;
+    private _contentTracker?: RovoDevContentTracker;
 
     private _extensionPath: string;
     private _extensionUri: Uri;
@@ -97,12 +110,44 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         return this._rovoDevApiClient;
     }
 
-    private get isDisabled() {
-        return this._processState === RovoDevProcessState.Disabled;
+    private getYoloModeStorageKey(): string {
+        // Use a global key for YOLO mode across all workspaces
+        return 'yoloMode_global';
+    }
+
+    private async loadYoloModeFromStorage(): Promise<boolean> {
+        if (this.isBoysenberry) {
+            return true;
+        }
+
+        const key = this.getYoloModeStorageKey();
+        const stored = this._context.workspaceState.get<boolean>(key);
+        return stored ?? false;
+    }
+
+    private async saveYoloModeToStorage(enabled: boolean): Promise<void> {
+        if (this.isBoysenberry) {
+            return;
+        }
+
+        const key = this.getYoloModeStorageKey();
+        await this._context.workspaceState.update(key, enabled);
+    }
+
+    public get isReady(): boolean {
+        return !!this._webviewReady;
     }
 
     public get isVisible(): boolean {
         return this._webviewView?.visible ?? false;
+    }
+
+    public get isDisabled(): boolean {
+        return this.processState === 'Disabled' || this.processState === 'Terminated';
+    }
+
+    private get processState(): RovoDevProcessState['state'] {
+        return RovoDevProcessManager.state.state;
     }
 
     constructor(context: ExtensionContext, extensionPath: string) {
@@ -126,9 +171,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // Register editor listeners
         this._registerEditorListeners();
 
-        // Register this provider with the process manager for error handling
-        RovoDevProcessManager.setRovoDevWebviewProvider(this);
-
         if (this.isBoysenberry) {
             this._prHandler = new RovoDevPullRequestHandler();
             this.appInstanceId = process.env.ROVODEV_SANDBOX_ID as string;
@@ -145,8 +187,17 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             this.appInstanceId,
             onTelemetryError,
         );
+
         this._chatProvider = new RovoDevChatProvider(this.isBoysenberry, this._telemetryProvider);
-        this._chatProvider.yoloMode = this.isBoysenberry;
+
+        this.loadYoloModeFromStorage().then((yoloMode) => {
+            this._chatProvider.yoloMode = yoloMode;
+        });
+
+        this._jiraItemsProvider = new RovoDevJiraItemsProvider();
+        this._jiraItemsProvider.onNewJiraItems((issues) => this.sendJiraItemsToView(issues));
+
+        this._disposables.push(this._jiraItemsProvider);
     }
 
     private onConfigurationChanged(e: ConfigurationChangeEvent): void {
@@ -154,11 +205,19 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             this._debugPanelEnabled = Container.config.rovodev.debugPanelEnabled;
             this.refreshDebugPanel(true);
         }
+        if (configuration.changed(e, 'rovodev.thinkingBlockEnabled')) {
+            this.refreshThinkingBlock();
+        }
     }
 
     private async refreshDebugPanel(force?: boolean) {
         if (this._debugPanelEnabled || force) {
-            this._debugPanelContext['ProcessState'] = RovoDevProcessState[this._processState];
+            const fullProcessState = RovoDevProcessManager.state;
+            this._debugPanelContext['ProcessState'] = fullProcessState.state;
+            if (fullProcessState.state === 'Disabled') {
+                this._debugPanelContext['ProcessState'] += ' / ' + fullProcessState.subState;
+            }
+
             await this._webView?.postMessage({
                 type: RovoDevProviderMessageType.SetDebugPanel,
                 enabled: this._debugPanelEnabled,
@@ -166,6 +225,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 mcpContext: this._debugPanelMcpContext,
             });
         }
+    }
+
+    private async refreshThinkingBlock() {
+        const thinkingBlockEnabled = Container.config.rovodev.thinkingBlockEnabled;
+
+        await this._webView?.postMessage({
+            type: RovoDevProviderMessageType.SetThinkingBlockEnabled,
+            enabled: thinkingBlockEnabled,
+        });
     }
 
     public resolveWebviewView(
@@ -184,6 +252,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             enableCommandUris: true,
             enableScripts: true,
             localResourceRoots: [
+                Uri.file(path.join(this._extensionPath, 'images')),
                 Uri.file(path.join(this._extensionPath, 'build')),
                 Uri.file(path.join(this._extensionPath, 'node_modules', '@vscode', 'codicons', 'dist')),
             ],
@@ -269,11 +338,22 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.CheckGitChanges:
-                        const isClean = await this._prHandler!.isGitStateClean();
+                        if (!this._prHandler) {
+                            await webview.postMessage({
+                                type: RovoDevProviderMessageType.CheckGitChangesComplete,
+                                hasChanges: false,
+                            });
+                            break;
+                        }
+                        const hasChanges = await this._prHandler.hasChangesOrUnpushedCommits();
                         await webview.postMessage({
                             type: RovoDevProviderMessageType.CheckGitChangesComplete,
-                            hasChanges: !isClean,
+                            hasChanges: hasChanges,
                         });
+                        break;
+
+                    case RovoDevViewResponseType.FilterModifiedFilesByContent:
+                        await this.executeFilterModifiedFilesByContent(e.files);
                         break;
 
                     case RovoDevViewResponseType.ReportThinkingDrawerExpanded:
@@ -292,33 +372,30 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     case RovoDevViewResponseType.WebviewReady:
                         this._webviewReady = true;
                         this.refreshDebugPanel(true);
-                        if (!this.isBoysenberry && !this.isDisabled) {
+                        this.refreshThinkingBlock();
+
+                        if (!this.isBoysenberry) {
+                            // listen to change of process state by the process manager
+                            RovoDevProcessManager.onStateChanged((newState) =>
+                                this.handleProcessStateChanged(newState),
+                            );
+
                             if (!workspace.workspaceFolders?.length) {
-                                await this.signalRovoDevDisabled('noOpenFolder');
-                                return;
+                                await this.signalRovoDevDisabled('NoWorkspaceOpen');
+                                break;
                             } else {
+                                const yoloMode = await this.loadYoloModeFromStorage();
                                 await webview.postMessage({
                                     type: RovoDevProviderMessageType.ProviderReady,
                                     workspacePath: workspace.workspaceFolders?.[0]?.uri.fsPath,
                                     homeDir: process.env.HOME || process.env.USERPROFILE,
+                                    yoloMode: yoloMode,
                                 });
                             }
                         }
 
-                        const fixedPort = parseInt(process.env[rovodevInfo.envVars.port] || '0');
-                        if (fixedPort) {
-                            const rovoDevHost = process.env[rovodevInfo.envVars.host] || 'localhost';
-                            const rovoDevApiClient = new RovoDevApiClient(rovoDevHost, fixedPort);
-                            await this.initializeWithHealthcheck(rovoDevApiClient);
-                        } else if (this.isBoysenberry) {
-                            await this.signalRovoDevDisabled('other');
-                            throw new Error('Rovo Dev port not set');
-                        } else {
-                            this._processState = RovoDevProcessState.Starting;
-                            this.refreshDebugPanel();
-
-                            await RovoDevProcessManager.initializeRovoDev(this._context);
-                        }
+                        // initialize (or refresh) the provider based on the current process state
+                        this.handleProcessStateChanged(RovoDevProcessManager.state);
                         break;
 
                     case RovoDevViewResponseType.GetAgentMemory:
@@ -363,13 +440,21 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.ToolPermissionChoiceSubmit:
+                        if (e.choice === 'allowAll') {
+                            await this._chatProvider.signalToolRequestAllowAll();
+                            break;
+                        }
                         await this._chatProvider.signalToolRequestChoiceSubmit(e.toolCallId, e.choice);
                         break;
 
                     case RovoDevViewResponseType.YoloModeToggled:
                         this._chatProvider.yoloMode = e.value;
+                        this.saveYoloModeToStorage(e.value);
                         break;
 
+                    case RovoDevViewResponseType.OpenExternalLink:
+                        await env.openExternal(Uri.parse(e.href));
+                        break;
                     default:
                         // @ts-expect-error ts(2339) - e here should be 'never'
                         this.processError(new Error(`Unknown message type: ${e.type}`));
@@ -450,26 +535,41 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             title,
             isRetriable,
             isProcessTerminated,
+            skipLogError,
         }: {
             title?: string;
             isRetriable?: boolean;
             isProcessTerminated?: boolean;
+            skipLogError?: boolean;
         } = {},
     ) {
-        RovoDevLogger.error(error);
+        if (!skipLogError) {
+            RovoDevLogger.error(error);
+        }
 
         const webview = this._webView!;
         return webview.postMessage({
             type: RovoDevProviderMessageType.ShowDialog,
             message: {
+                event_kind: '_RovoDevDialog',
                 type: 'error',
                 text: `${error.message}${error.gitErrorCode ? `\n ${error.gitErrorCode}` : ''}`,
                 title,
-                source: 'RovoDevDialog',
                 isRetriable,
                 isProcessTerminated,
                 uid: v4(),
             },
+        });
+    }
+
+    private sendJiraItemsToView(issues: MinimalIssue<DetailedSiteInfo>[] | undefined) {
+        if (!this._webView) {
+            return;
+        }
+
+        return this._webView.postMessage({
+            type: RovoDevProviderMessageType.SetJiraWorkItems,
+            issues,
         });
     }
 
@@ -557,18 +657,26 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     public async executeNewSession(): Promise<void> {
         const webview = this._webView!;
 
-        // for these states, we shouldn't do anything
+        // new session is disabled for these process states,
+        // of if there are no folders open,
+        // or a cancellation is in progress
         if (
-            this._processState === RovoDevProcessState.Disabled ||
-            this._processState === RovoDevProcessState.Starting ||
-            this._processState === RovoDevProcessState.NotStarted
+            this.processState === 'NotStarted' ||
+            this.processState === 'Starting' ||
+            this.processState === 'Downloading' ||
+            this.processState === 'Disabled' ||
+            !workspace.workspaceFolders?.length ||
+            this._chatProvider.pendingCancellation
         ) {
             return;
         }
 
-        // special handling for when the Rovo Dev process has been terminated
-        if (this._processState === RovoDevProcessState.Terminated) {
-            this._processState = RovoDevProcessState.Starting;
+        // special handling for when the Rovo Dev process has been terminated, or failed to initialize
+        if (
+            this.processState === 'Terminated' ||
+            this.processState === 'DownloadingFailed' ||
+            this.processState === 'StartingFailed'
+        ) {
             this.refreshDebugPanel();
 
             await webview.postMessage({
@@ -576,16 +684,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             });
 
             await RovoDevProcessManager.initializeRovoDev(this._context, true);
-            return;
-        }
-
-        // new session is a no-op if there are no folders opened or if the process is not initialized
-        if (
-            this.isDisabled ||
-            !workspace.workspaceFolders?.length ||
-            !this._initialized ||
-            this._chatProvider.pendingCancellation
-        ) {
             return;
         }
 
@@ -620,7 +718,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             info = await this.rovoDevApiClient?.healthcheck();
         } catch {}
 
-        if (info) {
+        this._debugPanelMcpContext = {};
+
+        if (info && info.mcp_servers) {
             for (const mcpServer in info.mcp_servers) {
                 this._debugPanelMcpContext[mcpServer] = info.mcp_servers[mcpServer];
             }
@@ -774,16 +874,54 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
+    private async executeFilterModifiedFilesByContent(files: ModifiedFile[]) {
+        const webview = this._webView!;
+
+        if (!this._contentTracker) {
+            // If content tracker is not available, return all files (fallback behavior)
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.FilterModifiedFilesByContentComplete,
+                filteredFiles: files,
+            });
+            return;
+        }
+
+        try {
+            const filePaths = files.map((file) => file.filePath);
+            const filesWithContentChanges = await this._contentTracker.filterFilesWithChanges(filePaths);
+
+            const filteredFiles = files.filter(
+                (file) =>
+                    filesWithContentChanges.includes(file.filePath) ||
+                    file.type === modifyFileTitleMap.created.type ||
+                    file.type === modifyFileTitleMap.deleted.type,
+            );
+
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.FilterModifiedFilesByContentComplete,
+                filteredFiles: filteredFiles,
+            });
+        } catch (error) {
+            // On error, return all files
+            RovoDevLogger.debug('Error filtering files by content:', error);
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.FilterModifiedFilesByContentComplete,
+                filteredFiles: files,
+            });
+        }
+    }
+
     private async createPR(commitMessage?: string, branchName?: string): Promise<void> {
-        const prHandler = this._prHandler!;
+        const prHandler = this._prHandler;
 
         let prLink: string | undefined;
         const webview = this._webView!;
         try {
-            if (!commitMessage || !branchName) {
-                throw new Error('Commit message and branch name are required to create a PR');
+            if (!branchName || branchName.trim() === '') {
+                throw new Error('Branch name is required to create a PR');
             }
-            prLink = await prHandler.createPR(branchName, commitMessage);
+
+            prLink = await prHandler!.createPR(branchName, commitMessage);
 
             await webview.postMessage({
                 type: RovoDevProviderMessageType.CreatePRComplete,
@@ -809,11 +947,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async getCurrentBranchName(): Promise<void> {
-        const webview = this._webView!;
-        const prHandler = this._prHandler!;
+        const webview = this._webView;
+        const prHandler = this._prHandler;
 
         try {
-            const branchName = await prHandler.getCurrentBranchName();
+            if (!webview) {
+                throw new Error('Webview not initialized');
+            }
+            const branchName = await prHandler!.getCurrentBranchName();
             await webview.postMessage({
                 type: RovoDevProviderMessageType.GetCurrentBranchNameComplete,
                 data: {
@@ -877,7 +1018,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
      * @returns A promise that resolves when the context item has been added.
      */
     public async addToContext(contextItem: RovoDevContextItem): Promise<void> {
-        if (!this.isDisabled) {
+        if (this.isDisabled) {
             return;
         }
 
@@ -889,22 +1030,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     /**
-     * Sets the text in the prompt input field of the RovoDev webview
-     * @param text The text to set in the prompt input field
-     */
-    public setPromptText(text: string): void {
-        const webView = this._webView;
-        if (!webView) {
-            return;
-        }
-
-        webView.postMessage({
-            type: RovoDevProviderMessageType.SetPromptText,
-            text: text,
-        });
-    }
-
-    /**
      * Sets the text in the prompt input field with focus, using the same reliable approach as invokeRovoDevAskCommand
      * @param text The text to set in the prompt input field
      */
@@ -912,15 +1037,18 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // Focus and wait for webview to be ready to receive messages
         commands.executeCommand('atlascode.views.rovoDev.webView.focus');
 
-        const ready = await safeWaitFor({
+        const webview = await safeWaitFor({
             condition: (value) => !!value,
-            check: () => !!this._webView && this._webviewReady,
+            check: () => (this._webviewReady ? this._webView : undefined),
             timeout: 5000,
             interval: 50,
         });
 
-        if (ready) {
-            this.setPromptText(text);
+        if (webview) {
+            webview.postMessage({
+                type: RovoDevProviderMessageType.SetPromptText,
+                text,
+            });
         }
     }
 
@@ -945,73 +1073,87 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             await this.rovoDevApiClient!.acceptMcpTerms(serverName!, decision!);
         }
 
-        await this.initializeWithHealthcheck(this.rovoDevApiClient!, { timeout: 10000, timestamp: Date.now() });
+        await this.initializeWithHealthcheck(10000);
     }
 
-    /**
-     * Sends an error message to the chat history instead of showing a VS Code notification
-     * @param errorMessage The error message to display in chat
-     */
-    public sendErrorToChat(errorMessage: string) {
-        return this.processError(new Error(errorMessage));
+    private async handleProcessStateChanged(newState: RovoDevProcessState) {
+        if (newState.state === 'Downloading' || newState.state === 'Starting' || newState.state === 'Started') {
+            this._jiraItemsProvider.setJiraSite(newState.jiraSiteHostname);
+        }
+
+        const webview = this._webView!;
+
+        switch (newState.state) {
+            case 'NotStarted':
+            case 'Starting':
+                this._isProviderDisabled = false;
+                await webview.postMessage({
+                    type: RovoDevProviderMessageType.SetInitializing,
+                    isPromptPending: this._chatProvider.isPromptPending,
+                });
+                break;
+
+            case 'Downloading':
+                await webview.postMessage({
+                    type: RovoDevProviderMessageType.SetDownloadProgress,
+                    isPromptPending: this._chatProvider.isPromptPending,
+                    totalBytes: newState.totalBytes,
+                    downloadedBytes: newState.downloadedBytes,
+                });
+                break;
+
+            case 'DownloadingFailed':
+                this.signalProcessFailedToInitialize('Unable to update Rovo Dev.');
+                break;
+
+            case 'StartingFailed':
+                this.signalProcessFailedToInitialize('Unable to start Rovo Dev.');
+                break;
+
+            case 'Started':
+                await this.signalProcessStarted(newState.hostname, newState.httpPort);
+                break;
+
+            case 'Terminated':
+                this.signalProcessTerminated(newState.exitCode);
+                break;
+
+            case 'Disabled':
+                this.signalRovoDevDisabled(newState.subState, newState.entitlementDetail);
+                break;
+
+            case 'Boysenberry':
+                if (!newState.httpPort) {
+                    this.handleProcessStateChanged({ state: 'Disabled', subState: 'Other' });
+                    throw new Error('Rovo Dev port not set');
+                } else {
+                    this.signalProcessStarted(newState.hostname, newState.httpPort);
+                }
+                break;
+
+            default:
+                // @ts-expect-error ts(2339) - newState here should be 'never'
+                this.processError(`Unknown process state: ${newState.state}`);
+                break;
+        }
     }
 
-    public signalInitializing() {
-        const webView = this._webView!;
-        return webView.postMessage({
-            type: RovoDevProviderMessageType.SetInitializing,
-            isPromptPending: this._chatProvider.isPromptPending,
-        });
-    }
-
-    public signalBinaryDownloadStarted(totalBytes: number) {
-        const webView = this._webView!;
-        return webView.postMessage({
-            type: RovoDevProviderMessageType.SetDownloadProgress,
-            isPromptPending: this._chatProvider.isPromptPending,
-            totalBytes,
-            downloadedBytes: 0,
-        });
-    }
-
-    public signalBinaryDownloadProgress(downloadedBytes: number, totalBytes: number) {
-        const webView = this._webView!;
-        return webView.postMessage({
-            type: RovoDevProviderMessageType.SetDownloadProgress,
-            isPromptPending: this._chatProvider.isPromptPending,
-            downloadedBytes,
-            totalBytes,
-        });
-    }
-
-    public signalBinaryDownloadEnded() {
-        return this.signalInitializing();
-    }
-
-    public signalProcessStarted(rovoDevPort: number, timestamp?: number) {
-        this._processState = RovoDevProcessState.Starting;
-
+    private signalProcessStarted(hostname: string, rovoDevPort: number) {
         // initialize the API client
-        const rovoDevHost = process.env[rovodevInfo.envVars.host] || 'localhost';
-        const rovoDevApiClient = new RovoDevApiClient(rovoDevHost, rovoDevPort);
+        this._rovoDevApiClient = new RovoDevApiClient(hostname, rovoDevPort);
 
-        this._debugPanelContext['RovoDevAddress'] = `http://${rovoDevHost}:${rovoDevPort}`;
+        this._debugPanelContext['RovoDevAddress'] = `http://${hostname}:${rovoDevPort}`;
         this.refreshDebugPanel();
 
         // enable the 'show terminal' button only when in debugging
         setCommandContext(CommandContext.RovoDevTerminalEnabled, !this.isBoysenberry && Container.isDebugging);
 
-        return this.initializeWithHealthcheck(rovoDevApiClient, { timestamp });
+        return this.initializeWithHealthcheck();
     }
 
     // timeout defaulted to 1 minute.
     // yes, 1 minute is huge, but Rovo Dev has been acting weird with extremely delayed start-ups recently.
-    private async initializeWithHealthcheck(
-        rovoDevApiClient: RovoDevApiClient,
-        { timeout = 60000, timestamp }: { timeout?: number; timestamp?: number } = {},
-    ) {
-        this._rovoDevApiClient = rovoDevApiClient;
-
+    private async initializeWithHealthcheck(timeout = 60000) {
         const result = await safeWaitFor({
             condition: (info) => !!info && info.status !== 'unknown',
             check: () => this.executeHealthcheckInfo(),
@@ -1019,12 +1161,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             interval: 500,
             abortIf: () => !this.rovoDevApiClient,
         });
-
-        if (timestamp) {
-            this._debugPanelContext['RovoDevInitTime'] = `${new Date().getTime() - timestamp} ms`;
-        } else {
-            delete this._debugPanelContext['RovoDevInitTime'];
-        }
 
         const webView = this._webView!;
         const rovoDevClient = this._rovoDevApiClient;
@@ -1040,38 +1176,80 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // if result is undefined, it means we didn't manage to contact Rovo Dev within the allotted time
         // TODO - this scenario needs a better handling
         if (!result || result.status === 'unknown') {
-            this.signalProcessFailedToInitialize(
-                `Service at at "${this._rovoDevApiClient.baseApiUrl}" wasn't ready within ${timeout} ms`,
-            );
+            const msg = result ? 'Rovo Dev service is unhealthy/unknown.' : 'Rovo Dev service is unreachable.';
+            RovoDevLogger.error(new Error(msg));
+
+            if (this.isBoysenberry) {
+                await this.signalRovoDevDisabled('Other');
+                await this.processError(new Error(`${msg}\rTry closing and reopening the session to retry.`), {
+                    title: 'Failed to initialize Rovo Dev',
+                    skipLogError: true,
+                });
+            } else {
+                await this.signalProcessFailedToInitialize(msg);
+            }
             return;
         }
 
         // if result is unhealthy, it means Rovo Dev has failed during initialization (e.g., some MCP servers failed to start)
         // we can't continue - shutdown and set the process as terminated so the user can try again.
         if (result.status === 'unhealthy') {
-            this.signalProcessFailedToInitialize();
+            const msg = 'Rovo Dev service is unhealthy.';
+            RovoDevLogger.error(new Error(msg));
+
+            if (this.isBoysenberry) {
+                await this.signalRovoDevDisabled('Other');
+                await this.processError(
+                    new Error(`Rovo Dev service is unhealthy.\nTry closing and reopening the session to retry.`),
+                    { title: 'Failed to initialize Rovo Dev', skipLogError: true },
+                );
+            } else {
+                await this.signalProcessFailedToInitialize();
+            }
             return;
         }
 
         // this scenario is when the user is not allowed to run Rovo Dev because it's disabled by the Jira administrator
-        // TODO - handle this better: AXON-1024
         if (result.status === 'entitlement check failed') {
-            this.signalProcessFailedToInitialize(
-                'Rovo Dev is currently disabled in your Jira site.\nPlease contact your administrator to enable it.',
-            );
+            if (this.isBoysenberry) {
+                await this.signalRovoDevDisabled('Other');
+                await this.processError(
+                    new Error(`${result.detail.payload.message}\nCode: ${result.detail.payload.status}`),
+                    {
+                        title: result.detail.payload.title || 'Entitlement check failed',
+                        skipLogError: true,
+                    },
+                );
+            } else {
+                await this.signalRovoDevDisabled('EntitlementCheckFailed', result.detail);
+            }
             return;
         }
 
         // this scenario is when the user needs to accept/decline the usage of some MCP server before Rovo Dev can start
         if (result.status === 'pending user review') {
-            const serversToReview = Object.keys(result.mcp_servers).filter(
-                (x) => result.mcp_servers[x] === 'pending user review',
-            );
-            webView.postMessage({
-                type: RovoDevProviderMessageType.SetMcpAcceptanceRequired,
-                isPromptPending: this._chatProvider.isPromptPending,
-                mcpIds: serversToReview,
-            });
+            const mcp_servers = result.mcp_servers || {};
+            const serversToReview = Object.keys(mcp_servers).filter((x) => mcp_servers[x] === 'pending user review');
+
+            if (this.isBoysenberry) {
+                await this.signalRovoDevDisabled('Other');
+                await this.processError(
+                    new Error(`Cannot start third party MCP servers:${serversToReview.map((name) => `\n- ${name}`)}`),
+                    { title: 'Failed to initialize Rovo Dev', skipLogError: true },
+                );
+            } else {
+                if (serversToReview.length === 0) {
+                    await this.signalProcessFailedToInitialize(
+                        'Failed to initialize Rovo Dev, something went wrong with the MCP servers acceptance flow.',
+                    );
+                } else {
+                    await webView.postMessage({
+                        type: RovoDevProviderMessageType.SetMcpAcceptanceRequired,
+                        isPromptPending: this._chatProvider.isPromptPending,
+                        mcpIds: serversToReview,
+                    });
+                }
+            }
 
             return;
         }
@@ -1082,8 +1260,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             throw new Error(`Invalid healthcheck's response: "${result.status.toString()}".`);
         }
 
-        this._initialized = true;
-        this._processState = RovoDevProcessState.Started;
         this.beginNewSession(result.sessionId || null, false);
 
         this.refreshDebugPanel();
@@ -1093,7 +1269,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             isPromptPending: this._chatProvider.isPromptPending,
         });
 
-        await this._chatProvider.setReady(this._rovoDevApiClient);
+        await this._chatProvider.setReady(rovoDevClient);
 
         if (this.isBoysenberry) {
             // Initialize global dwell tracker now that API client exists
@@ -1106,6 +1282,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             await this._chatProvider.executeReplay();
         }
 
+        // Initialize content tracker with the API client
+        this._contentTracker?.dispose();
+        this._contentTracker = new RovoDevContentTracker(this._rovoDevApiClient);
+
         // extra sanity checks here
 
         if (!this.appInstanceId) {
@@ -1113,32 +1293,33 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
-    public async signalRovoDevDisabled(reason: RovoDevDisabledReason) {
-        if (
-            this._processState === RovoDevProcessState.Terminated ||
-            this._processState === RovoDevProcessState.Disabled
-        ) {
+    private async signalRovoDevDisabled(
+        reason: RovoDevDisabledReason,
+        detail?: RovoDevEntitlementCheckFailedDetail,
+    ): Promise<void> {
+        // skip if the current disabled priority is same or higher
+        if (RovoDevDisabledPriority[this._disabledReason] >= RovoDevDisabledPriority[reason]) {
             return;
         }
+        this._isProviderDisabled = true;
 
-        this.setRovoDevTerminated(RovoDevProcessState.Disabled);
+        this.setRovoDevTerminated();
 
         const webView = this._webView!;
         await webView.postMessage({
             type: RovoDevProviderMessageType.RovoDevDisabled,
             reason,
+            detail,
         });
     }
 
-    public async signalProcessFailedToInitialize(errorMessage?: string) {
-        if (
-            this._processState === RovoDevProcessState.Terminated ||
-            this._processState === RovoDevProcessState.Disabled
-        ) {
+    private async signalProcessFailedToInitialize(errorMessage?: string) {
+        if (this._isProviderDisabled) {
             return;
         }
+        this._isProviderDisabled = true;
 
-        this.setRovoDevTerminated(RovoDevProcessState.Terminated);
+        this.setRovoDevTerminated();
 
         const title = 'Failed to start Rovo Dev';
 
@@ -1147,18 +1328,17 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             : 'Please start a new chat session to try again.';
 
         const error = new Error(errorMessage);
-        await this.processError(error, { title, isProcessTerminated: true });
+        // we assume that the real error has been logged somehwere else, so we don't log this one
+        await this.processError(error, { title, isProcessTerminated: true, skipLogError: true });
     }
 
-    public async signalProcessTerminated(code?: number) {
-        if (
-            this._processState === RovoDevProcessState.Terminated ||
-            this._processState === RovoDevProcessState.Disabled
-        ) {
+    private async signalProcessTerminated(code?: number) {
+        if (this._isProviderDisabled) {
             return;
         }
+        this._isProviderDisabled = true;
 
-        this.setRovoDevTerminated(RovoDevProcessState.Terminated);
+        this.setRovoDevTerminated();
 
         const title = 'Agent process terminated';
         const errorMessage =
@@ -1167,22 +1347,21 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 : 'Please start a new chat session to continue.';
 
         const error = new Error(errorMessage);
-        await this.processError(error, { title, isProcessTerminated: true });
+        // we assume that the real error has been logged somehwere else, so we don't log this one
+        await this.processError(error, { title, isProcessTerminated: true, skipLogError: true });
     }
 
     // Disabled and Terminated states are almost identical, except that
     // with Terminated you can restart Rovo Dev with the [+] button,
     // and with Disabled you can't.
-    private setRovoDevTerminated(processState: RovoDevProcessState.Disabled | RovoDevProcessState.Terminated) {
-        this._processState = processState;
-
-        this._initialized = false;
-        this._webviewReady = false;
+    private setRovoDevTerminated(): Promise<void> {
         this._rovoDevApiClient = undefined;
         this._chatProvider.shutdown();
         this._telemetryProvider.shutdown();
         this._dwellTracker?.dispose();
         this._dwellTracker = undefined;
+        this._contentTracker?.dispose();
+        this._contentTracker = undefined;
 
         return this.refreshDebugPanel();
     }

@@ -55,7 +55,7 @@ describe('UpdatedFilesComponent', () => {
                 actionsEnabled={true}
             />,
         );
-        expect(screen.getByText('3 Updated files')).toBeTruthy();
+        expect(screen.getByText('3 updated files')).toBeTruthy();
     });
 
     it('renders singular file text for single file', () => {
@@ -68,7 +68,7 @@ describe('UpdatedFilesComponent', () => {
                 actionsEnabled={true}
             />,
         );
-        expect(screen.getByText('1 Updated file')).toBeTruthy();
+        expect(screen.getByText('1 updated file')).toBeTruthy();
     });
 
     it('calls onUndo with all file paths when Undo All is clicked', () => {

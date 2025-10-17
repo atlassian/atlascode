@@ -1,44 +1,45 @@
 import { render, screen } from '@testing-library/react';
 import React from 'react';
-import { forceCastTo } from 'testsutil/miscFunctions';
 
-import { DefaultMessage } from '../utils';
 import { ChatMessageItem } from './ChatMessageItem';
 
 describe('ChatMessageItem', () => {
-    const defaultMessage = forceCastTo<DefaultMessage>({
-        text: 'Test message',
-        source: 'User',
-    });
-
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
     it('renders user message correctly', () => {
-        render(<ChatMessageItem msg={defaultMessage} />);
+        const promptMessage = {
+            event_kind: 'text' as const,
+            content: 'Test message',
+            index: 0,
+        };
+
+        render(<ChatMessageItem msg={promptMessage} />);
 
         expect(screen.getByText('Test message')).toBeTruthy();
     });
 
     it('renders assistant message correctly', () => {
-        const assistantMessage = forceCastTo<DefaultMessage>({
-            ...defaultMessage,
-            source: 'RovoDev',
-        });
+        const rovoDevMessage = {
+            event_kind: 'text' as const,
+            content: 'Test message',
+            index: 0,
+        };
 
-        render(<ChatMessageItem msg={assistantMessage} />);
+        render(<ChatMessageItem msg={rovoDevMessage} />);
 
         expect(screen.getByText('Test message')).toBeTruthy();
     });
 
     it('renders markdown content correctly', () => {
-        const assistantMessage = forceCastTo<DefaultMessage>({
-            text: '**Bold text**',
-            source: 'RovoDev',
-        });
+        const rovoDevMessage = {
+            event_kind: 'text' as const,
+            content: '**Bold text**',
+            index: 0,
+        };
 
-        render(<ChatMessageItem msg={assistantMessage} />);
+        render(<ChatMessageItem msg={rovoDevMessage} />);
         expect(screen.getByText('Bold text')).toBeTruthy();
     });
 });

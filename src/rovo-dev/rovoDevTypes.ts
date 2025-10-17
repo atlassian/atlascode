@@ -1,3 +1,6 @@
+import { ToolPermissionChoice } from './rovoDevApiClientInterfaces';
+import { RovoDevEntitlementCheckFailedDetail } from './rovoDevWebviewProviderMessages';
+
 export type RovoDevContextFileInfo = {
     name: string;
     absolutePath: string;
@@ -68,13 +71,23 @@ export interface InitializingMcpAcceptanceState extends AbstractInitializingStat
 
 export type InitializingState = InitializingOtherState | InitializingDownladingState | InitializingMcpAcceptanceState;
 
+export interface BasicDisabledState {
+    state: 'Disabled';
+    subState: 'NeedAuth' | 'NoWorkspaceOpen' | 'UnsupportedArch' | 'Other';
+}
+
+export interface EntitlementCheckDisabledState {
+    state: 'Disabled';
+    subState: 'EntitlementCheckFailed';
+    detail: RovoDevEntitlementCheckFailedDetail;
+}
+
+export type DisabledState = BasicDisabledState | EntitlementCheckDisabledState;
+
 export interface BasicState {
     state: 'WaitingForPrompt' | 'GeneratingResponse' | 'CancellingResponse' | 'ExecutingPlan' | 'ProcessTerminated';
 }
 
-export interface DisabledState {
-    state: 'Disabled';
-    subState: 'NeedAuth' | 'NoWorkspaceOpen' | 'Other';
-}
-
 export type State = BasicState | InitializingState | DisabledState;
+
+export type ToolPermissionDialogChoice = ToolPermissionChoice | 'allowAll';

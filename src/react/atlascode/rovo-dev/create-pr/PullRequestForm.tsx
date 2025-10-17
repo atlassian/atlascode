@@ -6,7 +6,7 @@ import { ConnectionTimeout } from 'src/util/time';
 import { useMessagingApi } from '../../messagingApi';
 import { MarkedDown } from '../common/common';
 import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
-import { DefaultMessage } from '../utils';
+import { PullRequestMessage } from '../utils';
 
 const PullRequestButton: React.FC<{
     onClick: (event: React.MouseEvent<HTMLButtonElement>) => Promise<void>;
@@ -29,7 +29,7 @@ interface PullRequestFormProps {
     messagingApi: ReturnType<
         typeof useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>
     >;
-    onPullRequestCreated: (url: string) => void;
+    onPullRequestCreated: (url: string, branchName: string) => void;
     isFormVisible?: boolean;
     setFormVisible?: (visible: boolean) => void;
 }
@@ -69,7 +69,7 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
         const message = formData.get('pr-commit-message') as string | null;
         const branchName = formData.get('pr-branch-name') as string | null;
 
-        if (!message || !branchName) {
+        if (!branchName) {
             return;
         }
 
@@ -78,7 +78,7 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
         const response = await postMessagePromise(
             {
                 type: RovoDevViewResponseType.CreatePR,
-                payload: { branchName, commitMessage: message },
+                payload: { branchName, commitMessage: message?.trim() || undefined },
             },
             RovoDevProviderMessageType.CreatePRComplete,
             ConnectionTimeout,
@@ -89,7 +89,7 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
             console.error(`Error creating PR: ${response.data.error}`);
             return;
         }
-        onPullRequestCreated(response.data.url || '');
+        onPullRequestCreated(response.data.url || '', branchName);
     };
 
     return (
@@ -103,13 +103,18 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
                         </div>
                         <div className="form-fields">
                             <div className="form-field">
-                                <label htmlFor="pr-commit-message">Commit message</label>
+                                <label htmlFor="pr-commit-message">
+                                    Commit message
+                                    <span style={{ fontSize: '0.85em', opacity: 0.7 }}>
+                                        {' '}
+                                        (optional if already committed)
+                                    </span>
+                                </label>
                                 <input
                                     type="text"
                                     id="pr-commit-message"
                                     name="pr-commit-message"
                                     placeholder="Enter a commit message"
-                                    required
                                 />
                             </div>
                             <div className="form-field">
@@ -146,10 +151,13 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
     );
 };
 
-export const PullRequestChatItem: React.FC<{ msg: DefaultMessage }> = ({ msg }) => {
+export const PullRequestChatItem: React.FC<{ msg: PullRequestMessage; onLinkClick: (href: string) => void }> = ({
+    msg,
+    onLinkClick,
+}) => {
     const content = (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <MarkedDown value={msg.text || ''} />
+            <MarkedDown value={msg.text || ''} onLinkClick={onLinkClick} />
         </div>
     );
     return (

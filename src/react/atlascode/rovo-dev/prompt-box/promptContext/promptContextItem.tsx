@@ -1,6 +1,8 @@
 import React from 'react';
 import { RovoDevContextItem } from 'src/rovo-dev/rovoDevTypes';
 
+import { OpenFileFunc } from '../../common/common';
+
 const isHighContrastTheme = (): boolean => {
     return (
         document.body.classList.contains('vscode-high-contrast') ||
@@ -75,9 +77,13 @@ export type PromptContextItemRemoveProps = {
     onRemove?: () => void;
 };
 
+export type PromptContextItemOpenFileProps = {
+    openFile?: OpenFileFunc;
+};
+
 export const PromptContextItem: React.FC<
-    RovoDevContextItem & PromptContextItemToggleProps & PromptContextItemRemoveProps
-> = ({ file: openFile, selection, enabled, onToggle, onRemove }) => {
+    RovoDevContextItem & PromptContextItemToggleProps & PromptContextItemRemoveProps & PromptContextItemOpenFileProps
+> = ({ file: openFile, selection, enabled, onToggle, onRemove, openFile: openFileFunc }) => {
     // Calculate line numbers if selection is present
     let lineInfo: string | null = null;
     if (selection) {
@@ -101,7 +107,16 @@ export const PromptContextItem: React.FC<
                         whiteSpace: 'nowrap',
                         maxWidth: 110,
                         marginRight: 4,
+                        cursor: openFileFunc ? 'pointer' : 'default',
                     }}
+                    onClick={() => {
+                        if (openFileFunc && selection) {
+                            openFileFunc(openFile.absolutePath, false, [selection.start + 1, selection.end + 1]);
+                        } else if (openFileFunc) {
+                            openFileFunc(openFile.absolutePath);
+                        }
+                    }}
+                    title={openFile.absolutePath}
                 >
                     {openFile.name}
                 </span>

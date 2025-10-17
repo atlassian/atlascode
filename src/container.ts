@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 
 import { featureFlagClientInitializedEvent } from './analytics';
 import { AnalyticsClient, analyticsClient } from './analytics-node-client/src/client.min.js';
-import { Product, ProductJira } from './atlclients/authInfo';
+import { Product } from './atlclients/authInfo';
 import { CredentialManager } from './atlclients/authStore';
 import { ClientManager } from './atlclients/clientManager';
 import { LoginManager } from './atlclients/loginManager';
@@ -35,7 +35,6 @@ import OnboardingProvider from './onboarding/onboardingProvider';
 import { registerQuickAuthCommand } from './onboarding/quickFlow';
 import { Pipeline } from './pipelines/model';
 import { RovoDevCodeActionProvider } from './rovo-dev/rovoDevCodeActionProvider';
-import { RovoDevDecorator } from './rovo-dev/rovoDevDecorator';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { SiteManager } from './siteManager';
@@ -70,7 +69,6 @@ import { VSCStartWorkWebviewControllerFactory } from './webview/startwork/vscSta
 import { CreateIssueProblemsWebview } from './webviews/createIssueProblemsWebview';
 import { CreateIssueWebview } from './webviews/createIssueWebview';
 import { JiraIssueViewManager } from './webviews/jiraIssueViewManager';
-import { StartWorkOnIssueWebview } from './webviews/startWorkOnIssueWebview';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
@@ -80,6 +78,10 @@ export class Container {
     private static _commonMessageHandler: CommonActionMessageHandler;
     private static _bitbucketHelper: CheckoutHelper;
     private static _assignedWorkItemsView: AssignedWorkItemsViewProvider;
+    private static _helpExplorer: HelpExplorer;
+
+    // Container for all rovodev components that might get toggled by feature flags
+    private static _rovodevDisposable?: vscode.Disposable = undefined;
 
     static async initialize(context: ExtensionContext, version: string) {
         canFetchInternalUrl().then((success) => {
@@ -120,7 +122,6 @@ export class Container {
             (this._createIssueProblemsWebview = new CreateIssueProblemsWebview(context.extensionPath)),
         );
         context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
-        context.subscriptions.push(new StartWorkOnIssueWebview(context.extensionPath));
         context.subscriptions.push(new IssueHoverProviderManager());
         context.subscriptions.push(new AuthStatusBar());
         context.subscriptions.push((this._jqlManager = new JQLManager()));
@@ -194,7 +195,8 @@ export class Container {
 
         this._loginManager = new LoginManager(this._credentialManager, this._siteManager, this._analyticsClient);
         this._bitbucketHelper = new BitbucketCheckoutHelper(context.globalState);
-        context.subscriptions.push(new HelpExplorer());
+        this._helpExplorer = new HelpExplorer();
+        context.subscriptions.push(this._helpExplorer);
 
         this._featureFlagClient = FeatureFlagClient.getInstance();
 
@@ -239,8 +241,7 @@ export class Container {
             // refresh Rovo Dev when Jira gets enabled or disabled
             context.subscriptions.push(
                 configuration.onDidChange(async (e) => {
-                    if (configuration.changed(e, 'jira.enabled')) {
-                        await this.updateFeatureFlagTenantId();
+                    if (configuration.changed(e, 'jira.enabled') || configuration.changed(e, 'rovodev.enabled')) {
                         await this.refreshRovoDev(context);
                     }
                 }, this),
@@ -258,13 +259,7 @@ export class Container {
 
         this._onboardingProvider = new OnboardingProvider();
 
-        if (
-            process.env.ROVODEV_BBY ||
-            (this.config.jira.enabled && this.featureFlagClient.checkGate(Features.RovoDevEnabled))
-        ) {
-            this._isRovoDevEnabled = true;
-            await this.enableRovoDev(context);
-        }
+        this.refreshRovoDev(context);
     }
 
     static async updateFeatureFlagTenantId(): Promise<boolean> {
@@ -294,19 +289,25 @@ export class Container {
     }
 
     private static async refreshRovoDev(context: ExtensionContext) {
-        if (this.config.jira.enabled && (await this.isAtlassianUser(ProductJira))) {
-            this._isRovoDevEnabled = true;
+        const shouldEnableRovoDev = (this.config.rovodev.enabled && this.config.jira.enabled) || this.isBoysenberryMode;
+
+        if (shouldEnableRovoDev) {
             await this.enableRovoDev(context);
         } else {
-            this._isRovoDevEnabled = false;
             await this.disableRovoDev();
         }
     }
 
     private static async enableRovoDev(context: ExtensionContext) {
+        this._isRovoDevEnabled = true;
+
         if (this._rovodevDisposable) {
+            if (this.isBoysenberryMode) {
+                return;
+            }
+
             try {
-                // Already enabled
+                // The process should be already running, so we signal that the credentials may have changed
                 await RovoDevProcessManager.refreshRovoDevCredentials(context);
             } catch (error) {
                 RovoDevLogger.error(error, 'Refreshing Rovo Dev credentials');
@@ -317,8 +318,12 @@ export class Container {
                 // this enables the Rovo Dev activity bar
                 await setCommandContext(CommandContext.RovoDevEnabled, true);
 
+                // only in Boysenberry, we auto-focus the Rovo Dev view
+                if (this.isBoysenberryMode) {
+                    await vscode.commands.executeCommand('atlascode.views.rovoDev.webView.focus');
+                }
+
                 this._rovodevDisposable = vscode.Disposable.from(
-                    new RovoDevDecorator(),
                     languages.registerCodeActionsProvider({ scheme: 'file' }, new RovoDevCodeActionProvider(), {
                         providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
                     }),
@@ -326,6 +331,14 @@ export class Container {
                 );
 
                 context.subscriptions.push(this._rovodevDisposable);
+
+                if (!this.isBoysenberryMode) {
+                    // Update help explorer to show Rovo Dev content
+                    this._helpExplorer.refresh();
+
+                    // Start the Rovo Dev process
+                    await RovoDevProcessManager.initializeRovoDev(context);
+                }
             } catch (error) {
                 RovoDevLogger.error(error, 'Enabling Rovo Dev');
             }
@@ -341,10 +354,20 @@ export class Container {
     }
 
     private static async disableRovoDev() {
+        if (this.isBoysenberryMode) {
+            RovoDevLogger.error(new Error('disableRovoDev called in Boysenberry mode'));
+            return;
+        }
+
+        this._isRovoDevEnabled = false;
+
         if (!this._rovodevDisposable) {
             // Already disabled
             return;
         }
+
+        // Update help explorer to hide Rovo Dev content
+        this._helpExplorer.refresh();
 
         try {
             await setCommandContext(CommandContext.RovoDevEnabled, false);
@@ -420,7 +443,7 @@ export class Container {
         }, 2000);
     }
 
-    static get machineId() {
+    public static get machineId() {
         return env.machineId;
     }
 
@@ -442,11 +465,12 @@ export class Container {
             } catch {}
         }
 
-        return this._isDebugging;
+        return !!this._isDebugging;
     }
 
-    // Container for all rovodev components that might get toggled by feature flags
-    private static _rovodevDisposable?: vscode.Disposable = undefined;
+    public static get isBoysenberryMode() {
+        return !!process.env.ROVODEV_BBY;
+    }
 
     public static get configTarget(): ConfigTarget {
         return this._context.globalState.get<ConfigTarget>(ConfigTargetKey, ConfigTarget.User);
@@ -481,6 +505,10 @@ export class Container {
     private static _isRovoDevEnabled: boolean;
     public static get isRovoDevEnabled() {
         return this._isRovoDevEnabled;
+    }
+
+    public static get isRovoDevActive(): boolean {
+        return this._isRovoDevEnabled && this._rovodevWebviewProvider && !this._rovodevWebviewProvider.isDisabled;
     }
 
     private static _version: string;

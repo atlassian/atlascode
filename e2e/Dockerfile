@@ -27,8 +27,11 @@ RUN cat <<EOF > /usr/bin/entrypoint.sh && chmod +x /usr/bin/entrypoint.sh
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Setting up git configuration
-if [[ "\${TARGET}" == "bitbucket-cloud" || "\${TARGET}" == "bitbucket-dc" ]]; then
+# Set default target if not defined
+TARGET=\${TARGET:-all}
+
+# Setting up git configuration for Bitbucket tests
+if [[ "\${TARGET}" == "bitbucket-cloud" || "\${TARGET}" == "bitbucket-dc" || "\${TARGET}" == "all" ]]; then
     echo ">> Running mock repository setup"
     chmod +x ./e2e/setup-mock-repository.sh
     ./e2e/setup-mock-repository.sh
@@ -51,11 +54,17 @@ if [[ -z "\${ONLYSERVER:-}" ]]; then
     
     echo ">> Running e2e tests"
     
-    SUPPORTED_TARGETS=("jira-cloud" "jira-dc" "bitbucket-cloud" "bitbucket-dc")
+    SUPPORTED_TARGETS=("jira-cloud" "jira-dc" "bitbucket-cloud" "bitbucket-dc" "all")
     
     if [[ " \${SUPPORTED_TARGETS[*]} " =~ " \${TARGET} " ]]; then
-        echo ">> Running \${TARGET} tests"
-        npx playwright test --project=\${TARGET} --workers=1
+        if [[ "\${TARGET}" == "all" ]]; then
+            echo ">> WARNING: TARGET=all is not expected in CI - a specific target should be provided"
+            echo ">> Running all tests as fallback"
+            npx playwright test --workers=1
+        else
+            echo ">> Running \${TARGET} tests"
+            npx playwright test --project=\${TARGET} --workers=1
+        fi
     else
         echo ">> Unsupported target: \${TARGET}. Running all tests"
         npx playwright test --workers=1

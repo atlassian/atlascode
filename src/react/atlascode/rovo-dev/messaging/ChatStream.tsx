@@ -1,27 +1,24 @@
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
-import { State } from 'src/rovo-dev/rovoDevTypes';
+import { State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 import { ConnectionTimeout } from 'src/util/time';
 
+import { DetailedSiteInfo } from '../../../../atlclients/authInfo';
 import { useMessagingApi } from '../../messagingApi';
 import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
-import { PullRequestChatItem, PullRequestForm } from '../create-pr/PullRequestForm';
+import { PullRequestForm } from '../create-pr/PullRequestForm';
 import { FeedbackForm, FeedbackType } from '../feedback-form/FeedbackForm';
-import { RovoDevLanding } from '../rovoDevLanding';
-import {
-    McpConsentChoice,
-    RovoDevViewResponse,
-    RovoDevViewResponseType,
-    ToolPermissionChoice,
-} from '../rovoDevViewMessages';
+import { RovoDevLanding } from '../landing-page/RovoDevLanding';
+import { McpConsentChoice, RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import { CodePlanButton } from '../technical-plan/CodePlanButton';
-import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolCallItem } from '../tools/ToolCallItem';
-import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
-import { DefaultMessage, DialogMessage, parseToolReturnMessage, Response, scrollToEnd } from '../utils';
-import { ChatMessageItem } from './ChatMessageItem';
-import { MessageDrawer } from './MessageDrawer';
+import { DialogMessage, PullRequestMessage, Response, scrollToEnd } from '../utils';
+import { ChatStreamMessageRenderer } from './ChatStreamMessageRenderer';
+import { DropdownButton } from './dropdown-button/DropdownButton';
+
+const IsBoysenberry = process.env.ROVODEV_BBY === 'true';
 
 interface ChatStreamProps {
     chatHistory: Response[];
@@ -39,7 +36,7 @@ interface ChatStreamProps {
     deepPlanCreated: boolean;
     executeCodePlan: () => void;
     currentState: State;
-    onChangesGitPushed: (msg: DefaultMessage, pullRequestCreated: boolean) => void;
+    onChangesGitPushed: (msg: PullRequestMessage, pullRequestCreated: boolean) => void;
     onCollapsiblePanelExpanded: () => void;
     feedbackVisible: boolean;
     setFeedbackVisible: (visible: boolean) => void;
@@ -47,7 +44,10 @@ interface ChatStreamProps {
     onLoginClick: () => void;
     onOpenFolder: () => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
-    onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionChoice) => void;
+    setPromptText: (context: string) => void;
+    jiraWorkItems: MinimalIssue<DetailedSiteInfo>[] | undefined;
+    onJiraItemClick: (issue: MinimalIssue<DetailedSiteInfo>) => void;
+    onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionDialogChoice | 'enableYolo') => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -67,6 +67,9 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     onLoginClick,
     onOpenFolder,
     onMcpChoice,
+    setPromptText,
+    jiraWorkItems,
+    onJiraItemClick,
     onToolPermissionChoice,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
@@ -86,6 +89,12 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         setHasChangesInGit(response.hasChanges);
     }, [messagingApi]);
 
+    const onLinkClick = React.useCallback(
+        (href: string) => {
+            messagingApi.postMessage({ type: RovoDevViewResponseType.OpenExternalLink, href });
+        },
+        [messagingApi],
+    );
     const [autoScrollEnabled, setAutoScrollEnabled] = React.useState(true);
 
     // Helper to perform auto-scroll when enabled
@@ -162,7 +171,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         if (chatHistory.length > prevChatHistoryLengthRef.current) {
             const newMessage = chatHistory[chatHistory.length - 1];
             // Check if the new message is a user message (not an array of thinking messages)
-            if (!Array.isArray(newMessage) && newMessage?.source === 'User') {
+            if (!Array.isArray(newMessage) && newMessage?.event_kind === '_RovoDevUserPrompt') {
                 setAutoScrollEnabled(true);
                 // Clear scroll events to reset direction tracking when user sends a message
                 scrollEvents = [];
@@ -191,16 +200,18 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     ]);
 
     // Other state management effect
-    React.useEffect(() => {
-        if (process.env.ROVODEV_BBY && currentState.state === 'WaitingForPrompt') {
-            const canCreatePR = chatHistory.length > 0;
-            setCanCreatePR(canCreatePR);
-            if (canCreatePR) {
-                // Only check git changes if there's something in the chat
-                checkGitChanges();
+    if (IsBoysenberry) {
+        React.useEffect(() => {
+            if (currentState.state === 'WaitingForPrompt') {
+                const canCreatePR = chatHistory.length > 0;
+                setCanCreatePR(canCreatePR);
+                if (canCreatePR) {
+                    // Only check git changes if there's something in the chat
+                    checkGitChanges();
+                }
             }
-        }
-    }, [currentState, chatHistory, isFormVisible, checkGitChanges]);
+        }, [currentState, chatHistory, isFormVisible, checkGitChanges]);
+    }
 
     const handleCopyResponse = React.useCallback((text: string) => {
         if (!navigator.clipboard) {
@@ -230,71 +241,30 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
-            <RovoDevLanding
-                currentState={currentState}
-                onLoginClick={onLoginClick}
-                onOpenFolder={onOpenFolder}
-                onMcpChoice={onMcpChoice}
-            />
-            {!isChatHistoryDisabled &&
-                chatHistory &&
-                chatHistory.map((block, idx) => {
-                    const drawerOpen =
-                        idx === chatHistory.findLastIndex((msg) => Array.isArray(msg)) &&
-                        currentState.state !== 'WaitingForPrompt';
-
-                    if (block) {
-                        if (Array.isArray(block)) {
-                            return (
-                                <MessageDrawer
-                                    messages={block}
-                                    opened={drawerOpen}
-                                    renderProps={renderProps}
-                                    onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
-                                />
-                            );
-                        } else if (block.source === 'User' || block.source === 'RovoDev') {
-                            return (
-                                <ChatMessageItem
-                                    msg={block}
-                                    enableActions={
-                                        block.source === 'RovoDev' && currentState.state === 'WaitingForPrompt'
-                                    }
-                                    onCopy={handleCopyResponse}
-                                    onFeedback={handleFeedbackTrigger}
-                                />
-                            );
-                        } else if (block.source === 'ToolReturn') {
-                            const parsedMessages = parseToolReturnMessage(block);
-
-                            return parsedMessages.map((message) => {
-                                if (message.technicalPlan) {
-                                    return (
-                                        <TechnicalPlanComponent
-                                            content={message.technicalPlan}
-                                            openFile={renderProps.openFile}
-                                            checkFileExists={renderProps.checkFileExists}
-                                        />
-                                    );
-                                }
-                                return <ToolReturnParsedItem msg={message} openFile={renderProps.openFile} />;
-                            });
-                        } else if (block.source === 'RovoDevDialog') {
-                            return (
-                                <DialogMessageItem
-                                    msg={block}
-                                    isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
-                                    retryAfterError={renderProps.retryPromptAfterError}
-                                    onToolPermissionChoice={onToolPermissionChoice}
-                                />
-                            );
-                        } else if (block.source === 'PullRequest') {
-                            return <PullRequestChatItem msg={block} />;
-                        }
-                    }
-
-                    return null;
-                })}
+            {!IsBoysenberry && (
+                <RovoDevLanding
+                    currentState={currentState}
+                    isHistoryEmpty={chatHistory.length === 0}
+                    onLoginClick={onLoginClick}
+                    onOpenFolder={onOpenFolder}
+                    onMcpChoice={onMcpChoice}
+                    setPromptText={setPromptText}
+                    jiraWorkItems={jiraWorkItems}
+                    onJiraItemClick={onJiraItemClick}
+                />
+            )}
+            {!isChatHistoryDisabled && (
+                <ChatStreamMessageRenderer
+                    chatHistory={chatHistory}
+                    currentState={currentState}
+                    handleCopyResponse={handleCopyResponse}
+                    handleFeedbackTrigger={handleFeedbackTrigger}
+                    onToolPermissionChoice={onToolPermissionChoice}
+                    onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
+                    renderProps={renderProps}
+                    onLinkClick={onLinkClick}
+                />
+            )}
 
             {!isChatHistoryDisabled && shouldShowToolCall && pendingToolCall && (
                 <div style={{ marginBottom: '16px' }}>
@@ -302,15 +272,36 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                 </div>
             )}
 
-            {!isChatHistoryDisabled &&
-                modalDialogs.map((dialog) => (
-                    <DialogMessageItem
-                        msg={dialog}
-                        isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
-                        retryAfterError={renderProps.retryPromptAfterError}
-                        onToolPermissionChoice={onToolPermissionChoice}
-                    />
-                ))}
+            {!isChatHistoryDisabled && (
+                <div>
+                    {modalDialogs.map((dialog) => (
+                        <DialogMessageItem
+                            msg={dialog}
+                            isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
+                            retryAfterError={renderProps.retryPromptAfterError}
+                            onToolPermissionChoice={onToolPermissionChoice}
+                        />
+                    ))}
+                    {modalDialogs.length > 1 && modalDialogs.every((d) => d.type === 'toolPermissionRequest') && (
+                        <DropdownButton
+                            buttonItem={{
+                                label: 'Allow all',
+                                onSelect: () => onToolPermissionChoice(modalDialogs[0].toolCallId, 'allowAll'),
+                            }}
+                            items={[
+                                {
+                                    label: 'Allow all',
+                                    onSelect: () => onToolPermissionChoice(modalDialogs[0].toolCallId, 'allowAll'),
+                                },
+                                {
+                                    label: 'Enable YOLO mode',
+                                    onSelect: () => onToolPermissionChoice(modalDialogs[0].toolCallId, 'enableYolo'),
+                                },
+                            ]}
+                        />
+                    )}
+                </div>
+            )}
 
             {!isChatHistoryDisabled && currentState.state === 'WaitingForPrompt' && (
                 <FollowUpActionFooter>
@@ -322,17 +313,17 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                 setIsFormVisible(false);
                             }}
                             messagingApi={messagingApi}
-                            onPullRequestCreated={(url) => {
+                            onPullRequestCreated={(url, branchName) => {
                                 setCanCreatePR(false);
                                 setIsFormVisible(false);
 
                                 const pullRequestCreated = !!url;
                                 onChangesGitPushed(
                                     {
-                                        source: 'PullRequest',
+                                        event_kind: '_RovoDevPullRequest',
                                         text: url
-                                            ? `Pull request ready: ${url}`
-                                            : 'Successfully pushed changes to the remote repository.',
+                                            ? `Successfully pushed changes to the remote repository with branch "${branchName}". Click to create PR: ${url}`
+                                            : `Successfully pushed changes to the remote repository with branch "${branchName}".`,
                                     },
                                     pullRequestCreated,
                                 );

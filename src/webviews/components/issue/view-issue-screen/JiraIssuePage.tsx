@@ -1,4 +1,3 @@
-import { LoadingButton } from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Tooltip from '@atlaskit/tooltip';
 import WidthDetector from '@atlaskit/width-detector';
@@ -16,7 +15,6 @@ import { EditIssueData, emptyEditIssueData, isIssueCreated } from '../../../../i
 import { LegacyPMFData } from '../../../../ipc/messaging';
 import { AtlascodeErrorBoundary } from '../../../../react/atlascode/common/ErrorBoundary';
 import { readFilesContentAsync } from '../../../../util/files';
-import { createRovoDevTemplate } from '../../../../util/rovoDevTemplate';
 import { ConnectionTimeout } from '../../../../util/time';
 import { AtlLoader } from '../../AtlLoader';
 import ErrorBanner from '../../ErrorBanner';
@@ -28,9 +26,12 @@ import {
     CommonEditorPageEmit,
     CommonEditorViewState,
     emptyCommonEditorState,
+    MentionInfo,
 } from '../AbstractIssueEditorPage';
+import { AtlascodeMentionProvider } from '../common/AtlaskitEditor/AtlascodeMentionsProvider';
 import NavItem from '../NavItem';
 import PullRequests from '../PullRequests';
+import { EditorStateProvider } from './EditorStateContext';
 import { IssueCommentComponent } from './mainpanel/IssueCommentComponent';
 import IssueMainPanel from './mainpanel/IssueMainPanel';
 import { IssueSidebarButtonGroup } from './sidebar/IssueSidebarButtonGroup';
@@ -64,10 +65,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     private advancedSidebarFields: FieldUI[] = [];
     private advancedMainFields: FieldUI[] = [];
     private attachingInProgress = false;
+    private mentionProvider: AtlascodeMentionProvider;
 
     constructor(props: any) {
         super(props);
         this.state = emptyState;
+        this.mentionProvider = this.getMentionProvider();
     }
 
     // TODO: proper error handling in webviews :'(
@@ -169,23 +172,15 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
     };
 
-    handleSetRovoDevPrompt = () => {
-        const promptText = createRovoDevTemplate(this.state.key, this.state.siteDetails);
-
-        this.postMessage({
-            action: 'setRovoDevPromptText',
-            text: promptText,
+    fetchAndTransformUsers = async (input: string, accountId?: string): Promise<MentionInfo[]> =>
+        (await this.fetchUsers(input, accountId)).map((user) => {
+            return {
+                displayName: user.displayName,
+                avatarUrl: user.avatarUrls?.['48x48'],
+                mention: this.state.siteDetails.isCloud ? `[~accountid:${user.accountId}]` : `[~${user.name}]`,
+                accountId: user.accountId,
+            };
         });
-    };
-
-    fetchUsers = (input: string) => {
-        const apiVersion = this.getApiVersion();
-        const userSearchUrl = this.state.siteDetails.isCloud
-            ? `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?query=`
-            : `${this.state.siteDetails.baseApiUrl}/api/${apiVersion}/user/search?username=`;
-
-        return this.loadSelectOptions(input, userSearchUrl);
-    };
 
     protected override handleInlineEdit = async (field: FieldUI, newValue: any) => {
         switch (field.uiType) {
@@ -630,18 +625,11 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         await this.loadIssueOptions(this.state.fields['issuelinks'] as SelectFieldUI, input)
                     }
                     onDelete={this.handleDeleteIssuelink}
-                    fetchUsers={async (input: string) =>
-                        (await this.fetchUsers(input)).map((user) => ({
-                            displayName: user.displayName,
-                            avatarUrl: user.avatarUrls?.['48x48'],
-                            mention: this.state.siteDetails.isCloud
-                                ? `[~accountid:${user.accountId}]`
-                                : `[~${user.name}]`,
-                        }))
-                    }
+                    fetchUsers={this.fetchAndTransformUsers}
                     fetchImage={(img) => this.fetchImage(img)}
                     isAtlaskitEditorEnabled={this.state.isAtlaskitEditorEnabled}
                     onIssueUpdate={this.handleChildIssueUpdate}
+                    mentionProvider={this.mentionProvider}
                 />
                 {this.advancedMain()}
                 {this.state.fields['comment'] && (
@@ -653,15 +641,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             siteDetails={this.state.siteDetails}
                             onCreate={this.handleCreateComment}
                             onSave={this.handleUpdateComment}
-                            fetchUsers={async (input: string) =>
-                                (await this.fetchUsers(input)).map((user) => ({
-                                    displayName: user.displayName,
-                                    avatarUrl: user.avatarUrls?.['48x48'],
-                                    mention: this.state.siteDetails.isCloud
-                                        ? `[~accountid:${user.accountId}]`
-                                        : `[~${user.name}]`,
-                                }))
-                            }
+                            fetchUsers={this.fetchAndTransformUsers}
                             fetchImage={(img) => this.fetchImage(img)}
                             onDelete={this.handleDeleteComment}
                             isServiceDeskProject={
@@ -673,6 +653,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             onCommentTextChange={this.handleCommentTextChange}
                             isEditingComment={this.state.isEditingComment}
                             onEditingCommentChange={this.handleCommentEditingChange}
+                            mentionProvider={this.mentionProvider}
                         />
                     </div>
                 )}
@@ -765,20 +746,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     handleStatusChange={this.handleStatusChange}
                     handleStartWork={this.handleStartWorkOnIssue}
                 />
-                {this.state.isRovoDevEnabled && (
-                    <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '4px' }}>
-                        <Tooltip content="Rovo Dev is an AI assistant that will take the issue details and generate code on it">
-                            <LoadingButton
-                                className="ac-button"
-                                onClick={this.handleSetRovoDevPrompt}
-                                isLoading={false}
-                            >
-                                Start with Rovo Dev!
-                            </LoadingButton>
-                        </Tooltip>
-                    </Box>
-                )}
-
                 <IssueSidebarCollapsible label="Details" items={commonItems} defaultOpen />
                 <IssueSidebarCollapsible label="More fields" items={advancedItems} />
             </Box>
@@ -838,63 +805,65 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
         return (
             <Page>
-                <AtlascodeErrorBoundary
-                    context={{ view: AnalyticsView.JiraIssuePage }}
-                    postMessageFunc={(e) => {
-                        this.postMessage(e); /* just {this.postMessage} doesn't work */
-                    }}
-                >
-                    <WidthDetector>
-                        {(width?: number) => {
-                            if (width && width < 800) {
+                <EditorStateProvider isAtlaskitEditorEnabled={this.state.isAtlaskitEditorEnabled}>
+                    <AtlascodeErrorBoundary
+                        context={{ view: AnalyticsView.JiraIssuePage }}
+                        postMessageFunc={(e) => {
+                            this.postMessage(e); /* just {this.postMessage} doesn't work */
+                        }}
+                    >
+                        <WidthDetector>
+                            {(width?: number) => {
+                                if (width && width < 800) {
+                                    return (
+                                        <div style={{ margin: '20px 16px 0px 16px' }}>
+                                            {this.getMainPanelNavMarkup()}
+                                            <h1>
+                                                {this.getInputMarkup(
+                                                    this.state.fields['summary'],
+                                                    true,
+                                                    this.state.fieldValues['issuetype'],
+                                                    'summary',
+                                                )}
+                                            </h1>
+                                            {this.commonSidebar()}
+                                            {this.getMainPanelBodyMarkup()}
+                                            {this.createdUpdatedDates()}
+                                        </div>
+                                    );
+                                }
                                 return (
-                                    <div style={{ margin: '20px 16px 0px 16px' }}>
-                                        {this.getMainPanelNavMarkup()}
-                                        <h1>
-                                            {this.getInputMarkup(
-                                                this.state.fields['summary'],
-                                                true,
-                                                this.state.fieldValues['issuetype'],
-                                                'summary',
-                                            )}
-                                        </h1>
-                                        {this.commonSidebar()}
-                                        {this.getMainPanelBodyMarkup()}
-                                        {this.createdUpdatedDates()}
+                                    <div style={{ maxWidth: '1200px', margin: '20px auto 0 auto' }}>
+                                        <Grid layout="fluid">
+                                            <GridColumn>
+                                                {this.getMainPanelNavMarkup()}
+                                                <div style={{ paddingTop: '8px' }}>
+                                                    <Grid layout="fluid">
+                                                        <GridColumn medium={8}>
+                                                            <h1 data-testid="issue.title">
+                                                                {this.getInputMarkup(
+                                                                    this.state.fields['summary'],
+                                                                    true,
+                                                                    this.state.fieldValues['issuetype'],
+                                                                    'summary',
+                                                                )}
+                                                            </h1>
+                                                            {this.getMainPanelBodyMarkup()}
+                                                        </GridColumn>
+                                                        <GridColumn medium={4}>
+                                                            {this.commonSidebar()}
+                                                            {this.createdUpdatedDates()}
+                                                        </GridColumn>
+                                                    </Grid>
+                                                </div>
+                                            </GridColumn>
+                                        </Grid>
                                     </div>
                                 );
-                            }
-                            return (
-                                <div style={{ maxWidth: '1200px', margin: '20px auto 0 auto' }}>
-                                    <Grid layout="fluid">
-                                        <GridColumn>
-                                            {this.getMainPanelNavMarkup()}
-                                            <div style={{ paddingTop: '8px' }}>
-                                                <Grid layout="fluid">
-                                                    <GridColumn medium={8}>
-                                                        <h1 data-testid="issue.title">
-                                                            {this.getInputMarkup(
-                                                                this.state.fields['summary'],
-                                                                true,
-                                                                this.state.fieldValues['issuetype'],
-                                                                'summary',
-                                                            )}
-                                                        </h1>
-                                                        {this.getMainPanelBodyMarkup()}
-                                                    </GridColumn>
-                                                    <GridColumn medium={4}>
-                                                        {this.commonSidebar()}
-                                                        {this.createdUpdatedDates()}
-                                                    </GridColumn>
-                                                </Grid>
-                                            </div>
-                                        </GridColumn>
-                                    </Grid>
-                                </div>
-                            );
-                        }}
-                    </WidthDetector>
-                </AtlascodeErrorBoundary>
+                            }}
+                        </WidthDetector>
+                    </AtlascodeErrorBoundary>
+                </EditorStateProvider>
             </Page>
         );
     }

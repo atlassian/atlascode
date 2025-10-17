@@ -15,6 +15,7 @@ import {
     DetailedSiteInfo,
     emptyAuthInfo,
     emptyBasicAuthInfo,
+    OAuthInfo,
     ProductBitbucket,
     ProductJira,
     SiteInfo,
@@ -89,10 +90,12 @@ describe('VSCConfigActionApi', () => {
             getSitesAvailable: jest.fn(),
             removeSite: jest.fn(),
             getSiteForId: jest.fn(),
+            addSites: jest.fn(),
         };
 
         mockCredentialManager = {
             getAuthInfo: jest.fn(),
+            saveAuthInfo: jest.fn(),
         };
 
         mockExplorerFocusManager = {
@@ -178,11 +181,110 @@ describe('VSCConfigActionApi', () => {
     describe('clearAuth', () => {
         it('should remove client and site', async () => {
             const site: DetailedSiteInfo = { id: 'test-site' } as DetailedSiteInfo;
+            mockSiteManager.getSitesAvailable.mockReturnValue([]);
 
             await vscConfigActionApi.clearAuth(site);
 
             expect(mockClientManager.removeClient).toHaveBeenCalledWith(site);
             expect(mockSiteManager.removeSite).toHaveBeenCalledWith(site);
+        });
+
+        it('restores oauth site when removing API token site', async () => {
+            global.fetch = jest.fn().mockResolvedValue({
+                json: jest.fn().mockResolvedValue({ cloudId: 'test-cloud-id' }),
+            });
+
+            const apiTokenSite: DetailedSiteInfo = {
+                id: 'api-token-site',
+                host: 'example.atlassian.net',
+                name: 'example.atlassian.net',
+                isCloud: true,
+                contextPath: '/',
+                userId: 'user-123',
+                product: ProductJira,
+            } as DetailedSiteInfo;
+
+            const oauthSite: DetailedSiteInfo = {
+                id: 'oauth-site',
+                host: 'different.atlassian.net',
+                name: 'different',
+                isCloud: true,
+                userId: 'user-123',
+                product: ProductJira,
+                credentialId: 'oauth-cred-id',
+                baseLinkUrl: 'https://different.atlassian.net',
+                baseApiUrl: 'https://api.atlassian.com/ex/jira/different-cloud-id/rest',
+            } as DetailedSiteInfo;
+
+            const oauthAuthInfo: OAuthInfo = {
+                access: 'access-token',
+                refresh: 'refresh-token',
+                iat: Date.now(),
+                expirationDate: Date.now() + 3600000,
+                recievedAt: Date.now(),
+                user: {
+                    id: 'user-123',
+                    displayName: 'Test User',
+                    email: 'test@example.com',
+                    avatarUrl: 'https://avatar.url/test.png',
+                },
+                state: 'Valid' as any,
+            };
+
+            mockSiteManager.getSitesAvailable.mockReturnValue([apiTokenSite, oauthSite]);
+
+            mockCredentialManager.getAuthInfo.mockResolvedValue(oauthAuthInfo);
+
+            await vscConfigActionApi.clearAuth(apiTokenSite);
+
+            expect(mockClientManager.removeClient).toHaveBeenCalledWith(apiTokenSite);
+            expect(mockSiteManager.removeSite).toHaveBeenCalledWith(apiTokenSite);
+
+            expect(global.fetch).toHaveBeenCalledWith('https://example.atlassian.net/_edge/tenant_info');
+            expect(mockCredentialManager.getAuthInfo).toHaveBeenCalledWith(oauthSite, false);
+
+            expect(mockCredentialManager.saveAuthInfo).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    host: 'example.atlassian.net',
+                    baseLinkUrl: 'https://example.atlassian.net',
+                    baseApiUrl: 'https://api.atlassian.com/ex/jira/test-cloud-id/rest',
+                    id: 'test-cloud-id',
+                    name: 'example',
+                }),
+                oauthAuthInfo,
+            );
+
+            expect(mockSiteManager.addSites).toHaveBeenCalledWith([
+                expect.objectContaining({
+                    host: 'example.atlassian.net',
+                    baseLinkUrl: 'https://example.atlassian.net',
+                    baseApiUrl: 'https://api.atlassian.com/ex/jira/test-cloud-id/rest',
+                    id: 'test-cloud-id',
+                    name: 'example',
+                }),
+            ]);
+        });
+
+        it('does not restore oauth site when removing OAuth site', async () => {
+            const oauthSite: DetailedSiteInfo = {
+                id: 'oauth-site',
+                host: 'example.atlassian.net',
+                name: 'example',
+                isCloud: true,
+                userId: 'user-123',
+                product: ProductJira,
+            } as DetailedSiteInfo;
+
+            mockSiteManager.getSitesAvailable.mockReturnValue([oauthSite]);
+
+            await vscConfigActionApi.clearAuth(oauthSite);
+
+            expect(mockClientManager.removeClient).toHaveBeenCalledWith(oauthSite);
+            expect(mockSiteManager.removeSite).toHaveBeenCalledWith(oauthSite);
+
+            expect(mockCredentialManager.getAuthInfo).not.toHaveBeenCalled();
+            expect(mockCredentialManager.saveAuthInfo).not.toHaveBeenCalled();
+            expect(mockSiteManager.addSites).not.toHaveBeenCalled();
         });
     });
 

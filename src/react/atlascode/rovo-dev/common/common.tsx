@@ -1,11 +1,10 @@
-import StatusErrorIcon from '@atlaskit/icon/core/error';
 import MarkdownIt from 'markdown-it';
 import React from 'react';
 
 import { ChatMessageItem } from '../messaging/ChatMessageItem';
 import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
-import { ChatMessage, DefaultMessage, parseToolReturnMessage } from '../utils';
+import { ChatMessage, parseToolReturnMessage } from '../utils';
 import { DialogMessageItem } from './DialogMessage';
 
 const mdParser = new MarkdownIt({
@@ -16,10 +15,65 @@ const mdParser = new MarkdownIt({
 });
 
 mdParser.linkify.set({ fuzzyLink: false });
+if (process.env.ROVODEV_BBY === 'true') {
+    mdParser.renderer.rules.link_open = function (tokens, idx, options, env, renderer) {
+        const token = tokens[idx];
+        token.attrSet('target', '_blank');
+        token.attrSet('rel', 'noopener noreferrer');
+        return renderer.renderToken(tokens, idx, options);
+    };
+}
 
-export const MarkedDown: React.FC<{ value: string }> = ({ value }) => {
+mdParser.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+    const token = tokens[idx];
+    const hrefIndex = token.attrIndex('href');
+    if (hrefIndex >= 0) {
+        const hrefAttr = token.attrs ? token.attrs[hrefIndex] : null;
+        if (hrefAttr && hrefAttr[1]) {
+            const hrefValue = hrefAttr[1];
+
+            token.attrs!.splice(hrefIndex, 1);
+            token.attrSet('data-href', hrefValue);
+            token.attrSet(
+                'style',
+                'cursor: pointer; color: var(--vscode-textLink-foreground); text-decoration: underline;',
+            );
+        }
+    }
+    return self.renderToken(tokens, idx, options);
+};
+
+export const MarkedDown: React.FC<{ value: string; onLinkClick?: (href: string) => void }> = ({
+    value,
+    onLinkClick,
+}) => {
+    const spanRef = React.useRef<HTMLSpanElement>(null);
+
+    React.useEffect(() => {
+        if (!spanRef.current) {
+            return;
+        }
+
+        const handleClick = (event: Event) => {
+            const target = event.target as HTMLElement;
+            if (target.tagName === 'A' && onLinkClick) {
+                const href = target.getAttribute('data-href');
+                if (href) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onLinkClick(href);
+                }
+            }
+        };
+
+        const currentSpan = spanRef.current;
+        currentSpan.addEventListener('click', handleClick);
+        return () => {
+            currentSpan.removeEventListener('click', handleClick);
+        };
+    }, [onLinkClick]);
     // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- necessary to apply MarkDown formatting
-    return <span dangerouslySetInnerHTML={{ __html: mdParser.render(value) }} />;
+    return <span ref={spanRef} dangerouslySetInnerHTML={{ __html: mdParser.render(value) }} />;
 };
 
 export interface OpenFileFunc {
@@ -46,14 +100,13 @@ export const FollowUpActionFooter: React.FC<{ children?: React.ReactNode }> = ({
 
 export const renderChatHistory = (
     msg: ChatMessage,
-    index: number,
     openFile: OpenFileFunc,
     checkFileExists: CheckFileExistsFunc,
     isRetryAfterErrorButtonEnabled: (uid: string) => boolean,
     retryAfterError: () => void,
 ) => {
-    switch (msg.source) {
-        case 'ToolReturn':
+    switch (msg.event_kind) {
+        case 'tool-return':
             const parsedMessages = parseToolReturnMessage(msg);
             return parsedMessages.map((message) => {
                 if (message.technicalPlan) {
@@ -67,7 +120,7 @@ export const renderChatHistory = (
                 }
                 return <ToolReturnParsedItem msg={message} openFile={openFile} />;
             });
-        case 'RovoDevDialog':
+        case '_RovoDevDialog':
             return (
                 <DialogMessageItem
                     msg={msg}
@@ -78,20 +131,9 @@ export const renderChatHistory = (
                     }
                 />
             );
-        case 'RovoDev':
-        case 'User':
-            return <ChatMessageItem msg={msg} />;
-        case 'RovoDevRetry':
-            const retryMsg: DefaultMessage = {
-                text: msg.content,
-                source: 'RovoDev',
-            };
-            return (
-                <ChatMessageItem
-                    msg={retryMsg}
-                    icon={<StatusErrorIcon color="var(--ds-icon-danger)" label="error-icon" spacing="none" />}
-                />
-            );
+        case 'text':
+        case '_RovoDevUserPrompt':
+            return <ChatMessageItem msg={msg} openFile={openFile} />;
         default:
             return <div>Unknown message type</div>;
     }

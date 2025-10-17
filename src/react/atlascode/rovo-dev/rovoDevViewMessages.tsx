@@ -1,5 +1,5 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
-import { RovoDevPrompt } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevPrompt, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 
 import { FeedbackType } from './feedback-form/FeedbackForm';
 
@@ -30,15 +30,18 @@ export const enum RovoDevViewResponseType {
     CheckFileExists = 'checkFileExists',
     ToolPermissionChoiceSubmit = 'toolPermissionChoiceSubmit',
     YoloModeToggled = 'yoloModeToggled',
+    FilterModifiedFilesByContent = 'filterModifiedFilesByContent',
+    OpenExternalLink = 'openExternalLink',
 }
+
+export type FileOperationType = 'modify' | 'create' | 'delete';
 
 export interface ModifiedFile {
     filePath: string;
-    type: 'modify' | 'create' | 'delete';
+    type: FileOperationType;
 }
 
 export type McpConsentChoice = 'accept' | 'acceptAll' | 'deny';
-export type ToolPermissionChoice = 'allow' | 'deny';
 
 export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.Refresh>
@@ -48,7 +51,7 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.OpenFolder>
     | ReducerAction<RovoDevViewResponseType.UndoFileChanges, { files: ModifiedFile[] }>
     | ReducerAction<RovoDevViewResponseType.KeepFileChanges, { files: ModifiedFile[] }>
-    | ReducerAction<RovoDevViewResponseType.CreatePR, { payload: { branchName: string; commitMessage: string } }>
+    | ReducerAction<RovoDevViewResponseType.CreatePR, { payload: { branchName: string; commitMessage?: string } }>
     | ReducerAction<RovoDevViewResponseType.RetryPromptAfterError>
     | ReducerAction<RovoDevViewResponseType.GetCurrentBranchName>
     | ReducerAction<RovoDevViewResponseType.AddContext>
@@ -70,6 +73,8 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.CheckFileExists, { filePath: string; requestId: string }>
     | ReducerAction<
           RovoDevViewResponseType.ToolPermissionChoiceSubmit,
-          { choice: ToolPermissionChoice; toolCallId: string }
+          { choice: ToolPermissionDialogChoice; toolCallId: string }
       >
-    | ReducerAction<RovoDevViewResponseType.YoloModeToggled, { value: boolean }>;
+    | ReducerAction<RovoDevViewResponseType.YoloModeToggled, { value: boolean }>
+    | ReducerAction<RovoDevViewResponseType.FilterModifiedFilesByContent, { files: ModifiedFile[] }>
+    | ReducerAction<RovoDevViewResponseType.OpenExternalLink, { href: string }>;

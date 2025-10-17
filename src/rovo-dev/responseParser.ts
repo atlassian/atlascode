@@ -1,5 +1,23 @@
 // interfaces for the raw responses from the rovo dev agent
 
+import {
+    RovoDevClearResponse,
+    RovoDevExceptionResponse,
+    RovoDevOnCallToolStartResponse,
+    RovoDevParsingError,
+    RovoDevPruneResponse,
+    RovoDevResponse,
+    RovoDevRetryPromptResponse,
+    RovoDevStatusResponse,
+    RovoDevTextResponse,
+    RovoDevToolCallResponse,
+    RovoDevToolName,
+    RovoDevToolPemissionScenario,
+    RovoDevToolReturnResponse,
+    RovoDevUserPromptResponse,
+    RovoDevWarningResponse,
+} from './responseParserInterfaces';
+
 // https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.UserPromptPart
 interface RovoDevUserPromptResponseRaw {
     content?: string;
@@ -26,10 +44,11 @@ interface RovoDevTextChunk {
 
 // https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.ToolCallPart
 interface RovoDevToolCallResponseRaw {
-    tool_name?: string;
-    tool_name_delta?: string;
+    tool_name: RovoDevToolName;
     args?: string;
     args_delta?: string;
+    /** sets when the tool is being exposed by an MCP server */
+    mcp_server?: string;
     tool_call_id: string;
 }
 
@@ -40,7 +59,7 @@ interface RovoDevToolCallChunk {
 
 // https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.ToolReturnPart
 interface RovoDevToolReturnResponseRaw {
-    tool_name: string;
+    tool_name: RovoDevToolName;
     content: string | object;
     tool_call_id: string;
     timestamp: string;
@@ -55,8 +74,7 @@ interface RovoDevToolReturnChunk {
 interface RovoDevRetryPromptResponseRaw {
     content?: string;
     content_delta?: string;
-    tool_name?: string;
-    tool_name_delta?: string;
+    tool_name: RovoDevToolName;
     tool_call_id: string;
     timestamp: string;
 }
@@ -112,12 +130,17 @@ interface RovoDevPruneChunk {
 // https://bitbucket.org/atlassian/acra-python/src/9ce5910e61d00e91f70c7978e067bde2690a1c97/packages/cli-rovodev/docs/serve/streaming-events.md?at=RDA-307-emit-warning-events-related-to-rate-limits-and-other-api-request-problems#:~:text=Server%20Error%20Warnings
 interface RovoDevOnCallToolStartResponseRaw {
     parts: RovoDevToolCallResponseRaw[];
+    permission_required?: boolean;
+    permissions?: Record<string, RovoDevToolPemissionScenario>;
 }
 
 interface RovoDevOnCallToolStartChunk {
     event_kind: 'on_call_tools_start';
     data: RovoDevOnCallToolStartResponseRaw;
 }
+
+// doc missing
+type RovoDevStatusChunk = RovoDevStatusResponse;
 
 // https://bitbucket.org/atlassian/acra-python/src/9ce5910e61d00e91f70c7978e067bde2690a1c97/packages/cli-rovodev/docs/serve/streaming-events.md?at=RDA-307-emit-warning-events-related-to-rate-limits-and-other-api-request-problems#:~:text=Server%20Error%20Warnings
 interface RovoDevCloseChunk {
@@ -147,6 +170,7 @@ type RovoDevSingleChunk =
     | RovoDevClearChunk
     | RovoDevPruneChunk
     | RovoDevOnCallToolStartChunk
+    | RovoDevStatusChunk
     | RovoDevCloseChunk;
 
 // https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.PartStartEvent
@@ -168,90 +192,6 @@ interface RovoDevPartDeltaChunk {
     event_kind: 'part_delta';
     data: RovoDevPartDeltaResponseRaw;
 }
-
-// abstracted responses' interfaces
-
-export interface RovoDevUserPromptResponse {
-    event_kind: 'user-prompt';
-    content: string;
-    timestamp: string;
-}
-
-export interface RovoDevTextResponse {
-    event_kind: 'text';
-    index: number;
-    content: string;
-}
-
-export interface RovoDevToolCallResponse {
-    event_kind: 'tool-call';
-    tool_name: string;
-    args: string;
-    tool_call_id: string;
-}
-
-export interface RovoDevToolReturnResponse {
-    event_kind: 'tool-return';
-    tool_name: string;
-    content?: string;
-    parsedContent?: object;
-    tool_call_id: string;
-    timestamp: string;
-    toolCallMessage: RovoDevToolCallResponse;
-}
-
-export interface RovoDevRetryPromptResponse {
-    event_kind: 'retry-prompt';
-    content: string;
-    tool_name: string;
-    tool_call_id: string;
-    timestamp: string;
-}
-
-export interface RovoDevExceptionResponse {
-    event_kind: 'exception';
-    message: string;
-    title?: string;
-    type: string;
-}
-
-export interface RovoDevWarningResponse {
-    event_kind: 'warning';
-    message: string;
-    title?: string;
-}
-
-export interface RovoDevClearResponse {
-    event_kind: 'clear';
-    message: string;
-}
-
-export interface RovoDevPruneResponse {
-    event_kind: 'prune';
-    message: string;
-}
-
-export interface RovoDevOnCallToolStartResponse {
-    event_kind: 'on_call_tools_start';
-    tools: RovoDevToolCallResponse[];
-}
-
-export interface RovoDevCloseResponse {
-    event_kind: 'close';
-}
-
-export type RovoDevResponse =
-    | RovoDevUserPromptResponse
-    | RovoDevTextResponse
-    | RovoDevToolCallResponse
-    | RovoDevToolReturnResponse
-    | RovoDevRetryPromptResponse
-    | RovoDevExceptionResponse
-    | RovoDevWarningResponse
-    | RovoDevClearResponse
-    | RovoDevPruneResponse
-    | RovoDevOnCallToolStartResponse
-    | RovoDevCloseResponse;
 
 // parsing functions for specific response types
 
@@ -289,14 +229,14 @@ function parseResponseToolCall(
     buffer?: RovoDevToolCallResponse,
 ): RovoDevToolCallResponse {
     if (buffer) {
-        buffer.tool_name += data.tool_name_delta || '';
         buffer.args += data.args_delta || '';
         return buffer;
     } else {
         return {
             event_kind: 'tool-call',
-            tool_name: data.tool_name || '',
+            tool_name: data.tool_name,
             args: data.args || '',
+            mcp_server: data.mcp_server,
             tool_call_id: data.tool_call_id,
         };
     }
@@ -322,13 +262,12 @@ function parseResponseRetryPrompt(
     buffer?: RovoDevRetryPromptResponse,
 ): RovoDevRetryPromptResponse {
     if (buffer) {
-        buffer.tool_name += data.tool_name_delta || '';
         buffer.content += data.content_delta || '';
         return buffer;
     } else {
         return {
             event_kind: 'retry-prompt',
-            tool_name: data.tool_name || '',
+            tool_name: data.tool_name,
             content: data.content || '',
             tool_call_id: data.tool_call_id,
             timestamp: data.timestamp,
@@ -371,10 +310,19 @@ function parseOnCallToolStart(data: RovoDevOnCallToolStartResponseRaw): RovoDevO
     return {
         event_kind: 'on_call_tools_start',
         tools: data.parts.map((part) => parseResponseToolCall(part)),
+        permission_required: !!data.permission_required,
+        permissions: data.permissions ?? {},
     };
 }
 
 // the parser
+
+function generateError(error: Error): RovoDevParsingError {
+    return {
+        event_kind: '_parsing_error',
+        error,
+    };
+}
 
 export interface RovoDevResponseParserOptions {
     mergeAllChunks?: boolean;
@@ -411,7 +359,8 @@ export class RovoDevResponseParser {
 
             const match = chunkRaw.match(/^event: ([^\r\n]+)\r?\ndata: (.*)$/);
             if (!match) {
-                throw new Error(`Rovo Dev parser error: unable to parse chunk: "${chunkRaw}"`);
+                yield generateError(new Error(`Rovo Dev parser error: unable to parse chunk: "${chunkRaw}"`));
+                continue;
             }
 
             const chunk: RovoDevSingleChunk | RovoDevPartStartChunk | RovoDevPartDeltaChunk = {
@@ -437,9 +386,13 @@ export class RovoDevResponseParser {
 
                 this.previousChunk = this.parseGenericReponse(partStartChunk);
 
-                if (!this.mergeAllChunks && event_kind_inner === 'text') {
-                    // if the event is a text message, send them out immediately instead
-                    // of waiting for it to be fully reconstructed
+                // send out immediately:
+                // - errors
+                // - text messages unless we'd like to reconstruct them fully
+                if (
+                    this.previousChunk.event_kind === '_parsing_error' ||
+                    (!this.mergeAllChunks && event_kind_inner === 'text')
+                ) {
                     tmpChunkToFlush = this.flushPreviousChunk();
                     if (tmpChunkToFlush) {
                         yield tmpChunkToFlush;
@@ -456,9 +409,13 @@ export class RovoDevResponseParser {
 
                 this.previousChunk = this.parseGenericReponse(partDeltaChunk, this.previousChunk);
 
-                if (!this.mergeAllChunks && event_kind_inner === 'text') {
-                    // if the event is a text message, send them out immediately instead
-                    // of waiting for it to be fully reconstructed
+                // send out immediately:
+                // - errors
+                // - text messages unless we'd like to reconstruct them fully
+                if (
+                    this.previousChunk.event_kind === '_parsing_error' ||
+                    (!this.mergeAllChunks && event_kind_inner === 'text')
+                ) {
                     tmpChunkToFlush = this.flushPreviousChunk();
                     if (tmpChunkToFlush) {
                         yield tmpChunkToFlush;
@@ -479,7 +436,7 @@ export class RovoDevResponseParser {
     *flush() {
         // if there is still data in the buffer, something went wrong.
         if (this.buffer) {
-            throw new Error('Rovo Dev parser error: flushed with non-empty buffer');
+            yield generateError(new Error('Rovo Dev parser error: flushed with non-empty buffer'));
         }
 
         const chunk = this.flushPreviousChunk();
@@ -492,6 +449,7 @@ export class RovoDevResponseParser {
         const chunk = this.previousChunk;
         this.previousChunk = undefined;
 
+        // store tool calls so they can be attached in tool return messages
         if (chunk?.event_kind === 'tool-call') {
             this.toolCalls[chunk.tool_call_id] = chunk;
         } else if (chunk?.event_kind === 'tool-return') {
@@ -507,12 +465,7 @@ export class RovoDevResponseParser {
             case 'user_prompt':
                 return parseResponseUserPrompt(chunk.data, buffer as RovoDevUserPromptResponse);
 
-            // text is a special case, where we don't care about reconstructing the delta messages,
-            // but we just want to send every single chunk as individual messages
             case 'text':
-                if (!this.mergeAllChunks && buffer) {
-                    throw new Error('Rovo Dev parser error: text should not have buffer set');
-                }
                 return parseResponseText(chunk.data, buffer as RovoDevTextResponse);
 
             case 'tool-call':
@@ -522,54 +475,52 @@ export class RovoDevResponseParser {
             // it doesn't seem like tool-return can be split in parts
             case 'tool-return':
             case 'tool_return':
-                if (buffer) {
-                    throw new Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`);
-                }
-                return parseResponseToolReturn(chunk.data, this.toolCalls);
+                return buffer
+                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
+                    : parseResponseToolReturn(chunk.data, this.toolCalls);
 
             case 'retry-prompt':
             case 'retry_prompt':
                 return parseResponseRetryPrompt(chunk.data, buffer as RovoDevRetryPromptResponse);
 
             case 'exception':
-                if (buffer) {
-                    throw new Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`);
-                }
-                return parseResponseException(chunk.data);
+                return buffer
+                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
+                    : parseResponseException(chunk.data);
 
             case 'warning':
-                if (buffer) {
-                    throw new Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`);
-                }
-                return parseResponseWarning(chunk.data);
+                return buffer
+                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
+                    : parseResponseWarning(chunk.data);
 
             case 'clear':
-                if (buffer) {
-                    throw new Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`);
-                }
-                return parseResponseClear(chunk.data);
+                return buffer
+                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
+                    : parseResponseClear(chunk.data);
 
             case 'prune':
-                if (buffer) {
-                    throw new Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`);
-                }
-                return parseResponsePrune(chunk.data);
+                return buffer
+                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
+                    : parseResponsePrune(chunk.data);
 
             case 'on_call_tools_start':
-                if (buffer) {
-                    throw new Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`);
-                }
-                return parseOnCallToolStart(chunk.data);
+                return buffer
+                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
+                    : parseOnCallToolStart(chunk.data);
+
+            case 'status':
+                return buffer
+                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
+                    : chunk;
 
             case 'close':
-                if (buffer) {
-                    throw new Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`);
-                }
-                return { event_kind: 'close' };
+                return buffer
+                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
+                    : { event_kind: 'close' };
 
             default:
                 // @ts-expect-error ts(2339) - chunk here should be 'never'
-                throw new Error(`Rovo Dev parser error: unknown event kind: ${chunk.event_kind}`);
+                return generateError(new Error(`Rovo Dev parser error: unknown event kind: ${chunk.event_kind}`));
         }
     }
 }

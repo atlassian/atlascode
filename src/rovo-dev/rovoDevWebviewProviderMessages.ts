@@ -1,16 +1,18 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 
+import { DetailedSiteInfo } from '../atlclients/authInfo';
+import { ModifiedFile } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
 import { DialogMessage } from '../react/atlascode/rovo-dev/utils';
-import { RovoDevResponse } from './responseParser';
-import { RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
+import { RovoDevTextResponse, RovoDevToolCallResponse, RovoDevToolReturnResponse } from './responseParserInterfaces';
+import { EntitlementCheckRovoDevHealthcheckResponse } from './rovoDevApiClientInterfaces';
+import { DisabledState, RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 
 export const enum RovoDevProviderMessageType {
     RovoDevDisabled = 'rovoDevDisabled',
     SignalPromptSent = 'signalPromptSent',
-    Response = 'response',
+    RovoDevResponseMessage = 'rovoDevResponseMessage',
     CompleteMessage = 'completeMessage',
-    ToolCall = 'toolCall',
-    ToolReturn = 'toolReturn',
     ShowDialog = 'showDialog',
     ClearChat = 'clearChat',
     ProviderReady = 'providerReady',
@@ -24,15 +26,14 @@ export const enum RovoDevProviderMessageType {
     ContextAdded = 'contextAdded',
     ContextRemoved = 'contextRemoved',
     CheckGitChangesComplete = 'checkGitChangesComplete',
+    FilterModifiedFilesByContentComplete = 'filterModifiedFilesByContentComplete',
     ForceStop = 'forceStop',
     ShowFeedbackForm = 'showFeedbackForm',
     SetDebugPanel = 'setDebugPanel',
     SetPromptText = 'setPromptText',
+    SetJiraWorkItems = 'setJiraWorkItems',
     CheckFileExistsComplete = 'checkFileExistsComplete',
-}
-
-export interface RovoDevObjectResponse {
-    dataObject: RovoDevResponse;
+    SetThinkingBlockEnabled = 'setThinkingBlockEnabled',
 }
 
 interface FocusedContextRemovedResponse {
@@ -44,18 +45,30 @@ interface NonFocusedContextRemovedResponse {
     context: RovoDevContextItem;
 }
 
-export type RovoDevDisabledReason = 'noOpenFolder' | 'needAuth' | 'other';
+export type RovoDevDisabledReason = DisabledState['subState'];
+
+export type RovoDevEntitlementCheckFailedDetail = EntitlementCheckRovoDevHealthcheckResponse['detail'];
+
+export type RovoDevResponseMessageType = RovoDevTextResponse | RovoDevToolCallResponse | RovoDevToolReturnResponse;
+//| RovoDevRetryPromptResponse;
 
 export type RovoDevProviderMessage =
-    | ReducerAction<RovoDevProviderMessageType.RovoDevDisabled, { reason: RovoDevDisabledReason }>
+    | ReducerAction<
+          RovoDevProviderMessageType.RovoDevDisabled,
+          { reason: RovoDevDisabledReason; detail?: RovoDevEntitlementCheckFailedDetail }
+      >
     | ReducerAction<RovoDevProviderMessageType.SignalPromptSent, RovoDevPrompt & { echoMessage: boolean }>
-    | ReducerAction<RovoDevProviderMessageType.Response, RovoDevObjectResponse>
-    | ReducerAction<RovoDevProviderMessageType.CompleteMessage, { isReplay?: boolean }>
-    | ReducerAction<RovoDevProviderMessageType.ToolCall, RovoDevObjectResponse>
-    | ReducerAction<RovoDevProviderMessageType.ToolReturn, RovoDevObjectResponse>
+    | ReducerAction<
+          RovoDevProviderMessageType.RovoDevResponseMessage,
+          { message: RovoDevResponseMessageType | RovoDevResponseMessageType[] }
+      >
+    | ReducerAction<RovoDevProviderMessageType.CompleteMessage>
     | ReducerAction<RovoDevProviderMessageType.ShowDialog, { message: DialogMessage }>
     | ReducerAction<RovoDevProviderMessageType.ClearChat>
-    | ReducerAction<RovoDevProviderMessageType.ProviderReady, { workspacePath?: string; homeDir?: string }>
+    | ReducerAction<
+          RovoDevProviderMessageType.ProviderReady,
+          { workspacePath?: string; homeDir?: string; yoloMode?: boolean }
+      >
     | ReducerAction<RovoDevProviderMessageType.SetInitializing, { isPromptPending: boolean }>
     | ReducerAction<
           RovoDevProviderMessageType.SetDownloadProgress,
@@ -72,6 +85,7 @@ export type RovoDevProviderMessage =
           FocusedContextRemovedResponse | NonFocusedContextRemovedResponse
       >
     | ReducerAction<RovoDevProviderMessageType.CheckGitChangesComplete, { hasChanges: boolean }>
+    | ReducerAction<RovoDevProviderMessageType.FilterModifiedFilesByContentComplete, { filteredFiles: ModifiedFile[] }>
     | ReducerAction<RovoDevProviderMessageType.ForceStop>
     | ReducerAction<RovoDevProviderMessageType.ShowFeedbackForm>
     | ReducerAction<
@@ -80,6 +94,11 @@ export type RovoDevProviderMessage =
       >
     | ReducerAction<RovoDevProviderMessageType.SetPromptText, { text: string }>
     | ReducerAction<
+          RovoDevProviderMessageType.SetJiraWorkItems,
+          { issues: MinimalIssue<DetailedSiteInfo>[] | undefined }
+      >
+    | ReducerAction<
           RovoDevProviderMessageType.CheckFileExistsComplete,
           { requestId: string; filePath: string; exists: boolean }
-      >;
+      >
+    | ReducerAction<RovoDevProviderMessageType.SetThinkingBlockEnabled, { enabled: boolean }>;

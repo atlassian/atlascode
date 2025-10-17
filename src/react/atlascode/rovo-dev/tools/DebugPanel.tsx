@@ -14,7 +14,7 @@ export const DebugPanel: React.FC<{
             {Object.keys(debugContext).length > 0 && (
                 <>
                     <hr />
-                    <DebugContextPanel title="Provider's state" debugContext={debugContext} />
+                    <DebugContextPanel title="Process state" debugContext={debugContext} />
                 </>
             )}
             {Object.keys(debugMcpContext).length > 0 && (

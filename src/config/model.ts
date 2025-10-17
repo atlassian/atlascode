@@ -44,8 +44,9 @@ export interface IConfig {
 }
 
 export interface RovoDevConfig {
-    showKeybinding: boolean;
+    enabled: boolean;
     debugPanelEnabled: boolean;
+    thinkingBlockEnabled: boolean;
 }
 
 export interface JiraConfig {
@@ -217,8 +218,9 @@ const emptyJiraConfig: JiraConfig = {
 };
 
 const emptyRovoDevConfig: RovoDevConfig = {
-    showKeybinding: false,
+    enabled: false,
     debugPanelEnabled: false,
+    thinkingBlockEnabled: false,
 };
 
 const emptyRelatedJiraIssues: BitbucketRelatedJiraIssues = {

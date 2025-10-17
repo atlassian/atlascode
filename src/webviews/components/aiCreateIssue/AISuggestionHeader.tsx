@@ -1,6 +1,6 @@
 import Checkbox from '@atlaskit/checkbox';
 import { HelperMessage } from '@atlaskit/form';
-import StatusInformationIcon from '@atlaskit/icon/core/status-information';
+import LightbulbIcon from '@atlaskit/icon/core/lightbulb';
 import React, { useCallback, useEffect, useState } from 'react';
 import { IssueSuggestionContextLevel, IssueSuggestionSettings } from 'src/config/model';
 
@@ -94,16 +94,16 @@ const AISuggestionHeader: React.FC<{
         <div style={{ marginBottom: '15px' }}>
             <hr className="ac-form-separator" />
             <Checkbox
-                label="Use AI to create summary and description"
+                label="Use Rovo Dev to generate the summary and description"
                 isChecked={isEnabled}
                 onChange={handleCheckboxChange}
             />
             <HelperMessage>
                 <span style={{ display: 'flex', alignItems: 'center' }}>
                     <span style={{ marginLeft: '6px', marginRight: '6px' }}>
-                        <StatusInformationIcon label="info" size="small" />
+                        <LightbulbIcon label="info" size="small" />
                     </span>
-                    <span>Uses AI. Verify results.</span>
+                    <span>Rovo Dev reads the TODO comment and surrounding code for context</span>
                 </span>
             </HelperMessage>
         </div>
@@ -111,6 +111,9 @@ const AISuggestionHeader: React.FC<{
         <HelperMessage>
             <div style={{ marginTop: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <span>
+                    <span style={{ marginLeft: '6px', marginRight: '6px' }}>
+                        <LightbulbIcon label="info" size="small" />
+                    </span>
                     <a
                         href="https://id.atlassian.com/manage-profile/security/api-tokens"
                         target="_blank"
@@ -118,7 +121,7 @@ const AISuggestionHeader: React.FC<{
                     >
                         Create an API token
                     </a>{' '}
-                    and add it here to use AI issue suggestions
+                    and add it here to use Rovo Dev issue suggestions
                 </span>
                 <button type={'button'} style={{ marginTop: '0', fontSize: '12px' }} onClick={onLoginClick}>
                     Add API Token

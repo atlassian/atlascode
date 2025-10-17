@@ -16,7 +16,6 @@ import { assignIssue } from './commands/jira/assignIssue';
 import { createIssue } from './commands/jira/createIssue';
 import { showIssue, showIssueForKey, showIssueForSiteIdAndKey, showIssueForURL } from './commands/jira/showIssue';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
-import { startWorkWithRovoDev } from './commands/jira/startWorkWithRovoDev';
 import { configuration } from './config/configuration';
 import { Commands, HelpTreeViewId } from './constants';
 import { Container } from './container';
@@ -176,9 +175,6 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                             ? issueNodeOrMinimalIssue
                             : issueNodeOrMinimalIssue.issue,
                     ),
-            ),
-            commands.registerCommand(Commands.StartWorkWithRovoDev, (issueNode: IssueNode) =>
-                startWorkWithRovoDev(issueNode.issue),
             ),
             commands.registerCommand(Commands.ViewDiff, async (...diffArgs: [() => {}, Uri, Uri, string]) => {
                 viewScreenEvent(Registry.screen.pullRequestDiffScreen, undefined, ProductBitbucket).then((e) => {
@@ -392,9 +388,6 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                             : issueNodeOrMinimalIssue.issue,
                     ),
             ),
-            commands.registerCommand(Commands.StartWorkWithRovoDev, (issueNode: IssueNode) =>
-                startWorkWithRovoDev(issueNode.issue),
-            ),
             commands.registerCommand(Commands.ViewDiff, async (...diffArgs: [() => {}, Uri, Uri, string]) => {
                 viewScreenEvent(Registry.screen.pullRequestDiffScreen, undefined, ProductBitbucket).then((e) => {
                     Container.analyticsClient.sendScreenEvent(e);
@@ -491,7 +484,7 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
             const context = buildContext(window.activeTextEditor, vscodeContext);
 
             const prompt = await window.showInputBox({
-                placeHolder: 'Type your RovoDev command',
+                placeHolder: 'Type your Rovo Dev command',
                 prompt: 'Send a command to RovoDev for the selected code',
             });
 
@@ -521,15 +514,13 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
                 Container.rovodevWebviewProvider.addToContext(item);
             });
         }),
-        commands.registerCommand(Commands.OpenRovoDevConfig, async () => {
-            await openRovoDevConfigFile('.rovodev/config.yml', 'Rovo Dev settings file');
-        }),
-        commands.registerCommand(Commands.OpenRovoDevMcpJson, async () => {
-            await openRovoDevConfigFile('.rovodev/mcp.json', 'Rovo Dev MCP configuration');
-        }),
-        commands.registerCommand(Commands.OpenRovoDevGlobalMemory, async () => {
-            await openRovoDevConfigFile('.rovodev/.agent.md', 'Rovo Dev Global Memory file');
-        }),
+        commands.registerCommand(Commands.OpenRovoDevConfig, async () => await openRovoDevConfigFile('config.yml')),
+        commands.registerCommand(Commands.OpenRovoDevMcpJson, async () => await openRovoDevConfigFile('mcp.json')),
+        commands.registerCommand(
+            Commands.OpenRovoDevGlobalMemory,
+            async () => await openRovoDevConfigFile('.agent.md'),
+        ),
+        commands.registerCommand(Commands.OpenRovoDevLogFile, async () => await openRovoDevConfigFile('rovodev.log')),
     );
 }
 

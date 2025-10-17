@@ -3,6 +3,8 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { DetailedSiteInfo, Product } from 'src/atlclients/authInfo';
 
+import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
+import { EditorStateProvider } from '../EditorStateContext';
 import { IssueCommentComponent, type IssueCommentComponentProps } from './IssueCommentComponent';
 
 const mockSiteDetails: DetailedSiteInfo = {
@@ -98,6 +100,9 @@ const mockOnDelete = jest.fn();
 const mockOnCommentTextChange = jest.fn();
 const mockOnEditingCommentChange = jest.fn();
 
+// Mock mention provider
+const mockMentionProvider = AtlascodeMentionProvider.init({ url: '' }, jest.fn().mockResolvedValue([]));
+
 describe('IssueCommentComponent with Atlaskit Editor', () => {
     const renderComponent = ({
         siteDetails = mockSiteDetails,
@@ -114,24 +119,28 @@ describe('IssueCommentComponent with Atlaskit Editor', () => {
         isEditingComment = false,
         onEditingCommentChange = mockOnEditingCommentChange,
         isAtlaskitEditorEnabled = true,
+        mentionProvider = mockMentionProvider,
     }: Partial<IssueCommentComponentProps>) => {
         return (
-            <IssueCommentComponent
-                siteDetails={siteDetails}
-                currentUser={currentUser}
-                comments={comments}
-                isServiceDeskProject={isServiceDeskProject}
-                onSave={onSave}
-                onCreate={onCreate}
-                fetchUsers={fetchUsers}
-                fetchImage={fetchImage}
-                onDelete={onDelete}
-                commentText={commentText}
-                onCommentTextChange={onCommentTextChange}
-                isEditingComment={isEditingComment}
-                onEditingCommentChange={onEditingCommentChange}
-                isAtlaskitEditorEnabled={isAtlaskitEditorEnabled}
-            />
+            <EditorStateProvider>
+                <IssueCommentComponent
+                    siteDetails={siteDetails}
+                    currentUser={currentUser}
+                    comments={comments}
+                    isServiceDeskProject={isServiceDeskProject}
+                    onSave={onSave}
+                    onCreate={onCreate}
+                    fetchUsers={fetchUsers}
+                    fetchImage={fetchImage}
+                    onDelete={onDelete}
+                    commentText={commentText}
+                    onCommentTextChange={onCommentTextChange}
+                    isEditingComment={isEditingComment}
+                    onEditingCommentChange={onEditingCommentChange}
+                    isAtlaskitEditorEnabled={isAtlaskitEditorEnabled}
+                    mentionProvider={mentionProvider}
+                />
+            </EditorStateProvider>
         );
     };
 
@@ -175,7 +184,13 @@ describe('IssueCommentComponent with Atlaskit Editor', () => {
             });
         };
 
-        await act(() => render(<IssueCommentComponentWrapper />));
+        await act(() =>
+            render(
+                <EditorStateProvider>
+                    <IssueCommentComponentWrapper />
+                </EditorStateProvider>,
+            ),
+        );
 
         await act(() => fireEvent.click(screen.getByPlaceholderText('Add a comment...')));
         const editor = await screen.findByLabelText('Rich text editor for comments');

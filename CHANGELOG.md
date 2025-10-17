@@ -1,10 +1,65 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.4
+
+### Improvements
+
+- Added support for Rovo Dev /status command
+
+### Bug Fixes
+
+- Fixed duplicated slash commands in Rovo Dev's prompt box
+- Fixed broken entitlement check disabled view in 4.0.3
+
+## What's new in 4.0.3
+
+### Improvements
+
+- Improved the initialization time for Rovo Dev, allowing the process to start before its webview is ready
+- Added assignee column for child and linked issues
+
+### Bug Fixes
+
+- Fixed issue with infinite loading when searching labels
+
+## What's new in 4.0.2
+
+### Improvements
+
+- Removed the hint on code selection to send the text to Rovo Dev
+
+## What's new in 4.0.1
+
+### Features
+
+- Added a config option to enable/disable the Rovo Dev feature
+
+## What's new in 4.0.0
+
+### Features
+
+- **Rovo Dev: Atlassian AI Agent** is now available in beta
+    - New sidebar icon that opens the Rovo Dev view. Rovo Dev can answer questions about your codebase and complete tasks for you
+    - Read our docs here: https://github.com/atlassian/atlascode/wiki
+
+### Bug Fixes
+
+- Fix issue when logging out from api token does not restore the corresponding oauth site
+
+## What's new in 3.8.20
+
+- Internal changes only.
+
 ## What's new in 3.8.19
 
 ### Bug Fixes
 
 - Fix error while connecting several jira sites with an API token
+- Fix issue when pressing enter to submit the form does not work
+
+## What's new in 3.8.18
+
+- Internal changes only.
 
 ## What's new in 3.8.17
 
@@ -12,6 +67,10 @@
 
 - Update pipeline schema to the current latest version
 - Add the ability to search issue through all connected sites
+
+## What's new in 3.8.16
+
+- Internal changes only.
 
 ## What's new in 3.8.15
 

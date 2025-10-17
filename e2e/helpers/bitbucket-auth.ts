@@ -12,7 +12,7 @@ export const authenticateWithBitbucketDC = async (
     username: string = 'mockuser',
     password: string = '12345',
 ) => {
-    const settingsFrame = await openAtlassianSettings(page, 'Connect Bitbucket to view pull requests');
+    const settingsFrame = await openAtlassianSettings(page, 'Log in to Bitbucket');
 
     await expect(settingsFrame.getByRole('button', { name: 'Authentication authenticate' })).toBeVisible();
     await expect(settingsFrame.getByRole('button', { name: 'Login with API Token' })).toBeVisible();
@@ -65,7 +65,7 @@ export const authenticateWithBitbucketCloud = async (
         route.abort();
     });
 
-    const settingsFrame = await openAtlassianSettings(page, 'Connect Bitbucket to view pull requests');
+    const settingsFrame = await openAtlassianSettings(page, 'Log in to Bitbucket');
 
     await expect(settingsFrame.getByRole('button', { name: 'Authentication authenticate' })).toBeVisible();
     await expect(settingsFrame.getByRole('button', { name: 'Login with API Token' })).toBeVisible();
