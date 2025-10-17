@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "urlPath": "/rest/api/2/project/search"
+    "urlPathPattern": "/rest/api/2/project/search"
   },
   "response": {
     "status": 200,
