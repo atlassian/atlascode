@@ -1658,7 +1658,7 @@
         "nyc": "^17.1.0",
         "ovsx": "^0.10.5",
         "path-browserify": "^1.0.1",
-        "playwright": "1.53.0",
+        "playwright": "1.56.1",
         "postcss-flexbugs-fixes": "^5.0.2",
         "postcss-loader": "^8.1.1",
         "postcss-preset-env": "^10.2.0",
