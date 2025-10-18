@@ -85,6 +85,12 @@ export const AdvancedConfigsPanel: React.FunctionComponent<AdvancedConfigsProps>
                                 onSubsectionChange={onSubsectionChange}
                                 customPrefixes={config[`${ConfigSection.Jira}.startWorkBranchTemplate.customPrefixes`]}
                                 customTemplate={config[`${ConfigSection.Jira}.startWorkBranchTemplate.customTemplate`]}
+                                defaultTransitionName={
+                                    config[`${ConfigSection.Jira}.startWorkBranchTemplate.defaultTransitionName`]
+                                }
+                                enableIssueTransition={
+                                    config[`${ConfigSection.Jira}.startWorkBranchTemplate.enableIssueTransition`]
+                                }
                             />
                         </Grid>
                         <Grid item>
