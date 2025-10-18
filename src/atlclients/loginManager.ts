@@ -1,7 +1,7 @@
 import { Container } from 'src/container';
 import * as vscode from 'vscode';
 
-import { authenticatedEvent, editedEvent } from '../analytics';
+import { aiInstallCompletedEvent, authenticatedEvent, editedEvent } from '../analytics';
 import { AnalyticsClient } from '../analytics-node-client/src/client.min.js';
 import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
 import { Logger } from '../logger';
@@ -165,6 +165,12 @@ export class LoginManager {
             try {
                 const siteDetails = await this.saveDetailsForSite(site, authInfo);
 
+                // Fire analytics event only for Cloud API token i.e. Rovo Dev auth
+                if (siteDetails.isCloud) {
+                    aiInstallCompletedEvent(siteDetails).then((e) => {
+                        this._analyticsClient.sendTrackEvent(e);
+                    });
+                }
                 authenticatedEvent(siteDetails, isOnboarding, source).then((e) => {
                     this._analyticsClient.sendTrackEvent(e);
                 });

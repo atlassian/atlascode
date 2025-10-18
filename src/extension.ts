@@ -184,6 +184,7 @@ async function sendAnalytics(version: string, globalState: Memento) {
         installedEvent(version).then((e) => {
             Container.analyticsClient.sendTrackEvent(e);
         });
+
         return;
     }
 
