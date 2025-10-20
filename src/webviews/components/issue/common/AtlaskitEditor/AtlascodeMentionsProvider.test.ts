@@ -85,4 +85,374 @@ describe('AtlascodeMentionProvider', () => {
             expect(result).toBeUndefined();
         });
     });
+
+    describe('filter method', () => {
+        it('should call fetchUsers with empty string when no query provided', async () => {
+            const provider = AtlascodeMentionProvider.init(mockConfig, mockFetchUsers);
+
+            provider.filter();
+
+            // Wait for the timeout to execute
+            jest.advanceTimersByTime(50);
+
+            expect(mockFetchUsers).toHaveBeenCalledWith('');
+        });
+
+        it('should call fetchUsers with provided query', async () => {
+            const provider = AtlascodeMentionProvider.init(mockConfig, mockFetchUsers);
+
+            provider.filter('john');
+
+            // Wait for the timeout to execute
+            jest.advanceTimersByTime(50);
+
+            expect(mockFetchUsers).toHaveBeenCalledWith('john');
+        });
+
+        it('should format mentions correctly for Bitbucket Cloud', async () => {
+            const mockUsers = [
+                {
+                    accountId: 'user1',
+                    displayName: 'John Doe',
+                    mention: '@john',
+                    avatarUrl: 'avatar1.jpg',
+                },
+                {
+                    accountId: 'user2',
+                    displayName: 'Jane Smith',
+                    mention: '@jane',
+                    avatarUrl: 'avatar2.jpg',
+                },
+            ];
+            mockFetchUsers.mockResolvedValue(mockUsers);
+
+            const configWithCloud = { ...mockConfig, isBitbucketCloud: true };
+            const provider = AtlascodeMentionProvider.init(configWithCloud, mockFetchUsers);
+
+            provider.filter('test');
+            jest.advanceTimersByTime(50);
+
+            await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for async operations
+
+            // Should have notified listeners with properly formatted mentions
+            expect((provider as any)._notifyListeners).toHaveBeenCalledWith(
+                {
+                    mentions: [
+                        {
+                            id: '{user1}',
+                            name: 'John Doe',
+                            mentionName: '@john',
+                            avatarUrl: 'avatar1.jpg',
+                        },
+                        {
+                            id: '{user2}',
+                            name: 'Jane Smith',
+                            mentionName: '@jane',
+                            avatarUrl: 'avatar2.jpg',
+                        },
+                    ],
+                    query: 'test',
+                },
+                {},
+            );
+        });
+
+        it('should format mentions correctly for non-Cloud Bitbucket', async () => {
+            const mockUsers = [
+                {
+                    accountId: 'user1',
+                    displayName: 'John Doe',
+                    mention: '@john',
+                    avatarUrl: 'avatar1.jpg',
+                },
+            ];
+            mockFetchUsers.mockResolvedValue(mockUsers);
+
+            const configWithoutCloud = { ...mockConfig, isBitbucketCloud: false };
+            const provider = AtlascodeMentionProvider.init(configWithoutCloud, mockFetchUsers);
+
+            provider.filter('test');
+            jest.advanceTimersByTime(50);
+
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            expect((provider as any)._notifyListeners).toHaveBeenCalledWith(
+                {
+                    mentions: [
+                        {
+                            id: 'user1', // No curly braces for non-cloud
+                            name: 'John Doe',
+                            mentionName: '@john',
+                            avatarUrl: 'avatar1.jpg',
+                        },
+                    ],
+                    query: 'test',
+                },
+                {},
+            );
+        });
+
+        it('should notify all results listeners', async () => {
+            const mockUsers = [{ accountId: 'user1', displayName: 'John', mention: '@john', avatarUrl: 'avatar.jpg' }];
+            mockFetchUsers.mockResolvedValue(mockUsers);
+
+            const provider = AtlascodeMentionProvider.init(mockConfig, mockFetchUsers);
+
+            provider.filter('test');
+            jest.advanceTimersByTime(50);
+
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            expect((provider as any)._notifyAllResultsListeners).toHaveBeenCalledWith({
+                mentions: [
+                    {
+                        id: 'user1',
+                        name: 'John',
+                        mentionName: '@john',
+                        avatarUrl: 'avatar.jpg',
+                    },
+                ],
+                query: 'test',
+            });
+        });
+    });
+
+    describe('resolveMentionName method', () => {
+        it('should return warning result when no mentionNameResolver configured', async () => {
+            const configWithoutResolver = { ...mockConfig, mentionNameResolver: undefined };
+            const provider = AtlascodeMentionProvider.init(configWithoutResolver, mockFetchUsers);
+
+            const result = await provider.resolveMentionName('user1');
+
+            expect(result).toEqual({
+                id: 'user1',
+                name: '',
+                status: 'UNKNOWN',
+            });
+        });
+
+        it('should call mentionNameResolver.lookupName when resolver is available', async () => {
+            const mockResult = {
+                id: 'user1',
+                name: 'John Doe',
+                status: 'OK' as const,
+            };
+            mockMentionNameResolver.lookupName.mockResolvedValue(mockResult);
+
+            const provider = AtlascodeMentionProvider.init(mockConfig, mockFetchUsers);
+
+            const result = await provider.resolveMentionName('user1');
+
+            expect(mockMentionNameResolver.lookupName).toHaveBeenCalledWith('user1');
+            expect(result).toEqual(mockResult);
+        });
+
+        it('should cache mention name resolution results', async () => {
+            const mockResult = {
+                id: 'user1',
+                name: 'John Doe',
+                status: 'OK' as const,
+            };
+            mockMentionNameResolver.lookupName.mockResolvedValue(mockResult);
+
+            const provider = AtlascodeMentionProvider.init(mockConfig, mockFetchUsers);
+
+            // First call
+            const result1 = await provider.resolveMentionName('user1');
+            // Second call within cache duration
+            const result2 = await provider.resolveMentionName('user1');
+
+            expect(mockMentionNameResolver.lookupName).toHaveBeenCalledTimes(1);
+            expect(result1).toEqual(mockResult);
+            expect(result2).toEqual(mockResult);
+        });
+
+        it('should respect cache expiry time', async () => {
+            const mockResult = {
+                id: 'user1',
+                name: 'John Doe',
+                status: 'OK' as const,
+            };
+            mockMentionNameResolver.lookupName.mockResolvedValue(mockResult);
+
+            const provider = AtlascodeMentionProvider.init(mockConfig, mockFetchUsers);
+
+            // First call
+            await provider.resolveMentionName('user1');
+
+            // Fast-forward time beyond cache duration (5 minutes + 1ms)
+            jest.advanceTimersByTime(300001);
+
+            // Second call after cache expiry
+            await provider.resolveMentionName('user1');
+
+            expect(mockMentionNameResolver.lookupName).toHaveBeenCalledTimes(2);
+        });
+
+        it('should handle different user IDs independently in cache', async () => {
+            const mockResult1 = { id: 'user1', name: 'John Doe', status: 'OK' as const };
+            const mockResult2 = { id: 'user2', name: 'Jane Smith', status: 'OK' as const };
+
+            mockMentionNameResolver.lookupName.mockResolvedValueOnce(mockResult1).mockResolvedValueOnce(mockResult2);
+
+            const provider = AtlascodeMentionProvider.init(mockConfig, mockFetchUsers);
+
+            const result1 = await provider.resolveMentionName('user1');
+            const result2 = await provider.resolveMentionName('user2');
+
+            expect(mockMentionNameResolver.lookupName).toHaveBeenCalledTimes(2);
+            expect(mockMentionNameResolver.lookupName).toHaveBeenNthCalledWith(1, 'user1');
+            expect(mockMentionNameResolver.lookupName).toHaveBeenNthCalledWith(2, 'user2');
+            expect(result1).toEqual(mockResult1);
+            expect(result2).toEqual(mockResult2);
+        });
+
+        it('should handle rejected promises from mentionNameResolver', async () => {
+            const error = new Error('Network error');
+            mockMentionNameResolver.lookupName.mockRejectedValue(error);
+
+            const provider = AtlascodeMentionProvider.init(mockConfig, mockFetchUsers);
+
+            await expect(provider.resolveMentionName('user1')).rejects.toThrow('Network error');
+        });
+
+        it('should cache failed promises and not retry immediately', async () => {
+            const error = new Error('Network error');
+            mockMentionNameResolver.lookupName.mockRejectedValue(error);
+
+            const provider = AtlascodeMentionProvider.init(mockConfig, mockFetchUsers);
+
+            // First call - should fail and cache the failed promise
+            await expect(provider.resolveMentionName('user1')).rejects.toThrow('Network error');
+
+            // Second call within cache duration - should return cached failed promise
+            await expect(provider.resolveMentionName('user1')).rejects.toThrow('Network error');
+
+            // Should only have made one call to the resolver
+            expect(mockMentionNameResolver.lookupName).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe('shouldHighlightMention method', () => {
+        it('should always return false', () => {
+            const provider = AtlascodeMentionProvider.init(mockConfig, mockFetchUsers);
+
+            const mockMention = {
+                id: 'user1',
+                text: '@john',
+                accessLevel: 'APPLICATION',
+            };
+
+            expect(provider.shouldHighlightMention(mockMention as any)).toBe(false);
+        });
+    });
+
+    describe('Private constructor behavior', () => {
+        it('should properly initialize config and fetchUsers', () => {
+            const customConfig = { url: 'custom-url', isBitbucketCloud: false };
+            const customFetchUsers = jest.fn();
+
+            const provider = AtlascodeMentionProvider.init(customConfig, customFetchUsers);
+
+            // Test that the provider uses the correct config
+            provider.filter('test');
+            jest.advanceTimersByTime(50);
+
+            expect(customFetchUsers).toHaveBeenCalledWith('test');
+        });
+    });
+
+    describe('Edge cases and error handling', () => {
+        it('should handle empty user arrays from fetchUsers', async () => {
+            mockFetchUsers.mockResolvedValue([]);
+
+            const provider = AtlascodeMentionProvider.init(mockConfig, mockFetchUsers);
+
+            provider.filter('test');
+            jest.advanceTimersByTime(50);
+
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            expect((provider as any)._notifyListeners).toHaveBeenCalledWith({ mentions: [], query: 'test' }, {});
+        });
+
+        it('should handle fetchUsers rejection gracefully', async () => {
+            const error = new Error('Fetch failed');
+            mockFetchUsers.mockRejectedValue(error);
+
+            const provider = AtlascodeMentionProvider.init(mockConfig, mockFetchUsers);
+
+            // Should not throw when filter is called
+            expect(() => {
+                provider.filter('test');
+                jest.advanceTimersByTime(50);
+            }).not.toThrow();
+        });
+
+        it('should handle malformed user objects', async () => {
+            const malformedUsers = [
+                { accountId: 'user1' }, // Missing other required fields
+                { displayName: 'John' }, // Missing accountId
+                null,
+                undefined,
+            ];
+            mockFetchUsers.mockResolvedValue(malformedUsers);
+
+            const provider = AtlascodeMentionProvider.init(mockConfig, mockFetchUsers);
+
+            provider.filter('test');
+            jest.advanceTimersByTime(50);
+
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            // Should handle malformed data gracefully
+            expect((provider as any)._notifyListeners).toHaveBeenCalled();
+        });
+
+        it('should handle very long queries', async () => {
+            const longQuery = 'a'.repeat(1000);
+            mockFetchUsers.mockResolvedValue([]);
+
+            const provider = AtlascodeMentionProvider.init(mockConfig, mockFetchUsers);
+
+            provider.filter(longQuery);
+            jest.advanceTimersByTime(50);
+
+            expect(mockFetchUsers).toHaveBeenCalledWith(longQuery);
+        });
+    });
+
+    describe('Cache memory management', () => {
+        it('should maintain separate cache entries for different IDs', async () => {
+            const mockResults = [
+                { id: 'user1', name: 'John', status: 'OK' as const },
+                { id: 'user2', name: 'Jane', status: 'OK' as const },
+                { id: 'user3', name: 'Bob', status: 'OK' as const },
+            ];
+
+            mockMentionNameResolver.lookupName
+                .mockResolvedValueOnce(mockResults[0])
+                .mockResolvedValueOnce(mockResults[1])
+                .mockResolvedValueOnce(mockResults[2]);
+
+            const provider = AtlascodeMentionProvider.init(mockConfig, mockFetchUsers);
+
+            // Populate cache with multiple entries
+            await provider.resolveMentionName('user1');
+            await provider.resolveMentionName('user2');
+            await provider.resolveMentionName('user3');
+
+            // Verify all cached entries work independently
+            const cachedResult1 = await provider.resolveMentionName('user1');
+            const cachedResult2 = await provider.resolveMentionName('user2');
+            const cachedResult3 = await provider.resolveMentionName('user3');
+
+            expect(cachedResult1).toEqual(mockResults[0]);
+            expect(cachedResult2).toEqual(mockResults[1]);
+            expect(cachedResult3).toEqual(mockResults[2]);
+
+            // Should have only made 3 calls total (initial population)
+            expect(mockMentionNameResolver.lookupName).toHaveBeenCalledTimes(3);
+        });
+    });
 });
