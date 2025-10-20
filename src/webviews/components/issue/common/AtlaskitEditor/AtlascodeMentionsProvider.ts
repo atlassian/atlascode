@@ -17,7 +17,7 @@ type ExtendedMentionResourceConfig = MentionResourceConfig & {
 };
 
 export class AtlascodeMentionProvider extends AbstractMentionResource implements ResolvingMentionProvider {
-    static #instance: AtlascodeMentionProvider;
+    static instance: AtlascodeMentionProvider;
 
     private config: ExtendedMentionResourceConfig;
     private fetchUsers: FetchJiraUsersFunc | FetchBBUsersFunc;
@@ -34,11 +34,11 @@ export class AtlascodeMentionProvider extends AbstractMentionResource implements
         config: ExtendedMentionResourceConfig,
         fetchUsers: FetchJiraUsersFunc | FetchBBUsersFunc,
     ): AtlascodeMentionProvider {
-        if (!AtlascodeMentionProvider.#instance) {
-            AtlascodeMentionProvider.#instance = new AtlascodeMentionProvider(config, fetchUsers);
+        if (!AtlascodeMentionProvider.instance) {
+            AtlascodeMentionProvider.instance = new AtlascodeMentionProvider(config, fetchUsers);
         }
 
-        return AtlascodeMentionProvider.#instance;
+        return AtlascodeMentionProvider.instance;
     }
 
     // Making the constructor private to enforce singleton pattern
@@ -51,18 +51,22 @@ export class AtlascodeMentionProvider extends AbstractMentionResource implements
     override filter(query?: string): void {
         const isBitbucketCloud = this.config.isBitbucketCloud;
         setTimeout(async () => {
-            const users = await this.fetchUsers(query || '');
-            const mentions = users.map((user) => {
-                const mention = {
-                    id: isBitbucketCloud ? `{${user.accountId}}` : `${user.accountId}`,
-                    name: user.displayName,
-                    mentionName: user.mention,
-                    avatarUrl: user.avatarUrl,
-                };
-                return mention;
-            });
-            this._notifyListeners({ mentions, query: query || '' }, {});
-            this._notifyAllResultsListeners({ mentions, query: query || '' });
+            try {
+                const users = await this.fetchUsers(query || '');
+                const mentions = users.map((user) => {
+                    const mention = {
+                        id: isBitbucketCloud ? `{${user?.accountId}}` : `${user?.accountId}`,
+                        name: user?.displayName,
+                        mentionName: user?.mention,
+                        avatarUrl: user?.avatarUrl,
+                    };
+                    return mention;
+                });
+                this._notifyListeners({ mentions, query: query || '' }, {});
+                this._notifyAllResultsListeners({ mentions, query: query || '' });
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
         }, 30 + 1);
         return;
     }

@@ -3,9 +3,11 @@ import { MentionResourceConfig } from '@atlaskit/mention';
 import { AtlascodeMentionProvider } from './AtlascodeMentionsProvider';
 
 // Mock the AbstractMentionResource to avoid importing the full Atlaskit implementation
+const mockNotifyListeners = jest.fn();
+
 jest.mock('@atlaskit/mention', () => ({
     AbstractMentionResource: class {
-        protected _notifyListeners = jest.fn();
+        protected _notifyListeners = mockNotifyListeners;
         protected _notifyAllResultsListeners = jest.fn();
     },
     MentionNameStatus: {
@@ -36,6 +38,7 @@ describe('AtlascodeMentionProvider', () => {
         };
 
         jest.clearAllMocks();
+        mockNotifyListeners.mockClear();
         jest.clearAllTimers();
         jest.useFakeTimers();
     });
@@ -96,9 +99,7 @@ describe('AtlascodeMentionProvider', () => {
 
             provider.filter();
 
-            jest.advanceTimersByTime(31);
-
-            await new Promise((resolve) => setImmediate(resolve));
+            jest.advanceTimersByTime(35);
 
             expect(mockFetchUsers).toHaveBeenCalledWith('');
         });
@@ -108,12 +109,7 @@ describe('AtlascodeMentionProvider', () => {
             const provider = AtlascodeMentionProvider.init(mockConfig, mockFetchUsers);
 
             provider.filter('john');
-
-            // Wait for the timeout to execute (implementation uses 31ms)
             jest.advanceTimersByTime(31);
-
-            await new Promise((resolve) => setImmediate(resolve));
-
             expect(mockFetchUsers).toHaveBeenCalledWith('john');
         });
 
@@ -140,10 +136,11 @@ describe('AtlascodeMentionProvider', () => {
             provider.filter('test');
             jest.advanceTimersByTime(31);
 
-            await new Promise((resolve) => setImmediate(resolve));
+            // Allow microtasks to complete
+            await Promise.resolve();
 
             // Should have notified listeners with properly formatted mentions
-            expect((provider as any)._notifyListeners).toHaveBeenCalledWith(
+            expect(mockNotifyListeners).toHaveBeenCalledWith(
                 {
                     mentions: [
                         {
@@ -182,9 +179,10 @@ describe('AtlascodeMentionProvider', () => {
             provider.filter('test');
             jest.advanceTimersByTime(31);
 
-            await new Promise((resolve) => setImmediate(resolve));
+            // Allow microtasks to complete
+            await Promise.resolve();
 
-            expect((provider as any)._notifyListeners).toHaveBeenCalledWith(
+            expect(mockNotifyListeners).toHaveBeenCalledWith(
                 {
                     mentions: [
                         {
@@ -209,8 +207,8 @@ describe('AtlascodeMentionProvider', () => {
             provider.filter('test');
             jest.advanceTimersByTime(31);
 
-            await new Promise((resolve) => setImmediate(resolve));
-
+            // Allow microtasks to complete
+            await Promise.resolve();
             expect((provider as any)._notifyAllResultsListeners).toHaveBeenCalledWith({
                 mentions: [
                     {
@@ -365,7 +363,8 @@ describe('AtlascodeMentionProvider', () => {
             provider.filter('test');
             jest.advanceTimersByTime(31);
 
-            await new Promise((resolve) => setImmediate(resolve));
+            // Allow microtasks to complete
+            await Promise.resolve();
 
             expect(customFetchUsers).toHaveBeenCalledWith('test');
         });
@@ -380,9 +379,9 @@ describe('AtlascodeMentionProvider', () => {
             provider.filter('test');
             jest.advanceTimersByTime(31);
 
-            await new Promise((resolve) => setImmediate(resolve));
+            await Promise.resolve();
 
-            expect((provider as any)._notifyListeners).toHaveBeenCalledWith({ mentions: [], query: 'test' }, {});
+            expect(mockNotifyListeners).toHaveBeenCalledWith({ mentions: [], query: 'test' }, {});
         });
 
         it('should handle fetchUsers rejection gracefully', async () => {
@@ -397,7 +396,7 @@ describe('AtlascodeMentionProvider', () => {
                 jest.advanceTimersByTime(31);
             }).not.toThrow();
 
-            await new Promise((resolve) => setImmediate(resolve));
+            await Promise.resolve();
         });
 
         it('should handle malformed user objects', async () => {
@@ -414,9 +413,10 @@ describe('AtlascodeMentionProvider', () => {
             provider.filter('test');
             jest.advanceTimersByTime(31);
 
-            await new Promise((resolve) => setImmediate(resolve));
+            // Allow microtasks to complete
+            await Promise.resolve();
 
-            expect((provider as any)._notifyListeners).toHaveBeenCalled();
+            expect(mockNotifyListeners).toHaveBeenCalled();
         });
 
         it('should handle very long queries', async () => {
@@ -428,7 +428,7 @@ describe('AtlascodeMentionProvider', () => {
             provider.filter(longQuery);
             jest.advanceTimersByTime(31);
 
-            await new Promise((resolve) => setImmediate(resolve));
+            await Promise.resolve();
 
             expect(mockFetchUsers).toHaveBeenCalledWith(longQuery);
         });
