@@ -20,6 +20,9 @@ describe('AtlascodeMentionProvider', () => {
     let mockConfig: MentionResourceConfig;
     let mockMentionNameResolver: jest.Mocked<any>;
 
+    // update timeout for GH actions
+    jest.setTimeout(10000);
+
     beforeEach(() => {
         // Reset the singleton instance before each test
         (AtlascodeMentionProvider as any).instance = undefined;
@@ -88,23 +91,28 @@ describe('AtlascodeMentionProvider', () => {
 
     describe('filter method', () => {
         it('should call fetchUsers with empty string when no query provided', async () => {
+            mockFetchUsers.mockResolvedValue([]);
             const provider = AtlascodeMentionProvider.init(mockConfig, mockFetchUsers);
 
             provider.filter();
 
-            // Wait for the timeout to execute
-            jest.advanceTimersByTime(50);
+            jest.advanceTimersByTime(31);
+
+            await new Promise((resolve) => setImmediate(resolve));
 
             expect(mockFetchUsers).toHaveBeenCalledWith('');
         });
 
         it('should call fetchUsers with provided query', async () => {
+            mockFetchUsers.mockResolvedValue([]);
             const provider = AtlascodeMentionProvider.init(mockConfig, mockFetchUsers);
 
             provider.filter('john');
 
-            // Wait for the timeout to execute
-            jest.advanceTimersByTime(50);
+            // Wait for the timeout to execute (implementation uses 31ms)
+            jest.advanceTimersByTime(31);
+
+            await new Promise((resolve) => setImmediate(resolve));
 
             expect(mockFetchUsers).toHaveBeenCalledWith('john');
         });
@@ -130,9 +138,9 @@ describe('AtlascodeMentionProvider', () => {
             const provider = AtlascodeMentionProvider.init(configWithCloud, mockFetchUsers);
 
             provider.filter('test');
-            jest.advanceTimersByTime(50);
+            jest.advanceTimersByTime(31);
 
-            await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for async operations
+            await new Promise((resolve) => setImmediate(resolve));
 
             // Should have notified listeners with properly formatted mentions
             expect((provider as any)._notifyListeners).toHaveBeenCalledWith(
@@ -172,9 +180,9 @@ describe('AtlascodeMentionProvider', () => {
             const provider = AtlascodeMentionProvider.init(configWithoutCloud, mockFetchUsers);
 
             provider.filter('test');
-            jest.advanceTimersByTime(50);
+            jest.advanceTimersByTime(31);
 
-            await new Promise((resolve) => setTimeout(resolve, 0));
+            await new Promise((resolve) => setImmediate(resolve));
 
             expect((provider as any)._notifyListeners).toHaveBeenCalledWith(
                 {
@@ -199,9 +207,9 @@ describe('AtlascodeMentionProvider', () => {
             const provider = AtlascodeMentionProvider.init(mockConfig, mockFetchUsers);
 
             provider.filter('test');
-            jest.advanceTimersByTime(50);
+            jest.advanceTimersByTime(31);
 
-            await new Promise((resolve) => setTimeout(resolve, 0));
+            await new Promise((resolve) => setImmediate(resolve));
 
             expect((provider as any)._notifyAllResultsListeners).toHaveBeenCalledWith({
                 mentions: [
@@ -348,15 +356,16 @@ describe('AtlascodeMentionProvider', () => {
     });
 
     describe('Private constructor behavior', () => {
-        it('should properly initialize config and fetchUsers', () => {
+        it('should properly initialize config and fetchUsers', async () => {
             const customConfig = { url: 'custom-url', isBitbucketCloud: false };
-            const customFetchUsers = jest.fn();
+            const customFetchUsers = jest.fn().mockResolvedValue([]);
 
             const provider = AtlascodeMentionProvider.init(customConfig, customFetchUsers);
 
-            // Test that the provider uses the correct config
             provider.filter('test');
-            jest.advanceTimersByTime(50);
+            jest.advanceTimersByTime(31);
+
+            await new Promise((resolve) => setImmediate(resolve));
 
             expect(customFetchUsers).toHaveBeenCalledWith('test');
         });
@@ -369,9 +378,9 @@ describe('AtlascodeMentionProvider', () => {
             const provider = AtlascodeMentionProvider.init(mockConfig, mockFetchUsers);
 
             provider.filter('test');
-            jest.advanceTimersByTime(50);
+            jest.advanceTimersByTime(31);
 
-            await new Promise((resolve) => setTimeout(resolve, 0));
+            await new Promise((resolve) => setImmediate(resolve));
 
             expect((provider as any)._notifyListeners).toHaveBeenCalledWith({ mentions: [], query: 'test' }, {});
         });
@@ -385,8 +394,10 @@ describe('AtlascodeMentionProvider', () => {
             // Should not throw when filter is called
             expect(() => {
                 provider.filter('test');
-                jest.advanceTimersByTime(50);
+                jest.advanceTimersByTime(31);
             }).not.toThrow();
+
+            await new Promise((resolve) => setImmediate(resolve));
         });
 
         it('should handle malformed user objects', async () => {
@@ -401,11 +412,10 @@ describe('AtlascodeMentionProvider', () => {
             const provider = AtlascodeMentionProvider.init(mockConfig, mockFetchUsers);
 
             provider.filter('test');
-            jest.advanceTimersByTime(50);
+            jest.advanceTimersByTime(31);
 
-            await new Promise((resolve) => setTimeout(resolve, 0));
+            await new Promise((resolve) => setImmediate(resolve));
 
-            // Should handle malformed data gracefully
             expect((provider as any)._notifyListeners).toHaveBeenCalled();
         });
 
@@ -416,7 +426,9 @@ describe('AtlascodeMentionProvider', () => {
             const provider = AtlascodeMentionProvider.init(mockConfig, mockFetchUsers);
 
             provider.filter(longQuery);
-            jest.advanceTimersByTime(50);
+            jest.advanceTimersByTime(31);
+
+            await new Promise((resolve) => setImmediate(resolve));
 
             expect(mockFetchUsers).toHaveBeenCalledWith(longQuery);
         });
