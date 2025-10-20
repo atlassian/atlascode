@@ -1,6 +1,6 @@
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Tooltip from '@atlaskit/tooltip';
-import WidthDetector from '@atlaskit/width-detector';
+import WidthObserver from '@atlaskit/width-detector';
 import { CommentVisibility, IssueType, MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, InputFieldUI, SelectFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { Box } from '@mui/material';
@@ -812,7 +812,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             this.postMessage(e); /* just {this.postMessage} doesn't work */
                         }}
                     >
-                        <WidthDetector>
+                        <WidthObserver>
                             {(width?: number) => {
                                 if (width && width < 800) {
                                     return (
@@ -861,7 +861,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                     </div>
                                 );
                             }}
-                        </WidthDetector>
+                        </WidthObserver>
                     </AtlascodeErrorBoundary>
                 </EditorStateProvider>
             </Page>

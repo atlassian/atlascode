@@ -1,5 +1,4 @@
-import { Alert, AlertTitle } from '@mui/lab';
-import { Box, Button, Collapse, Grid } from '@mui/material';
+import { Alert, AlertTitle, Box, Button, Collapse, Grid } from '@mui/material';
 import React, { useCallback, useContext } from 'react';
 
 import { CommonAction } from '../../../../lib/ipc/fromUI/common';
