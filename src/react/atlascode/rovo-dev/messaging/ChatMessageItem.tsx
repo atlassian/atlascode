@@ -6,7 +6,7 @@ import Tooltip from '@atlaskit/tooltip';
 import React, { useCallback, useState } from 'react';
 import { RovoDevTextResponse } from 'src/rovo-dev/responseParserInterfaces';
 
-import { MarkedDown, OpenFileFunc } from '../common/common';
+import { MarkedDown, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { PromptContextCollection } from '../prompt-box/promptContext/promptContextCollection';
 import { UserPromptMessage } from '../utils';
 
@@ -17,7 +17,7 @@ export const ChatMessageItem: React.FC<{
     onCopy?: (text: string) => void;
     onFeedback?: (isPositive: boolean) => void;
     openFile: OpenFileFunc;
-    openJira: (url: string) => void;
+    openJira: OpenJiraFunc;
     onLinkClick?: (href: string) => void;
 }> = ({ msg, icon, enableActions, onCopy, onFeedback, openFile, openJira, onLinkClick }) => {
     const [isCopied, setIsCopied] = useState(false);

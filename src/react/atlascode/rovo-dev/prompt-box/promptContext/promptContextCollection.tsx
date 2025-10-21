@@ -1,7 +1,7 @@
 import React from 'react';
 import { RovoDevContextItem, RovoDevFileContext, RovoDevJiraContext } from 'src/rovo-dev/rovoDevTypes';
 
-import { OpenFileFunc } from '../../common/common';
+import { OpenFileFunc, OpenJiraFunc } from '../../common/common';
 import { PromptContextFileItem, PromptContextJiraItem } from './promptContextItem';
 
 // PromptContextCollection: displays a row or column of PromptContextItem
@@ -14,7 +14,7 @@ export const PromptContextCollection: React.FC<{
     onRemoveContext?: (item: RovoDevContextItem) => void;
     inChat?: boolean;
     openFile: OpenFileFunc;
-    openJira: (url: string) => void;
+    openJira: OpenJiraFunc;
 }> = ({
     content,
     direction = 'row',

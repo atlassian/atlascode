@@ -1,7 +1,7 @@
 import React from 'react';
 import { RovoDevFileContext } from 'src/rovo-dev/rovoDevTypes';
 
-import { OpenFileFunc } from '../../common/common';
+import { OpenFileFunc, OpenJiraFunc } from '../../common/common';
 
 const isHighContrastTheme = (): boolean => {
     return (
@@ -186,7 +186,7 @@ export const PromptContextFileItem: React.FC<
 };
 
 export const PromptContextJiraItem: React.FC<
-    { name: string; url: string; openJira: (url: string) => void } & PromptContextItemRemoveProps
+    { name: string; url: string; openJira: OpenJiraFunc } & PromptContextItemRemoveProps
 > = ({ name, url, onRemove, openJira }) => {
     return (
         <span style={chipStyle}>
