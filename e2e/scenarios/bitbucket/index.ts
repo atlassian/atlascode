@@ -21,9 +21,9 @@ export const bitbucketScenariosDC = [
     { name: 'Cleanup', run: cleanupWorkspace },
     { name: 'Authenticate with Bitbucket', run: authFlow },
     { name: 'Connect repository', run: connectRepository },
-    { name: 'Start work Flow', run: startWorkFlow },
     { name: 'Create PullRequest', run: createPullRequest },
     { name: 'View PullRequest', run: viewPullRequest },
     { name: 'Add comment to PullRequest', run: addCommentToPullRequestDC },
     { name: 'Approve PullRequset', run: approvePullRequest },
+    { name: 'Start work Flow', run: startWorkFlow },
 ];
