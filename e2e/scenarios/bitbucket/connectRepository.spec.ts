@@ -7,8 +7,8 @@ const addRepo = async (page: Page, type: BitbucketTypes) => {
     await new AtlascodeDrawer(page).pullRequests.addRepository();
     await page.waitForTimeout(250);
 
-    const pathInput = page.getByRole('textbox', { name: 'Type to narrow down results. - Add Folder to Workspace' });
-    await pathInput.waitFor({ state: 'visible' });
+    const pathInput = page.getByRole('textbox', { name: 'Add Folder to Workspace' });
+    await pathInput.waitFor({ state: 'visible', timeout: 5_000 });
     await page.waitForTimeout(250);
 
     if (type === BitbucketTypes.Cloud) {
