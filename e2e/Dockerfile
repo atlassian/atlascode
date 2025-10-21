@@ -3,7 +3,7 @@ FROM node:23-slim
 # Install dependencies and xvfb
 RUN apt-get update \
     && apt-get install -y wget gpg xauth curl git \
-    && npm install --global playwright@1.53.0 \
+    && npm install --global playwright@1.56.1 \
     && npx playwright install --with-deps chromium
 
 # install code-server

@@ -109,6 +109,17 @@ export async function authenticatedEvent(
     });
 }
 
+export async function aiInstallCompletedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
+    return instanceTrackEvent(site, 'completed', 'aiInstall', {
+        attributes: {
+            targetProduct: 'rovodev',
+            productStage: 'onboarding',
+            onboardingStep: 'install',
+            xid: 'rovodev-ide-vscode',
+        },
+    });
+}
+
 export async function editedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
     return instanceTrackEvent(site, 'edited', 'atlascode', {
         attributes: { machineId: Container.machineId, hostProduct: site.product.name },
