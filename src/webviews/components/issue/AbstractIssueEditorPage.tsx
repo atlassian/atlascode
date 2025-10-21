@@ -575,7 +575,7 @@ export abstract class AbstractIssueEditorPage<
                     <>
                         {field.key === 'summary' && <AISuggestionHeader vscodeApi={this._api} />}
                         <Field
-                            key={this.state.summaryKey}
+                            key={field.key === 'summary' ? this.state.summaryKey : field.key}
                             defaultValue={defaultVal}
                             label={<span>{field.name}</span>}
                             isRequired={field.required}
@@ -592,9 +592,11 @@ export abstract class AbstractIssueEditorPage<
                                 let markup = (
                                     <Textfield
                                         {...fieldArgs.fieldProps}
-                                        value={defaultVal}
                                         className="ac-inputField"
-                                        isDisabled={this.state.isSomethingLoading || this.state.isGeneratingSuggestions}
+                                        isDisabled={
+                                            (this.state.isSomethingLoading && this.state.loadingField === field.key) ||
+                                            this.state.isGeneratingSuggestions
+                                        }
                                         onChange={chain(fieldArgs.fieldProps.onChange, (e: any) =>
                                             this.handleInlineEdit(field, e.currentTarget.value),
                                         )}
@@ -615,7 +617,9 @@ export abstract class AbstractIssueEditorPage<
                                             {...fieldArgs.fieldProps}
                                             value={this.coerceToString(this.state.fieldValues[field.key])}
                                             isDisabled={
-                                                this.state.isSomethingLoading || this.state.isGeneratingSuggestions
+                                                (this.state.isSomethingLoading &&
+                                                    this.state.loadingField === field.key) ||
+                                                this.state.isGeneratingSuggestions
                                             }
                                             onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
                                                 this.handleInlineEdit(field, val),

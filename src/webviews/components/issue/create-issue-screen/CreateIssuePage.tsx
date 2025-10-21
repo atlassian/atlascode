@@ -181,13 +181,23 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                         fieldValues: mergedFieldValues,
                     };
 
+                    // Only reset summaryKey if project or issuetype changed (which affect summary validation)
+                    const projectChanged =
+                        fieldValues?.project && this.state.fieldValues.project?.key !== fieldValues.project.key;
+                    const issueTypeChanged =
+                        fieldValues?.issuetype && this.state.fieldValues.issuetype?.id !== fieldValues.issuetype.id;
+
                     this.updateInternals(mergedIssueData);
                     this.setState(mergedIssueData, () => {
-                        this.setState({
+                        const newState: any = {
                             isSomethingLoading: false,
                             loadingField: '',
-                            summaryKey: v4(), // reset summary to clear validation errors
-                        });
+                        };
+                        // Only reset summary key when project or issue type changes
+                        if (projectChanged || issueTypeChanged) {
+                            newState.summaryKey = v4(); // reset summary to clear validation errors
+                        }
+                        this.setState(newState);
                     });
 
                     break;
@@ -390,30 +400,30 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     }
 
     getCommonFieldMarkup(): React.ReactElement[] {
-        return this.commonFields.map((field, index) => {
+        return this.commonFields.map((field) => {
             const errorMessage = this.getFieldError(field.key);
             if (errorMessage) {
                 return (
-                    <div key={index}>
+                    <div key={field.key}>
                         {this.getInputMarkup(field)}
                         <ErrorMessage>{errorMessage}</ErrorMessage>
                     </div>
                 );
             }
-            return <div key={index}>{this.getInputMarkup(field)}</div>;
+            return <div key={field.key}>{this.getInputMarkup(field)}</div>;
         });
     }
 
     getAdvancedFieldMarkup(): any {
         // Cloud supports parent-child relation only for all issues. DC supports parent-child for standard-issues and subtasks
         if (this.state.siteDetails.isCloud) {
-            return this.advancedFields.map((field) =>
-                this.getInputMarkup(field, false, this.state.fieldValues['issuetype']),
-            );
+            return this.advancedFields.map((field) => (
+                <div key={field.key}>{this.getInputMarkup(field, false, this.state.fieldValues['issuetype'])}</div>
+            ));
         } else {
             return this.advancedFields
                 .filter((field) => field.key !== 'parent') //
-                .map((field) => this.getInputMarkup(field));
+                .map((field) => <div key={field.key}>{this.getInputMarkup(field)}</div>);
         }
     }
 
