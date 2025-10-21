@@ -23,8 +23,7 @@ export const enum RovoDevProviderMessageType {
     CancelFailed = 'cancelFailed',
     CreatePRComplete = 'createPRComplete',
     GetCurrentBranchNameComplete = 'getCurrentBranchNameComplete',
-    ContextAdded = 'contextAdded',
-    ContextRemoved = 'contextRemoved',
+    SetChatContext = 'setChatContext',
     CheckGitChangesComplete = 'checkGitChangesComplete',
     FilterModifiedFilesByContentComplete = 'filterModifiedFilesByContentComplete',
     ForceStop = 'forceStop',
@@ -34,15 +33,6 @@ export const enum RovoDevProviderMessageType {
     SetJiraWorkItems = 'setJiraWorkItems',
     CheckFileExistsComplete = 'checkFileExistsComplete',
     SetThinkingBlockEnabled = 'setThinkingBlockEnabled',
-}
-
-interface FocusedContextRemovedResponse {
-    isFocus: true;
-}
-
-interface NonFocusedContextRemovedResponse {
-    isFocus: false;
-    context: RovoDevContextItem;
 }
 
 export type RovoDevDisabledReason = DisabledState['subState'];
@@ -79,11 +69,7 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.CancelFailed>
     | ReducerAction<RovoDevProviderMessageType.CreatePRComplete, { data: { url?: string; error?: string } }>
     | ReducerAction<RovoDevProviderMessageType.GetCurrentBranchNameComplete, { data: { branchName?: string } }>
-    | ReducerAction<RovoDevProviderMessageType.ContextAdded, { context: RovoDevContextItem }>
-    | ReducerAction<
-          RovoDevProviderMessageType.ContextRemoved,
-          FocusedContextRemovedResponse | NonFocusedContextRemovedResponse
-      >
+    | ReducerAction<RovoDevProviderMessageType.SetChatContext, { context: RovoDevContextItem[] }>
     | ReducerAction<RovoDevProviderMessageType.CheckGitChangesComplete, { hasChanges: boolean }>
     | ReducerAction<RovoDevProviderMessageType.FilterModifiedFilesByContentComplete, { filteredFiles: ModifiedFile[] }>
     | ReducerAction<RovoDevProviderMessageType.ForceStop>

@@ -1,10 +1,14 @@
 import timer from 'src/util/perf';
 import {
+    CancellationToken,
     commands,
     ConfigurationChangeEvent,
+    DataTransfer,
+    DataTransferItem,
     Disposable,
     EventEmitter,
     TreeDataProvider,
+    TreeDragAndDropController,
     TreeItem,
     TreeViewVisibilityChangeEvent,
     window,
@@ -29,7 +33,13 @@ const AssignedWorkItemsViewProviderId = AssignedJiraItemsViewId;
 const RefreshCumulativeJqlFetchEventName = 'ui.jira.jqlFetch.update.lcp';
 const InitialCumulativeJqlFetchEventName = 'ui.jira.jqlFetch.render.lcp';
 
-export class AssignedWorkItemsViewProvider extends Disposable implements TreeDataProvider<TreeItem> {
+export class AssignedWorkItemsViewProvider
+    extends Disposable
+    implements TreeDataProvider<TreeItem>, TreeDragAndDropController<TreeItem>
+{
+    dropMimeTypes = [];
+    dragMimeTypes = [];
+
     private static readonly _treeItemConfigureJiraMessage = loginToJiraMessageNode;
 
     private _onDidChangeTreeData = new EventEmitter<TreeItem | undefined | void>();
@@ -47,7 +57,10 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
 
         setCommandContext(CommandContext.AssignedIssueExplorer, Container.config.jira.explorer.enabled);
 
-        const treeView = window.createTreeView(AssignedWorkItemsViewProviderId, { treeDataProvider: this });
+        const treeView = window.createTreeView(AssignedWorkItemsViewProviderId, {
+            treeDataProvider: this,
+            dragAndDropController: this,
+        });
 
         BadgeDelegate.initialize(treeView);
 
@@ -195,5 +208,12 @@ export class AssignedWorkItemsViewProvider extends Disposable implements TreeDat
         return issues
             ? issues.map((issue) => new JiraIssueNode(JiraIssueNode.NodeType.JiraAssignedIssuesNode, issue))
             : [];
+    }
+
+    public async handleDrag(source: readonly TreeItem[], treeDataTransfer: DataTransfer, _token: CancellationToken) {
+        treeDataTransfer.set(
+            'application/vnd.code.tree.jiraAssignedWorkItem',
+            new DataTransferItem(source.map((x) => x.resourceUri)),
+        );
     }
 }

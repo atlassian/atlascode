@@ -22,6 +22,8 @@ import {
     SLASH_COMMANDS,
 } from './utils';
 
+const IsBoysenberry = process.env.ROVODEV_BBY === 'true';
+
 type NonDisabledState = Exclude<State, DisabledState>;
 
 interface PromptInputBoxProps {
@@ -74,22 +76,24 @@ function initMonaco(isBBY: boolean) {
     }
 }
 
-function createEditor(setIsEmpty?: (isEmpty: boolean) => void, isBBY: boolean = false) {
+function createEditor(setIsEmpty: (isEmpty: boolean) => void) {
     const container = document.getElementById('prompt-editor-container');
     if (!container) {
         return undefined;
     }
 
-    initMonaco(isBBY);
+    initMonaco(IsBoysenberry);
 
     const editor = createMonacoPromptEditor(container);
+
     editor.onDidChangeModelContent(() => {
         if (editor.getValue().trim().length === 0) {
-            setIsEmpty?.(true);
+            setIsEmpty(true);
         } else {
-            setIsEmpty?.(false);
+            setIsEmpty(false);
         }
     });
+
     setupAutoResize(editor);
     return editor;
 }
@@ -113,11 +117,8 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     const [editor, setEditor] = React.useState<ReturnType<typeof createEditor>>(undefined);
     const [isEmpty, setIsEmpty] = React.useState(true);
 
-    // create the editor only once - use onSend hook to retry
-    React.useEffect(
-        () => setEditor((prev) => prev ?? createEditor(setIsEmpty, onYoloModeToggled === undefined)),
-        [onSend, onYoloModeToggled],
-    );
+    // create the editor only once - use onAddContext hook to retry
+    React.useEffect(() => setEditor((prev) => prev ?? createEditor(setIsEmpty)), [onAddContext]);
 
     React.useEffect(() => {
         // Remove Monaco's color stylesheet

@@ -2,7 +2,7 @@ import React from 'react';
 import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
 import { State } from 'src/rovo-dev/rovoDevTypes';
 
-import { CheckFileExistsFunc, OpenFileFunc } from '../common/common';
+import { CheckFileExistsFunc, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { Response } from '../utils';
 import { ChatItem } from './ChatItem';
 
@@ -13,6 +13,7 @@ interface ChatStreamMessageRendererProps {
     handleFeedbackTrigger: (isPositive: boolean) => void;
     renderProps: {
         openFile: OpenFileFunc;
+        openJira: OpenJiraFunc;
         checkFileExists: CheckFileExistsFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;

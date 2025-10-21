@@ -6,7 +6,7 @@ import { ConnectionTimeout } from 'src/util/time';
 
 import { DetailedSiteInfo } from '../../../../atlclients/authInfo';
 import { useMessagingApi } from '../../messagingApi';
-import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc } from '../common/common';
+import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
 import { PullRequestForm } from '../create-pr/PullRequestForm';
 import { FeedbackForm, FeedbackType } from '../feedback-form/FeedbackForm';
@@ -25,6 +25,7 @@ interface ChatStreamProps {
     modalDialogs: DialogMessage[];
     renderProps: {
         openFile: OpenFileFunc;
+        openJira: OpenJiraFunc;
         checkFileExists: CheckFileExistsFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;

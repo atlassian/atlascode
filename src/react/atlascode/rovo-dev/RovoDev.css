@@ -8,6 +8,37 @@ body {
     --ds-background-neutral-subtle-hovered: var(--vscode-list-hoverBackground);
 }
 
+#rovoDevDragDropOverlay {
+    position: fixed;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--vscode-editorGroup-dropBackground);
+    z-index: 999;
+    cursor: pointer;
+}
+
+#rovoDevDragDropOverlayMessage {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 8px;
+    background-color: var(--vscode-sideBar-background);
+    font-size: var(--vscode-font-size);
+    font-family: var(--vscode-font-family);
+}
+
+#rovoDevDragDropOverlayMessage > .codicon {
+    font-size: 1.5em;
+    padding-right: 8px;
+}
+
 .rovoDevChat * {
     scrollbar-width: auto;
     scrollbar-color: var(--vscode-scrollbarSlider-background) transparent;
@@ -24,10 +55,6 @@ body {
     height: 100vh;
     margin: auto;
     max-width: 800px;
-}
-
-.rovoDevChat:not(.debugEnabled) .debugOnly {
-    display: none !important;
 }
 
 #rovoDevLogo > path:first-child {

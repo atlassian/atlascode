@@ -4,7 +4,6 @@ import { RovoDevEntitlementCheckFailedDetail } from './rovoDevWebviewProviderMes
 export type RovoDevContextFileInfo = {
     name: string;
     absolutePath: string;
-    relativePath: string;
 };
 
 export type RovoDevContextSelectionInfo = {
@@ -12,12 +11,21 @@ export type RovoDevContextSelectionInfo = {
     end: number;
 };
 
-export type RovoDevContextItem = {
+export interface RovoDevFileContext {
+    contextType: 'file';
     isFocus: boolean;
     file: RovoDevContextFileInfo;
     selection?: RovoDevContextSelectionInfo;
     enabled: boolean;
-};
+}
+
+export interface RovoDevJiraContext {
+    contextType: 'jiraWorkItem';
+    name: string;
+    url: string;
+}
+
+export type RovoDevContextItem = RovoDevFileContext | RovoDevJiraContext;
 
 export interface RovoDevPrompt {
     text: string;

@@ -28,6 +28,7 @@ jest.mock('../tools/ToolCallItem', () => ({
 describe('MessageDrawer', () => {
     const mockRenderProps = {
         openFile: jest.fn(),
+        openJira: jest.fn(),
         checkFileExists: jest.fn(),
         isRetryAfterErrorButtonEnabled: jest.fn(),
         retryPromptAfterError: jest.fn(),

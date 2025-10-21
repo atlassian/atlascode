@@ -43,6 +43,7 @@ describe('ChatItem', () => {
         onCollapsiblePanelExpanded: jest.fn(),
         renderProps: {
             openFile: jest.fn(),
+            openJira: jest.fn(),
             checkFileExists: jest.fn(),
             isRetryAfterErrorButtonEnabled: jest.fn(),
             retryPromptAfterError: jest.fn(),

@@ -2,25 +2,28 @@ import { Container } from 'src/container';
 import { RovoDevLogger } from 'src/logger';
 import { RovoDevViewResponse } from 'src/react/atlascode/rovo-dev/rovoDevViewMessages';
 import { v4 } from 'uuid';
-import { Event, Webview } from 'vscode';
 
 import { RovoDevResponseParser } from './responseParser';
 import { RovoDevResponse } from './responseParserInterfaces';
 import { RovoDevApiClient } from './rovoDevApiClient';
 import {
     RovoDevChatRequest,
+    RovoDevChatRequestContext,
     RovoDevChatRequestContextFileEntry,
+    RovoDevChatRequestContextOtherEntry,
     ToolPermissionChoice,
 } from './rovoDevApiClientInterfaces';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
-import { RovoDevContextItem, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
+import {
+    RovoDevContextItem,
+    RovoDevFileContext,
+    RovoDevJiraContext,
+    RovoDevPrompt,
+    TechnicalPlan,
+} from './rovoDevTypes';
 import { statusJsonResponseToMarkdown } from './rovoDevUtils';
+import { TypedWebview } from './rovoDevWebviewProvider';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
-
-interface TypedWebview<MessageOut, MessageIn> extends Webview {
-    readonly onDidReceiveMessage: Event<MessageIn>;
-    postMessage(message: MessageOut): Thenable<boolean>;
-}
 
 type StreamingApi = 'chat' | 'replay';
 
@@ -103,6 +106,9 @@ export class RovoDevChatProvider {
         if (!text) {
             return;
         }
+
+        // remove hidden focused item from the context
+        context = context.filter((x) => x.contextType !== 'file' || x.enabled);
 
         const isCommand = PromptCommands.includes(text.trim());
         if (isCommand) {
@@ -574,18 +580,25 @@ export class RovoDevChatProvider {
 
     private preparePayloadForChatRequest(prompt: RovoDevPrompt): RovoDevChatRequest {
         const fileContext: RovoDevChatRequestContextFileEntry[] = (prompt.context || [])
-            .filter((x) => x.enabled)
-            .map((x) => ({
+            .filter((x) => x.contextType === 'file' && x.enabled)
+            .map((x: RovoDevFileContext) => ({
                 type: 'file' as const,
                 file_path: x.file.absolutePath,
                 selection: x.selection,
                 note: 'I currently have this file open in my IDE',
             }));
 
+        const jiraContext: RovoDevChatRequestContextOtherEntry[] = (prompt.context || [])
+            .filter((x) => x.contextType === 'jiraWorkItem')
+            .map((x: RovoDevJiraContext) => ({
+                type: 'jiraWorkItem',
+                content: x.url,
+            }));
+
         return {
             message: prompt.text,
             enable_deep_plan: prompt.enable_deep_plan,
-            context: fileContext,
+            context: Array<RovoDevChatRequestContext>().concat(fileContext).concat(jiraContext),
         };
     }
 
@@ -642,12 +655,12 @@ export class RovoDevChatProvider {
 
             // Create context item for each file
             context.push({
+                contextType: 'file',
                 isFocus: false,
                 enabled: true,
                 file: {
                     name: filePath.split('/').pop() || filePath,
                     absolutePath: filePath,
-                    relativePath: filePath.split('/').pop() || filePath, // Use basename as relative path
                 },
                 selection: selection,
             });

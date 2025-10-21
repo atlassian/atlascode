@@ -471,6 +471,7 @@ const buildContext = (editor?: TextEditor, vscodeContext?: ExtensionContext): Ro
     };
     const selections = editor.selections && editor.selections.length > 0 ? editor.selections : [editor.selection];
     return selections.map((selection) => ({
+        contextType: 'file',
         isFocus: false,
         file: fileInfo,
         selection: selection ? { start: selection.start.line, end: selection.end.line } : undefined,

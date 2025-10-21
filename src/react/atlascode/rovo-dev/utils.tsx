@@ -349,3 +349,22 @@ export const appendResponse = (
         return [...prev, response];
     }
 };
+
+export async function processDropDataTransferItems(
+    items: DataTransferItemList,
+    callback: (value: string[]) => void,
+): Promise<void> {
+    if (!items || items.length === 0) {
+        return;
+    }
+
+    const promises: Promise<string>[] = [];
+
+    for (let i = 0; i < items.length; ++i) {
+        const item = items[i];
+        promises.push(new Promise<string>((resolve) => item.getAsString(resolve)));
+    }
+
+    const values = await Promise.all(promises);
+    callback(values);
+}

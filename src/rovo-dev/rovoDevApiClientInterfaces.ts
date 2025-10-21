@@ -13,9 +13,11 @@ export interface RovoDevChatRequestContextOtherEntry {
     content: string;
 }
 
+export type RovoDevChatRequestContext = RovoDevChatRequestContextFileEntry | RovoDevChatRequestContextOtherEntry;
+
 export interface RovoDevChatRequest {
     message: string;
-    context: (RovoDevChatRequestContextFileEntry | RovoDevChatRequestContextOtherEntry)[];
+    context: RovoDevChatRequestContext[];
     enable_deep_plan?: boolean;
 }
 

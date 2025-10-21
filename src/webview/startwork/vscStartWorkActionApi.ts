@@ -134,7 +134,10 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
 
     async openRovoDev(issue: MinimalIssue<DetailedSiteInfo>): Promise<void> {
         const issueUrl = `${issue.siteDetails.baseLinkUrl}/browse/${issue.key}`;
-        const prompt = `Please work on [${issue.key}](${issueUrl})`;
-        await Container.rovodevWebviewProvider.setPromptTextWithFocus(prompt);
+        await Container.rovodevWebviewProvider.setPromptTextWithFocus('Work on the attached Jira work item', {
+            contextType: 'jiraWorkItem',
+            name: issue.key,
+            url: issueUrl,
+        });
     }
 }

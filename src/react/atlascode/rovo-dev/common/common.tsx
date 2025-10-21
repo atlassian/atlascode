@@ -108,6 +108,10 @@ export interface OpenFileFunc {
     (filePath: string, tryShowDiff?: boolean, lineRange?: number[]): void;
 }
 
+export interface OpenJiraFunc {
+    (url: string): void;
+}
+
 export type CheckFileExistsFunc = (filePath: string) => boolean | null;
 
 export const FollowUpActionFooter: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
@@ -129,6 +133,7 @@ export const FollowUpActionFooter: React.FC<{ children?: React.ReactNode }> = ({
 export const renderChatHistory = (
     msg: ChatMessage,
     openFile: OpenFileFunc,
+    openJira: OpenJiraFunc,
     checkFileExists: CheckFileExistsFunc,
     isRetryAfterErrorButtonEnabled: (uid: string) => boolean,
     retryAfterError: () => void,
@@ -161,7 +166,7 @@ export const renderChatHistory = (
             );
         case 'text':
         case '_RovoDevUserPrompt':
-            return <ChatMessageItem msg={msg} openFile={openFile} />;
+            return <ChatMessageItem msg={msg} openFile={openFile} openJira={openJira} />;
         default:
             return <div>Unknown message type</div>;
     }

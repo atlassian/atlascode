@@ -223,23 +223,6 @@ describe('RovoDevWebviewProvider - Real Implementation Tests', () => {
             expect(provider).toBeDefined();
         });
 
-        it('should handle addToContext', async () => {
-            const contextItem = {
-                isFocus: true,
-                file: { name: 'test.ts', absolutePath: '/test.ts', relativePath: 'test.ts' },
-                selection: undefined,
-                enabled: true,
-            };
-
-            // Mock the webview
-            (provider as any)._webView = {
-                postMessage: jest.fn().mockResolvedValue(true),
-            };
-
-            await provider.addToContext(contextItem);
-            expect(provider).toBeDefined();
-        });
-
         it('should handle setPromptTextWithFocus', async () => {
             // Mock the webview
             (provider as any)._webView = {

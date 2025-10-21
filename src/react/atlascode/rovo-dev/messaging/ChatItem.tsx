@@ -2,7 +2,7 @@ import React from 'react';
 import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
 import { State } from 'src/rovo-dev/rovoDevTypes';
 
-import { CheckFileExistsFunc, OpenFileFunc } from '../common/common';
+import { CheckFileExistsFunc, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
 import { PullRequestChatItem } from '../create-pr/PullRequestForm';
 import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
@@ -19,6 +19,7 @@ interface ChatItemProps {
     onCollapsiblePanelExpanded: () => void;
     renderProps: {
         openFile: OpenFileFunc;
+        openJira: OpenJiraFunc;
         checkFileExists: CheckFileExistsFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
@@ -61,6 +62,7 @@ export const ChatItem = React.memo<ChatItemProps>(
                     onCopy={handleCopyResponse}
                     onFeedback={handleFeedbackTrigger}
                     openFile={renderProps.openFile}
+                    openJira={renderProps.openJira}
                     onLinkClick={onLinkClick}
                 />
             );

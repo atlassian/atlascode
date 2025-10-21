@@ -2,6 +2,7 @@ import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import * as fs from 'fs';
 import path from 'path';
 import { CommandContext, setCommandContext } from 'src/commandContext';
+import { showIssueForURL } from 'src/commands/jira/showIssue';
 import { configuration } from 'src/config/configuration';
 import { getFsPromise } from 'src/util/fsPromises';
 import { safeWaitFor } from 'src/util/waitFor';
@@ -16,7 +17,6 @@ import {
     ExtensionContext,
     Position,
     Range,
-    TextEditor,
     Uri,
     Webview,
     WebviewView,
@@ -40,6 +40,7 @@ import { GitErrorCodes } from '../typings/git';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { RovoDevApiClient } from './rovoDevApiClient';
 import { RovoDevHealthcheckResponse } from './rovoDevApiClientInterfaces';
+import { RovoDevChatContextProvider } from './rovoDevChatContextProvider';
 import { RovoDevChatProvider } from './rovoDevChatProvider';
 import { RovoDevContentTracker } from './rovoDevContentTracker';
 import { RovoDevDwellTracker } from './rovoDevDwellTracker';
@@ -56,7 +57,7 @@ import {
     RovoDevProviderMessageType,
 } from './rovoDevWebviewProviderMessages';
 
-interface TypedWebview<MessageOut, MessageIn> extends Webview {
+export interface TypedWebview<MessageOut, MessageIn> extends Webview {
     readonly onDidReceiveMessage: Event<MessageIn>;
     postMessage(message: MessageOut): Thenable<boolean>;
 }
@@ -81,6 +82,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private readonly _telemetryProvider: RovoDevTelemetryProvider;
     private readonly _jiraItemsProvider: RovoDevJiraItemsProvider;
     private readonly _chatProvider: RovoDevChatProvider;
+    private readonly _chatContextprovider: RovoDevChatContextProvider;
 
     private _webView?: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse>;
     private _webviewView?: WebviewView;
@@ -189,6 +191,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         );
 
         this._chatProvider = new RovoDevChatProvider(this.isBoysenberry, this._telemetryProvider);
+        this._chatContextprovider = new RovoDevChatContextProvider();
 
         this.loadYoloModeFromStorage().then((yoloMode) => {
             this._chatProvider.yoloMode = yoloMode;
@@ -247,6 +250,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         const webview = this._webView;
 
         this._chatProvider.setWebview(webview);
+        this._chatContextprovider.setWebview(webview);
 
         webview.options = {
             enableCommandUris: true,
@@ -314,11 +318,25 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.ForceUserFocusUpdate:
-                        await this.forceUserFocusUpdate();
+                        await this._chatContextprovider.forceUserFocusUpdate();
                         break;
 
                     case RovoDevViewResponseType.AddContext:
-                        await this.executeAddContext();
+                        if (e.contextItem) {
+                            await this._chatContextprovider.addContextItem(e.contextItem);
+                        } else if (e.dragDropData) {
+                            await this._chatContextprovider.processDragDropData(e.dragDropData);
+                        } else {
+                            await this._chatContextprovider.executeAddContext();
+                        }
+                        break;
+
+                    case RovoDevViewResponseType.RemoveContext:
+                        await this._chatContextprovider.removeContextItem(e.item);
+                        break;
+
+                    case RovoDevViewResponseType.ToggleContextFocus:
+                        await this._chatContextprovider.toggleFocusedContextFile(e.enabled);
                         break;
 
                     case RovoDevViewResponseType.ReportChangedFilesPanelShown:
@@ -427,6 +445,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await commands.executeCommand(Commands.WorkbenchOpenFolder);
                         break;
 
+                    case RovoDevViewResponseType.OpenJira:
+                        await showIssueForURL(e.url);
+                        break;
+
                     case RovoDevViewResponseType.McpConsentChoiceSubmit:
                         if (e.choice === 'acceptAll') {
                             await this.acceptMcpServer(true);
@@ -455,6 +477,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     case RovoDevViewResponseType.OpenExternalLink:
                         await env.openExternal(Uri.parse(e.href));
                         break;
+
                     default:
                         // @ts-expect-error ts(2339) - e here should be 'never'
                         this.processError(new Error(`Unknown message type: ${e.type}`));
@@ -470,43 +493,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._telemetryProvider.startNewSession(sessionId ?? v4(), manuallyCreated);
     }
 
-    // Helper to get openFile info from a document
-    private getOpenFileInfo = (doc: { uri: Uri; fileName: string }) => {
-        const workspaceFolder = workspace.getWorkspaceFolder(doc.uri);
-        const baseName = doc.fileName.split(path.sep).pop() || '';
-        return {
-            name: baseName,
-            absolutePath: doc.uri.fsPath,
-            relativePath: workspaceFolder ? path.relative(workspaceFolder.uri.fsPath, doc.uri.fsPath) : doc.fileName,
-        };
-    };
-
-    private async forceUserFocusUpdate(editor: TextEditor | undefined = window.activeTextEditor, selection?: Range) {
-        if (!this._webView) {
-            return;
-        }
-
-        selection = selection || (editor ? editor.selection : undefined);
-
-        if (!editor) {
-            await this.removeContextItem(true);
-            return;
-        }
-
-        const fileInfo = this.getOpenFileInfo(editor.document);
-        if (fileInfo.absolutePath !== '' && fs.existsSync(fileInfo.absolutePath)) {
-            const fileSelection =
-                selection && !selection.isEmpty ? { start: selection.start.line, end: selection.end.line } : undefined;
-
-            await this.addContextItem({
-                isFocus: true,
-                file: fileInfo,
-                selection: fileSelection,
-                enabled: true,
-            });
-        }
-    }
-
     // Listen to active editor and selection changes
     private _registerEditorListeners() {
         // Listen for active editor changes
@@ -515,7 +501,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 if (!Container.isRovoDevEnabled) {
                     return;
                 }
-                this.forceUserFocusUpdate(editor);
+                this._chatContextprovider.forceUserFocusUpdate(editor);
             }),
         );
         // Listen for selection changes
@@ -524,7 +510,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 if (!Container.isRovoDevEnabled) {
                     return;
                 }
-                this.forceUserFocusUpdate(event.textEditor);
+                this._chatContextprovider.forceUserFocusUpdate(event.textEditor);
             }),
         );
     }
@@ -571,87 +557,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             type: RovoDevProviderMessageType.SetJiraWorkItems,
             issues,
         });
-    }
-
-    private addContextItem(contextItem: RovoDevContextItem): Thenable<boolean> {
-        const webview = this._webView!;
-        return webview.postMessage({
-            type: RovoDevProviderMessageType.ContextAdded,
-            context: contextItem,
-        });
-    }
-
-    private removeContextItem(isFocus: true): Thenable<boolean>;
-    private removeContextItem(isFocus: false, contextItem: RovoDevContextItem): Thenable<boolean>;
-    private removeContextItem(isFocus: boolean, contextItem?: RovoDevContextItem): Thenable<boolean> {
-        const webview = this._webView!;
-
-        if (isFocus) {
-            return webview.postMessage({
-                type: RovoDevProviderMessageType.ContextRemoved,
-                isFocus,
-            });
-        } else {
-            return webview.postMessage({
-                type: RovoDevProviderMessageType.ContextRemoved,
-                isFocus,
-                context: contextItem!,
-            });
-        }
-    }
-
-    private async selectContextItem(): Promise<RovoDevContextItem | undefined> {
-        // Get all workspace files
-        const files = await workspace.findFiles('**/*', '**/node_modules/**');
-        if (!files.length) {
-            console.log('No files found in workspace.'); // bwieger, look at this more
-            return;
-        }
-
-        // Show QuickPick to select a file
-        const items = files.map((uri) => {
-            const workspaceFolder = workspace.getWorkspaceFolder(uri);
-            const absolutePath = uri.fsPath;
-            const relativePath = workspaceFolder ? path.relative(workspaceFolder.uri.fsPath, uri.fsPath) : uri.fsPath;
-            const name = path.basename(uri.fsPath);
-            return {
-                label: name,
-                description: relativePath,
-                uri,
-                absolutePath,
-                relativePath,
-                name,
-            };
-        });
-
-        const picked = await window.showQuickPick(items, {
-            placeHolder: 'Select a file to add as context',
-        });
-
-        if (!picked) {
-            return;
-        }
-
-        return {
-            isFocus: false,
-            file: {
-                name: picked.name,
-                absolutePath: picked.absolutePath,
-                relativePath: picked.relativePath,
-            },
-            selection: undefined,
-            enabled: true,
-        };
-    }
-
-    private async executeAddContext(): Promise<void> {
-        // Get all workspace files
-        const picked = await this.selectContextItem();
-        if (!picked) {
-            return;
-        }
-
-        await this.addContextItem(picked);
     }
 
     public async executeNewSession(): Promise<void> {
@@ -1017,25 +922,17 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
      * @param contextItem The context item to add.
      * @returns A promise that resolves when the context item has been added.
      */
-    public async addToContext(contextItem: RovoDevContextItem): Promise<void> {
-        if (this.isDisabled) {
-            return;
-        }
-
-        const webView = this._webView!;
-        webView.postMessage({
-            type: RovoDevProviderMessageType.ContextAdded,
-            context: contextItem,
-        });
+    public addToContext(contextItem: RovoDevContextItem) {
+        return this._chatContextprovider.addContextItem(contextItem);
     }
 
     /**
      * Sets the text in the prompt input field with focus, using the same reliable approach as invokeRovoDevAskCommand
      * @param text The text to set in the prompt input field
      */
-    public async setPromptTextWithFocus(text: string): Promise<void> {
+    public async setPromptTextWithFocus(text: string, contextItem?: RovoDevContextItem): Promise<void> {
         // Focus and wait for webview to be ready to receive messages
-        commands.executeCommand('atlascode.views.rovoDev.webView.focus');
+        await commands.executeCommand('atlascode.views.rovoDev.webView.focus');
 
         const webview = await safeWaitFor({
             condition: (value) => !!value,
@@ -1045,6 +942,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
 
         if (webview) {
+            if (contextItem) {
+                this._chatContextprovider.addContextItem(contextItem);
+            }
+
             webview.postMessage({
                 type: RovoDevProviderMessageType.SetPromptText,
                 text,

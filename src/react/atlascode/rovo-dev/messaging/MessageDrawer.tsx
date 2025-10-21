@@ -2,13 +2,14 @@ import ChevronDown from '@atlaskit/icon/glyph/chevron-down';
 import ChevronRight from '@atlaskit/icon/glyph/chevron-right';
 import React, { useCallback } from 'react';
 
-import { CheckFileExistsFunc, OpenFileFunc, renderChatHistory } from '../common/common';
+import { CheckFileExistsFunc, OpenFileFunc, OpenJiraFunc, renderChatHistory } from '../common/common';
 import { ChatMessage } from '../utils';
 
 interface MessageDrawerProps {
     messages: ChatMessage[];
     renderProps: {
         openFile: OpenFileFunc;
+        openJira: OpenJiraFunc;
         checkFileExists: CheckFileExistsFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
@@ -19,7 +20,7 @@ interface MessageDrawerProps {
 
 export const MessageDrawer: React.FC<MessageDrawerProps> = ({
     messages,
-    renderProps: { openFile, checkFileExists, isRetryAfterErrorButtonEnabled, retryPromptAfterError },
+    renderProps: { openFile, openJira, checkFileExists, isRetryAfterErrorButtonEnabled, retryPromptAfterError },
     onCollapsiblePanelExpanded,
     opened,
 }) => {
@@ -60,6 +61,7 @@ export const MessageDrawer: React.FC<MessageDrawerProps> = ({
                     renderChatHistory(
                         msg,
                         openFile,
+                        openJira,
                         checkFileExists,
                         isRetryAfterErrorButtonEnabled,
                         retryPromptAfterError,
