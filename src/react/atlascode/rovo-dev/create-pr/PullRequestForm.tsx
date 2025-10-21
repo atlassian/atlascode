@@ -19,7 +19,7 @@ const PullRequestButton: React.FC<{
             ) : (
                 <PullRequestIcon label="Create pull request" spacing="none" />
             )}
-            Create Pull Request
+            Create pull request
         </button>
     );
 };
