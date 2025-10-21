@@ -1,5 +1,12 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.5
+
+### Features
+
+- Added drag and drop support into the Rovo Dev view for prompt context (requires pressing the `shift` key to drop)
+- Added native support for Jira work items for Rovo Dev prompt context
+
 ## What's new in 4.0.4
 
 ### Improvements
