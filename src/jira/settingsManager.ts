@@ -38,6 +38,7 @@ const minimalDefaultIssueFields: string[] = [
     'parent',
     'subtasks',
     'issuelinks',
+    'assignee',
 ];
 
 export class JiraSettingsManager extends Disposable {

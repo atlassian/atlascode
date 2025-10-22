@@ -3,9 +3,11 @@ import { emptyTransition, Transition } from '@atlassianlabs/jira-pi-common-model
 import CloseIcon from '@mui/icons-material/Close';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { Alert, AlertTitle, Autocomplete } from '@mui/lab';
 import {
+    Alert,
+    AlertTitle,
     AppBar,
+    Autocomplete,
     Box,
     Button,
     Card,

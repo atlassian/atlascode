@@ -1,5 +1,40 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.5
+
+### Features
+
+- Added drag and drop support into the Rovo Dev view for prompt context (requires pressing the `shift` key to drop)
+- Added native support for Jira work items for Rovo Dev prompt context
+
+## What's new in 4.0.4
+
+### Improvements
+
+- Added support for Rovo Dev /status command
+
+### Bug Fixes
+
+- Fixed duplicated slash commands in Rovo Dev's prompt box
+- Fixed broken entitlement check disabled view in 4.0.3
+
+## What's new in 4.0.3
+
+### Improvements
+
+- Improved the initialization time for Rovo Dev, allowing the process to start before its webview is ready
+- Added assignee column for child and linked issues
+
+### Bug Fixes
+
+- Fixed issue with infinite loading when searching labels
+
+## What's new in 4.0.2
+
+### Improvements
+
+- Removed the hint on code selection to send the text to Rovo Dev
+
 ## What's new in 4.0.1
 
 ### Features
@@ -11,7 +46,7 @@
 ### Features
 
 - **Rovo Dev: Atlassian AI Agent** is now available in beta
-    - New sidebar icon that opens the Rovo Dev view. Rovo Dev can answer questions about your codebase and complete tasks for you 
+    - New sidebar icon that opens the Rovo Dev view. Rovo Dev can answer questions about your codebase and complete tasks for you
     - Read our docs here: https://github.com/atlassian/atlascode/wiki
 
 ### Bug Fixes

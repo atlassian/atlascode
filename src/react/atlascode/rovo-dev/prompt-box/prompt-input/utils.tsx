@@ -1,6 +1,22 @@
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 export const createMonacoPromptEditor = (container: HTMLElement) => {
+    /* Disable web workers in Monaco by providing a dummy implementation 
+        Monaco web workers cannot be instantiated in vscode webview */
+    window.MonacoEnvironment = {
+        getWorker: function (_moduleId, label) {
+            return {
+                postMessage: () => {},
+                terminate: () => {},
+                addEventListener: () => {},
+                removeEventListener: () => {},
+                onmessage: () => {},
+                dispatchEvent: () => false,
+                onmessageerror: () => {},
+                onerror: () => {},
+            };
+        },
+    };
     return monaco.editor.create(container, {
         value: '',
         language: 'plaintext',
@@ -85,6 +101,22 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         command: { title: 'Agent Memory', id: 'rovo-dev.agentMemory', tooltip: 'Show agent memory' },
     },
     {
+        label: '/yolo',
+        insertText: '/yolo',
+        description: 'Toggle tool confirmations',
+        command: { title: 'Yolo Mode', id: 'rovo-dev.toggleYoloMode', tooltip: 'Toggle tool confirmations' },
+    },
+    {
+        label: '/status',
+        insertText: '/status',
+        description: 'Show Rovo Dev CLI status including version, account details and model',
+        command: {
+            title: 'Status',
+            id: 'rovo-dev.triggerStatus',
+            tooltip: 'Show Rovo Dev CLI status including version, account details and model',
+        },
+    },
+    {
         label: '/feedback',
         insertText: '/feedback',
         description: 'Provide feedback on Rovo Dev',
@@ -92,7 +124,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     },
 ];
 
-export const createSlashCommandProvider = (): monaco.languages.CompletionItemProvider => {
+export const createSlashCommandProvider = (commands: SlashCommand[]): monaco.languages.CompletionItemProvider => {
     return {
         triggerCharacters: ['/'],
         provideCompletionItems: (model, position) => {
@@ -116,7 +148,7 @@ export const createSlashCommandProvider = (): monaco.languages.CompletionItemPro
 
             const startColumn = position.column - match[0].length;
 
-            const suggestions: monaco.languages.CompletionItem[] = SLASH_COMMANDS.map((command, index) => ({
+            const suggestions: monaco.languages.CompletionItem[] = commands.map((command, index) => ({
                 label: command.label,
                 kind: monaco.languages.CompletionItemKind.Method,
                 insertText: command.insertText,
@@ -156,6 +188,7 @@ export function setupMonacoCommands(
     onCopy: () => void,
     handleMemoryCommand: () => void,
     handleTriggerFeedbackCommand: () => void,
+    onYoloModeToggled?: () => void,
 ) {
     monaco.editor.registerCommand('rovo-dev.clearChat', () => {
         if (onSend('/clear')) {
@@ -178,6 +211,19 @@ export function setupMonacoCommands(
         handleMemoryCommand();
         editor.setValue('');
     });
+
+    monaco.editor.registerCommand('rovo-dev.triggerStatus', () => {
+        if (onSend('/status')) {
+            editor.setValue('');
+        }
+    });
+
+    if (onYoloModeToggled) {
+        monaco.editor.registerCommand('rovo-dev.toggleYoloMode', () => {
+            onYoloModeToggled();
+            editor.setValue('');
+        });
+    }
 
     monaco.editor.registerCommand('rovo-dev.triggerFeedback', () => {
         handleTriggerFeedbackCommand();

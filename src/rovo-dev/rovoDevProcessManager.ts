@@ -7,15 +7,26 @@ import path from 'path';
 import { RovoDevLogger } from 'src/logger';
 import { downloadAndUnzip } from 'src/util/downloadFile';
 import { getFsPromise } from 'src/util/fsPromises';
-import { Disposable, ExtensionContext, Terminal, Uri, window, workspace } from 'vscode';
+import { Disposable, Event, EventEmitter, ExtensionContext, Terminal, Uri, window, workspace } from 'vscode';
 
-import { isBasicAuthInfo, ProductJira } from '../atlclients/authInfo';
-import { rovodevInfo } from '../constants';
+import { DetailedSiteInfo, isBasicAuthInfo, ProductJira } from '../atlclients/authInfo';
 import { Container } from '../container';
 import { RovoDevApiClient } from './rovoDevApiClient';
-import { RovoDevWebviewProvider } from './rovoDevWebviewProvider';
+import { RovoDevDisabledReason, RovoDevEntitlementCheckFailedDetail } from './rovoDevWebviewProviderMessages';
 
 export const MIN_SUPPORTED_ROVODEV_VERSION = packageJson.rovoDev.version;
+
+// Rovodev port mapping settings
+const RovoDevInfo = {
+    hostname: '127.0.0.1',
+    envVars: {
+        port: 'ROVODEV_PORT',
+    },
+    portRange: {
+        start: 40000,
+        end: 41000,
+    },
+};
 
 function GetRovoDevURIs(context: ExtensionContext) {
     const extensionPath = context.storageUri!.fsPath;
@@ -84,8 +95,8 @@ async function shutdownRovoDev(port: number) {
 }
 
 async function getOrAssignPortForWorkspace(): Promise<number> {
-    const portStart = rovodevInfo.portRange.start;
-    const portEnd = rovodevInfo.portRange.end;
+    const portStart = RovoDevInfo.portRange.start;
+    const portEnd = RovoDevInfo.portRange.end;
 
     for (let port = portStart; port <= portEnd; ++port) {
         if (await isPortAvailable(port)) {
@@ -160,7 +171,75 @@ class ProcessManagerError extends Error {
     }
 }
 
+export interface RovoDevProcessNotStartedState {
+    state: 'NotStarted';
+}
+
+export interface RovoDevProcessDownloadingState {
+    state: 'Downloading';
+    jiraSiteHostname: DetailedSiteInfo | string;
+    totalBytes: number;
+    downloadedBytes: number;
+}
+
+export interface RovoDevProcessStartingState {
+    state: 'Starting';
+    jiraSiteHostname: DetailedSiteInfo | string;
+}
+
+export interface RovoDevProcessStartedState {
+    state: 'Started';
+    jiraSiteHostname: DetailedSiteInfo | string;
+    hostname: string;
+    httpPort: number;
+    timeStarted: number;
+}
+
+export interface RovoDevProcessTerminatedState {
+    state: 'Terminated';
+    exitCode?: number;
+}
+
+export interface RovoDevProcessEntitlementCheckFailedState {
+    state: 'Disabled';
+    subState: 'EntitlementCheckFailed';
+    entitlementDetail: RovoDevEntitlementCheckFailedDetail;
+}
+
+export interface RovoDevProcessDisabledState {
+    state: 'Disabled';
+    subState: Exclude<RovoDevDisabledReason, 'EntitlementCheckFailed'>;
+    entitlementDetail?: RovoDevEntitlementCheckFailedDetail;
+}
+
+export interface RovoDevProcessFailedState {
+    state: 'DownloadingFailed' | 'StartingFailed';
+    error: Error;
+}
+
+export interface RovoDevProcessBoysenberryState {
+    state: 'Boysenberry';
+    hostname: string;
+    httpPort: number;
+}
+
+export type RovoDevProcessState =
+    | RovoDevProcessNotStartedState
+    | RovoDevProcessDownloadingState
+    | RovoDevProcessStartingState
+    | RovoDevProcessStartedState
+    | RovoDevProcessTerminatedState
+    | RovoDevProcessEntitlementCheckFailedState
+    | RovoDevProcessDisabledState
+    | RovoDevProcessFailedState
+    | RovoDevProcessBoysenberryState;
+
 export abstract class RovoDevProcessManager {
+    private static _onStateChanged = new EventEmitter<RovoDevProcessState>();
+    public static get onStateChanged(): Event<RovoDevProcessState> {
+        return this._onStateChanged.event;
+    }
+
     private static currentCredentials: CloudCredentials | undefined;
 
     /** This lock ensures this class is async-safe, preventing repeated invocations
@@ -168,17 +247,24 @@ export abstract class RovoDevProcessManager {
      */
     private static asyncLocked = false;
 
-    // Reference to the RovoDev webview provider for sending errors to chat
-    // This is ensured to be initialized before the entrypoint `initializeRovoDevProcessManager` is invoked.
-    static rovoDevWebviewProvider: RovoDevWebviewProvider;
-    public static setRovoDevWebviewProvider(provider: RovoDevWebviewProvider) {
-        this.rovoDevWebviewProvider = provider;
-    }
-
     private static rovoDevInstance: RovoDevTerminalInstance | undefined;
     private static stopRovoDevInstance() {
         this.rovoDevInstance?.dispose();
         this.rovoDevInstance = undefined;
+    }
+
+    public static get state(): RovoDevProcessState {
+        if (Container.isBoysenberryMode) {
+            const httpPort = parseInt(process.env[RovoDevInfo.envVars.port] || '0');
+            return { state: 'Boysenberry', hostname: RovoDevInfo.hostname, httpPort };
+        } else {
+            return this._state;
+        }
+    }
+    private static _state: RovoDevProcessState = { state: 'NotStarted' };
+    private static setState(newState: RovoDevProcessState) {
+        this._state = newState;
+        this._onStateChanged.fire(newState);
     }
 
     private static failIfRovoDevInstanceIsRunning() {
@@ -190,48 +276,51 @@ export abstract class RovoDevProcessManager {
         this.rovoDevInstance = undefined;
     }
 
-    private static async downloadBinaryThenInitialize(rovoDevURIs: RovoDevURIs) {
+    private static async downloadBinaryThenInitialize(credentialsHost: string, rovoDevURIs: RovoDevURIs) {
         const baseDir = rovoDevURIs.RovoDevBaseDir;
         const versionDir = rovoDevURIs.RovoDevVersionDir;
         const zipUrl = rovoDevURIs.RovoDevZipUrl;
 
         if (!zipUrl) {
-            await this.sendErrorToChat(
-                this.rovoDevWebviewProvider,
-                new Error(
-                    `Rovo Dev is not supported for the following platform/architecture: ${process.platform}/${process.arch}`,
-                ),
-            );
+            this.setState({
+                state: 'Disabled',
+                subState: 'UnsupportedArch',
+            });
             return;
         }
 
-        this.rovoDevWebviewProvider.signalBinaryDownloadStarted(0);
+        // setting totalBytes to 1 because we don't know its size yet,
+        // and we want to show 0% downloaded
+        this.setState({
+            state: 'Downloading',
+            jiraSiteHostname: credentialsHost,
+            totalBytes: 1,
+            downloadedBytes: 0,
+        });
 
-        try {
-            if (fs.existsSync(baseDir)) {
-                await getFsPromise((callback) => fs.rm(baseDir, { recursive: true, force: true }, callback));
-            }
-
-            const onProgressChange = (downloadedBytes: number, totalBytes: number | undefined) => {
-                if (totalBytes) {
-                    this.rovoDevWebviewProvider.signalBinaryDownloadProgress(downloadedBytes, totalBytes);
-                }
-            };
-
-            await downloadAndUnzip(zipUrl, baseDir, versionDir, true, onProgressChange);
-
-            await getFsPromise((callback) => fs.mkdir(versionDir, { recursive: true }, callback));
-        } catch (error) {
-            await this.sendErrorToChat(
-                this.rovoDevWebviewProvider,
-                new Error(
-                    `Unable to update Rovo Dev:\n${error.message}\n\nTo try again, please close VS Code and reopen it.`,
-                ),
-            );
-            throw error;
+        if (fs.existsSync(baseDir)) {
+            await getFsPromise((callback) => fs.rm(baseDir, { recursive: true, force: true }, callback));
         }
 
-        this.rovoDevWebviewProvider.signalBinaryDownloadEnded();
+        const onProgressChange = (downloadedBytes: number, totalBytes: number | undefined) => {
+            if (totalBytes) {
+                this.setState({
+                    state: 'Downloading',
+                    jiraSiteHostname: credentialsHost,
+                    totalBytes,
+                    downloadedBytes,
+                });
+            }
+        };
+
+        await downloadAndUnzip(zipUrl, baseDir, versionDir, true, onProgressChange);
+
+        await getFsPromise((callback) => fs.mkdir(versionDir, { recursive: true }, callback));
+
+        this.setState({
+            state: 'Starting',
+            jiraSiteHostname: credentialsHost,
+        });
     }
 
     private static async internalInitializeRovoDev(
@@ -240,7 +329,10 @@ export abstract class RovoDevProcessManager {
         forceNewInstance?: boolean,
     ) {
         if (!workspace.workspaceFolders?.length) {
-            await this.rovoDevWebviewProvider.signalRovoDevDisabled('NoWorkspaceOpen');
+            this.setState({
+                state: 'Disabled',
+                subState: 'NoWorkspaceOpen',
+            });
             return;
         }
 
@@ -253,21 +345,44 @@ export abstract class RovoDevProcessManager {
         this.currentCredentials = credentials;
 
         if (!credentials) {
-            await this.rovoDevWebviewProvider.signalRovoDevDisabled('NeedAuth');
+            this.setState({
+                state: 'Disabled',
+                subState: 'NeedAuth',
+            });
             return;
         }
 
-        const rovoDevURIs = GetRovoDevURIs(context);
-        await this.rovoDevWebviewProvider.signalInitializing(credentials.host);
+        this.setState({
+            state: 'Starting',
+            jiraSiteHostname: credentials.host,
+        });
+
+        let rovoDevURIs: ReturnType<typeof GetRovoDevURIs>;
 
         try {
-            if (!fs.existsSync(rovoDevURIs.RovoDevBinPath)) {
-                await this.downloadBinaryThenInitialize(rovoDevURIs);
-            }
+            rovoDevURIs = GetRovoDevURIs(context);
 
+            if (!fs.existsSync(rovoDevURIs.RovoDevBinPath)) {
+                await this.downloadBinaryThenInitialize(credentials.host, rovoDevURIs);
+            }
+        } catch (error) {
+            RovoDevLogger.error(error);
+            this.setState({
+                state: 'DownloadingFailed',
+                error,
+            });
+            return;
+        }
+
+        try {
             await this.startRovoDev(context, credentials, rovoDevURIs);
         } catch (error) {
-            this.sendErrorToChat(this.rovoDevWebviewProvider, error);
+            RovoDevLogger.error(error);
+            this.setState({
+                state: 'StartingFailed',
+                error,
+            });
+            return;
         }
     }
 
@@ -292,12 +407,6 @@ export abstract class RovoDevProcessManager {
 
     public static async refreshRovoDevCredentials(context: ExtensionContext) {
         if (this.asyncLocked) {
-            return;
-        }
-
-        // don't do anything if the provider isn't ready yet - the initialization will be called
-        // by the provider when it becomes ready
-        if (!this.rovoDevWebviewProvider || !this.rovoDevWebviewProvider.isReady) {
             return;
         }
 
@@ -335,7 +444,6 @@ export abstract class RovoDevProcessManager {
 
         const folder = workspace.workspaceFolders[0];
         this.rovoDevInstance = new RovoDevTerminalInstance(
-            this.rovoDevWebviewProvider,
             folder.uri.fsPath,
             rovoDevURIs.RovoDevBinPath,
             rovoDevURIs.RovoDevIconUri,
@@ -343,19 +451,11 @@ export abstract class RovoDevProcessManager {
 
         context.subscriptions.push(this.rovoDevInstance);
 
-        await this.rovoDevInstance.start(credentials);
+        await this.rovoDevInstance.start(credentials, (newState) => this.setState(newState));
     }
 
     public static showTerminal() {
         this.rovoDevInstance?.showTerminal();
-    }
-
-    private static async sendErrorToChat(rovoDevWebViewProvider: RovoDevWebviewProvider, error: Error) {
-        if (error instanceof ProcessManagerError && error.type === 'needAuth') {
-            await rovoDevWebViewProvider.signalRovoDevDisabled('NeedAuth');
-        } else {
-            await rovoDevWebViewProvider.signalProcessFailedToInitialize(error.message);
-        }
     }
 }
 
@@ -370,7 +470,6 @@ class RovoDevTerminalInstance extends Disposable {
     }
 
     constructor(
-        private readonly rovoDevWebviewProvider: RovoDevWebviewProvider,
         private readonly workspacePath: string,
         private readonly rovoDevBinPath: string,
         private readonly rovoDevIconUri: Uri,
@@ -378,14 +477,16 @@ class RovoDevTerminalInstance extends Disposable {
         super(() => this.stop());
     }
 
-    public async start(credentials: CloudCredentials): Promise<void> {
+    public async start(
+        credentials: CloudCredentials,
+        setState: (newState: RovoDevProcessState) => void,
+    ): Promise<void> {
         if (this.started) {
             throw new Error('Instance already started');
         }
         this.started = true;
 
         const port = await getOrAssignPortForWorkspace();
-        const rovoDevWebviewProvider = this.rovoDevWebviewProvider;
 
         return new Promise<void>((resolve, reject) => {
             if (!credentials) {
@@ -445,13 +546,29 @@ class RovoDevTerminalInstance extends Disposable {
                         if (event === this.rovoDevTerminal) {
                             this.finalizeStop();
 
+                            if (event.exitStatus?.code) {
+                                RovoDevLogger.error(
+                                    new Error(`Rovo Dev process terminated with exit code ${event.exitStatus.code}.`),
+                                );
+                            }
+
                             // we don't want to pass the 0 code as a number, as it's not an error
-                            rovoDevWebviewProvider.signalProcessTerminated(event.exitStatus?.code || undefined);
+                            setState({
+                                state: 'Terminated',
+                                exitCode: event.exitStatus?.code || undefined,
+                            });
                         }
                     });
                     this.disposables.push(onDidCloseTerminal);
 
-                    await rovoDevWebviewProvider.signalProcessStarted(port, timeStarted.getTime());
+                    setState({
+                        state: 'Started',
+                        jiraSiteHostname: credentials.host,
+                        hostname: RovoDevInfo.hostname,
+                        httpPort: port,
+                        timeStarted: timeStarted.getTime(),
+                    });
+
                     resolve();
                 } catch (error) {
                     // make sure we only reject instances of Error

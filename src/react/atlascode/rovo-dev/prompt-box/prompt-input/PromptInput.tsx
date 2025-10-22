@@ -9,7 +9,6 @@ import Tooltip from '@atlaskit/tooltip';
 import * as monaco from 'monaco-editor';
 import React from 'react';
 import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
-type NonDisabledState = Exclude<State, DisabledState>;
 
 import { rovoDevTextareaStyles } from '../../rovoDevViewStyles';
 import PromptSettingsPopup from '../prompt-settings-popup/PromptSettingsPopup';
@@ -20,7 +19,12 @@ import {
     setupAutoResize,
     setupMonacoCommands,
     setupPromptKeyBindings,
+    SLASH_COMMANDS,
 } from './utils';
+
+const IsBoysenberry = process.env.ROVODEV_BBY === 'true';
+
+type NonDisabledState = Exclude<State, DisabledState>;
 
 interface PromptInputBoxProps {
     disabled?: boolean;
@@ -57,22 +61,39 @@ const getTextAreaPlaceholder = (isGeneratingResponse: boolean, currentState: Non
     }
 };
 
-function createEditor(setIsEmpty?: (isEmpty: boolean) => void) {
+let monacoInitialized = false;
+
+function initMonaco(isBBY: boolean) {
+    if (!monacoInitialized) {
+        let commands = SLASH_COMMANDS;
+        if (isBBY) {
+            commands = commands.filter((command) => command.label !== '/yolo');
+        }
+
+        monaco.languages.registerCompletionItemProvider('plaintext', createSlashCommandProvider(commands));
+
+        monacoInitialized = true;
+    }
+}
+
+function createEditor(setIsEmpty: (isEmpty: boolean) => void) {
     const container = document.getElementById('prompt-editor-container');
     if (!container) {
         return undefined;
     }
 
-    monaco.languages.registerCompletionItemProvider('plaintext', createSlashCommandProvider());
+    initMonaco(IsBoysenberry);
 
     const editor = createMonacoPromptEditor(container);
+
     editor.onDidChangeModelContent(() => {
         if (editor.getValue().trim().length === 0) {
-            setIsEmpty?.(true);
+            setIsEmpty(true);
         } else {
-            setIsEmpty?.(false);
+            setIsEmpty(false);
         }
     });
+
     setupAutoResize(editor);
     return editor;
 }
@@ -96,8 +117,8 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     const [editor, setEditor] = React.useState<ReturnType<typeof createEditor>>(undefined);
     const [isEmpty, setIsEmpty] = React.useState(true);
 
-    // create the editor only once - use onSend hook to retry
-    React.useEffect(() => setEditor((prev) => prev ?? createEditor(setIsEmpty)), [onSend]);
+    // create the editor only once - use onAddContext hook to retry
+    React.useEffect(() => setEditor((prev) => prev ?? createEditor(setIsEmpty)), [onAddContext]);
 
     React.useEffect(() => {
         // Remove Monaco's color stylesheet
@@ -119,9 +140,16 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
 
     React.useEffect(() => {
         if (editor) {
-            setupMonacoCommands(editor, onSend, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand);
+            setupMonacoCommands(
+                editor,
+                onSend,
+                onCopy,
+                handleMemoryCommand,
+                handleTriggerFeedbackCommand,
+                onYoloModeToggled,
+            );
         }
-    }, [editor, onSend, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand]);
+    }, [editor, onSend, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand, onYoloModeToggled]);
 
     // Handle setting prompt text from external source
     React.useEffect(() => {

@@ -1,8 +1,8 @@
 import React from 'react';
-import { RovoDevContextItem } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevContextItem, RovoDevFileContext, RovoDevJiraContext } from 'src/rovo-dev/rovoDevTypes';
 
-import { OpenFileFunc } from '../../common/common';
-import { PromptContextItem } from './promptContextItem';
+import { OpenFileFunc, OpenJiraFunc } from '../../common/common';
+import { PromptContextFileItem, PromptContextJiraItem } from './promptContextItem';
 
 // PromptContextCollection: displays a row or column of PromptContextItem
 export const PromptContextCollection: React.FC<{
@@ -13,7 +13,8 @@ export const PromptContextCollection: React.FC<{
     readonly?: boolean;
     onRemoveContext?: (item: RovoDevContextItem) => void;
     inChat?: boolean;
-    openFile?: OpenFileFunc;
+    openFile: OpenFileFunc;
+    openJira: OpenJiraFunc;
 }> = ({
     content,
     direction = 'row',
@@ -23,13 +24,15 @@ export const PromptContextCollection: React.FC<{
     onRemoveContext,
     inChat,
     openFile,
+    openJira,
 }) => {
     if (content.length === 0) {
         return null;
     }
 
-    const focusedItem = content.find((x) => x.isFocus);
-    const addedItems = content.filter((x) => !x.isFocus);
+    const focusedItem = content.find((x) => x.contextType === 'file' && x.isFocus) as RovoDevFileContext | undefined;
+    const fileItems = content.filter((x) => x.contextType === 'file' && !x.isFocus) as RovoDevFileContext[];
+    const jiraItems = content.filter((x) => x.contextType === 'jiraWorkItem') as RovoDevJiraContext[];
 
     const flexDirection = direction === 'column' ? 'column' : 'row';
     const justifyContent = align === 'right' ? 'flex-end' : 'flex-start';
@@ -51,7 +54,7 @@ export const PromptContextCollection: React.FC<{
             {/* Disabled for now in favor of the larger button outside the collection */}
             {/* {!readonly && <AddContextButton onClick={onAddContext} />} */}
             {!!focusedItem && (
-                <PromptContextItem
+                <PromptContextFileItem
                     isFocus={focusedItem.isFocus}
                     file={focusedItem.file}
                     selection={focusedItem.selection}
@@ -60,8 +63,8 @@ export const PromptContextCollection: React.FC<{
                     openFile={openFile}
                 />
             )}
-            {addedItems.map((item, index) => (
-                <PromptContextItem
+            {fileItems.map((item, index) => (
+                <PromptContextFileItem
                     key={index}
                     isFocus={item.isFocus}
                     file={item.file}
@@ -69,6 +72,15 @@ export const PromptContextCollection: React.FC<{
                     enabled={item.enabled}
                     onRemove={!readonly && onRemoveContext ? () => onRemoveContext(item) : undefined}
                     openFile={openFile}
+                />
+            ))}
+            {jiraItems.map((item, index) => (
+                <PromptContextJiraItem
+                    key={index}
+                    name={item.name}
+                    url={item.url}
+                    onRemove={!readonly && onRemoveContext ? () => onRemoveContext(item) : undefined}
+                    openJira={openJira}
                 />
             ))}
         </div>

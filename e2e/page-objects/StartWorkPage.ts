@@ -51,7 +51,7 @@ export class StartWorkPage {
         await expect(this.branchPrefixSelect).toBeVisible();
         await expect(this.branchPrefixSelect).toHaveValue(/bugfix/i);
         await expect(this.localBranchInput).toBeVisible();
-        await expect(this.localBranchInput).toHaveValue('bugfix/BTS-1-sample-user-interface-bugs');
+        await expect(this.localBranchInput).toHaveValue('bugfix/BTS-1-user-interface-bugs');
     }
 
     async waitForSuccessToast() {

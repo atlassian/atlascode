@@ -10,7 +10,7 @@ import { Commands } from '../constants';
 import { Container } from '../container';
 import { GitContentProvider } from './gitContentProvider';
 import { AbstractBaseNode } from './nodes/abstractBaseNode';
-import { emptyBitbucketNodes, loginToBitbucketMessageNode } from './nodes/definedNodes';
+import { emptyBitbucketNodes } from './nodes/definedNodes';
 import { SimpleNode } from './nodes/simpleNode';
 import { CreatePullRequestNode, PullRequestFilters, PullRequestHeaderNode } from './pullrequest/headerNode';
 import { DescriptionNode, PullRequestTitlesNode } from './pullrequest/pullRequestNode';
@@ -222,7 +222,7 @@ describe('PullRequestNodeDataProvider', () => {
     });
 
     describe('getChildren', () => {
-        it('should return login message when no sites are available', async () => {
+        it('should return empty array when no sites are available', async () => {
             (Container.siteManager.getSitesAvailable as jest.Mock).mockReturnValue([]);
 
             const children = await provider.getChildren();
@@ -233,7 +233,8 @@ describe('PullRequestNodeDataProvider', () => {
                 undefined,
                 ProductBitbucket,
             );
-            expect(children).toEqual([loginToBitbucketMessageNode]);
+            // Should return empty array to show viewsWelcome with login button
+            expect(children).toEqual([]);
         });
 
         it('should return empty nodes when no repositories are found', async () => {

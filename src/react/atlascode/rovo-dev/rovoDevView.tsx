@@ -1,6 +1,7 @@
 import './RovoDev.css';
 import './RovoDevCodeHighlighting.css';
 
+import InformationCircleIcon from '@atlaskit/icon/core/information-circle';
 import { setGlobalTheme } from '@atlaskit/tokens';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { highlightElement } from '@speed-highlight/core';
@@ -13,14 +14,19 @@ import { v4 } from 'uuid';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../../../rovo-dev/rovoDevWebviewProviderMessages';
-import { createRovoDevTemplate } from '../../../util/rovoDevTemplate';
 import { useMessagingApi } from '../messagingApi';
 import { FeedbackType } from './feedback-form/FeedbackForm';
 import { ChatStream } from './messaging/ChatStream';
 import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
 import { PromptContextCollection } from './prompt-box/promptContext/promptContextCollection';
 import { UpdatedFilesComponent } from './prompt-box/updated-files/UpdatedFilesComponent';
-import { McpConsentChoice, ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
+import {
+    FileOperationType,
+    McpConsentChoice,
+    ModifiedFile,
+    RovoDevViewResponse,
+    RovoDevViewResponseType,
+} from './rovoDevViewMessages';
 import { DebugPanel } from './tools/DebugPanel';
 import { parseToolCallMessage } from './tools/ToolCallItem';
 import {
@@ -29,7 +35,9 @@ import {
     DialogMessage,
     extractLastNMessages,
     isCodeChangeTool,
+    modifyFileTitleMap,
     parseToolReturnMessage,
+    processDropDataTransferItems,
     PullRequestMessage,
     Response,
     ToolReturnParseResult,
@@ -60,6 +68,8 @@ const RovoDevView: React.FC = () => {
     const [promptText, setPromptText] = useState<string | undefined>(undefined);
     const [fileExistenceMap, setFileExistenceMap] = useState<Map<string, boolean>>(new Map());
     const [jiraWorkItems, setJiraWorkItems] = useState<MinimalIssue<DetailedSiteInfo>[] | undefined>(undefined);
+    const [pendingFilesForFiltering, setPendingFilesForFiltering] = useState<ModifiedFile[] | null>(null);
+    const [thinkingBlockEnabled, setThinkingBlockEnabled] = useState(true);
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -173,7 +183,25 @@ const RovoDevView: React.FC = () => {
                     }
                 });
 
-                return Array.from(filesMap.values());
+                const allFiles = Array.from(filesMap.values());
+                const modifiedFiles = allFiles
+                    .filter((file) =>
+                        [
+                            modifyFileTitleMap.updated.type,
+                            modifyFileTitleMap.created.type,
+                            modifyFileTitleMap.deleted.type,
+                        ].includes(file.type!),
+                    )
+                    .map((file) => ({
+                        filePath: file.filePath!,
+                        type: file.type as FileOperationType,
+                    }));
+
+                if (modifiedFiles.length > 0) {
+                    setPendingFilesForFiltering(modifiedFiles);
+                }
+
+                return allFiles;
             });
         }
     }, []);
@@ -181,7 +209,7 @@ const RovoDevView: React.FC = () => {
     const handleAppendResponse = useCallback(
         (response: Response | Response[]) => {
             setHistory((prev) => {
-                prev = appendResponse(prev, response, handleAppendModifiedFileToolReturns);
+                prev = appendResponse(prev, response, handleAppendModifiedFileToolReturns, thinkingBlockEnabled);
 
                 const last = prev.at(-1);
                 if (
@@ -195,7 +223,7 @@ const RovoDevView: React.FC = () => {
                 return prev;
             });
         },
-        [handleAppendModifiedFileToolReturns],
+        [handleAppendModifiedFileToolReturns, thinkingBlockEnabled],
     );
 
     const onMessageHandler = useCallback(
@@ -336,30 +364,8 @@ const RovoDevView: React.FC = () => {
                     }
                     break;
 
-                case RovoDevProviderMessageType.ContextAdded:
-                    setPromptContextCollection((prev) => {
-                        const newItem = event.context;
-                        const idx = prev.findIndex((x) => x.file.absolutePath === newItem.file.absolutePath);
-                        if (idx < 0) {
-                            return [...prev, newItem];
-                        } else if (!newItem.isFocus || prev[idx].isFocus) {
-                            // never replace explicitely added with focused
-                            prev[idx] = newItem;
-                            return [...prev];
-                        } else {
-                            return prev;
-                        }
-                    });
-                    break;
-
-                case RovoDevProviderMessageType.ContextRemoved:
-                    setPromptContextCollection((prev) => {
-                        if (event.isFocus) {
-                            return [...prev.filter((x) => !x.isFocus)];
-                        } else {
-                            return [...prev.filter((x) => x.file.absolutePath !== event.context.file.absolutePath)];
-                        }
-                    });
+                case RovoDevProviderMessageType.SetChatContext:
+                    setPromptContextCollection(event.context);
                     break;
 
                 case RovoDevProviderMessageType.CreatePRComplete:
@@ -388,6 +394,25 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.SetJiraWorkItems:
                     setJiraWorkItems(event.issues);
+                    break;
+
+                case RovoDevProviderMessageType.FilterModifiedFilesByContentComplete: {
+                    const convertedFiles: ToolReturnParseResult[] = event.filteredFiles.map((file) => {
+                        const content = modifyFileTitleMap[file.type]?.title || modifyFileTitleMap.updated.title;
+
+                        return {
+                            content,
+                            filePath: file.filePath,
+                            title: file.filePath.split('/').pop() || file.filePath,
+                            type: file.type,
+                        };
+                    });
+                    setTotalModifiedFiles(convertedFiles);
+                    break;
+                }
+
+                case RovoDevProviderMessageType.SetThinkingBlockEnabled:
+                    setThinkingBlockEnabled(() => event.enabled);
                     break;
 
                 default:
@@ -421,6 +446,18 @@ const RovoDevView: React.FC = () => {
         }
     }, [postMessage, dispatch, outgoingMessage]);
 
+    // Effect to trigger content filtering when files are pending
+    React.useEffect(() => {
+        if (pendingFilesForFiltering !== null) {
+            postMessage({
+                type: RovoDevViewResponseType.FilterModifiedFilesByContent,
+                files: pendingFilesForFiltering,
+            });
+            // Set to null to indicate filtering is in progress (prevents duplicate requests)
+            setPendingFilesForFiltering(null);
+        }
+    }, [pendingFilesForFiltering, postMessage]);
+
     const sendPrompt = useCallback(
         (text: string): boolean => {
             if (text.trim() === '') {
@@ -450,7 +487,7 @@ const RovoDevView: React.FC = () => {
                 type: RovoDevViewResponseType.Prompt,
                 text,
                 enable_deep_plan: isDeepPlanToggled,
-                context: promptContextCollection.filter((x) => x.enabled),
+                context: promptContextCollection,
             });
 
             return true;
@@ -511,6 +548,16 @@ const RovoDevView: React.FC = () => {
                 filePath,
                 tryShowDiff: !!tryShowDiff,
                 range: range && range.length === 2 ? range : undefined,
+            });
+        },
+        [postMessage],
+    );
+
+    const openJira = useCallback(
+        (url: string) => {
+            postMessage({
+                type: RovoDevViewResponseType.OpenJira,
+                url,
             });
         },
         [postMessage],
@@ -621,11 +668,50 @@ const RovoDevView: React.FC = () => {
         });
     }, [postMessage]);
 
-    const onAddContext = useCallback(() => {
-        postMessage({
-            type: RovoDevViewResponseType.AddContext,
-        });
-    }, [postMessage]);
+    const onAddContext = useCallback(
+        (dragDropData?: string[]) => {
+            postMessage({
+                type: RovoDevViewResponseType.AddContext,
+                dragDropData,
+            });
+        },
+        [postMessage],
+    );
+
+    const onAddJiraContext = useCallback(
+        (jiraIssueKey: string, jiraIssueUrl: string) => {
+            postMessage({
+                type: RovoDevViewResponseType.AddContext,
+                contextItem: {
+                    contextType: 'jiraWorkItem',
+                    name: jiraIssueKey,
+                    url: jiraIssueUrl,
+                },
+            });
+        },
+        [postMessage],
+    );
+
+    const onRemoveContext = useCallback(
+        (item: RovoDevContextItem) => {
+            postMessage({
+                type: RovoDevViewResponseType.RemoveContext,
+                item,
+            });
+        },
+        [postMessage],
+    );
+
+    // this assumes that only a single item in "focus" status exists in the collection
+    const onToggleContextFocus = useCallback(
+        (enabled: boolean) => {
+            postMessage({
+                type: RovoDevViewResponseType.ToggleContextFocus,
+                enabled,
+            });
+        },
+        [postMessage],
+    );
 
     const onMcpChoice = useCallback(
         (choice: McpConsentChoice, serverName?: string) => {
@@ -659,10 +745,14 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
-    const onJiraItemClick = useCallback((issue: MinimalIssue<DetailedSiteInfo>) => {
-        const template = createRovoDevTemplate(issue.key, issue.siteDetails);
-        setPromptText(template);
-    }, []);
+    const onJiraItemClick = useCallback(
+        (issue: MinimalIssue<DetailedSiteInfo>) => {
+            const jiraIssueUrl = `${issue.siteDetails.baseLinkUrl}/browse/${issue.key}`;
+            onAddJiraContext(issue.key, jiraIssueUrl);
+            setPromptText('Work on the attached Jira work item');
+        },
+        [onAddJiraContext],
+    );
 
     const setPromptTextFromAction = useCallback((context: string) => {
         setPromptText(context);
@@ -715,100 +805,123 @@ const RovoDevView: React.FC = () => {
         (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance');
 
     return (
-        <div className={debugPanelEnabled ? 'rovoDevChat debugEnabled' : 'rovoDevChat'}>
-            {debugPanelEnabled && (
-                <DebugPanel
-                    currentState={currentState}
-                    debugContext={debugPanelContext}
-                    debugMcpContext={debugPanelMcpContext}
-                />
-            )}
-            <ChatStream
-                chatHistory={history}
-                modalDialogs={modalDialogs}
-                renderProps={{
-                    openFile,
-                    checkFileExists,
-                    isRetryAfterErrorButtonEnabled,
-                    retryPromptAfterError,
+        <>
+            <div
+                id="rovoDevDragDropOverlay"
+                onDragLeave={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    document.getElementById('rovoDevDragDropOverlay')!.style.display = 'none';
                 }}
-                messagingApi={{
-                    postMessage,
-                    postMessagePromise,
+                onDrop={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    document.getElementById('rovoDevDragDropOverlay')!.style.display = 'none';
+
+                    const items = event.dataTransfer?.items || [];
+                    processDropDataTransferItems(items, onAddContext);
                 }}
-                pendingToolCall={pendingToolCallMessage}
-                deepPlanCreated={isDeepPlanCreated}
-                executeCodePlan={executeCodePlan}
-                currentState={currentState}
-                onChangesGitPushed={onChangesGitPushed}
-                onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
-                feedbackVisible={isFeedbackFormVisible}
-                setFeedbackVisible={setIsFeedbackFormVisible}
-                sendFeedback={executeSendFeedback}
-                onLoginClick={onLoginClick}
-                onOpenFolder={onOpenFolder}
-                onMcpChoice={onMcpChoice}
-                setPromptText={setPromptTextFromAction}
-                jiraWorkItems={jiraWorkItems}
-                onJiraItemClick={onJiraItemClick}
-                onToolPermissionChoice={onToolPermissionChoice}
-            />
-            {!hidePromptBox && (
-                <div className="input-section-container">
-                    <UpdatedFilesComponent
-                        modifiedFiles={totalModifiedFiles}
-                        onUndo={undoFiles}
-                        onKeep={keepFiles}
-                        openDiff={openFile}
-                        actionsEnabled={currentState.state === 'WaitingForPrompt'}
-                        workspacePath={workspacePath}
-                        homeDir={homeDir}
+            >
+                <div id="rovoDevDragDropOverlayMessage">
+                    <span className="codicon codicon-attach"></span>
+                    Drop files and Jira work items
+                    <br />
+                    to attach them as context
+                </div>
+            </div>
+            <div
+                className="rovoDevChat"
+                onDragOver={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    document.getElementById('rovoDevDragDropOverlay')!.style.display = 'flex';
+                }}
+            >
+                {debugPanelEnabled && (
+                    <DebugPanel
+                        currentState={currentState}
+                        debugContext={debugPanelContext}
+                        debugMcpContext={debugPanelMcpContext}
                     />
-                    <div className="prompt-container-container">
-                        <div className="prompt-container">
-                            <PromptContextCollection
-                                content={promptContextCollection}
-                                readonly={false}
-                                onRemoveContext={(item: RovoDevContextItem) => {
-                                    setPromptContextCollection((prev) => {
-                                        return [...prev.filter((x) => x.file.absolutePath !== item.file.absolutePath)];
-                                    });
-                                }}
-                                onToggleActiveItem={(enabled) => {
-                                    setPromptContextCollection((prev) => {
-                                        const idx = prev.findIndex((x) => x.isFocus);
-                                        if (idx < 0) {
-                                            return prev;
-                                        } else {
-                                            prev[idx].enabled = enabled;
-                                            return [...prev];
-                                        }
-                                    });
-                                }}
-                                openFile={openFile}
-                            />
-                            <PromptInputBox
-                                disabled={currentState.state === 'ProcessTerminated'}
-                                currentState={currentState}
-                                isDeepPlanEnabled={isDeepPlanToggled}
-                                isYoloModeEnabled={isYoloModeToggled}
-                                onDeepPlanToggled={() => setIsDeepPlanToggled((prev) => !prev)}
-                                onYoloModeToggled={IsBoysenberry ? undefined : () => onYoloModeToggled()}
-                                onSend={sendPrompt}
-                                onCancel={cancelResponse}
-                                onAddContext={onAddContext}
-                                onCopy={handleCopyResponse}
-                                handleMemoryCommand={executeGetAgentMemory}
-                                handleTriggerFeedbackCommand={handleShowFeedbackForm}
-                                promptText={promptText}
-                                onPromptTextSet={handlePromptTextSet}
-                            />
+                )}
+                <ChatStream
+                    chatHistory={history}
+                    modalDialogs={modalDialogs}
+                    renderProps={{
+                        openFile,
+                        openJira,
+                        checkFileExists,
+                        isRetryAfterErrorButtonEnabled,
+                        retryPromptAfterError,
+                    }}
+                    messagingApi={{
+                        postMessage,
+                        postMessagePromise,
+                    }}
+                    pendingToolCall={pendingToolCallMessage}
+                    deepPlanCreated={isDeepPlanCreated}
+                    executeCodePlan={executeCodePlan}
+                    currentState={currentState}
+                    onChangesGitPushed={onChangesGitPushed}
+                    onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
+                    feedbackVisible={isFeedbackFormVisible}
+                    setFeedbackVisible={setIsFeedbackFormVisible}
+                    sendFeedback={executeSendFeedback}
+                    onLoginClick={onLoginClick}
+                    onOpenFolder={onOpenFolder}
+                    onMcpChoice={onMcpChoice}
+                    setPromptText={setPromptTextFromAction}
+                    jiraWorkItems={jiraWorkItems}
+                    onJiraItemClick={onJiraItemClick}
+                    onToolPermissionChoice={onToolPermissionChoice}
+                />
+                {!hidePromptBox && (
+                    <div className="input-section-container">
+                        <UpdatedFilesComponent
+                            modifiedFiles={totalModifiedFiles}
+                            onUndo={undoFiles}
+                            onKeep={keepFiles}
+                            openDiff={openFile}
+                            actionsEnabled={currentState.state === 'WaitingForPrompt'}
+                            workspacePath={workspacePath}
+                            homeDir={homeDir}
+                        />
+                        <div className="prompt-container-container">
+                            <div className="prompt-container">
+                                <PromptContextCollection
+                                    content={promptContextCollection}
+                                    readonly={false}
+                                    onRemoveContext={onRemoveContext}
+                                    onToggleActiveItem={onToggleContextFocus}
+                                    openFile={openFile}
+                                    openJira={openJira}
+                                />
+                                <PromptInputBox
+                                    disabled={currentState.state === 'ProcessTerminated'}
+                                    currentState={currentState}
+                                    isDeepPlanEnabled={isDeepPlanToggled}
+                                    isYoloModeEnabled={isYoloModeToggled}
+                                    onDeepPlanToggled={() => setIsDeepPlanToggled((prev) => !prev)}
+                                    onYoloModeToggled={IsBoysenberry ? undefined : () => onYoloModeToggled()}
+                                    onSend={sendPrompt}
+                                    onCancel={cancelResponse}
+                                    onAddContext={onAddContext}
+                                    onCopy={handleCopyResponse}
+                                    handleMemoryCommand={executeGetAgentMemory}
+                                    handleTriggerFeedbackCommand={handleShowFeedbackForm}
+                                    promptText={promptText}
+                                    onPromptTextSet={handlePromptTextSet}
+                                />
+                            </div>
+                        </div>
+                        <div className="ai-disclaimer">
+                            <InformationCircleIcon label="Disclaimer logo" size="small" />
+                            Uses AI. Verify results.
                         </div>
                     </div>
-                    <div className="ai-disclaimer">Uses AI. Verify results.</div>
-                </div>
-            )}
-        </div>
+                )}
+            </div>
+        </>
     );
 };
 

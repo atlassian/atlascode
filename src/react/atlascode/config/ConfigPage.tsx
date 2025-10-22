@@ -1,8 +1,6 @@
 import { RefreshButton } from '@atlassianlabs/guipi-core-components';
 import PersonIcon from '@mui/icons-material/Person';
 import WorkIcon from '@mui/icons-material/Work';
-import ToggleButton from '@mui/lab/ToggleButton';
-import ToggleButtonGroup from '@mui/lab/ToggleButtonGroup';
 import {
     AppBar,
     Badge,
@@ -13,6 +11,8 @@ import {
     Tab,
     Tabs,
     Theme,
+    ToggleButton,
+    ToggleButtonGroup,
     Toolbar,
     Tooltip,
     Typography,

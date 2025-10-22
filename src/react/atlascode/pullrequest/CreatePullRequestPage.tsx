@@ -2,9 +2,9 @@ import { RefreshButton, ToggleWithLabel } from '@atlassianlabs/guipi-core-compon
 import { emptyTransition, Transition } from '@atlassianlabs/jira-pi-common-models';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import LaunchIcon from '@mui/icons-material/Launch';
-import { Autocomplete } from '@mui/lab';
 import {
     AppBar,
+    Autocomplete,
     Box,
     Button,
     Card,

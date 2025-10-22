@@ -2,30 +2,32 @@ import { Container } from 'src/container';
 import { RovoDevLogger } from 'src/logger';
 import { RovoDevViewResponse } from 'src/react/atlascode/rovo-dev/rovoDevViewMessages';
 import { v4 } from 'uuid';
-import { Event, Webview } from 'vscode';
 
 import { RovoDevResponseParser } from './responseParser';
 import { RovoDevResponse } from './responseParserInterfaces';
 import { RovoDevApiClient } from './rovoDevApiClient';
 import {
     RovoDevChatRequest,
+    RovoDevChatRequestContext,
     RovoDevChatRequestContextFileEntry,
+    RovoDevChatRequestContextOtherEntry,
     ToolPermissionChoice,
 } from './rovoDevApiClientInterfaces';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
-import { RovoDevContextItem, RovoDevPrompt, TechnicalPlan } from './rovoDevTypes';
 import {
-    RovoDevProviderMessage,
-    RovoDevProviderMessageType,
-    RovoDevResponseMessageType,
-} from './rovoDevWebviewProviderMessages';
-
-interface TypedWebview<MessageOut, MessageIn> extends Webview {
-    readonly onDidReceiveMessage: Event<MessageIn>;
-    postMessage(message: MessageOut): Thenable<boolean>;
-}
+    RovoDevContextItem,
+    RovoDevFileContext,
+    RovoDevJiraContext,
+    RovoDevPrompt,
+    TechnicalPlan,
+} from './rovoDevTypes';
+import { statusJsonResponseToMarkdown } from './rovoDevUtils';
+import { TypedWebview } from './rovoDevWebviewProvider';
+import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 
 type StreamingApi = 'chat' | 'replay';
+
+const PromptCommands = ['/prune', '/clear', '/status'];
 
 export class RovoDevChatProvider {
     private readonly isDebugging = Container.isDebugging;
@@ -105,7 +107,10 @@ export class RovoDevChatProvider {
             return;
         }
 
-        const isCommand = text.trim() === '/clear' || text.trim() === '/prune';
+        // remove hidden focused item from the context
+        context = context.filter((x) => x.contextType !== 'file' || x.enabled);
+
+        const isCommand = PromptCommands.includes(text.trim());
         if (isCommand) {
             enable_deep_plan = false;
             context = [];
@@ -251,25 +256,21 @@ export class RovoDevChatProvider {
         const decoder = new TextDecoder();
         const parser = new RovoDevResponseParser({ mergeAllChunks: true });
 
-        const allMessages: RovoDevResponse[] = [];
-
         while (true) {
             const { done, value } = await reader.read();
 
             if (done) {
                 for (const msg of parser.flush()) {
-                    allMessages.push(msg);
+                    await this.processRovoDevResponse('replay', msg);
                 }
                 break;
             }
 
-            const data = decoder.decode(value);
+            const data = decoder.decode(value, { stream: true });
             for (const msg of parser.parse(data)) {
-                allMessages.push(msg);
+                await this.processRovoDevResponse('replay', msg);
             }
         }
-
-        await this.processRovoDevReplayResponse(allMessages);
     }
 
     private async processChatResponse(fetchOp: Promise<Response> | Response) {
@@ -315,49 +316,6 @@ export class RovoDevChatProvider {
                 await this.processRovoDevResponse('chat', msg);
             }
         }
-    }
-
-    private async processRovoDevReplayResponse(responses: RovoDevResponse[]): Promise<void> {
-        const webview = this._webView!;
-
-        let group: RovoDevResponseMessageType[] = [];
-
-        const flush = async () => {
-            if (group.length > 0) {
-                await webview.postMessage({
-                    type: RovoDevProviderMessageType.RovoDevResponseMessage,
-                    message: group,
-                });
-                group = [];
-            }
-        };
-
-        const firstMessage = responses.shift();
-        if (!firstMessage) {
-            return;
-        }
-
-        // send the fist item individually, just to get a feeling when the replay startd
-        this.processRovoDevResponse('replay', firstMessage);
-
-        // group all contiguous messages of type 'text', 'tool-call', 'tool-return',
-        // and send them in batch. send all other type of messages normally.
-        for (const response of responses) {
-            switch (response.event_kind) {
-                case 'text':
-                case 'tool-call':
-                case 'tool-return':
-                    group.push(response);
-                    break;
-
-                default:
-                    await flush();
-                    this.processRovoDevResponse('replay', response);
-                    break;
-            }
-        }
-
-        await flush();
     }
 
     private async processRovoDevResponse(sourceApi: StreamingApi, response: RovoDevResponse): Promise<void> {
@@ -420,8 +378,18 @@ export class RovoDevChatProvider {
                 break;
 
             case 'exception':
-                const msg = response.title ? `${response.title} - ${response.message}` : response.message;
-                await this.processError(new Error(msg));
+                RovoDevLogger.error(new Error(`${response.type} ${response.message}`), response.title || undefined);
+                await webview.postMessage({
+                    type: RovoDevProviderMessageType.ShowDialog,
+                    message: {
+                        event_kind: '_RovoDevDialog',
+                        type: 'error',
+                        title: response.title || undefined,
+                        text: response.message,
+                        statusCode: `Error code: ${response.type}`,
+                        uid: v4(),
+                    },
+                });
                 break;
 
             case 'warning':
@@ -492,6 +460,18 @@ export class RovoDevChatProvider {
                     });
                     await Promise.all(promises);
                 }
+                break;
+
+            case 'status':
+                await webview.postMessage({
+                    type: RovoDevProviderMessageType.ShowDialog,
+                    message: {
+                        type: 'info',
+                        title: 'Status response',
+                        text: statusJsonResponseToMarkdown(response),
+                        event_kind: '_RovoDevDialog',
+                    },
+                });
                 break;
 
             case 'close':
@@ -600,18 +580,25 @@ export class RovoDevChatProvider {
 
     private preparePayloadForChatRequest(prompt: RovoDevPrompt): RovoDevChatRequest {
         const fileContext: RovoDevChatRequestContextFileEntry[] = (prompt.context || [])
-            .filter((x) => x.enabled)
-            .map((x) => ({
+            .filter((x) => x.contextType === 'file' && x.enabled)
+            .map((x: RovoDevFileContext) => ({
                 type: 'file' as const,
                 file_path: x.file.absolutePath,
                 selection: x.selection,
                 note: 'I currently have this file open in my IDE',
             }));
 
+        const jiraContext: RovoDevChatRequestContextOtherEntry[] = (prompt.context || [])
+            .filter((x) => x.contextType === 'jiraWorkItem')
+            .map((x: RovoDevJiraContext) => ({
+                type: 'jiraWorkItem',
+                content: x.url,
+            }));
+
         return {
             message: prompt.text,
             enable_deep_plan: prompt.enable_deep_plan,
-            context: fileContext,
+            context: Array<RovoDevChatRequestContext>().concat(fileContext).concat(jiraContext),
         };
     }
 
@@ -668,12 +655,12 @@ export class RovoDevChatProvider {
 
             // Create context item for each file
             context.push({
+                contextType: 'file',
                 isFocus: false,
                 enabled: true,
                 file: {
                     name: filePath.split('/').pop() || filePath,
                     absolutePath: filePath,
-                    relativePath: filePath.split('/').pop() || filePath, // Use basename as relative path
                 },
                 selection: selection,
             });

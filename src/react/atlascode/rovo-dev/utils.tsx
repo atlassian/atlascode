@@ -70,7 +70,7 @@ interface ToolReturnInfo {
     type: 'modify' | 'create' | 'delete' | 'open' | 'bash';
 }
 
-const modifyFileTitleMap: Record<string, ToolReturnInfo> = {
+export const modifyFileTitleMap: Record<string, ToolReturnInfo> = {
     expanded_code_chunks: { title: 'Expanded code', type: 'open' },
     replaced_code: { title: 'Replaced code', type: 'modify' },
     opened: { title: 'Opened file', type: 'open' },
@@ -274,10 +274,11 @@ export const appendResponse = (
     prev: Response[],
     response: Response | Response[],
     handleAppendModifiedFileToolReturns: (tr: RovoDevToolReturnResponse) => void,
+    thinkingBlockEnabled: boolean,
 ): Response[] => {
     if (Array.isArray(response)) {
         for (const _resp of response) {
-            prev = appendResponse(prev, _resp, handleAppendModifiedFileToolReturns);
+            prev = appendResponse(prev, _resp, handleAppendModifiedFileToolReturns, thinkingBlockEnabled);
         }
         return prev;
     }
@@ -291,13 +292,15 @@ export const appendResponse = (
     if (!Array.isArray(latest)) {
         // Streaming text response, append to current message
         if (latest?.event_kind === 'text' && response?.event_kind === 'text') {
-            latest.content += response.content;
-            return [...prev, latest];
+            const appendedMessage = { ...latest };
+            appendedMessage.content += response.content;
+
+            return [...prev, appendedMessage];
         }
         // Group tool return with previous message if applicable
         if (response.event_kind === 'tool-return') {
             handleAppendModifiedFileToolReturns(response);
-            if (response.tool_name !== 'create_technical_plan') {
+            if (response.tool_name !== 'create_technical_plan' && thinkingBlockEnabled) {
                 // Do not group if User, Error message, or Pull Request message is the latest
                 const canGroup =
                     latest &&
@@ -329,7 +332,7 @@ export const appendResponse = (
     } else {
         if (response.event_kind === 'tool-return') {
             handleAppendModifiedFileToolReturns(response);
-            if (response.tool_name !== 'create_technical_plan') {
+            if (response.tool_name !== 'create_technical_plan' && thinkingBlockEnabled) {
                 latest.push(response);
                 return [...prev, latest];
             } else {
@@ -346,3 +349,22 @@ export const appendResponse = (
         return [...prev, response];
     }
 };
+
+export async function processDropDataTransferItems(
+    items: DataTransferItemList,
+    callback: (value: string[]) => void,
+): Promise<void> {
+    if (!items || items.length === 0) {
+        return;
+    }
+
+    const promises: Promise<string>[] = [];
+
+    for (let i = 0; i < items.length; ++i) {
+        const item = items[i];
+        promises.push(new Promise<string>((resolve) => item.getAsString(resolve)));
+    }
+
+    const values = await Promise.all(promises);
+    callback(values);
+}

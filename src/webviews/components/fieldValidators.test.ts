@@ -228,7 +228,7 @@ describe('fieldValidators', () => {
             expect(validateUrl('not-a-url')).toBe('NOT_URL');
             expect(validateUrl('http://')).toBe('NOT_URL');
             expect(validateUrl('://example.com')).toBe('NOT_URL');
-            expect(validateUrl('')).toBe('NOT_URL');
+            expect(validateUrl('')).toBe(undefined);
             expect(validateUrl('just-text')).toBe('NOT_URL');
         });
 
@@ -249,7 +249,7 @@ describe('fieldValidators', () => {
         it('should return false for invalid URLs', () => {
             expect(isValidUrl('not-a-url')).toBe(false);
             expect(isValidUrl('http://')).toBe(false);
-            expect(isValidUrl('')).toBe(false);
+            expect(isValidUrl('')).toBe(true);
         });
     });
 

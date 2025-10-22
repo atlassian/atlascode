@@ -471,6 +471,7 @@ const buildContext = (editor?: TextEditor, vscodeContext?: ExtensionContext): Ro
     };
     const selections = editor.selections && editor.selections.length > 0 ? editor.selections : [editor.selection];
     return selections.map((selection) => ({
+        contextType: 'file',
         isFocus: false,
         file: fileInfo,
         selection: selection ? { start: selection.start.line, end: selection.end.line } : undefined,
@@ -484,7 +485,7 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
             const context = buildContext(window.activeTextEditor, vscodeContext);
 
             const prompt = await window.showInputBox({
-                placeHolder: 'Type your RovoDev command',
+                placeHolder: 'Type your Rovo Dev command',
                 prompt: 'Send a command to RovoDev for the selected code',
             });
 
@@ -514,15 +515,13 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
                 Container.rovodevWebviewProvider.addToContext(item);
             });
         }),
-        commands.registerCommand(Commands.OpenRovoDevConfig, async () => {
-            await openRovoDevConfigFile('.rovodev/config.yml', 'Rovo Dev settings file');
-        }),
-        commands.registerCommand(Commands.OpenRovoDevMcpJson, async () => {
-            await openRovoDevConfigFile('.rovodev/mcp.json', 'Rovo Dev MCP configuration');
-        }),
-        commands.registerCommand(Commands.OpenRovoDevGlobalMemory, async () => {
-            await openRovoDevConfigFile('.rovodev/.agent.md', 'Rovo Dev Global Memory file');
-        }),
+        commands.registerCommand(Commands.OpenRovoDevConfig, async () => await openRovoDevConfigFile('config.yml')),
+        commands.registerCommand(Commands.OpenRovoDevMcpJson, async () => await openRovoDevConfigFile('mcp.json')),
+        commands.registerCommand(
+            Commands.OpenRovoDevGlobalMemory,
+            async () => await openRovoDevConfigFile('.agent.md'),
+        ),
+        commands.registerCommand(Commands.OpenRovoDevLogFile, async () => await openRovoDevConfigFile('rovodev.log')),
     );
 }
 

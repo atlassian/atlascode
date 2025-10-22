@@ -6,26 +6,26 @@ import { ConnectionTimeout } from 'src/util/time';
 
 import { DetailedSiteInfo } from '../../../../atlclients/authInfo';
 import { useMessagingApi } from '../../messagingApi';
-import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc } from '../common/common';
+import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
-import { PullRequestChatItem, PullRequestForm } from '../create-pr/PullRequestForm';
+import { PullRequestForm } from '../create-pr/PullRequestForm';
 import { FeedbackForm, FeedbackType } from '../feedback-form/FeedbackForm';
 import { RovoDevLanding } from '../landing-page/RovoDevLanding';
 import { McpConsentChoice, RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import { CodePlanButton } from '../technical-plan/CodePlanButton';
-import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolCallItem } from '../tools/ToolCallItem';
-import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
-import { DialogMessage, parseToolReturnMessage, PullRequestMessage, Response, scrollToEnd } from '../utils';
-import { ChatMessageItem } from './ChatMessageItem';
+import { DialogMessage, PullRequestMessage, Response, scrollToEnd } from '../utils';
+import { ChatStreamMessageRenderer } from './ChatStreamMessageRenderer';
 import { DropdownButton } from './dropdown-button/DropdownButton';
-import { MessageDrawer } from './MessageDrawer';
+
+const IsBoysenberry = process.env.ROVODEV_BBY === 'true';
 
 interface ChatStreamProps {
     chatHistory: Response[];
     modalDialogs: DialogMessage[];
     renderProps: {
         openFile: OpenFileFunc;
+        openJira: OpenJiraFunc;
         checkFileExists: CheckFileExistsFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
@@ -90,6 +90,12 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         setHasChangesInGit(response.hasChanges);
     }, [messagingApi]);
 
+    const onLinkClick = React.useCallback(
+        (href: string) => {
+            messagingApi.postMessage({ type: RovoDevViewResponseType.OpenExternalLink, href });
+        },
+        [messagingApi],
+    );
     const [autoScrollEnabled, setAutoScrollEnabled] = React.useState(true);
 
     // Helper to perform auto-scroll when enabled
@@ -195,16 +201,18 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     ]);
 
     // Other state management effect
-    React.useEffect(() => {
-        if (process.env.ROVODEV_BBY && currentState.state === 'WaitingForPrompt') {
-            const canCreatePR = chatHistory.length > 0;
-            setCanCreatePR(canCreatePR);
-            if (canCreatePR) {
-                // Only check git changes if there's something in the chat
-                checkGitChanges();
+    if (IsBoysenberry) {
+        React.useEffect(() => {
+            if (currentState.state === 'WaitingForPrompt') {
+                const canCreatePR = chatHistory.length > 0;
+                setCanCreatePR(canCreatePR);
+                if (canCreatePR) {
+                    // Only check git changes if there's something in the chat
+                    checkGitChanges();
+                }
             }
-        }
-    }, [currentState, chatHistory, isFormVisible, checkGitChanges]);
+        }, [currentState, chatHistory, isFormVisible, checkGitChanges]);
+    }
 
     const handleCopyResponse = React.useCallback((text: string) => {
         if (!navigator.clipboard) {
@@ -234,7 +242,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
-            {!process.env.ROVODEV_BBY && (
+            {!IsBoysenberry && (
                 <RovoDevLanding
                     currentState={currentState}
                     isHistoryEmpty={chatHistory.length === 0}
@@ -246,66 +254,18 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     onJiraItemClick={onJiraItemClick}
                 />
             )}
-            {!isChatHistoryDisabled &&
-                chatHistory &&
-                chatHistory.map((block, idx) => {
-                    const drawerOpen =
-                        idx === chatHistory.findLastIndex((msg) => Array.isArray(msg)) &&
-                        currentState.state !== 'WaitingForPrompt';
-
-                    if (block) {
-                        if (Array.isArray(block)) {
-                            return (
-                                <MessageDrawer
-                                    messages={block}
-                                    opened={drawerOpen}
-                                    renderProps={renderProps}
-                                    onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
-                                />
-                            );
-                        } else if (block.event_kind === '_RovoDevUserPrompt' || block.event_kind === 'text') {
-                            return (
-                                <ChatMessageItem
-                                    msg={block}
-                                    enableActions={
-                                        block.event_kind === 'text' && currentState.state === 'WaitingForPrompt'
-                                    }
-                                    onCopy={handleCopyResponse}
-                                    onFeedback={handleFeedbackTrigger}
-                                    openFile={renderProps.openFile}
-                                />
-                            );
-                        } else if (block.event_kind === 'tool-return') {
-                            const parsedMessages = parseToolReturnMessage(block);
-
-                            return parsedMessages.map((message) => {
-                                if (message.technicalPlan) {
-                                    return (
-                                        <TechnicalPlanComponent
-                                            content={message.technicalPlan}
-                                            openFile={renderProps.openFile}
-                                            checkFileExists={renderProps.checkFileExists}
-                                        />
-                                    );
-                                }
-                                return <ToolReturnParsedItem msg={message} openFile={renderProps.openFile} />;
-                            });
-                        } else if (block.event_kind === '_RovoDevDialog') {
-                            return (
-                                <DialogMessageItem
-                                    msg={block}
-                                    isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
-                                    retryAfterError={renderProps.retryPromptAfterError}
-                                    onToolPermissionChoice={onToolPermissionChoice}
-                                />
-                            );
-                        } else if (block.event_kind === '_RovoDevPullRequest') {
-                            return <PullRequestChatItem msg={block} />;
-                        }
-                    }
-
-                    return null;
-                })}
+            {!isChatHistoryDisabled && (
+                <ChatStreamMessageRenderer
+                    chatHistory={chatHistory}
+                    currentState={currentState}
+                    handleCopyResponse={handleCopyResponse}
+                    handleFeedbackTrigger={handleFeedbackTrigger}
+                    onToolPermissionChoice={onToolPermissionChoice}
+                    onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
+                    renderProps={renderProps}
+                    onLinkClick={onLinkClick}
+                />
+            )}
 
             {!isChatHistoryDisabled && shouldShowToolCall && pendingToolCall && (
                 <div style={{ marginBottom: '16px' }}>
@@ -354,7 +314,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                 setIsFormVisible(false);
                             }}
                             messagingApi={messagingApi}
-                            onPullRequestCreated={(url) => {
+                            onPullRequestCreated={(url, branchName) => {
                                 setCanCreatePR(false);
                                 setIsFormVisible(false);
 
@@ -363,8 +323,8 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                                     {
                                         event_kind: '_RovoDevPullRequest',
                                         text: url
-                                            ? `Pull request ready: ${url}`
-                                            : 'Successfully pushed changes to the remote repository.',
+                                            ? `Successfully pushed changes to the remote repository with branch "${branchName}". Click to create PR: ${url}`
+                                            : `Successfully pushed changes to the remote repository with branch "${branchName}".`,
                                     },
                                     pullRequestCreated,
                                 );

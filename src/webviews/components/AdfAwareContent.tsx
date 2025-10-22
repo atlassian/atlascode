@@ -17,6 +17,8 @@ interface AdfAwareContentProps {
  */
 export const AdfAwareContent: React.FC<AdfAwareContentProps> = memo(({ content, mentionProvider }) => {
     const [traversedDocument, setTraversedDocument] = useState<any>(null);
+    const [lastContent, setLastContent] = useState<string>(content);
+
     try {
         const adfEncoder = new ADFEncoder((schema) => {
             return new WikiMarkupTransformer(schema);
@@ -24,6 +26,12 @@ export const AdfAwareContent: React.FC<AdfAwareContentProps> = memo(({ content, 
         const document = adfEncoder.encode(content);
 
         useLayoutEffect(() => {
+            // Reset when content changes
+            if (content !== lastContent) {
+                setTraversedDocument(null);
+                setLastContent(content);
+            }
+
             const fetchMentions = async () => {
                 if (!traversedDocument) {
                     const mentionsMap = new Map<string, MentionNameDetails>();
@@ -51,7 +59,7 @@ export const AdfAwareContent: React.FC<AdfAwareContentProps> = memo(({ content, 
             };
 
             fetchMentions();
-        }, [document, mentionProvider, traversedDocument]);
+        }, [content, document, mentionProvider, traversedDocument, lastContent]);
 
         return (
             <IntlProvider locale="en">
