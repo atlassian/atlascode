@@ -1,3 +1,5 @@
+import { MentionNameStatus } from '@atlaskit/mention';
+import { setGlobalTheme } from '@atlaskit/tokens';
 import { InlineTextEditor } from '@atlassianlabs/guipi-core-components';
 import {
     Box,
@@ -13,8 +15,9 @@ import {
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';
+import { AtlascodeMentionProvider } from 'src/webviews/components/issue/common/AtlaskitEditor/AtlascodeMentionsProvider';
 
 import { User } from '../../../bitbucket/model';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
@@ -137,6 +140,32 @@ function PullRequestDetailsPageContent({ state, controller }: PullRequestDetails
     const classes = useStyles();
     const theme = useTheme();
     const isWideScreen = useMediaQuery(theme.breakpoints.up('md'));
+
+    useEffect(() => {
+        // Add atlaskit theme for Atlaskit editor
+        const initializeTheme = () => {
+            const body = document.body;
+            const isDark: boolean =
+                body.getAttribute('class') === 'vscode-dark' ||
+                (body.classList.contains('vscode-high-contrast') &&
+                    !body.classList.contains('vscode-high-contrast-light'));
+
+            setGlobalTheme({
+                light: 'light',
+                dark: 'dark',
+                colorMode: isDark ? 'dark' : 'light',
+                typography: 'typography-modernized',
+            });
+        };
+
+        initializeTheme();
+
+        const observer = new MutationObserver(initializeTheme);
+        observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+        return () => observer.disconnect();
+    }, []);
+
     const handleFetchUsers = AwesomeDebouncePromise(
         async (input: string, abortSignal?: AbortSignal): Promise<User[]> => {
             return await controller.fetchUsers(state.pr.site, input, abortSignal);
@@ -144,6 +173,49 @@ function PullRequestDetailsPageContent({ state, controller }: PullRequestDetails
         300,
         { leading: false },
     );
+
+    const mentionsProvider = useMemo(() => {
+        if (!state?.pr?.site?.details?.baseApiUrl) {
+            return;
+        }
+        return AtlascodeMentionProvider.init(
+            {
+                url: '',
+                mentionNameResolver: {
+                    lookupName: async (id: string) => {
+                        const accountId = id.split('accountid:')[1];
+                        if (!accountId) {
+                            return {
+                                id,
+                                name: 'Unknown User',
+                                status: MentionNameStatus.UNKNOWN,
+                            };
+                        }
+                        const users = await handleFetchUsers(accountId);
+                        if (users.length === 0) {
+                            return {
+                                id,
+                                name: 'Unknown User',
+                                status: MentionNameStatus.UNKNOWN,
+                            };
+                        }
+                        const resolvedMention = {
+                            id,
+                            name: users[0].displayName,
+                            status: MentionNameStatus.OK,
+                        };
+                        return resolvedMention;
+                    },
+                    cacheName: (_id: string, _name: string) => {
+                        // currently this method is never called by Atlaskit. So it is implemented only to satisfy the interface
+                    },
+                },
+                isBitbucketCloud: state.pr.site.details.isCloud,
+            },
+            handleFetchUsers,
+        );
+    }, [state?.pr?.site.details, handleFetchUsers]);
+
     return (
         <>
             <PullRequestHeader state={state} controller={controller} />
@@ -157,6 +229,7 @@ function PullRequestDetailsPageContent({ state, controller }: PullRequestDetails
                             state={state}
                             controller={controller}
                             handleFetchUsers={handleFetchUsers}
+                            mentionsProvider={mentionsProvider}
                         />
                     </Paper>
                 </Grid>
