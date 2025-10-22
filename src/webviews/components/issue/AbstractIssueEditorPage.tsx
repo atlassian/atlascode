@@ -1854,6 +1854,7 @@ export abstract class AbstractIssueEditorPage<
                             isInline={true}
                             field={field}
                             onFilesChanged={this.handleCreateModeAttachments}
+                            initialFiles={this.state.fieldValues[field.key]}
                         />
                     </div>
                 );
