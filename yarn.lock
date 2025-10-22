@@ -12282,6 +12282,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/react@npm:16 || 17 || 18":
+  version: 18.3.24
+  resolution: "@types/react@npm:18.3.24"
+  dependencies:
+    "@types/prop-types": "npm:*"
+    csstype: "npm:^3.0.2"
+  checksum: 10/3f8529961afa40696f4a677e0f4399cb5da1fca9828c00634f884db261fc29a68af0b0397611fff4dd81847ac85036a1b72e987eafd994cdf4ddb1a1bcce7d61
+  languageName: node
+  linkType: hard
+
 "@types/react@npm:16 || 17 || 18 || 19":
   version: 19.2.0
   resolution: "@types/react@npm:19.2.0"
@@ -12291,13 +12301,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:16 || 17 || 18, @types/react@npm:^18.3.23":
-  version: 18.3.24
-  resolution: "@types/react@npm:18.3.24"
+"@types/react@npm:^19.2.2":
+  version: 19.2.2
+  resolution: "@types/react@npm:19.2.2"
   dependencies:
-    "@types/prop-types": "npm:*"
     csstype: "npm:^3.0.2"
-  checksum: 10/3f8529961afa40696f4a677e0f4399cb5da1fca9828c00634f884db261fc29a68af0b0397611fff4dd81847ac85036a1b72e987eafd994cdf4ddb1a1bcce7d61
+  checksum: 10/d6adf8fd4bb23a7e04da5700d96b15dc0f59653727a9c6e940c151d7232fa1dbbab98417d5ac830dcfb6cba3f206efbd4cd83647e6f9a688d7363a90e607f6bf
   languageName: node
   linkType: hard
 
@@ -13678,7 +13687,7 @@ __metadata:
     "@types/mustache": "npm:^4.0.1"
     "@types/node": "npm:^22.15.23"
     "@types/node-ipc": "npm:^9.2.0"
-    "@types/react": "npm:^18.3.23"
+    "@types/react": "npm:^19.2.2"
     "@types/react-dom": "npm:^18.3.7"
     "@types/scheduler": "npm:^0.16.1"
     "@types/semver": "npm:^7.1.0"
@@ -13769,7 +13778,7 @@ __metadata:
     prosemirror-model: "npm:^1.25.1"
     prosemirror-state: "npm:^1.4.3"
     prosemirror-view: "npm:^1.39.3"
-    react: "npm:^18.3.1"
+    react: "npm:^19.2.0"
     react-async-hook: "npm:^4.0.0"
     react-dom: "npm:^18.3.1"
     react-dropzone: "npm:^14.3.8"
@@ -23466,12 +23475,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:^18.3.1":
-  version: 18.3.1
-  resolution: "react@npm:18.3.1"
-  dependencies:
-    loose-envify: "npm:^1.1.0"
-  checksum: 10/261137d3f3993eaa2368a83110466fc0e558bc2c7f7ae7ca52d94f03aac945f45146bd85e5f481044db1758a1dbb57879e2fcdd33924e2dde1bdc550ce73f7bf
+"react@npm:^19.2.0":
+  version: 19.2.0
+  resolution: "react@npm:19.2.0"
+  checksum: 10/e13bcdb8e994c3cfa922743cb75ca8deb60531bf02f584d2d8dab940a8132ce8a2e6ef16f8ed7f372b4072e7a7eeff589b2812dabbedfa73e6e46201dac8a9d0
   languageName: node
   linkType: hard
 
