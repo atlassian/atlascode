@@ -282,32 +282,94 @@ export class RovoDevChatProvider {
         let isFirstByte = true;
         let isFirstMessage = true;
 
-        while (true) {
-            const { done, value } = await reader.read();
+        // Debouncing mechanism for smooth streaming
+        let pendingTextResponse: RovoDevResponse | null = null;
+        let debounceTimer: NodeJS.Timeout | null = null;
+        const DEBOUNCE_DELAY = 16; // ~60fps for smooth streaming
 
-            if (isFirstByte) {
-                this._telemetryProvider.perfLogger.promptFirstByteReceived(this._currentPromptId);
-                isFirstByte = false;
+        const flushPendingText = async () => {
+            if (pendingTextResponse && debounceTimer) {
+                clearTimeout(debounceTimer);
+                debounceTimer = null;
+                await this.processRovoDevResponse('chat', pendingTextResponse);
+                pendingTextResponse = null;
+            }
+        };
+
+        const scheduleTextUpdate = (msg: RovoDevResponse) => {
+            if (pendingTextResponse && pendingTextResponse.event_kind === 'text' && msg.event_kind === 'text') {
+                // Merge text content for smoother streaming, preserving all content
+                const pendingText = pendingTextResponse as any;
+                const newText = msg as any;
+                pendingText.content = (pendingText.content || '') + (newText.content || '');
+                // Update index to the latest one
+                pendingText.index = newText.index;
+            } else {
+                // Clone the message to avoid mutation issues
+                pendingTextResponse = {
+                    ...msg,
+                    content: (msg as any).content || ''
+                };
             }
 
-            if (done) {
-                // last response of the stream -> fire performance telemetry event
-                this._telemetryProvider.perfLogger.promptLastMessageReceived(this._currentPromptId);
-
-                for (const msg of parser.flush()) {
-                    await this.processRovoDevResponse('chat', msg);
-                }
-                break;
+            if (debounceTimer) {
+                clearTimeout(debounceTimer);
             }
 
-            const data = decoder.decode(value, { stream: true });
-            for (const msg of parser.parse(data)) {
-                if (isFirstMessage) {
-                    this._telemetryProvider.perfLogger.promptFirstMessageReceived(this._currentPromptId);
-                    isFirstMessage = false;
+            debounceTimer = setTimeout(async () => {
+                await flushPendingText();
+            }, DEBOUNCE_DELAY);
+        };
+
+        try {
+            while (true) {
+                const { done, value } = await reader.read();
+
+                if (isFirstByte) {
+                    this._telemetryProvider.perfLogger.promptFirstByteReceived(this._currentPromptId);
+                    isFirstByte = false;
                 }
 
-                await this.processRovoDevResponse('chat', msg);
+                if (done) {
+                    // Flush any pending text updates
+                    await flushPendingText();
+
+                    // last response of the stream -> fire performance telemetry event
+                    this._telemetryProvider.perfLogger.promptLastMessageReceived(this._currentPromptId);
+
+                    for (const msg of parser.flush()) {
+                        if (msg.event_kind === 'text') {
+                            scheduleTextUpdate(msg);
+                        } else {
+                            await this.processRovoDevResponse('chat', msg);
+                        }
+                    }
+                    
+                    // Final flush
+                    await flushPendingText();
+                    break;
+                }
+
+                const data = decoder.decode(value, { stream: true });
+                for (const msg of parser.parse(data)) {
+                    if (isFirstMessage) {
+                        this._telemetryProvider.perfLogger.promptFirstMessageReceived(this._currentPromptId);
+                        isFirstMessage = false;
+                    }
+
+                    if (msg.event_kind === 'text') {
+                        // Use debounced updates for text to ensure smooth streaming
+                        scheduleTextUpdate(msg);
+                    } else {
+                        // Process non-text messages immediately
+                        await this.processRovoDevResponse('chat', msg);
+                    }
+                }
+            }
+        } finally {
+            // Cleanup debounce timer
+            if (debounceTimer) {
+                clearTimeout(debounceTimer);
             }
         }
     }
