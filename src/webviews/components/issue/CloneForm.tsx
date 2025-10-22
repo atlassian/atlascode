@@ -25,6 +25,9 @@ type Props = {
     originalSummary: string;
     originalAssignee?: any;
     fetchUsers: (input: string) => Promise<User[]>;
+    hasAttachments?: boolean;
+    hasLinkedIssues?: boolean;
+    hasChildIssues?: boolean;
     isLoading?: boolean;
 };
 
@@ -112,32 +115,46 @@ export default class CloneForm extends React.Component<Props, any> {
                                 </Field>
                             </FormSection>
 
-                            <FormSection>
-                                <Typography variant="h6" style={{ marginBottom: '12px' }}>
-                                    Include
-                                </Typography>
+                            {(this.props.hasAttachments || this.props.hasLinkedIssues || this.props.hasChildIssues) && (
+                                <FormSection>
+                                    <Typography variant="h6" style={{ marginBottom: '12px' }}>
+                                        Include
+                                    </Typography>
 
-                                <Box style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <Field
-                                        name="includeAttachments"
-                                        defaultValue={this.state.cloneOptions.includeAttachments}
-                                    >
-                                        {({ fieldProps }: any) => <Checkbox {...fieldProps} label="Attachments" />}
-                                    </Field>
-                                    <Field
-                                        name="includeLinkedIssues"
-                                        defaultValue={this.state.cloneOptions.includeLinkedIssues}
-                                    >
-                                        {({ fieldProps }: any) => <Checkbox {...fieldProps} label="Linked issues" />}
-                                    </Field>
-                                    <Field
-                                        name="includeChildIssues"
-                                        defaultValue={this.state.cloneOptions.includeChildIssues}
-                                    >
-                                        {({ fieldProps }: any) => <Checkbox {...fieldProps} label="Child issues" />}
-                                    </Field>
-                                </Box>
-                            </FormSection>
+                                    <Box style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        {this.props.hasAttachments && (
+                                            <Field
+                                                name="includeAttachments"
+                                                defaultValue={this.state.cloneOptions.includeAttachments}
+                                            >
+                                                {({ fieldProps }: any) => (
+                                                    <Checkbox {...fieldProps} label="Attachments" />
+                                                )}
+                                            </Field>
+                                        )}
+                                        {this.props.hasLinkedIssues && (
+                                            <Field
+                                                name="includeLinkedIssues"
+                                                defaultValue={this.state.cloneOptions.includeLinkedIssues}
+                                            >
+                                                {({ fieldProps }: any) => (
+                                                    <Checkbox {...fieldProps} label="Linked issues" />
+                                                )}
+                                            </Field>
+                                        )}
+                                        {this.props.hasChildIssues && (
+                                            <Field
+                                                name="includeChildIssues"
+                                                defaultValue={this.state.cloneOptions.includeChildIssues}
+                                            >
+                                                {({ fieldProps }: any) => (
+                                                    <Checkbox {...fieldProps} label="Child issues" />
+                                                )}
+                                            </Field>
+                                        )}
+                                    </Box>
+                                </FormSection>
+                            )}
 
                             <Box style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
                                 <ButtonGroup>
