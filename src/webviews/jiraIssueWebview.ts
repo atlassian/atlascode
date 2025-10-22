@@ -1139,9 +1139,15 @@ export class JiraIssueWebview
                             // Create the cloned issue
                             const clonedIssueData = {
                                 fields: {
-                                    ...msg.issueData,
+                                    summary: msg.issueData.summary,
                                     project: { key: this._issue.key.split('-')[0] },
                                     issuetype: { name: 'Task' }, // Default to Task, could be made configurable
+                                    assignee: msg.issueData.assignee
+                                        ? { accountId: msg.issueData.assignee.accountId }
+                                        : undefined,
+                                    reporter: msg.issueData.reporter
+                                        ? { accountId: msg.issueData.reporter.accountId }
+                                        : undefined,
                                 },
                             };
 
