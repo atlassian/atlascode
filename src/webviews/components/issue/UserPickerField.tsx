@@ -1,6 +1,5 @@
 import { User } from '@atlassianlabs/jira-pi-common-models';
-import { Close } from '@mui/icons-material';
-import { Avatar, Grid, IconButton, TextField, Typography } from '@mui/material';
+import { Avatar, Grid, TextField, Typography } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React, { useCallback, useState } from 'react';
@@ -78,11 +77,6 @@ const UserPickerField: React.FC<UserPickerFieldProps> = ({
         [inputText],
     );
 
-    const handleClear = useCallback(() => {
-        onChange(null);
-        setInputText('');
-    }, [onChange]);
-
     const handleOpen = useCallback(() => {
         setOpen(true);
     }, []);
@@ -107,6 +101,29 @@ const UserPickerField: React.FC<UserPickerFieldProps> = ({
             noOptionsText={
                 fetchUsersResult.loading ? 'Loading...' : inputText.length > 1 ? 'No users found' : 'Type to search'
             }
+            sx={{
+                '& .MuiAutocomplete-popupIndicator': {
+                    color: 'white',
+                },
+                '& .MuiAutocomplete-clearIndicator': {
+                    color: 'white',
+                },
+                '& .MuiOutlinedInput-root': {
+                    padding: '1px',
+                    fontSize: '14px',
+                    // Use CSS custom properties for theme-aware colors
+                    color: 'var(--vscode-input-foreground, var(--vscode-foreground, #172b4d))',
+                    '& fieldset': {
+                        borderColor: '#738496',
+                    },
+                    '&:hover fieldset': {
+                        borderColor: '#738496',
+                    },
+                    '&.Mui-focused fieldset': {
+                        borderColor: '#738496',
+                    },
+                },
+            }}
             renderInput={(params) => (
                 <TextField
                     {...params}
@@ -115,16 +132,6 @@ const UserPickerField: React.FC<UserPickerFieldProps> = ({
                     required={required}
                     InputProps={{
                         ...params.InputProps,
-                        endAdornment: (
-                            <>
-                                {value && (
-                                    <IconButton size="small" onClick={handleClear} sx={{ marginRight: 1 }}>
-                                        <Close fontSize="small" />
-                                    </IconButton>
-                                )}
-                                {params.InputProps.endAdornment}
-                            </>
-                        ),
                     }}
                 />
             )}

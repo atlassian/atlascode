@@ -83,7 +83,7 @@ export default class CloneForm extends React.Component<Props, any> {
                                 <Field
                                     name="assignee"
                                     label="Assignee"
-                                    defaultValue={this.props.originalAssignee || this.props.currentUser}
+                                    defaultValue={this.props.originalAssignee || null}
                                 >
                                     {({ fieldProps }: any) => (
                                         <UserPickerField
@@ -91,7 +91,6 @@ export default class CloneForm extends React.Component<Props, any> {
                                             onChange={fieldProps.onChange}
                                             fetchUsers={this.props.fetchUsers}
                                             placeholder="Type to search"
-                                            // label="Assignee"
                                         />
                                     )}
                                 </Field>
@@ -108,7 +107,6 @@ export default class CloneForm extends React.Component<Props, any> {
                                             onChange={fieldProps.onChange}
                                             fetchUsers={this.props.fetchUsers}
                                             placeholder="Type to search"
-                                            // label="Reporter"
                                             required
                                         />
                                     )}
