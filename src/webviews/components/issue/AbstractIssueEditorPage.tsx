@@ -678,6 +678,7 @@ export abstract class AbstractIssueEditorPage<
                                 <div>
                                     <DatePicker
                                         {...fieldArgs.fieldProps}
+                                        defaultValue={this.coerceToString(this.state.fieldValues[field.key])}
                                         isDisabled={this.state.isSomethingLoading}
                                         className="ac-select-container"
                                         selectProps={{
@@ -743,6 +744,7 @@ export abstract class AbstractIssueEditorPage<
                                 <div>
                                     <DateTimePicker
                                         {...fieldArgs.fieldProps}
+                                        defaultValue={this.coerceToString(this.state.fieldValues[field.key])}
                                         isDisabled={this.state.isSomethingLoading}
                                         className="ac-select-container"
                                         datePickerSelectProps={{
