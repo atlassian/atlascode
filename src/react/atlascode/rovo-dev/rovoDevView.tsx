@@ -656,11 +656,15 @@ const RovoDevView: React.FC = () => {
         [history, postMessage],
     );
 
-    const onLoginClick = useCallback(() => {
-        postMessage({
-            type: RovoDevViewResponseType.LaunchJiraAuth,
-        });
-    }, [postMessage]);
+    const onLoginClick = useCallback(
+        (openApiTokenLogin: boolean) => {
+            postMessage({
+                type: RovoDevViewResponseType.LaunchJiraAuth,
+                openApiTokenLogin,
+            });
+        },
+        [postMessage],
+    );
 
     const onOpenFolder = useCallback(() => {
         postMessage({
