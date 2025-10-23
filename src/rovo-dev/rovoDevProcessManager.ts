@@ -366,7 +366,7 @@ export abstract class RovoDevProcessManager {
                 await this.downloadBinaryThenInitialize(credentials.host, rovoDevURIs);
             }
         } catch (error) {
-            RovoDevLogger.error(error);
+            RovoDevLogger.error(error, 'Error downloading Rovo Dev');
             this.setState({
                 state: 'DownloadingFailed',
                 error,
@@ -377,7 +377,7 @@ export abstract class RovoDevProcessManager {
         try {
             await this.startRovoDev(context, credentials, rovoDevURIs);
         } catch (error) {
-            RovoDevLogger.error(error);
+            RovoDevLogger.error(error, 'Error executing Rovo Dev');
             this.setState({
                 state: 'StartingFailed',
                 error,
