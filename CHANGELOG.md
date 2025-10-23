@@ -1,5 +1,12 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.6
+
+### Improvements
+
+- Added validation checks to ensure the Jira API Token hasn't expired
+- Rovo Dev now doesn't start, and prompts for fixing the API Token authentication, when the API Token is expired
+
 ## What's new in 4.0.5
 
 ### Features
