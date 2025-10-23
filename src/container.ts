@@ -101,13 +101,8 @@ export class Container {
         });
 
         context.subscriptions.push(
-            env.onDidChangeTelemetryEnabled((e) => {
+            env.onDidChangeTelemetryEnabled(() => {
                 this._analyticsClient.setAnalyticsEnabled(this.getAnalyticsEnabled());
-            }),
-            configuration.onDidChange((e) => {
-                if (configuration.changed(e, 'telemetry.enabled')) {
-                    this._analyticsClient.setAnalyticsEnabled(this.getAnalyticsEnabled());
-                }
             }),
         );
 
@@ -209,22 +204,15 @@ export class Container {
         this._helpExplorer = new HelpExplorer();
         context.subscriptions.push(this._helpExplorer);
 
-        this._featureFlagClient = FeatureFlagClient.getInstance(this.getExperimentationEnabled());
+        this._featureFlagClient = FeatureFlagClient.getInstance(this.getAnalyticsEnabled());
 
         /**
-         * If telemetry or experimentation settings change, update the feature flag client enabled state
+         * If telemetry settings change, update the feature flag client enabled state
          * If FF client initialization was skipped, this will be picked up on restart
          */
         context.subscriptions.push(
-            env.onDidChangeTelemetryEnabled((e) => {
-                this._featureFlagClient.setEnabled(this.getExperimentationEnabled());
-            }),
-            configuration.onDidChange((e) => {
-                if (configuration.changed(e, 'experiments.enabled')) {
-                    this._featureFlagClient.setEnabled(this.getExperimentationEnabled());
-                } else if (configuration.changed(e, 'telemetry.enabled')) {
-                    this._featureFlagClient.setEnabled(this.getExperimentationEnabled());
-                }
+            env.onDidChangeTelemetryEnabled(() => {
+                this._featureFlagClient.setEnabled(this.getAnalyticsEnabled());
             }),
         );
 
@@ -443,25 +431,11 @@ export class Container {
     };
 
     private static getAnalyticsEnabled(): boolean {
-        if (!env.isTelemetryEnabled) {
-            return false;
-        }
         if (process.env.DISABLE_ANALYTICS === '1') {
             return false;
         }
 
-        const atlascodeTelemetryEnabled = this.config.telemetry.enabled;
-
-        return atlascodeTelemetryEnabled;
-    }
-
-    private static getExperimentationEnabled(): boolean {
-        if (!this.getAnalyticsEnabled()) {
-            return false;
-        }
-
-        const atlascodeExperimentationEnabled = this.config.experiments.enabled;
-        return atlascodeExperimentationEnabled;
+        return env.isTelemetryEnabled;
     }
 
     static initializeBitbucket(bbCtx: BitbucketContext) {

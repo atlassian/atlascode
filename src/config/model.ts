@@ -41,17 +41,8 @@ export interface IConfig {
     enableHttpsTunnel: boolean;
     helpExplorerEnabled: boolean;
     rovodev: RovoDevConfig;
-    experiments: ExperimentsConfig;
-    telemetry: TelemetryConfig;
 }
 
-export interface ExperimentsConfig {
-    enabled: boolean;
-}
-
-export interface TelemetryConfig {
-    enabled: boolean;
-}
 export interface RovoDevConfig {
     enabled: boolean;
     debugPanelEnabled: boolean;
@@ -301,10 +292,4 @@ export const emptyConfig: IConfig = {
     enableHttpsTunnel: false,
     helpExplorerEnabled: true,
     rovodev: emptyRovoDevConfig,
-    experiments: {
-        enabled: false,
-    },
-    telemetry: {
-        enabled: false,
-    },
 };
