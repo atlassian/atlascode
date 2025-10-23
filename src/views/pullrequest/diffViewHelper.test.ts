@@ -161,6 +161,7 @@ describe('diffViewHelper', () => {
             expect(result).toBeDefined();
             expect(result.fileDisplayData).toBeDefined();
             expect(result.diffArgs).toHaveLength(4);
+            expect(result.diffArgs[1]).toBeTruthy();
             expect(result.fileDisplayData.prUrl).toBe('http://example.com/pr1');
             expect(typeof result.diffArgs[0]).toBe('function');
 
