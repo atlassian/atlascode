@@ -1464,6 +1464,18 @@
                     "default": true,
                     "description": "Shows the help explorer treeview",
                     "scope": "window"
+                },
+                "atlascode.experiments.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "markdownDescription": "Enables participation in Atlassian experiments to improve the extension\n\n_**Note:**_\n* _To participate in experiments, `#atlascode.telemetry.enabled#` must be set to `true` **and** VS Code's telemetry must be enabled._\n* _When toggling this setting, restart extension to ensure experiments are applied or removed correctly._",
+                    "scope": "window"
+                },
+                "atlascode.telemetry.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "markdownDescription": "Enables sending of usage data to Atlassian to help improve the extension\n\n_**Note:** To send telemetry, VS Code's telemetry must also be enabled._",
+                    "scope": "window"
                 }
             }
         }

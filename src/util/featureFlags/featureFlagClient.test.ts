@@ -64,7 +64,7 @@ describe('FeatureFlagClient', () => {
         };
 
         FeatureFlagClient['singleton'] = undefined;
-        featureFlagClient = FeatureFlagClient.getInstance();
+        featureFlagClient = FeatureFlagClient.getInstance(true);
     });
 
     afterEach(() => {
@@ -199,6 +199,21 @@ describe('FeatureFlagClient', () => {
 
             expect(mockClient.getExperimentValue).not.toHaveBeenCalled();
         });
+        it('should not initialize if experimentation is disabled', async () => {
+            FeatureFlagClient['singleton'] = undefined;
+            featureFlagClient = FeatureFlagClient.getInstance(false);
+
+            let error: FeatureFlagClientInitError = undefined!;
+
+            try {
+                await featureFlagClient.initialize(options);
+            } catch (err) {
+                error = err;
+            }
+
+            expect(error).toBeDefined();
+            expect(error.errorType).toBe(ClientInitializedErrorType.Skipped);
+        });
     });
 
     describe('updateUser', () => {
@@ -258,7 +273,7 @@ describe('FeatureFlagClient', () => {
             process.env.ATLASCODE_FF_OVERRIDES = `another-very-real-feature=false`;
 
             FeatureFlagClient['singleton'] = undefined;
-            featureFlagClient = FeatureFlagClient.getInstance();
+            featureFlagClient = FeatureFlagClient.getInstance(true);
             await featureFlagClient.initialize(options);
 
             const mockedCheckGate = (name: string) => MockedFeatureGates_Features[name] ?? false;
@@ -275,7 +290,7 @@ describe('FeatureFlagClient', () => {
             process.env.ATLASCODE_EXP_OVERRIDES_STRING = `another-exp-name=another value`;
 
             FeatureFlagClient['singleton'] = undefined;
-            featureFlagClient = FeatureFlagClient.getInstance();
+            featureFlagClient = FeatureFlagClient.getInstance(true);
             await featureFlagClient.initialize(options);
 
             const mockedGetExperimentValue = (name: string, param: string, defaultValue: any) => {
