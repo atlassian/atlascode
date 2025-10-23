@@ -216,6 +216,26 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                     }
                     break;
                 }
+                case 'projectsLoaded': {
+                    handled = true;
+                    const { projects, total, hasMore } = e;
+                    const currentProjects = this.state.selectFieldOptions['project'] || [];
+                    const newProjects = [...currentProjects, ...projects];
+
+                    this.setState({
+                        selectFieldOptions: {
+                            ...this.state.selectFieldOptions,
+                            project: newProjects,
+                        },
+                        projectPagination: {
+                            total,
+                            hasMore,
+                            loaded: newProjects.length,
+                            isLoadingMore: false,
+                        },
+                    });
+                    break;
+                }
             }
         }
 
