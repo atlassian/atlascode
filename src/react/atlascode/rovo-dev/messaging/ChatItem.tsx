@@ -1,6 +1,5 @@
 import React from 'react';
 import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
-import { State } from 'src/rovo-dev/rovoDevTypes';
 
 import { CheckFileExistsFunc, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
@@ -24,7 +23,6 @@ interface ChatItemProps {
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
     };
-    currentState: State;
     drawerOpen: boolean;
     onLinkClick: (href: string) => void;
 }
@@ -37,7 +35,6 @@ export const ChatItem = React.memo<ChatItemProps>(
         onToolPermissionChoice,
         onCollapsiblePanelExpanded,
         renderProps,
-        currentState,
         drawerOpen,
         onLinkClick,
     }) => {
@@ -58,7 +55,7 @@ export const ChatItem = React.memo<ChatItemProps>(
             return (
                 <ChatMessageItem
                     msg={block}
-                    enableActions={block.event_kind === 'text' && currentState.state === 'WaitingForPrompt'}
+                    enableActions={block.event_kind === 'text' && block.isSummary === true}
                     onCopy={handleCopyResponse}
                     onFeedback={handleFeedbackTrigger}
                     openFile={renderProps.openFile}
@@ -115,7 +112,6 @@ export const ChatItem = React.memo<ChatItemProps>(
         return (
             prevProps.block === nextProps.block &&
             !isAppendedMessages() &&
-            prevProps.currentState === nextProps.currentState &&
             prevProps.drawerOpen === nextProps.drawerOpen
         );
     },

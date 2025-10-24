@@ -15,6 +15,7 @@ export interface RovoDevTextResponse {
     event_kind: 'text';
     index: number;
     content: string;
+    isSummary?: boolean;
 }
 
 export interface RovoDevToolCallResponse {

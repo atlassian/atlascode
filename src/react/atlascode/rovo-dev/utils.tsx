@@ -287,13 +287,16 @@ export const appendResponse = (
         return prev;
     }
 
+    if (prev.length === 0) {
+        return [response];
+    }
+
     const latest = prev.pop();
 
     if (!Array.isArray(latest)) {
         // Streaming text response, append to current message
         if (latest?.event_kind === 'text' && response?.event_kind === 'text') {
-            const appendedMessage = { ...latest };
-            appendedMessage.content += response.content;
+            const appendedMessage = { ...latest, content: latest.content + response.content };
 
             return [...prev, appendedMessage];
         }
@@ -308,21 +311,19 @@ export const appendResponse = (
                     latest.event_kind !== '_RovoDevDialog' &&
                     latest.event_kind !== '_RovoDevPullRequest';
 
-                let thinkingGroup: ChatMessage[] = canGroup ? [latest, response] : [response];
-
                 if (canGroup) {
                     const prevGroup = prev.pop();
                     // if previous message is also a thinking group, merge them
                     if (prevGroup !== undefined) {
                         if (Array.isArray(prevGroup)) {
-                            thinkingGroup = [...prevGroup, ...thinkingGroup];
+                            return [...prev, [...prevGroup, latest, response]];
                         } else {
-                            return [...prev, prevGroup, thinkingGroup];
+                            return [...prev, prevGroup, [latest, response]];
                         }
                     }
-                    return [...prev, thinkingGroup];
+                    return [...prev, [latest, response]];
                 } else {
-                    return latest ? [...prev, latest, thinkingGroup] : [...prev, thinkingGroup];
+                    return latest ? [...prev, latest, [response]] : [...prev, [response]];
                 }
             } else {
                 // create_technical_plan is always its own message

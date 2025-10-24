@@ -60,7 +60,6 @@ export const ChatStreamMessageRenderer = React.memo<ChatStreamMessageRendererPro
                     onToolPermissionChoice={onToolPermissionChoice}
                     onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
                     renderProps={renderProps}
-                    currentState={currentState}
                     drawerOpen={idx === openDrawerIdx}
                     onLinkClick={onLinkClick}
                 />
