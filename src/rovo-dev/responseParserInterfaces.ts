@@ -120,6 +120,9 @@ export type RovoDevToolName =
     | 'grep'
     | 'bash'
     | 'create_technical_plan'
-    | 'mcp_invoke_tool';
+    | 'mcp_invoke_tool'
+    | 'mcp__atlassian__invoke_tool'
+    | 'mcp__atlassian__get_tool_schema'
+    | 'mcp__scout__invoke_tool';
 
 export type RovoDevToolPemissionScenario = 'ASK' | 'ALLOWED' | 'DENIED';

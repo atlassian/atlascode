@@ -77,6 +77,7 @@ export const modifyFileTitleMap: Record<string, ToolReturnInfo> = {
     created: { title: 'Created file', type: 'create' },
     deleted: { title: 'Deleted file', type: 'delete' },
     updated: { title: 'Updated file', type: 'modify' },
+    expanded_folder: { title: 'Expanded folder', type: 'open' },
 };
 
 /**
@@ -132,6 +133,22 @@ export function parseToolReturnMessage(msg: RovoDevToolReturnResponse): ToolRetu
             }
             break;
 
+        case 'expand_folder':
+            const folder = msg.toolCallMessage.args && JSON.parse(msg.toolCallMessage.args);
+            if (folder?.folder_path) {
+                resp.push({
+                    title: folder.folder_path,
+                    content: 'Expanded folder',
+                    type: 'open',
+                });
+            } else {
+                resp.push({
+                    content: 'Expanded folder',
+                    type: 'open',
+                });
+            }
+            break;
+
         case 'bash':
             const args = msg.toolCallMessage.args && JSON.parse(msg.toolCallMessage.args);
             if (args?.command) {
@@ -177,6 +194,16 @@ export function parseToolReturnMessage(msg: RovoDevToolReturnResponse): ToolRetu
             }
             break;
 
+        case 'mcp__atlassian__invoke_tool':
+        case 'mcp__atlassian__get_tool_schema':
+        case 'mcp__scout__invoke_tool':
+            const mcpToolCallArgs = msg.toolCallMessage.args;
+            const mcpToolData = mcpToolCallArgs ? JSON.parse(mcpToolCallArgs) : undefined;
+            resp.push({
+                content: `Invoked MCP tool: \`${mcpToolData?.tool_name || 'unknown tool'}\``,
+                type: 'bash',
+            });
+            break;
         default:
             // For other tool names, we just return the raw content
             resp.push({
