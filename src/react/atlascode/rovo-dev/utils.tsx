@@ -194,6 +194,16 @@ export function parseToolReturnMessage(msg: RovoDevToolReturnResponse): ToolRetu
             }
             break;
 
+        case 'mcp__atlassian__invoke_tool':
+        case 'mcp__atlassian__get_tool_schema':
+        case 'mcp__scout__invoke_tool':
+            const mcpToolCallArgs = msg.toolCallMessage.args;
+            const mcpToolData = mcpToolCallArgs ? JSON.parse(mcpToolCallArgs) : undefined;
+            resp.push({
+                content: `Invoked MCP tool: \`${mcpToolData?.tool_name || 'unknown tool'}\``,
+                type: 'bash',
+            });
+            break;
         default:
             // For other tool names, we just return the raw content
             resp.push({
