@@ -37,7 +37,8 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
             });
         } else if (isAutocompleteSuggestionsResult(result)) {
             suggestions = result.results.map((result) => {
-                return { label: result.displayName, value: result.value };
+                const plainTextLabel = result.displayName.replace(/<b>|<\/b>/g, '');
+                return { label: plainTextLabel, value: result.value };
             });
         } else if (isProjectsResult(result)) {
             // Jira server's /project API does not filter/search, so manually filter results that match the query
@@ -132,8 +133,9 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                 const client = await Container.clientManager.jiraClient(msg.site);
                                 let suggestions: any[] = [];
                                 if (msg.autocompleteUrl && msg.autocompleteUrl.trim() !== '') {
+                                    const finalUrl = this.transformAutocompleteUrl(msg.autocompleteUrl, msg.fieldName);
                                     const result = await client.getAutocompleteDataFromUrl(
-                                        msg.autocompleteUrl + encodeURIComponent(msg.query),
+                                        finalUrl + encodeURIComponent(msg.query),
                                     );
                                     suggestions = this.formatSelectOptions(msg, result);
                                 }
@@ -180,5 +182,14 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
         }
 
         return handled;
+    }
+
+    private transformAutocompleteUrl(url: string, fieldName?: string): string {
+        if (fieldName === 'Team' && url.includes('/gateway/api/v1/recommendations')) {
+            const baseUrl = url.replace('/gateway/api/v1/recommendations', '');
+            return `${baseUrl}/rest/api/2/jql/autocompletedata/suggestions?fieldName=${fieldName}&fieldValue=`;
+        }
+
+        return url;
     }
 }

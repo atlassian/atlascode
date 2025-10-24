@@ -436,7 +436,12 @@ export class JiraIssueWebview
                     const newFieldValues: FieldValues = (msg as EditIssueAction).fields;
                     try {
                         const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
-                        await client.editIssue(this._issue!.key, newFieldValues);
+                        const teamId = (msg as EditIssueAction).teamId;
+
+                        await client.editIssue(
+                            this._issue!.key,
+                            teamId ? { [Object.keys(newFieldValues)[0]]: teamId } : newFieldValues,
+                        );
                         if (
                             Object.keys(newFieldValues).some(
                                 (fieldKey) => this._editUIData.fieldValues[`${fieldKey}.rendered`] !== undefined,
