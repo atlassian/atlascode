@@ -14,10 +14,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
+  setup:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -26,18 +27,47 @@ jobs:
         run: corepack enable
 
       - name: Cache Yarn dependencies
+        id: cache-deps
         uses: actions/cache@v4
         with:
           path: |
             .yarn/cache
             .yarn/unplugged
             .yarn/install-state.gz
-          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+            node_modules
+          key: deps-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           restore-keys: |
-            yarn-${{ runner.os }}-
+            deps-${{ runner.os }}-
 
       - name: Install dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
         run: yarn install --immutable
+
+      - name: Upload node_modules
+        uses: actions/upload-artifact@v4
+        with:
+          name: node_modules
+          path: node_modules
+          retention-days: 1
+
+  lint:
+    needs: [setup]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node_modules
+          path: node_modules
 
       - name: Run vulnerability audit
         run: yarn npm audit --recursive --no-deprecations
@@ -46,7 +76,7 @@ jobs:
         run: yarn lint
 
   ci-matrix:
-    needs: [lint]
+    needs: [setup, lint]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
@@ -70,6 +100,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -77,19 +108,11 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
-      - name: Cache Yarn dependencies
-        uses: actions/cache@v4
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
         with:
-          path: |
-            .yarn/cache
-            .yarn/unplugged
-            .yarn/install-state.gz
-          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            yarn-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: yarn install --immutable
+          name: node_modules
+          path: node_modules
 
       - name: Run unit tests
         if: matrix.kind == 'unit'
