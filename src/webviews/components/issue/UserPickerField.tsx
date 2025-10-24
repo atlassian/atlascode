@@ -103,24 +103,24 @@ const UserPickerField: React.FC<UserPickerFieldProps> = ({
             }
             sx={{
                 '& .MuiAutocomplete-popupIndicator': {
-                    color: 'white',
+                    color: 'var(--vscode-foreground)',
                 },
                 '& .MuiAutocomplete-clearIndicator': {
-                    color: 'white',
+                    color: 'var(--vscode-foreground)',
                 },
                 '& .MuiOutlinedInput-root': {
                     padding: '1px',
                     fontSize: '14px',
-                    // Use CSS custom properties for theme-aware colors
-                    color: 'var(--vscode-input-foreground, var(--vscode-foreground, #172b4d))',
+                    color: 'var(--vscode-input-foreground)',
+                    backgroundColor: 'var(--vscode-input-background)',
                     '& fieldset': {
-                        borderColor: '#738496',
+                        borderColor: 'var(--vscode-quickInput-foreground)',
                     },
                     '&:hover fieldset': {
-                        borderColor: '#738496',
+                        borderColor: 'var(--vscode-quickInput-foreground)',
                     },
                     '&.Mui-focused fieldset': {
-                        borderColor: '#738496',
+                        borderColor: 'var(--vscode-quickInput-foreground)',
                     },
                 },
             }}

@@ -77,7 +77,16 @@ export default class CloneForm extends React.Component<Props, any> {
                         <form {...formProps}>
                             <FormSection>
                                 <Field name="summary" label="Summary" isRequired defaultValue={this.state.summary}>
-                                    {({ fieldProps }: any) => <TextField {...fieldProps} placeholder="Enter summary" />}
+                                    {({ fieldProps }: any) => (
+                                        <TextField
+                                            {...fieldProps}
+                                            placeholder="Enter summary"
+                                            style={{
+                                                color: 'var(--vscode-input-foreground)',
+                                                backgroundColor: 'var(--vscode-input-background)',
+                                            }}
+                                        />
+                                    )}
                                 </Field>
 
                                 <Field
