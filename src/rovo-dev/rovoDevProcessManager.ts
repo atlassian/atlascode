@@ -29,16 +29,15 @@ const RovoDevInfo = {
 };
 
 function GetRovoDevURIs(context: ExtensionContext) {
+    const platform = process.platform;
+    const arch = process.arch;
     const extensionPath = context.storageUri!.fsPath;
     const rovoDevBaseDir = path.join(extensionPath, 'atlascode-rovodev-bin');
     const rovoDevVersionDir = path.join(rovoDevBaseDir, MIN_SUPPORTED_ROVODEV_VERSION);
-    const rovoDevBinPath = path.join(rovoDevVersionDir, 'atlassian_cli_rovodev');
+    const rovoDevBinPath = path.join(rovoDevVersionDir, 'atlassian_cli_rovodev') + (platform === 'win32' ? '.exe' : '');
     const rovoDevIconUri = Uri.file(context.asAbsolutePath(path.join('resources', 'rovodev-terminal-icon.svg')));
 
-    const platform = process.platform;
-    const arch = process.arch;
     let rovoDevZipUrl = undefined;
-
     if (platform === 'win32' || platform === 'linux' || platform === 'darwin') {
         const platformDir = platform === 'win32' ? 'windows' : platform;
         if (arch === 'x64' || arch === 'arm64') {
@@ -525,7 +524,7 @@ class RovoDevTerminalInstance extends Disposable {
                         isTransient: true,
                         iconPath: this.rovoDevIconUri,
                         env: {
-                            USER: process.env.USER,
+                            USER: process.env.USER || process.env.USERNAME,
                             USER_EMAIL: credentials.username,
                             ROVODEV_SANDBOX_ID: Container.appInstanceId,
                             ...(credentials.key ? { USER_API_TOKEN: credentials.key } : {}),
