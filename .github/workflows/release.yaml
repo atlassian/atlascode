@@ -55,7 +55,7 @@ jobs:
           restore-keys: yarn-cache-
 
       - name: Set version in package.json
-        run: yarn version $PACKAGE_VERSION --immediate
+        run: npm version $PACKAGE_VERSION --no-git-tag-version --allow-same-version -f
 
       - name: Install dependencies
         run: yarn install --immutable

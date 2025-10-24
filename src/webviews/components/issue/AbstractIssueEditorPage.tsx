@@ -860,6 +860,8 @@ export abstract class AbstractIssueEditorPage<
                     }
                 } else if (currentIssueType.name !== 'Epic') {
                     // This will never run for DC because it does not have 'parent' field
+                    const defaultParent = this.state.fieldValues['parent'] || undefined;
+
                     return (
                         <Field
                             label={<span>{field.name}</span>}
@@ -871,6 +873,7 @@ export abstract class AbstractIssueEditorPage<
                                 return (
                                     <AsyncSelect
                                         {...fieldArgs.fieldProps}
+                                        defaultValue={defaultParent}
                                         isClearable={!field.required}
                                         isMulti={false}
                                         className="ac-form-select-container"
