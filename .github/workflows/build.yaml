@@ -18,27 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Cache Yarn dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            .yarn/cache
-            .yarn/unplugged
-            .yarn/install-state.gz
-            node_modules
-          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            yarn-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: yarn install --immutable
+      
+      - name: Setup Yarn dependencies
+        uses: ./.github/actions/setup-dependencies
 
       - name: Run vulnerability audit
         run: yarn npm audit --recursive --no-deprecations
@@ -51,27 +33,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Cache Yarn dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            .yarn/cache
-            .yarn/unplugged
-            .yarn/install-state.gz
-            node_modules
-          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            yarn-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: yarn install --immutable
+      - name: Setup Yarn dependencies
+        uses: ./.github/actions/setup-dependencies
 
       - name: Build and package the extension
         run: yarn extension:package
@@ -88,27 +51,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Cache Yarn dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            .yarn/cache
-            .yarn/unplugged
-            .yarn/install-state.gz
-            node_modules
-          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            yarn-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: yarn install --immutable
+      - name: Setup Yarn dependencies
+        uses: ./.github/actions/setup-dependencies
 
       - name: Run unit tests
         run: yarn test
@@ -134,27 +78,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Cache Yarn dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            .yarn/cache
-            .yarn/unplugged
-            .yarn/install-state.gz
-            node_modules
-          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            yarn-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: yarn install --immutable
+      - name: Setup Yarn dependencies
+        uses: ./.github/actions/setup-dependencies
 
       - name: Download extension package
         uses: actions/download-artifact@v4
