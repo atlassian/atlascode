@@ -206,16 +206,6 @@ export class Container {
 
         this._featureFlagClient = FeatureFlagClient.getInstance(this.getAnalyticsEnabled());
 
-        /**
-         * If telemetry settings change, update the feature flag client enabled state
-         * If FF client initialization was skipped, this will be picked up on restart
-         */
-        context.subscriptions.push(
-            env.onDidChangeTelemetryEnabled(() => {
-                this._featureFlagClient.setEnabled(this.getAnalyticsEnabled());
-            }),
-        );
-
         await this.initializeFeatureFlagClient();
 
         if (this._featureFlagClient.checkExperimentValue(Experiments.AtlascodeNewSettingsExperiment)) {
