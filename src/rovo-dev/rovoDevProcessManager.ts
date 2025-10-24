@@ -110,7 +110,7 @@ async function getOrAssignPortForWorkspace(): Promise<number> {
  * Placeholder implementation for Rovo Dev CLI credential storage
  */
 async function getCloudCredentials(): Promise<
-    { username: string; key: string; host: string; isStaging: boolean } | undefined
+    { username: string; key: string; host: string; isValid: boolean; isStaging: boolean } | undefined
 > {
     try {
         const sites = Container.siteManager.getSitesAvailable(ProductJira);
@@ -127,10 +127,20 @@ async function getCloudCredentials(): Promise<
                 return undefined;
             }
 
+            // verify the credentials work
+            let isValid: boolean;
+            try {
+                await Container.clientManager.jiraClient(site);
+                isValid = true;
+            } catch {
+                isValid = false;
+            }
+
             return {
                 username: authInfo.username,
                 key: authInfo.password,
                 host: site.host,
+                isValid,
                 isStaging: site.host.endsWith('.jira-dev.com'),
             };
         });
@@ -157,17 +167,6 @@ function areCredentialsEqual(cred1?: CloudCredentials, cred2?: CloudCredentials)
     }
 
     return cred1.host === cred2.host && cred1.key === cred2.key && cred1.username === cred2.username;
-}
-
-class ProcessManagerError extends Error {
-    constructor(type: 'needAuth');
-    constructor(type: 'other', message: string);
-    constructor(
-        public type: 'needAuth' | 'other',
-        message?: string,
-    ) {
-        super(message || type);
-    }
 }
 
 export interface RovoDevProcessNotStartedState {
@@ -349,6 +348,12 @@ export abstract class RovoDevProcessManager {
                 subState: 'NeedAuth',
             });
             return;
+        } else if (!credentials.isValid) {
+            this.setState({
+                state: 'Disabled',
+                subState: 'UnauthorizedAuth',
+            });
+            return;
         }
 
         this.setState({
@@ -488,11 +493,6 @@ class RovoDevTerminalInstance extends Disposable {
         const port = await getOrAssignPortForWorkspace();
 
         return new Promise<void>((resolve, reject) => {
-            if (!credentials) {
-                reject(new ProcessManagerError('needAuth'));
-                return;
-            }
-
             access(this.rovoDevBinPath, constants.X_OK, async (err) => {
                 if (err) {
                     reject(new Error(`executable not found.`));

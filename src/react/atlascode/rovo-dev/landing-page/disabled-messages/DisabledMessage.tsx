@@ -11,7 +11,7 @@ const messageOuterStyles: React.CSSProperties = {
 
 export const DisabledMessage: React.FC<{
     currentState: State;
-    onLoginClick: () => void;
+    onLoginClick: (openApiTokenLogin: boolean) => void;
     onOpenFolder: () => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
 }> = ({ currentState, onLoginClick, onOpenFolder, onMcpChoice }) => {
@@ -19,8 +19,23 @@ export const DisabledMessage: React.FC<{
         return (
             <div style={messageOuterStyles}>
                 <div>Create an API token in Jira Cloud and add it here to use Rovo Dev beta</div>
-                <button style={{ ...inChatButtonStyles, marginTop: '8px' }} onClick={onLoginClick}>
+                <button style={{ ...inChatButtonStyles, marginTop: '8px' }} onClick={() => onLoginClick(true)}>
                     Add API Token
+                </button>
+            </div>
+        );
+    }
+
+    if (currentState.state === 'Disabled' && currentState.subState === 'UnauthorizedAuth') {
+        return (
+            <div style={messageOuterStyles}>
+                <div>
+                    It looks like the API token you used for authentication has expired.
+                    <br />
+                    Please fix the authentication to continue.
+                </div>
+                <button style={{ ...inChatButtonStyles, marginTop: '8px' }} onClick={() => onLoginClick(false)}>
+                    Auth settings
                 </button>
             </div>
         );

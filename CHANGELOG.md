@@ -2,7 +2,13 @@
 
 ## What's new in 4.0.6
 
+### Improvements
+
+- Added validation checks to ensure the Jira API Token hasn't expired
+- Rovo Dev now doesn't start, and prompts for fixing the API Token authentication, when the API Token is expired
+
 ### Bug Fixes
+
 - Fix executable not found for Rovo Dev on Windows
 - Fix some of the exit code 1 reason 2 failures of Rovo Dev on Windows 
 

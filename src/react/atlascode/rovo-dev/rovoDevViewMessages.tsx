@@ -74,7 +74,7 @@ export type RovoDevViewResponse =
           RovoDevViewResponseType.SendFeedback,
           { feedbackType: FeedbackType; feedbackMessage: string; lastTenMessages?: string[]; canContact: boolean }
       >
-    | ReducerAction<RovoDevViewResponseType.LaunchJiraAuth>
+    | ReducerAction<RovoDevViewResponseType.LaunchJiraAuth, { openApiTokenLogin: boolean }>
     | ReducerAction<RovoDevViewResponseType.McpConsentChoiceSubmit, { choice: McpConsentChoice; serverName?: string }>
     | ReducerAction<RovoDevViewResponseType.CheckFileExists, { filePath: string; requestId: string }>
     | ReducerAction<

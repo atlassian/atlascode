@@ -68,9 +68,10 @@ const RovoDevDisabledPriority: Record<RovoDevDisabledReason | 'none', number> = 
     none: 0,
     Other: 1,
     EntitlementCheckFailed: 2,
-    NeedAuth: 3,
-    NoWorkspaceOpen: 4,
-    UnsupportedArch: 5,
+    UnauthorizedAuth: 3,
+    NeedAuth: 4,
+    NoWorkspaceOpen: 5,
+    UnsupportedArch: 6,
 };
 
 export class RovoDevWebviewProvider extends Disposable implements WebviewViewProvider {
@@ -438,7 +439,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.LaunchJiraAuth:
-                        await commands.executeCommand(Commands.JiraAPITokenLogin);
+                        if (e.openApiTokenLogin) {
+                            await commands.executeCommand(Commands.JiraAPITokenLogin);
+                        } else {
+                            await commands.executeCommand(Commands.ShowJiraAuth);
+                        }
                         break;
 
                     case RovoDevViewResponseType.OpenFolder:
