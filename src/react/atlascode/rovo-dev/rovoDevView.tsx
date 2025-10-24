@@ -206,6 +206,18 @@ const RovoDevView: React.FC = () => {
         }
     }, []);
 
+    const setSummaryMessageInHistory = useCallback(() => {
+        setHistory((prev) => {
+            const lastMessage = prev[prev.length - 1];
+
+            if (lastMessage && !Array.isArray(lastMessage) && lastMessage.event_kind === 'text') {
+                const summaryMessage = { ...lastMessage, isSummary: true };
+                return [...prev.slice(0, -1), summaryMessage];
+            }
+            return prev;
+        });
+    }, []);
+
     const handleAppendResponse = useCallback(
         (response: Response | Response[]) => {
             setHistory((prev) => {
@@ -267,6 +279,7 @@ const RovoDevView: React.FC = () => {
                     ) {
                         setCurrentState({ state: 'WaitingForPrompt' });
                     }
+                    setSummaryMessageInHistory();
                     setPendingToolCallMessage('');
                     setModalDialogs([]);
                     break;
@@ -428,7 +441,7 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [currentState.state, handleAppendResponse, clearChatHistory],
+        [handleAppendResponse, currentState.state, setSummaryMessageInHistory, clearChatHistory],
     );
 
     const { postMessage, postMessagePromise } = useMessagingApi<
