@@ -16,19 +16,19 @@ To run the tests locally, it should be enough to do the following:
 1.  First, prepare mock certificates for wiremock, using
 
 ```sh
- yarn test:e2e:sslcerts
+ npm run test:e2e:sslcerts
 ```
 
 2.  Build a docker image that we use for testing:
 
 ```sh
-yarn test:e2e:docker:build
+npm run test:e2e:docker:build
 ```
 
 3.  Run tests headless in a docker container:
 
 ```sh
-yarn test:e2e:docker
+npm run test:e2e:docker
 ```
 
 4. Check the output, and the artifacts provided in `./test-results`
@@ -39,7 +39,7 @@ yarn test:e2e:docker
 To run E2E tests against changed code, you might need to re-build the extension by running
 
 ```sh
-yarn extension:package
+npm run extension:package
 ```
 
 ---
@@ -51,7 +51,7 @@ yarn extension:package
 2. Use the following command to start the testing environment
 
 ```sh
-  yarn test:e2e:docker:serve
+  npm test:e2e:docker:serve
 ```
 
 3. Open *http://127.0.0.1:9988* in browser. The code-server UI should be available.

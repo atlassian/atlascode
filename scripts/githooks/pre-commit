@@ -43,5 +43,5 @@ for file in "${stagedFiles[@]}"; do
 done
 
 if (( ${runlint} == 1 )); then
-    yarn lint
+    npm run lint
 fi
