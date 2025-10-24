@@ -123,6 +123,9 @@ const UserPickerField: React.FC<UserPickerFieldProps> = ({
                         borderColor: 'var(--vscode-quickInput-foreground)',
                     },
                 },
+                '& .MuiInputLabel-root': {
+                    color: 'var(--vscode-descriptionForeground)',
+                },
             }}
             renderInput={(params) => (
                 <TextField
