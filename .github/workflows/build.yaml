@@ -18,22 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Cache Yarn dependencies
-        uses: actions/cache@v4
-        with:
-          path: .yarn/cache
-          key: yarn-cache-${{ hashFiles('yarn.lock') }}
-          restore-keys: yarn-cache-
-
-      - name: Install dependencies
-        run: yarn install --immutable
+      
+      - name: Setup Yarn dependencies
+        uses: ./.github/actions/setup-dependencies
 
       - name: Run vulnerability audit
         run: yarn npm audit --recursive --no-deprecations
@@ -41,22 +28,46 @@ jobs:
       - name: Run linter
         run: yarn lint
 
-  ci-matrix:
-    needs: [lint]
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Yarn dependencies
+        uses: ./.github/actions/setup-dependencies
+
+      - name: Build and package the extension
+        run: yarn extension:package
+
+      - name: Upload extension package
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-package
+          path: atlascode-*.vsix
+          retention-days: 1
+
+  test-unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Yarn dependencies
+        uses: ./.github/actions/setup-dependencies
+
+      - name: Run unit tests
+        run: yarn test
+
+  test-e2e:
+    needs: [build]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
       matrix:
-        include:
-          - kind: unit
-          - kind: e2e
-            target: jira-cloud
-          - kind: e2e
-            target: jira-dc
-          - kind: e2e
-            target: bitbucket-cloud
-          - kind: e2e
-            target: bitbucket-dc
+        target:
+          - jira-cloud
+          - jira-dc
+          - bitbucket-cloud
+          - bitbucket-dc
 
     env:
       ATLASCODE_FX3_API_KEY: ${{ secrets.ATLASCODE_FX3_API_KEY }}
@@ -66,49 +77,30 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      
+      - name: Setup Yarn dependencies
+        uses: ./.github/actions/setup-dependencies
+
+      - name: Download extension package
+        uses: actions/download-artifact@v4
         with:
-          node-version: 20
-          
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Cache Yarn dependencies
-        uses: actions/cache@v4
-        with:
-          path: .yarn/cache
-          key: yarn-cache-${{ hashFiles('yarn.lock') }}
-          restore-keys: yarn-cache-
-
-      - name: Install dependencies
-        run: yarn install --immutable
-
-      - name: Run unit tests
-        if: matrix.kind == 'unit'
-        run: yarn test
-
-      - name: Build and package the extension
-        if: matrix.kind == 'e2e'
-        run: yarn extension:package
+          name: extension-package
 
       - name: Generate SSL certs for E2E test
-        if: matrix.kind == 'e2e'
         run: yarn test:e2e:sslcerts
 
       - name: Fetch E2E image
-        if: matrix.kind == 'e2e'
         run: |
           docker pull ghcr.io/atlassian/atlascode-e2e:latest
           docker tag ghcr.io/atlassian/atlascode-e2e:latest atlascode-e2e
 
       - name: Run E2E (${{ matrix.target }})
-        if: matrix.kind == 'e2e'
         run: yarn test:e2e:docker
         env:
           TARGET: ${{ matrix.target }}
 
       - name: Upload E2E artifacts (${{ matrix.target }})
-        if: matrix.kind == 'e2e' && failure()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-test-results-${{ matrix.target }}
@@ -117,14 +109,22 @@ jobs:
           if-no-files-found: ignore
 
   finalize:
-    needs: [ci-matrix]
+    needs: [lint, test-unit, test-e2e]
     runs-on: ubuntu-latest
     if: always()
     steps:
       - name: Check if all jobs succeeded
         run: |
-          if [[ "${{ needs.ci-matrix.result }}" != "success" ]]; then
-            echo "One of the ci-matrix jobs failed"
+          if [[ "${{ needs.lint.result }}" != "success" ]]; then
+            echo "Lint job failed"
+            exit 1
+          fi
+          if [[ "${{ needs.test-unit.result }}" != "success" ]]; then
+            echo "Unit test job failed"
+            exit 1
+          fi
+          if [[ "${{ needs.test-e2e.result }}" != "success" ]]; then
+            echo "E2E test jobs failed"
             exit 1
           fi
           echo "All steps completed successfully"
