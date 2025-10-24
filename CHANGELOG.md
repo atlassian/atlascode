@@ -11,6 +11,7 @@
 
 - Fix executable not found for Rovo Dev on Windows
 - Fix some of the exit code 1 reason 2 failures of Rovo Dev on Windows 
+- Fixed UI flickering of Jira suggestions in Rovo Dev 
 
 ## What's new in 4.0.5
 
