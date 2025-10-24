@@ -28,9 +28,13 @@ jobs:
       - name: Cache Yarn dependencies
         uses: actions/cache@v4
         with:
-          path: .yarn/cache
-          key: yarn-cache-${{ hashFiles('yarn.lock') }}
-          restore-keys: yarn-cache-
+          path: |
+            .yarn/cache
+            .yarn/unplugged
+            .yarn/install-state.gz
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -76,9 +80,13 @@ jobs:
       - name: Cache Yarn dependencies
         uses: actions/cache@v4
         with:
-          path: .yarn/cache
-          key: yarn-cache-${{ hashFiles('yarn.lock') }}
-          restore-keys: yarn-cache-
+          path: |
+            .yarn/cache
+            .yarn/unplugged
+            .yarn/install-state.gz
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
 
       - name: Install dependencies
         run: yarn install --immutable
