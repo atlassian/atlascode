@@ -20,6 +20,10 @@
 - Added drag and drop support into the Rovo Dev view for prompt context (requires pressing the `shift` key to drop)
 - Added native support for Jira work items for Rovo Dev prompt context
 
+### Bug Fixes
+
+- Fix issue with not working team adding functionality
+
 ## What's new in 4.0.4
 
 ### Improvements
