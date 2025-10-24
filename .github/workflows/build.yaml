@@ -161,19 +161,13 @@ jobs:
         with:
           name: extension-package
 
-      - name: Download Docker image
-        uses: actions/download-artifact@v4
-        with:
-          name: e2e-docker-image
-          path: /tmp
-
-      - name: Load Docker image
-        run: |
-          docker load -i /tmp/e2e-image.tar
-          docker tag ghcr.io/atlassian/atlascode-e2e:latest atlascode-e2e
-
       - name: Generate SSL certs for E2E test
         run: yarn test:e2e:sslcerts
+
+      - name: Fetch E2E image
+        run: |
+          docker pull ghcr.io/atlassian/atlascode-e2e:latest
+          docker tag ghcr.io/atlassian/atlascode-e2e:latest atlascode-e2e
 
       - name: Run E2E (${{ matrix.target }})
         run: yarn test:e2e:docker
