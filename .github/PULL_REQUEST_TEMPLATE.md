@@ -29,8 +29,8 @@ In particular, if you're making changes not covered by tests - please describe t
 
 Basic checks:
 
-- [ ] `npm run lint`
-- [ ] `npm run test`
+- [ ] `yarn lint`
+- [ ] `yarn test`
 
 Advanced checks: 
 - [ ] If Atlassian employee & Bitbucket changes: did you test with DC in mind? [See Instructions](https://www.loom.com/share/71e5d17734a547f68fd6128be6cd760e?sid=835e58a7-1240-498d-b2d7-fa7fdf8ffa36)

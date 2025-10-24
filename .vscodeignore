@@ -1,57 +1,81 @@
-# Allowed:
+# ---- ALLOWED ----
 # build/
 # resources/
 # images/
 # LICENSE
 
-__mocks__/
-__tests__/
-.generated/
-e2e/
-.npm/
+# ---- IGNORED ----
 
-# Don't package anything from here specifically:
-resources/rovo-dev/
+# Source code
+src/**
 
-.env
-.env.example
-.nvmrc
-.prettierignore
-CODEOWNERS
-changelog.md
-nightlyver.sh
-package.json
-readme.md
-eslint.config.mjs
+# Test
+testsutil/**
+__mocks__/**
+__tests__/**
+e2e/**
+coverage/**
+test-results/**
+.vscode-test/**
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Build configs
+webpack.*
 tsconfig.json
 tsconfig.notest.json
-vscode-stylenames.txt
-.devcontainer/
-.github/
-coverage/
-scripts/
-test-results/
+eslint.config.mjs
+jest.config.ts
+jest.react.config.ts
+jest.unit.config.ts
+playwright.config.js
+.prettierignore
+.nvmrc
 
-.vscode/
-.vscode-test/
-out/test/
-out/**/*.map
-src/
-testsutil/
+# Dev files
+.env
+.env.example
+.devcontainer/**
+.github/**
+.vscode/**
+.readme/**
+devhtml/**
+scripts/**
 .gitignore
 bitbucket-pipelines.yml
+CODEOWNERS
+nightlyver.sh
+vscode-stylenames.txt
+.eslintcache
+
+# node_modules
+node_modules/**
+!node_modules/@vscode/codicons/dist/**
+
+# Yarn cache and internals
+.yarn/**
+!.yarn/releases
+!.yarn/plugins
+.yarnrc.yml
+yarn.lock
+
+# Source maps
+**/*.map
+out/**/*.map
+build/**/*.map
+
+# Certificates
 *.pem
 *.crt
 *.p12
 *.vsix
 *.orig
-node_modules/
-!node_modules/@vscode/codicons/dist/**
-webpack.*
-build/**/*.map
-.readme/
-devhtml/
-jest.config.ts
-jest.react.config.ts
-jest.unit.config.ts
-playwright.config.js
+
+# Generated files
+.generated/**
+.npm/**
+
+# Don't package anything from here specifically:
+resources/rovo-dev/**

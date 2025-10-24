@@ -7,6 +7,8 @@ import { filesize } from 'filesize';
 import React, { useEffect, useReducer } from 'react';
 import { FileWithPath, useDropzone } from 'react-dropzone';
 
+import { FileWithContent } from '../../../util/files';
+
 type ItemData = {
     file: FileWithPreview;
     delfunc: (file: any) => void;
@@ -24,7 +26,7 @@ const Thumbnail = (data: ItemData) => {
     if (data.file.isImage) {
         return (
             <div className="ac-attachment-thumb-img-inline">
-                <img src={data.file.preview} />
+                <img src={data.file.preview} alt={data.file.name} />
             </div>
         );
     }
@@ -47,6 +49,11 @@ interface FileWithPreview extends FileWithPath {
     isImage: boolean;
 }
 
+type SerializedFile = Pick<FileWithContent, 'name' | 'size' | 'type' | 'lastModified'> & {
+    fileContent: string;
+    path: string;
+};
+
 export const previewableTypes: string[] = ['image/gif', 'image/jpeg', 'image/png', 'image/webp'];
 
 type ActionType = {
@@ -59,6 +66,7 @@ type AttachmentFormProps = {
     // TODO: remove field param when we clean up ui
     field?: FieldUI;
     onFilesChanged(files: FileWithPath[], field?: FieldUI): void;
+    initialFiles?: SerializedFile[];
 };
 
 const initialState: FileWithPreview[] = [];
@@ -92,7 +100,7 @@ const dialogEditor = (
         <div className="ac-attachment-container">
             <div {...getRootProps({ className: 'ac-attachment-dropzone' })}>
                 <div className="ac-attachment-instructions">
-                    <img className="ac-attachment-filesbg" src={'images/files-bg.png'} />
+                    <img className="ac-attachment-filesbg" src={'images/files-bg.png'} alt="Upload files" />
                     <div className="ac-attachment-drag-and-button">
                         <div className="ac-attachment-drag-text">
                             <span>Drag and drop your files anywhere or</span>
@@ -108,7 +116,9 @@ const dialogEditor = (
                         <div className="ac-attachment-thumb-item">
                             <div className="ac-attachment-thumb-inner">
                                 <div className="ac-attachment-thumb-img-wrapper">
-                                    {file.isImage && <img src={file.preview} className="ac-attachment-thumb-img" />}
+                                    {file.isImage && (
+                                        <img src={file.preview} className="ac-attachment-thumb-img" alt={file.name} />
+                                    )}
                                     {!file.isImage && <FileIcon label="no preview" />}
                                     <div className="ac-attachment-overlay-container">
                                         <div className="ac-attachment-overlay">
@@ -173,8 +183,34 @@ const inlineEditor = (
     );
 };
 
-export const AttachmentForm: React.FunctionComponent<AttachmentFormProps> = ({ field, onFilesChanged, isInline }) => {
-    const [files, dispatch] = useReducer(filesReducer, initialState);
+export const AttachmentForm: React.FunctionComponent<AttachmentFormProps> = ({
+    field,
+    onFilesChanged,
+    isInline,
+    initialFiles,
+}) => {
+    // Restore files from saved state (recreate File objects from serialized data)
+    const restoredFiles = React.useMemo(() => {
+        if (!initialFiles?.length) {
+            return initialState;
+        }
+
+        return initialFiles.map((saved: SerializedFile) => {
+            const decodedFileContent = Uint8Array.from(atob(saved.fileContent), (char) => char.charCodeAt(0));
+            const blob = new Blob([decodedFileContent], {
+                type: saved.type,
+            });
+            const file = new File([blob], saved.name, { type: saved.type, lastModified: saved.lastModified });
+            const isImage = previewableTypes.includes(saved.type);
+
+            return Object.assign(file, {
+                preview: isImage ? URL.createObjectURL(blob) : '',
+                isImage,
+            });
+        });
+    }, [initialFiles]);
+
+    const [files, dispatch] = useReducer(filesReducer, restoredFiles);
     const { getRootProps, getInputProps } = useDropzone({
         onDrop: (acceptedFiles: File[]) => {
             const newFiles = acceptedFiles.map((file) => {

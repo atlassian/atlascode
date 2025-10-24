@@ -20,7 +20,7 @@
             "envFile": "${workspaceFolder}/.env"
         },
         {
-            // This configuration requires npm run dev to be running externally
+            // This configuration requires yarn dev to be running externally
             // It will pick up the re-compiled extension code but not hot-swap it 
             "name": "Extension (watch/external)",
             "type": "extensionHost",
