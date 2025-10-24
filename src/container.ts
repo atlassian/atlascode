@@ -204,7 +204,7 @@ export class Container {
         this._helpExplorer = new HelpExplorer();
         context.subscriptions.push(this._helpExplorer);
 
-        this._featureFlagClient = FeatureFlagClient.getInstance(this.getAnalyticsEnabled());
+        this._featureFlagClient = FeatureFlagClient.getInstance();
 
         await this.initializeFeatureFlagClient();
 

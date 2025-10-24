@@ -1,6 +1,7 @@
 import { ClientOptions, FeatureGateEnvironment, Identifiers } from '@atlaskit/feature-gate-js-client';
 import { FetcherOptions } from '@atlaskit/feature-gate-js-client/dist/types/client/fetcher';
 import { NewFeatureGateOptions } from '@atlaskit/feature-gate-js-client/dist/types/client/types';
+import { env } from 'vscode';
 
 import { ClientInitializedErrorType } from '../../analytics';
 import { Logger } from '../../logger';
@@ -28,13 +29,10 @@ const INIT_RETRY_COUNT = 5;
 
 export class FeatureFlagClient {
     private static singleton: FeatureFlagClient | undefined;
-    private enabled?: boolean;
-    public static getInstance(enabled?: boolean) {
+    public static getInstance() {
         if (!this.singleton) {
             this.singleton = new FeatureFlagClient();
-            this.singleton.setEnabled(enabled || false);
         }
-
         return this.singleton;
     }
 
@@ -63,16 +61,13 @@ export class FeatureFlagClient {
     }
 
     private constructor() {
-        this.isExperimentationDisabled = !!process.env.ATLASCODE_NO_EXP;
+        this.isExperimentationDisabled = !!process.env.ATLASCODE_NO_EXP || !env.isTelemetryEnabled;
 
         this.featureGateOverrides = {} as FeatureGateValues;
         this.experimentValueOverride = {} as ExperimentGateValues;
         this.initializeOverrides();
     }
 
-    setEnabled(enabled: boolean) {
-        this.enabled = enabled;
-    }
     /**
      * Workaround to account for a TLS-related ECONNRESET that sometimes occurs in undici
      * when node attempts a naked `fetch`. The regular static client implementation of
@@ -115,11 +110,6 @@ export class FeatureFlagClient {
                 ClientInitializedErrorType.Failed,
                 'FeatureFlagClient already initialized',
             );
-        }
-
-        if (!this.enabled) {
-            Logger.debug('FeatureGates: initialization skipped as feature flag client is disabled');
-            throw new FeatureFlagClientInitError(ClientInitializedErrorType.Skipped, 'experimentation disabled');
         }
 
         if (!identifiers.analyticsAnonymousId) {
@@ -264,7 +254,7 @@ export class FeatureFlagClient {
         }
 
         let gateValue = false;
-        if (this.client && this.isInitialized() && this.enabled) {
+        if (this.client && this.isInitialized()) {
             // FeatureGates.checkGate returns false if any errors
             gateValue = this.client.checkGate(gate);
         }
@@ -285,7 +275,7 @@ export class FeatureFlagClient {
 
         const experimentGate = ExperimentGates[experiment];
         let gateValue = experimentGate.defaultValue;
-        if (this.client && this.isInitialized() && this.enabled) {
+        if (this.client && this.isInitialized()) {
             gateValue = this.client.getExperimentValue(
                 experiment,
                 experimentGate.parameter,
