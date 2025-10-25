@@ -23,6 +23,7 @@ export interface RefreshIssueAction extends Action {
 export interface EditIssueAction extends Action {
     action: 'editIssue';
     fields: FieldValues;
+    teamId?: string;
 }
 
 export interface EditChildIssueAction extends Action {
@@ -78,6 +79,7 @@ export interface FetchQueryAction extends Action {
     autocompleteUrl?: string;
     valueType: ValueType;
     currentJQL?: string;
+    fieldName?: string;
 }
 
 export interface ScreensForProjectsAction extends Action {

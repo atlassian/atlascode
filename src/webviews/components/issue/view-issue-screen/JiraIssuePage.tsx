@@ -284,6 +284,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
             default: {
                 let typedVal = newValue;
+                let teamId;
+
+                if (field.name === 'Team' && typedVal?.value) {
+                    typedVal = newValue.label;
+                    teamId = newValue.value;
+                }
 
                 if (typedVal && field.valueType === ValueType.Number && typeof newValue !== 'number') {
                     typedVal = parseFloat(newValue);
@@ -296,13 +302,13 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 if (typedVal === undefined) {
                     typedVal = null;
                 }
-                await this.handleEditIssue(field.key, typedVal);
+                await this.handleEditIssue(field.key, typedVal, teamId);
                 break;
             }
         }
     };
 
-    handleEditIssue = async (fieldKey: string, newValue: any) => {
+    handleEditIssue = async (fieldKey: string, newValue: any, teamId?: string) => {
         this.setState({ isSomethingLoading: true, loadingField: fieldKey });
         const nonce = v4();
         await this.postMessageWithEventPromise(
@@ -311,6 +317,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 fields: {
                     [fieldKey]: newValue,
                 },
+                ...(teamId ? { teamId: teamId } : undefined),
                 nonce: nonce,
             },
             'editIssueDone',
