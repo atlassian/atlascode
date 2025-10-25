@@ -99,7 +99,8 @@ export async function getArgsForDiffView(
     const source = `${remotePrefix}${pr.data.source!.branchName}`;
     let mergeBase = pr.data.destination!.commitHash;
     try {
-        if (pr.workspaceRepo) {
+        // Workaround for cases when source and destination are not the same repo
+        if (pr.workspaceRepo && pr.data.source.repo.url === pr.data.destination.repo.url) {
             const scm = Container.bitbucketContext.getRepositoryScm(pr.workspaceRepo.rootUri);
             if (scm) {
                 mergeBase = await scm.getMergeBase(destination, source);
