@@ -386,7 +386,6 @@ export abstract class AbstractIssueEditorPage<
     ): Promise<IssuePickerIssue[]> => {
         return new Promise((resolve) => {
             const nonce: string = v4();
-            // this.postMessage({ action: 'fetchIssues', query: input, site: this.state.siteDetails, autocompleteUrl: field.autoCompleteUrl, nonce: nonce });
             (async () => {
                 try {
                     const listEvent = await this.postMessageWithEventPromise(
@@ -433,10 +432,10 @@ export abstract class AbstractIssueEditorPage<
             return this.loadSelectOptions(input, userSearchUrl);
         }
 
-        return this.loadSelectOptions(input, this.fixAutocompleteUrl(field.autoCompleteUrl));
+        return this.loadSelectOptions(input, this.fixAutocompleteUrl(field.autoCompleteUrl), field);
     };
 
-    protected loadSelectOptions = (input: string, url: string): Promise<any[]> => {
+    protected loadSelectOptions = (input: string, url: string, field?: SelectFieldUI): Promise<any[]> => {
         this.setState({ isSomethingLoading: true });
         return new Promise((resolve) => {
             const nonce: string = v4();
@@ -448,6 +447,8 @@ export abstract class AbstractIssueEditorPage<
                             query: input,
                             site: this.state.siteDetails,
                             autocompleteUrl: url,
+                            fieldName: field?.name,
+                            fieldKey: field?.key,
                             nonce,
                         },
                         'selectOptionsList',
