@@ -2,6 +2,10 @@
 
 ## What's new in 4.0.6
 
+### Features
+
+- Added clone jira work items support
+
 ### Improvements
 
 - Added validation checks to ensure the Jira API Token hasn't expired
@@ -10,8 +14,8 @@
 ### Bug Fixes
 
 - Fix executable not found for Rovo Dev on Windows
-- Fix some of the exit code 1 reason 2 failures of Rovo Dev on Windows 
-- Fixed UI flickering of Jira suggestions in Rovo Dev 
+- Fix some of the exit code 1 reason 2 failures of Rovo Dev on Windows
+- Fixed UI flickering of Jira suggestions in Rovo Dev
 
 ## What's new in 4.0.5
 
