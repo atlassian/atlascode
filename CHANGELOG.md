@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.7
+
+### Bug Fixes
+
+- Fix issue with not working team adding functionality
+
 ## What's new in 4.0.6
 
 ### Features
