@@ -575,7 +575,7 @@ export abstract class AbstractIssueEditorPage<
                     <>
                         {field.key === 'summary' && <AISuggestionHeader vscodeApi={this._api} />}
                         <Field
-                            key={this.state.summaryKey}
+                            key={field.key === 'summary' ? this.state.summaryKey : field.key}
                             defaultValue={defaultVal}
                             label={<span>{field.name}</span>}
                             isRequired={field.required}
@@ -592,9 +592,11 @@ export abstract class AbstractIssueEditorPage<
                                 let markup = (
                                     <Textfield
                                         {...fieldArgs.fieldProps}
-                                        value={defaultVal}
                                         className="ac-inputField"
-                                        isDisabled={this.state.isSomethingLoading || this.state.isGeneratingSuggestions}
+                                        isDisabled={
+                                            (this.state.isSomethingLoading && this.state.loadingField === field.key) ||
+                                            this.state.isGeneratingSuggestions
+                                        }
                                         onChange={chain(fieldArgs.fieldProps.onChange, (e: any) =>
                                             this.handleInlineEdit(field, e.currentTarget.value),
                                         )}
@@ -615,7 +617,9 @@ export abstract class AbstractIssueEditorPage<
                                             {...fieldArgs.fieldProps}
                                             value={this.coerceToString(this.state.fieldValues[field.key])}
                                             isDisabled={
-                                                this.state.isSomethingLoading || this.state.isGeneratingSuggestions
+                                                (this.state.isSomethingLoading &&
+                                                    this.state.loadingField === field.key) ||
+                                                this.state.isGeneratingSuggestions
                                             }
                                             onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
                                                 this.handleInlineEdit(field, val),
@@ -678,6 +682,7 @@ export abstract class AbstractIssueEditorPage<
                                 <div>
                                     <DatePicker
                                         {...fieldArgs.fieldProps}
+                                        defaultValue={this.coerceToString(this.state.fieldValues[field.key])}
                                         isDisabled={this.state.isSomethingLoading}
                                         className="ac-select-container"
                                         selectProps={{
@@ -743,6 +748,7 @@ export abstract class AbstractIssueEditorPage<
                                 <div>
                                     <DateTimePicker
                                         {...fieldArgs.fieldProps}
+                                        defaultValue={this.coerceToString(this.state.fieldValues[field.key])}
                                         isDisabled={this.state.isSomethingLoading}
                                         className="ac-select-container"
                                         datePickerSelectProps={{
@@ -854,6 +860,8 @@ export abstract class AbstractIssueEditorPage<
                     }
                 } else if (currentIssueType.name !== 'Epic') {
                     // This will never run for DC because it does not have 'parent' field
+                    const defaultParent = this.state.fieldValues['parent'] || undefined;
+
                     return (
                         <Field
                             label={<span>{field.name}</span>}
@@ -865,6 +873,7 @@ export abstract class AbstractIssueEditorPage<
                                 return (
                                     <AsyncSelect
                                         {...fieldArgs.fieldProps}
+                                        defaultValue={defaultParent}
                                         isClearable={!field.required}
                                         isMulti={false}
                                         className="ac-form-select-container"
@@ -1854,6 +1863,7 @@ export abstract class AbstractIssueEditorPage<
                             isInline={true}
                             field={field}
                             onFilesChanged={this.handleCreateModeAttachments}
+                            initialFiles={this.state.fieldValues[field.key]}
                         />
                     </div>
                 );

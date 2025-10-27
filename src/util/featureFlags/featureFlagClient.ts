@@ -1,6 +1,7 @@
 import { ClientOptions, FeatureGateEnvironment, Identifiers } from '@atlaskit/feature-gate-js-client';
 import { FetcherOptions } from '@atlaskit/feature-gate-js-client/dist/types/client/fetcher';
 import { NewFeatureGateOptions } from '@atlaskit/feature-gate-js-client/dist/types/client/types';
+import { env } from 'vscode';
 
 import { ClientInitializedErrorType } from '../../analytics';
 import { Logger } from '../../logger';
@@ -60,7 +61,7 @@ export class FeatureFlagClient {
     }
 
     private constructor() {
-        this.isExperimentationDisabled = !!process.env.ATLASCODE_NO_EXP;
+        this.isExperimentationDisabled = !!process.env.ATLASCODE_NO_EXP || !env.isTelemetryEnabled;
 
         this.featureGateOverrides = {} as FeatureGateValues;
         this.experimentValueOverride = {} as ExperimentGateValues;
