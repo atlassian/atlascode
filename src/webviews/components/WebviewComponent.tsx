@@ -15,16 +15,6 @@ interface VsCodeApi {
 
 declare function acquireVsCodeApi(): VsCodeApi;
 
-// Singleton to ensure VS Code API is only acquired once
-let _vscodeApi: VsCodeApi | null = null;
-
-function getVsCodeApi(): VsCodeApi {
-    if (!_vscodeApi) {
-        _vscodeApi = acquireVsCodeApi();
-    }
-    return _vscodeApi;
-}
-
 // WebviewComponent is the base React component for creating a webview in vscode.
 // This handles comms between vscode and react.
 // Generic Types:
@@ -37,7 +27,7 @@ export abstract class WebviewComponent<A extends Action, R, P, S> extends React.
 
     constructor(props: Readonly<P>) {
         super(props);
-        this._api = getVsCodeApi();
+        this._api = acquireVsCodeApi();
 
         const onMessageEvent = this.onMessageEvent.bind(this);
 
