@@ -8,6 +8,10 @@
 
 ## What's new in 4.0.6
 
+### Features
+
+- Added clone jira work items support
+
 ### Improvements
 
 - Added validation checks to ensure the Jira API Token hasn't expired

@@ -15,6 +15,7 @@ describe('IssueSidebarButtonGroup', () => {
     const mockFetchUsers = jest.fn();
     const mockHandleStatusChange = jest.fn();
     const mockHandleStartWork = jest.fn();
+    const mockHandleCloneIssue = jest.fn();
 
     const defaultProps = {
         handleRefresh: mockHandleRefresh,
@@ -30,6 +31,7 @@ describe('IssueSidebarButtonGroup', () => {
         fetchUsers: mockFetchUsers,
         handleStatusChange: mockHandleStatusChange,
         handleStartWork: mockHandleStartWork,
+        handleCloneIssue: mockHandleCloneIssue,
         transitions: [] as Transition[],
     };
 
