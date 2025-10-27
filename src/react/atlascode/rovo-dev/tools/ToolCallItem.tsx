@@ -57,6 +57,9 @@ export function parseToolCallMessage(msgToolName: RovoDevToolName): string {
         case 'create_technical_plan':
             return 'Creating technical plan';
         case 'mcp_invoke_tool':
+        case 'mcp__atlassian__invoke_tool':
+        case 'mcp__atlassian__get_tool_schema':
+        case 'mcp__scout__invoke_tool':
             return "Invoking MCP server's tool";
         default:
             // @ts-expect-error ts(2339) - msgToolName here should be 'never'

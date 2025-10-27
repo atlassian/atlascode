@@ -21,25 +21,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Cache Yarn dependencies
-        uses: actions/cache@v4
-        with:
-          path: .yarn/cache
-          key: yarn-cache-${{ hashFiles('yarn.lock') }}
-          restore-keys: yarn-cache-
+          cache: 'npm'
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: |
+          npm ci --no-audit
 
       - name: Run vulnerability audit
-        run: yarn npm audit --recursive --no-deprecations
+        # "There is no Vulnerability in Media Viewer after 48.5.4. since it was fixed by patching, but npm audit still reports it.",
+        # So that switched to audit-ci with allowlist
+        run: npx audit-ci --config=".audit-ci.json"
 
       - name: Run linter
-        run: yarn lint
+        run: npm run lint
 
   ci-matrix:
     needs: [lint]
@@ -69,31 +63,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Cache Yarn dependencies
-        uses: actions/cache@v4
-        with:
-          path: .yarn/cache
-          key: yarn-cache-${{ hashFiles('yarn.lock') }}
-          restore-keys: yarn-cache-
+          cache: 'npm'
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: npm ci --no-audit
 
       - name: Run unit tests
         if: matrix.kind == 'unit'
-        run: yarn test
+        run: npm run test
 
       - name: Build and package the extension
         if: matrix.kind == 'e2e'
-        run: yarn extension:package
+        run: npm run extension:package
 
       - name: Generate SSL certs for E2E test
         if: matrix.kind == 'e2e'
-        run: yarn test:e2e:sslcerts
+        run: npm run test:e2e:sslcerts
 
       - name: Fetch E2E image
         if: matrix.kind == 'e2e'
@@ -103,7 +88,7 @@ jobs:
 
       - name: Run E2E (${{ matrix.target }})
         if: matrix.kind == 'e2e'
-        run: yarn test:e2e:docker
+        run: npm run test:e2e:docker
         env:
           TARGET: ${{ matrix.target }}
 

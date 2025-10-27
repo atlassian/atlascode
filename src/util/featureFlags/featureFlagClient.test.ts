@@ -34,6 +34,15 @@ jest.mock('./utils', () => {
     };
 });
 
+jest.mock('vscode', () => {
+    return {
+        ...jest.requireActual('jest-mock-vscode').createVSCodeMock(jest),
+        env: {
+            isTelemetryEnabled: true,
+        },
+    };
+});
+
 import { Identifiers } from '@atlaskit/feature-gate-js-client';
 import { it } from '@jest/globals';
 import { forceCastTo } from 'testsutil';
@@ -75,7 +84,6 @@ describe('FeatureFlagClient', () => {
     describe('initialize', () => {
         it('should initialize the feature flag client', async () => {
             jest.spyOn(mockClient, 'initialize');
-
             await featureFlagClient.initialize(options);
             expect(mockClient.initialize).toHaveBeenCalled();
         });

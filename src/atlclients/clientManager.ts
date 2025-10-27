@@ -149,7 +149,7 @@ export class ClientManager implements Disposable {
             newClient = await this._queue.add(async () => {
                 return this.getClient<JiraClient<DetailedSiteInfo>>(site, (info) => {
                     Logger.debug(`getClient factory`);
-                    let client: any = undefined;
+                    let client: JiraClient<DetailedSiteInfo> | undefined = undefined;
 
                     if (isOAuthInfo(info)) {
                         Logger.debug(`${tag}: creating client for ${site.baseApiUrl}`);
@@ -181,6 +181,8 @@ export class ClientManager implements Disposable {
                             jiraTokenAuthProvider(info.token),
                             getAgent,
                         );
+                    } else {
+                        throw new Error('Unable to create the Jira client: auth method unknown');
                     }
                     Logger.debug(`${tag}: client created`);
                     return client;
@@ -190,7 +192,13 @@ export class ClientManager implements Disposable {
             Logger.error(e, `Failed to refresh tokens`);
             throw e;
         }
-        return newClient!;
+
+        // test if Cloud API Token is still good
+        if (site.isCloud && isBasicAuthInfo(await Container.credentialManager.getAuthInfo(site, false))) {
+            await newClient.getCurrentUser();
+        }
+
+        return newClient;
     }
 
     private createOAuthHTTPClient(site: DetailedSiteInfo, token: string): HTTPClient {
@@ -278,11 +286,12 @@ export class ClientManager implements Disposable {
             client = factory(credentials);
 
             // Figure out the TTL
-            let ttl = oauthTTL;
+            let ttl: number;
             if (isOAuthInfo(credentials)) {
                 if (credentials.expirationDate) {
-                    const diff = credentials.expirationDate - Date.now();
-                    ttl = diff;
+                    ttl = credentials.expirationDate - Date.now();
+                } else {
+                    ttl = oauthTTL;
                 }
             } else {
                 ttl = serverTTL;
@@ -297,7 +306,7 @@ export class ClientManager implements Disposable {
         return client;
     }
 
-    private async getClient<T>(site: DetailedSiteInfo, factory: (info: AuthInfo) => any): Promise<T> {
+    private async getClient<T>(site: DetailedSiteInfo, factory: (info: AuthInfo) => T): Promise<T> {
         let client: T | undefined = undefined;
         client = this._clients.getItem<T>(this.keyForSite(site));
         if (!client) {

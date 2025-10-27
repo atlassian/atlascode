@@ -29,16 +29,15 @@ const RovoDevInfo = {
 };
 
 function GetRovoDevURIs(context: ExtensionContext) {
+    const platform = process.platform;
+    const arch = process.arch;
     const extensionPath = context.storageUri!.fsPath;
     const rovoDevBaseDir = path.join(extensionPath, 'atlascode-rovodev-bin');
     const rovoDevVersionDir = path.join(rovoDevBaseDir, MIN_SUPPORTED_ROVODEV_VERSION);
-    const rovoDevBinPath = path.join(rovoDevVersionDir, 'atlassian_cli_rovodev');
+    const rovoDevBinPath = path.join(rovoDevVersionDir, 'atlassian_cli_rovodev') + (platform === 'win32' ? '.exe' : '');
     const rovoDevIconUri = Uri.file(context.asAbsolutePath(path.join('resources', 'rovodev-terminal-icon.svg')));
 
-    const platform = process.platform;
-    const arch = process.arch;
     let rovoDevZipUrl = undefined;
-
     if (platform === 'win32' || platform === 'linux' || platform === 'darwin') {
         const platformDir = platform === 'win32' ? 'windows' : platform;
         if (arch === 'x64' || arch === 'arm64') {
@@ -111,7 +110,7 @@ async function getOrAssignPortForWorkspace(): Promise<number> {
  * Placeholder implementation for Rovo Dev CLI credential storage
  */
 async function getCloudCredentials(): Promise<
-    { username: string; key: string; host: string; isStaging: boolean } | undefined
+    { username: string; key: string; host: string; isValid: boolean; isStaging: boolean } | undefined
 > {
     try {
         const sites = Container.siteManager.getSitesAvailable(ProductJira);
@@ -128,10 +127,20 @@ async function getCloudCredentials(): Promise<
                 return undefined;
             }
 
+            // verify the credentials work
+            let isValid: boolean;
+            try {
+                await Container.clientManager.jiraClient(site);
+                isValid = true;
+            } catch {
+                isValid = false;
+            }
+
             return {
                 username: authInfo.username,
                 key: authInfo.password,
                 host: site.host,
+                isValid,
                 isStaging: site.host.endsWith('.jira-dev.com'),
             };
         });
@@ -158,17 +167,6 @@ function areCredentialsEqual(cred1?: CloudCredentials, cred2?: CloudCredentials)
     }
 
     return cred1.host === cred2.host && cred1.key === cred2.key && cred1.username === cred2.username;
-}
-
-class ProcessManagerError extends Error {
-    constructor(type: 'needAuth');
-    constructor(type: 'other', message: string);
-    constructor(
-        public type: 'needAuth' | 'other',
-        message?: string,
-    ) {
-        super(message || type);
-    }
 }
 
 export interface RovoDevProcessNotStartedState {
@@ -350,6 +348,12 @@ export abstract class RovoDevProcessManager {
                 subState: 'NeedAuth',
             });
             return;
+        } else if (!credentials.isValid) {
+            this.setState({
+                state: 'Disabled',
+                subState: 'UnauthorizedAuth',
+            });
+            return;
         }
 
         this.setState({
@@ -489,11 +493,6 @@ class RovoDevTerminalInstance extends Disposable {
         const port = await getOrAssignPortForWorkspace();
 
         return new Promise<void>((resolve, reject) => {
-            if (!credentials) {
-                reject(new ProcessManagerError('needAuth'));
-                return;
-            }
-
             access(this.rovoDevBinPath, constants.X_OK, async (err) => {
                 if (err) {
                     reject(new Error(`executable not found.`));
@@ -525,7 +524,7 @@ class RovoDevTerminalInstance extends Disposable {
                         isTransient: true,
                         iconPath: this.rovoDevIconUri,
                         env: {
-                            USER: process.env.USER,
+                            USER: process.env.USER || process.env.USERNAME,
                             USER_EMAIL: credentials.username,
                             ROVODEV_SANDBOX_ID: Container.appInstanceId,
                             ...(credentials.key ? { USER_API_TOKEN: credentials.key } : {}),

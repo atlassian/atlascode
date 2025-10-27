@@ -42,7 +42,7 @@ interface ChatStreamProps {
     feedbackVisible: boolean;
     setFeedbackVisible: (visible: boolean) => void;
     sendFeedback: (feedbackType: FeedbackType, feedack: string, canContact: boolean, lastTenMessages: boolean) => void;
-    onLoginClick: () => void;
+    onLoginClick: (openApiTokenLogin: boolean) => void;
     onOpenFolder: () => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
     setPromptText: (context: string) => void;

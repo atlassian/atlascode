@@ -30,7 +30,7 @@ const RovoDevImg = () => {
 export const RovoDevLanding: React.FC<{
     currentState: State;
     isHistoryEmpty: boolean;
-    onLoginClick: () => void;
+    onLoginClick: (openApiTokenLogin: boolean) => void;
     onOpenFolder: () => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
     setPromptText: (context: string) => void;
