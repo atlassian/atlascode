@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.7
+
+### Bug Fixes
+
+- Fix issue with not working team adding functionality
+
 ## What's new in 4.0.6
 
 ### Improvements
@@ -10,8 +16,8 @@
 ### Bug Fixes
 
 - Fix executable not found for Rovo Dev on Windows
-- Fix some of the exit code 1 reason 2 failures of Rovo Dev on Windows 
-- Fixed UI flickering of Jira suggestions in Rovo Dev 
+- Fix some of the exit code 1 reason 2 failures of Rovo Dev on Windows
+- Fixed UI flickering of Jira suggestions in Rovo Dev
 
 ## What's new in 4.0.5
 
