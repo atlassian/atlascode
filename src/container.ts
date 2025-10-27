@@ -1,5 +1,5 @@
 import { v4 } from 'uuid';
-import { env, ExtensionContext, languages, UIKind, workspace } from 'vscode';
+import { env, ExtensionContext, languages, UIKind } from 'vscode';
 import * as vscode from 'vscode';
 
 import { featureFlagClientInitializedEvent } from './analytics';
@@ -97,8 +97,14 @@ export class Container {
             subproduct: 'atlascode',
             version: version,
             deviceId: this.machineId,
-            enable: this.getAnalyticsEnable(),
+            enable: this.getAnalyticsEnabled(),
         });
+
+        context.subscriptions.push(
+            env.onDidChangeTelemetryEnabled(() => {
+                this._analyticsClient.setAnalyticsEnabled(this.getAnalyticsEnabled());
+            }),
+        );
 
         if (this.isDebugging) {
             setCommandContext(CommandContext.DebugMode, true);
@@ -200,23 +206,8 @@ export class Container {
 
         this._featureFlagClient = FeatureFlagClient.getInstance();
 
-        try {
-            await this._featureFlagClient.initialize({
-                analyticsAnonymousId: this.machineId,
-            });
+        await this.initializeFeatureFlagClient();
 
-            this.pushFeatureUpdatesToUI();
-            Logger.debug(`FeatureFlagClient: Succesfully initialized the client.`);
-            featureFlagClientInitializedEvent(true).then((e) => {
-                this.analyticsClient.sendTrackEvent(e);
-            });
-        } catch (err) {
-            const error = err as FeatureFlagClientInitError;
-            Logger.debug(`FeatureFlagClient: Failed to initialize the client: ${error.message}`);
-            featureFlagClientInitializedEvent(false, error.errorType, error.message).then((e) => {
-                this.analyticsClient.sendTrackEvent(e);
-            });
-        }
         if (this._featureFlagClient.checkExperimentValue(Experiments.AtlascodeNewSettingsExperiment)) {
             context.subscriptions.push((this._settingsWebviewFactory = settingsV3ViewFactory));
         } else {
@@ -262,6 +253,25 @@ export class Container {
         this.refreshRovoDev(context);
     }
 
+    private static async initializeFeatureFlagClient() {
+        try {
+            await this._featureFlagClient.initialize({
+                analyticsAnonymousId: this.machineId,
+            });
+
+            this.pushFeatureUpdatesToUI();
+            Logger.debug(`FeatureFlagClient: Succesfully initialized the client.`);
+            featureFlagClientInitializedEvent(true).then((e) => {
+                this.analyticsClient.sendTrackEvent(e);
+            });
+        } catch (err) {
+            const error = err as FeatureFlagClientInitError;
+            Logger.debug(`FeatureFlagClient: Failed to initialize the client: ${error.message}`);
+            featureFlagClientInitializedEvent(false, error.errorType, error.message).then((e) => {
+                this.analyticsClient.sendTrackEvent(e);
+            });
+        }
+    }
     static async updateFeatureFlagTenantId(): Promise<boolean> {
         const tenantId = Container.config.jira.enabled ? this._siteManager.primarySite?.id : undefined;
 
@@ -410,13 +420,12 @@ export class Container {
         return openPullRequest(this._bitbucketHelper, pullRequestUrl);
     };
 
-    private static getAnalyticsEnable(): boolean {
+    private static getAnalyticsEnabled(): boolean {
         if (process.env.DISABLE_ANALYTICS === '1') {
             return false;
         }
 
-        const telemetryConfig = workspace.getConfiguration('telemetry');
-        return telemetryConfig.get<boolean>('enableTelemetry', true);
+        return env.isTelemetryEnabled;
     }
 
     static initializeBitbucket(bbCtx: BitbucketContext) {

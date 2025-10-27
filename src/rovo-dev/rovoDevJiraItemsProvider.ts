@@ -24,6 +24,17 @@ export class RovoDevJiraItemsProvider extends Disposable {
     }
 
     public setJiraSite(jiraSiteHostname: DetailedSiteInfo | string) {
+        // if the site hasn't changed, do nothing
+        if (this.jiraSiteHostname) {
+            if (typeof jiraSiteHostname === 'object') {
+                if (this.jiraSiteHostname === jiraSiteHostname) {
+                    return;
+                }
+            } else if (this.jiraSiteHostname.host === jiraSiteHostname) {
+                return;
+            }
+        }
+
         this.stop();
         this._onNewJiraItems.fire(undefined);
 
