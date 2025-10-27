@@ -18,7 +18,7 @@ type Props = {
         assignee?: any;
         reporter: any;
         cloneOptions: {
-            includeAttachments: boolean;
+            includeDescription: boolean;
             includeLinkedIssues: boolean;
             includeChildIssues: boolean;
         };
@@ -27,8 +27,9 @@ type Props = {
     currentUser: User;
     originalSummary: string;
     originalAssignee?: any;
+    originalDescription?: string;
     fetchUsers: (input: string) => Promise<User[]>;
-    hasAttachments?: boolean;
+    hasDescription?: boolean;
     hasLinkedIssues?: boolean;
     hasChildIssues?: boolean;
     isLoading?: boolean;
@@ -42,7 +43,7 @@ export default class CloneForm extends React.Component<Props, any> {
             assignee: props.originalAssignee,
             reporter: props.currentUser,
             cloneOptions: {
-                includeAttachments: false,
+                includeDescription: false,
                 includeLinkedIssues: false,
                 includeChildIssues: false,
             },
@@ -60,7 +61,7 @@ export default class CloneForm extends React.Component<Props, any> {
                 assignee: this.state.assignee,
                 reporter: this.state.reporter,
                 cloneOptions: {
-                    includeAttachments: this.state.cloneOptions.includeAttachments,
+                    includeDescription: this.state.cloneOptions.includeDescription,
                     includeLinkedIssues: this.state.cloneOptions.includeLinkedIssues,
                     includeChildIssues: this.state.cloneOptions.includeChildIssues,
                 },
@@ -135,7 +136,7 @@ export default class CloneForm extends React.Component<Props, any> {
                             required
                         />
 
-                        {(this.props.hasAttachments || this.props.hasLinkedIssues || this.props.hasChildIssues) && (
+                        {(this.props.hasDescription || this.props.hasLinkedIssues || this.props.hasChildIssues) && (
                             <Box>
                                 <Typography
                                     variant="h6"
@@ -145,16 +146,16 @@ export default class CloneForm extends React.Component<Props, any> {
                                 </Typography>
 
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    {this.props.hasAttachments && (
+                                    {this.props.hasDescription && (
                                         <FormControlLabel
                                             control={
                                                 <MuiCheckbox
-                                                    checked={this.state.cloneOptions.includeAttachments}
+                                                    checked={this.state.cloneOptions.includeDescription}
                                                     onChange={(e) =>
                                                         this.setState({
                                                             cloneOptions: {
                                                                 ...this.state.cloneOptions,
-                                                                includeAttachments: e.target.checked,
+                                                                includeDescription: e.target.checked,
                                                             },
                                                         })
                                                     }
@@ -162,12 +163,11 @@ export default class CloneForm extends React.Component<Props, any> {
                                                         color: 'var(--vscode-foreground)',
                                                         '&.Mui-checked': {
                                                             color: 'var(--vscode-foreground)',
-                                                            fontSize: '14px',
                                                         },
                                                     }}
                                                 />
                                             }
-                                            label="Attachments"
+                                            label="Description"
                                             sx={{ color: 'var(--vscode-foreground)' }}
                                         />
                                     )}

@@ -62,8 +62,9 @@ describe('CloneForm', () => {
         currentUser: mockCurrentUser,
         originalSummary: 'Original Issue Summary',
         originalAssignee: mockOriginalAssignee,
+        originalDescription: 'Original Description',
         fetchUsers: mockFetchUsers,
-        hasAttachments: true,
+        hasDescription: true,
         hasLinkedIssues: true,
         hasChildIssues: false,
     };
@@ -112,14 +113,14 @@ describe('CloneForm', () => {
     it('renders include section when options are available', () => {
         render(<CloneForm {...defaultProps} />);
         expect(screen.getByText('Include')).toBeTruthy();
-        expect(screen.getByText('Attachments')).toBeTruthy();
+        expect(screen.getByText('Description')).toBeTruthy();
         expect(screen.getByText('Linked issues')).toBeTruthy();
     });
 
     it('does not render include section when no options are available', () => {
         const propsWithoutOptions = {
             ...defaultProps,
-            hasAttachments: false,
+            hasDescription: false,
             hasLinkedIssues: false,
             hasChildIssues: false,
         };
@@ -130,13 +131,13 @@ describe('CloneForm', () => {
     it('renders only available include options', () => {
         const propsWithLimitedOptions = {
             ...defaultProps,
-            hasAttachments: true,
+            hasDescription: true,
             hasLinkedIssues: false,
             hasChildIssues: true,
         };
         render(<CloneForm {...propsWithLimitedOptions} />);
 
-        expect(screen.getByText('Attachments')).toBeTruthy();
+        expect(screen.getByText('Description')).toBeTruthy();
         expect(screen.queryByText('Linked issues')).toBeFalsy();
         expect(screen.getByText('Child issues')).toBeTruthy();
     });
@@ -166,8 +167,11 @@ describe('CloneForm', () => {
         const reporterInput = screen.getByTestId('input-reporter');
         fireEvent.change(reporterInput, { target: { value: 'New Reporter' } });
 
-        const attachmentsCheckbox = screen.getByLabelText('Attachments');
-        fireEvent.click(attachmentsCheckbox);
+        const descriptionCheckbox = screen.getByLabelText('Description');
+        fireEvent.click(descriptionCheckbox);
+
+        const linkedIssuesCheckbox = screen.getByLabelText('Linked issues');
+        fireEvent.click(linkedIssuesCheckbox);
 
         const cloneButton = screen.getByText('Clone');
         fireEvent.click(cloneButton);
@@ -178,8 +182,8 @@ describe('CloneForm', () => {
                 assignee: { displayName: 'New Assignee', accountId: 'test-id' },
                 reporter: { displayName: 'New Reporter', accountId: 'test-id' },
                 cloneOptions: {
-                    includeAttachments: true,
-                    includeLinkedIssues: false,
+                    includeDescription: true,
+                    includeLinkedIssues: true,
                     includeChildIssues: false,
                 },
             });
@@ -189,14 +193,14 @@ describe('CloneForm', () => {
     it('handles checkbox state changes correctly', () => {
         render(<CloneForm {...defaultProps} />);
 
-        const attachmentsCheckbox = screen.getByLabelText('Attachments') as HTMLInputElement;
+        const descriptionCheckbox = screen.getByLabelText('Description') as HTMLInputElement;
         const linkedIssuesCheckbox = screen.getByLabelText('Linked issues') as HTMLInputElement;
 
-        expect(attachmentsCheckbox.checked).toBeFalsy();
+        expect(descriptionCheckbox.checked).toBeFalsy();
         expect(linkedIssuesCheckbox.checked).toBeFalsy();
 
-        fireEvent.click(attachmentsCheckbox);
-        expect(attachmentsCheckbox.checked).toBeTruthy();
+        fireEvent.click(descriptionCheckbox);
+        expect(descriptionCheckbox.checked).toBeTruthy();
 
         fireEvent.click(linkedIssuesCheckbox);
         expect(linkedIssuesCheckbox.checked).toBeTruthy();
@@ -232,7 +236,7 @@ describe('CloneForm', () => {
                 assignee: mockOriginalAssignee,
                 reporter: mockCurrentUser,
                 cloneOptions: {
-                    includeAttachments: false,
+                    includeDescription: false,
                     includeLinkedIssues: false,
                     includeChildIssues: false,
                 },
