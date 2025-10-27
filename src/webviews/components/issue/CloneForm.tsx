@@ -181,7 +181,6 @@ export default class CloneForm extends React.Component<Props, any> {
                                                             cloneOptions: {
                                                                 ...this.state.cloneOptions,
                                                                 includeLinkedIssues: e.target.checked,
-                                                                fontSize: '14px',
                                                             },
                                                         })
                                                     }
