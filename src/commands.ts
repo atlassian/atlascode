@@ -505,7 +505,7 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
             Container.rovodevWebviewProvider.executeTriggerFeedback(),
         ),
         commands.registerCommand(Commands.RovodevOpenHelp, () => {
-            env.openExternal(Uri.parse('https://www.google.com'));
+            env.openExternal(Uri.parse('https://support.atlassian.com/rovo/docs/work-with-rovo-dev-in-the-ide/'));
         }),
         commands.registerCommand(Commands.RovodevAddToContext, async () => {
             const context = buildContext(window.activeTextEditor, vscodeContext);
