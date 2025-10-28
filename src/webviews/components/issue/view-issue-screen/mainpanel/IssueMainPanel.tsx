@@ -1,7 +1,6 @@
-import Button, { ButtonGroup } from '@atlaskit/button';
+import Button from '@atlaskit/button';
 import AddIcon from '@atlaskit/icon/core/add';
 import InlineDialog from '@atlaskit/inline-dialog';
-import Modal, { ModalTransition } from '@atlaskit/modal-dialog';
 import Tooltip from '@atlaskit/tooltip';
 import { IssueType, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, FieldUIs, FieldValues, IssueLinkTypeSelectOption } from '@atlassianlabs/jira-pi-meta-models';
@@ -84,10 +83,6 @@ const IssueMainPanel: React.FC<Props> = ({
     const [enableLinkedIssues, setEnableLinkedIssues] = React.useState(false);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
     const [isInlineDialogOpen, setIsInlineDialogOpen] = React.useState(false);
-    const [editingWorklog, setEditingWorklog] = React.useState<any>(null);
-    const [editingWorklogId, setEditingWorklogId] = React.useState<string | undefined>(undefined);
-    const [worklogToDelete, setWorklogToDelete] = React.useState<any>(null);
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
 
     // Use centralized editor state
     const { openEditor, closeEditor, isEditorActive } = useEditorState();
@@ -142,53 +137,25 @@ const IssueMainPanel: React.FC<Props> = ({
         }
     };
 
-    const handleEditWorklog = (worklog: any) => {
-        setEditingWorklog(worklog);
-        setEditingWorklogId(worklog.id);
-        setIsInlineDialogOpen(true);
-    };
-
-    const handleDeleteWorklog = (worklog: any) => {
-        setWorklogToDelete(worklog);
-        setIsDeleteModalOpen(true);
-    };
-
-    const confirmDeleteWorklog = () => {
-        if (worklogToDelete) {
-            handleInlineEdit(fields['worklog'], {
-                action: 'deleteWorklog',
-                worklogId: worklogToDelete.id,
-                adjustEstimate: 'auto',
-            });
-        }
-        setWorklogToDelete(null);
-        setIsDeleteModalOpen(false);
-    };
-
-    const cancelDeleteWorklog = () => {
-        setWorklogToDelete(null);
-        setIsDeleteModalOpen(false);
+    const handleConfirmDeleteWorklog = (worklog: any) => {
+        handleInlineEdit(fields['worklog'], {
+            action: 'deleteWorklog',
+            worklogId: worklog.id,
+            adjustEstimate: 'auto',
+        });
     };
 
     const handleWorklogSave = (worklogData: any) => {
-        if (editingWorklog && editingWorklogId) {
-            handleInlineEdit(fields['worklog'], {
-                action: 'updateWorklog',
-                worklogId: editingWorklogId,
-                worklogData: worklogData,
-            });
-        } else {
-            handleInlineEdit(fields['worklog'], worklogData);
-        }
-        setEditingWorklog(null);
-        setEditingWorklogId(undefined);
+        handleInlineEdit(fields['worklog'], worklogData);
         setIsInlineDialogOpen(false);
     };
 
     const handleWorklogCancel = () => {
-        setEditingWorklog(null);
-        setEditingWorklogId(undefined);
         setIsInlineDialogOpen(false);
+    };
+
+    const handleWorklogEdit = (worklogData: any) => {
+        handleInlineEdit(fields['worklog'], worklogData);
     };
 
     const addContentDropDown = (
@@ -244,8 +211,6 @@ const IssueMainPanel: React.FC<Props> = ({
                                         onSave={handleWorklogSave}
                                         onCancel={handleWorklogCancel}
                                         originalEstimate={originalEstimate}
-                                        editingWorklog={editingWorklog}
-                                        worklogId={editingWorklogId}
                                     />
                                 }
                                 isOpen={isInlineDialogOpen}
@@ -405,35 +370,12 @@ const IssueMainPanel: React.FC<Props> = ({
                         </div>
                         <Worklogs
                             worklogs={fieldValues['worklog']}
-                            onEditWorklog={handleEditWorklog}
-                            onDeleteWorklog={handleDeleteWorklog}
+                            onEditWorklog={handleWorklogEdit}
+                            onConfirmDelete={handleConfirmDeleteWorklog}
+                            originalEstimate={originalEstimate}
                         />
                     </div>
                 )}
-
-            {/* Delete Work Log Confirmation Modal */}
-            {isDeleteModalOpen && (
-                <ModalTransition>
-                    <Modal
-                        heading="Delete Work Log"
-                        onClose={cancelDeleteWorklog}
-                        shouldCloseOnEscapePress
-                        shouldCloseOnOverlayClick
-                    >
-                        <p style={{ color: 'var(--vscode-foreground)!important', marginBottom: '16px' }}>
-                            Are you sure you want to delete this work log? This action cannot be undone.
-                        </p>
-                        <ButtonGroup>
-                            <Button className="ac-button" onClick={confirmDeleteWorklog} appearance="danger">
-                                Delete
-                            </Button>
-                            <Button className="ac-button" onClick={cancelDeleteWorklog}>
-                                Cancel
-                            </Button>
-                        </ButtonGroup>
-                    </Modal>
-                </ModalTransition>
-            )}
         </div>
     );
 };
