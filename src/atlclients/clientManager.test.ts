@@ -63,6 +63,9 @@ describe('ClientManager', () => {
     let mockQueue: any;
     let mockCacheMap: any;
 
+    let jiraCloudClientConstructor: any;
+    let jiraServerClientConstructor: any;
+
     const mockUser = {
         id: 'test-user-id',
         displayName: 'Test User',
@@ -190,8 +193,12 @@ describe('ClientManager', () => {
         (Negotiator as jest.MockedClass<typeof Negotiator>).mockImplementation(() => mockNegotiator);
 
         // Mock Jira clients
-        (JiraCloudClient as jest.MockedClass<typeof JiraCloudClient>).mockImplementation(() => ({}) as any);
-        (JiraServerClient as jest.MockedClass<typeof JiraServerClient>).mockImplementation(() => ({}) as any);
+        jiraCloudClientConstructor = (JiraCloudClient as jest.MockedClass<typeof JiraCloudClient>).mockImplementation(
+            () => ({ getCurrentUser: jest.fn() }) as any,
+        );
+        jiraServerClientConstructor = (
+            JiraServerClient as jest.MockedClass<typeof JiraServerClient>
+        ).mockImplementation(() => ({}) as any);
 
         // Mock Bitbucket APIs
         (CloudRepositoriesApi as jest.MockedClass<typeof CloudRepositoriesApi>).mockImplementation(() => ({}) as any);
@@ -374,7 +381,8 @@ describe('ClientManager', () => {
             const result = await clientManager.jiraClient(mockCloudSite);
 
             expect(result).toBe(cachedClient);
-            expect(mockCredentialManager.getAuthInfo).not.toHaveBeenCalled();
+            expect(jiraCloudClientConstructor).not.toHaveBeenCalled();
+            expect(jiraServerClientConstructor).not.toHaveBeenCalled();
         });
 
         it('should handle invalid credentials', async () => {

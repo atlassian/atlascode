@@ -7,11 +7,11 @@ import { createIssue } from './createIssue.spec';
 import { loginNotification } from './loginNotification.spec';
 import { logoutNotification } from './logoutNotification.spec';
 import { renameIssue } from './renameIssue.spec';
-import { startWorkFlow } from './startWorkFlow.spec';
 import { updateDescription } from './updateDescription.spec';
 import { updateIssueStatus } from './updateIssueStatus.spec';
 import { updateLabelsFlow } from './updateLabelsFlow.spec';
 import { viewCommentWithImage } from './viewCommentWithImage.spec';
+
 export const jiraCloudScenarios = [
     { name: 'Authenticate with Jira', run: authFlowJira },
     { name: 'Create issue', run: createIssue },
@@ -23,7 +23,6 @@ export const jiraCloudScenarios = [
     { name: 'Assigning issue to myself', run: assigningFlow },
     { name: 'Add and remove existing labels', run: updateLabelsFlow },
     { name: 'Check image in description', run: checkImageInDescription },
-    { name: 'Start work on Jira issue', run: startWorkFlow },
     { name: 'Rename Issue', run: renameIssue },
     { name: 'Logout Notification', run: logoutNotification },
 ];
@@ -39,7 +38,6 @@ export const jiraDCScenarios = [
     { name: 'Assigning issue to myself', run: assigningFlow },
     { name: 'Add and remove existing labels', run: updateLabelsFlow },
     { name: 'Check image in description', run: checkImageInDescription },
-    { name: 'Start work on Jira issue', run: startWorkFlow },
     { name: 'Rename Issue', run: renameIssue },
     { name: 'Logout Notification', run: logoutNotification },
 ];

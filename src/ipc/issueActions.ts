@@ -23,6 +23,7 @@ export interface RefreshIssueAction extends Action {
 export interface EditIssueAction extends Action {
     action: 'editIssue';
     fields: FieldValues;
+    teamId?: string;
 }
 
 export interface EditChildIssueAction extends Action {
@@ -78,6 +79,7 @@ export interface FetchQueryAction extends Action {
     autocompleteUrl?: string;
     valueType: ValueType;
     currentJQL?: string;
+    fieldName?: string;
 }
 
 export interface ScreensForProjectsAction extends Action {
@@ -132,6 +134,12 @@ export interface StartWorkAction extends Action {
 export interface OpenStartWorkPageAction extends Action {
     action: 'openStartWorkPage';
     issue: MinimalIssue<DetailedSiteInfo>;
+}
+
+export interface CloneIssueAction extends Action {
+    action: 'cloneIssue';
+    site: DetailedSiteInfo;
+    issueData: any;
 }
 
 export interface WorklogData {
@@ -305,6 +313,10 @@ export function isStartWork(a: Action): a is StartWorkAction {
 
 export function isOpenStartWorkPageAction(a: Action): a is OpenStartWorkPageAction {
     return (<OpenStartWorkPageAction>a).issue !== undefined;
+}
+
+export function isCloneIssue(a: Action): a is CloneIssueAction {
+    return a && a.action === 'cloneIssue';
 }
 
 export function isUpdateAiSettings(a: Action): a is UpdateAiSettingsAction {

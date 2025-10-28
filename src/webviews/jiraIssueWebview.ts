@@ -14,7 +14,7 @@ import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
 import timer from 'src/util/perf';
-import { commands, env } from 'vscode';
+import { commands, env, window } from 'vscode';
 
 import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../analytics';
 import { performanceEvent } from '../analytics';
@@ -22,6 +22,7 @@ import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlcli
 import { clientForSite } from '../bitbucket/bbUtils';
 import { PullRequestData } from '../bitbucket/model';
 import { postComment } from '../commands/jira/postComment';
+import { showIssue } from '../commands/jira/showIssue';
 import { startWorkOnIssue } from '../commands/jira/startWorkOnIssue';
 import { Commands } from '../constants';
 import { Container } from '../container';
@@ -29,6 +30,7 @@ import {
     EditChildIssueAction,
     EditIssueAction,
     isAddAttachmentsAction,
+    isCloneIssue,
     isCreateIssue,
     isCreateIssueLink,
     isCreateWorklog,
@@ -436,7 +438,12 @@ export class JiraIssueWebview
                     const newFieldValues: FieldValues = (msg as EditIssueAction).fields;
                     try {
                         const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
-                        await client.editIssue(this._issue!.key, newFieldValues);
+                        const teamId = (msg as EditIssueAction).teamId;
+
+                        await client.editIssue(
+                            this._issue!.key,
+                            teamId ? { [Object.keys(newFieldValues)[0]]: teamId } : newFieldValues,
+                        );
                         if (
                             Object.keys(newFieldValues).some(
                                 (fieldKey) => this._editUIData.fieldValues[`${fieldKey}.rendered`] !== undefined,
@@ -1125,6 +1132,170 @@ export class JiraIssueWebview
                     if (isOpenStartWorkPageAction(msg)) {
                         handled = true;
                         startWorkOnIssue(this._issue);
+                    }
+                    break;
+                }
+                case 'cloneIssue': {
+                    if (isCloneIssue(msg)) {
+                        handled = true;
+                        try {
+                            window.showInformationMessage(
+                                `Cloning ${this._issue.key}\n\nWhen cloning is complete, the cloned work item will be linked to ${this._issue.key} and you'll receive another pop-up here just like this one.`,
+                                'OK',
+                            );
+
+                            const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+
+                            const clonedIssueData = {
+                                fields: {
+                                    summary: msg.issueData.summary,
+                                    project: { key: this._issue.key.split('-')[0] },
+                                    issuetype: { name: 'Task' }, // Default to Task, could be made configurable
+                                    assignee: msg.issueData.assignee
+                                        ? { accountId: msg.issueData.assignee.accountId }
+                                        : undefined,
+                                    reporter: msg.issueData.reporter
+                                        ? { accountId: msg.issueData.reporter.accountId }
+                                        : undefined,
+                                },
+                            };
+
+                            if (msg.issueData.cloneOptions?.includeDescription) {
+                                try {
+                                    const originalIssue = await client.getIssue(this._issue.key, ['description'], '');
+                                    if (originalIssue.fields.description) {
+                                        (clonedIssueData.fields as any).description = originalIssue.fields.description;
+                                        Logger.info('Including description in cloned issue');
+                                    }
+                                } catch (e) {
+                                    Logger.warn('Could not fetch description for cloning', e);
+                                }
+                            }
+
+                            const resp = await client.createIssue(clonedIssueData);
+
+                            // Create a link between the original and cloned issue
+                            await client.createIssueLink(resp.key, {
+                                type: { name: 'Cloners' },
+                                inwardIssue: { key: this._issue.key },
+                                outwardIssue: { key: resp.key },
+                            });
+
+                            // Handle linked issues if requested
+                            if (msg.issueData.cloneOptions?.includeLinkedIssues) {
+                                try {
+                                    const originalIssue = await client.getIssue(this._issue.key, ['issuelinks'], '');
+                                    if (originalIssue.fields.issuelinks && originalIssue.fields.issuelinks.length > 0) {
+                                        Logger.info(`Cloning ${originalIssue.fields.issuelinks.length} linked issues`);
+
+                                        for (const link of originalIssue.fields.issuelinks) {
+                                            try {
+                                                const linkedKey = link.outwardIssue
+                                                    ? link.outwardIssue.key
+                                                    : link.inwardIssue.key;
+
+                                                await client.createIssueLink(resp.key, {
+                                                    type: { name: link.type.name },
+                                                    inwardIssue: { key: resp.key },
+                                                    outwardIssue: { key: linkedKey },
+                                                });
+                                                Logger.info(`Cloned link to issue: ${linkedKey}`);
+                                            } catch (linkError) {
+                                                Logger.warn(
+                                                    `Failed to clone link to issue ${link.outwardIssue?.key || link.inwardIssue?.key}:`,
+                                                    linkError,
+                                                );
+                                            }
+                                        }
+                                    }
+                                } catch (e) {
+                                    Logger.warn('Could not clone linked issues', e);
+                                }
+                            }
+
+                            // Handle child issues if requested
+                            if (msg.issueData.cloneOptions?.includeChildIssues) {
+                                try {
+                                    const originalIssue = await client.getIssue(this._issue.key, ['subtasks'], '');
+                                    if (originalIssue.fields.subtasks && originalIssue.fields.subtasks.length > 0) {
+                                        Logger.info(`Cloning ${originalIssue.fields.subtasks.length} child issues`);
+
+                                        for (const subtask of originalIssue.fields.subtasks) {
+                                            try {
+                                                const subtaskDetails = await client.getIssue(
+                                                    subtask.key,
+                                                    ['summary', 'description', 'assignee', 'reporter', 'issuetype'],
+                                                    '',
+                                                );
+
+                                                const clonedSubtaskData = {
+                                                    fields: {
+                                                        summary: `CLONE - ${subtaskDetails.fields.summary}`,
+                                                        project: { key: this._issue.key.split('-')[0] },
+                                                        issuetype: { name: subtaskDetails.fields.issuetype.name },
+                                                        parent: { key: resp.key }, // Set the cloned issue as parent
+                                                        assignee: subtaskDetails.fields.assignee
+                                                            ? { accountId: subtaskDetails.fields.assignee.accountId }
+                                                            : undefined,
+                                                        reporter: subtaskDetails.fields.reporter
+                                                            ? { accountId: subtaskDetails.fields.reporter.accountId }
+                                                            : undefined,
+                                                        description: subtaskDetails.fields.description,
+                                                    },
+                                                };
+
+                                                const clonedSubtask = await client.createIssue(clonedSubtaskData);
+                                                Logger.info(
+                                                    `Cloned child issue: ${subtask.key} -> ${clonedSubtask.key}`,
+                                                );
+                                            } catch (subtaskError) {
+                                                Logger.warn(
+                                                    `Failed to clone child issue ${subtask.key}:`,
+                                                    subtaskError,
+                                                );
+                                            }
+                                        }
+                                    }
+                                } catch (e) {
+                                    Logger.warn('Could not clone child issues', e);
+                                }
+                            }
+
+                            issueCreatedEvent(this._issue.siteDetails, resp.key).then((e) => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
+
+                            commands.executeCommand(
+                                Commands.RefreshAssignedWorkItemsExplorer,
+                                OnJiraEditedRefreshDelay,
+                            );
+                            commands.executeCommand(Commands.RefreshCustomJqlExplorer, OnJiraEditedRefreshDelay);
+
+                            // Show VS Code notification
+                            window
+                                .showInformationMessage(
+                                    `Cloning complete! Issue ${resp.key} has been cloned from ${this._issue.key} and linked successfully.`,
+                                    'Open Cloned Issue',
+                                )
+                                .then((selection: string | undefined) => {
+                                    if (selection === 'Open Cloned Issue') {
+                                        showIssue({ key: resp.key, siteDetails: this._issue.siteDetails });
+                                    }
+                                });
+
+                            this.postMessage({
+                                type: 'fieldValueUpdate',
+                                fieldValues: { loadingField: '' },
+                                nonce: msg.nonce,
+                            });
+                        } catch (e) {
+                            Logger.error(e, 'Error cloning issue');
+                            this.postMessage({
+                                type: 'error',
+                                reason: 'Error cloning issue',
+                                nonce: msg.nonce,
+                            });
+                        }
                     }
                     break;
                 }

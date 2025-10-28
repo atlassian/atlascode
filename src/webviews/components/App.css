@@ -1934,6 +1934,9 @@ pre {
 .ac-attachment-thumb-img-inline {
     width: 34px;
     height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .ac-attachment-overlay-container {
