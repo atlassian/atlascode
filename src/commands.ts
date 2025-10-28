@@ -504,6 +504,9 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(Commands.RovodevShareFeedback, () =>
             Container.rovodevWebviewProvider.executeTriggerFeedback(),
         ),
+        commands.registerCommand(Commands.RovodevOpenHelp, () => {
+            env.openExternal(Uri.parse('https://www.google.com'));
+        }),
         commands.registerCommand(Commands.RovodevAddToContext, async () => {
             const context = buildContext(window.activeTextEditor, vscodeContext);
             if (!context || context.length === 0) {
