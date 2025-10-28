@@ -1493,6 +1493,7 @@
         "@atlaskit/editor-plugin-insert-block": "^7.0.1",
         "@atlaskit/editor-plugin-list": "^8.0.0",
         "@atlaskit/editor-plugin-mentions": "^8.0.0",
+        "@atlaskit/editor-plugin-tasks-and-decisions": "^9.0.0",
         "@atlaskit/editor-plugin-text-color": "^6.0.1",
         "@atlaskit/editor-plugin-toolbar-lists-indentation": "^7.0.1",
         "@atlaskit/editor-wikimarkup-transformer": "^11.16.4",
