@@ -514,7 +514,7 @@
             },
             {
                 "command": "atlascode.rovodev.openHelp",
-                "title": "Help",
+                "title": "Documentation",
                 "category": "Atlassian"
             }
         ],
