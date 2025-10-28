@@ -664,7 +664,7 @@
                 },
                 {
                     "command": "atlascode.rovodev.openHelp",
-                    "when": "view == atlascode.views.rovoDev.webView",
+                    "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
                     "group": "rovoDevContextMenu2@2"
                 },
                 {
