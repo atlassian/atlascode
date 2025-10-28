@@ -120,7 +120,7 @@ export const FollowUpActionFooter: React.FC<{ children?: React.ReactNode }> = ({
             style={{
                 display: 'flex',
                 flexDirection: 'row',
-                justifyContent: 'flex-end',
+                justifyContent: 'flex-start',
                 marginTop: '8px',
                 marginBottom: '8px',
             }}

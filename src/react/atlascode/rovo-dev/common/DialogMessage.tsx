@@ -50,71 +50,76 @@ export const DialogMessageItem: React.FC<{
 
     return (
         <div style={{ ...chatMessageStyles, ...errorMessageStyles }}>
-            <div style={{ display: 'flex', flexDirection: 'row' }}>
-                {icon}
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '8px',
-                        paddingTop: '2px',
-                        paddingLeft: '2px',
-                        width: 'calc(100% - 24px)',
-                        overflowWrap: 'break-word',
-                    }}
-                >
+            <div
+                style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    paddingTop: '2px',
+                    paddingLeft: '2px',
+                    width: 'calc(100% - 24px)',
+                    overflowWrap: 'break-word',
+                }}
+            >
+                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                    {icon}
                     <div style={messageContentStyles}>{title}</div>
+                </div>
 
-                    {msg.text && (
-                        <div style={messageContentStyles}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <MarkedDown value={msg.text} />
-                            </div>
+                {msg.text && (
+                    <div style={messageContentStyles}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <MarkedDown value={msg.text} />
                         </div>
-                    )}
+                    </div>
+                )}
 
-                    {msg.type === 'toolPermissionRequest' && (
-                        <ToolCall toolName={msg.toolName} toolArgs={msg.toolArgs} mcpServer={msg.mcpServer} />
-                    )}
+                {msg.type === 'toolPermissionRequest' && (
+                    <ToolCall toolName={msg.toolName} toolArgs={msg.toolArgs} mcpServer={msg.mcpServer} />
+                )}
 
-                    {msg.type === 'error' &&
-                        msg.isRetriable &&
-                        retryAfterError &&
-                        isRetryAfterErrorButtonEnabled?.(msg.uid) && (
-                            <div
-                                style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '8px' }}
-                            >
-                                <button style={inChatButtonStyles} onClick={retryAfterError}>
-                                    Try again
-                                </button>
-                            </div>
-                        )}
-                    {msg.type === 'toolPermissionRequest' && onToolPermissionChoice && (
+                {msg.type === 'error' &&
+                    msg.isRetriable &&
+                    retryAfterError &&
+                    isRetryAfterErrorButtonEnabled?.(msg.uid) && (
                         <div
                             style={{
                                 display: 'flex',
-                                justifyContent: 'flex-end',
+                                justifyContent: 'flex-start',
                                 width: '100%',
                                 marginTop: '8px',
-                                gap: '8px',
                             }}
                         >
-                            <button
-                                style={inChatSecondaryButtonStyles}
-                                onClick={() => onToolPermissionChoice(msg.toolCallId, 'deny')}
-                            >
-                                Deny
-                            </button>
-                            <button
-                                style={inChatButtonStyles}
-                                onClick={() => onToolPermissionChoice(msg.toolCallId, 'allow')}
-                            >
-                                Allow
+                            <button style={inChatButtonStyles} onClick={retryAfterError}>
+                                Try again
                             </button>
                         </div>
                     )}
-                    {msg.statusCode && <div style={{ fontSize: 'smaller', textAlign: 'right' }}>{msg.statusCode}</div>}
-                </div>
+                {msg.type === 'toolPermissionRequest' && onToolPermissionChoice && (
+                    <div
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'flex-start',
+                            width: '100%',
+                            marginTop: '8px',
+                            gap: '8px',
+                        }}
+                    >
+                        <button
+                            style={inChatButtonStyles}
+                            onClick={() => onToolPermissionChoice(msg.toolCallId, 'allow')}
+                        >
+                            Allow
+                        </button>
+                        <button
+                            style={inChatSecondaryButtonStyles}
+                            onClick={() => onToolPermissionChoice(msg.toolCallId, 'deny')}
+                        >
+                            Deny
+                        </button>
+                    </div>
+                )}
+                {msg.statusCode && <div style={{ fontSize: 'smaller', textAlign: 'right' }}>{msg.statusCode}</div>}
             </div>
         </div>
     );

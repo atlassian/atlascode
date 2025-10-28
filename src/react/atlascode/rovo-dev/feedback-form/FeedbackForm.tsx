@@ -120,11 +120,11 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({ onSubmit, onCancel, 
                     </div>
                 </div>
                 <div className="form-actions">
-                    <button type="button" onClick={() => onCancel()} className="form-cancel-button">
-                        Cancel
-                    </button>
                     <button type="submit" className="form-submit-button">
                         Send feedback
+                    </button>
+                    <button type="button" onClick={() => onCancel()} className="form-cancel-button">
+                        Cancel
                     </button>
                 </div>
             </form>
