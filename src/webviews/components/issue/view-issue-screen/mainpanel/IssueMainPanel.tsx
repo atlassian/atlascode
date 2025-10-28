@@ -259,7 +259,19 @@ const IssueMainPanel: React.FC<Props> = ({
                                     setDescriptionText(e);
                                 }}
                                 onSave={(i: string) => {
-                                    handleInlineEdit(fields['description'], i);
+                                    // For v3 API: If description is ADF JSON string, parse it back to object
+                                    let valueToSave = i;
+                                    try {
+                                        const parsed = JSON.parse(i);
+                                        if (parsed && typeof parsed === 'object' && parsed.type === 'doc') {
+                                            // This is ADF format - send as object for v3 API
+                                            valueToSave = parsed;
+                                        }
+                                        // eslint-disable-next-line no-unused-vars
+                                    } catch (e) {
+                                        // Not JSON, send as-is (plain text or wiki markup)
+                                    }
+                                    handleInlineEdit(fields['description'], valueToSave);
                                     closeEditorHandler();
                                 }}
                                 onCancel={() => {

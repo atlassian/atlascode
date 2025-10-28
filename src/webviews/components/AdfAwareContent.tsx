@@ -1,8 +1,7 @@
 import { mention } from '@atlaskit/adf-utils/builders';
 import { filter, traverse } from '@atlaskit/adf-utils/traverse';
-import { WikiMarkupTransformer } from '@atlaskit/editor-wikimarkup-transformer';
 import { MentionNameDetails } from '@atlaskit/mention';
-import { ADFEncoder, ReactRenderer } from '@atlaskit/renderer';
+import { ReactRenderer } from '@atlaskit/renderer';
 import React, { memo, useLayoutEffect, useState } from 'react';
 import { IntlProvider } from 'react-intl-next';
 
@@ -13,17 +12,15 @@ interface AdfAwareContentProps {
 }
 
 /**
- * Smart component that detects and renders wiki markup
+ * Smart component that renders ADF content with support for tasks, decisions, and mentions
  */
 export const AdfAwareContent: React.FC<AdfAwareContentProps> = memo(({ content, mentionProvider }) => {
     const [traversedDocument, setTraversedDocument] = useState<any>(null);
     const [lastContent, setLastContent] = useState<string>(content);
 
     try {
-        const adfEncoder = new ADFEncoder((schema) => {
-            return new WikiMarkupTransformer(schema);
-        });
-        const document = adfEncoder.encode(content);
+        // Parse content as ADF JSON directly (no Wiki Markup transformation)
+        const document = typeof content === 'string' ? JSON.parse(content) : content;
 
         useLayoutEffect(() => {
             // Reset when content changes
@@ -71,7 +68,7 @@ export const AdfAwareContent: React.FC<AdfAwareContentProps> = memo(({ content, 
             </IntlProvider>
         );
     } catch (error) {
-        console.error('Failed to parse WikiMarkup, falling back to text:', error);
+        console.error('Failed to parse ADF content, falling back to text:', error);
         return <p>{content}</p>;
     }
 });
