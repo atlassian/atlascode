@@ -1,11 +1,12 @@
-import { DetailedSiteInfo } from 'src/atlclients/authInfo';
-import { BaseUI, UiAction, UiResponse } from '../baseUI';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+import { RovoDevPullRequestHandler } from 'src/rovo-dev/rovoDevPullRequestHandler';
+import { SearchJiraHelper } from 'src/views/jira/searchJiraHelper';
 // import { SearchAllJiraHelper } from 'src/views/jira/searchAllJiraHelper';
 import { QuickInputButtons, QuickPickItemKind, ThemeIcon } from 'vscode';
+
+import { BaseUI, UiAction, UiResponse } from '../baseUI';
 import { StartWorkData } from './startWorkStates';
-import { SearchJiraHelper } from 'src/views/jira/searchJiraHelper';
-import { RovoDevPullRequestHandler } from 'src/rovo-dev/rovoDevPullRequestHandler';
 
 export class StartWorkFlowUI extends BaseUI {
     constructor() {
@@ -79,14 +80,14 @@ export class StartWorkFlowUI extends BaseUI {
         return { value, action };
     }
 
-    async inputBranchName(oldValue: string): Promise<UiResponse<string>> {
+    async inputBranchName(oldValue: string, issueKey?: string): Promise<UiResponse<string>> {
         const prHandler = new RovoDevPullRequestHandler();
 
         const { value, action } = await this.showInputBox({
             title: 'Start Work: Enter Branch Name',
             placeHolder: 'Enter branch name',
             value: oldValue,
-            valueSelection: [0, oldValue.length],
+            valueSelection: [issueKey ? issueKey?.length + 1 : 0, oldValue.length],
             validateInput: async (text: string) => {
                 if (text.length === 0) {
                     return 'Branch name cannot be empty';
@@ -97,6 +98,7 @@ export class StartWorkFlowUI extends BaseUI {
                 return null;
             },
         });
+
         return { value, action };
     }
 
@@ -119,5 +121,31 @@ export class StartWorkFlowUI extends BaseUI {
         );
 
         return { value, action };
+    }
+
+    async pickStartWithRovo(): Promise<UiResponse<boolean | undefined>> {
+        const items = [
+            {
+                label: 'Yes, start with Rovo',
+                description: 'Use Rovo to assist with your work on this issue',
+            },
+            {
+                label: 'No, thanks',
+                description: 'Do not use Rovo for this issue',
+            },
+        ];
+        const { value, action } = await this.showQuickPick<string>(
+            items.map((item, index) => ({
+                label: item.label,
+                description: item.description,
+                value: index === 0,
+            })),
+            {
+                placeHolder: 'Would you like to start working on this issue with Rovo?',
+                title: 'Start Work: Use Rovo',
+            },
+        );
+
+        return { value: value !== 'No, thanks', action };
     }
 }

@@ -1,9 +1,14 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+import { Container } from 'src/container';
+import { transitionIssue } from 'src/jira/transitionIssue';
+import { RovoDevPullRequestHandler } from 'src/rovo-dev/rovoDevPullRequestHandler';
+import { RovoDevJiraContext } from 'src/rovo-dev/rovoDevTypes';
+import { window } from 'vscode';
+
+import { UiAction } from '../baseUI';
 import { State, Transition } from '../types';
 import { StartWorkFlowUI } from './startWorkFlowUI';
-import { DetailedSiteInfo } from 'src/atlclients/authInfo';
-import { UiAction } from '../baseUI';
-import { RovoDevPullRequestHandler } from 'src/rovo-dev/rovoDevPullRequestHandler';
 
 export type StartWorkData = {
     // ughhhhh
@@ -14,6 +19,8 @@ export type StartWorkData = {
     targetBranchName: string;
 
     transitionName?: string;
+
+    startWithRovo?: boolean;
 };
 
 async function getCurrentBranchName(): Promise<string | undefined> {
@@ -27,17 +34,22 @@ export class StartWorkStates {
         action: async (data: Partial<StartWorkData>, ui: StartWorkFlowUI) => {
             // Initialize the UI with the provided data
 
-            const { value, action } = await ui.pickIssue();
-            if (action === UiAction.Back || !value) {
-                return Transition.back();
+            let issue: MinimalIssue<DetailedSiteInfo>;
+            if (!data.issue) {
+                const { value, action } = await ui.pickIssue();
+                if (action === UiAction.Back || !value) {
+                    return Transition.back();
+                }
+                issue = value;
+            } else {
+                issue = data.issue;
             }
-
             const currentBranch = await getCurrentBranchName();
 
             return Transition.forward(this.branchSelector, {
-                issue: value,
+                issue: issue,
                 sourceBranchName: currentBranch,
-                targetBranchName: value.key + '-my-cool-branch',
+                targetBranchName: issue.key + '-' + issue.summary.replace(/\s+/g, '-').toLowerCase(),
             });
         },
     };
@@ -46,8 +58,9 @@ export class StartWorkStates {
         name: 'branchSelector',
         action: async (data: Partial<StartWorkData>, ui: StartWorkFlowUI) => {
             const { value, action } = await ui.pickWillCreateBranch(data);
+            // TODO handle start work button cancel
             if (action === UiAction.Back) {
-                return Transition.back();
+                return Transition.forward(this.finalState);
             }
 
             if (value === 'Fork from main') {
@@ -87,7 +100,7 @@ export class StartWorkStates {
         name: 'editTargetBranchName',
         action: async (data: Partial<StartWorkData>, ui: StartWorkFlowUI) => {
             const oldValue = data.targetBranchName || '';
-            const { value, action } = await ui.inputBranchName(oldValue);
+            const { value, action } = await ui.inputBranchName(oldValue, data.issue?.key);
             if (action === UiAction.Back) {
                 return Transition.back();
             }
@@ -108,7 +121,54 @@ export class StartWorkStates {
                 return Transition.forward(this.finalState, { transitionName: undefined });
             }
 
-            return Transition.forward(this.finalState, { transitionName: value });
+            return Transition.forward(this.doStuff, { transitionName: value });
+        },
+    };
+
+    doStuff: State<StartWorkFlowUI, Partial<StartWorkData>> = {
+        name: 'doStuff',
+        action: async (data: Partial<StartWorkData>, ui: StartWorkFlowUI) => {
+            const prHandler = new RovoDevPullRequestHandler();
+            ui.showLoadingIndicator({
+                props: { placeHolder: 'Doing stuff...', title: 'Loading' },
+                awaitedFunc: async (resolve, reject, input) => {
+                    input.busy = true;
+                    if (data.willCreateBranch) {
+                        try {
+                            await prHandler.createBranch(data.targetBranchName!, data.sourceBranchName!);
+                        } catch (e) {
+                            window.showErrorMessage(`Failed to create branch: ${e}`);
+                        }
+                    }
+
+                    if (data.transitionName) {
+                        try {
+                            const transition = data.issue!.transitions.find((t) => t.name === data.transitionName);
+                            if (transition) {
+                                await transitionIssue(data.issue!, transition, { source: 'Start Work Flow' });
+                            }
+                        } catch (e) {
+                            window.showErrorMessage(`Failed to transition issue: ${e}`);
+                        }
+                    }
+                    input.busy = false;
+                    resolve(undefined);
+                },
+            });
+
+            return Transition.forward(this.rovoStep);
+        },
+    };
+
+    rovoStep: State<StartWorkFlowUI, Partial<StartWorkData>> = {
+        name: 'rovoStep',
+        action: async (data: Partial<StartWorkData>, ui: StartWorkFlowUI) => {
+            const { value, action } = await ui.pickStartWithRovo();
+            if (action === UiAction.Back) {
+                return Transition.back();
+            }
+
+            return Transition.forward(this.finalState, { startWithRovo: value });
         },
     };
 
@@ -116,6 +176,15 @@ export class StartWorkStates {
         name: 'finalState',
         isTerminal: true,
         action: async (data: Partial<StartWorkData>, ui: StartWorkFlowUI) => {
+            if (data.startWithRovo) {
+                const prompt = 'Start working on the following Jira issue: ' + data.issue!.key;
+                const context: RovoDevJiraContext = {
+                    contextType: 'jiraWorkItem',
+                    name: data.issue!.key,
+                    url: data.issue?.siteDetails.baseLinkUrl + '/browse/' + data.issue!.key,
+                };
+                Container.rovodevWebviewProvider.invokeRovoDevAskCommand(prompt, [context]);
+            }
             return Transition.done();
         },
     };

@@ -1131,7 +1131,8 @@ export class JiraIssueWebview
                 case 'openStartWorkPage': {
                     if (isOpenStartWorkPageAction(msg)) {
                         handled = true;
-                        startWorkOnIssue(this._issue);
+                        await startWorkOnIssue(this._issue);
+                        this.invalidate();
                     }
                     break;
                 }

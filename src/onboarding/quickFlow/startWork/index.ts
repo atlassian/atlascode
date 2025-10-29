@@ -1,5 +1,5 @@
 import { QuickFlow } from '../quickFlow';
-import { State, QuickFlowAnalyticsEvent } from '../types';
+import { QuickFlowAnalyticsEvent, State } from '../types';
 import { StartWorkFlowUI } from './startWorkFlowUI';
 import { StartWorkData, StartWorkStates } from './startWorkStates';
 

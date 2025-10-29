@@ -34,6 +34,12 @@ export class RovoDevPullRequestHandler {
         return branches.some((branch) => branch.name === branchName);
     }
 
+    public async createBranch(branchName: string, baseBranch: string): Promise<void> {
+        const repo = await this.getGitRepository();
+
+        return repo.createBranch(branchName, true, baseBranch);
+    }
+
     private async getGitRepository(): Promise<Repository> {
         const gitApi = await this.getGitAPI();
 

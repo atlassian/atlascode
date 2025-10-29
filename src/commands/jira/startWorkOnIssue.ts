@@ -1,4 +1,5 @@
 import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
+import { StartWorkQuickFlow } from 'src/onboarding/quickFlow/startWork';
 
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Container } from '../../container';
@@ -22,11 +23,18 @@ export async function startWorkOnIssue(issueOrKeyAndSite: MinimalIssueOrKeyAndSi
         throw new Error(`Jira issue ${issueOrKeyAndSite.key} not found in site ${issueOrKeyAndSite.siteDetails}`);
     }
 
-    const { startWorkV3WebviewFactory, startWorkWebviewFactory } = Container;
+    // const { startWorkV3WebviewFactory, startWorkWebviewFactory } = Container;
 
-    const factory = Container.featureFlagClient.checkGate(Features.StartWorkV3)
-        ? startWorkV3WebviewFactory
-        : startWorkWebviewFactory;
+    // const factory = Container.featureFlagClient.checkGate(Features.StartWorkV3)
+    //     ? startWorkV3WebviewFactory
+    //     : startWorkWebviewFactory;
 
-    factory.createOrShow({ issue });
+    // factory.createOrShow({ issue });
+
+    const flow = new StartWorkQuickFlow();
+    try {
+        await flow.run({ issue });
+    } catch (e) {
+        console.error('Error running Start Work flow', e);
+    }
 }

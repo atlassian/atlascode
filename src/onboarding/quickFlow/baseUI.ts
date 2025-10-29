@@ -81,7 +81,9 @@ export class BaseUI {
                 }
             }
 
-            input.onDidAccept(() => {
+            input.onDidAccept(async () => {
+                const errorMessage = await props.validateInput?.(input.value);
+                input.validationMessage = errorMessage || undefined;
                 // According to the docs, `string` validation errors should in
                 // theory prevent accepting the form, but somehow they don't
                 if (!this.isInputValid(input)) {
