@@ -912,6 +912,204 @@ describe('JiraIssueWebview', () => {
             });
         });
 
+        test('should handle updateWorklog action', async () => {
+            const worklogData = {
+                timeSpent: '2h',
+                comment: 'Updated work done',
+                adjustEstimate: 'auto',
+            };
+
+            const msg = {
+                action: 'updateWorklog',
+                site: mockSiteDetails,
+                issueKey: mockIssue.key,
+                worklogId: 'worklog-1',
+                worklogData,
+                nonce: 'nonce-123',
+            };
+
+            const updatedWorklog = {
+                id: 'worklog-1',
+                timeSpent: '2h',
+                comment: 'Updated work done',
+            };
+
+            (mockJiraClient as any).putToJira = jest.fn().mockResolvedValue(updatedWorklog);
+            jiraIssueWebview['_editUIData'].fieldValues['worklog'] = {
+                worklogs: [{ id: 'worklog-1', timeSpent: '1h', comment: 'Old work' }],
+            };
+
+            const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+
+            await jiraIssueWebview['onMessageReceived'](msg);
+
+            expect((mockJiraClient as any).putToJira).toHaveBeenCalledWith(
+                'issue/TEST-123/worklog/worklog-1',
+                worklogData,
+                { adjustEstimate: 'auto' },
+            );
+            expect(jiraIssueWebview['_editUIData'].fieldValues['worklog'].worklogs[0]).toEqual(updatedWorklog);
+            expect(postMessageSpy).toHaveBeenCalledWith({
+                type: 'fieldValueUpdate',
+                fieldValues: { worklog: { worklogs: [updatedWorklog] }, nonce: 'nonce-123' },
+            });
+        });
+
+        test('should handle deleteWorklog action', async () => {
+            const msg = {
+                action: 'deleteWorklog',
+                site: mockSiteDetails,
+                issueKey: mockIssue.key,
+                worklogId: 'worklog-1',
+                adjustEstimate: 'auto',
+                nonce: 'nonce-123',
+            };
+
+            (mockJiraClient as any).deleteToJira = jest.fn().mockResolvedValue({});
+            jiraIssueWebview['_editUIData'].fieldValues['worklog'] = {
+                worklogs: [
+                    { id: 'worklog-1', timeSpent: '1h', comment: 'Work to delete' },
+                    { id: 'worklog-2', timeSpent: '2h', comment: 'Work to keep' },
+                ],
+            };
+
+            const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+
+            await jiraIssueWebview['onMessageReceived'](msg);
+
+            expect((mockJiraClient as any).deleteToJira).toHaveBeenCalledWith('issue/TEST-123/worklog/worklog-1', {
+                adjustEstimate: 'auto',
+            });
+            expect(jiraIssueWebview['_editUIData'].fieldValues['worklog'].worklogs).toHaveLength(1);
+            expect(jiraIssueWebview['_editUIData'].fieldValues['worklog'].worklogs[0].id).toBe('worklog-2');
+            expect(postMessageSpy).toHaveBeenCalledWith({
+                type: 'fieldValueUpdate',
+                fieldValues: {
+                    worklog: { worklogs: [{ id: 'worklog-2', timeSpent: '2h', comment: 'Work to keep' }] },
+                    nonce: 'nonce-123',
+                },
+            });
+        });
+
+        test('should handle updateWorklog action with new estimate', async () => {
+            const worklogData = {
+                timeSpent: '2h',
+                comment: 'Updated work done',
+                adjustEstimate: 'new',
+                newEstimate: '3h',
+            };
+
+            const msg = {
+                action: 'updateWorklog',
+                site: mockSiteDetails,
+                issueKey: mockIssue.key,
+                worklogId: 'worklog-1',
+                worklogData,
+                nonce: 'nonce-123',
+            };
+
+            const updatedWorklog = {
+                id: 'worklog-1',
+                timeSpent: '2h',
+                comment: 'Updated work done',
+            };
+
+            (mockJiraClient as any).putToJira = jest.fn().mockResolvedValue(updatedWorklog);
+            jiraIssueWebview['_editUIData'].fieldValues['worklog'] = {
+                worklogs: [{ id: 'worklog-1', timeSpent: '1h', comment: 'Old work' }],
+            };
+
+            await jiraIssueWebview['onMessageReceived'](msg);
+
+            expect((mockJiraClient as any).putToJira).toHaveBeenCalledWith(
+                'issue/TEST-123/worklog/worklog-1',
+                worklogData,
+                { adjustEstimate: 'new', newEstimate: '3h' },
+            );
+        });
+
+        test('should handle deleteWorklog action with new estimate', async () => {
+            const msg = {
+                action: 'deleteWorklog',
+                site: mockSiteDetails,
+                issueKey: mockIssue.key,
+                worklogId: 'worklog-1',
+                adjustEstimate: 'new',
+                newEstimate: '4h',
+                nonce: 'nonce-123',
+            };
+
+            (mockJiraClient as any).deleteToJira = jest.fn().mockResolvedValue({});
+            jiraIssueWebview['_editUIData'].fieldValues['worklog'] = {
+                worklogs: [{ id: 'worklog-1', timeSpent: '1h', comment: 'Work to delete' }],
+            };
+
+            await jiraIssueWebview['onMessageReceived'](msg);
+
+            expect((mockJiraClient as any).deleteToJira).toHaveBeenCalledWith('issue/TEST-123/worklog/worklog-1', {
+                adjustEstimate: 'new',
+                newEstimate: '4h',
+            });
+        });
+
+        test('should handle updateWorklog error', async () => {
+            const worklogData = {
+                timeSpent: '2h',
+                comment: 'Updated work done',
+                adjustEstimate: 'auto',
+            };
+
+            const msg = {
+                action: 'updateWorklog',
+                site: mockSiteDetails,
+                issueKey: mockIssue.key,
+                worklogId: 'worklog-1',
+                worklogData,
+                nonce: 'nonce-123',
+            };
+
+            const error = new Error('Update failed');
+            (mockJiraClient as any).putToJira = jest.fn().mockRejectedValue(error);
+
+            const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+
+            await jiraIssueWebview['onMessageReceived'](msg);
+
+            expect(postMessageSpy).toHaveBeenCalledWith({
+                type: 'error',
+                reason: expect.objectContaining({
+                    title: 'Error updating worklog',
+                }),
+                nonce: 'nonce-123',
+            });
+        });
+
+        test('should handle deleteWorklog error', async () => {
+            const msg = {
+                action: 'deleteWorklog',
+                site: mockSiteDetails,
+                issueKey: mockIssue.key,
+                worklogId: 'worklog-1',
+                adjustEstimate: 'auto',
+                nonce: 'nonce-123',
+            };
+
+            const error = new Error('Delete failed');
+            (mockJiraClient as any).deleteToJira = jest.fn().mockRejectedValue(error);
+
+            const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+
+            await jiraIssueWebview['onMessageReceived'](msg);
+
+            expect(postMessageSpy).toHaveBeenCalledWith({
+                type: 'error',
+                reason: expect.objectContaining({
+                    title: 'Error deleting worklog',
+                }),
+                nonce: 'nonce-123',
+            });
+        });
+
         test('should handle addWatcher action', async () => {
             const watcher = { accountId: 'user-1', displayName: 'Test User' };
             const msg = {
