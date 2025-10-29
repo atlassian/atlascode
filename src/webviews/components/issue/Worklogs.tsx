@@ -50,7 +50,7 @@ const Actions = (
     return (
         <div style={{ display: 'flex', gap: '4px', flexDirection: 'column' }}>
             {data.onEditWorklog && (
-                <div className={`ac-inline-dialog ${isEditing ? 'active' : ''}`}>
+                <div className={`ac-inline-dialog ac-worklog-inline-dialog ${isEditing ? 'active' : ''}`}>
                     <InlineDialog
                         content={
                             <WorklogForm
@@ -77,17 +77,12 @@ const Actions = (
                 </div>
             )}
             {data.onDeleteWorklog && (
-                <div className={`ac-inline-dialog ${isDeleting ? 'active' : ''}`}>
+                <div className={`ac-inline-dialog ac-worklog-inline-dialog ${isDeleting ? 'active' : ''}`}>
                     <InlineDialog
                         content={
                             <div
                                 style={{
-                                    padding: '16px',
-                                    backgroundColor: 'var(--vscode-editor-background)',
-                                    border: '1px solid var(--vscode-list-focusOutline)',
-                                    borderRadius: '6px',
-                                    minWidth: '280px',
-                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                                    padding: '0',
                                 }}
                             >
                                 <p
