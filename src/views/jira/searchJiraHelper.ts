@@ -1,5 +1,5 @@
 import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
-import { commands, QuickPickItem, ThemeIcon, window } from 'vscode';
+import { commands, QuickPick, QuickPickItem, ThemeIcon, window } from 'vscode';
 
 import { searchIssuesEvent } from '../../analytics';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
@@ -72,7 +72,7 @@ export class SearchJiraHelper {
     }
 
     // This method is called when the user clicks on the "Search Jira" button in the Jira Tree View
-    private static createIssueQuickPick() {
+    public static createIssueQuickPick(doNothing?: boolean): QuickPick<QuickPickIssue> {
         searchIssuesEvent(ProductJira).then((e) => {
             Container.analyticsClient.sendTrackEvent(e);
         });
@@ -117,22 +117,26 @@ export class SearchJiraHelper {
             searchAllOption.searchTerm = value;
         });
 
-        quickPick.onDidAccept(() => {
-            const selectedItem = quickPick.selectedItems[0];
-            if (!selectedItem) {
-                return;
-            }
+        if (!doNothing) {
+            quickPick.onDidAccept(() => {
+                const selectedItem = quickPick.selectedItems[0];
+                if (!selectedItem) {
+                    return;
+                }
 
-            if ('searchTerm' in selectedItem) {
-                selectedItem.searchTerm
-                    ? commands.executeCommand(Commands.JiraSearchAllIssues, selectedItem.searchTerm)
-                    : commands.executeCommand(Commands.JiraSearchAllIssues);
-            } else {
-                commands.executeCommand(Commands.ShowIssue, selectedItem.issue);
-            }
-            quickPick.hide();
-        });
+                if ('searchTerm' in selectedItem) {
+                    selectedItem.searchTerm
+                        ? commands.executeCommand(Commands.JiraSearchAllIssues, selectedItem.searchTerm)
+                        : commands.executeCommand(Commands.JiraSearchAllIssues);
+                } else {
+                    commands.executeCommand(Commands.ShowIssue, selectedItem.issue);
+                }
+                quickPick.hide();
+            });
+        }
 
         quickPick.show();
+
+        return quickPick;
     }
 }

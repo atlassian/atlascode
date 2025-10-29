@@ -49,7 +49,7 @@ export class BaseUI {
         const input = window.createInputBox();
 
         // Common properties
-        input.title = this.title;
+        input.title = props.title || this.title;
         input.ignoreFocusOut = this.ignoreFocusOut;
 
         // Special properties
@@ -116,7 +116,7 @@ export class BaseUI {
         const input = window.createQuickPick();
 
         // Common properties
-        input.title = this.title;
+        input.title = props.title || this.title;
         input.ignoreFocusOut = this.ignoreFocusOut;
 
         // Special properties
@@ -166,7 +166,7 @@ export class BaseUI {
         const input = window.createInputBox();
 
         // Common properties
-        input.title = this.title;
+        input.title = props.title || this.title;
         input.ignoreFocusOut = this.ignoreFocusOut;
 
         // Special properties

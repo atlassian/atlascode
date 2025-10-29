@@ -32,6 +32,7 @@ import { Experiments, Features } from './util/featureFlags';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
 import { PipelineNode } from './views/pipelines/PipelinesTree';
+import { StartWorkQuickFlow } from './onboarding/quickFlow/startWork';
 
 export function registerCommands(vscodeContext: ExtensionContext) {
     const settingsFeatureValue = Container.featureFlagClient.checkExperimentValue(
@@ -541,6 +542,14 @@ export function registerDebugCommands(vscodeContext: ExtensionContext): Disposab
             window.showInformationMessage('[DEBUG] Atlascode: Quick command');
 
             // Add your logic here
+
+            const flow = new StartWorkQuickFlow();
+            try {
+                const data = await flow.run({});
+                window.showInformationMessage(`[DEBUG] Quick flow result: ${JSON.stringify(data)}`);
+            } catch (e) {
+                window.showErrorMessage(`[DEBUG] Quick flow error: ${e}`);
+            }
         }),
 
         // Login to a cloud site with API token

@@ -28,6 +28,12 @@ export class RovoDevPullRequestHandler {
         return this.gitApiCache;
     }
 
+    public async doesBranchExist(branchName: string): Promise<boolean> {
+        const repo = await this.getGitRepository();
+        const branches = await repo.getBranches({ remote: true });
+        return branches.some((branch) => branch.name === branchName);
+    }
+
     private async getGitRepository(): Promise<Repository> {
         const gitApi = await this.getGitAPI();
 
