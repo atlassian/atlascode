@@ -67,7 +67,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                     timeSpentInput.focus();
                     timeSpentInput.select();
                 }
-            }, 100);
+            }, 0);
         }
     }
 
