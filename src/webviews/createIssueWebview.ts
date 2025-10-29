@@ -313,17 +313,11 @@ export class CreateIssueWebview
             startAt,
             'key',
             query,
-            'create', // Filter by CREATE_ISSUES permission on the API side
+            'create', // Filter by CREATE_ISSUES permission on the API side (Cloud only)
         );
 
-        const result = {
-            projects: paginatedResult.projects,
-            total: paginatedResult.total,
-            hasMore: paginatedResult.hasMore,
-        };
-
-        this._projectsWithCreateIssuesPermission[cacheKey] = result;
-        return result;
+        this._projectsWithCreateIssuesPermission[cacheKey] = paginatedResult;
+        return paginatedResult;
     }
 
     private async selectedProjectHasCreatePermission(project: Project): Promise<boolean> {
