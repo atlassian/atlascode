@@ -777,13 +777,12 @@ export class JiraIssueWebview
                         handled = true;
                         try {
                             const client = await Container.clientManager.jiraClient(msg.site);
-                            let queryParams: any = { adjustEstimate: msg.worklogData.adjustEstimate };
-                            delete msg.worklogData.adjustEstimate;
-                            if (queryParams.adjustEstimate === 'new') {
-                                queryParams = { ...queryParams, newEstimate: msg.worklogData.newEstimate };
-                                delete msg.worklogData.newEstimate;
+                            const { adjustEstimate, newEstimate, ...worklogBody } = msg.worklogData as any;
+                            let queryParams: any = { adjustEstimate };
+                            if (adjustEstimate === 'new' && newEstimate) {
+                                queryParams = { ...queryParams, newEstimate };
                             }
-                            const resp = await client.addWorklog(msg.issueKey, msg.worklogData, queryParams);
+                            const resp = await client.addWorklog(msg.issueKey, worklogBody, queryParams);
 
                             if (!Array.isArray(this._editUIData.fieldValues['worklog']?.worklogs)) {
                                 this._editUIData.fieldValues['worklog'] = { worklogs: [] };
@@ -819,16 +818,15 @@ export class JiraIssueWebview
                         handled = true;
                         try {
                             const client = await Container.clientManager.jiraClient(msg.site);
-                            let queryParams: any = { adjustEstimate: msg.worklogData.adjustEstimate };
-                            delete msg.worklogData.adjustEstimate;
-                            if (queryParams.adjustEstimate === 'new') {
-                                queryParams = { ...queryParams, newEstimate: msg.worklogData.newEstimate };
-                                delete msg.worklogData.newEstimate;
+                            const { adjustEstimate, newEstimate, ...worklogBody } = msg.worklogData as any;
+                            let queryParams: any = { adjustEstimate };
+                            if (adjustEstimate === 'new' && newEstimate) {
+                                queryParams = { ...queryParams, newEstimate };
                             }
 
                             const resp = await (client as any).putToJira(
                                 `issue/${msg.issueKey}/worklog/${msg.worklogId}`,
-                                msg.worklogData,
+                                worklogBody,
                                 queryParams,
                             );
 

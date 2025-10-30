@@ -63,7 +63,7 @@ const Actions = (
                         }
                         isOpen={isEditing}
                         onClose={data.onCancelEdit!}
-                        placement="left"
+                        placement="left-end"
                     >
                         <Tooltip content="Edit" position="top">
                             <Button
@@ -117,7 +117,7 @@ const Actions = (
                         }
                         isOpen={isDeleting}
                         onClose={data.onCancelDelete!}
-                        placement="left"
+                        placement="left-end"
                     >
                         <Tooltip content="Delete" position="top">
                             <Button
@@ -194,7 +194,7 @@ export default class Worklogs extends React.Component<WorklogsProps, WorklogsSta
         return (
             <TableTree
                 columns={[Author, Comment, TimeSpent, Created, Actions]}
-                columnWidths={['100%', '100%', '150px', '180px', '50px']}
+                columnWidths={['100%', '100%', '170px', '300px', '50px']}
                 items={this.props.worklogs.worklogs.map((worklog) => {
                     return {
                         id: worklog.id,
