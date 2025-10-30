@@ -945,7 +945,7 @@ describe('JiraIssueWebview', () => {
 
             expect((mockJiraClient as any).putToJira).toHaveBeenCalledWith(
                 'issue/TEST-123/worklog/worklog-1',
-                worklogData,
+                { timeSpent: '2h', comment: 'Updated work done' },
                 { adjustEstimate: 'auto' },
             );
             expect(jiraIssueWebview['_editUIData'].fieldValues['worklog'].worklogs[0]).toEqual(updatedWorklog);
@@ -1023,7 +1023,7 @@ describe('JiraIssueWebview', () => {
 
             expect((mockJiraClient as any).putToJira).toHaveBeenCalledWith(
                 'issue/TEST-123/worklog/worklog-1',
-                worklogData,
+                { timeSpent: '2h', comment: 'Updated work done' },
                 { adjustEstimate: 'new', newEstimate: '3h' },
             );
         });
