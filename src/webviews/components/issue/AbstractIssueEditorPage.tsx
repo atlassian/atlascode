@@ -507,15 +507,10 @@ export abstract class AbstractIssueEditorPage<
         }
     }, 100);
 
-    handleFocusEditor = () => {
+    handleEditorFocus = (isFocused: boolean) => {
         this.postMessage({
-            action: 'focusEditor',
-        });
-    };
-
-    handleBlurEditor = () => {
-        this.postMessage({
-            action: 'blurEditor',
+            action: 'handleEditorFocus',
+            isFocused,
         });
     };
 
@@ -621,8 +616,8 @@ export abstract class AbstractIssueEditorPage<
                                         <AtlaskitEditor
                                             defaultValue={this.state.fieldValues[field.key] || ''}
                                             isSaveOnBlur={true}
-                                            onBlur={this.handleBlurEditor}
-                                            onFocus={this.handleFocusEditor}
+                                            onBlur={() => this.handleEditorFocus(false)}
+                                            onFocus={() => this.handleEditorFocus(true)}
                                             onSave={(content) => this.handleInlineEdit(field, content)}
                                             mentionProvider={Promise.resolve(this.getMentionProvider())}
                                         />
@@ -639,8 +634,8 @@ export abstract class AbstractIssueEditorPage<
                                                 this.handleInlineEdit(field, val),
                                             )}
                                             fetchUsers={this.fetchAndTransformUsers}
-                                            onEditorFocus={this.handleFocusEditor}
-                                            onEditorBlur={this.handleBlurEditor}
+                                            onEditorFocus={() => this.handleEditorFocus(true)}
+                                            onEditorBlur={() => this.handleEditorFocus(false)}
                                         />
                                     );
                                 }

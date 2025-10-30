@@ -66,8 +66,7 @@ export interface PullRequestDetailsControllerApi {
     ) => void;
     openJiraIssue: (issue: MinimalIssue<DetailedSiteInfo>) => void;
     openBuildStatus: (buildStatus: BuildStatus) => void;
-    handleFocusEditor: () => void;
-    handleBlurEditor: () => void;
+    handleEditorFocus: (isFocused: boolean) => void;
 }
 
 const emptyApi: PullRequestDetailsControllerApi = {
@@ -102,8 +101,7 @@ const emptyApi: PullRequestDetailsControllerApi = {
 
     openJiraIssue: (issue: MinimalIssue<DetailedSiteInfo>) => {},
     openBuildStatus: (buildStatus: BuildStatus) => {},
-    handleFocusEditor: () => {},
-    handleBlurEditor: () => {},
+    handleEditorFocus: (isFocused: boolean) => {},
 };
 
 export const PullRequestDetailsControllerContext = React.createContext(emptyApi);
@@ -667,14 +665,15 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         [postMessage],
     );
 
-    const handleFocusEditor = useCallback(() => {
-        console.log('++++ fe controller focused');
-        postMessage({ type: PullRequestDetailsActionType.HandleFocusEditor });
-    }, [postMessage]);
-
-    const handleBlurEditor = useCallback(() => {
-        postMessage({ type: PullRequestDetailsActionType.HandleBlurEditor });
-    }, [postMessage]);
+    const handleEditorFocus = useCallback(
+        (isFocused: boolean) => {
+            postMessage({
+                type: PullRequestDetailsActionType.HandleEditorFocus,
+                isFocused: isFocused,
+            });
+        },
+        [postMessage],
+    );
 
     const controllerApi = useMemo<PullRequestDetailsControllerApi>((): PullRequestDetailsControllerApi => {
         return {
@@ -697,8 +696,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             merge: merge,
             openJiraIssue: openJiraIssue,
             openBuildStatus: openBuildStatus,
-            handleFocusEditor: handleFocusEditor,
-            handleBlurEditor: handleBlurEditor,
+            handleEditorFocus: handleEditorFocus,
         };
     }, [
         postMessage,
@@ -720,8 +718,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         merge,
         openJiraIssue,
         openBuildStatus,
-        handleFocusEditor,
-        handleBlurEditor,
+        handleEditorFocus,
     ]);
 
     return [state, controllerApi];

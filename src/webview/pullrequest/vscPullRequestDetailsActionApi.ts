@@ -342,11 +342,7 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         return { tasks: commentsAndTasks.tasks, comments: commentsAndTasks.pageComments };
     }
 
-    handleFocusEditor(): void {
-        Container.setIsEditorFocused(true);
-    }
-
-    handleBlurEditor(): void {
-        Container.setIsEditorFocused(false);
+    handleEditorFocus(isFocused: boolean): void {
+        Container.setIsEditorFocused(isFocused);
     }
 }

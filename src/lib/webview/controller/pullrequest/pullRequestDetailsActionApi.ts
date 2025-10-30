@@ -71,6 +71,5 @@ export interface PullRequestDetailsActionApi {
         task: Task,
     ): Promise<{ tasks: Task[]; comments: Comment[] }>;
     deleteTask(pr: PullRequest, task: Task): Promise<{ tasks: Task[]; comments: Comment[] }>;
-    handleFocusEditor(): void;
-    handleBlurEditor(): void;
+    handleEditorFocus(isFocused: boolean): void;
 }

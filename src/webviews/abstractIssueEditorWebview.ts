@@ -11,7 +11,13 @@ import { ValueType } from '@atlassianlabs/jira-pi-meta-models';
 
 import { showIssue } from '../commands/jira/showIssue';
 import { Container } from '../container';
-import { FetchQueryAction, isCreateSelectOption, isFetchQueryAndSite, isOpenJiraIssue } from '../ipc/issueActions';
+import {
+    FetchQueryAction,
+    isCreateSelectOption,
+    isFetchQueryAndSite,
+    isHandleEditorFocus,
+    isOpenJiraIssue,
+} from '../ipc/issueActions';
 import { isAction } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { AbstractReactWebview } from './abstractWebview';
@@ -177,12 +183,11 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                         }
                         break;
                     }
-                    case 'focusEditor': {
-                        Container.setIsEditorFocused(true);
-                        break;
-                    }
-                    case 'blurEditor': {
-                        Container.setIsEditorFocused(false);
+                    case 'handleEditorFocus': {
+                        if (isHandleEditorFocus(msg)) {
+                            handled = true;
+                            Container.setIsEditorFocused(msg.isFocused);
+                        }
                         break;
                     }
                 }

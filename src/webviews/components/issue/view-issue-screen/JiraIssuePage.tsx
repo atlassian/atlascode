@@ -666,8 +666,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     isAtlaskitEditorEnabled={this.state.isAtlaskitEditorEnabled}
                     onIssueUpdate={this.handleChildIssueUpdate}
                     mentionProvider={this.mentionProvider}
-                    onFocusEditor={this.handleFocusEditor}
-                    onBlurEditor={this.handleBlurEditor}
+                    handleEditorFocus={this.handleEditorFocus}
                 />
                 {this.advancedMain()}
                 {this.state.fields['comment'] && (
@@ -692,8 +691,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             isEditingComment={this.state.isEditingComment}
                             onEditingCommentChange={this.handleCommentEditingChange}
                             mentionProvider={this.mentionProvider}
-                            onFocusEditor={this.handleFocusEditor}
-                            onBlurEditor={this.handleBlurEditor}
+                            handleEditorFocus={this.handleEditorFocus}
                         />
                     </div>
                 )}

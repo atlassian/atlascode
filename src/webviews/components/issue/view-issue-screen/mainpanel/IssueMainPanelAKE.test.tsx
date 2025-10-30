@@ -52,6 +52,7 @@ const mockOnDelete = jest.fn();
 const mockOnFetchIssues = jest.fn();
 const mockFetchUsers = jest.fn();
 const mockFetchImage = jest.fn();
+const mockHandleEditorFocus = jest.fn();
 
 // Helper function to wrap components with EditorStateProvider for testing
 const renderWithEditorProvider = (component: React.ReactElement) => {
@@ -115,6 +116,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
                     fetchImage={mockFetchImage}
                     isAtlaskitEditorEnabled={true}
                     mentionProvider={mockMentionProvider}
+                    handleEditorFocus={mockHandleEditorFocus}
                 />,
             ),
         );
@@ -142,6 +144,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
                     fetchImage={mockFetchImage}
                     isAtlaskitEditorEnabled={true}
                     mentionProvider={mockMentionProvider}
+                    handleEditorFocus={mockHandleEditorFocus}
                 />,
             ),
         );
@@ -179,6 +182,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
                         fetchImage={mockFetchImage}
                         isAtlaskitEditorEnabled={true}
                         mentionProvider={mockMentionProvider}
+                        handleEditorFocus={mockHandleEditorFocus}
                     />,
                 ),
             );
@@ -207,6 +211,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
                         fetchImage={mockFetchImage}
                         isAtlaskitEditorEnabled={true}
                         mentionProvider={mockMentionProvider}
+                        handleEditorFocus={mockHandleEditorFocus}
                     />,
                 ),
             );
@@ -275,6 +280,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
                         fetchImage={mockFetchImage}
                         isAtlaskitEditorEnabled={true}
                         mentionProvider={mockMentionProvider}
+                        handleEditorFocus={mockHandleEditorFocus}
                     />,
                 ),
             );
@@ -303,6 +309,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
                         fetchImage={mockFetchImage}
                         isAtlaskitEditorEnabled={true}
                         mentionProvider={mockMentionProvider}
+                        handleEditorFocus={mockHandleEditorFocus}
                     />,
                 ),
             );
@@ -345,6 +352,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
                         fetchImage={mockFetchImage}
                         isAtlaskitEditorEnabled={true}
                         mentionProvider={mockMentionProvider}
+                        handleEditorFocus={mockHandleEditorFocus}
                     />,
                 ),
             );

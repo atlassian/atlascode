@@ -37,6 +37,7 @@ import {
     isDeleteByIDAction,
     isDeleteWorklog,
     isGetImage,
+    isHandleEditorFocus,
     isIssueComment,
     isIssueDeleteComment,
     isOpenStartWorkPageAction,
@@ -1479,12 +1480,11 @@ export class JiraIssueWebview
                     }
                     break;
                 }
-                case 'focusEditor': {
-                    Container.setIsEditorFocused(true);
-                    break;
-                }
-                case 'blurEditor': {
-                    Container.setIsEditorFocused(false);
+                case 'handleEditorFocus': {
+                    if (isHandleEditorFocus(msg)) {
+                        handled = true;
+                        Container.setIsEditorFocused(msg.isFocused);
+                    }
                     break;
                 }
             }

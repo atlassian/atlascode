@@ -143,8 +143,7 @@ describe('PullRequestDetailsWebviewController', () => {
             createTask: jest.fn(),
             editTask: jest.fn(),
             deleteTask: jest.fn(),
-            handleFocusEditor: jest.fn(),
-            handleBlurEditor: jest.fn(),
+            handleEditorFocus: jest.fn(),
         };
         mockCommonHandler = {
             onMessageReceived: jest.fn(),

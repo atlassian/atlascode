@@ -18,8 +18,8 @@ interface AtlaskitEditorProps extends Omit<Partial<EditorNextProps>, 'onChange' 
     defaultValue?: string;
     onContentChange?: (content: string) => void;
     onChange?: (content: string) => void;
-    onFocus?: () => void;
-    onBlur?: () => void;
+    onFocus: () => void;
+    onBlur: () => void;
     isSaveOnBlur?: boolean;
 }
 
@@ -30,10 +30,10 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
         onSave,
         defaultValue = '',
         onChange,
+        onFocus,
         onBlur,
         onContentChange,
         mentionProvider,
-        onFocus,
         isSaveOnBlur,
     } = props;
 

@@ -43,8 +43,7 @@ type Props = {
     onIssueUpdate?: (issueKey: string, fieldKey: string, newValue: any) => void;
     isAtlaskitEditorEnabled?: boolean;
     mentionProvider: AtlascodeMentionProvider;
-    onFocusEditor?: () => void;
-    onBlurEditor?: () => void;
+    handleEditorFocus: (isFocused: boolean) => void;
 };
 
 const IssueMainPanel: React.FC<Props> = ({
@@ -68,8 +67,7 @@ const IssueMainPanel: React.FC<Props> = ({
     onIssueUpdate,
     isAtlaskitEditorEnabled,
     mentionProvider,
-    onFocusEditor,
-    onBlurEditor,
+    handleEditorFocus,
 }) => {
     const attachments = fields['attachment'] && fieldValues['attachment'] ? fieldValues['attachment'] : undefined;
     const subtasks =
@@ -251,8 +249,8 @@ const IssueMainPanel: React.FC<Props> = ({
                                     setDescriptionText(content);
                                 }}
                                 mentionProvider={Promise.resolve(mentionProvider)}
-                                onFocus={onFocusEditor}
-                                onBlur={onBlurEditor}
+                                onFocus={() => handleEditorFocus(true)}
+                                onBlur={() => handleEditorFocus(false)}
                             />
                         ) : (
                             <JiraIssueTextAreaEditor
@@ -271,8 +269,8 @@ const IssueMainPanel: React.FC<Props> = ({
                                 fetchUsers={fetchUsers}
                                 isDescription
                                 saving={loadingField === 'description'}
-                                onEditorFocus={onFocusEditor}
-                                onEditorBlur={onBlurEditor}
+                                onEditorFocus={() => handleEditorFocus(true)}
+                                onEditorBlur={() => handleEditorFocus(false)}
                             />
                         )
                     ) : (
