@@ -36,6 +36,8 @@ export type IssueCommentComponentProps = {
     onEditingCommentChange: (editing: boolean) => void;
     isAtlaskitEditorEnabled?: boolean;
     mentionProvider: AtlascodeMentionProvider;
+    getMediaAuth?: () => Promise<{ token: string; clientId: string; baseUrl?: string; collectionName?: string }>;
+    issueKey?: string;
 };
 const CommentComponent: React.FC<{
     siteDetails: DetailedSiteInfo;
@@ -47,6 +49,8 @@ const CommentComponent: React.FC<{
     isServiceDeskProject?: boolean;
     isAtlaskitEditorEnabled?: boolean;
     mentionProvider: AtlascodeMentionProvider;
+    getMediaAuth?: () => Promise<{ token: string; clientId: string; baseUrl?: string; collectionName?: string }>;
+    issueKey?: string;
 }> = ({
     siteDetails,
     comment,
@@ -57,6 +61,8 @@ const CommentComponent: React.FC<{
     isServiceDeskProject,
     isAtlaskitEditorEnabled,
     mentionProvider,
+    getMediaAuth,
+    issueKey,
 }) => {
     const { openEditor, closeEditor, isEditorActive } = useEditorState();
     const editorId = `edit-comment-${comment.id}` as const;
@@ -135,6 +141,8 @@ const CommentComponent: React.FC<{
                         isAtlaskitEditorEnabled ? (
                             <AtlaskitEditor
                                 defaultValue={commentText}
+                                getMediaAuth={getMediaAuth}
+                                issueKey={issueKey}
                                 onSave={(content) => {
                                     setIsSaving(true);
                                     closeEditorHandler();
@@ -201,6 +209,8 @@ const AddCommentComponent: React.FC<{
     isEditing: boolean;
     setIsEditing: (editing: boolean) => void;
     mentionProvider: AtlascodeMentionProvider;
+    getMediaAuth?: () => Promise<{ token: string; clientId: string; baseUrl?: string; collectionName?: string }>;
+    issueKey?: string;
 }> = ({
     fetchUsers,
     user,
@@ -212,6 +222,8 @@ const AddCommentComponent: React.FC<{
     isEditing,
     setIsEditing,
     mentionProvider,
+    getMediaAuth,
+    issueKey,
 }) => {
     const { openEditor, closeEditor } = useEditorState();
 
@@ -278,6 +290,8 @@ const AddCommentComponent: React.FC<{
                     <Box sx={{ width: '100%' }}>
                         <AtlaskitEditor
                             defaultValue={commentText}
+                            getMediaAuth={getMediaAuth}
+                            issueKey={issueKey}
                             onSave={(content) => {
                                 if (content && content.trim() !== '') {
                                     onCreate(content, undefined);
@@ -340,6 +354,8 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
     onEditingCommentChange,
     isAtlaskitEditorEnabled,
     mentionProvider,
+    getMediaAuth,
+    issueKey,
 }) => {
     return (
         <Box
@@ -357,6 +373,8 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
                 isEditing={isEditingComment}
                 setIsEditing={onEditingCommentChange}
                 mentionProvider={mentionProvider}
+                getMediaAuth={getMediaAuth}
+                issueKey={issueKey}
             />
             {comments
                 .sort((a, b) => (a.created > b.created ? -1 : 1))
@@ -372,6 +390,8 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
                         isServiceDeskProject={isServiceDeskProject}
                         isAtlaskitEditorEnabled={isAtlaskitEditorEnabled}
                         mentionProvider={mentionProvider}
+                        getMediaAuth={getMediaAuth}
+                        issueKey={issueKey}
                     />
                 ))}
         </Box>

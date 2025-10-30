@@ -1479,6 +1479,57 @@ export class JiraIssueWebview
                     }
                     break;
                 }
+                case 'getMediaAuth': {
+                    handled = true;
+                    try {
+                        const site = (msg as any).site;
+                        const issueKey = (msg as any).issueKey;
+
+                        if (!issueKey) {
+                            throw new Error('Issue key is required for media upload credentials');
+                        }
+
+                        const client = await Container.clientManager.jiraClient(site);
+
+                        // Use Jira's public REST API to get upload credentials for media service
+                        // This endpoint generates an upload token with 20 min TTL, same as Jira Web
+                        const credentialsUrl = `${client.baseUrl}/rest/api/2/attachment/upload/issue/${issueKey}/credentials`;
+
+                        const response = await client.transportFactory().get(credentialsUrl, {
+                            method: 'GET',
+                            headers: {
+                                Authorization: await client.authorizationProvider('GET', credentialsUrl),
+                            },
+                        });
+                        console.log(credentialsUrl, 'credentialsUrl');
+                        console.log('Authorization header:', await client.authorizationProvider('GET', credentialsUrl));
+                        console.log(response, 'response');
+
+                        if (!response || !response.data) {
+                            throw new Error('Failed to get media upload credentials from Jira API');
+                        }
+
+                        const credentials = response.data;
+
+                        // Extract the necessary fields from Jira's response
+                        await this.postMessage({
+                            type: 'mediaAuth',
+                            token: credentials.token || credentials.uploadToken,
+                            clientId: credentials.clientId,
+                            baseUrl: credentials.baseUrl || 'https://api.media.atlassian.com',
+                            collectionName: credentials.collectionName || issueKey,
+                            nonce: (msg as any).nonce,
+                        });
+                    } catch (e) {
+                        Logger.error(e, 'Error getting media upload credentials');
+                        await this.postMessage({
+                            type: 'error',
+                            reason: this.formatErrorReason(e, 'Error getting media upload credentials'),
+                            nonce: (msg as any).nonce,
+                        });
+                    }
+                    break;
+                }
             }
         }
 

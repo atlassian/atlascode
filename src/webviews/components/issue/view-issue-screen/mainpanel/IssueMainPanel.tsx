@@ -43,6 +43,8 @@ type Props = {
     onIssueUpdate?: (issueKey: string, fieldKey: string, newValue: any) => void;
     isAtlaskitEditorEnabled?: boolean;
     mentionProvider: AtlascodeMentionProvider;
+    getMediaAuth?: () => Promise<{ token: string; clientId: string; baseUrl?: string; collectionName?: string }>;
+    issueKey?: string;
 };
 
 const IssueMainPanel: React.FC<Props> = ({
@@ -66,6 +68,8 @@ const IssueMainPanel: React.FC<Props> = ({
     onIssueUpdate,
     isAtlaskitEditorEnabled,
     mentionProvider,
+    getMediaAuth,
+    issueKey,
 }) => {
     const attachments = fields['attachment'] && fieldValues['attachment'] ? fieldValues['attachment'] : undefined;
     const subtasks =
@@ -235,6 +239,8 @@ const IssueMainPanel: React.FC<Props> = ({
                         isAtlaskitEditorEnabled ? (
                             <AtlaskitEditor
                                 defaultValue={descriptionText}
+                                getMediaAuth={getMediaAuth}
+                                issueKey={issueKey}
                                 onSave={(content) => {
                                     handleInlineEdit(fields['description'], content);
                                     closeEditorHandler();
