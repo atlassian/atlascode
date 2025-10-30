@@ -9,6 +9,7 @@
 ### Bug Fixes
 
 - Fix issue with not working team adding functionality
+- Disabled CMD+B hotkey when Jira/Bitbucket editor has focus
 
 ## What's new in 4.0.6
 
