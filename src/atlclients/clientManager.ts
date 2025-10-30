@@ -185,13 +185,7 @@ export class ClientManager implements Disposable {
                         throw new Error('Unable to create the Jira client: auth method unknown');
                     }
 
-                    // Force API v3 - override the client's apiVersion property
-                    // The JiraCloudClient/JiraServerClient constructors don't accept apiVersion,
-                    // but the base JiraClient uses this property to build URLs like /rest/api/{version}/
-                    Logger.info(`[V3] Setting client apiVersion to: 3`);
-                    (client as any).apiVersion = '3';
-
-                    Logger.debug(`${tag}: client created with API version ${client.apiVersion}`);
+                    Logger.debug(`${tag}: client created`);
                     return client;
                 });
             });
