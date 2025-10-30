@@ -1479,6 +1479,14 @@ export class JiraIssueWebview
                     }
                     break;
                 }
+                case 'focusEditor': {
+                    Container.setIsEditorFocused(true);
+                    break;
+                }
+                case 'blurEditor': {
+                    Container.setIsEditorFocused(false);
+                    break;
+                }
             }
         }
 

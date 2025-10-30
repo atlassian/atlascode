@@ -31,6 +31,8 @@ export enum PullRequestDetailsActionType {
     Merge = 'merge',
     OpenJiraIssue = 'openJiraIssue',
     OpenBuildStatus = 'openBuildStatus',
+    HandleFocusEditor = 'handleFocusEditor',
+    HandleBlurEditor = 'handleBlurEditor',
 }
 
 export type PullRequestDetailsAction =
@@ -50,6 +52,8 @@ export type PullRequestDetailsAction =
     | ReducerAction<PullRequestDetailsActionType.Merge, MergeAction>
     | ReducerAction<PullRequestDetailsActionType.OpenJiraIssue, OpenJiraIssueAction>
     | ReducerAction<PullRequestDetailsActionType.OpenBuildStatus, OpenBuildStatusAction>
+    | ReducerAction<PullRequestDetailsActionType.HandleFocusEditor>
+    | ReducerAction<PullRequestDetailsActionType.HandleBlurEditor>
     | CommonAction;
 
 export interface FetchUsersRequestAction {

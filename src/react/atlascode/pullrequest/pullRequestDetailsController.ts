@@ -66,6 +66,8 @@ export interface PullRequestDetailsControllerApi {
     ) => void;
     openJiraIssue: (issue: MinimalIssue<DetailedSiteInfo>) => void;
     openBuildStatus: (buildStatus: BuildStatus) => void;
+    handleFocusEditor: () => void;
+    handleBlurEditor: () => void;
 }
 
 const emptyApi: PullRequestDetailsControllerApi = {
@@ -100,6 +102,8 @@ const emptyApi: PullRequestDetailsControllerApi = {
 
     openJiraIssue: (issue: MinimalIssue<DetailedSiteInfo>) => {},
     openBuildStatus: (buildStatus: BuildStatus) => {},
+    handleFocusEditor: () => {},
+    handleBlurEditor: () => {},
 };
 
 export const PullRequestDetailsControllerContext = React.createContext(emptyApi);
@@ -663,6 +667,15 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         [postMessage],
     );
 
+    const handleFocusEditor = useCallback(() => {
+        console.log('++++ fe controller focused');
+        postMessage({ type: PullRequestDetailsActionType.HandleFocusEditor });
+    }, [postMessage]);
+
+    const handleBlurEditor = useCallback(() => {
+        postMessage({ type: PullRequestDetailsActionType.HandleBlurEditor });
+    }, [postMessage]);
+
     const controllerApi = useMemo<PullRequestDetailsControllerApi>((): PullRequestDetailsControllerApi => {
         return {
             postMessage: postMessage,
@@ -684,6 +697,8 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             merge: merge,
             openJiraIssue: openJiraIssue,
             openBuildStatus: openBuildStatus,
+            handleFocusEditor: handleFocusEditor,
+            handleBlurEditor: handleBlurEditor,
         };
     }, [
         postMessage,
@@ -705,6 +720,8 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         merge,
         openJiraIssue,
         openBuildStatus,
+        handleFocusEditor,
+        handleBlurEditor,
     ]);
 
     return [state, controllerApi];

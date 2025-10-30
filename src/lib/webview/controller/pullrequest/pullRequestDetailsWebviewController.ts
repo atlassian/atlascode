@@ -554,6 +554,13 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 }
                 break;
 
+            case PullRequestDetailsActionType.HandleFocusEditor:
+                this.api.handleFocusEditor();
+                break;
+            case PullRequestDetailsActionType.HandleBlurEditor:
+                this.api.handleBlurEditor();
+                break;
+
             case CommonActionType.SendAnalytics:
             case CommonActionType.CopyLink:
             case CommonActionType.OpenJiraIssue:

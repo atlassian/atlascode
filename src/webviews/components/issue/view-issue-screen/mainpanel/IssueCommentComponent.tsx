@@ -36,6 +36,8 @@ export type IssueCommentComponentProps = {
     onEditingCommentChange: (editing: boolean) => void;
     isAtlaskitEditorEnabled?: boolean;
     mentionProvider: AtlascodeMentionProvider;
+    onFocusEditor?: () => void;
+    onBlurEditor?: () => void;
 };
 const CommentComponent: React.FC<{
     siteDetails: DetailedSiteInfo;
@@ -47,6 +49,8 @@ const CommentComponent: React.FC<{
     isServiceDeskProject?: boolean;
     isAtlaskitEditorEnabled?: boolean;
     mentionProvider: AtlascodeMentionProvider;
+    onFocusEditor?: () => void;
+    onBlurEditor?: () => void;
 }> = ({
     siteDetails,
     comment,
@@ -57,6 +61,8 @@ const CommentComponent: React.FC<{
     isServiceDeskProject,
     isAtlaskitEditorEnabled,
     mentionProvider,
+    onFocusEditor,
+    onBlurEditor,
 }) => {
     const { openEditor, closeEditor, isEditorActive } = useEditorState();
     const editorId = `edit-comment-${comment.id}` as const;
@@ -149,6 +155,8 @@ const CommentComponent: React.FC<{
                                     setCommentText(content);
                                 }}
                                 mentionProvider={Promise.resolve(mentionProvider)}
+                                onFocus={onFocusEditor}
+                                onBlur={onBlurEditor}
                             />
                         ) : (
                             <JiraIssueTextAreaEditor
@@ -173,6 +181,8 @@ const CommentComponent: React.FC<{
                                 }}
                                 fetchUsers={fetchUsers}
                                 isServiceDeskProject={isServiceDeskProject}
+                                onEditorFocus={onFocusEditor}
+                                onEditorBlur={onBlurEditor}
                             />
                         )
                     ) : isAtlaskitEditorEnabled ? (
@@ -201,6 +211,8 @@ const AddCommentComponent: React.FC<{
     isEditing: boolean;
     setIsEditing: (editing: boolean) => void;
     mentionProvider: AtlascodeMentionProvider;
+    onFocusEditor?: () => void;
+    onBlurEditor?: () => void;
 }> = ({
     fetchUsers,
     user,
@@ -212,6 +224,8 @@ const AddCommentComponent: React.FC<{
     isEditing,
     setIsEditing,
     mentionProvider,
+    onFocusEditor,
+    onBlurEditor,
 }) => {
     const { openEditor, closeEditor } = useEditorState();
 
@@ -293,6 +307,8 @@ const AddCommentComponent: React.FC<{
                                 setCommentText(content);
                             }}
                             mentionProvider={Promise.resolve(mentionProvider)}
+                            onFocus={onFocusEditor}
+                            onBlur={onBlurEditor}
                         />
                     </Box>
                 ) : (
@@ -315,7 +331,11 @@ const AddCommentComponent: React.FC<{
                             setCommentText('');
                             closeEditorHandler();
                         }}
-                        onEditorFocus={openEditorHandler}
+                        onEditorFocus={() => {
+                            openEditorHandler();
+                            onFocusEditor && onFocusEditor();
+                        }}
+                        onEditorBlur={onBlurEditor}
                         fetchUsers={fetchUsers}
                         isServiceDeskProject={isServiceDeskProject}
                     />
@@ -340,6 +360,8 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
     onEditingCommentChange,
     isAtlaskitEditorEnabled,
     mentionProvider,
+    onFocusEditor,
+    onBlurEditor,
 }) => {
     return (
         <Box
@@ -357,6 +379,8 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
                 isEditing={isEditingComment}
                 setIsEditing={onEditingCommentChange}
                 mentionProvider={mentionProvider}
+                onFocusEditor={onFocusEditor}
+                onBlurEditor={onBlurEditor}
             />
             {comments
                 .sort((a, b) => (a.created > b.created ? -1 : 1))
@@ -372,6 +396,8 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
                         isServiceDeskProject={isServiceDeskProject}
                         isAtlaskitEditorEnabled={isAtlaskitEditorEnabled}
                         mentionProvider={mentionProvider}
+                        onFocusEditor={onFocusEditor}
+                        onBlurEditor={onBlurEditor}
                     />
                 ))}
         </Box>

@@ -93,6 +93,8 @@ export const PullRequestMainContent: React.FC<PullRequestMainContentProps> = ({
                                     currentUser={state.currentUser}
                                     fetchUsers={handleFetchUsers}
                                     onSave={controller.postComment}
+                                    onFocusEditor={controller.handleFocusEditor}
+                                    onBlurEditor={controller.handleBlurEditor}
                                 />
                             </Grid>
                         </Grid>

@@ -177,6 +177,14 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                         }
                         break;
                     }
+                    case 'focusEditor': {
+                        Container.setIsEditorFocused(true);
+                        break;
+                    }
+                    case 'blurEditor': {
+                        Container.setIsEditorFocused(false);
+                        break;
+                    }
                 }
             }
         }
