@@ -3,7 +3,7 @@ import Tooltip from '@atlaskit/tooltip';
 import WidthObserver from '@atlaskit/width-detector';
 import { CommentVisibility, IssueType, MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, InputFieldUI, SelectFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
-import { Box } from '@mui/material';
+import { Box, Tab, Tabs } from '@mui/material';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import * as React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
@@ -12,6 +12,7 @@ import { v4 } from 'uuid';
 import { AnalyticsView } from '../../../../analyticsTypes';
 import { EditIssueAction, IssueCommentAction } from '../../../../ipc/issueActions';
 import { EditIssueData, emptyEditIssueData, isIssueCreated } from '../../../../ipc/issueMessaging';
+import { IssueHistoryItem } from '../../../../ipc/issueMessaging';
 import { LegacyPMFData } from '../../../../ipc/messaging';
 import { AtlascodeErrorBoundary } from '../../../../react/atlascode/common/ErrorBoundary';
 import { readFilesContentAsync } from '../../../../util/files';
@@ -33,6 +34,7 @@ import NavItem from '../NavItem';
 import PullRequests from '../PullRequests';
 import { EditorStateProvider } from './EditorStateContext';
 import { IssueCommentComponent } from './mainpanel/IssueCommentComponent';
+import { IssueHistory } from './mainpanel/IssueHistory';
 import IssueMainPanel from './mainpanel/IssueMainPanel';
 import { IssueSidebarButtonGroup } from './sidebar/IssueSidebarButtonGroup';
 import { IssueSidebarCollapsible, SidebarItem } from './sidebar/IssueSidebarCollapsible';
@@ -48,6 +50,9 @@ export interface ViewState extends CommonEditorViewState, EditIssueData {
     hierarchyLoading: boolean;
     hierarchy: MinimalIssue<DetailedSiteInfo>[];
     containerWidth?: number;
+    commentsTabIndex: number;
+    history: IssueHistoryItem[];
+    historyLoading: boolean;
 }
 
 const emptyState: ViewState = {
@@ -59,6 +64,9 @@ const emptyState: ViewState = {
     isEditingComment: false,
     hierarchyLoading: false,
     hierarchy: [],
+    commentsTabIndex: 0,
+    history: [],
+    historyLoading: false,
 };
 
 export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
@@ -136,6 +144,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 }
                 case 'hierarchyLoading': {
                     this.setState({ hierarchy: e.hierarchy, hierarchyLoading: true });
+                    break;
+                }
+                case 'historyUpdate': {
+                    this.setState({ history: e.history, historyLoading: false });
                     break;
                 }
             }
@@ -418,6 +430,17 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
     };
 
+    private handleCommentsTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+        this.setState({ commentsTabIndex: newValue });
+        if (newValue === 1 && this.state.history.length === 0 && !this.state.historyLoading) {
+            this.setState({ historyLoading: true });
+            this.postMessage({
+                action: 'fetchIssueHistory',
+                issueKey: this.state.key,
+            });
+        }
+    };
+
     handleStatusChange = (transition: Transition) => {
         this.setState({ isSomethingLoading: true, loadingField: 'status' });
         this.postMessage({
@@ -670,27 +693,53 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 {this.advancedMain()}
                 {this.state.fields['comment'] && (
                     <div className="ac-vpadding">
-                        <label className="ac-field-label">Comments</label>
-                        <IssueCommentComponent
-                            comments={this.state.fieldValues['comment'].comments}
-                            currentUser={this.state.currentUser}
-                            siteDetails={this.state.siteDetails}
-                            onCreate={this.handleCreateComment}
-                            onSave={this.handleUpdateComment}
-                            fetchUsers={this.fetchAndTransformUsers}
-                            fetchImage={(img) => this.fetchImage(img)}
-                            onDelete={this.handleDeleteComment}
-                            isServiceDeskProject={
-                                this.state.fieldValues['project'] &&
-                                this.state.fieldValues['project'].projectTypeKey === 'service_desk'
-                            }
-                            isAtlaskitEditorEnabled={this.state.isAtlaskitEditorEnabled}
-                            commentText={this.state.commentText}
-                            onCommentTextChange={this.handleCommentTextChange}
-                            isEditingComment={this.state.isEditingComment}
-                            onEditingCommentChange={this.handleCommentEditingChange}
-                            mentionProvider={this.mentionProvider}
-                        />
+                        <Tabs
+                            value={this.state.commentsTabIndex}
+                            onChange={this.handleCommentsTabChange}
+                            aria-label="Issue activity tabs"
+                            indicatorColor="primary"
+                            variant="scrollable"
+                            scrollButtons
+                            allowScrollButtonsMobile
+                        >
+                            <Tab label="Comments" id="issue-tab-comments" aria-controls="issue-tabpanel-comments" />
+                            <Tab label="History" id="issue-tab-history" aria-controls="issue-tabpanel-history" />
+                        </Tabs>
+
+                        {this.state.commentsTabIndex === 0 && (
+                            <div role="tabpanel" id="issue-tabpanel-comments" aria-labelledby="issue-tab-comments">
+                                <IssueCommentComponent
+                                    comments={this.state.fieldValues['comment'].comments}
+                                    currentUser={this.state.currentUser}
+                                    siteDetails={this.state.siteDetails}
+                                    onCreate={this.handleCreateComment}
+                                    onSave={this.handleUpdateComment}
+                                    fetchUsers={this.fetchAndTransformUsers}
+                                    fetchImage={(img) => this.fetchImage(img)}
+                                    onDelete={this.handleDeleteComment}
+                                    isServiceDeskProject={
+                                        this.state.fieldValues['project'] &&
+                                        this.state.fieldValues['project'].projectTypeKey === 'service_desk'
+                                    }
+                                    isAtlaskitEditorEnabled={this.state.isAtlaskitEditorEnabled}
+                                    commentText={this.state.commentText}
+                                    onCommentTextChange={this.handleCommentTextChange}
+                                    isEditingComment={this.state.isEditingComment}
+                                    onEditingCommentChange={this.handleCommentEditingChange}
+                                    mentionProvider={this.mentionProvider}
+                                />
+                            </div>
+                        )}
+
+                        {this.state.commentsTabIndex === 1 && (
+                            <div role="tabpanel" id="issue-tabpanel-history" aria-labelledby="issue-tab-history">
+                                <IssueHistory
+                                    history={this.state.history}
+                                    historyLoading={this.state.historyLoading}
+                                    siteDetails={this.state.siteDetails}
+                                />
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -824,6 +873,13 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
     override componentDidMount() {
         this.postMessage({ action: 'getFeatureFlags' });
+        if (this.state.commentsTabIndex === 1) {
+            this.setState({ historyLoading: true });
+            this.postMessage({
+                action: 'fetchIssueHistory',
+                issueKey: this.state.key,
+            });
+        }
     }
 
     public override render() {

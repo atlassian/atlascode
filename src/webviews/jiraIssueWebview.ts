@@ -1479,6 +1479,63 @@ export class JiraIssueWebview
                     }
                     break;
                 }
+                case 'fetchIssueHistory': {
+                    handled = true;
+                    try {
+                        const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+                        const apiVersion = client.apiVersion || '2';
+                        const baseApiUrl = this._issue.siteDetails.baseApiUrl.replace(/\/rest$/, '');
+                        const historyUrl = `${baseApiUrl}/rest/api/${apiVersion}/issue/${this._issue.key}?expand=changelog`;
+
+                        const response = await client.transportFactory().get(historyUrl, {
+                            method: 'GET',
+                            headers: {
+                                Authorization: await client.authorizationProvider('GET', historyUrl),
+                            },
+                        });
+
+                        const historyItems: any[] = [];
+                        const changelog = response.data.changelog;
+
+                        if (changelog && changelog.histories) {
+                            changelog.histories.forEach((history: any) => {
+                                history.items.forEach((item: any) => {
+                                    historyItems.push({
+                                        id: `${history.id}-${item.fieldId || item.field}`,
+                                        timestamp: history.created,
+                                        author: {
+                                            displayName: history.author.displayName || history.author.name,
+                                            accountId: history.author.accountId,
+                                            avatarUrl:
+                                                history.author.avatarUrls?.['48x48'] ||
+                                                history.author.avatarUrls?.['32x32'],
+                                        },
+                                        field: item.fieldId || item.field,
+                                        fieldDisplayName: item.field,
+                                        from: item.from,
+                                        to: item.to,
+                                        fromString: item.fromString,
+                                        toString: item.toString,
+                                    });
+                                });
+                            });
+                        }
+
+                        historyItems.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+                        this.postMessage({
+                            type: 'historyUpdate',
+                            history: historyItems,
+                        });
+                    } catch (e) {
+                        Logger.error(e, 'Error fetching issue history');
+                        this.postMessage({
+                            type: 'historyUpdate',
+                            history: [],
+                        });
+                    }
+                    break;
+                }
             }
         }
 

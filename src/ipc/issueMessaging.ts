@@ -100,3 +100,24 @@ export function isStartWorkOnIssueData(m: Message): m is StartWorkOnIssueData {
 export function isStartWorkOnIssueResult(m: Message): m is StartWorkOnIssueResult {
     return (<StartWorkOnIssueResult>m).type === 'startWorkOnIssueResult';
 }
+
+export interface IssueHistoryItem {
+    id: string;
+    timestamp: string;
+    author: {
+        displayName: string;
+        accountId?: string;
+        avatarUrl?: string;
+    };
+    field: string;
+    fieldDisplayName: string;
+    from?: string | null;
+    to?: string | null;
+    fromString?: string;
+    toString?: string;
+}
+
+export interface IssueHistoryUpdate extends Message {
+    type: 'historyUpdate';
+    history: IssueHistoryItem[];
+}

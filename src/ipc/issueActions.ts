@@ -194,6 +194,11 @@ export interface GetImageAction extends Action {
     url: string;
 }
 
+export interface FetchIssueHistoryAction extends Action {
+    action: 'fetchIssueHistory';
+    issueKey: string;
+}
+
 export interface UpdateAiSettingsAction extends Action {
     action: 'updateAiSettings';
     newState: IssueSuggestionSettings;
