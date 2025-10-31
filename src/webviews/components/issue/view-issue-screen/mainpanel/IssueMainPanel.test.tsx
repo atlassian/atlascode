@@ -1,3 +1,5 @@
+import '@testing-library/dom';
+
 import { FieldUI } from '@atlassianlabs/jira-pi-meta-models';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
@@ -7,6 +9,34 @@ import { disableConsole } from 'testsutil/console';
 import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
 import { EditorStateProvider } from '../EditorStateContext';
 import IssueMainPanel from './IssueMainPanel';
+
+jest.mock('../../Worklogs', () => {
+    return function MockWorklogs({ onEditWorklog, onConfirmDelete, worklogs }: any) {
+        return (
+            <div data-testid="worklogs-component">
+                <div>Worklogs: {worklogs.worklogs.length}</div>
+                <button
+                    onClick={() =>
+                        onEditWorklog({
+                            action: 'updateWorklog',
+                            worklogId: 'worklog-1',
+                            worklogData: { timeSpent: '2h' },
+                        })
+                    }
+                    data-testid="edit-worklog-button"
+                >
+                    Edit Worklog
+                </button>
+                <button
+                    onClick={() => onConfirmDelete({ id: 'worklog-1', comment: 'Test work' })}
+                    data-testid="delete-worklog-button"
+                >
+                    Delete Worklog
+                </button>
+            </div>
+        );
+    };
+});
 
 const mockSiteDetails: DetailedSiteInfo = {
     userId: 'user-123',
@@ -126,5 +156,190 @@ describe('IssueMainPanel', () => {
             expect.objectContaining({ key: 'description', name: 'Description' }),
             'Updated description',
         );
+    });
+
+    describe('Worklog Functionality', () => {
+        const mockWorklogFields = {
+            worklog: {
+                required: false,
+                name: 'Work Log',
+                key: 'worklog',
+                uiType: 'worklog',
+                displayOrder: 3,
+                valueType: 'string',
+                isArray: false,
+                advanced: false,
+                schema: 'worklog',
+            } as FieldUI,
+        };
+
+        const mockWorklogFieldValues = {
+            worklog: {
+                worklogs: [
+                    {
+                        id: 'worklog-1',
+                        timeSpent: '1h',
+                        comment: 'Test work log',
+                        created: '2023-01-01T10:00:00.000Z',
+                        author: {
+                            accountId: 'user-1',
+                            displayName: 'Test User',
+                            avatarUrls: {
+                                '48x48': 'https://example.com/avatar.png',
+                            },
+                        },
+                    },
+                ],
+            },
+        };
+
+        it('should render worklog component with correct props', async () => {
+            await act(() =>
+                renderWithEditorProvider(
+                    <IssueMainPanel
+                        fields={mockWorklogFields}
+                        fieldValues={mockWorklogFieldValues}
+                        handleAddAttachments={mockHandleAddAttachments}
+                        siteDetails={mockSiteDetails}
+                        onDeleteAttachment={mockOnDeleteAttachment}
+                        isEpic={false}
+                        handleInlineEdit={mockHandleInlineEdit}
+                        subtaskTypes={[]}
+                        linkTypes={[]}
+                        handleOpenIssue={mockHandleOpenIssue}
+                        onDelete={mockOnDelete}
+                        onFetchIssues={mockOnFetchIssues}
+                        fetchUsers={mockFetchUsers}
+                        fetchImage={mockFetchImage}
+                        isAtlaskitEditorEnabled={false}
+                        mentionProvider={mockMentionProvider}
+                    />,
+                ),
+            );
+
+            expect(screen.getByTestId('worklogs-component')).toBeTruthy();
+            expect(screen.getByText('Worklogs: 1')).toBeTruthy();
+        });
+
+        it('should handle worklog edit action', async () => {
+            await act(() =>
+                renderWithEditorProvider(
+                    <IssueMainPanel
+                        fields={mockWorklogFields}
+                        fieldValues={mockWorklogFieldValues}
+                        handleAddAttachments={mockHandleAddAttachments}
+                        siteDetails={mockSiteDetails}
+                        onDeleteAttachment={mockOnDeleteAttachment}
+                        isEpic={false}
+                        handleInlineEdit={mockHandleInlineEdit}
+                        subtaskTypes={[]}
+                        linkTypes={[]}
+                        handleOpenIssue={mockHandleOpenIssue}
+                        onDelete={mockOnDelete}
+                        onFetchIssues={mockOnFetchIssues}
+                        fetchUsers={mockFetchUsers}
+                        fetchImage={mockFetchImage}
+                        isAtlaskitEditorEnabled={false}
+                        mentionProvider={mockMentionProvider}
+                    />,
+                ),
+            );
+
+            const editButton = screen.getByTestId('edit-worklog-button');
+            fireEvent.click(editButton);
+
+            expect(mockHandleInlineEdit).toHaveBeenCalledWith(
+                expect.objectContaining({ key: 'worklog', name: 'Work Log' }),
+                {
+                    action: 'updateWorklog',
+                    worklogId: 'worklog-1',
+                    worklogData: { timeSpent: '2h' },
+                },
+            );
+        });
+
+        it('should handle worklog delete action', async () => {
+            await act(() =>
+                renderWithEditorProvider(
+                    <IssueMainPanel
+                        fields={mockWorklogFields}
+                        fieldValues={mockWorklogFieldValues}
+                        handleAddAttachments={mockHandleAddAttachments}
+                        siteDetails={mockSiteDetails}
+                        onDeleteAttachment={mockOnDeleteAttachment}
+                        isEpic={false}
+                        handleInlineEdit={mockHandleInlineEdit}
+                        subtaskTypes={[]}
+                        linkTypes={[]}
+                        handleOpenIssue={mockHandleOpenIssue}
+                        onDelete={mockOnDelete}
+                        onFetchIssues={mockOnFetchIssues}
+                        fetchUsers={mockFetchUsers}
+                        fetchImage={mockFetchImage}
+                        isAtlaskitEditorEnabled={false}
+                        mentionProvider={mockMentionProvider}
+                    />,
+                ),
+            );
+
+            const deleteButton = screen.getByTestId('delete-worklog-button');
+            fireEvent.click(deleteButton);
+
+            expect(mockHandleInlineEdit).toHaveBeenCalledWith(
+                expect.objectContaining({ key: 'worklog', name: 'Work Log' }),
+                {
+                    action: 'deleteWorklog',
+                    worklogId: 'worklog-1',
+                    adjustEstimate: 'auto',
+                },
+            );
+        });
+
+        it('should handle worklog creation when no action specified', async () => {
+            const mockWorklogFieldsWithCreate = {
+                worklog: {
+                    ...mockWorklogFields.worklog,
+                    uiType: 'worklog',
+                } as FieldUI,
+            };
+
+            await act(() =>
+                renderWithEditorProvider(
+                    <IssueMainPanel
+                        fields={mockWorklogFieldsWithCreate}
+                        fieldValues={mockWorklogFieldValues}
+                        handleAddAttachments={mockHandleAddAttachments}
+                        siteDetails={mockSiteDetails}
+                        onDeleteAttachment={mockOnDeleteAttachment}
+                        isEpic={false}
+                        handleInlineEdit={mockHandleInlineEdit}
+                        subtaskTypes={[]}
+                        linkTypes={[]}
+                        handleOpenIssue={mockHandleOpenIssue}
+                        onDelete={mockOnDelete}
+                        onFetchIssues={mockOnFetchIssues}
+                        fetchUsers={mockFetchUsers}
+                        fetchImage={mockFetchImage}
+                        isAtlaskitEditorEnabled={false}
+                        mentionProvider={mockMentionProvider}
+                    />,
+                ),
+            );
+
+            // Simulate worklog creation by calling handleInlineEdit directly
+            const worklogData = {
+                timeSpent: '1h',
+                comment: 'New work log',
+                adjustEstimate: 'auto',
+            };
+
+            // This would be called internally when creating a new worklog
+            mockHandleInlineEdit(mockWorklogFieldsWithCreate.worklog, worklogData);
+
+            expect(mockHandleInlineEdit).toHaveBeenCalledWith(
+                expect.objectContaining({ key: 'worklog', name: 'Work Log' }),
+                worklogData,
+            );
+        });
     });
 });

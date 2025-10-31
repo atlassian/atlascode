@@ -835,6 +835,10 @@ section button span {
     background-color: var(--vscode-editor-background--darken-05);
 }
 
+.ac-worklog-inline-dialog > div {
+    background: transparent !important;
+}
+
 .ac-inline-items-container {
     width: 100%;
 }

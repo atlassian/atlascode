@@ -252,12 +252,32 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             }
             case UIType.Worklog: {
                 this.setState({ isSomethingLoading: true, loadingField: field.key });
-                this.postMessage({
-                    action: 'createWorklog',
-                    site: this.state.siteDetails,
-                    worklogData: newValue,
-                    issueKey: this.state.key,
-                });
+
+                if (newValue.action === 'updateWorklog') {
+                    this.postMessage({
+                        action: 'updateWorklog',
+                        site: this.state.siteDetails,
+                        issueKey: this.state.key,
+                        worklogId: newValue.worklogId,
+                        worklogData: newValue.worklogData,
+                    });
+                } else if (newValue.action === 'deleteWorklog') {
+                    this.postMessage({
+                        action: 'deleteWorklog',
+                        site: this.state.siteDetails,
+                        issueKey: this.state.key,
+                        worklogId: newValue.worklogId,
+                        adjustEstimate: newValue.adjustEstimate,
+                        newEstimate: newValue.newEstimate,
+                    });
+                } else {
+                    this.postMessage({
+                        action: 'createWorklog',
+                        site: this.state.siteDetails,
+                        worklogData: newValue,
+                        issueKey: this.state.key,
+                    });
+                }
                 break;
             }
 

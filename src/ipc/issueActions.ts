@@ -149,6 +149,23 @@ export interface CreateWorklogAction extends Action {
     worklogData: WorklogData;
 }
 
+export interface UpdateWorklogAction extends Action {
+    action: 'updateWorklog';
+    site: DetailedSiteInfo;
+    issueKey: string;
+    worklogId: string;
+    worklogData: WorklogData;
+}
+
+export interface DeleteWorklogAction extends Action {
+    action: 'deleteWorklog';
+    site: DetailedSiteInfo;
+    issueKey: string;
+    worklogId: string;
+    adjustEstimate?: string;
+    newEstimate?: string;
+}
+
 export interface UpdateWatcherAction extends Action {
     site: DetailedSiteInfo;
     issueKey: string;
@@ -248,6 +265,25 @@ export function isCreateWorklog(a: Action): a is CreateWorklogAction {
         (<CreateWorklogAction>a).worklogData !== undefined &&
         (<CreateWorklogAction>a).site !== undefined &&
         (<CreateWorklogAction>a).issueKey !== undefined
+    );
+}
+
+export function isUpdateWorklog(a: Action): a is UpdateWorklogAction {
+    return (
+        a &&
+        (<UpdateWorklogAction>a).worklogData !== undefined &&
+        (<UpdateWorklogAction>a).site !== undefined &&
+        (<UpdateWorklogAction>a).issueKey !== undefined &&
+        (<UpdateWorklogAction>a).worklogId !== undefined
+    );
+}
+
+export function isDeleteWorklog(a: Action): a is DeleteWorklogAction {
+    return (
+        a &&
+        (<DeleteWorklogAction>a).site !== undefined &&
+        (<DeleteWorklogAction>a).issueKey !== undefined &&
+        (<DeleteWorklogAction>a).worklogId !== undefined
     );
 }
 
