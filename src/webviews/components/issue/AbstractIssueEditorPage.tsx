@@ -925,6 +925,8 @@ export abstract class AbstractIssueEditorPage<
                     );
                 } else {
                     const validateFunc = field.required ? FieldValidators.validateSingleSelect : undefined;
+                    const defaultLinkType = this.state.fieldValues[field.key]?.type || undefined;
+
                     return (
                         <React.Fragment>
                             <Field
@@ -944,6 +946,8 @@ export abstract class AbstractIssueEditorPage<
                                         <div>
                                             <Select
                                                 {...fieldArgs.fieldProps}
+                                                key={`${field.key}.type-${defaultLinkType?.id || 'empty'}`}
+                                                defaultValue={defaultLinkType}
                                                 isMulti={false}
                                                 isClearable={!field.required}
                                                 className="ac-form-select-container"
@@ -978,9 +982,14 @@ export abstract class AbstractIssueEditorPage<
                             </Field>
                             <Field id={`${field.key}.issue`} name={`${field.key}.issue`}>
                                 {(fieldArgs: any) => {
+                                    const defaultLinkedIssues = this.state.fieldValues[field.key]?.issue || undefined;
+                                    const linkedIssuesKey = `${field.key}.issue-${JSON.stringify(defaultLinkedIssues || [])}`;
+
                                     return (
                                         <AsyncSelect
                                             {...fieldArgs.fieldProps}
+                                            key={linkedIssuesKey}
+                                            defaultValue={defaultLinkedIssues}
                                             isClearable={true}
                                             isMulti={true}
                                             className="ac-form-select-container"
