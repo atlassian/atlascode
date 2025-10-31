@@ -184,6 +184,7 @@ export class ClientManager implements Disposable {
                     } else {
                         throw new Error('Unable to create the Jira client: auth method unknown');
                     }
+
                     Logger.debug(`${tag}: client created`);
                     return client;
                 });
