@@ -341,4 +341,8 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         const commentsAndTasks = await this.getTasks(pr, comments, []);
         return { tasks: commentsAndTasks.tasks, comments: commentsAndTasks.pageComments };
     }
+
+    handleEditorFocus(isFocused: boolean): void {
+        Container.setIsEditorFocused(isFocused);
+    }
 }

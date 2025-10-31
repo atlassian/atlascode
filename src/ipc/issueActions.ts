@@ -215,6 +215,11 @@ export interface AiSuggeestionFeedbackAction extends Action {
     };
 }
 
+export interface HandleEditorFocusAction extends Action {
+    action: 'handleEditorFocus';
+    isFocused: boolean;
+}
+
 export function isGetImage(a: Action): a is GetImageAction {
     return (<GetImageAction>a).action === 'getImage';
 }
@@ -364,4 +369,8 @@ export function isAiSuggestionFeedback(a: Action): a is AiSuggeestionFeedbackAct
         (<AiSuggeestionFeedbackAction>a).isPositive !== undefined &&
         (<AiSuggeestionFeedbackAction>a).todoData !== undefined
     );
+}
+
+export function isHandleEditorFocus(a: Action): a is HandleEditorFocusAction {
+    return a && a.action === 'handleEditorFocus';
 }

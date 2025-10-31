@@ -416,6 +416,10 @@ export class Container {
         this._assignedWorkItemsView.focus();
     }
 
+    static setIsEditorFocused(isFocused: boolean) {
+        setCommandContext(CommandContext.IsEditorFocused, isFocused);
+    }
+
     static openPullRequestHandler = (pullRequestUrl: string) => {
         return openPullRequest(this._bitbucketHelper, pullRequestUrl);
     };

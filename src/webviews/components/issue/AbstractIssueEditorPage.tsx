@@ -507,6 +507,13 @@ export abstract class AbstractIssueEditorPage<
         }
     }, 100);
 
+    handleEditorFocus = (isFocused: boolean) => {
+        this.postMessage({
+            action: 'handleEditorFocus',
+            isFocused,
+        });
+    };
+
     protected getInputMarkup(
         field: FieldUI,
         editmode: boolean = false,
@@ -608,9 +615,10 @@ export abstract class AbstractIssueEditorPage<
                                     markup = this.state.isAtlaskitEditorEnabled ? (
                                         <AtlaskitEditor
                                             defaultValue={this.state.fieldValues[field.key] || ''}
-                                            onBlur={(content: string) => {
-                                                this.handleInlineEdit(field, content);
-                                            }}
+                                            isSaveOnBlur={true}
+                                            onBlur={() => this.handleEditorFocus(false)}
+                                            onFocus={() => this.handleEditorFocus(true)}
+                                            onSave={(content) => this.handleInlineEdit(field, content)}
                                             mentionProvider={Promise.resolve(this.getMentionProvider())}
                                         />
                                     ) : (
@@ -626,6 +634,8 @@ export abstract class AbstractIssueEditorPage<
                                                 this.handleInlineEdit(field, val),
                                             )}
                                             fetchUsers={this.fetchAndTransformUsers}
+                                            onEditorFocus={() => this.handleEditorFocus(true)}
+                                            onEditorBlur={() => this.handleEditorFocus(false)}
                                         />
                                     );
                                 }

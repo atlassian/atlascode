@@ -37,6 +37,7 @@ import {
     isDeleteByIDAction,
     isDeleteWorklog,
     isGetImage,
+    isHandleEditorFocus,
     isIssueComment,
     isIssueDeleteComment,
     isOpenStartWorkPageAction,
@@ -1476,6 +1477,13 @@ export class JiraIssueWebview
                                 nonce: msg.nonce,
                             });
                         }
+                    }
+                    break;
+                }
+                case 'handleEditorFocus': {
+                    if (isHandleEditorFocus(msg)) {
+                        handled = true;
+                        Container.setIsEditorFocused(msg.isFocused);
                     }
                     break;
                 }

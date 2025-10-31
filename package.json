@@ -93,6 +93,12 @@
                 "key": "ctrl+alt+a",
                 "when": "editorTextFocus",
                 "mac": "cmd+alt+a"
+            },
+            {
+                "command": "",
+                "key": "ctrl+b",
+                "when": "atlascode:isEditorFocused",
+                "mac": "cmd+b"
             }
         ],
         "commands": [
