@@ -91,6 +91,13 @@ export interface ScreensForSiteAction extends Action {
     site: DetailedSiteInfo;
 }
 
+export interface LoadMoreProjectsAction extends Action {
+    action: 'loadMoreProjects';
+    maxResults?: number;
+    startAt?: number;
+    query?: string;
+}
+
 export interface CreateSelectOptionAction extends Action {
     fieldKey: string;
     siteDetails: DetailedSiteInfo;
@@ -254,6 +261,10 @@ export function isScreensForProjects(a: Action): a is ScreensForProjectsAction {
 
 export function isScreensForSite(a: Action): a is ScreensForSiteAction {
     return (<ScreensForSiteAction>a).site !== undefined;
+}
+
+export function isLoadMoreProjects(a: Action): a is LoadMoreProjectsAction {
+    return a && a.action === 'loadMoreProjects';
 }
 
 export function isCreateSelectOption(a: Action): a is CreateSelectOptionAction {

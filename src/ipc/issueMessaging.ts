@@ -39,6 +39,12 @@ export interface CreateIssueData extends Message {}
 export interface CreateIssueData extends IssueTypeUI<DetailedSiteInfo> {
     currentUser: User;
     transformerProblems: CreateMetaTransformerProblems;
+    projectPagination?: {
+        total: number;
+        loaded: number;
+        hasMore: boolean;
+        isLoadingMore: boolean;
+    };
 }
 
 export const emptyCreateIssueData: CreateIssueData = {
