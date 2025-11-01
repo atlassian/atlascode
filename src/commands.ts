@@ -25,6 +25,7 @@ import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } 
 import { Logger } from './logger';
 import { runQuickAuth } from './onboarding/quickFlow';
 import { AuthenticationType } from './onboarding/quickFlow/authentication/types';
+import { StartWorkQuickFlow } from './onboarding/quickFlow/startWork';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevContextItem } from './rovo-dev/rovoDevTypes';
 import { openRovoDevConfigFile } from './rovo-dev/rovoDevUtils';
@@ -32,7 +33,6 @@ import { Experiments, Features } from './util/featureFlags';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
 import { PipelineNode } from './views/pipelines/PipelinesTree';
-import { StartWorkQuickFlow } from './onboarding/quickFlow/startWork';
 
 export function registerCommands(vscodeContext: ExtensionContext) {
     const settingsFeatureValue = Container.featureFlagClient.checkExperimentValue(

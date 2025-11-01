@@ -3,7 +3,7 @@ import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { RovoDevPullRequestHandler } from 'src/rovo-dev/rovoDevPullRequestHandler';
 import { SearchJiraHelper } from 'src/views/jira/searchJiraHelper';
 // import { SearchAllJiraHelper } from 'src/views/jira/searchAllJiraHelper';
-import { QuickInputButtons, QuickPickItemKind, ThemeIcon } from 'vscode';
+import { QuickInputButtons, QuickPickItem, QuickPickItemKind, ThemeIcon } from 'vscode';
 
 import { BaseUI, UiAction, UiResponse } from '../baseUI';
 import { StartWorkData } from './startWorkStates';
@@ -45,36 +45,40 @@ export class StartWorkFlowUI extends BaseUI {
 
     async pickWillCreateBranch(
         data: Partial<StartWorkData>,
+        branches: () => Promise<QuickPickItem[]>,
     ): Promise<
-        UiResponse<'Fork from main' | 'Fork from current branch' | 'Choose another base branch' | 'Use current branch'>
+        UiResponse<
+            | 'Create new branch from default'
+            | 'Create new branch from current'
+            | 'Choose another base branch'
+            | 'Use current branch'
+        >
     > {
-        const items = [
+        let items = [
             {
                 iconPath: new ThemeIcon('git-branch'),
-                label: 'Fork from main',
-            },
-            {
-                iconPath: new ThemeIcon('git-branch'),
-                label: `Fork from current branch`,
+                label: 'Create new branch from default',
                 description: `${data.sourceBranchName}`,
             },
             {
                 iconPath: new ThemeIcon('git-branch'),
-                label: 'Choose another base branch',
-                description: 'PLACEHOLDER, WE WILL USE A FULL BRANCH LIST INSTEAD',
+                label: `Create new branch from current`,
+                description: `${data.currentBranchName}`,
             },
-
-            { kind: QuickPickItemKind.Separator, label: '' },
             {
                 iconPath: new ThemeIcon('trash'),
                 label: 'Use current branch',
-                detail: 'Do not create a new branch',
             },
+            { kind: QuickPickItemKind.Separator, label: 'other branches' },
         ];
 
+        if (data.currentBranchName?.trim() === data.sourceBranchName?.trim()) {
+            items = items.filter((item) => item.label !== 'Fork from current branch');
+        }
         const { value, action } = await this.showQuickPick<any>(items, {
-            placeHolder: 'Do we create a new branch for you? You can edit the branch name later.',
+            placeHolder: 'Enter source branch for branch creation',
             title: 'Start Work: Branch Creation',
+            asyncItems: branches,
         });
 
         return { value, action };

@@ -40,7 +40,7 @@ export class RovoDevPullRequestHandler {
         return repo.createBranch(branchName, true, baseBranch);
     }
 
-    private async getGitRepository(): Promise<Repository> {
+    public async getGitRepository(): Promise<Repository> {
         const gitApi = await this.getGitAPI();
 
         if (gitApi.repositories.length === 0) {
@@ -211,6 +211,33 @@ export class RovoDevPullRequestHandler {
     public async getCurrentBranchName(): Promise<string | undefined> {
         const repo = await this.getGitRepository();
         return repo.state.HEAD?.name;
+    }
+
+    public async getDefaultBranchName(): Promise<string | undefined> {
+        try {
+            const repo = await this.getGitRepository();
+            repo.getBranches({ remote: true });
+            const result = await execAsync('git symbolic-ref refs/remotes/origin/HEAD', {
+                cwd: repo.rootUri.fsPath,
+            });
+            // Output will be like "refs/remotes/origin/main"
+            const defaultBranch = result.stdout.trim().split('/').pop();
+            return defaultBranch;
+        } catch (e) {
+            // Fallback: try to get it using git remote show
+            console.log('Failed to get default branch via symbolic-ref, trying git remote show', e);
+            try {
+                const repo = await this.getGitRepository();
+                const result = await execAsync('git remote show origin', {
+                    cwd: repo.rootUri.fsPath,
+                });
+                const match = result.stdout.match(/HEAD branch: (.+)/);
+                return match ? match[1].trim() : 'main';
+            } catch (fallbackError) {
+                RovoDevLogger.error(fallbackError, 'Failed to get default branch name');
+                return 'main'; // Ultimate fallback
+            }
+        }
     }
 
     private async hasUncommittedChanges(): Promise<boolean> {

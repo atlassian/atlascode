@@ -4,7 +4,8 @@ import { Container } from 'src/container';
 import { transitionIssue } from 'src/jira/transitionIssue';
 import { RovoDevPullRequestHandler } from 'src/rovo-dev/rovoDevPullRequestHandler';
 import { RovoDevJiraContext } from 'src/rovo-dev/rovoDevTypes';
-import { window } from 'vscode';
+import { RefType } from 'src/typings/git';
+import { QuickPickItem, ThemeIcon, window } from 'vscode';
 
 import { UiAction } from '../baseUI';
 import { State, Transition } from '../types';
@@ -16,8 +17,8 @@ export type StartWorkData = {
 
     willCreateBranch: boolean;
     sourceBranchName: string;
+    currentBranchName: string;
     targetBranchName: string;
-
     transitionName?: string;
 
     startWithRovo?: boolean;
@@ -28,6 +29,35 @@ async function getCurrentBranchName(): Promise<string | undefined> {
     return prHandler.getCurrentBranchName();
 }
 
+async function getDefaultBranchName(): Promise<string | undefined> {
+    const prHandler = new RovoDevPullRequestHandler();
+    return prHandler.getDefaultBranchName();
+}
+
+async function getBranches(): Promise<QuickPickItem[]> {
+    const prHandler = new RovoDevPullRequestHandler();
+    const repo = await prHandler.getGitRepository();
+
+    const branches = await repo.getRefs({});
+    const allBraches = await Promise.all(
+        branches.map(async (branch) => {
+            return {
+                type: branch.type,
+                label: branch.name || '',
+                iconPath:
+                    branch.type === RefType.RemoteHead
+                        ? new ThemeIcon('cloud')
+                        : branch.type === RefType.Head
+                          ? new ThemeIcon('git-branch')
+                          : new ThemeIcon('tag'),
+                description: branch.remote,
+                detail: branch.commit,
+            };
+        }),
+    );
+
+    return allBraches.sort((a, b) => a.type - b.type);
+}
 export class StartWorkStates {
     public initialState: State<StartWorkFlowUI, Partial<StartWorkData>> = {
         name: 'initial',
@@ -45,10 +75,12 @@ export class StartWorkStates {
                 issue = data.issue;
             }
             const currentBranch = await getCurrentBranchName();
+            const defaultBranch = await getDefaultBranchName();
 
             return Transition.forward(this.branchSelector, {
                 issue: issue,
-                sourceBranchName: currentBranch,
+                currentBranchName: currentBranch,
+                sourceBranchName: defaultBranch || 'main',
                 targetBranchName: issue.key + '-' + issue.summary.replace(/\s+/g, '-').toLowerCase(),
             });
         },
@@ -57,18 +89,20 @@ export class StartWorkStates {
     branchSelector: State<StartWorkFlowUI, Partial<StartWorkData>> = {
         name: 'branchSelector',
         action: async (data: Partial<StartWorkData>, ui: StartWorkFlowUI) => {
-            const { value, action } = await ui.pickWillCreateBranch(data);
+            const prHandler = new RovoDevPullRequestHandler();
+            const repo = await prHandler.getGitRepository();
+            const { value, action } = await ui.pickWillCreateBranch(data, getBranches);
             // TODO handle start work button cancel
             if (action === UiAction.Back) {
                 return Transition.forward(this.finalState);
             }
 
-            if (value === 'Fork from main') {
+            if (value === 'Create new branch from default') {
                 return Transition.forward(this.editTargetBranchName, {
                     willCreateBranch: true,
-                    sourceBranchName: 'main',
+                    sourceBranchName: await getDefaultBranchName(),
                 });
-            } else if (value === 'Fork from current branch') {
+            } else if (value === 'Create new branch from current') {
                 return Transition.forward(this.editTargetBranchName, {
                     willCreateBranch: true,
                     sourceBranchName: await getCurrentBranchName(),
@@ -77,6 +111,11 @@ export class StartWorkStates {
                 return Transition.forward(this.editSourceBranchName, { willCreateBranch: true });
             } else if (value === 'Use current branch') {
                 return Transition.forward(this.pickIssueTransition, { willCreateBranch: false });
+            } else if (value && (await repo.getBranch(value))) {
+                return Transition.forward(this.editTargetBranchName, {
+                    willCreateBranch: true,
+                    sourceBranchName: value,
+                });
             } else {
                 throw new Error(`Unknown branch action: ${value}`);
             }

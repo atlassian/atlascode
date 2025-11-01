@@ -113,7 +113,11 @@ export class BaseUI {
 
     public showQuickPick<T = string>(
         items: QuickPickItem[],
-        props: QuickPickOptions & ExtraOptions & { validateSelection?: (items: readonly QuickPickItem[]) => boolean },
+        props: QuickPickOptions &
+            ExtraOptions & {
+                validateSelection?: (items: readonly QuickPickItem[]) => boolean;
+                asyncItems?: () => Promise<QuickPickItem[]>;
+            },
     ): Promise<UiResponse<T>> {
         const input = window.createQuickPick();
 
@@ -123,12 +127,11 @@ export class BaseUI {
 
         // Special properties
         input.placeholder = props.placeHolder;
-        input.items = items;
+        input.items = props.asyncItems ? [...items, { label: 'Loading...' }] : items;
         input.value = props.value || '';
         input.activeItems = [items[0]];
         input.totalSteps = props.step;
         input.ignoreFocusOut = props.ignoreFocusOut || true;
-
         input.buttons = [QuickInputButtons.Back, ...(props.buttons || [])];
         if (props.buttonHandler !== undefined) {
             input.onDidTriggerButton((e) => {
@@ -151,6 +154,19 @@ export class BaseUI {
                 resolve({ value: undefined, action: UiAction.Back });
             });
             input.show();
+
+            if (props.asyncItems !== undefined) {
+                input.busy = true;
+                props
+                    .asyncItems()
+                    .then((asyncItems) => {
+                        input.items = [...items, ...asyncItems];
+                        input.busy = false;
+                    })
+                    .catch(() => {
+                        input.busy = false;
+                    });
+            }
         });
     }
 
