@@ -35,6 +35,7 @@ export const PullRequestMainContent: React.FC<PullRequestMainContentProps> = ({
                         fetchUsers={handleFetchUsers}
                         isLoading={state.loadState.basicData}
                         summaryChange={controller.updateSummary}
+                        handleEditorFocus={controller.handleEditorFocus}
                     />
                 </Grid>
                 {state.relatedJiraIssues.length > 0 && (
@@ -86,6 +87,7 @@ export const PullRequestMainContent: React.FC<PullRequestMainContentProps> = ({
                                     fetchUsers={handleFetchUsers}
                                     onDelete={controller.deleteComment}
                                     pullRequestState={state.pr.data.state}
+                                    handleEditorFocus={controller.handleEditorFocus}
                                 />
                             </Grid>
                             <Grid item>
@@ -93,6 +95,7 @@ export const PullRequestMainContent: React.FC<PullRequestMainContentProps> = ({
                                     currentUser={state.currentUser}
                                     fetchUsers={handleFetchUsers}
                                     onSave={controller.postComment}
+                                    handleEditorFocus={controller.handleEditorFocus}
                                 />
                             </Grid>
                         </Grid>

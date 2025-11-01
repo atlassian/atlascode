@@ -2,9 +2,14 @@
 
 ## What's new in 4.0.7
 
+### Features
+
+- Added edit and delete work log support
+
 ### Bug Fixes
 
 - Fix issue with not working team adding functionality
+- Disabled CMD+B hotkey when Jira/Bitbucket editor has focus
 
 ## What's new in 4.0.6
 

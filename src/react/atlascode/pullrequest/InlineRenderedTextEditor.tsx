@@ -36,6 +36,7 @@ type InlineTextEditorProps = {
     htmlContent: string;
     onSave?: (value: string) => void;
     fetchUsers?: (input: string) => Promise<User[]>;
+    handleEditorFocus: (isFocused: boolean) => void;
 };
 
 const InlineRenderedTextEditor: React.FC<InlineTextEditorProps> = (props: InlineTextEditorProps) => {
@@ -63,6 +64,8 @@ const InlineRenderedTextEditor: React.FC<InlineTextEditorProps> = (props: Inline
             onSave={handleSave}
             onCancel={exitEditMode}
             fetchUsers={props.fetchUsers}
+            onFocus={() => props.handleEditorFocus(true)}
+            onBlur={() => props.handleEditorFocus(false)}
         />
     ) : (
         <Grid

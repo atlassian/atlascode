@@ -91,6 +91,13 @@ export interface ScreensForSiteAction extends Action {
     site: DetailedSiteInfo;
 }
 
+export interface LoadMoreProjectsAction extends Action {
+    action: 'loadMoreProjects';
+    maxResults?: number;
+    startAt?: number;
+    query?: string;
+}
+
 export interface CreateSelectOptionAction extends Action {
     fieldKey: string;
     siteDetails: DetailedSiteInfo;
@@ -149,6 +156,23 @@ export interface CreateWorklogAction extends Action {
     worklogData: WorklogData;
 }
 
+export interface UpdateWorklogAction extends Action {
+    action: 'updateWorklog';
+    site: DetailedSiteInfo;
+    issueKey: string;
+    worklogId: string;
+    worklogData: WorklogData;
+}
+
+export interface DeleteWorklogAction extends Action {
+    action: 'deleteWorklog';
+    site: DetailedSiteInfo;
+    issueKey: string;
+    worklogId: string;
+    adjustEstimate?: string;
+    newEstimate?: string;
+}
+
 export interface UpdateWatcherAction extends Action {
     site: DetailedSiteInfo;
     issueKey: string;
@@ -198,6 +222,11 @@ export interface AiSuggeestionFeedbackAction extends Action {
     };
 }
 
+export interface HandleEditorFocusAction extends Action {
+    action: 'handleEditorFocus';
+    isFocused: boolean;
+}
+
 export function isGetImage(a: Action): a is GetImageAction {
     return (<GetImageAction>a).action === 'getImage';
 }
@@ -234,6 +263,10 @@ export function isScreensForSite(a: Action): a is ScreensForSiteAction {
     return (<ScreensForSiteAction>a).site !== undefined;
 }
 
+export function isLoadMoreProjects(a: Action): a is LoadMoreProjectsAction {
+    return a && a.action === 'loadMoreProjects';
+}
+
 export function isCreateSelectOption(a: Action): a is CreateSelectOptionAction {
     return a && (<CreateSelectOptionAction>a).createData !== undefined;
 }
@@ -248,6 +281,25 @@ export function isCreateWorklog(a: Action): a is CreateWorklogAction {
         (<CreateWorklogAction>a).worklogData !== undefined &&
         (<CreateWorklogAction>a).site !== undefined &&
         (<CreateWorklogAction>a).issueKey !== undefined
+    );
+}
+
+export function isUpdateWorklog(a: Action): a is UpdateWorklogAction {
+    return (
+        a &&
+        (<UpdateWorklogAction>a).worklogData !== undefined &&
+        (<UpdateWorklogAction>a).site !== undefined &&
+        (<UpdateWorklogAction>a).issueKey !== undefined &&
+        (<UpdateWorklogAction>a).worklogId !== undefined
+    );
+}
+
+export function isDeleteWorklog(a: Action): a is DeleteWorklogAction {
+    return (
+        a &&
+        (<DeleteWorklogAction>a).site !== undefined &&
+        (<DeleteWorklogAction>a).issueKey !== undefined &&
+        (<DeleteWorklogAction>a).worklogId !== undefined
     );
 }
 
@@ -328,4 +380,8 @@ export function isAiSuggestionFeedback(a: Action): a is AiSuggeestionFeedbackAct
         (<AiSuggeestionFeedbackAction>a).isPositive !== undefined &&
         (<AiSuggeestionFeedbackAction>a).todoData !== undefined
     );
+}
+
+export function isHandleEditorFocus(a: Action): a is HandleEditorFocusAction {
+    return a && a.action === 'handleEditorFocus';
 }

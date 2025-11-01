@@ -35,6 +35,7 @@ import EdiText, { EdiTextType } from 'react-editext';
 import { v4 } from 'uuid';
 
 import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
+import { ProjectsPagination } from '../../../constants';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import {
     CreatedSelectOption,
@@ -61,6 +62,7 @@ import JiraIssueTextAreaEditor from './common/JiraIssueTextArea';
 import { EditRenderedTextArea } from './EditRenderedTextArea';
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import InlineSubtaskEditor from './InlineSubtaskEditor';
+import { LazyLoadingSelect } from './LazyLoadingSelect';
 import { ParticipantList } from './ParticipantList';
 import { TextAreaEditor } from './TextAreaEditor';
 
@@ -93,6 +95,12 @@ export interface CommonEditorViewState extends Message {
     isGeneratingSuggestions?: boolean;
     summaryKey: string;
     isAtlaskitEditorEnabled: boolean;
+    projectPagination?: {
+        total: number;
+        loaded: number;
+        hasMore: boolean;
+        isLoadingMore: boolean;
+    };
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -507,6 +515,13 @@ export abstract class AbstractIssueEditorPage<
         }
     }, 100);
 
+    handleEditorFocus = (isFocused: boolean) => {
+        this.postMessage({
+            action: 'handleEditorFocus',
+            isFocused,
+        });
+    };
+
     protected getInputMarkup(
         field: FieldUI,
         editmode: boolean = false,
@@ -608,9 +623,10 @@ export abstract class AbstractIssueEditorPage<
                                     markup = this.state.isAtlaskitEditorEnabled ? (
                                         <AtlaskitEditor
                                             defaultValue={this.state.fieldValues[field.key] || ''}
-                                            onBlur={(content: string) => {
-                                                this.handleInlineEdit(field, content);
-                                            }}
+                                            isSaveOnBlur={true}
+                                            onBlur={() => this.handleEditorFocus(false)}
+                                            onFocus={() => this.handleEditorFocus(true)}
+                                            onSave={(content) => this.handleInlineEdit(field, content)}
                                             mentionProvider={Promise.resolve(this.getMentionProvider())}
                                         />
                                     ) : (
@@ -626,6 +642,8 @@ export abstract class AbstractIssueEditorPage<
                                                 this.handleInlineEdit(field, val),
                                             )}
                                             fetchUsers={this.fetchAndTransformUsers}
+                                            onEditorFocus={() => this.handleEditorFocus(true)}
+                                            onEditorBlur={() => this.handleEditorFocus(false)}
                                         />
                                     );
                                 }
@@ -1287,6 +1305,55 @@ export abstract class AbstractIssueEditorPage<
                                     if (fieldArgs.error === 'EMPTY') {
                                         errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
                                     }
+                                    if (field.valueType === ValueType.Project) {
+                                        return (
+                                            <React.Fragment>
+                                                <LazyLoadingSelect
+                                                    {...fieldArgs.fieldProps}
+                                                    {...commonProps}
+                                                    value={defVal}
+                                                    className="ac-form-select-container"
+                                                    classNamePrefix="ac-form-select"
+                                                    placeholder="Type to search"
+                                                    noOptionsMessage={() => 'Type to search'}
+                                                    isClearable={this.isClearableSelect(selectField)}
+                                                    options={this.state.selectFieldOptions[field.key]}
+                                                    isDisabled={
+                                                        this.state.isSomethingLoading &&
+                                                        this.state.loadingField !== field.key
+                                                    }
+                                                    isLoading={this.state.loadingField === field.key}
+                                                    hasMore={this.state.projectPagination?.hasMore || false}
+                                                    isLoadingMore={this.state.projectPagination?.isLoadingMore || false}
+                                                    totalCount={this.state.projectPagination?.total || 0}
+                                                    loadedCount={this.state.projectPagination?.loaded || 0}
+                                                    onLoadMore={this.handleLoadMoreProjects}
+                                                    loadOptions={async (input: any) =>
+                                                        await this.loadSelectOptionsForField(
+                                                            field as SelectFieldUI,
+                                                            input,
+                                                        )
+                                                    }
+                                                    onChange={FieldValidators.chain(
+                                                        fieldArgs.fieldProps.onChange,
+                                                        (selected: any) => {
+                                                            this.handleSelectChange(selectField, selected);
+                                                        },
+                                                    )}
+                                                    onMenuClose={() => {
+                                                        if (this.state.loadingField === field.key) {
+                                                            this.setState({
+                                                                isSomethingLoading: false,
+                                                                loadingField: '',
+                                                            });
+                                                        }
+                                                    }}
+                                                />
+                                                {errDiv}
+                                            </React.Fragment>
+                                        );
+                                    }
+
                                     return (
                                         <React.Fragment>
                                             <AsyncSelect
@@ -2063,4 +2130,22 @@ export abstract class AbstractIssueEditorPage<
                 return 'text';
         }
     }
+
+    protected handleLoadMoreProjects = (startAt: number) => {
+        if (this.state.projectPagination) {
+            this.setState({
+                projectPagination: {
+                    ...this.state.projectPagination,
+                    isLoadingMore: true,
+                },
+            });
+        }
+
+        this.postMessage({
+            action: 'loadMoreProjects',
+            maxResults: ProjectsPagination.pageSize,
+            startAt: startAt,
+            nonce: v4(),
+        });
+    };
 }

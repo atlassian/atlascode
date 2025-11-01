@@ -35,13 +35,16 @@ import {
     isCreateIssueLink,
     isCreateWorklog,
     isDeleteByIDAction,
+    isDeleteWorklog,
     isGetImage,
+    isHandleEditorFocus,
     isIssueComment,
     isIssueDeleteComment,
     isOpenStartWorkPageAction,
     isTransitionIssue,
     isUpdateVoteAction,
     isUpdateWatcherAction,
+    isUpdateWorklog,
     TransitionChildIssueAction,
 } from '../ipc/issueActions';
 import { EditIssueData, emptyEditIssueData } from '../ipc/issueMessaging';
@@ -775,13 +778,12 @@ export class JiraIssueWebview
                         handled = true;
                         try {
                             const client = await Container.clientManager.jiraClient(msg.site);
-                            let queryParams: any = { adjustEstimate: msg.worklogData.adjustEstimate };
-                            delete msg.worklogData.adjustEstimate;
-                            if (queryParams.adjustEstimate === 'new') {
-                                queryParams = { ...queryParams, newEstimate: msg.worklogData.newEstimate };
-                                delete msg.worklogData.newEstimate;
+                            const { adjustEstimate, newEstimate, ...worklogBody } = msg.worklogData as any;
+                            let queryParams: any = { adjustEstimate };
+                            if (adjustEstimate === 'new' && newEstimate) {
+                                queryParams = { ...queryParams, newEstimate };
                             }
-                            const resp = await client.addWorklog(msg.issueKey, msg.worklogData, queryParams);
+                            const resp = await client.addWorklog(msg.issueKey, worklogBody, queryParams);
 
                             if (!Array.isArray(this._editUIData.fieldValues['worklog']?.worklogs)) {
                                 this._editUIData.fieldValues['worklog'] = { worklogs: [] };
@@ -805,6 +807,104 @@ export class JiraIssueWebview
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error creating worklog'),
+                                nonce: msg.nonce,
+                            });
+                        }
+                    }
+                    break;
+                }
+
+                case 'updateWorklog': {
+                    if (isUpdateWorklog(msg)) {
+                        handled = true;
+                        try {
+                            const client = await Container.clientManager.jiraClient(msg.site);
+                            const { adjustEstimate, newEstimate, ...worklogBody } = msg.worklogData as any;
+                            let queryParams: any = { adjustEstimate };
+                            if (adjustEstimate === 'new' && newEstimate) {
+                                queryParams = { ...queryParams, newEstimate };
+                            }
+
+                            const resp = await (client as any).putToJira(
+                                `issue/${msg.issueKey}/worklog/${msg.worklogId}`,
+                                worklogBody,
+                                queryParams,
+                            );
+
+                            if (Array.isArray(this._editUIData.fieldValues['worklog']?.worklogs)) {
+                                const worklogIndex = this._editUIData.fieldValues['worklog'].worklogs.findIndex(
+                                    (w: any) => w.id === msg.worklogId,
+                                );
+                                if (worklogIndex !== -1) {
+                                    this._editUIData.fieldValues['worklog'].worklogs[worklogIndex] = resp;
+                                }
+                            }
+
+                            this.postMessage({
+                                type: 'fieldValueUpdate',
+                                fieldValues: { worklog: this._editUIData.fieldValues['worklog'], nonce: msg.nonce },
+                            });
+                            issueUpdatedEvent(
+                                this._issue.siteDetails,
+                                this._issue.key,
+                                'worklog',
+                                this.fieldNameForKey('worklog'),
+                            ).then((e) => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
+                        } catch (e) {
+                            Logger.error(e, 'Error updating worklog');
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Error updating worklog'),
+                                nonce: msg.nonce,
+                            });
+                        }
+                    }
+                    break;
+                }
+
+                case 'deleteWorklog': {
+                    if (isDeleteWorklog(msg)) {
+                        handled = true;
+                        try {
+                            const client = await Container.clientManager.jiraClient(msg.site);
+                            const queryParams: any = {};
+                            if (msg.adjustEstimate) {
+                                queryParams.adjustEstimate = msg.adjustEstimate;
+                                if (msg.adjustEstimate === 'new' && msg.newEstimate) {
+                                    queryParams.newEstimate = msg.newEstimate;
+                                }
+                            }
+
+                            await (client as any).deleteToJira(
+                                `issue/${msg.issueKey}/worklog/${msg.worklogId}`,
+                                queryParams,
+                            );
+
+                            if (Array.isArray(this._editUIData.fieldValues['worklog']?.worklogs)) {
+                                this._editUIData.fieldValues['worklog'].worklogs = this._editUIData.fieldValues[
+                                    'worklog'
+                                ].worklogs.filter((w: any) => w.id !== msg.worklogId);
+                            }
+
+                            this.postMessage({
+                                type: 'fieldValueUpdate',
+                                fieldValues: { worklog: this._editUIData.fieldValues['worklog'], nonce: msg.nonce },
+                            });
+                            issueUpdatedEvent(
+                                this._issue.siteDetails,
+                                this._issue.key,
+                                'worklog',
+                                this.fieldNameForKey('worklog'),
+                            ).then((e) => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
+                        } catch (e) {
+                            Logger.error(e, 'Error deleting worklog');
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Error deleting worklog'),
                                 nonce: msg.nonce,
                             });
                         }
@@ -1378,6 +1478,13 @@ export class JiraIssueWebview
                                 nonce: msg.nonce,
                             });
                         }
+                    }
+                    break;
+                }
+                case 'handleEditorFocus': {
+                    if (isHandleEditorFocus(msg)) {
+                        handled = true;
+                        Container.setIsEditorFocused(msg.isFocused);
                     }
                     break;
                 }
