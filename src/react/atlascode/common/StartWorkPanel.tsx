@@ -13,10 +13,20 @@ import { PanelTitle } from './PanelTitle';
 type StartWorkPanelProps = CommonSubpanelProps & {
     customPrefixes: string[];
     customTemplate: string;
+    enableIssueTransition: boolean;
+    defaultTransitionName: string;
 };
 
 export const StartWorkPanel: React.FunctionComponent<StartWorkPanelProps> = memo(
-    ({ visible, expanded, customPrefixes, customTemplate, onSubsectionChange }) => {
+    ({
+        visible,
+        expanded,
+        customPrefixes,
+        customTemplate,
+        defaultTransitionName,
+        enableIssueTransition,
+        onSubsectionChange,
+    }) => {
         const [internalExpanded, setInternalExpanded] = useState<boolean>(expanded);
 
         const expansionHandler = useCallback(
@@ -47,7 +57,12 @@ export const StartWorkPanel: React.FunctionComponent<StartWorkPanelProps> = memo
                     <PanelSubtitle>configure the start work screen</PanelSubtitle>
                 </AccordionSummary>
                 <AccordionDetails>
-                    <StartWorkSettings customPrefixes={customPrefixes} customTemplate={customTemplate} />
+                    <StartWorkSettings
+                        customPrefixes={customPrefixes}
+                        customTemplate={customTemplate}
+                        enableIssueTransition={enableIssueTransition}
+                        defaultTransitionName={defaultTransitionName}
+                    />
                 </AccordionDetails>
             </Accordion>
         );
