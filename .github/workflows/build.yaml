@@ -48,13 +48,28 @@ jobs:
           path: atlascode-*.vsix
           retention-days: 1
 
+      - name: Upload node_modules for reuse
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-modules
+          path: node_modules
+          retention-days: 1
+
   test-unit:
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       
-      - name: Setup npm dependencies
-        uses: ./.github/actions/setup-dependencies
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
+          path: node_modules
 
       - name: Run unit tests
         run: npm test
@@ -80,8 +95,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Setup npm dependencies
-        uses: ./.github/actions/setup-dependencies
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
+          path: node_modules
 
       - name: Download extension package
         uses: actions/download-artifact@v4
