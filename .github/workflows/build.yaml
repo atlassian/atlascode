@@ -48,11 +48,14 @@ jobs:
           path: atlascode-*.vsix
           retention-days: 1
 
+      - name: Compress node_modules
+        run: tar -czf node_modules.tar.gz node_modules
+
       - name: Upload node_modules for reuse
         uses: actions/upload-artifact@v4
         with:
           name: node-modules
-          path: node_modules
+          path: node_modules.tar.gz
           retention-days: 1
 
   test-unit:
@@ -69,7 +72,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: node-modules
-          path: node_modules
+
+      - name: Extract node_modules
+        run: tar -xzf node_modules.tar.gz
 
       - name: Run unit tests
         run: npm test
@@ -103,7 +108,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: node-modules
-          path: node_modules
+
+      - name: Extract node_modules
+        run: tar -xzf node_modules.tar.gz
 
       - name: Download extension package
         uses: actions/download-artifact@v4
