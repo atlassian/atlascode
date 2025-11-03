@@ -179,6 +179,12 @@ jobs:
           name: node-modules
           failOnError: false
 
+      - name: Delete extension package artifact
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: extension-package
+          failOnError: false
+
       - name: Check if all jobs succeeded
         run: |
           if [[ "${{ needs.lint.result }}" != "success" ]]; then
