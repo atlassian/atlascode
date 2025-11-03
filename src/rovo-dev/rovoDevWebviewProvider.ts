@@ -75,6 +75,71 @@ const RovoDevDisabledPriority: Record<RovoDevDisabledReason | 'none', number> = 
 };
 
 export class RovoDevWebviewProvider extends Disposable implements WebviewViewProvider {
+    private _webView?: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse>;
+    // private _webviewView?: WebviewView;
+
+    private _rovodevWebviewProvider: RovoDevWebviewProviderActual;
+
+    constructor(context: ExtensionContext, extensionPath: string) {
+        super(() => {
+            this.dispose();
+        });
+        this._rovodevWebviewProvider = new RovoDevWebviewProviderActual(context, extensionPath);
+        // this._extensionPath = extensionPath;
+        // this._extensionUri = Uri.file(extensionPath);
+    }
+
+    public resolveWebviewView(
+        webviewView: WebviewView,
+        _context: WebviewViewResolveContext,
+        _token: CancellationToken,
+    ): Thenable<void> | void {
+        this._webView = webviewView.webview;
+        // this._webviewView = webviewView;
+        // grab the webview from the instance field, so it's properly typed
+        const webview = this._webView;
+
+        this._rovodevWebviewProvider.setWebview(webview);
+    }
+
+    public async invokeRovoDevAskCommand(prompt: string, context?: RovoDevContextItem[]): Promise<void> {
+        this._rovodevWebviewProvider.invokeRovoDevAskCommand(prompt, context);
+    }
+
+    public async executeNewSession(): Promise<void> {
+        return this._rovodevWebviewProvider.executeNewSession();
+    }
+
+    public async executeTriggerFeedback(): Promise<void> {
+        return this._rovodevWebviewProvider.executeTriggerFeedback();
+    }
+
+    public addToContext(contextItem: RovoDevContextItem) {
+        return this._rovodevWebviewProvider.addToContext(contextItem);
+    }
+
+    public get isVisible(): boolean {
+        return this._rovodevWebviewProvider.isVisible;
+    }
+
+    public get isDisabled(): boolean {
+        return this._rovodevWebviewProvider.isDisabled;
+    }
+
+    public get isReady(): boolean {
+        return this._rovodevWebviewProvider.isReady;
+    }
+
+    public async setPromptTextWithFocus(text: string, contextItem?: RovoDevContextItem): Promise<void> {
+        return this._rovodevWebviewProvider.setPromptTextWithFocus(text, contextItem);
+    }
+
+    public override dispose() {
+        this._rovodevWebviewProvider.dispose();
+    }
+}
+
+export class RovoDevWebviewProviderActual extends Disposable implements WebviewViewProvider {
     private readonly viewType = 'atlascodeRovoDev';
     private readonly isBoysenberry = Container.isBoysenberryMode;
     private readonly appInstanceId: string;
@@ -111,6 +176,254 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private get rovoDevApiClient() {
         return this._rovoDevApiClient;
+    }
+
+    // POC logic
+    public setWebview(webview: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse>) {
+        this._webView = webview;
+
+        this._chatProvider.setWebview(webview);
+        this._chatContextprovider.setWebview(webview);
+
+        webview.options = {
+            enableCommandUris: true,
+            enableScripts: true,
+            localResourceRoots: [
+                Uri.file(path.join(this._extensionPath, 'images')),
+                Uri.file(path.join(this._extensionPath, 'build')),
+                Uri.file(path.join(this._extensionPath, 'node_modules', '@vscode', 'codicons', 'dist')),
+            ],
+        };
+
+        const codiconsUri = webview.asWebviewUri(
+            Uri.joinPath(this._extensionUri, 'node_modules', '@vscode', 'codicons', 'dist', 'codicon.css'),
+        );
+
+        webview.html = getHtmlForView(
+            this._extensionPath,
+            webview.asWebviewUri(this._extensionUri),
+            webview.cspSource,
+            this.viewType,
+            codiconsUri,
+        );
+
+        webview.onDidReceiveMessage(async (e) => {
+            try {
+                switch (e.type) {
+                    case RovoDevViewResponseType.Refresh:
+                        // this message is being sent from messagingApi.ts
+                        break;
+
+                    case RovoDevViewResponseType.Prompt:
+                        const revertedChanges = this._revertedChanges;
+                        this._revertedChanges = [];
+                        await this._chatProvider.executeChat(e, revertedChanges);
+                        break;
+
+                    case RovoDevViewResponseType.CancelResponse:
+                        if (!this._chatProvider.pendingCancellation) {
+                            await this._chatProvider.executeCancel(false);
+                        }
+                        break;
+
+                    case RovoDevViewResponseType.OpenFile:
+                        await this.executeOpenFile(e.filePath, e.tryShowDiff, e.range);
+                        break;
+
+                    case RovoDevViewResponseType.UndoFileChanges:
+                        await this.executeUndoFiles(e.files);
+                        break;
+
+                    case RovoDevViewResponseType.KeepFileChanges:
+                        await this.executeKeepFiles(e.files);
+                        break;
+
+                    case RovoDevViewResponseType.CreatePR:
+                        await this.createPR(e.payload.commitMessage, e.payload.branchName);
+                        break;
+
+                    case RovoDevViewResponseType.RetryPromptAfterError:
+                        await this._chatProvider.executeRetryPromptAfterError();
+                        break;
+
+                    case RovoDevViewResponseType.GetCurrentBranchName:
+                        await this.getCurrentBranchName();
+                        break;
+
+                    case RovoDevViewResponseType.ForceUserFocusUpdate:
+                        await this._chatContextprovider.forceUserFocusUpdate();
+                        break;
+
+                    case RovoDevViewResponseType.AddContext:
+                        if (e.contextItem) {
+                            await this._chatContextprovider.addContextItem(e.contextItem);
+                        } else if (e.dragDropData) {
+                            await this._chatContextprovider.processDragDropData(e.dragDropData);
+                        } else {
+                            await this._chatContextprovider.executeAddContext();
+                        }
+                        break;
+
+                    case RovoDevViewResponseType.RemoveContext:
+                        await this._chatContextprovider.removeContextItem(e.item);
+                        break;
+
+                    case RovoDevViewResponseType.ToggleContextFocus:
+                        await this._chatContextprovider.toggleFocusedContextFile(e.enabled);
+                        break;
+
+                    case RovoDevViewResponseType.ReportChangedFilesPanelShown:
+                        this._telemetryProvider.fireTelemetryEvent(
+                            'rovoDevFilesSummaryShownEvent',
+                            this._chatProvider.currentPromptId,
+                            e.filesCount,
+                        );
+                        break;
+
+                    case RovoDevViewResponseType.ReportChangesGitPushed:
+                        this._telemetryProvider.fireTelemetryEvent(
+                            'rovoDevGitPushActionEvent',
+                            this._chatProvider.currentPromptId,
+                            e.pullRequestCreated,
+                        );
+                        break;
+
+                    case RovoDevViewResponseType.CheckGitChanges:
+                        if (!this._prHandler) {
+                            await webview.postMessage({
+                                type: RovoDevProviderMessageType.CheckGitChangesComplete,
+                                hasChanges: false,
+                            });
+                            break;
+                        }
+                        const hasChanges = await this._prHandler.hasChangesOrUnpushedCommits();
+                        await webview.postMessage({
+                            type: RovoDevProviderMessageType.CheckGitChangesComplete,
+                            hasChanges: hasChanges,
+                        });
+                        break;
+
+                    case RovoDevViewResponseType.FilterModifiedFilesByContent:
+                        await this.executeFilterModifiedFilesByContent(e.files);
+                        break;
+
+                    case RovoDevViewResponseType.ReportThinkingDrawerExpanded:
+                        this._telemetryProvider.fireTelemetryEvent(
+                            'rovoDevDetailsExpandedEvent',
+                            this._chatProvider.currentPromptId,
+                        );
+                        break;
+                    case RovoDevViewResponseType.ReportCreatePrButtonClicked:
+                        this._telemetryProvider.fireTelemetryEvent(
+                            'rovoDevCreatePrButtonClickedEvent',
+                            this._chatProvider.currentPromptId,
+                        );
+                        break;
+
+                    case RovoDevViewResponseType.WebviewReady:
+                        this._webviewReady = true;
+                        this.refreshDebugPanel(true);
+                        this.refreshThinkingBlock();
+
+                        if (!this.isBoysenberry) {
+                            // listen to change of process state by the process manager
+                            RovoDevProcessManager.onStateChanged((newState) =>
+                                this.handleProcessStateChanged(newState),
+                            );
+
+                            if (!workspace.workspaceFolders?.length) {
+                                await this.signalRovoDevDisabled('NoWorkspaceOpen');
+                                break;
+                            } else {
+                                const yoloMode = await this.loadYoloModeFromStorage();
+                                await webview.postMessage({
+                                    type: RovoDevProviderMessageType.ProviderReady,
+                                    workspacePath: workspace.workspaceFolders?.[0]?.uri.fsPath,
+                                    homeDir: process.env.HOME || process.env.USERPROFILE,
+                                    yoloMode: yoloMode,
+                                });
+                            }
+                        }
+
+                        // initialize (or refresh) the provider based on the current process state
+                        this.handleProcessStateChanged(RovoDevProcessManager.state);
+                        break;
+
+                    case RovoDevViewResponseType.GetAgentMemory:
+                        await this.executeOpenFile('.agent.md', false, undefined, true);
+                        break;
+
+                    case RovoDevViewResponseType.TriggerFeedback:
+                        await this.executeTriggerFeedback();
+                        break;
+
+                    case RovoDevViewResponseType.SendFeedback:
+                        await RovoDevFeedbackManager.submitFeedback(
+                            {
+                                feedbackType: e.feedbackType,
+                                feedbackMessage: e.feedbackMessage,
+                                canContact: e.canContact,
+                                lastTenMessages: e.lastTenMessages,
+                                rovoDevSessionId: process.env.SANDBOX_SESSION_ID,
+                            },
+                            !!this.isBoysenberry,
+                        );
+                        break;
+
+                    case RovoDevViewResponseType.LaunchJiraAuth:
+                        if (e.openApiTokenLogin) {
+                            await commands.executeCommand(Commands.JiraAPITokenLogin);
+                        } else {
+                            await commands.executeCommand(Commands.ShowJiraAuth);
+                        }
+                        break;
+
+                    case RovoDevViewResponseType.OpenFolder:
+                        await commands.executeCommand(Commands.WorkbenchOpenFolder);
+                        break;
+
+                    case RovoDevViewResponseType.OpenJira:
+                        await showIssueForURL(e.url);
+                        break;
+
+                    case RovoDevViewResponseType.McpConsentChoiceSubmit:
+                        if (e.choice === 'acceptAll') {
+                            await this.acceptMcpServer(true);
+                        } else {
+                            await this.acceptMcpServer(false, e.serverName!, e.choice);
+                        }
+                        break;
+
+                    case RovoDevViewResponseType.CheckFileExists:
+                        await this.checkFileExists(e.filePath, e.requestId);
+                        break;
+
+                    case RovoDevViewResponseType.ToolPermissionChoiceSubmit:
+                        if (e.choice === 'allowAll') {
+                            await this._chatProvider.signalToolRequestAllowAll();
+                            break;
+                        }
+                        await this._chatProvider.signalToolRequestChoiceSubmit(e.toolCallId, e.choice);
+                        break;
+
+                    case RovoDevViewResponseType.YoloModeToggled:
+                        this._chatProvider.yoloMode = e.value;
+                        this.saveYoloModeToStorage(e.value);
+                        break;
+
+                    case RovoDevViewResponseType.OpenExternalLink:
+                        await env.openExternal(Uri.parse(e.href));
+                        break;
+
+                    default:
+                        // @ts-expect-error ts(2339) - e here should be 'never'
+                        this.processError(new Error(`Unknown message type: ${e.type}`));
+                        break;
+                }
+            } catch (error) {
+                await this.processError(error);
+            }
+        });
     }
 
     private getYoloModeStorageKey(): string {
@@ -153,7 +466,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         return RovoDevProcessManager.state.state;
     }
 
-    constructor(context: ExtensionContext, extensionPath: string) {
+    constructor(context: ExtensionContext, extensionPath: string, viewId: string = 'atlascode.views.rovoDev.webView') {
         super(() => {
             this._dispose();
         });
@@ -165,7 +478,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         // Register the webview view provider
         this._disposables.push(
-            window.registerWebviewViewProvider('atlascode.views.rovoDev.webView', this, {
+            window.registerWebviewViewProvider(viewId, this, {
                 webviewOptions: { retainContextWhenHidden: true },
             }),
             configuration.onDidChange(this.onConfigurationChanged, this),

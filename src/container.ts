@@ -34,6 +34,7 @@ import { Logger, RovoDevLogger } from './logger';
 import OnboardingProvider from './onboarding/onboardingProvider';
 import { registerQuickAuthCommand } from './onboarding/quickFlow';
 import { Pipeline } from './pipelines/model';
+import { RovoDevPageProvider } from './poc/rovodevPageProvider';
 import { RovoDevCodeActionProvider } from './rovo-dev/rovoDevCodeActionProvider';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
@@ -338,6 +339,7 @@ export class Container {
                         providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
                     }),
                     (this._rovodevWebviewProvider = new RovoDevWebviewProvider(context, context.extensionPath)),
+                    (this._rovodevPageProvider = new RovoDevPageProvider(context, context.extensionPath)),
                 );
 
                 context.subscriptions.push(this._rovodevDisposable);
@@ -657,6 +659,11 @@ export class Container {
     private static _rovodevWebviewProvider: RovoDevWebviewProvider;
     public static get rovodevWebviewProvider() {
         return this._rovodevWebviewProvider;
+    }
+
+    private static _rovodevPageProvider: RovoDevPageProvider;
+    public static get rovodevPageProvider() {
+        return this._rovodevPageProvider;
     }
 }
 
