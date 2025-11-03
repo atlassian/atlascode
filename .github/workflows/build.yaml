@@ -2,6 +2,7 @@ name: Build
 permissions:
   contents: read
   packages: read
+  actions: write
 
 on:
   pull_request:
@@ -14,39 +15,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
+  setup:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       
       - name: Setup npm dependencies
         uses: ./.github/actions/setup-dependencies
-
-      - name: Run vulnerability audit
-        # "There is no Vulnerability in Media Viewer after 48.5.4. since it was fixed by patching, but npm audit still reports it.",
-        # So that switched to audit-ci with allowlist
-        run: npx audit-ci --config=".audit-ci.json"
-
-      - name: Run linter
-        run: npm run lint
-
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup npm dependencies
-        uses: ./.github/actions/setup-dependencies
-
-      - name: Build and package the extension
-        run: npm run extension:package
-
-      - name: Upload extension package
-        uses: actions/upload-artifact@v4
-        with:
-          name: extension-package
-          path: atlascode-*.vsix
-          retention-days: 1
 
       - name: Compress node_modules
         run: tar -czf node_modules.tar.gz node_modules
@@ -58,8 +33,34 @@ jobs:
           path: node_modules.tar.gz
           retention-days: 1
 
+  lint:
+    needs: [setup]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
+
+      - name: Extract node_modules
+        run: tar -xzf node_modules.tar.gz
+
+      - name: Run vulnerability audit
+        # "There is no Vulnerability in Media Viewer after 48.5.4. since it was fixed by patching, but npm audit still reports it.",
+        # So that switched to audit-ci with allowlist
+        run: npx audit-ci --config=".audit-ci.json"
+
+      - name: Run linter
+        run: npm run lint
+
   test-unit:
-    needs: [build]
+    needs: [setup]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -78,6 +79,34 @@ jobs:
 
       - name: Run unit tests
         run: npm test
+
+  build:
+    needs: [setup]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
+
+      - name: Extract node_modules
+        run: tar -xzf node_modules.tar.gz
+
+      - name: Build and package the extension
+        run: npm run extension:package
+
+      - name: Upload extension package
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-package
+          path: atlascode-*.vsix
+          retention-days: 1
 
   test-e2e:
     needs: [build]
@@ -144,6 +173,12 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     steps:
+      - name: Delete node_modules artifact
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: node-modules
+          failOnError: false
+
       - name: Check if all jobs succeeded
         run: |
           if [[ "${{ needs.lint.result }}" != "success" ]]; then
