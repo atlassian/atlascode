@@ -90,6 +90,7 @@ export const enum Commands {
     RovodevShowTerminal = 'atlascode.rovodev.showTerminal',
     RovodevShareFeedback = 'atlascode.rovodev.shareFeedback',
     RovodevOpenInTab = 'atlascode.rovodev.openInTab',
+    RovodevNewTabSession = 'atlascode.rovodev.newTabSession',
     InProgressIssue = 'atlascode.jira.inProgressIssue',
     DoneIssue = 'atlascode.jira.doneIssue',
     ShowOnboardingFlow = 'atlascode.showOnboardingFlow',

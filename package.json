@@ -186,6 +186,13 @@
                 "enablement": "atlascode:rovoDevEnabled"
             },
             {
+                "command": "atlascode.rovodev.newTabSession",
+                "title": "New Rovo Dev Session in Tab",
+                "category": "Rovo Dev",
+                "description": "Creates a new Rovo Dev session in a separate tab.",
+                "enablement": "atlascode:rovoDevEnabled"
+            },
+            {
                 "command": "atlascode.jira.todoIssue",
                 "title": "TO DO"
             },
@@ -676,6 +683,11 @@
                     "group": "rovoDevContextMenu2@2"
                 },
                 {
+                    "command": "atlascode.rovodev.newTabSession",
+                    "when": "view == atlascode.views.rovoDev.webView",
+                    "group": "rovoDevContextMenu2@3"
+                },
+                {
                     "command": "atlascode.jira.createIssue",
                     "when": "view =~ /(atlascode.views.jira.assignedWorkItemsTreeView)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation@1"
@@ -893,6 +905,10 @@
                 },
                 {
                     "command": "atlascode.rovodev.openInTab",
+                    "when": "atlascode:rovoDevEnabled"
+                },
+                {
+                    "command": "atlascode.rovodev.newTabSession",
                     "when": "atlascode:rovoDevEnabled"
                 },
                 {
