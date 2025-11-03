@@ -183,7 +183,7 @@ jobs:
           if-no-files-found: ignore
 
   finalize:
-    needs: [lint, test-unit, test-e2e]
+    needs: [setup-dependencies, lint, test-unit, build-extension, test-e2e]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -201,16 +201,14 @@ jobs:
 
       - name: Check if all jobs succeeded
         run: |
-          if [[ "${{ needs.lint.result }}" != "success" ]]; then
-            echo "Lint job failed"
-            exit 1
-          fi
-          if [[ "${{ needs.test-unit.result }}" != "success" ]]; then
-            echo "Unit test job failed"
-            exit 1
-          fi
-          if [[ "${{ needs.test-e2e.result }}" != "success" ]]; then
-            echo "E2E test jobs failed"
+          results="${{ toJSON(needs.*.result) }}"
+          if echo "$results" | grep -qv "success"; then
+            echo "One or more jobs failed:"
+            echo "  setup-dependencies: ${{ needs.setup-dependencies.result }}"
+            echo "  lint: ${{ needs.lint.result }}"
+            echo "  test-unit: ${{ needs.test-unit.result }}"
+            echo "  build-extension: ${{ needs.build-extension.result }}"
+            echo "  test-e2e: ${{ needs.test-e2e.result }}"
             exit 1
           fi
           echo "All steps completed successfully"
