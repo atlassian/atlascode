@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Disposable, ExtensionContext, Uri, ViewColumn, WebviewPanel, window } from 'vscode';
 
 import { RovoDevViewResponse } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
+import { RovoDevProcessManager, RovoDevProcessManagerInstance } from '../rovo-dev/rovoDevProcessManager';
 import { RovoDevContextItem } from '../rovo-dev/rovoDevTypes';
 import { RovoDevWebviewProviderActual, TypedWebview } from '../rovo-dev/rovoDevWebviewProvider';
 import { RovoDevProviderMessage } from '../rovo-dev/rovoDevWebviewProviderMessages';
@@ -12,6 +13,7 @@ interface RovoDevSession {
     id: string;
     panel: WebviewPanel;
     provider: RovoDevWebviewProviderActual;
+    processManagerInstance: RovoDevProcessManagerInstance;
     sessionNumber: number;
 }
 
@@ -65,10 +67,13 @@ export class RovoDevPageProvider extends Disposable {
             },
         );
 
+        // Create a dedicated process manager instance for this session
+        const processManagerInstance = RovoDevProcessManager.createInstance(this._context, sessionId);
         // Create a new provider for this session
         const provider = new RovoDevWebviewProviderActual(
             this._context,
             this._extensionPath,
+            processManagerInstance,
             `atlascode.views.rovoDev.webViewPage.${sessionId}`,
         );
 
@@ -77,6 +82,7 @@ export class RovoDevPageProvider extends Disposable {
             id: sessionId,
             panel,
             provider,
+            processManagerInstance,
             sessionNumber,
         };
 
@@ -222,6 +228,8 @@ export class RovoDevPageProvider extends Disposable {
         const session = this._sessions.get(sessionId);
         if (session) {
             session.provider.dispose();
+            // Remove the process instance from the global registry
+            RovoDevProcessManager.removeInstance(sessionId);
             this._sessions.delete(sessionId);
 
             // If this was the active session, clear the active panel ID
@@ -243,6 +251,8 @@ export class RovoDevPageProvider extends Disposable {
         for (const session of this._sessions.values()) {
             session.provider.dispose();
             session.panel.dispose();
+            // Remove each process instance from the global registry
+            RovoDevProcessManager.removeInstance(session.id);
         }
         this._sessions.clear();
         this._activePanelId = undefined;

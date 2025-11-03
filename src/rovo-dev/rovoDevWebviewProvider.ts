@@ -46,7 +46,7 @@ import { RovoDevContentTracker } from './rovoDevContentTracker';
 import { RovoDevDwellTracker } from './rovoDevDwellTracker';
 import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
 import { RovoDevJiraItemsProvider } from './rovoDevJiraItemsProvider';
-import { RovoDevProcessManager, RovoDevProcessState } from './rovoDevProcessManager';
+import { RovoDevProcessManager, RovoDevProcessManagerInstance, RovoDevProcessState } from './rovoDevProcessManager';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import { RovoDevContextItem } from './rovoDevTypes';
@@ -84,7 +84,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         super(() => {
             this.dispose();
         });
-        this._rovodevWebviewProvider = new RovoDevWebviewProviderActual(context, extensionPath);
+        this._rovodevWebviewProvider = new RovoDevWebviewProviderActual(
+            context,
+            extensionPath,
+            RovoDevProcessManager.ensureDefaultInstance(context),
+        );
         // this._extensionPath = extensionPath;
         // this._extensionUri = Uri.file(extensionPath);
     }
@@ -149,6 +153,7 @@ export class RovoDevWebviewProviderActual extends Disposable implements WebviewV
     private readonly _jiraItemsProvider: RovoDevJiraItemsProvider;
     private readonly _chatProvider: RovoDevChatProvider;
     private readonly _chatContextprovider: RovoDevChatContextProvider;
+    private readonly _processManager: RovoDevProcessManagerInstance;
 
     private _webView?: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse>;
     private _webviewView?: WebviewView;
@@ -327,9 +332,7 @@ export class RovoDevWebviewProviderActual extends Disposable implements WebviewV
 
                         if (!this.isBoysenberry) {
                             // listen to change of process state by the process manager
-                            RovoDevProcessManager.onStateChanged((newState) =>
-                                this.handleProcessStateChanged(newState),
-                            );
+                            this._processManager.onStateChanged((newState) => this.handleProcessStateChanged(newState));
 
                             if (!workspace.workspaceFolders?.length) {
                                 await this.signalRovoDevDisabled('NoWorkspaceOpen');
@@ -346,7 +349,7 @@ export class RovoDevWebviewProviderActual extends Disposable implements WebviewV
                         }
 
                         // initialize (or refresh) the provider based on the current process state
-                        this.handleProcessStateChanged(RovoDevProcessManager.state);
+                        this.handleProcessStateChanged(this._processManager.state);
                         break;
 
                     case RovoDevViewResponseType.GetAgentMemory:
@@ -463,10 +466,15 @@ export class RovoDevWebviewProviderActual extends Disposable implements WebviewV
     }
 
     private get processState(): RovoDevProcessState['state'] {
-        return RovoDevProcessManager.state.state;
+        return this._processManager.state.state;
     }
 
-    constructor(context: ExtensionContext, extensionPath: string, viewId: string = 'atlascode.views.rovoDev.webView') {
+    constructor(
+        context: ExtensionContext,
+        extensionPath: string,
+        processManagerInstance: RovoDevProcessManagerInstance,
+        viewId: string = 'atlascode.views.rovoDev.webView',
+    ) {
         super(() => {
             this._dispose();
         });
@@ -475,6 +483,8 @@ export class RovoDevWebviewProviderActual extends Disposable implements WebviewV
         this._extensionUri = Uri.file(this._extensionPath);
         this._context = context;
         this._debugPanelEnabled = Container.config.rovodev.debugPanelEnabled;
+        this._processManager = processManagerInstance;
+        this._processManager.initializeRovoDev();
 
         // Register the webview view provider
         this._disposables.push(
@@ -529,7 +539,7 @@ export class RovoDevWebviewProviderActual extends Disposable implements WebviewV
 
     private async refreshDebugPanel(force?: boolean) {
         if (this._debugPanelEnabled || force) {
-            const fullProcessState = RovoDevProcessManager.state;
+            const fullProcessState = this._processManager.state;
             this._debugPanelContext['ProcessState'] = fullProcessState.state;
             if (fullProcessState.state === 'Disabled') {
                 this._debugPanelContext['ProcessState'] += ' / ' + fullProcessState.subState;
@@ -708,9 +718,7 @@ export class RovoDevWebviewProviderActual extends Disposable implements WebviewV
 
                         if (!this.isBoysenberry) {
                             // listen to change of process state by the process manager
-                            RovoDevProcessManager.onStateChanged((newState) =>
-                                this.handleProcessStateChanged(newState),
-                            );
+                            this._processManager.onStateChanged((newState) => this.handleProcessStateChanged(newState));
 
                             if (!workspace.workspaceFolders?.length) {
                                 await this.signalRovoDevDisabled('NoWorkspaceOpen');
@@ -727,7 +735,7 @@ export class RovoDevWebviewProviderActual extends Disposable implements WebviewV
                         }
 
                         // initialize (or refresh) the provider based on the current process state
-                        this.handleProcessStateChanged(RovoDevProcessManager.state);
+                        this.handleProcessStateChanged(this._processManager.state);
                         break;
 
                     case RovoDevViewResponseType.GetAgentMemory:
@@ -906,7 +914,7 @@ export class RovoDevWebviewProviderActual extends Disposable implements WebviewV
                 type: RovoDevProviderMessageType.ClearChat,
             });
 
-            await RovoDevProcessManager.initializeRovoDev(this._context, true);
+            await this._processManager.initializeRovoDev(true);
             return;
         }
 
