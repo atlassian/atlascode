@@ -1496,6 +1496,27 @@ export class JiraIssueWebview
 
                         const historyItems: any[] = [];
                         const changelog = response.data.changelog;
+                        const issueData = response.data;
+
+                        // Add the "Work item created" event
+                        if (issueData.fields?.created && issueData.fields?.reporter) {
+                            const reporter = issueData.fields.reporter;
+                            historyItems.push({
+                                id: '__CREATED__',
+                                timestamp: issueData.fields.created,
+                                author: {
+                                    displayName: reporter.displayName || reporter.name,
+                                    accountId: reporter.accountId,
+                                    avatarUrl: reporter.avatarUrls?.['48x48'] || reporter.avatarUrls?.['32x32'],
+                                },
+                                field: '__CREATED__',
+                                fieldDisplayName: '__CREATED__',
+                                from: null,
+                                to: null,
+                                fromString: undefined,
+                                toString: undefined,
+                            });
+                        }
 
                         if (changelog && changelog.histories) {
                             changelog.histories.forEach((history: any) => {
@@ -1521,7 +1542,15 @@ export class JiraIssueWebview
                             });
                         }
 
-                        historyItems.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+                        historyItems.sort((a, b) => {
+                            if (a.id === '__CREATED__') {
+                                return 1;
+                            }
+                            if (b.id === '__CREATED__') {
+                                return -1;
+                            }
+                            return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+                        });
 
                         this.postMessage({
                             type: 'historyUpdate',
