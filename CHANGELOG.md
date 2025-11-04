@@ -5,6 +5,7 @@
 ### Features
 
 - Added edit and delete work log support
+- Added Call-to-Action links for Rovo Dev enablement errors and credit limit errors
 
 ### Bug Fixes
 
