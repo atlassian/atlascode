@@ -31,6 +31,10 @@ export interface AbstractDialogMessage {
     text: string;
     title?: string;
     statusCode?: string;
+    ctaLink?: {
+        text: string;
+        link: string;
+    };
 }
 
 export interface ErrorDialogMessage extends AbstractDialogMessage {

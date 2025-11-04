@@ -100,6 +100,7 @@ const mockFetchImage = jest.fn();
 const mockOnDelete = jest.fn();
 const mockOnCommentTextChange = jest.fn();
 const mockOnEditingCommentChange = jest.fn();
+const mockHandleEditorFocus = jest.fn();
 
 // Mock mention provider
 const mockMentionProvider = AtlascodeMentionProvider.init({ url: '' }, jest.fn().mockResolvedValue([]));
@@ -132,6 +133,7 @@ describe('IssueCommentComponent', () => {
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={false}
                 mentionProvider={mockMentionProvider}
+                handleEditorFocus={mockHandleEditorFocus}
             />,
         );
 
@@ -156,6 +158,7 @@ describe('IssueCommentComponent', () => {
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={false}
                 mentionProvider={mockMentionProvider}
+                handleEditorFocus={mockHandleEditorFocus}
             />,
         );
 
@@ -182,6 +185,7 @@ describe('IssueCommentComponent', () => {
                     onEditingCommentChange={mockOnEditingCommentChange}
                     isAtlaskitEditorEnabled={false}
                     mentionProvider={mockMentionProvider}
+                    handleEditorFocus={mockHandleEditorFocus}
                 />,
             ),
         );
@@ -213,6 +217,7 @@ describe('IssueCommentComponent', () => {
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={false}
                 mentionProvider={mockMentionProvider}
+                handleEditorFocus={mockHandleEditorFocus}
             />,
         );
 
@@ -243,6 +248,7 @@ describe('IssueCommentComponent', () => {
                     onEditingCommentChange={setIsEditingComment}
                     isAtlaskitEditorEnabled={false}
                     mentionProvider={mockMentionProvider}
+                    handleEditorFocus={mockHandleEditorFocus}
                 />
             );
         };

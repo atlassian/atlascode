@@ -70,23 +70,30 @@ export function statusJsonResponseToMarkdown(response: RovoDevStatusResponse): s
     }
 
     buffer += '**Model**\n';
-    buffer += `- ${parseCustomCliTagsForMarkdown(data.model.humanReadableName)}`;
+    buffer += `- ${parseCustomCliTagsForMarkdown(data.model.humanReadableName, [])}`;
 
     return buffer;
 }
 
-function formatText(text: string, cliTags: string[]) {
+function formatText(text: string, cliTags: string[], links: { text: string; link: string }[]) {
     if (cliTags.includes('italic')) {
         text = `*${text}*`;
     }
     if (cliTags.includes('bold')) {
         text = `**${text}**`;
     }
+
+    const linkIndex = cliTags.findIndex((x) => x.startsWith('link='));
+    if (linkIndex >= 0) {
+        const link = cliTags[linkIndex].substring('link='.length);
+        links.push({ text, link });
+        text = '{link' + links.length + '}';
+    }
     return text;
 }
 
 // this function doesn't work well with nested identical tags - hopefully we don't need that
-export function parseCustomCliTagsForMarkdown(text: string): string {
+export function parseCustomCliTagsForMarkdown(text: string, links: { text: string; link: string }[]): string {
     // no valid tags
     if (!text || !text.includes('[/') || !text.includes(']', text.indexOf('['))) {
         return text;
@@ -97,16 +104,22 @@ export function parseCustomCliTagsForMarkdown(text: string): string {
     // handle unopened tags
     if (text[firstTagPosition + 1] === '/') {
         const startingPosition = text.indexOf(']', firstTagPosition) + 1;
-        return text.substring(0, startingPosition) + parseCustomCliTagsForMarkdown(text.substring(startingPosition));
+        return (
+            text.substring(0, startingPosition) + parseCustomCliTagsForMarkdown(text.substring(startingPosition), links)
+        );
     }
 
     const firstTagContent = text.substring(firstTagPosition + 1, text.indexOf(']'));
-    const closingTagPosition = text.indexOf('[/' + firstTagContent + ']');
+    const closingTagPosition = firstTagContent.startsWith('link=')
+        ? text.indexOf('[/link]')
+        : text.indexOf('[/' + firstTagContent + ']');
 
     // handle unclosed tags
     if (closingTagPosition === -1) {
         const startingPosition = text.indexOf(']', firstTagPosition) + 1;
-        return text.substring(0, startingPosition) + parseCustomCliTagsForMarkdown(text.substring(startingPosition));
+        return (
+            text.substring(0, startingPosition) + parseCustomCliTagsForMarkdown(text.substring(startingPosition), links)
+        );
     }
 
     const contentWithinTags = text.substring(text.indexOf(']', firstTagPosition) + 1, closingTagPosition);
@@ -114,7 +127,7 @@ export function parseCustomCliTagsForMarkdown(text: string): string {
 
     return (
         text.substring(0, firstTagPosition) +
-        formatText(parseCustomCliTagsForMarkdown(contentWithinTags), firstTagContent.split(' ')) +
-        parseCustomCliTagsForMarkdown(text.substring(afterTags))
+        formatText(parseCustomCliTagsForMarkdown(contentWithinTags, links), firstTagContent.split(' '), links) +
+        parseCustomCliTagsForMarkdown(text.substring(afterTags), links)
     );
 }

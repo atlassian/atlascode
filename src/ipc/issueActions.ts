@@ -91,6 +91,13 @@ export interface ScreensForSiteAction extends Action {
     site: DetailedSiteInfo;
 }
 
+export interface LoadMoreProjectsAction extends Action {
+    action: 'loadMoreProjects';
+    maxResults?: number;
+    startAt?: number;
+    query?: string;
+}
+
 export interface CreateSelectOptionAction extends Action {
     fieldKey: string;
     siteDetails: DetailedSiteInfo;
@@ -220,6 +227,11 @@ export interface AiSuggeestionFeedbackAction extends Action {
     };
 }
 
+export interface HandleEditorFocusAction extends Action {
+    action: 'handleEditorFocus';
+    isFocused: boolean;
+}
+
 export function isGetImage(a: Action): a is GetImageAction {
     return (<GetImageAction>a).action === 'getImage';
 }
@@ -254,6 +266,10 @@ export function isScreensForProjects(a: Action): a is ScreensForProjectsAction {
 
 export function isScreensForSite(a: Action): a is ScreensForSiteAction {
     return (<ScreensForSiteAction>a).site !== undefined;
+}
+
+export function isLoadMoreProjects(a: Action): a is LoadMoreProjectsAction {
+    return a && a.action === 'loadMoreProjects';
 }
 
 export function isCreateSelectOption(a: Action): a is CreateSelectOptionAction {
@@ -369,4 +385,8 @@ export function isAiSuggestionFeedback(a: Action): a is AiSuggeestionFeedbackAct
         (<AiSuggeestionFeedbackAction>a).isPositive !== undefined &&
         (<AiSuggeestionFeedbackAction>a).todoData !== undefined
     );
+}
+
+export function isHandleEditorFocus(a: Action): a is HandleEditorFocusAction {
+    return a && a.action === 'handleEditorFocus';
 }

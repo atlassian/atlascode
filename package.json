@@ -46,7 +46,7 @@
     ],
     "main": "./build/extension/extension",
     "rovoDev": {
-        "version": "0.12.10"
+        "version": "0.12.14"
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
@@ -93,6 +93,12 @@
                 "key": "ctrl+alt+a",
                 "when": "editorTextFocus",
                 "mac": "cmd+alt+a"
+            },
+            {
+                "command": "",
+                "key": "ctrl+b",
+                "when": "atlascode:isEditorFocused",
+                "mac": "cmd+b"
             }
         ],
         "commands": [

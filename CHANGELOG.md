@@ -5,10 +5,12 @@
 ### Features
 
 - Added edit and delete work log support
+- Added Call-to-Action links for Rovo Dev enablement errors and credit limit errors
 
 ### Bug Fixes
 
 - Fix issue with not working team adding functionality
+- Disabled CMD+B hotkey when Jira/Bitbucket editor has focus
 
 ## What's new in 4.0.6
 

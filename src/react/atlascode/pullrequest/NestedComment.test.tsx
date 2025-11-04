@@ -85,6 +85,7 @@ const mockController: PullRequestDetailsControllerApi = {
     checkoutBranch: jest.fn(),
     openDiff: jest.fn(),
     openJiraIssue: jest.fn(),
+    handleEditorFocus: jest.fn(),
 } as PullRequestDetailsControllerApi;
 
 const renderWithContext = (pullRequestState: PullRequestState, comment: Comment = mockComment) => {
@@ -96,6 +97,7 @@ const renderWithContext = (pullRequestState: PullRequestState, comment: Comment 
                 fetchUsers={jest.fn()}
                 onDelete={jest.fn()}
                 pullRequestState={pullRequestState}
+                handleEditorFocus={jest.fn()}
             />
         </PullRequestDetailsControllerContext.Provider>,
     );

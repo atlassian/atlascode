@@ -20,7 +20,8 @@ export const DialogMessageItem: React.FC<{
     isRetryAfterErrorButtonEnabled?: (uid: string) => boolean;
     retryAfterError?: () => void;
     onToolPermissionChoice?: (toolCallId: string, choice: ToolPermissionChoice) => void;
-}> = ({ msg, isRetryAfterErrorButtonEnabled, retryAfterError, onToolPermissionChoice }) => {
+    customButton?: { text: string; onClick: () => void };
+}> = ({ msg, isRetryAfterErrorButtonEnabled, retryAfterError, onToolPermissionChoice, customButton }) => {
     const [title, icon] = React.useMemo(() => {
         let title: string;
         let icon: React.JSX.Element;
@@ -89,6 +90,7 @@ export const DialogMessageItem: React.FC<{
                                 </button>
                             </div>
                         )}
+
                     {msg.type === 'toolPermissionRequest' && onToolPermissionChoice && (
                         <div
                             style={{
@@ -113,6 +115,15 @@ export const DialogMessageItem: React.FC<{
                             </button>
                         </div>
                     )}
+
+                    {customButton && (
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '8px' }}>
+                            <button style={inChatButtonStyles} onClick={customButton.onClick}>
+                                {customButton.text}
+                            </button>
+                        </div>
+                    )}
+
                     {msg.statusCode && <div style={{ fontSize: 'smaller', textAlign: 'right' }}>{msg.statusCode}</div>}
                 </div>
             </div>
