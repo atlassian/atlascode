@@ -49,6 +49,7 @@ export const ChatItem = React.memo<ChatItemProps>(
                     opened={drawerOpen}
                     renderProps={renderProps}
                     onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
+                    onLinkClick={onLinkClick}
                 />
             );
         } else if (block.event_kind === '_RovoDevUserPrompt' || block.event_kind === 'text') {
@@ -79,12 +80,22 @@ export const ChatItem = React.memo<ChatItemProps>(
                 return <ToolReturnParsedItem msg={message} openFile={renderProps.openFile} />;
             });
         } else if (block.event_kind === '_RovoDevDialog') {
+            let customButton: { text: string; onClick: () => void } | undefined = undefined;
+            if (block.ctaLink) {
+                const { text, link } = block.ctaLink;
+                customButton = {
+                    text,
+                    onClick: () => onLinkClick(link),
+                };
+            }
+
             return (
                 <DialogMessageItem
                     msg={block}
                     isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
                     retryAfterError={renderProps.retryPromptAfterError}
                     onToolPermissionChoice={onToolPermissionChoice}
+                    customButton={customButton}
                 />
             );
         } else if (block.event_kind === '_RovoDevPullRequest') {

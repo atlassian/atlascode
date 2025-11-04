@@ -13,8 +13,9 @@ export const DisabledMessage: React.FC<{
     currentState: State;
     onLoginClick: (openApiTokenLogin: boolean) => void;
     onOpenFolder: () => void;
+    onLinkClick: (url: string) => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
-}> = ({ currentState, onLoginClick, onOpenFolder, onMcpChoice }) => {
+}> = ({ currentState, onLoginClick, onOpenFolder, onLinkClick, onMcpChoice }) => {
     if (currentState.state === 'Disabled' && currentState.subState === 'NeedAuth') {
         return (
             <div style={messageOuterStyles}>
@@ -53,6 +54,17 @@ export const DisabledMessage: React.FC<{
     }
 
     if (currentState.state === 'Disabled' && currentState.subState === 'EntitlementCheckFailed') {
+        let customButton: { text: string; onClick: () => void } | undefined = undefined;
+        if (currentState.detail.payload.ctaLink) {
+            const { text, link } = currentState.detail.payload.ctaLink;
+            customButton = {
+                text,
+                onClick: () => onLinkClick(link),
+            };
+        }
+
+        const message = currentState.detail.payload.message.replace('{ctaLink}', '').trim();
+
         return (
             <div style={{ ...messageOuterStyles, width: '100%' }}>
                 <DialogMessageItem
@@ -60,10 +72,11 @@ export const DisabledMessage: React.FC<{
                         event_kind: '_RovoDevDialog',
                         type: 'error',
                         title: currentState.detail.payload.title,
-                        text: currentState.detail.payload.message,
+                        text: message,
                         statusCode: `Failure code: ${currentState.detail.payload.status}`,
                         uid: '',
                     }}
+                    customButton={customButton}
                 />
             </div>
         );

@@ -51,6 +51,7 @@ describe('MessageDrawer', () => {
                 messages={mockMessages}
                 renderProps={mockRenderProps}
                 onCollapsiblePanelExpanded={() => {}}
+                onLinkClick={() => {}}
             />,
         );
 
@@ -67,6 +68,7 @@ describe('MessageDrawer', () => {
                 messages={mockMessages}
                 renderProps={mockRenderProps}
                 onCollapsiblePanelExpanded={() => {}}
+                onLinkClick={() => {}}
             />,
         );
 
@@ -83,6 +85,7 @@ describe('MessageDrawer', () => {
                 messages={mockMessages}
                 renderProps={mockRenderProps}
                 onCollapsiblePanelExpanded={() => {}}
+                onLinkClick={() => {}}
             />,
         );
 
@@ -109,6 +112,7 @@ describe('MessageDrawer', () => {
                 messages={emptyMessages}
                 renderProps={mockRenderProps}
                 onCollapsiblePanelExpanded={() => {}}
+                onLinkClick={() => {}}
             />,
         );
 

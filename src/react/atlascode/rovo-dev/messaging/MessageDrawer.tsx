@@ -16,6 +16,7 @@ interface MessageDrawerProps {
     };
     opened: boolean;
     onCollapsiblePanelExpanded: () => void;
+    onLinkClick: (link: string) => void;
 }
 
 export const MessageDrawer: React.FC<MessageDrawerProps> = ({
@@ -23,6 +24,7 @@ export const MessageDrawer: React.FC<MessageDrawerProps> = ({
     renderProps: { openFile, openJira, checkFileExists, isRetryAfterErrorButtonEnabled, retryPromptAfterError },
     onCollapsiblePanelExpanded,
     opened,
+    onLinkClick,
 }) => {
     const [isOpen, setIsOpen] = React.useState(opened);
 
@@ -62,6 +64,7 @@ export const MessageDrawer: React.FC<MessageDrawerProps> = ({
                         msg,
                         openFile,
                         openJira,
+                        onLinkClick,
                         checkFileExists,
                         isRetryAfterErrorButtonEnabled,
                         retryPromptAfterError,

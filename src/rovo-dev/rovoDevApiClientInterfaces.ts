@@ -47,11 +47,9 @@ export interface EntitlementCheckRovoDevHealthcheckResponse {
             status: EntitlementFailedStatus;
             title?: string;
             message: string;
-            userCreditLimits: {
-                user: {
-                    isProductAdmin: boolean;
-                    isOrgAdmin: boolean;
-                };
+            ctaLink?: {
+                link: string;
+                text: string;
             };
         };
     };
