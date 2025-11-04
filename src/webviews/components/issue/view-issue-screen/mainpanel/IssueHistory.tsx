@@ -20,10 +20,77 @@ const formatTimestamp = (timestamp: string): string => {
     }
 };
 
-const formatValue = (value: string | null | undefined): string => {
+const formatDuration = (seconds: number): string => {
+    if (seconds === 0) {
+        return '0m';
+    }
+
+    const weeks = Math.floor(seconds / (7 * 24 * 60 * 60));
+    const days = Math.floor((seconds % (7 * 24 * 60 * 60)) / (24 * 60 * 60));
+    const hours = Math.floor((seconds % (24 * 60 * 60)) / (60 * 60));
+    const minutes = Math.floor((seconds % (60 * 60)) / 60);
+
+    const parts: string[] = [];
+    if (weeks > 0) {
+        parts.push(`${weeks}w`);
+    }
+    if (days > 0) {
+        parts.push(`${days}d`);
+    }
+    if (hours > 0) {
+        parts.push(`${hours}h`);
+    }
+    if (minutes > 0) {
+        parts.push(`${minutes}m`);
+    }
+
+    if (parts.length === 0) {
+        return '0m';
+    }
+
+    return parts.join(' ');
+};
+
+const isTimeField = (field: string | undefined, fieldDisplayName: string): boolean => {
+    if (!field && !fieldDisplayName) {
+        return false;
+    }
+
+    const lowerField = (field || '').toLowerCase();
+    const lowerDisplayName = fieldDisplayName.toLowerCase();
+
+    const timeFields = [
+        'timeestimate',
+        'timespent',
+        'remainingestimate',
+        'originalestimate',
+        'timetracking',
+        'time estimate',
+        'time spent',
+        'remaining estimate',
+        'original estimate',
+    ];
+
+    return timeFields.some((tf) => lowerField.includes(tf) || lowerDisplayName.includes(tf));
+};
+
+const formatValue = (value: string | null | undefined, field?: string, fieldDisplayName?: string): string => {
     if (value === null || value === undefined || value === '') {
         return 'None';
     }
+
+    if (isTimeField(field, fieldDisplayName || '')) {
+        const stringValue = String(value);
+        const isAlreadyFormatted = /[a-zA-Z]/.test(stringValue);
+
+        if (!isAlreadyFormatted) {
+            const numValue = typeof value === 'string' ? parseFloat(value) : value;
+            if (!isNaN(numValue) && typeof numValue === 'number') {
+                return formatDuration(numValue);
+            }
+        }
+    }
+
     return value;
 };
 
@@ -115,7 +182,7 @@ export const IssueHistory: React.FC<IssueHistoryProps> = ({ history, historyLoad
                                         color: '--vscode-descriptionForeground',
                                     }}
                                 >
-                                    {formatValue(item.fromString || item.from)}
+                                    {formatValue(item.fromString || item.from, item.field, item.fieldDisplayName)}
                                 </span>
                                 <span style={{ color: '--vscode-descriptionForeground' }}>→</span>
                                 <span
@@ -126,7 +193,7 @@ export const IssueHistory: React.FC<IssueHistoryProps> = ({ history, historyLoad
                                         color: '--vscode-descriptionForeground',
                                     }}
                                 >
-                                    {formatValue(item.toString || item.to)}
+                                    {formatValue(item.toString || item.to, item.field, item.fieldDisplayName)}
                                 </span>
                             </div>
                         )}
