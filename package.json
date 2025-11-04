@@ -309,6 +309,15 @@
                 "category": "Jira"
             },
             {
+                "command": "atlascode.jira.filter",
+                "title": "Filter issues",
+                "icon": {
+                    "dark": "resources/dark/preferences.svg",
+                    "light": "resources/light/preferences.svg"
+                },
+                "category": "Jira"
+            },
+            {
                 "command": "atlascode.jira.refreshCustomJqlExplorer",
                 "title": "Refresh Custom JQL Filters",
                 "icon": {
@@ -679,6 +688,11 @@
                     "group": "navigation@2"
                 },
                 {
+                    "command": "atlascode.jira.filter",
+                    "when": "view == atlascode.views.jira.assignedWorkItemsTreeView && atlascode:isJiraAuthenticated",
+                    "group": "navigation@3"
+                },
+                {
                     "command": "atlascode.jira.refreshCustomJqlExplorer",
                     "when": "view == atlascode.views.jira.customJqlTreeView && atlascode:isJiraAuthenticated",
                     "group": "navigation@2"
@@ -1031,6 +1045,10 @@
                 {
                     "command": "atlascode.jira.refreshCustomJqlExplorer",
                     "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
+                },
+                {
+                    "command": "atlascode.jira.filter",
+                    "when": "false"
                 }
             ]
         },
