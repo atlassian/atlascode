@@ -88,7 +88,7 @@ export const IssueHistory: React.FC<IssueHistoryProps> = ({ history, historyLoad
                         <Avatar src={item.author.avatarUrl} name={item.author.displayName} size="small" />
                         <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
                             <div style={{ fontWeight: 600, fontSize: '14px' }}>{item.author.displayName}</div>
-                            <div style={{ fontSize: '12px', color: '--vscode-foreground' }}>
+                            <div style={{ fontSize: '12px', color: '--vscode-descriptionForeground', opacity: 0.7 }}>
                                 {getActionText(item.fieldDisplayName)} • {formatTimestamp(item.timestamp)}
                             </div>
                         </div>
@@ -110,22 +110,20 @@ export const IssueHistory: React.FC<IssueHistoryProps> = ({ history, historyLoad
                                 <span
                                     style={{
                                         padding: '4px 8px',
-                                        backgroundColor: '#f4f5f7',
                                         borderRadius: '3px',
                                         fontSize: '13px',
-                                        color: '#42526e',
+                                        color: '--vscode-descriptionForeground',
                                     }}
                                 >
                                     {formatValue(item.fromString || item.from)}
                                 </span>
-                                <span style={{ color: '#6b778c' }}>→</span>
+                                <span style={{ color: '--vscode-descriptionForeground' }}>→</span>
                                 <span
                                     style={{
                                         padding: '4px 8px',
-                                        backgroundColor: '#f4f5f7',
                                         borderRadius: '3px',
                                         fontSize: '13px',
-                                        color: '#42526e',
+                                        color: '--vscode-descriptionForeground',
                                     }}
                                 >
                                     {formatValue(item.toString || item.to)}

@@ -697,10 +697,20 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             value={this.state.commentsTabIndex}
                             onChange={this.handleCommentsTabChange}
                             aria-label="Issue activity tabs"
-                            indicatorColor="primary"
                             variant="scrollable"
                             scrollButtons
                             allowScrollButtonsMobile
+                            sx={{
+                                '& .MuiTab-root': {
+                                    color: 'var(--vscode-tab-inactiveForeground)',
+                                    '&.Mui-selected': {
+                                        color: 'var(--vscode-tab-activeForeground)',
+                                    },
+                                },
+                                '& .MuiTabs-indicator': {
+                                    backgroundColor: 'var(--vscode-button-background)',
+                                },
+                            }}
                         >
                             <Tab label="Comments" id="issue-tab-comments" aria-controls="issue-tabpanel-comments" />
                             <Tab label="History" id="issue-tab-history" aria-controls="issue-tabpanel-history" />
