@@ -21,7 +21,7 @@ import {
     RovoDevPrompt,
     TechnicalPlan,
 } from './rovoDevTypes';
-import { statusJsonResponseToMarkdown } from './rovoDevUtils';
+import { parseCustomCliTagsForMarkdown, statusJsonResponseToMarkdown } from './rovoDevUtils';
 import { TypedWebview } from './rovoDevWebviewProvider';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 
@@ -377,32 +377,39 @@ export class RovoDevChatProvider {
                 await this.processError(response.error, { showOnlyInDebug: true });
                 break;
 
-            case 'exception':
+            case 'exception': {
                 RovoDevLogger.error(new Error(`${response.type} ${response.message}`), response.title || undefined);
+
+                const { text, link } = this.parseExceptionMessage(response.message);
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.ShowDialog,
                     message: {
                         event_kind: '_RovoDevDialog',
                         type: 'error',
                         title: response.title || undefined,
-                        text: response.message,
+                        text,
+                        ctaLink: link,
                         statusCode: `Error code: ${response.type}`,
                         uid: v4(),
                     },
                 });
                 break;
+            }
 
-            case 'warning':
+            case 'warning': {
+                const { text, link } = this.parseExceptionMessage(response.message);
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.ShowDialog,
                     message: {
                         type: 'warning',
-                        text: response.message,
+                        text,
+                        ctaLink: link,
                         title: response.title,
                         event_kind: '_RovoDevDialog',
                     },
                 });
                 break;
+            }
 
             case 'clear':
                 await webview.postMessage({
@@ -667,5 +674,21 @@ export class RovoDevChatProvider {
         }
 
         return { text: source.replace(contextRegex, '').trim(), context };
+    }
+
+    private parseExceptionMessage(message: string) {
+        let links: Parameters<typeof parseCustomCliTagsForMarkdown>[1] = [];
+        let exceptionText = parseCustomCliTagsForMarkdown(message, links);
+
+        if (links.length === 1) {
+            exceptionText = exceptionText.replace('{link1}', '').trim();
+        } else if (links.length > 1) {
+            for (let i = 1; i <= links.length; ++i) {
+                exceptionText = exceptionText.replace('{link' + i + '}', links[i - 1].link);
+            }
+            links = [];
+        }
+
+        return { text: exceptionText, link: links.length === 1 ? links[0] : undefined };
     }
 }

@@ -134,6 +134,7 @@ export const renderChatHistory = (
     msg: ChatMessage,
     openFile: OpenFileFunc,
     openJira: OpenJiraFunc,
+    onLinkClick: (link: string) => void,
     checkFileExists: CheckFileExistsFunc,
     isRetryAfterErrorButtonEnabled: (uid: string) => boolean,
     retryAfterError: () => void,
@@ -154,6 +155,15 @@ export const renderChatHistory = (
                 return <ToolReturnParsedItem msg={message} openFile={openFile} />;
             });
         case '_RovoDevDialog':
+            let customButton: { text: string; onClick: () => void } | undefined = undefined;
+            if (msg.ctaLink) {
+                const { text, link } = msg.ctaLink;
+                customButton = {
+                    text,
+                    onClick: () => onLinkClick(link),
+                };
+            }
+
             return (
                 <DialogMessageItem
                     msg={msg}
@@ -162,6 +172,7 @@ export const renderChatHistory = (
                     onToolPermissionChoice={
                         () => {} /* this codepath is not supposed to have tool permissions requests */
                     }
+                    customButton={customButton}
                 />
             );
         case 'text':

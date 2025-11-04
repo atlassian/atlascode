@@ -252,6 +252,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     setPromptText={setPromptText}
                     jiraWorkItems={jiraWorkItems}
                     onJiraItemClick={onJiraItemClick}
+                    onLinkClick={onLinkClick}
                 />
             )}
             {!isChatHistoryDisabled && (
