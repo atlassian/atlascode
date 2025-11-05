@@ -794,6 +794,7 @@ export class JiraIssueWebview
                                 type: 'fieldValueUpdate',
                                 fieldValues: { worklog: this._editUIData.fieldValues['worklog'], nonce: msg.nonce },
                             });
+                            this.refreshIssueHistory();
                             issueUpdatedEvent(
                                 this._issue.siteDetails,
                                 this._issue.key,
@@ -844,6 +845,7 @@ export class JiraIssueWebview
                                 type: 'fieldValueUpdate',
                                 fieldValues: { worklog: this._editUIData.fieldValues['worklog'], nonce: msg.nonce },
                             });
+                            this.refreshIssueHistory();
                             issueUpdatedEvent(
                                 this._issue.siteDetails,
                                 this._issue.key,
@@ -892,6 +894,7 @@ export class JiraIssueWebview
                                 type: 'fieldValueUpdate',
                                 fieldValues: { worklog: this._editUIData.fieldValues['worklog'], nonce: msg.nonce },
                             });
+                            this.refreshIssueHistory();
                             issueUpdatedEvent(
                                 this._issue.siteDetails,
                                 this._issue.key,
@@ -1483,80 +1486,7 @@ export class JiraIssueWebview
                 case 'fetchIssueHistory': {
                     handled = true;
                     try {
-                        const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
-                        const apiVersion = client.apiVersion || '2';
-                        const baseApiUrl = this._issue.siteDetails.baseApiUrl.replace(/\/rest$/, '');
-                        const historyUrl = `${baseApiUrl}/rest/api/${apiVersion}/issue/${this._issue.key}?expand=changelog`;
-
-                        const response = await client.transportFactory().get(historyUrl, {
-                            method: 'GET',
-                            headers: {
-                                Authorization: await client.authorizationProvider('GET', historyUrl),
-                            },
-                        });
-
-                        const historyItems: any[] = [];
-                        const changelog = response.data.changelog;
-                        const issueData = response.data;
-
-                        // Add the "Work item created" event
-                        if (issueData.fields?.created && issueData.fields?.reporter) {
-                            const reporter = issueData.fields.reporter;
-                            historyItems.push({
-                                id: '__CREATED__',
-                                timestamp: issueData.fields.created,
-                                author: {
-                                    displayName: reporter.displayName || reporter.name,
-                                    accountId: reporter.accountId,
-                                    avatarUrl: reporter.avatarUrls?.['48x48'] || reporter.avatarUrls?.['32x32'],
-                                },
-                                field: '__CREATED__',
-                                fieldDisplayName: '__CREATED__',
-                                from: null,
-                                to: null,
-                                fromString: undefined,
-                                toString: undefined,
-                            });
-                        }
-
-                        if (changelog && changelog.histories) {
-                            changelog.histories.forEach((history: any) => {
-                                history.items.forEach((item: any) => {
-                                    historyItems.push({
-                                        id: `${history.id}-${item.fieldId || item.field}`,
-                                        timestamp: history.created,
-                                        author: {
-                                            displayName: history.author.displayName || history.author.name,
-                                            accountId: history.author.accountId,
-                                            avatarUrl:
-                                                history.author.avatarUrls?.['48x48'] ||
-                                                history.author.avatarUrls?.['32x32'],
-                                        },
-                                        field: item.fieldId || item.field,
-                                        fieldDisplayName: item.field,
-                                        from: item.from,
-                                        to: item.to,
-                                        fromString: item.fromString,
-                                        toString: item.toString,
-                                    });
-                                });
-                            });
-                        }
-
-                        historyItems.sort((a, b) => {
-                            if (a.id === '__CREATED__') {
-                                return 1;
-                            }
-                            if (b.id === '__CREATED__') {
-                                return -1;
-                            }
-                            return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
-                        });
-
-                        this.postMessage({
-                            type: 'historyUpdate',
-                            history: historyItems,
-                        });
+                        await this.refreshIssueHistory();
                     } catch (e) {
                         Logger.error(e, 'Error fetching issue history');
                         this.postMessage({
@@ -1602,6 +1532,125 @@ export class JiraIssueWebview
         }
 
         return hierarchy;
+    }
+
+    private async refreshIssueHistory() {
+        try {
+            const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+            const apiVersion = client.apiVersion || '2';
+            const baseApiUrl = this._issue.siteDetails.baseApiUrl.replace(/\/rest$/, '');
+            const historyUrl = `${baseApiUrl}/rest/api/${apiVersion}/issue/${this._issue.key}?expand=changelog`;
+
+            const [historyResponse, worklogResponse] = await Promise.all([
+                client.transportFactory().get(historyUrl, {
+                    method: 'GET',
+                    headers: {
+                        Authorization: await client.authorizationProvider('GET', historyUrl),
+                    },
+                }),
+                client
+                    .transportFactory()
+                    .get(`${baseApiUrl}/rest/api/${apiVersion}/issue/${this._issue.key}/worklog`, {
+                        method: 'GET',
+                        headers: {
+                            Authorization: await client.authorizationProvider(
+                                'GET',
+                                `${baseApiUrl}/rest/api/${apiVersion}/issue/${this._issue.key}/worklog`,
+                            ),
+                        },
+                    })
+                    .catch((e) => {
+                        Logger.warn(e, 'Error fetching worklogs for history');
+                        return { data: { worklogs: [] } };
+                    }),
+            ]);
+
+            const historyItems: any[] = [];
+            const changelog = historyResponse.data.changelog;
+            const issueData = historyResponse.data;
+            const worklogs = worklogResponse.data.worklogs || [];
+
+            // Add the "Work item created" event
+            if (issueData.fields?.created && issueData.fields?.reporter) {
+                const reporter = issueData.fields.reporter;
+                historyItems.push({
+                    id: '__CREATED__',
+                    timestamp: issueData.fields.created,
+                    author: {
+                        displayName: reporter.displayName || reporter.name,
+                        accountId: reporter.accountId,
+                        avatarUrl: reporter.avatarUrls?.['48x48'] || reporter.avatarUrls?.['32x32'],
+                    },
+                    field: '__CREATED__',
+                    fieldDisplayName: '__CREATED__',
+                    from: null,
+                    to: null,
+                    fromString: undefined,
+                    toString: undefined,
+                });
+            }
+
+            if (changelog && changelog.histories) {
+                changelog.histories.forEach((history: any) => {
+                    history.items.forEach((item: any) => {
+                        historyItems.push({
+                            id: `${history.id}-${item.fieldId || item.field}`,
+                            timestamp: history.created,
+                            author: {
+                                displayName: history.author.displayName || history.author.name,
+                                accountId: history.author.accountId,
+                                avatarUrl: history.author.avatarUrls?.['48x48'] || history.author.avatarUrls?.['32x32'],
+                            },
+                            field: item.fieldId || item.field,
+                            fieldDisplayName: item.field,
+                            from: item.from,
+                            to: item.to,
+                            fromString: item.fromString,
+                            toString: item.toString,
+                        });
+                    });
+                });
+            }
+
+            worklogs.forEach((worklog: any) => {
+                if (worklog.started) {
+                    historyItems.push({
+                        id: `worklog-${worklog.id}`,
+                        timestamp: worklog.started,
+                        author: {
+                            displayName: worklog.author?.displayName || worklog.author?.name || 'Unknown',
+                            accountId: worklog.author?.accountId,
+                            avatarUrl: worklog.author?.avatarUrls?.['48x48'] || worklog.author?.avatarUrls?.['32x32'],
+                        },
+                        field: 'worklog',
+                        fieldDisplayName: 'Work Log',
+                        from: null,
+                        to: worklog.timeSpent,
+                        fromString: undefined,
+                        toString: worklog.comment || '',
+                        worklogComment: worklog.comment,
+                        worklogTimeSpent: worklog.timeSpent,
+                    });
+                }
+            });
+
+            historyItems.sort((a, b) => {
+                if (a.id === '__CREATED__') {
+                    return 1;
+                }
+                if (b.id === '__CREATED__') {
+                    return -1;
+                }
+                return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+            });
+
+            this.postMessage({
+                type: 'historyUpdate',
+                history: historyItems,
+            });
+        } catch (e) {
+            Logger.error(e, 'Error refreshing issue history');
+        }
     }
 
     private async recentPullRequests(): Promise<PullRequestData[]> {

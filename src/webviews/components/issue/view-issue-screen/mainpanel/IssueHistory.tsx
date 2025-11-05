@@ -69,6 +69,8 @@ const isTimeField = (field: string | undefined, fieldDisplayName: string): boole
         'time spent',
         'remaining estimate',
         'original estimate',
+        'worklog',
+        'work log',
     ];
 
     return timeFields.some((tf) => lowerField.includes(tf) || lowerDisplayName.includes(tf));
@@ -94,9 +96,12 @@ const formatValue = (value: string | null | undefined, field?: string, fieldDisp
     return value;
 };
 
-const getActionText = (fieldDisplayName: string): string => {
+const getActionText = (fieldDisplayName: string, field?: string): string => {
     if (fieldDisplayName === '__CREATED__') {
         return 'created the Work item';
+    }
+    if (field === 'worklog' || fieldDisplayName.toLowerCase() === 'work log') {
+        return 'logged time';
     }
     const lowerField = fieldDisplayName.toLowerCase();
     if (lowerField === 'status') {
@@ -156,47 +161,93 @@ export const IssueHistory: React.FC<IssueHistoryProps> = ({ history, historyLoad
                         <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
                             <div style={{ fontWeight: 600, fontSize: '14px' }}>{item.author.displayName}</div>
                             <div style={{ fontSize: '12px', color: '--vscode-descriptionForeground', opacity: 0.7 }}>
-                                {getActionText(item.fieldDisplayName)} • {formatTimestamp(item.timestamp)}
+                                {getActionText(item.fieldDisplayName, item.field)} • {formatTimestamp(item.timestamp)}
                             </div>
                         </div>
                     </div>
                     {item.fieldDisplayName !== '__CREATED__' &&
-                        (item.fromString !== undefined ||
-                            item.toString !== undefined ||
-                            item.from !== null ||
-                            item.to !== null) && (
+                        (item.field === 'worklog' ? (
                             <div
                                 style={{
                                     display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '12px',
+                                    flexDirection: 'column',
+                                    gap: '4px',
                                     marginLeft: '32px',
                                     marginTop: '4px',
                                 }}
                             >
-                                <span
-                                    style={{
-                                        padding: '4px 8px',
-                                        borderRadius: '3px',
-                                        fontSize: '13px',
-                                        color: '--vscode-descriptionForeground',
-                                    }}
-                                >
-                                    {formatValue(item.fromString || item.from, item.field, item.fieldDisplayName)}
-                                </span>
-                                <span style={{ color: '--vscode-descriptionForeground' }}>→</span>
-                                <span
-                                    style={{
-                                        padding: '4px 8px',
-                                        borderRadius: '3px',
-                                        fontSize: '13px',
-                                        color: '--vscode-descriptionForeground',
-                                    }}
-                                >
-                                    {formatValue(item.toString || item.to, item.field, item.fieldDisplayName)}
-                                </span>
+                                {(item as any).worklogTimeSpent && (
+                                    <div
+                                        style={{
+                                            padding: '4px 8px',
+                                            borderRadius: '3px',
+                                            fontSize: '13px',
+                                            color: '--vscode-descriptionForeground',
+                                            display: 'inline-block',
+                                            width: 'fit-content',
+                                        }}
+                                    >
+                                        Time logged:{' '}
+                                        {formatValue(
+                                            (item as any).worklogTimeSpent || item.to,
+                                            item.field,
+                                            item.fieldDisplayName,
+                                        )}
+                                    </div>
+                                )}
+                                {(item as any).worklogComment && (
+                                    <div
+                                        style={{
+                                            padding: '4px 8px',
+                                            borderRadius: '3px',
+                                            fontSize: '13px',
+                                            color: '--vscode-descriptionForeground',
+                                            fontStyle: 'italic',
+                                            marginTop: '4px',
+                                        }}
+                                    >
+                                        {(item as any).worklogComment}
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        ) : (
+                            (item.fromString !== undefined ||
+                                item.toString !== undefined ||
+                                item.from !== null ||
+                                item.to !== null) && (
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '12px',
+                                        marginLeft: '32px',
+                                        marginTop: '4px',
+                                    }}
+                                >
+                                    <span
+                                        style={{
+                                            padding: '4px 8px',
+                                            borderRadius: '3px',
+                                            fontSize: '13px',
+                                            color: '--vscode-descriptionForeground',
+                                        }}
+                                    >
+                                        {formatValue(item.fromString || item.from, item.field, item.fieldDisplayName)}
+                                    </span>
+                                    <span style={{ color: '--vscode-descriptionForeground' }}>→</span>
+                                    <span
+                                        style={{
+                                            padding: '4px 8px',
+                                            borderRadius: '3px',
+                                            fontSize: '13px',
+                                            color: '--vscode-descriptionForeground',
+                                        }}
+                                    >
+                                        {formatValue(item.toString || item.to, item.field, item.fieldDisplayName)}
+                                    </span>
+                                </div>
+                            )
+                        ))}
                 </div>
             ))}
         </div>
