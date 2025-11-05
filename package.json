@@ -517,6 +517,11 @@
                 "command": "atlascode.debug.quickLogout",
                 "title": "[DEBUG] Atlassian: Quick logout",
                 "enablement": "atlascode:debugMode"
+            },
+            {
+                "command": "atlascode.addRecommendedExtension",
+                "title": "Add as Recommended Extension",
+                "category": "Atlassian"
             }
         ],
         "viewsContainers": {

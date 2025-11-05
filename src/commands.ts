@@ -16,6 +16,7 @@ import { assignIssue } from './commands/jira/assignIssue';
 import { createIssue } from './commands/jira/createIssue';
 import { showIssue, showIssueForKey, showIssueForSiteIdAndKey, showIssueForURL } from './commands/jira/showIssue';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
+import { addAtlascodeAsRecommendedExtension } from './commands/addRecommendedExtension';
 import { configuration } from './config/configuration';
 import { Commands, HelpTreeViewId } from './constants';
 import { Container } from './container';
@@ -237,6 +238,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                     });
                 }
             }),
+            commands.registerCommand(Commands.AddRecommendedExtension, addAtlascodeAsRecommendedExtension),
         );
     } else {
         vscodeContext.subscriptions.push(
@@ -449,6 +451,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                     });
                 }
             }),
+            commands.registerCommand(Commands.AddRecommendedExtension, addAtlascodeAsRecommendedExtension),
         );
     }
 }
