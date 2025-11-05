@@ -1593,16 +1593,18 @@ export class JiraIssueWebview
             if (changelog && changelog.histories) {
                 changelog.histories.forEach((history: any) => {
                     history.items.forEach((item: any) => {
+                        const fieldKey = item.fieldId || item.field;
+                        const fieldDisplayName = this.fieldNameForKey(fieldKey) || item.field;
                         historyItems.push({
-                            id: `${history.id}-${item.fieldId || item.field}`,
+                            id: `${history.id}-${fieldKey}`,
                             timestamp: history.created,
                             author: {
                                 displayName: history.author.displayName || history.author.name,
                                 accountId: history.author.accountId,
                                 avatarUrl: history.author.avatarUrls?.['48x48'] || history.author.avatarUrls?.['32x32'],
                             },
-                            field: item.fieldId || item.field,
-                            fieldDisplayName: item.field,
+                            field: fieldKey,
+                            fieldDisplayName: fieldDisplayName,
                             from: item.from,
                             to: item.to,
                             fromString: item.fromString,
