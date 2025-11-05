@@ -201,8 +201,8 @@ jobs:
 
       - name: Check if all jobs succeeded
         run: |
-          results="${{ toJSON(needs.*.result) }}"
-          if echo "$results" | grep -qv "success"; then
+          results='${{ toJSON(needs.*.result) }}'
+          if echo "$results" | jq -e 'any(. != "success")' > /dev/null; then
             echo "One or more jobs failed:"
             echo "  setup-dependencies: ${{ needs.setup-dependencies.result }}"
             echo "  lint: ${{ needs.lint.result }}"
