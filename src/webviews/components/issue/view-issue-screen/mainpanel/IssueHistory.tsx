@@ -77,11 +77,17 @@ const isTimeField = (field: string | undefined, fieldDisplayName: string): boole
 };
 
 const formatValue = (value: string | null | undefined, field?: string, fieldDisplayName?: string): string => {
+    const isTime = isTimeField(field, fieldDisplayName || '');
+
+    if (isTime && (value === null || value === undefined || value === '')) {
+        return '0m';
+    }
+
     if (value === null || value === undefined || value === '') {
         return 'None';
     }
 
-    if (isTimeField(field, fieldDisplayName || '')) {
+    if (isTime) {
         const stringValue = String(value);
         const isAlreadyFormatted = /[a-zA-Z]/.test(stringValue);
 

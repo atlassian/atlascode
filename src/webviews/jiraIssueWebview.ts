@@ -1594,6 +1594,9 @@ export class JiraIssueWebview
                 changelog.histories.forEach((history: any) => {
                     history.items.forEach((item: any) => {
                         const fieldKey = item.fieldId || item.field;
+                        if (fieldKey && fieldKey.toLowerCase() === 'worklogid') {
+                            return;
+                        }
                         const fieldDisplayName = this.fieldNameForKey(fieldKey) || item.field;
                         historyItems.push({
                             id: `${history.id}-${fieldKey}`,
