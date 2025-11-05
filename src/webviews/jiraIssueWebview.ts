@@ -1593,11 +1593,25 @@ export class JiraIssueWebview
             if (changelog && changelog.histories) {
                 changelog.histories.forEach((history: any) => {
                     history.items.forEach((item: any) => {
-                        const fieldKey = item.fieldId || item.field;
+                        let fieldKey = item.fieldId || item.field;
                         if (fieldKey && fieldKey.toLowerCase() === 'worklogid') {
                             return;
                         }
-                        const fieldDisplayName = this.fieldNameForKey(fieldKey) || item.field;
+                        if (fieldKey) {
+                            const lowerFieldKey = fieldKey.toLowerCase();
+                            if (lowerFieldKey === 'assignee' || item.field?.toLowerCase() === 'assignee') {
+                                fieldKey = 'assignee';
+                            }
+                        }
+                        const fieldDisplayName = this.fieldNameForKey(fieldKey) || item.field || fieldKey;
+                        const fromValue =
+                            item.fromString ||
+                            (typeof item.from === 'string'
+                                ? item.from
+                                : item.from?.displayName || item.from?.name || null);
+                        const toValue =
+                            item.toString ||
+                            (typeof item.to === 'string' ? item.to : item.to?.displayName || item.to?.name || null);
                         historyItems.push({
                             id: `${history.id}-${fieldKey}`,
                             timestamp: history.created,
@@ -1608,8 +1622,8 @@ export class JiraIssueWebview
                             },
                             field: fieldKey,
                             fieldDisplayName: fieldDisplayName,
-                            from: item.from,
-                            to: item.to,
+                            from: fromValue,
+                            to: toValue,
                             fromString: item.fromString,
                             toString: item.toString,
                         });
@@ -1655,6 +1669,10 @@ export class JiraIssueWebview
             });
         } catch (e) {
             Logger.error(e, 'Error refreshing issue history');
+            this.postMessage({
+                type: 'historyUpdate',
+                history: [],
+            });
         }
     }
 
