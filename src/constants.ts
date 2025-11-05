@@ -105,7 +105,7 @@ export const enum Commands {
     DebugQuickCommand = 'atlascode.debug.quickCommand',
     DebugQuickLogin = 'atlascode.debug.quickLogin',
     DebugQuickLogout = 'atlascode.debug.quickLogout',
-    
+
     // Extension management commands
     AddRecommendedExtension = 'atlascode.addRecommendedExtension',
 }

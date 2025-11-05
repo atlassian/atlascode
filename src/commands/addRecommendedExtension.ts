@@ -1,6 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { workspace, window, Uri } from 'vscode';
+import { Uri, window, workspace } from 'vscode';
+
+import { addRecommendedExtensionTriggeredEvent } from '../analytics';
+import { Container } from '../container';
 import { Logger } from '../logger';
 
 const ATLASCODE_EXTENSION_ID = 'atlassian.atlascode';
@@ -11,7 +14,12 @@ interface ExtensionsJson {
     recommendations?: string[];
 }
 
-export async function addAtlascodeAsRecommendedExtension(): Promise<void> {
+export async function addAtlascodeAsRecommendedExtension(source: string = 'commandPalette'): Promise<void> {
+    // Track command triggered
+    addRecommendedExtensionTriggeredEvent(source).then((e) => {
+        Container.analyticsClient.sendTrackEvent(e);
+    });
+
     try {
         // Get the workspace folder
         const workspaceFolder = workspace.workspaceFolders?.[0];
@@ -39,7 +47,7 @@ export async function addAtlascodeAsRecommendedExtension(): Promise<void> {
                 extensionsConfig = JSON.parse(existingContent);
                 Logger.info('Read existing extensions.json file');
             } catch (error) {
-                Logger.error('Failed to parse existing extensions.json file', error);
+                Logger.error(error, 'Failed to parse existing extensions.json file');
                 window.showErrorMessage('Failed to parse existing extensions.json file. Please check its syntax.');
                 return;
             }
@@ -63,32 +71,30 @@ export async function addAtlascodeAsRecommendedExtension(): Promise<void> {
         try {
             const updatedContent = JSON.stringify(extensionsConfig, null, 4);
             fs.writeFileSync(extensionsJsonPath, updatedContent, 'utf8');
-            
+
             Logger.info('Successfully added Atlassian extension to recommendations');
             window.showInformationMessage(
                 'Successfully added Atlassian extension to workspace recommendations! ' +
-                'Team members will now see a suggestion to install this extension when they open the workspace.'
+                    'Team members will now see a suggestion to install this extension when they open the workspace.',
             );
 
             // Optionally open the extensions.json file to show the user what was added
             const shouldOpenFile = await window.showInformationMessage(
                 'Would you like to view the extensions.json file?',
                 'Yes',
-                'No'
+                'No',
             );
 
             if (shouldOpenFile === 'Yes') {
                 const doc = await workspace.openTextDocument(Uri.file(extensionsJsonPath));
                 await window.showTextDocument(doc);
             }
-
         } catch (error) {
-            Logger.error('Failed to write extensions.json file', error);
+            Logger.error(error, 'Failed to write extensions.json file');
             window.showErrorMessage('Failed to write extensions.json file. Please check file permissions.');
         }
-
     } catch (error) {
-        Logger.error('Failed to add recommended extension', error);
+        Logger.error(error, 'Failed to add recommended extension');
         window.showErrorMessage('Failed to add recommended extension. Please see the output channel for details.');
     }
 }
