@@ -310,6 +310,8 @@ export class Container {
 
     private static async enableRovoDev(context: ExtensionContext) {
         this._isRovoDevEnabled = true;
+        // Always set context key to ensure it's restored if lost (e.g., after reload or race conditions)
+        await setCommandContext(CommandContext.RovoDevEnabled, true);
 
         if (this._rovodevDisposable) {
             if (this.isBoysenberryMode) {
@@ -325,9 +327,6 @@ export class Container {
             }
         } else {
             try {
-                // this enables the Rovo Dev activity bar
-                await setCommandContext(CommandContext.RovoDevEnabled, true);
-
                 // only in Boysenberry, we auto-focus the Rovo Dev view
                 if (this.isBoysenberryMode) {
                     await vscode.commands.executeCommand('atlascode.views.rovoDev.webView.focus');
