@@ -45,6 +45,10 @@ export class RovoDevChatProvider {
         return Container.config.rovodev.debugPanelEnabled;
     }
 
+    private get isRetryPromptEnabled() {
+        return this._isBoysenberry || true;
+    }
+
     private _yoloMode = false;
     public get yoloMode() {
         return this._yoloMode;
@@ -358,7 +362,12 @@ export class RovoDevChatProvider {
                 break;
 
             case 'retry-prompt':
-                // ignore it as we are not consuming it
+                if (this.isRetryPromptEnabled) {
+                    await webview.postMessage({
+                        type: RovoDevProviderMessageType.RovoDevResponseMessage,
+                        message: response,
+                    });
+                }
                 break;
 
             case 'user-prompt':
