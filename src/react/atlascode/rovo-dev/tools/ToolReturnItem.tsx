@@ -11,13 +11,22 @@ export const ToolReturnParsedItem: React.FC<{
     msg: ToolReturnParseResult;
     openFile: OpenFileFunc;
 }> = ({ msg, openFile }) => {
-    const toolIcon = msg.type ? iconMap[msg.type] : undefined;
+    const toolIcon = React.useMemo(() => (msg.type ? iconMap[msg.type] : undefined), [msg.type]);
+
+    const filePathClass = msg.filePath && msg.type !== 'delete' ? 'tool-return-file-path' : '';
+
+    const handleOpenFile = React.useCallback(
+        (e: React.MouseEvent) => {
+            e.preventDefault();
+            if (msg.filePath && msg.type !== 'delete') {
+                openFile(msg.filePath);
+            }
+        },
+        [msg.filePath, msg.type, openFile],
+    );
 
     return (
-        <a
-            className={`tool-return-item-base tool-return-item ${msg.filePath ? 'tool-return-file-path' : ''}`}
-            onClick={() => msg.filePath && openFile(msg.filePath)}
-        >
+        <a className={`tool-return-item-base tool-return-item ${filePathClass}`} onClick={handleOpenFile}>
             {toolIcon}
             <div className="tool-return-item-base" style={{ flexWrap: 'wrap' }}>
                 <div className="tool-return-content">
