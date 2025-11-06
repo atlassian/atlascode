@@ -12,9 +12,9 @@ import { RovoDevToolReturnResponse } from 'src/rovo-dev/client';
 import { RovoDevContextItem, State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
-import { DetailedSiteInfo } from '../../../atlclients/authInfo';
-import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../../../rovo-dev/rovoDevWebviewProviderMessages';
-import { useMessagingApi } from '../messagingApi';
+import { DetailedSiteInfo } from '../../atlclients/authInfo';
+import { useMessagingApi } from '../../react/atlascode/messagingApi';
+import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../rovoDevWebviewProviderMessages';
 import { FeedbackType } from './feedback-form/FeedbackForm';
 import { ChatStream } from './messaging/ChatStream';
 import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
