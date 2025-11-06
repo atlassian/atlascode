@@ -7,6 +7,15 @@ import { JiraTypes, PullRequestComment } from './types';
 import { updateIssueField } from './update-jira-issue';
 
 /**
+ * Helper function to reset all WireMock mappings
+ * This should be called before each test to prevent state pollution from previous tests
+ */
+export const resetWireMockMappings = async ({ request }: { request: APIRequestContext }) => {
+    await request.post('http://wiremock-mockedteams:8080/__admin/mappings/reset');
+    await request.post('http://wiremock-bitbucket:8080/__admin/mappings/reset');
+};
+
+/**
  * Helper function to set up WireMock mapping
  */
 export const setupWireMockMapping = async (request: APIRequestContext, method: string, body: any, urlPath: string) => {

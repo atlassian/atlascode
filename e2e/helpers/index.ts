@@ -3,6 +3,7 @@ export { authenticateWithBitbucketDC, authenticateWithBitbucketCloud } from './b
 export { authenticateWithJiraCloud, authenticateWithJiraDC } from './jira-auth';
 export { getIssueFrame, openAtlassianSettings, closeOnboardingQuickPick } from './common';
 export {
+    resetWireMockMappings,
     cleanupWireMockMapping,
     setupWireMockMapping,
     setupSearchMock,
