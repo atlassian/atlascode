@@ -46,7 +46,7 @@ export class RovoDevChatProvider {
     }
 
     private get isRetryPromptEnabled() {
-        return this._isBoysenberry || true;
+        return this._isBoysenberry;
     }
 
     private _yoloMode = false;
