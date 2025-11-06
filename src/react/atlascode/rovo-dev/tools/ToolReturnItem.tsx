@@ -1,7 +1,7 @@
-import CodeIcon from '@atlaskit/icon/glyph/code';
-import FileIcon from '@atlaskit/icon/glyph/file';
-import SearchIcon from '@atlaskit/icon/glyph/search';
-import TrashIcon from '@atlaskit/icon/glyph/trash';
+import AngleBracketsIcon from '@atlaskit/icon/core/angle-brackets';
+import DeleteIcon from '@atlaskit/icon/core/delete';
+import FileIcon from '@atlaskit/icon/core/file';
+import SearchIcon from '@atlaskit/icon/core/search';
 import React from 'react';
 
 import { MarkedDown, OpenFileFunc } from '../common/common';
@@ -46,9 +46,9 @@ const renderTitle = (msg: ToolReturnParseResult) => {
 };
 
 const iconMap: Record<string, React.JSX.Element> = {
-    modify: <CodeIcon label="Modified file" size="small" />,
-    create: <FileIcon label="Opened file" size="small" />,
-    delete: <TrashIcon label="Deleted file" size="small" />,
-    open: <SearchIcon label="Opened file" size="small" />,
-    bash: <CodeIcon label="Bash command" size="small" />,
+    modify: <AngleBracketsIcon label="Modified file" />,
+    create: <FileIcon label="Opened file" />,
+    delete: <DeleteIcon label="Deleted file" />,
+    open: <SearchIcon label="Opened file" />,
+    bash: <AngleBracketsIcon label="Bash command" />,
 };

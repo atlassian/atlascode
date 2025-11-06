@@ -4,7 +4,12 @@ import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { ModifiedFile } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
 import { DialogMessage } from '../react/atlascode/rovo-dev/utils';
-import { RovoDevTextResponse, RovoDevToolCallResponse, RovoDevToolReturnResponse } from './responseParserInterfaces';
+import {
+    RovoDevRetryPromptResponse,
+    RovoDevTextResponse,
+    RovoDevToolCallResponse,
+    RovoDevToolReturnResponse,
+} from './responseParserInterfaces';
 import { EntitlementCheckRovoDevHealthcheckResponse } from './rovoDevApiClientInterfaces';
 import { DisabledState, RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 
@@ -39,8 +44,11 @@ export type RovoDevDisabledReason = DisabledState['subState'];
 
 export type RovoDevEntitlementCheckFailedDetail = EntitlementCheckRovoDevHealthcheckResponse['detail'];
 
-export type RovoDevResponseMessageType = RovoDevTextResponse | RovoDevToolCallResponse | RovoDevToolReturnResponse;
-//| RovoDevRetryPromptResponse;
+export type RovoDevResponseMessageType =
+    | RovoDevTextResponse
+    | RovoDevToolCallResponse
+    | RovoDevToolReturnResponse
+    | RovoDevRetryPromptResponse;
 
 export type RovoDevProviderMessage =
     | ReducerAction<
