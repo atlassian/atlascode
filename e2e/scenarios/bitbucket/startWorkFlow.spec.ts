@@ -3,6 +3,7 @@ import {
     authenticateWithJiraCloud,
     authenticateWithJiraDC,
     getIssueFrame,
+    resetWireMockMappings,
     setupIssueMock,
     setupSearchMock,
 } from 'e2e/helpers';
@@ -14,7 +15,10 @@ const CURRENT_STATUS = 'To Do';
 const NEXT_STATUS = 'In Progress';
 
 export async function startWorkFlow(page: Page, type: BitbucketTypes, request: APIRequestContext) {
-    test.setTimeout(100_000);
+    // This test is large and may run longer on slower machines
+    test.setTimeout(90_000);
+    await resetWireMockMappings({ request });
+
     // Login to Jira
     if (type === BitbucketTypes.Cloud) {
         await authenticateWithJiraCloud(page);
