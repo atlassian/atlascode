@@ -76,6 +76,11 @@ export function useStartWorkFormState(
         }
     }, [selectedRepository, selectedBranchType, state.issue, state.customTemplate]);
 
+    useEffect(() => {
+        const isInProgress = state.issue.status.statusCategory.key === 'indeterminate';
+        setTransitionIssueEnabled(!isInProgress);
+    }, [state.issue.status.statusCategory.key]);
+
     const handleRepositoryChange = useCallback(
         (repository: RepoData) => {
             setSelectedRepository(repository);

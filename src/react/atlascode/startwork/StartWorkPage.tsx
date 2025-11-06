@@ -371,6 +371,11 @@ const StartWorkPage: React.FunctionComponent = () => {
         }
     }, [state.rovoDevPreference]);
 
+    useEffect(() => {
+        const isInProgress = state.issue.status.statusCategory.key === 'indeterminate';
+        setTransitionIssueEnabled(!isInProgress);
+    }, [state.issue.status.statusCategory.key]);
+
     const postMessageWithEventPromise = (
         send: StartWorkAction,
         waitForEvent: string,

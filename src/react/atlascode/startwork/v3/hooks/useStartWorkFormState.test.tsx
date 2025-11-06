@@ -66,7 +66,19 @@ describe('useStartWorkFormState', () => {
         repoData: [mockBitbucketRepo, mockGitHubRepo],
         customPrefixes: [],
         customTemplate: '{{prefix}}/{{issueKey}}-{{summary}}',
-        issue: { key: 'TEST-123', summary: 'Test issue' } as any,
+        issue: {
+            key: 'TEST-123',
+            summary: 'Test issue',
+            status: {
+                id: '1',
+                name: 'To Do',
+                statusCategory: {
+                    key: 'new',
+                    colorName: 'blue',
+                    name: 'To Do',
+                },
+            },
+        } as any,
         rovoDevPreference: false,
         isSomethingLoading: false,
         isRovoDevEnabled: false,
@@ -150,6 +162,35 @@ describe('useStartWorkFormState', () => {
                 mockState.issue,
                 mockState.customTemplate,
             );
+        });
+    });
+    describe('transition issue enabled initialization', () => {
+        it('should render transitionIssueEnabled checkbox as true when status category is "To Do"', () => {
+            const { result } = renderHook(() => useStartWorkFormState(mockState, mockController));
+
+            expect(result.current.updateStatusFormState.transitionIssueEnabled).toBe(true);
+        });
+
+        it('should render transitionIssueEnabled checkbox as false when status category is "In Progress"', () => {
+            const stateWithInProgressStatus = {
+                ...mockState,
+                issue: {
+                    ...mockState.issue,
+                    status: {
+                        id: '2',
+                        name: 'In Progress',
+                        statusCategory: {
+                            key: 'indeterminate',
+                            colorName: 'yellow',
+                            name: 'In Progress',
+                        },
+                    },
+                },
+            };
+
+            const { result } = renderHook(() => useStartWorkFormState(stateWithInProgressStatus, mockController));
+
+            expect(result.current.updateStatusFormState.transitionIssueEnabled).toBe(false);
         });
     });
 });
