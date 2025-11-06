@@ -522,6 +522,12 @@ export async function pmfClosed(): Promise<TrackEvent> {
     return trackEvent('closed', 'atlascodePmf');
 }
 
+export async function addRecommendedExtensionTriggeredEvent(source: string): Promise<TrackEvent> {
+    return trackEvent('triggered', 'addRecommendedExtension', {
+        attributes: { source: source },
+    });
+}
+
 export type DeepLinkEventErrorType = 'Success' | 'NotFound' | 'Exception';
 
 export async function deepLinkEvent(
