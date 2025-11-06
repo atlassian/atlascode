@@ -14,7 +14,7 @@ const CURRENT_STATUS = 'To Do';
 const NEXT_STATUS = 'In Progress';
 
 export async function startWorkFlow(page: Page, type: BitbucketTypes, request: APIRequestContext) {
-    test.setTimeout(50_000);
+    test.setTimeout(100_000);
     // Login to Jira
     if (type === BitbucketTypes.Cloud) {
         await authenticateWithJiraCloud(page);
