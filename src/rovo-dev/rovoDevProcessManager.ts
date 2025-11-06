@@ -7,6 +7,7 @@ import path from 'path';
 import { RovoDevLogger } from 'src/logger';
 import { downloadAndUnzip } from 'src/util/downloadFile';
 import { getFsPromise } from 'src/util/fsPromises';
+import { waitFor } from 'src/util/waitFor';
 import { Disposable, Event, EventEmitter, ExtensionContext, Terminal, Uri, window, workspace } from 'vscode';
 
 import { DetailedSiteInfo, isBasicAuthInfo, ProductJira } from '../atlclients/authInfo';
@@ -271,7 +272,7 @@ export abstract class RovoDevProcessManager {
         }
 
         // if the Rovo Dev instance exists but it's already stopped, we can unreference it
-        this.rovoDevInstance = undefined;
+        this.stopRovoDevInstance();
     }
 
     private static async downloadBinaryThenInitialize(credentialsHost: string, rovoDevURIs: RovoDevURIs) {
@@ -432,8 +433,20 @@ export abstract class RovoDevProcessManager {
         }
     }
 
-    public static deactivateRovoDevProcessManager() {
+    public static async deactivateRovoDevProcessManager() {
+        // wait for the lock to be released before stopping the instance
+        await waitFor({
+            check: () => this.asyncLocked,
+            condition: (asyncLocked) => !asyncLocked,
+            timeout: 10000,
+            interval: 100,
+        });
+
         this.stopRovoDevInstance();
+
+        this.setState({
+            state: 'NotStarted',
+        });
     }
 
     private static async startRovoDev(
