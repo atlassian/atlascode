@@ -38,7 +38,7 @@ export async function waitFor<T>({
     abortIf?: () => boolean;
 }): Promise<T> {
     if (abortIf?.()) {
-        throw new WaitForError('aborted', undefined);
+        throw new WaitForError('waitFor aborted', undefined);
     }
 
     let result = await check();
@@ -49,7 +49,7 @@ export async function waitFor<T>({
         timeout -= interval;
 
         if (abortIf?.()) {
-            throw new WaitForError('aborted', result);
+            throw new WaitForError('waitFor aborted', result);
         }
 
         result = await check();
@@ -57,7 +57,7 @@ export async function waitFor<T>({
     }
 
     if (!checkPassed) {
-        throw new WaitForError('failed', result);
+        throw new WaitForError('waitFor failed', result);
     }
 
     return result;
