@@ -12,7 +12,7 @@ import { Disposable, Event, EventEmitter, ExtensionContext, Terminal, Uri, windo
 
 import { DetailedSiteInfo, isBasicAuthInfo, ProductJira } from '../atlclients/authInfo';
 import { Container } from '../container';
-import { RovoDevApiClient } from './rovoDevApiClient';
+import { RovoDevApiClient } from './client';
 import { RovoDevDisabledReason, RovoDevEntitlementCheckFailedDetail } from './rovoDevWebviewProviderMessages';
 
 export const MIN_SUPPORTED_ROVODEV_VERSION = packageJson.rovoDev.version;

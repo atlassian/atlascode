@@ -5,12 +5,12 @@ import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { ModifiedFile } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
 import { DialogMessage } from '../react/atlascode/rovo-dev/utils';
 import {
+    EntitlementCheckRovoDevHealthcheckResponse,
     RovoDevRetryPromptResponse,
     RovoDevTextResponse,
     RovoDevToolCallResponse,
     RovoDevToolReturnResponse,
-} from './responseParserInterfaces';
-import { EntitlementCheckRovoDevHealthcheckResponse } from './rovoDevApiClientInterfaces';
+} from './client';
 import { DisabledState, RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 
 export const enum RovoDevProviderMessageType {

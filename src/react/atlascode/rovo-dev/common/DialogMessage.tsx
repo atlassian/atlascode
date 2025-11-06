@@ -2,8 +2,8 @@ import StatusErrorIcon from '@atlaskit/icon/core/status-error';
 import StatusInfoIcon from '@atlaskit/icon/core/status-information';
 import StatusWarningIcon from '@atlaskit/icon/core/status-warning';
 import React from 'react';
-import { RovoDevToolName } from 'src/rovo-dev/responseParserInterfaces';
-import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
+import { RovoDevToolName } from 'src/rovo-dev/client';
+import { ToolPermissionChoice } from 'src/rovo-dev/client';
 
 import {
     chatMessageStyles,

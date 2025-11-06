@@ -4,7 +4,7 @@ import {
     RovoDevToolCallResponse,
     RovoDevToolName,
     RovoDevToolReturnResponse,
-} from 'src/rovo-dev/responseParserInterfaces';
+} from 'src/rovo-dev/client';
 
 import { RovoDevContextItem, TechnicalPlan } from '../../../../src/rovo-dev/rovoDevTypes';
 
