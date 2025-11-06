@@ -89,6 +89,7 @@ export const enum Commands {
     RovodevNewSession = 'atlascode.rovodev.newChatSession',
     RovodevShowTerminal = 'atlascode.rovodev.showTerminal',
     RovodevShareFeedback = 'atlascode.rovodev.shareFeedback',
+    RovodevOpenHelp = 'atlascode.rovodev.openHelp',
     InProgressIssue = 'atlascode.jira.inProgressIssue',
     DoneIssue = 'atlascode.jira.doneIssue',
     ShowOnboardingFlow = 'atlascode.showOnboardingFlow',

@@ -517,6 +517,11 @@
                 "command": "atlascode.debug.quickLogout",
                 "title": "[DEBUG] Atlassian: Quick logout",
                 "enablement": "atlascode:debugMode"
+            },
+            {
+                "command": "atlascode.rovodev.openHelp",
+                "title": "Documentation",
+                "category": "Atlassian"
             }
         ],
         "viewsContainers": {
@@ -662,6 +667,11 @@
                     "command": "atlascode.rovodev.shareFeedback",
                     "when": "view == atlascode.views.rovoDev.webView",
                     "group": "rovoDevContextMenu2@1"
+                },
+                {
+                    "command": "atlascode.rovodev.openHelp",
+                    "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
+                    "group": "rovoDevContextMenu2@2"
                 },
                 {
                     "command": "atlascode.jira.createIssue",
@@ -1617,6 +1627,7 @@
         "@testing-library/react": "^16.3.0",
         "@testing-library/user-event": "^14.6.1",
         "@types/adm-zip": "^0.5.7",
+        "@types/aria-query": "^5.0.4",
         "@types/express": "^5.0.2",
         "@types/git-url-parse": "^9.0.1",
         "@types/jest": "^30.0.0",
