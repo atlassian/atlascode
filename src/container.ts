@@ -250,7 +250,7 @@ export class Container {
 
         this._onboardingProvider = new OnboardingProvider();
 
-        this.refreshRovoDev(context);
+        await this.refreshRovoDev(context);
     }
 
     private static async initializeFeatureFlagClient() {
@@ -313,6 +313,11 @@ export class Container {
         // Always set context key to ensure it's restored if lost (e.g., after reload or race conditions)
         await setCommandContext(CommandContext.RovoDevEnabled, true);
 
+        // Always refresh help explorer to ensure UI is updated
+        if (!this.isBoysenberryMode) {
+            this._helpExplorer.refresh();
+        }
+
         if (this._rovodevDisposable) {
             if (this.isBoysenberryMode) {
                 return;
@@ -342,9 +347,6 @@ export class Container {
                 context.subscriptions.push(this._rovodevDisposable);
 
                 if (!this.isBoysenberryMode) {
-                    // Update help explorer to show Rovo Dev content
-                    this._helpExplorer.refresh();
-
                     // Start the Rovo Dev process
                     await RovoDevProcessManager.initializeRovoDev(context);
                 }
