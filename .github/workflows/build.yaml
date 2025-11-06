@@ -188,7 +188,6 @@ jobs:
     if: always()
     steps:
       - name: Delete node_modules artifact
-        # Only delete artifacts on success to allow rerunning failed jobs
         if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
         uses: geekyeggo/delete-artifact@v5
         with:
@@ -196,7 +195,6 @@ jobs:
           failOnError: false
 
       - name: Delete extension package artifact
-        # Only delete artifacts on success to allow rerunning failed jobs
         if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
         uses: geekyeggo/delete-artifact@v5
         with:
