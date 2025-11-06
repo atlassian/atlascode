@@ -145,6 +145,7 @@ function sanitazeErrorMessage(message?: string): string | undefined {
 function sanitizeStackTrace(stack?: string): string | undefined {
     if (stack) {
         stack = stack.replace(/\/Users\/[^/]+\//gi, '/Users/<user>/'); // *nix Users folder
+        stack = stack.replace(/\/home\/[^/]+\//gi, '/home/<user>/'); // *nix home folder
         stack = stack.replace(/\\Users\\[^\\]+\\/gi, '\\Users\\<user>\\'); // windows Users folder
     }
     return stack || undefined;
