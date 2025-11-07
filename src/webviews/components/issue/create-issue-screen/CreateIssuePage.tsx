@@ -1,3 +1,4 @@
+import { AnalyticsView } from '@analyticsTypes';
 import Button from '@atlaskit/button';
 import LoadingButton from '@atlaskit/button/loading-button';
 import Form, { ErrorMessage, Field, FormFooter, FormHeader, RequiredAsterisk } from '@atlaskit/form';
@@ -6,15 +7,14 @@ import Select, { components } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
 import { IssueKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, FieldValues, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { DetailedSiteInfo, emptySiteInfo } from '@atlclients/authInfo';
+import { CreateIssueData, emptyCreateIssueData, isIssueCreated } from '@ipc/issueMessaging';
+import { LegacyPMFData } from '@ipc/messaging';
+import { AtlascodeErrorBoundary } from '@react/atlascode/common/ErrorBoundary';
+import { readFilesContentAsync } from '@util/files';
 import * as React from 'react';
 import { v4 } from 'uuid';
 
-import { AnalyticsView } from '../../../../analyticsTypes';
-import { DetailedSiteInfo, emptySiteInfo } from '../../../../atlclients/authInfo';
-import { CreateIssueData, emptyCreateIssueData, isIssueCreated } from '../../../../ipc/issueMessaging';
-import { LegacyPMFData } from '../../../../ipc/messaging';
-import { AtlascodeErrorBoundary } from '../../../../react/atlascode/common/ErrorBoundary';
-import { readFilesContentAsync } from '../../../../util/files';
 import { AtlLoader } from '../../AtlLoader';
 import ErrorBanner from '../../ErrorBanner';
 import { chain } from '../../fieldValidators';

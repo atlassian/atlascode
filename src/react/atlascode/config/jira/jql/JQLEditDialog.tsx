@@ -1,5 +1,7 @@
 import { JqlAutocompleteRestData, JQLInput, SiteSelector, Suggestion } from '@atlassianlabs/guipi-jira-components';
 import { JQLErrors } from '@atlassianlabs/jira-pi-common-models';
+import { DetailedSiteInfo, emptySiteInfo } from '@atlclients/authInfo';
+import { JQLEntry } from '@config/model';
 import {
     Box,
     Button,
@@ -17,8 +19,6 @@ import { useAsync } from 'react-async-hook';
 import { Controller, useForm } from 'react-hook-form';
 import { v4 } from 'uuid';
 
-import { DetailedSiteInfo, emptySiteInfo } from '../../../../../atlclients/authInfo';
-import { JQLEntry } from '../../../../../config/model';
 import { ConfigControllerContext } from '../../configController';
 import { useJqlValidator } from './useJqlValidator';
 

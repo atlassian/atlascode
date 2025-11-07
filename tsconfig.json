@@ -25,6 +25,20 @@
         "strictPropertyInitialization": true,
         "typeRoots": ["node_modules/@types", "src/typings/"],
         "paths": {
+            "@atlclients/*": ["src/atlclients/*"],
+            "@jira/*": ["src/jira/*"],
+            "@bitbucket/*": ["src/bitbucket/*"],
+            "@config/*": ["src/config/*"],
+            "@ipc/*": ["src/ipc/*"],
+            "@lib/*": ["src/lib/*"],
+            "@typings/*": ["src/typings/*"],
+            "@util/*": ["src/util/*"],
+            "@react/*": ["src/react/*"],
+            "@webviews/*": ["src/webviews/*"],
+            "@rovo-dev/*": ["src/rovo-dev/*"],
+            "@analytics": ["src/analytics.ts"],
+            "@analyticsTypes": ["src/analyticsTypes.ts"],
+            "@constants": ["src/constants.ts"],
             "testsutil/*": ["testsutil/*"]
         }
     },

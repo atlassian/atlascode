@@ -1,9 +1,9 @@
 import { JQLErrors } from '@atlassianlabs/jira-pi-common-models';
+import { DetailedSiteInfo } from '@atlclients/authInfo';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import { useCallback, useContext, useRef } from 'react';
 import useConstant from 'use-constant';
 
-import { DetailedSiteInfo } from '../../../../../atlclients/authInfo';
 import { ConfigControllerContext } from '../../configController';
 
 export const useJqlValidator = (site: DetailedSiteInfo) => {

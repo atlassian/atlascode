@@ -1,4 +1,5 @@
 import { FilterSearchResult, FilterSearchResults } from '@atlassianlabs/jira-pi-common-models';
+import { DetailedSiteInfo } from '@atlclients/authInfo';
 import SearchIcon from '@mui/icons-material/Search';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
@@ -21,7 +22,6 @@ import { makeStyles } from '@mui/styles';
 import clsx from 'clsx';
 import React, { useContext, useEffect, useState } from 'react';
 
-import { DetailedSiteInfo } from '../../../../../atlclients/authInfo';
 import { VSCodeStyles, VSCodeStylesContext } from '../../../../vscode/theme/styles';
 import { ConfigControllerContext } from '../../configController';
 import { useFilterSearch } from './useFilterSearch';

@@ -1,3 +1,6 @@
+import { DetailedSiteInfo } from '@atlclients/authInfo';
+import { JQLEntry } from '@config/model';
+import { ConfigSection, ConfigSubSection } from '@lib/ipc/models/config';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -5,9 +8,6 @@ import AccordionSummary from '@mui/material/AccordionSummary';
 import equal from 'fast-deep-equal/es6';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 
-import { DetailedSiteInfo } from '../../../../../atlclients/authInfo';
-import { JQLEntry } from '../../../../../config/model';
-import { ConfigSection, ConfigSubSection } from '../../../../../lib/ipc/models/config';
 import { CommonSubpanelProps } from '../../../common/commonPanelProps';
 import { PanelSubtitle } from '../../../common/PanelSubtitle';
 import { PanelTitle } from '../../../common/PanelTitle';

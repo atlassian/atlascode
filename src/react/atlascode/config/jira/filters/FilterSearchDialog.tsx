@@ -1,5 +1,7 @@
 import { SiteSelector } from '@atlassianlabs/guipi-jira-components';
 import { FilterSearchResult } from '@atlassianlabs/jira-pi-common-models';
+import { DetailedSiteInfo, emptySiteInfo } from '@atlclients/authInfo';
+import { JQLEntry } from '@config/model';
 import {
     Box,
     Button,
@@ -14,8 +16,6 @@ import {
 import React, { useCallback, useEffect, useState } from 'react';
 import { v4 } from 'uuid';
 
-import { DetailedSiteInfo, emptySiteInfo } from '../../../../../atlclients/authInfo';
-import { JQLEntry } from '../../../../../config/model';
 import { FilterSearchResultsTable } from './FilterSearchResultsTable';
 
 export type FilterSearchDialogProps = {
