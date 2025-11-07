@@ -126,7 +126,7 @@ jobs:
     needs: [build-extension]
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         target:
           - jira-cloud
@@ -188,12 +188,14 @@ jobs:
     if: always()
     steps:
       - name: Delete node_modules artifact
+        if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
         uses: geekyeggo/delete-artifact@v5
         with:
           name: node-modules
           failOnError: false
 
       - name: Delete extension package artifact
+        if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
         uses: geekyeggo/delete-artifact@v5
         with:
           name: extension-package
@@ -209,6 +211,7 @@ jobs:
             echo "  test-unit: ${{ needs.test-unit.result }}"
             echo "  build-extension: ${{ needs.build-extension.result }}"
             echo "  test-e2e: ${{ needs.test-e2e.result }}"
+            echo "Artifacts are retained for 1 day to allow rerunning failed jobs"
             exit 1
           fi
           echo "All steps completed successfully"
