@@ -325,14 +325,7 @@ export class Container {
             }
         } else {
             try {
-                // this enables the Rovo Dev activity bar
-                await setCommandContext(CommandContext.RovoDevEnabled, true);
-
-                // only in Boysenberry, we auto-focus the Rovo Dev view
-                if (this.isBoysenberryMode) {
-                    await vscode.commands.executeCommand('atlascode.views.rovoDev.webView.focus');
-                }
-
+                // don't add anything async before initializing _rovodevDisposable
                 this._rovodevDisposable = vscode.Disposable.from(
                     languages.registerCodeActionsProvider({ scheme: 'file' }, new RovoDevCodeActionProvider(), {
                         providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
@@ -342,7 +335,13 @@ export class Container {
 
                 context.subscriptions.push(this._rovodevDisposable);
 
-                if (!this.isBoysenberryMode) {
+                // this enables the Rovo Dev activity bar
+                await setCommandContext(CommandContext.RovoDevEnabled, true);
+
+                // only in Boysenberry, we auto-focus the Rovo Dev view
+                if (this.isBoysenberryMode) {
+                    await vscode.commands.executeCommand('atlascode.views.rovoDev.webView.focus');
+                } else {
                     // Update help explorer to show Rovo Dev content
                     this._helpExplorer.refresh();
 
@@ -380,10 +379,12 @@ export class Container {
         this._helpExplorer.refresh();
 
         try {
-            await setCommandContext(CommandContext.RovoDevEnabled, false);
+            // don't add anything async before disposing _rovodevDisposable
             this._rovodevDisposable.dispose();
             this._rovodevDisposable = undefined;
-            RovoDevProcessManager.deactivateRovoDevProcessManager();
+
+            await setCommandContext(CommandContext.RovoDevEnabled, false);
+            await RovoDevProcessManager.deactivateRovoDevProcessManager();
         } catch (error) {
             RovoDevLogger.error(error, 'Disabling Rovo Dev');
         }

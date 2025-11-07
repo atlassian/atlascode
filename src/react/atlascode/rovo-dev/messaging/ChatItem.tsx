@@ -1,5 +1,6 @@
+import CrossCircleIcon from '@atlaskit/icon/core/cross-circle';
 import React from 'react';
-import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
+import { ToolPermissionChoice } from 'src/rovo-dev/client';
 
 import { CheckFileExistsFunc, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
@@ -100,6 +101,15 @@ export const ChatItem = React.memo<ChatItemProps>(
             );
         } else if (block.event_kind === '_RovoDevPullRequest') {
             return <PullRequestChatItem msg={block} onLinkClick={onLinkClick} />;
+        } else if (block.event_kind === 'retry-prompt') {
+            return (
+                <ChatMessageItem
+                    icon={<CrossCircleIcon label="Retry prompt" />}
+                    msg={{ event_kind: 'text', content: block.content, index: -1 }}
+                    openFile={renderProps.openFile}
+                    openJira={renderProps.openJira}
+                />
+            );
         } else {
             return null;
         }

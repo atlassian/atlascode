@@ -38,8 +38,7 @@ import {
 import { modifyFileTitleMap } from '../react/atlascode/rovo-dev/utils';
 import { GitErrorCodes } from '../typings/git';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
-import { RovoDevApiClient } from './rovoDevApiClient';
-import { RovoDevHealthcheckResponse } from './rovoDevApiClientInterfaces';
+import { RovoDevApiClient, RovoDevHealthcheckResponse } from './client';
 import { RovoDevChatContextProvider } from './rovoDevChatContextProvider';
 import { RovoDevChatProvider } from './rovoDevChatProvider';
 import { RovoDevContentTracker } from './rovoDevContentTracker';

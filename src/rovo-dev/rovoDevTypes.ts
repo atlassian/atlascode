@@ -1,4 +1,4 @@
-import { ToolPermissionChoice } from './rovoDevApiClientInterfaces';
+import { ToolPermissionChoice } from './client';
 import { RovoDevEntitlementCheckFailedDetail } from './rovoDevWebviewProviderMessages';
 
 export type RovoDevContextFileInfo = {

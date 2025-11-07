@@ -2,7 +2,7 @@ import { createHash } from 'crypto';
 import { promises as fs } from 'fs';
 import { workspace } from 'vscode';
 
-import { RovoDevApiClient } from './rovoDevApiClient';
+import { RovoDevApiClient } from './client';
 
 // Tracks file content changes to determine if files have actually been modified by Rovo Dev
 // This helps avoid showing files as modified when changes have been reverted
