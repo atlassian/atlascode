@@ -67,7 +67,7 @@ describe('QuickPickUtils', () => {
 
     describe('getDefaultAssigneeOptions', () => {
         it('should include Unassigned option by default', () => {
-            const result = QuickPickUtils.getDefaultAssigneeOptions([]);
+            const result = QuickPickUtils.getDefaultAssigneeOptions([], null);
 
             expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ label: 'Unassigned' })]));
             expect(result.length).toBe(1);
@@ -83,7 +83,7 @@ describe('QuickPickUtils', () => {
                 },
             ];
 
-            const result = QuickPickUtils.getDefaultAssigneeOptions(previousItems);
+            const result = QuickPickUtils.getDefaultAssigneeOptions(previousItems, null);
 
             expect(result).toEqual(
                 expect.arrayContaining([
@@ -110,7 +110,7 @@ describe('QuickPickUtils', () => {
                 },
             ];
 
-            const result = QuickPickUtils.getDefaultAssigneeOptions(previousItems);
+            const result = QuickPickUtils.getDefaultAssigneeOptions(previousItems, null);
 
             const unassignedCount = result.filter((item) => item.label === 'Unassigned').length;
             expect(unassignedCount).toBe(1);
@@ -138,7 +138,7 @@ describe('QuickPickUtils', () => {
                 },
             ];
 
-            const result = QuickPickUtils.getDefaultAssigneeOptions(previousItems);
+            const result = QuickPickUtils.getDefaultAssigneeOptions(previousItems, null);
 
             expect(result.length).toBe(3);
             expect(result).toEqual(
@@ -383,7 +383,7 @@ describe('QuickPickUtils', () => {
                 },
             ];
 
-            const result = QuickPickUtils.extractFilterParameters(items);
+            const result = QuickPickUtils.extractFilterParameters(items, null);
 
             expect(result.hasUnassigned).toBe(true);
             expect(result.regularUsers).toHaveLength(0);
@@ -405,7 +405,7 @@ describe('QuickPickUtils', () => {
                 },
             ];
 
-            const result = QuickPickUtils.extractFilterParameters(items);
+            const result = QuickPickUtils.extractFilterParameters(items, null);
 
             expect(result.hasUnassigned).toBe(true);
             expect(result.regularUsers).toHaveLength(1);
@@ -428,7 +428,7 @@ describe('QuickPickUtils', () => {
                 },
             ];
 
-            const result = QuickPickUtils.extractFilterParameters(items);
+            const result = QuickPickUtils.extractFilterParameters(items, null);
 
             expect(result.hasUnassigned).toBe(false);
             expect(result.regularUsers).toHaveLength(2);
@@ -450,14 +450,14 @@ describe('QuickPickUtils', () => {
                 },
             ];
 
-            const result = QuickPickUtils.extractFilterParameters(items);
+            const result = QuickPickUtils.extractFilterParameters(items, null);
 
             expect(result.regularUsers).toHaveLength(1);
             expect(result.regularUsers[0].label).toBe('John Doe');
         });
 
         it('should handle empty array', () => {
-            const result = QuickPickUtils.extractFilterParameters([]);
+            const result = QuickPickUtils.extractFilterParameters([], null);
 
             expect(result.hasUnassigned).toBe(false);
             expect(result.regularUsers).toHaveLength(0);
@@ -468,6 +468,7 @@ describe('QuickPickUtils', () => {
         it('should return true when hasUnassigned is true', () => {
             const result = QuickPickUtils.isValidFilter({
                 hasUnassigned: true,
+                hasCurrentUser: false,
                 regularUsers: [],
             });
 
@@ -477,6 +478,7 @@ describe('QuickPickUtils', () => {
         it('should return true when regularUsers has items', () => {
             const result = QuickPickUtils.isValidFilter({
                 hasUnassigned: false,
+                hasCurrentUser: false,
                 regularUsers: [
                     {
                         label: 'John Doe',
@@ -493,6 +495,7 @@ describe('QuickPickUtils', () => {
         it('should return true when both hasUnassigned and regularUsers are set', () => {
             const result = QuickPickUtils.isValidFilter({
                 hasUnassigned: true,
+                hasCurrentUser: false,
                 regularUsers: [
                     {
                         label: 'John Doe',
@@ -509,6 +512,7 @@ describe('QuickPickUtils', () => {
         it('should return false when both are empty', () => {
             const result = QuickPickUtils.isValidFilter({
                 hasUnassigned: false,
+                hasCurrentUser: false,
                 regularUsers: [],
             });
 

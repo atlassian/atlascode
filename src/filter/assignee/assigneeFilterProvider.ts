@@ -1,8 +1,9 @@
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue, User } from '@atlassianlabs/jira-pi-common-models';
 import { showIssue } from 'src/commands/jira/showIssue';
 import { QuickPick, window } from 'vscode';
 
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
+import { currentUserJira } from '../../commands/jira/currentUser';
 import { Container } from '../../container';
 import { JiraIssueService } from './JiraIssueService';
 import { JiraUserService } from './JiraUserService';
@@ -13,11 +14,21 @@ export class AssigneeFilterProvider {
     static fetchTimeout: NodeJS.Timeout | undefined;
     static persistentSelectedItems: QuickPickUser[] = [];
     static previousSelectedItems: QuickPickUser[] = [];
+    static currentUser: User | null = null;
 
     public static async create(): Promise<void> {
         const sites = this.getAvailableSites();
         if (!sites.length) {
             return;
+        }
+
+        let currentUser: User | null = null;
+        try {
+            currentUser = await currentUserJira(sites[0]);
+            this.currentUser = currentUser;
+        } catch (error) {
+            console.error('Failed to fetch current user:', error);
+            this.currentUser = null;
         }
 
         const quickPick = window.createQuickPick<QuickPickUser>();
@@ -26,7 +37,7 @@ export class AssigneeFilterProvider {
         quickPick.matchOnDescription = true;
         quickPick.matchOnDetail = true;
         quickPick.canSelectMany = true;
-        quickPick.items = QuickPickUtils.getDefaultAssigneeOptions(this.previousSelectedItems);
+        quickPick.items = QuickPickUtils.getDefaultAssigneeOptions(this.previousSelectedItems, currentUser);
         quickPick.selectedItems = [];
 
         quickPick.show();
@@ -39,12 +50,17 @@ export class AssigneeFilterProvider {
             quickPick.dispose();
         });
 
-        quickPick.onDidChangeValue((value) => this.handleSearchInput(value, quickPick, sites));
+        quickPick.onDidChangeValue((value) => this.handleSearchInput(value, quickPick, sites, currentUser));
         quickPick.onDidAccept(() => this.handleUserAccept(quickPick));
         quickPick.onDidChangeSelection((selected) => this.handleSelectionChange(selected));
     }
 
-    static handleSearchInput(value: string, quickPick: QuickPick<QuickPickUser>, sites: DetailedSiteInfo[]) {
+    static handleSearchInput(
+        value: string,
+        quickPick: QuickPick<QuickPickUser>,
+        sites: DetailedSiteInfo[],
+        currentUser: User | null,
+    ) {
         if (this.fetchTimeout) {
             clearTimeout(this.fetchTimeout);
         }
@@ -54,7 +70,7 @@ export class AssigneeFilterProvider {
         if (!value.trim()) {
             this.currentToken++;
 
-            const defaultOptions = QuickPickUtils.getDefaultAssigneeOptions(this.previousSelectedItems);
+            const defaultOptions = QuickPickUtils.getDefaultAssigneeOptions(this.previousSelectedItems, currentUser);
             const mergedItems = QuickPickUtils.mergeItemsWithPersistent(persistentItems, defaultOptions);
 
             quickPick.title = 'Filter by Assignee - Select Users';
@@ -122,7 +138,7 @@ export class AssigneeFilterProvider {
     }
 
     static async fetchAssignedIssues(selectedUsers: readonly QuickPickUser[]): Promise<void> {
-        const filterParams = QuickPickUtils.extractFilterParameters(selectedUsers);
+        const filterParams = QuickPickUtils.extractFilterParameters(selectedUsers, this.currentUser);
         if (!QuickPickUtils.isValidFilter(filterParams)) {
             return;
         }
@@ -154,6 +170,7 @@ export class AssigneeFilterProvider {
                 filterParams.regularUsers,
                 sites,
                 filterParams.hasUnassigned,
+                filterParams.hasCurrentUser,
             );
             this.displayIssues(issuesQuickPick, issues, userNames);
         } catch (error) {

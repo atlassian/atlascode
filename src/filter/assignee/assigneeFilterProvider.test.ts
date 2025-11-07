@@ -331,6 +331,7 @@ describe('AssigneeFilterProvider', () => {
                 [selectedUser],
                 [mockSite1, mockSite2],
                 false,
+                false,
             );
         });
 

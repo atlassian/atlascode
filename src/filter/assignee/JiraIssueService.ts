@@ -9,8 +9,9 @@ export class JiraIssueService {
         users: readonly QuickPickUser[],
         sites: DetailedSiteInfo[],
         hasUnassigned: boolean,
+        hasCurrentUser: boolean,
     ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
-        const issuesPromises = sites.map((site) => this.fetchIssues(users, site, hasUnassigned));
+        const issuesPromises = sites.map((site) => this.fetchIssues(users, site, hasUnassigned, hasCurrentUser));
         const issues = await Promise.all(issuesPromises);
         return this.getUniqueIssues(issues.flat());
     }
@@ -30,16 +31,21 @@ export class JiraIssueService {
         users: readonly QuickPickUser[],
         site: DetailedSiteInfo,
         hasUnassigned: boolean,
+        hasCurrentUser: boolean,
     ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
         try {
-            return await this.getAssignedIssuesFromSite(users, site, hasUnassigned);
+            return await this.getAssignedIssuesFromSite(users, site, hasUnassigned, hasCurrentUser);
         } catch (err) {
             console.error(`Failed to fetch issues from ${site.host}:`, err);
             return [];
         }
     }
 
-    private static buildJQLConditions(users: readonly QuickPickUser[], hasUnassigned: boolean): string[] {
+    private static buildJQLConditions(
+        users: readonly QuickPickUser[],
+        hasUnassigned: boolean,
+        hasCurrentUser: boolean,
+    ): string[] {
         const conditions: string[] = [];
 
         if (users.length > 0) {
@@ -47,6 +53,10 @@ export class JiraIssueService {
             if (userAccountIds.length > 0) {
                 conditions.push(`assignee in (${userAccountIds.map((id) => `"${id}"`).join(', ')})`);
             }
+        }
+
+        if (hasCurrentUser) {
+            conditions.push('assignee = currentUser()');
         }
 
         if (hasUnassigned) {
@@ -60,9 +70,10 @@ export class JiraIssueService {
         users: readonly QuickPickUser[],
         site: DetailedSiteInfo,
         hasUnassigned: boolean,
+        hasCurrentUser: boolean,
     ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
         try {
-            const jqlConditions = this.buildJQLConditions(users, hasUnassigned);
+            const jqlConditions = this.buildJQLConditions(users, hasUnassigned, hasCurrentUser);
 
             if (jqlConditions.length === 0) {
                 return [];

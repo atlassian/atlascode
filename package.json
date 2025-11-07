@@ -311,10 +311,7 @@
             {
                 "command": "atlascode.jira.filter",
                 "title": "Filter issues",
-                "icon": {
-                    "dark": "resources/dark/preferences.svg",
-                    "light": "resources/light/preferences.svg"
-                },
+                "icon": "$(filter)",
                 "category": "Jira"
             },
             {
