@@ -1,3 +1,5 @@
+import { setCommandContext } from 'src/commandContext';
+import { CreateWorkItemWebviewProvider } from 'src/work-items/create-work-item/createWorkItemWebviewProvider';
 import { Position, Range, Uri, ViewColumn, window, workspace, WorkspaceEdit } from 'vscode';
 
 import { startIssueCreationEvent } from '../../analytics';
@@ -76,7 +78,9 @@ export async function createIssue(data: Uri | TodoIssueData | undefined, source?
         return;
     }
 
-    Container.createIssueWebview.createOrShow();
+    // Container.createIssueWebview.createOrShow();
+    setCommandContext('atlascode:showCreateWorkItemWebview', true);
+    new CreateWorkItemWebviewProvider(Container.context, Container.context.extensionPath);
     startIssueCreationEvent(source || 'explorer', ProductJira).then((e) => {
         Container.analyticsClient.sendTrackEvent(e);
     });
