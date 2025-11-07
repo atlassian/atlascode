@@ -1,7 +1,7 @@
 import { basename } from 'path';
 import { Disposable, window } from 'vscode';
 
-import { RovoDevApiClient } from './rovoDevApiClient';
+import { RovoDevApiClient } from './client';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 
 /**

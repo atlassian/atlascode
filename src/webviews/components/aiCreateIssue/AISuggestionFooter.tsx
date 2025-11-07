@@ -1,4 +1,5 @@
-import 'src/react/atlascode/rovo-dev/RovoDev.css';
+// TODO: extract the relevant bits, decouple from Rovo Dev styles
+import 'src/rovo-dev/ui/RovoDev.css';
 
 import { Checkbox } from '@atlaskit/checkbox';
 import { HelperMessage } from '@atlaskit/form';

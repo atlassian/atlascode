@@ -1,3 +1,4 @@
+import CrossCircleIcon from '@atlaskit/icon/core/cross-circle';
 import MarkdownIt from 'markdown-it';
 import React from 'react';
 
@@ -178,6 +179,15 @@ export const renderChatHistory = (
         case 'text':
         case '_RovoDevUserPrompt':
             return <ChatMessageItem msg={msg} openFile={openFile} openJira={openJira} />;
+        case 'retry-prompt':
+            return (
+                <ChatMessageItem
+                    icon={<CrossCircleIcon label="Retry prompt" size="small" />}
+                    msg={{ event_kind: 'text', content: msg.content, index: -1 }}
+                    openFile={openFile}
+                    openJira={openJira}
+                />
+            );
         default:
             return <div>Unknown message type</div>;
     }
