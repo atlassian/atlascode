@@ -1,6 +1,6 @@
 import { Container } from 'src/container';
 import { RovoDevLogger } from 'src/logger';
-import { RovoDevViewResponse } from 'src/react/atlascode/rovo-dev/rovoDevViewMessages';
+import { RovoDevViewResponse } from 'src/rovo-dev/ui/rovoDevViewMessages';
 import { v4 } from 'uuid';
 
 import {

@@ -6,7 +6,7 @@ import {
     RovoDevToolReturnResponse,
 } from 'src/rovo-dev/client';
 
-import { RovoDevContextItem, TechnicalPlan } from '../../../../src/rovo-dev/rovoDevTypes';
+import { RovoDevContextItem, TechnicalPlan } from '../rovoDevTypes';
 
 export type ChatMessage =
     | UserPromptMessage
