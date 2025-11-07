@@ -145,6 +145,7 @@ function sanitazeErrorMessage(message?: string): string | undefined {
 function sanitizeStackTrace(stack?: string): string | undefined {
     if (stack) {
         stack = stack.replace(/\/Users\/[^/]+\//gi, '/Users/<user>/'); // *nix Users folder
+        stack = stack.replace(/\/home\/[^/]+\//gi, '/home/<user>/'); // *nix home folder
         stack = stack.replace(/\\Users\\[^\\]+\\/gi, '\\Users\\<user>\\'); // windows Users folder
     }
     return stack || undefined;
@@ -519,6 +520,12 @@ export async function pmfSnoozed(): Promise<TrackEvent> {
 
 export async function pmfClosed(): Promise<TrackEvent> {
     return trackEvent('closed', 'atlascodePmf');
+}
+
+export async function addRecommendedExtensionTriggeredEvent(source: string): Promise<TrackEvent> {
+    return trackEvent('triggered', 'addRecommendedExtension', {
+        attributes: { source: source },
+    });
 }
 
 export type DeepLinkEventErrorType = 'Success' | 'NotFound' | 'Exception';

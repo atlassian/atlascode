@@ -4,8 +4,8 @@ import { State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 import { ConnectionTimeout } from 'src/util/time';
 
-import { DetailedSiteInfo } from '../../../../atlclients/authInfo';
-import { useMessagingApi } from '../../messagingApi';
+import { DetailedSiteInfo } from '../../../atlclients/authInfo';
+import { useMessagingApi } from '../../../react/atlascode/messagingApi';
 import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
 import { PullRequestForm } from '../create-pr/PullRequestForm';

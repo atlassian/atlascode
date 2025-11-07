@@ -1,5 +1,5 @@
 import React from 'react';
-import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
+import { ToolPermissionChoice } from 'src/rovo-dev/client';
 import { State } from 'src/rovo-dev/rovoDevTypes';
 
 import { CheckFileExistsFunc, OpenFileFunc, OpenJiraFunc } from '../common/common';

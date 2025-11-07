@@ -46,7 +46,7 @@
     ],
     "main": "./build/extension/extension",
     "rovoDev": {
-        "version": "0.12.14"
+        "version": "0.12.16"
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
@@ -517,6 +517,11 @@
                 "command": "atlascode.debug.quickLogout",
                 "title": "[DEBUG] Atlassian: Quick logout",
                 "enablement": "atlascode:debugMode"
+            },
+            {
+                "command": "atlascode.addRecommendedExtension",
+                "title": "Add as Recommended Extension",
+                "category": "Atlassian"
             }
         ],
         "viewsContainers": {

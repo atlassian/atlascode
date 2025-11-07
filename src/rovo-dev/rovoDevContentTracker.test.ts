@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import { Stats } from 'fs';
 
-import { RovoDevApiClient } from './rovoDevApiClient';
+import { RovoDevApiClient } from './client';
 import { RovoDevContentTracker } from './rovoDevContentTracker';
 
 jest.mock('fs', () => ({

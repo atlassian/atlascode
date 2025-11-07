@@ -10,6 +10,7 @@ import {
 } from './analytics';
 import { BasicAuthInfo, DetailedSiteInfo, ProductBitbucket, ProductJira } from './atlclients/authInfo';
 import { showBitbucketDebugInfo } from './bitbucket/bbDebug';
+import { addAtlascodeAsRecommendedExtension } from './commands/addRecommendedExtension';
 import { rerunPipeline } from './commands/bitbucket/rerunPipeline';
 import { runPipeline } from './commands/bitbucket/runPipeline';
 import { assignIssue } from './commands/jira/assignIssue';
@@ -237,6 +238,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                     });
                 }
             }),
+            commands.registerCommand(Commands.AddRecommendedExtension, addAtlascodeAsRecommendedExtension),
         );
     } else {
         vscodeContext.subscriptions.push(
@@ -449,6 +451,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                     });
                 }
             }),
+            commands.registerCommand(Commands.AddRecommendedExtension, addAtlascodeAsRecommendedExtension),
         );
     }
 }

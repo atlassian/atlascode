@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import path from 'path';
 import { window, workspace } from 'vscode';
 
-import { RovoDevStatusResponse } from './responseParserInterfaces';
+import { RovoDevStatusResponse } from './client';
 
 export type SupportedConfigFiles = 'config.yml' | 'mcp.json' | '.agent.md' | 'rovodev.log';
 

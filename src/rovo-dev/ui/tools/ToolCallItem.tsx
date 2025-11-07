@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { RovoDevToolName } from 'src/rovo-dev/responseParserInterfaces';
+import { RovoDevToolName } from 'src/rovo-dev/client';
 import { InitializingDownladingState, InitializingState, State } from 'src/rovo-dev/rovoDevTypes';
 
 export const ToolCallItem: React.FC<{
