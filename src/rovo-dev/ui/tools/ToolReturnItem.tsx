@@ -1,7 +1,7 @@
-import CodeIcon from '@atlaskit/icon/glyph/code';
-import FileIcon from '@atlaskit/icon/glyph/file';
-import SearchIcon from '@atlaskit/icon/glyph/search';
-import TrashIcon from '@atlaskit/icon/glyph/trash';
+import AngleBracketsIcon from '@atlaskit/icon/core/angle-brackets';
+import DeleteIcon from '@atlaskit/icon/core/delete';
+import FileIcon from '@atlaskit/icon/core/file';
+import SearchIcon from '@atlaskit/icon/core/search';
 import React from 'react';
 
 import { MarkedDown, OpenFileFunc } from '../common/common';
@@ -11,13 +11,22 @@ export const ToolReturnParsedItem: React.FC<{
     msg: ToolReturnParseResult;
     openFile: OpenFileFunc;
 }> = ({ msg, openFile }) => {
-    const toolIcon = msg.type ? iconMap[msg.type] : undefined;
+    const toolIcon = React.useMemo(() => (msg.type ? iconMap[msg.type] : undefined), [msg.type]);
+
+    const filePathClass = msg.filePath && msg.type !== 'delete' ? 'tool-return-file-path' : '';
+
+    const handleOpenFile = React.useCallback(
+        (e: React.MouseEvent) => {
+            e.preventDefault();
+            if (msg.filePath && msg.type !== 'delete') {
+                openFile(msg.filePath);
+            }
+        },
+        [msg.filePath, msg.type, openFile],
+    );
 
     return (
-        <a
-            className={`tool-return-item-base tool-return-item ${msg.filePath ? 'tool-return-file-path' : ''}`}
-            onClick={() => msg.filePath && openFile(msg.filePath)}
-        >
+        <a className={`tool-return-item-base tool-return-item ${filePathClass}`} onClick={handleOpenFile}>
             {toolIcon}
             <div className="tool-return-item-base" style={{ flexWrap: 'wrap' }}>
                 <div className="tool-return-content">
@@ -46,9 +55,9 @@ const renderTitle = (msg: ToolReturnParseResult) => {
 };
 
 const iconMap: Record<string, React.JSX.Element> = {
-    modify: <CodeIcon label="Modified file" size="small" />,
-    create: <FileIcon label="Opened file" size="small" />,
-    delete: <TrashIcon label="Deleted file" size="small" />,
-    open: <SearchIcon label="Opened file" size="small" />,
-    bash: <CodeIcon label="Bash command" size="small" />,
+    modify: <AngleBracketsIcon label="Modified file" />,
+    create: <FileIcon label="Opened file" />,
+    delete: <DeleteIcon label="Deleted file" />,
+    open: <SearchIcon label="Opened file" />,
+    bash: <AngleBracketsIcon label="Bash command" />,
 };

@@ -1,11 +1,12 @@
 import {
+    RovoDevRetryPromptResponse,
     RovoDevTextResponse,
     RovoDevToolCallResponse,
     RovoDevToolName,
     RovoDevToolReturnResponse,
-} from 'src/rovo-dev/responseParserInterfaces';
+} from 'src/rovo-dev/client';
 
-import { RovoDevContextItem, TechnicalPlan } from '../../../../src/rovo-dev/rovoDevTypes';
+import { RovoDevContextItem, TechnicalPlan } from '../rovoDevTypes';
 
 export type ChatMessage =
     | UserPromptMessage
@@ -13,7 +14,8 @@ export type ChatMessage =
     | DialogMessage
     | RovoDevTextResponse
     | RovoDevToolCallResponse
-    | RovoDevToolReturnResponse;
+    | RovoDevToolReturnResponse
+    | RovoDevRetryPromptResponse;
 
 export interface UserPromptMessage {
     event_kind: '_RovoDevUserPrompt';
@@ -332,8 +334,10 @@ export const appendResponse = (
             return [...prev, appendedMessage];
         }
         // Group tool return with previous message if applicable
-        if (response.event_kind === 'tool-return') {
-            handleAppendModifiedFileToolReturns(response);
+        if (response.event_kind === 'tool-return' || response.event_kind === 'retry-prompt') {
+            if (response.event_kind === 'tool-return') {
+                handleAppendModifiedFileToolReturns(response);
+            }
             if (response.tool_name !== 'create_technical_plan' && thinkingBlockEnabled) {
                 // Do not group if User, Error message, or Pull Request message is the latest
                 const canGroup =
@@ -362,8 +366,10 @@ export const appendResponse = (
             }
         }
     } else {
-        if (response.event_kind === 'tool-return') {
-            handleAppendModifiedFileToolReturns(response);
+        if (response.event_kind === 'tool-return' || response.event_kind === 'retry-prompt') {
+            if (response.event_kind === 'tool-return') {
+                handleAppendModifiedFileToolReturns(response);
+            }
             if (response.tool_name !== 'create_technical_plan' && thinkingBlockEnabled) {
                 latest.push(response);
                 return [...prev, latest];

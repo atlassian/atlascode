@@ -30,16 +30,9 @@ import { Container } from '../../src/container';
 import { RovoDevLogger } from '../../src/logger';
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { Commands } from '../constants';
-import {
-    ModifiedFile,
-    RovoDevViewResponse,
-    RovoDevViewResponseType,
-} from '../react/atlascode/rovo-dev/rovoDevViewMessages';
-import { modifyFileTitleMap } from '../react/atlascode/rovo-dev/utils';
 import { GitErrorCodes } from '../typings/git';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
-import { RovoDevApiClient } from './rovoDevApiClient';
-import { RovoDevHealthcheckResponse } from './rovoDevApiClientInterfaces';
+import { RovoDevApiClient, RovoDevHealthcheckResponse } from './client';
 import { RovoDevChatContextProvider } from './rovoDevChatContextProvider';
 import { RovoDevChatProvider } from './rovoDevChatProvider';
 import { RovoDevContentTracker } from './rovoDevContentTracker';
@@ -56,6 +49,8 @@ import {
     RovoDevProviderMessage,
     RovoDevProviderMessageType,
 } from './rovoDevWebviewProviderMessages';
+import { ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './ui/rovoDevViewMessages';
+import { modifyFileTitleMap } from './ui/utils';
 
 export interface TypedWebview<MessageOut, MessageIn> extends Webview {
     readonly onDidReceiveMessage: Event<MessageIn>;

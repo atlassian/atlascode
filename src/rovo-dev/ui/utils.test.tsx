@@ -1,4 +1,4 @@
-import { RovoDevToolCallResponse, RovoDevToolReturnResponse } from 'src/rovo-dev/responseParserInterfaces';
+import { RovoDevToolCallResponse, RovoDevToolReturnResponse } from 'src/rovo-dev/client';
 
 import { appendResponse, ChatMessage } from './utils';
 import { Response } from './utils';

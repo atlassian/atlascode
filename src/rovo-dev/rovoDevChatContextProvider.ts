@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import path from 'path';
-import { RovoDevViewResponse } from 'src/react/atlascode/rovo-dev/rovoDevViewMessages';
+import { RovoDevViewResponse } from 'src/rovo-dev/ui/rovoDevViewMessages';
 import { Range, TextEditor, Uri, window, workspace } from 'vscode';
 
 import { RovoDevContextItem, RovoDevFileContext, RovoDevJiraContext } from './rovoDevTypes';

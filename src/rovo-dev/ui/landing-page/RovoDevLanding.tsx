@@ -2,7 +2,7 @@ import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
 import { State } from 'src/rovo-dev/rovoDevTypes';
 
-import { DetailedSiteInfo } from '../../../../atlclients/authInfo';
+import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { McpConsentChoice } from '../rovoDevViewMessages';
 import { DisabledMessage } from './disabled-messages/DisabledMessage';
 import { RovoDevActions, RovoDevJiraWorkItems } from './RovoDevSuggestions';

@@ -108,7 +108,7 @@ jest.mock('../../src/rovo-dev/rovoDevDwellTracker', () => ({
     })),
 }));
 
-jest.mock('../../src/rovo-dev/rovoDevApiClient', () => ({
+jest.mock('../../src/rovo-dev/client/rovoDevApiClient', () => ({
     RovoDevApiClient: jest.fn().mockImplementation(() => ({
         healthcheck: jest.fn(),
         createSession: jest.fn(),

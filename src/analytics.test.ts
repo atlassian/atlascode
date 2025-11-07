@@ -264,7 +264,7 @@ describe('analytics', () => {
             expect(event.trackEvent.attributes.additionalParams).toEqual(additionalParams);
         });
 
-        it('should sanitize stack traces in errorEvent', async () => {
+        it('should sanitize stack traces in errorEvent (/Users)', async () => {
             const errorMessage = 'Test error message';
             const error = new Error('Test error');
             error.stack = 'Error: Test error\n    at TestFunction (/Users/realuser/test.js:10:15)';
@@ -274,6 +274,30 @@ describe('analytics', () => {
             // Check if the username was sanitized
             expect(event.trackEvent.attributes.stack).toContain('/Users/<user>/');
             expect(event.trackEvent.attributes.stack).not.toContain('/Users/realuser/');
+        });
+
+        it('should sanitize stack traces in errorEvent (/home)', async () => {
+            const errorMessage = 'Test error message';
+            const error = new Error('Test error');
+            error.stack = 'Error: Test error\n    at TestFunction (/home/realuser/test.js:10:15)';
+
+            const event = await analytics.errorEvent(undefined, errorMessage, error);
+
+            // Check if the username was sanitized
+            expect(event.trackEvent.attributes.stack).toContain('/home/<user>/');
+            expect(event.trackEvent.attributes.stack).not.toContain('/home/realuser/');
+        });
+
+        it('should sanitize stack traces in errorEvent (c:\\Users)', async () => {
+            const errorMessage = 'Test error message';
+            const error = new Error('Test error');
+            error.stack = 'Error: Test error\n    at TestFunction (c:\\Users\\realuser\\test.js:10:15)';
+
+            const event = await analytics.errorEvent(undefined, errorMessage, error);
+
+            // Check if the username was sanitized
+            expect(event.trackEvent.attributes.stack).toContain('c:\\Users\\<user>\\');
+            expect(event.trackEvent.attributes.stack).not.toContain('c:\\Users\\realuser\\');
         });
 
         it('should create uiErrorEvent with UI error information', async () => {
