@@ -164,14 +164,8 @@ describe('useStartWorkFormState', () => {
             );
         });
     });
-    describe('transition issue enabled initialization', () => {
-        it('should render transitionIssueEnabled checkbox as true when status category is "To Do"', () => {
-            const { result } = renderHook(() => useStartWorkFormState(mockState, mockController));
-
-            expect(result.current.updateStatusFormState.transitionIssueEnabled).toBe(true);
-        });
-
-        it('should render transitionIssueEnabled checkbox as false when status category is "In Progress"', () => {
+    describe('transition issue checkbox state', () => {
+        it('should render transitionIssueEnabled checkbox as false by default when status category is "In Progress" category', () => {
             const stateWithInProgressStatus = {
                 ...mockState,
                 issue: {
@@ -191,6 +185,53 @@ describe('useStartWorkFormState', () => {
             const { result } = renderHook(() => useStartWorkFormState(stateWithInProgressStatus, mockController));
 
             expect(result.current.updateStatusFormState.transitionIssueEnabled).toBe(false);
+        });
+
+        it('should allow user to manually toggle transitionIssueEnabled', () => {
+            const { result } = renderHook(() => useStartWorkFormState(mockState, mockController));
+
+            // Initially enabled (status is in "To Do" category)
+            expect(result.current.updateStatusFormState.transitionIssueEnabled).toBe(true);
+
+            // User clicks to disable
+            act(() => {
+                result.current.updateStatusFormActions.onTransitionIssueEnabledChange(false);
+            });
+            expect(result.current.updateStatusFormState.transitionIssueEnabled).toBe(false);
+
+            // User clicks to enable again
+            act(() => {
+                result.current.updateStatusFormActions.onTransitionIssueEnabledChange(true);
+            });
+            expect(result.current.updateStatusFormState.transitionIssueEnabled).toBe(true);
+        });
+
+        it('should update transitionIssueEnabled based on status category changes', () => {
+            const { result, rerender } = renderHook(({ state }) => useStartWorkFormState(state, mockController), {
+                initialProps: { state: mockState },
+            });
+
+            // "To Do"
+            expect(result.current.updateStatusFormState.transitionIssueEnabled).toBe(true);
+
+            // Changed to "In Progress"
+            const inProgressState = {
+                ...mockState,
+                issue: {
+                    ...mockState.issue,
+                    status: { ...mockState.issue.status, statusCategory: { key: 'indeterminate' } },
+                },
+            };
+            rerender({ state: inProgressState });
+            expect(result.current.updateStatusFormState.transitionIssueEnabled).toBe(false);
+
+            // Changed to "Done"
+            const doneState = {
+                ...mockState,
+                issue: { ...mockState.issue, status: { ...mockState.issue.status, statusCategory: { key: 'done' } } },
+            };
+            rerender({ state: doneState });
+            expect(result.current.updateStatusFormState.transitionIssueEnabled).toBe(true);
         });
     });
 });
