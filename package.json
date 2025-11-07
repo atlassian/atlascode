@@ -1011,6 +1011,26 @@
                 {
                     "command": "atlascode.showExploreSettings",
                     "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.searchIssues",
+                    "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
+                },
+                {
+                    "command": "atlascode.jira.createIssue",
+                    "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
+                },
+                {
+                    "command": "atlascode.jira.refreshAssignedWorkItemsExplorer",
+                    "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
+                },
+                {
+                    "command": "atlascode.jira.createNewJql",
+                    "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
+                },
+                {
+                    "command": "atlascode.jira.refreshCustomJqlExplorer",
+                    "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
                 }
             ]
         },
