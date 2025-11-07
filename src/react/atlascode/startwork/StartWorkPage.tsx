@@ -54,6 +54,7 @@ import { ErrorDisplay } from '../common/ErrorDisplay';
 import Lozenge from '../common/Lozenge';
 import { PMFDisplay } from '../common/pmf/PMFDisplay';
 import { PrepareCommitTip } from '../common/PrepareCommitTip';
+import { statusCategoryKeys } from '../constants';
 import { StartWorkControllerContext, useStartWorkController } from './startWorkController';
 
 const useStyles = makeStyles((theme: Theme) => ({
@@ -372,9 +373,9 @@ const StartWorkPage: React.FunctionComponent = () => {
     }, [state.rovoDevPreference]);
 
     useEffect(() => {
-        const isInProgress = state.issue.status.statusCategory.key === 'indeterminate';
+        const isInProgress = state.issue.status?.statusCategory?.key === statusCategoryKeys.inProgress;
         setTransitionIssueEnabled(!isInProgress);
-    }, [state.issue.status.statusCategory.key]);
+    }, [state.issue.status?.statusCategory?.key]);
 
     const postMessageWithEventPromise = (
         send: StartWorkAction,
