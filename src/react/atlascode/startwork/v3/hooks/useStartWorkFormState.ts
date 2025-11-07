@@ -3,6 +3,7 @@ import { useCallback, useContext, useEffect, useState } from 'react';
 
 import { StartWorkActionType } from '../../../../../lib/ipc/fromUI/startWork';
 import { RepoData } from '../../../../../lib/ipc/toUI/startWork';
+import { statusCategoryKeys } from '../../../../../react/atlascode/constants';
 import { Branch } from '../../../../../typings/git';
 import { ErrorControllerContext } from '../../../common/errorController';
 import { useStartWorkController } from '../../startWorkController';
@@ -75,6 +76,11 @@ export function useStartWorkFormState(
             );
         }
     }, [selectedRepository, selectedBranchType, state.issue, state.customTemplate]);
+
+    useEffect(() => {
+        const isInProgress = state.issue.status?.statusCategory?.key === statusCategoryKeys.inProgress;
+        setTransitionIssueEnabled(!isInProgress);
+    }, [state.issue.status?.statusCategory?.key]);
 
     const handleRepositoryChange = useCallback(
         (repository: RepoData) => {
