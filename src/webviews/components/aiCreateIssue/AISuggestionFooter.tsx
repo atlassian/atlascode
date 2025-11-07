@@ -1,5 +1,4 @@
-// TODO: extract the relevant bits, decouple from Rovo Dev styles
-import 'src/rovo-dev/ui/RovoDev.css';
+import './Suggestions.css';
 
 import { Checkbox } from '@atlaskit/checkbox';
 import { HelperMessage } from '@atlaskit/form';
@@ -83,14 +82,17 @@ const AISuggestionFooter: React.FC<{
                             ? 'Thank you for your feedback! Your input helps us improve Rovo Dev.'
                             : 'Please provide feedback to improve Rovo Dev work item generation'}
                     </HelperMessage>
-                    <div className="chat-message-actions" style={{ display: 'flex', gap: '2px', marginTop: '10px' }}>
+                    <div
+                        className="ai-suggestion-feedback-actions"
+                        style={{ display: 'flex', gap: '2px', marginTop: '10px' }}
+                    >
                         <div style={{ flex: 1 }}></div>
                         <Tooltip content="Helpful">
                             <button
                                 onClick={() => handleFeedback(true)}
                                 type="button"
                                 aria-label="like-response-button"
-                                className="chat-message-action"
+                                className="ai-suggestion-feedback-action"
                                 style={{ visibility: feedbackSent ? 'hidden' : 'visible' }}
                             >
                                 <ThumbsUpIcon label="thumbs-up" spacing="none" />
@@ -103,7 +105,7 @@ const AISuggestionFooter: React.FC<{
                                 }}
                                 type="button"
                                 aria-label="dislike-response-button"
-                                className="chat-message-action"
+                                className="ai-suggestion-feedback-action"
                                 style={{ visibility: feedbackSent ? 'hidden' : 'visible' }}
                             >
                                 <ThumbsDownIcon label="thumbs-down" spacing="none" />
