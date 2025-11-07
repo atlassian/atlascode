@@ -134,7 +134,7 @@ export const IssueHistory: React.FC<IssueHistoryProps> = ({ history, historyLoad
 
     if (history.length === 0) {
         return (
-            <div style={{ padding: '20px', textAlign: 'center', color: '#6b778c' }}>
+            <div style={{ padding: '20px', textAlign: 'center', color: 'var(--vscode-descriptionForeground)' }}>
                 <span>No history available</span>
             </div>
         );
@@ -166,7 +166,9 @@ export const IssueHistory: React.FC<IssueHistoryProps> = ({ history, historyLoad
                         <Avatar src={item.author.avatarUrl} name={item.author.displayName} size="small" />
                         <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
                             <div style={{ fontWeight: 600, fontSize: '14px' }}>{item.author.displayName}</div>
-                            <div style={{ fontSize: '12px', color: '--vscode-descriptionForeground', opacity: 0.7 }}>
+                            <div
+                                style={{ fontSize: '12px', color: 'var(--vscode-descriptionForeground)', opacity: 0.7 }}
+                            >
                                 {getActionText(item.fieldDisplayName, item.field)} • {formatTimestamp(item.timestamp)}
                             </div>
                         </div>
@@ -188,7 +190,7 @@ export const IssueHistory: React.FC<IssueHistoryProps> = ({ history, historyLoad
                                             padding: '4px 8px',
                                             borderRadius: '3px',
                                             fontSize: '13px',
-                                            color: '--vscode-descriptionForeground',
+                                            color: 'var(--vscode-descriptionForeground)',
                                             display: 'inline-block',
                                             width: 'fit-content',
                                         }}
@@ -207,7 +209,7 @@ export const IssueHistory: React.FC<IssueHistoryProps> = ({ history, historyLoad
                                             padding: '4px 8px',
                                             borderRadius: '3px',
                                             fontSize: '13px',
-                                            color: '--vscode-descriptionForeground',
+                                            color: 'var(--vscode-descriptionForeground)',
                                             fontStyle: 'italic',
                                             marginTop: '4px',
                                         }}
@@ -235,18 +237,18 @@ export const IssueHistory: React.FC<IssueHistoryProps> = ({ history, historyLoad
                                             padding: '4px 8px',
                                             borderRadius: '3px',
                                             fontSize: '13px',
-                                            color: '--vscode-descriptionForeground',
+                                            color: 'var(--vscode-descriptionForeground)',
                                         }}
                                     >
                                         {formatValue(item.fromString || item.from, item.field, item.fieldDisplayName)}
                                     </span>
-                                    <span style={{ color: '--vscode-descriptionForeground' }}>→</span>
+                                    <span style={{ color: 'var(--vscode-descriptionForeground)' }}>→</span>
                                     <span
                                         style={{
                                             padding: '4px 8px',
                                             borderRadius: '3px',
                                             fontSize: '13px',
-                                            color: '--vscode-descriptionForeground',
+                                            color: 'var(--vscode-descriptionForeground)',
                                         }}
                                     >
                                         {formatValue(item.toString || item.to, item.field, item.fieldDisplayName)}
