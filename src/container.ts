@@ -225,6 +225,7 @@ export class Container {
         if (!process.env.ROVODEV_BBY) {
             // refresh Rovo Dev when auth sites change
             this._siteManager.onDidSitesAvailableChange(async () => {
+                console.log('[RovoDev Debug] Sites available changed, triggering refreshRovoDev');
                 await this.updateFeatureFlagTenantId();
                 await this.refreshRovoDev(context);
             });
@@ -233,6 +234,9 @@ export class Container {
             context.subscriptions.push(
                 configuration.onDidChange(async (e) => {
                     if (configuration.changed(e, 'jira.enabled') || configuration.changed(e, 'rovodev.enabled')) {
+                        console.log(
+                            '[RovoDev Debug] Config changed (jira.enabled or rovodev.enabled), triggering refreshRovoDev',
+                        );
                         await this.refreshRovoDev(context);
                     }
                 }, this),
@@ -250,7 +254,9 @@ export class Container {
 
         this._onboardingProvider = new OnboardingProvider();
 
+        console.log('[RovoDev Debug] Container initialization: calling refreshRovoDev');
         await this.refreshRovoDev(context);
+        console.log('[RovoDev Debug] Container initialization: complete');
     }
 
     private static async initializeFeatureFlagClient() {
@@ -301,24 +307,42 @@ export class Container {
     private static async refreshRovoDev(context: ExtensionContext) {
         const shouldEnableRovoDev = (this.config.rovodev.enabled && this.config.jira.enabled) || this.isBoysenberryMode;
 
+        console.log('[RovoDev Debug] refreshRovoDev called:', {
+            shouldEnableRovoDev,
+            'config.rovodev.enabled': this.config.rovodev.enabled,
+            'config.jira.enabled': this.config.jira.enabled,
+            isBoysenberryMode: this.isBoysenberryMode,
+            currentlyEnabled: this._isRovoDevEnabled,
+            hasDisposable: !!this._rovodevDisposable,
+        });
+
         if (shouldEnableRovoDev) {
+            console.log('[RovoDev Debug] Calling enableRovoDev');
             await this.enableRovoDev(context);
         } else {
+            console.log('[RovoDev Debug] Calling disableRovoDev');
             await this.disableRovoDev();
         }
     }
 
     private static async enableRovoDev(context: ExtensionContext) {
+        console.log('[RovoDev Debug] enableRovoDev: START');
+
         this._isRovoDevEnabled = true;
+        console.log('[RovoDev Debug] enableRovoDev: Set _isRovoDevEnabled = true');
+
         // Always set context key to ensure it's restored if lost (e.g., after reload or race conditions)
         await setCommandContext(CommandContext.RovoDevEnabled, true);
+        console.log('[RovoDev Debug] enableRovoDev: Set VS Code context RovoDevEnabled = true');
 
         // Always refresh help explorer to ensure UI is updated
         if (!this.isBoysenberryMode) {
+            console.log('[RovoDev Debug] enableRovoDev: Refreshing Help Explorer');
             this._helpExplorer.refresh();
         }
 
         if (this._rovodevDisposable) {
+            console.log('[RovoDev Debug] enableRovoDev: Disposable already exists, refreshing credentials');
             if (this.isBoysenberryMode) {
                 return;
             }
@@ -331,6 +355,7 @@ export class Container {
                 return;
             }
         } else {
+            console.log('[RovoDev Debug] enableRovoDev: Creating new disposable');
             try {
                 // don't add anything async before initializing _rovodevDisposable
                 this._rovodevDisposable = vscode.Disposable.from(
@@ -339,6 +364,7 @@ export class Container {
                     }),
                     (this._rovodevWebviewProvider = new RovoDevWebviewProvider(context, context.extensionPath)),
                 );
+                console.log('[RovoDev Debug] enableRovoDev: Disposable created successfully');
 
                 context.subscriptions.push(this._rovodevDisposable);
 
@@ -347,9 +373,11 @@ export class Container {
                     await vscode.commands.executeCommand('atlascode.views.rovoDev.webView.focus');
                 } else {
                     // Start the Rovo Dev process
+                    console.log('[RovoDev Debug] enableRovoDev: Initializing Rovo Dev process');
                     await RovoDevProcessManager.initializeRovoDev(context);
                 }
             } catch (error) {
+                console.error('[RovoDev Debug] enableRovoDev: ERROR creating disposable:', error);
                 RovoDevLogger.error(error, 'Enabling Rovo Dev');
             }
         }
@@ -361,32 +389,45 @@ export class Container {
             RovoDevLogger.error(error, 'Refreshing Jira issue views');
             return;
         }
+
+        console.log('[RovoDev Debug] enableRovoDev: COMPLETE');
     }
 
     private static async disableRovoDev() {
+        console.log('[RovoDev Debug] disableRovoDev: START');
+
         if (this.isBoysenberryMode) {
+            console.log('[RovoDev Debug] disableRovoDev: Skipping (Boysenberry mode)');
             RovoDevLogger.error(new Error('disableRovoDev called in Boysenberry mode'));
             return;
         }
 
         this._isRovoDevEnabled = false;
+        console.log('[RovoDev Debug] disableRovoDev: Set _isRovoDevEnabled = false');
 
         if (!this._rovodevDisposable) {
+            console.log('[RovoDev Debug] disableRovoDev: Already disabled (no disposable)');
             // Already disabled
             return;
         }
 
         // Update help explorer to hide Rovo Dev content
+        console.log('[RovoDev Debug] disableRovoDev: Refreshing Help Explorer');
         this._helpExplorer.refresh();
 
         try {
             // don't add anything async before disposing _rovodevDisposable
+            console.log('[RovoDev Debug] disableRovoDev: Disposing disposable');
             this._rovodevDisposable.dispose();
             this._rovodevDisposable = undefined;
 
             await setCommandContext(CommandContext.RovoDevEnabled, false);
+            console.log('[RovoDev Debug] disableRovoDev: Set VS Code context RovoDevEnabled = false');
+
             await RovoDevProcessManager.deactivateRovoDevProcessManager();
+            console.log('[RovoDev Debug] disableRovoDev: Deactivated process manager');
         } catch (error) {
+            console.error('[RovoDev Debug] disableRovoDev: ERROR:', error);
             RovoDevLogger.error(error, 'Disabling Rovo Dev');
         }
 
@@ -397,6 +438,8 @@ export class Container {
             RovoDevLogger.error(error, 'Refreshing Jira issue views');
             return;
         }
+
+        console.log('[RovoDev Debug] disableRovoDev: COMPLETE');
     }
 
     private static pushFeatureUpdatesToUI() {
