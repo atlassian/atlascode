@@ -4,7 +4,7 @@ import ThumbsDownIcon from '@atlaskit/icon/core/thumbs-down';
 import ThumbsUpIcon from '@atlaskit/icon/core/thumbs-up';
 import Tooltip from '@atlaskit/tooltip';
 import React, { useCallback, useState } from 'react';
-import { RovoDevTextResponse } from 'src/rovo-dev/responseParserInterfaces';
+import { RovoDevTextResponse } from 'src/rovo-dev/client';
 
 import { MarkedDown, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { PromptContextCollection } from '../prompt-box/promptContext/promptContextCollection';

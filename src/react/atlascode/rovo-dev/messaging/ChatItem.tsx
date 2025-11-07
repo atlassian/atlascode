@@ -1,6 +1,6 @@
 import CrossCircleIcon from '@atlaskit/icon/core/cross-circle';
 import React from 'react';
-import { ToolPermissionChoice } from 'src/rovo-dev/rovoDevApiClientInterfaces';
+import { ToolPermissionChoice } from 'src/rovo-dev/client';
 
 import { CheckFileExistsFunc, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';

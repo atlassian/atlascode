@@ -3,16 +3,16 @@ import { RovoDevLogger } from 'src/logger';
 import { RovoDevViewResponse } from 'src/react/atlascode/rovo-dev/rovoDevViewMessages';
 import { v4 } from 'uuid';
 
-import { RovoDevResponseParser } from './responseParser';
-import { RovoDevResponse } from './responseParserInterfaces';
-import { RovoDevApiClient } from './rovoDevApiClient';
 import {
+    RovoDevApiClient,
     RovoDevChatRequest,
     RovoDevChatRequestContext,
     RovoDevChatRequestContextFileEntry,
     RovoDevChatRequestContextOtherEntry,
+    RovoDevResponse,
+    RovoDevResponseParser,
     ToolPermissionChoice,
-} from './rovoDevApiClientInterfaces';
+} from './client';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import {
     RovoDevContextItem,
