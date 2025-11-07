@@ -2,13 +2,12 @@ import Avatar from '@atlaskit/avatar';
 import { format, parseISO } from 'date-fns';
 import * as React from 'react';
 
-import { DetailedSiteInfo } from '../../../../../atlclients/authInfo';
 import { IssueHistoryItem } from '../../../../../ipc/issueMessaging';
+import { HistoryItemChange } from './HistoryItemChange';
 
 interface IssueHistoryProps {
     history: IssueHistoryItem[];
     historyLoading: boolean;
-    siteDetails: DetailedSiteInfo;
 }
 
 const formatTimestamp = (timestamp: string): string => {
@@ -123,7 +122,7 @@ const getActionText = (fieldDisplayName: string, field?: string): string => {
     }
 };
 
-export const IssueHistory: React.FC<IssueHistoryProps> = ({ history, historyLoading, siteDetails }) => {
+export const IssueHistory: React.FC<IssueHistoryProps> = ({ history, historyLoading }) => {
     if (historyLoading) {
         return (
             <div style={{ padding: '20px', textAlign: 'center' }}>
@@ -173,89 +172,7 @@ export const IssueHistory: React.FC<IssueHistoryProps> = ({ history, historyLoad
                             </div>
                         </div>
                     </div>
-                    {item.fieldDisplayName !== '__CREATED__' &&
-                        (item.field === 'worklog' ? (
-                            <div
-                                style={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: '4px',
-                                    marginLeft: '32px',
-                                    marginTop: '4px',
-                                }}
-                            >
-                                {(item as any).worklogTimeSpent && (
-                                    <div
-                                        style={{
-                                            padding: '4px 8px',
-                                            borderRadius: '3px',
-                                            fontSize: '13px',
-                                            color: 'var(--vscode-descriptionForeground)',
-                                            display: 'inline-block',
-                                            width: 'fit-content',
-                                        }}
-                                    >
-                                        Time logged:{' '}
-                                        {formatValue(
-                                            (item as any).worklogTimeSpent || item.to,
-                                            item.field,
-                                            item.fieldDisplayName,
-                                        )}
-                                    </div>
-                                )}
-                                {(item as any).worklogComment && (
-                                    <div
-                                        style={{
-                                            padding: '4px 8px',
-                                            borderRadius: '3px',
-                                            fontSize: '13px',
-                                            color: 'var(--vscode-descriptionForeground)',
-                                            fontStyle: 'italic',
-                                            marginTop: '4px',
-                                        }}
-                                    >
-                                        {(item as any).worklogComment}
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            (item.fromString !== undefined ||
-                                item.toString !== undefined ||
-                                item.from !== null ||
-                                item.to !== null) && (
-                                <div
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px',
-                                        marginLeft: '32px',
-                                        marginTop: '4px',
-                                    }}
-                                >
-                                    <span
-                                        style={{
-                                            padding: '4px 8px',
-                                            borderRadius: '3px',
-                                            fontSize: '13px',
-                                            color: 'var(--vscode-descriptionForeground)',
-                                        }}
-                                    >
-                                        {formatValue(item.fromString || item.from, item.field, item.fieldDisplayName)}
-                                    </span>
-                                    <span style={{ color: 'var(--vscode-descriptionForeground)' }}>→</span>
-                                    <span
-                                        style={{
-                                            padding: '4px 8px',
-                                            borderRadius: '3px',
-                                            fontSize: '13px',
-                                            color: 'var(--vscode-descriptionForeground)',
-                                        }}
-                                    >
-                                        {formatValue(item.toString || item.to, item.field, item.fieldDisplayName)}
-                                    </span>
-                                </div>
-                            )
-                        ))}
+                    <HistoryItemChange item={item} formatValue={formatValue} />
                 </div>
             ))}
         </div>

@@ -121,6 +121,8 @@ export interface IssueHistoryItem {
     to?: string | null;
     fromString?: string;
     toString?: string;
+    worklogTimeSpent?: string;
+    worklogComment?: string;
 }
 
 export interface IssueHistoryUpdate extends Message {

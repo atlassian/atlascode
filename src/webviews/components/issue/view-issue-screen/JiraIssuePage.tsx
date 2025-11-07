@@ -745,11 +745,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
                         {this.state.commentsTabIndex === 1 && (
                             <div role="tabpanel" id="issue-tabpanel-history" aria-labelledby="issue-tab-history">
-                                <IssueHistory
-                                    history={this.state.history}
-                                    historyLoading={this.state.historyLoading}
-                                    siteDetails={this.state.siteDetails}
-                                />
+                                <IssueHistory history={this.state.history} historyLoading={this.state.historyLoading} />
                             </div>
                         )}
                     </div>
@@ -885,13 +881,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
     override componentDidMount() {
         this.postMessage({ action: 'getFeatureFlags' });
-        if (this.state.commentsTabIndex === 1) {
-            this.setState({ historyLoading: true });
-            this.postMessage({
-                action: 'fetchIssueHistory',
-                issueKey: this.state.key,
-            });
-        }
     }
 
     public override render() {
