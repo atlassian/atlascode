@@ -110,6 +110,11 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
                 await this.updateField(fieldType, id);
                 break;
             }
+            case CreateWorkItemWebviewResponseType.UpdateSelectOptions: {
+                const input = message.payload.query;
+                await this.updateProjectOptions(input, message.payload.nonce);
+                break;
+            }
             default: {
                 console.warn(`Unknown message type received in CreateWorkItemWebview: ${message}`);
             }
@@ -130,6 +135,7 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
             payload: {
                 availableIssueTypes: Object.values(this._availableIssueTypes),
                 availableProjects: Object.values(this._availableProjects),
+                hasMoreProjects: this._hasMoreProjects,
                 availableSites: Object.values(this._availableSites),
                 selectedSiteId: this._selectedSite?.id,
                 selectedProjectId: this._selectedProject?.id,
@@ -208,6 +214,37 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
         }
     }
 
+    private async updateProjectOptions(query: string, nonce: string): Promise<void> {
+        if (!this.webview) {
+            return;
+        }
+
+        if (!this._selectedSite) {
+            return;
+        }
+
+        try {
+            const projects = await Container.jiraProjectManager.getProjectsPaginated(
+                this._selectedSite,
+                undefined,
+                undefined,
+                'key',
+                query,
+                'create',
+            );
+
+            await this.webview.postMessage({
+                type: CreateWorkItemWebviewProviderMessageType.UpdateProjectOptions,
+                payload: {
+                    availableProjects: projects.projects,
+                    hasMoreProjects: projects.hasMore,
+                },
+                nonce,
+            });
+        } catch (err) {
+            console.error('Error updating project options in Create Work Item webview:', err);
+        }
+    }
     private async updateSelectedSite(siteId: string): Promise<void> {
         if (!this.webview) {
             return;
@@ -250,6 +287,7 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
                 type: CreateWorkItemWebviewProviderMessageType.UpdatedSelectedSite,
                 payload: {
                     availableProjects: Object.values(this._availableProjects),
+                    hasMoreProjects: this._hasMoreProjects,
                     availableIssueTypes: Object.values(this._availableIssueTypes),
                     selectedProjectId: this._selectedProject.id,
                     selectedIssueTypeId: this._selectedIssueType.id,
@@ -259,7 +297,6 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
             console.error('Error updating selected site in Create Work Item webview:', err);
         } finally {
             this._pendingState = false;
-            console.log(this._hasMoreProjects);
         }
     }
 
@@ -278,7 +315,13 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
 
         try {
             this._pendingState = true;
-            const selectedProject = this._availableProjects[projectId];
+            let selectedProject: Project | undefined;
+
+            if (!this._availableProjects[projectId]) {
+                selectedProject = await Container.jiraProjectManager.getProjectForKey(this._selectedSite!, projectId);
+            } else {
+                selectedProject = this._availableProjects[projectId];
+            }
 
             if (!selectedProject) {
                 throw Error('Selected project not found');

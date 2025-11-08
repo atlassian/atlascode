@@ -15,6 +15,7 @@ export interface CreateFormState {
     selectedSiteId?: string;
     selectedProjectId?: string;
     selectedIssueTypeId?: string;
+    hasMoreProjects?: boolean;
 }
 
 export enum CreateFormActionType {
@@ -31,6 +32,7 @@ type CreateFormAction =
           payload: {
               availableSites: DetailedSiteInfo[];
               availableProjects: Project[];
+              hasMoreProjects: boolean;
               availableIssueTypes: IssueType[];
               selectedSiteId?: string;
               selectedProjectId?: string;
@@ -47,6 +49,7 @@ type CreateFormAction =
           type: CreateFormActionType.UpdatedSelectedSite;
           payload: {
               availableProjects: Project[];
+              hasMoreProjects: boolean;
               availableIssueTypes: IssueType[];
               selectedProjectId?: string;
               selectedIssueTypeId?: string;
@@ -82,6 +85,7 @@ export function createReducer(state: CreateFormState, action: CreateFormAction):
                     value: project.id,
                     iconPath: project.avatarUrls['48x48'],
                 })),
+                hasMoreProjects: action.payload.hasMoreProjects,
                 availableIssueTypes: action.payload.availableIssueTypes.map((issueType) => ({
                     name: issueType.name,
                     value: issueType.id,
@@ -106,6 +110,7 @@ export function createReducer(state: CreateFormState, action: CreateFormAction):
                     value: project.key,
                     iconPath: project.avatarUrls['48x48'],
                 })),
+                hasMoreProjects: action.payload.hasMoreProjects,
                 availableIssueTypes: action.payload.availableIssueTypes.map((issueType) => ({
                     name: issueType.name,
                     value: issueType.id,

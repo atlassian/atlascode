@@ -5,6 +5,7 @@ export enum CreateWorkItemWebviewProviderMessageType {
     InitFields = 'initFields',
     UpdatedSelectedSite = 'updatedSelectedSite',
     UpdatedSelectedProject = 'updatedSelectedProject',
+    UpdateProjectOptions = 'updateProjectOptions',
 }
 
 export type CreateWorkItemWebviewProviderMessage =
@@ -13,6 +14,7 @@ export type CreateWorkItemWebviewProviderMessage =
           payload: {
               availableIssueTypes: IssueType[];
               availableProjects: Project[];
+              hasMoreProjects: boolean;
               availableSites: DetailedSiteInfo[];
               selectedSiteId?: string;
               selectedProjectId?: string;
@@ -23,6 +25,7 @@ export type CreateWorkItemWebviewProviderMessage =
           type: CreateWorkItemWebviewProviderMessageType.UpdatedSelectedSite;
           payload: {
               availableProjects: Project[];
+              hasMoreProjects: boolean;
               availableIssueTypes: IssueType[];
               selectedProjectId?: string;
               selectedIssueTypeId?: string;
@@ -34,4 +37,12 @@ export type CreateWorkItemWebviewProviderMessage =
               availableIssueTypes: IssueType[];
               selectedIssueTypeId?: string;
           };
+      }
+    | {
+          type: CreateWorkItemWebviewProviderMessageType.UpdateProjectOptions;
+          payload: {
+              availableProjects: Project[];
+              hasMoreProjects: boolean;
+          };
+          nonce: string;
       };

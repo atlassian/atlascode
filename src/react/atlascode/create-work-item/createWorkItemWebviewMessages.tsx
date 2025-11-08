@@ -2,6 +2,7 @@ export enum CreateWorkItemWebviewResponseType {
     WebviewReady = 'webviewReady',
     CreateWorkItem = 'createWorkItem',
     UpdateField = 'updateField',
+    UpdateSelectOptions = 'updateSelectOptions',
 }
 
 export type CreateWorkItemWebviewResponse =
@@ -22,5 +23,13 @@ export type CreateWorkItemWebviewResponse =
           payload: {
               feildType: 'site' | 'project' | 'issueType';
               id: string;
+          };
+      }
+    | {
+          type: CreateWorkItemWebviewResponseType.UpdateSelectOptions;
+          payload: {
+              fieldType: 'site' | 'project' | 'issueType';
+              query: string;
+              nonce: string;
           };
       };

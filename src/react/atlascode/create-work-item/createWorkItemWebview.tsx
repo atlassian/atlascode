@@ -2,10 +2,13 @@ import './CreateWorkItem.css';
 
 import Select from '@atlaskit/select';
 import React from 'react';
+import { ConnectionTimeout } from 'src/util/time';
+import { LazyLoadingSelect } from 'src/webviews/components/issue/LazyLoadingSelect';
 import {
     CreateWorkItemWebviewProviderMessage,
     CreateWorkItemWebviewProviderMessageType,
 } from 'src/work-items/create-work-item/messages/createWorkItemWebviewProviderMessages';
+import { v4 } from 'uuid';
 
 import { useMessagingApi } from '../messagingApi';
 import { CreateWorkItemWebviewResponse, CreateWorkItemWebviewResponseType } from './createWorkItemWebviewMessages';
@@ -23,6 +26,7 @@ const emptyState: CreateFormState = {
 
 const CreateWorkItemWebview: React.FC = () => {
     const [state, dispatch] = React.useReducer(createReducer, emptyState);
+    const [isLoading, setIsLoading] = React.useState<boolean>(true);
 
     const onMessageHandler = React.useCallback((msg: CreateWorkItemWebviewProviderMessage) => {
         switch (msg.type) {
@@ -32,6 +36,7 @@ const CreateWorkItemWebview: React.FC = () => {
                     type: CreateFormActionType.InitFields,
                     payload: fields,
                 });
+                setIsLoading(false);
                 break;
             }
             case CreateWorkItemWebviewProviderMessageType.UpdatedSelectedSite: {
@@ -55,7 +60,7 @@ const CreateWorkItemWebview: React.FC = () => {
         }
     }, []);
 
-    const { postMessage } = useMessagingApi<
+    const { postMessage, postMessagePromise } = useMessagingApi<
         CreateWorkItemWebviewResponse,
         CreateWorkItemWebviewProviderMessage,
         CreateWorkItemWebviewProviderMessage
@@ -99,12 +104,39 @@ const CreateWorkItemWebview: React.FC = () => {
         [postMessage],
     );
 
-    const constructSelectOptions = <T extends { value: string; name: string }>(items: T[]) => {
+    const constructSelectOptions = <T extends { id?: string; value?: string; name: string }>(items: T[]) => {
         return items.map((item) => ({
-            value: item.value || '',
+            value: item.value || item.id || '',
             label: item.name,
         }));
     };
+
+    const handleLoadMoreProjects = React.useCallback(
+        async (inputValue: any) => {
+            if (typeof inputValue !== 'string') {
+                inputValue = '';
+            }
+            const nonce = v4();
+            const query: string = inputValue.trim();
+            setIsLoading(true);
+            const response = await postMessagePromise(
+                {
+                    type: CreateWorkItemWebviewResponseType.UpdateSelectOptions,
+                    payload: {
+                        fieldType: 'project',
+                        query: query,
+                        nonce: nonce,
+                    },
+                },
+                CreateWorkItemWebviewProviderMessageType.UpdateProjectOptions,
+                ConnectionTimeout,
+                nonce,
+            );
+            setIsLoading(false);
+            return constructSelectOptions(response.payload.availableProjects);
+        },
+        [postMessagePromise],
+    );
 
     return (
         <div className="view-container">
@@ -113,6 +145,7 @@ const CreateWorkItemWebview: React.FC = () => {
                 <div className="form-group">
                     <label htmlFor="site-picker">Site</label>
                     <Select
+                        isRequired={true}
                         inputId="site-picker"
                         name="site-picker"
                         onChange={(val: any) => handleChangeField(val, 'site')}
@@ -122,17 +155,24 @@ const CreateWorkItemWebview: React.FC = () => {
                 </div>
                 <div className="form-group">
                     <label htmlFor="project-picker">Project</label>
-                    <Select
+                    <LazyLoadingSelect
+                        isRequired={true}
+                        placeholder="Type to search"
+                        noOptionsMessage={() => 'Type to search'}
                         inputId="project-picker"
                         name="project-picker"
+                        hasMore={state.hasMoreProjects}
                         onChange={(val: any) => handleChangeField(val, 'project')}
                         defaultValue={state.selectedProjectId}
                         options={constructSelectOptions(state.availableProjects)}
+                        loadOptions={async (inputValue: any) => await handleLoadMoreProjects(inputValue)}
+                        isLoadingMore={isLoading}
                     />
                 </div>
                 <div className="form-group">
                     <label htmlFor="issue-type-picker">Issue Type</label>
                     <Select
+                        isRequired={true}
                         inputId="issue-type-picker"
                         name="issue-type-picker"
                         onChange={(val: any) => handleChangeField(val, 'issueType')}
@@ -142,7 +182,7 @@ const CreateWorkItemWebview: React.FC = () => {
                 </div>
                 <div className="form-group">
                     <label htmlFor="summary-input">Summary</label>
-                    <input id="summary-input" type="text" />
+                    <input required id="summary-input" type="text" />
                 </div>
                 <div className="form-actions">
                     <button type="button">Cancel</button>
