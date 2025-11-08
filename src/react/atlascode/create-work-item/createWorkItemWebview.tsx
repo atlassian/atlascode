@@ -179,20 +179,20 @@ const CreateWorkItemWebview: React.FC = () => {
 
     return (
         <div className="view-container">
-            <div className="header"></div>
             <Form name="create-work-item-form" onSubmit={handleSubmit}>
                 {(frmArgs: any) => (
-                    <form {...frmArgs.formProps}>
+                    <form {...frmArgs.formProps} className="form-container">
                         <Field label={<span>Site</span>} name="site" isRequired>
                             {(fieldArgs: any) => (
                                 <Select
                                     {...fieldArgs.fieldProps}
+                                    className="ac-form-select-container"
+                                    classNamePrefix="ac-form-select"
                                     onChange={(val: any) => handleChangeField(val, 'site')}
                                     value={
                                         defaultSite ? { value: defaultSite.value, label: defaultSite.name } : undefined
                                     }
                                     options={constructSelectOptions(state.availableSites)}
-                                    isDisabled={isLoading}
                                 />
                             )}
                         </Field>
@@ -200,6 +200,8 @@ const CreateWorkItemWebview: React.FC = () => {
                             {(fieldArgs: any) => (
                                 <LazyLoadingSelect
                                     {...fieldArgs.fieldProps}
+                                    className="ac-form-select-container"
+                                    classNamePrefix="ac-form-select"
                                     placeholder="Type to search"
                                     noOptionsMessage={() => 'Type to search'}
                                     hasMore={state.hasMoreProjects}
@@ -212,7 +214,6 @@ const CreateWorkItemWebview: React.FC = () => {
                                     options={constructSelectOptions(state.availableProjects)}
                                     loadOptions={async (inputValue: any) => await handleLoadMoreProjects(inputValue)}
                                     isLoadingMore={isLoading}
-                                    isDisabled={isLoading}
                                 />
                             )}
                         </Field>
@@ -220,6 +221,8 @@ const CreateWorkItemWebview: React.FC = () => {
                             {(fieldArgs: any) => (
                                 <Select
                                     {...fieldArgs.fieldProps}
+                                    className="ac-form-select-container"
+                                    classNamePrefix="ac-form-select"
                                     onChange={(val: any) => handleChangeField(val, 'issueType')}
                                     value={
                                         defaultIssueType
@@ -227,18 +230,22 @@ const CreateWorkItemWebview: React.FC = () => {
                                             : undefined
                                     }
                                     options={constructSelectOptions(state.availableIssueTypes)}
-                                    isDisabled={isLoading}
                                 />
                             )}
                         </Field>
 
                         <Field label={<span>Summary</span>} name="summary" isRequired>
-                            {(fieldArgs: any) => <input {...fieldArgs.fieldProps} type="text" />}
+                            {(fieldArgs: any) => (
+                                <input
+                                    {...fieldArgs.fieldProps}
+                                    className="form-input"
+                                    placeholder="What needs to be done?"
+                                    type="text"
+                                />
+                            )}
                         </Field>
                         <div className="form-actions">
-                            <button type="button" disabled={isLoading}>
-                                Cancel
-                            </button>
+                            <button type="button">Cancel</button>
                             <button type="submit" disabled={isLoading}>
                                 Create Work Item
                             </button>
