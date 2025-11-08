@@ -101,7 +101,7 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
             }
             case CreateWorkItemWebviewResponseType.CreateWorkItem: {
                 setCommandContext('atlascode:showCreateWorkItemWebview', false);
-                this.dispose();
+                // this.dispose();
                 break;
             }
             case CreateWorkItemWebviewResponseType.UpdateField: {

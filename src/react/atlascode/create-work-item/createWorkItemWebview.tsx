@@ -1,5 +1,7 @@
 import './CreateWorkItem.css';
 
+import Form from '@atlaskit/form';
+import { Field } from '@atlaskit/form';
 import Select from '@atlaskit/select';
 import React from 'react';
 import { ConnectionTimeout } from 'src/util/time';
@@ -27,6 +29,28 @@ const emptyState: CreateFormState = {
 const CreateWorkItemWebview: React.FC = () => {
     const [state, dispatch] = React.useReducer(createReducer, emptyState);
     const [isLoading, setIsLoading] = React.useState<boolean>(true);
+
+    const defaultSite = React.useMemo(
+        () =>
+            state.selectedSiteId ? state.availableSites.find((site) => site.value === state.selectedSiteId) : undefined,
+        [state.availableSites, state.selectedSiteId],
+    );
+
+    const defaultProject = React.useMemo(
+        () =>
+            state.selectedProjectId
+                ? state.availableProjects.find((project) => project.value === state.selectedProjectId)
+                : undefined,
+        [state.availableProjects, state.selectedProjectId],
+    );
+
+    const defaultIssueType = React.useMemo(
+        () =>
+            state.selectedIssueTypeId
+                ? state.availableIssueTypes.find((issueType) => issueType.value === state.selectedIssueTypeId)
+                : undefined,
+        [state.availableIssueTypes, state.selectedIssueTypeId],
+    );
 
     const onMessageHandler = React.useCallback((msg: CreateWorkItemWebviewProviderMessage) => {
         switch (msg.type) {
@@ -71,7 +95,22 @@ const CreateWorkItemWebview: React.FC = () => {
     }, [postMessage]);
 
     const handleSubmit = React.useCallback(() => {
-        postMessage({
+        const errors: Record<string, string> = {};
+        if (!state.selectedIssueTypeId) {
+            errors['issueType'] = 'EMPTY';
+        }
+        if (!state.selectedProjectId) {
+            errors['project'] = 'EMPTY';
+        }
+        if (!state.selectedSiteId) {
+            errors['site'] = 'EMPTY';
+        }
+        console.log('Form submission errors:', errors);
+        if (Object.keys(errors).length > 0) {
+            return errors;
+        }
+
+        return postMessage({
             type: CreateWorkItemWebviewResponseType.CreateWorkItem,
             payload: {
                 summary: 'Example Summary',
@@ -80,7 +119,7 @@ const CreateWorkItemWebview: React.FC = () => {
                 projectId: state.selectedProjectId || '',
             },
         });
-    }, [postMessage, state.selectedIssueTypeId, state.selectedProjectId]);
+    }, [postMessage, state.selectedIssueTypeId, state.selectedProjectId, state.selectedSiteId]);
 
     const handleChangeField = React.useCallback(
         (newValue: any, type: 'site' | 'project' | 'issueType') => {
@@ -141,56 +180,72 @@ const CreateWorkItemWebview: React.FC = () => {
     return (
         <div className="view-container">
             <div className="header"></div>
-            <form>
-                <div className="form-group">
-                    <label htmlFor="site-picker">Site</label>
-                    <Select
-                        isRequired={true}
-                        inputId="site-picker"
-                        name="site-picker"
-                        onChange={(val: any) => handleChangeField(val, 'site')}
-                        defaultValue={state.selectedSiteId}
-                        options={constructSelectOptions(state.availableSites)}
-                    />
-                </div>
-                <div className="form-group">
-                    <label htmlFor="project-picker">Project</label>
-                    <LazyLoadingSelect
-                        isRequired={true}
-                        placeholder="Type to search"
-                        noOptionsMessage={() => 'Type to search'}
-                        inputId="project-picker"
-                        name="project-picker"
-                        hasMore={state.hasMoreProjects}
-                        onChange={(val: any) => handleChangeField(val, 'project')}
-                        defaultValue={state.selectedProjectId}
-                        options={constructSelectOptions(state.availableProjects)}
-                        loadOptions={async (inputValue: any) => await handleLoadMoreProjects(inputValue)}
-                        isLoadingMore={isLoading}
-                    />
-                </div>
-                <div className="form-group">
-                    <label htmlFor="issue-type-picker">Issue Type</label>
-                    <Select
-                        isRequired={true}
-                        inputId="issue-type-picker"
-                        name="issue-type-picker"
-                        onChange={(val: any) => handleChangeField(val, 'issueType')}
-                        defaultValue={state.selectedIssueTypeId}
-                        options={constructSelectOptions(state.availableIssueTypes)}
-                    />
-                </div>
-                <div className="form-group">
-                    <label htmlFor="summary-input">Summary</label>
-                    <input required id="summary-input" type="text" />
-                </div>
-                <div className="form-actions">
-                    <button type="button">Cancel</button>
-                    <button type="submit" onClick={handleSubmit}>
-                        Create Work Item
-                    </button>
-                </div>
-            </form>
+            <Form name="create-work-item-form" onSubmit={handleSubmit}>
+                {(frmArgs: any) => (
+                    <form {...frmArgs.formProps}>
+                        <Field label={<span>Site</span>} name="site" isRequired>
+                            {(fieldArgs: any) => (
+                                <Select
+                                    {...fieldArgs.fieldProps}
+                                    onChange={(val: any) => handleChangeField(val, 'site')}
+                                    value={
+                                        defaultSite ? { value: defaultSite.value, label: defaultSite.name } : undefined
+                                    }
+                                    options={constructSelectOptions(state.availableSites)}
+                                    isDisabled={isLoading}
+                                />
+                            )}
+                        </Field>
+                        <Field label={<span>Project</span>} name="project" isRequired>
+                            {(fieldArgs: any) => (
+                                <LazyLoadingSelect
+                                    {...fieldArgs.fieldProps}
+                                    placeholder="Type to search"
+                                    noOptionsMessage={() => 'Type to search'}
+                                    hasMore={state.hasMoreProjects}
+                                    onChange={(val: any) => handleChangeField(val, 'project')}
+                                    value={
+                                        defaultProject
+                                            ? { value: defaultProject.value, label: defaultProject.name }
+                                            : undefined
+                                    }
+                                    options={constructSelectOptions(state.availableProjects)}
+                                    loadOptions={async (inputValue: any) => await handleLoadMoreProjects(inputValue)}
+                                    isLoadingMore={isLoading}
+                                    isDisabled={isLoading}
+                                />
+                            )}
+                        </Field>
+                        <Field label={<span>Issue Type</span>} name="issueType" isRequired>
+                            {(fieldArgs: any) => (
+                                <Select
+                                    {...fieldArgs.fieldProps}
+                                    onChange={(val: any) => handleChangeField(val, 'issueType')}
+                                    value={
+                                        defaultIssueType
+                                            ? { value: defaultIssueType.value, label: defaultIssueType.name }
+                                            : undefined
+                                    }
+                                    options={constructSelectOptions(state.availableIssueTypes)}
+                                    isDisabled={isLoading}
+                                />
+                            )}
+                        </Field>
+
+                        <Field label={<span>Summary</span>} name="summary" isRequired>
+                            {(fieldArgs: any) => <input {...fieldArgs.fieldProps} type="text" />}
+                        </Field>
+                        <div className="form-actions">
+                            <button type="button" disabled={isLoading}>
+                                Cancel
+                            </button>
+                            <button type="submit" disabled={isLoading}>
+                                Create Work Item
+                            </button>
+                        </div>
+                    </form>
+                )}
+            </Form>
         </div>
     );
 };
