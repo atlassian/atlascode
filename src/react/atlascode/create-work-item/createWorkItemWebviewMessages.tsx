@@ -23,20 +23,17 @@ export type CreateWorkItemWebviewResponse =
           type: CreateWorkItemWebviewResponseType.UpdateSite;
           payload: {
               siteId: string;
-              partialSummary?: string;
           };
       }
     | {
           type: CreateWorkItemWebviewResponseType.UpdateProject;
           payload: {
               projectKey: string;
-              partialSummary?: string;
           };
       }
     | {
           type: CreateWorkItemWebviewResponseType.UpdateIssueType;
           payload: {
               issueTypeId: string;
-              partialSummary?: string;
           };
       };
