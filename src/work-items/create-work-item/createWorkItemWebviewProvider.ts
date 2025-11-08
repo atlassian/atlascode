@@ -148,6 +148,10 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
             this._pendingState = true;
             const allSites = Container.siteManager.getSitesAvailable(ProductJira);
 
+            if (allSites.length === 0) {
+                throw new Error('No Jira sites available to create work items.');
+            }
+
             this._availableSites = allSites.reduce<Record<string, DetailedSiteInfo>>((acc, site) => {
                 acc[site.id] = site;
                 return acc;
@@ -155,54 +159,49 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
 
             const selectedSiteAndProject = Container.config.jira.lastCreateSiteAndProject;
 
-            this._selectedSite =
+            const selectedSite =
                 this._availableSites[selectedSiteAndProject.siteId] ||
                 this._availableSites[Object.keys(this._availableSites)[0]];
 
-            if (this._selectedSite) {
-                const projects = await Container.jiraProjectManager.getProjectsPaginated(
-                    this._selectedSite,
-                    undefined,
-                    undefined,
-                    undefined,
-                    undefined,
-                    'create',
-                );
-                this._selectedProject =
-                    projects.projects.find((p) => p.key === selectedSiteAndProject.projectKey) || projects.projects[0];
-                this._availableProjects = projects.projects.reduce<Record<string, Project>>((acc, project) => {
-                    acc[project.key] = project;
-                    return acc;
-                }, {});
-            } else {
+            if (!selectedSite) {
                 throw new Error('No Jira sites available to create work items.');
             }
 
-            if (this._selectedProject) {
-                const screenData = await fetchCreateIssueUI(this._selectedSite!, this._selectedProject.key);
-                this._selectedIssueType = screenData.selectedIssueType || screenData.issueTypes[0];
-                this._availableIssueTypes = screenData.issueTypes.reduce<Record<string, IssueType>>(
-                    (acc, issueType) => {
-                        acc[issueType.id] = issueType;
-                        return acc;
-                    },
-                    {},
-                );
-            } else {
-                throw new Error('No Jira projects available to create work items.');
-            }
-        } catch (err) {
-            console.error('Error initializing Create Work Item webview fields:', err);
-        } finally {
+            this._selectedSite = selectedSite;
+
+            const { selectedProject, projects, hasMore } = await this.getProjectsForSite(this._selectedSite);
+
+            this._selectedProject = selectedProject;
+            this._hasMoreProjects = hasMore;
+
+            this._availableProjects = projects.reduce<Record<string, Project>>((acc, project) => {
+                acc[project.key] = project;
+                return acc;
+            }, {});
+
+            const screenData = await fetchCreateIssueUI(this._selectedSite!, this._selectedProject.key);
+            this._selectedIssueType = screenData.selectedIssueType || screenData.issueTypes[0];
+            this._availableIssueTypes = screenData.issueTypes.reduce<Record<string, IssueType>>((acc, issueType) => {
+                acc[issueType.id] = issueType;
+                return acc;
+            }, {});
+
             this._pendingState = false;
             if (this._isWebviewReady) {
                 await this.initFields();
             }
+        } catch (err) {
+            console.error('Error initializing Create Work Item webview fields:', err);
+            this._pendingState = false;
         }
     }
 
     private async updateSelectedSite(siteId: string): Promise<void> {
         if (!this.webview) {
+            return;
+        }
+
+        if (siteId === this._selectedSite?.id) {
             return;
         }
 
