@@ -1,5 +1,5 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { ReducerAction } from 'src/ipc/messaging';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { BitbucketBranchingModel, Commit, FileDiff, PullRequest, User, WorkspaceRepo } from '../../../bitbucket/model';

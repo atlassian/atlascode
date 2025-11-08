@@ -1,8 +1,8 @@
-import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { JqlAutocompleteRestData, Suggestion } from '@atlassianlabs/guipi-jira-components';
 import { FilterSearchResults, JQLErrors } from '@atlassianlabs/jira-pi-common-models';
 import React, { useCallback, useMemo, useReducer } from 'react';
 import { UIErrorInfo } from 'src/analyticsTypes';
+import { defaultActionGuard, defaultStateGuard, ReducerAction } from 'src/ipc/messaging';
 import { v4 } from 'uuid';
 
 import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../atlclients/authInfo';
