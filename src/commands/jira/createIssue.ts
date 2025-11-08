@@ -1,6 +1,6 @@
 import { setCommandContext } from 'src/commandContext';
 import { CreateWorkItemWebviewProvider } from 'src/work-items/create-work-item/createWorkItemWebviewProvider';
-import { Position, Range, Uri, ViewColumn, window, workspace, WorkspaceEdit } from 'vscode';
+import { commands, Position, Range, Uri, ViewColumn, window, workspace, WorkspaceEdit } from 'vscode';
 
 import { startIssueCreationEvent } from '../../analytics';
 import { ProductJira } from '../../atlclients/authInfo';
@@ -84,6 +84,7 @@ export async function createIssue(data: Uri | TodoIssueData | undefined, source?
     startIssueCreationEvent(source || 'explorer', ProductJira).then((e) => {
         Container.analyticsClient.sendTrackEvent(e);
     });
+    await commands.executeCommand('atlascode.views.jira.createWorkItemWebview.focus');
 }
 
 function isTodoIssueData(a: any): a is TodoIssueData {
