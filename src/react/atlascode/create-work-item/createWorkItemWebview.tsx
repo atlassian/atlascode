@@ -17,7 +17,7 @@ const emptyState: CreateFormState = {
     availableProjects: [],
     availableIssueTypes: [],
     selectedSiteId: undefined,
-    selectedProjectKey: undefined,
+    selectedProjectId: undefined,
     selectedIssueTypeId: undefined,
 };
 
@@ -30,6 +30,22 @@ const CreateWorkItemWebview: React.FC = () => {
                 const fields = msg.payload;
                 dispatch({
                     type: CreateFormActionType.InitFields,
+                    payload: fields,
+                });
+                break;
+            }
+            case CreateWorkItemWebviewProviderMessageType.UpdatedSelectedSite: {
+                const fields = msg.payload;
+                dispatch({
+                    type: CreateFormActionType.UpdatedSelectedSite,
+                    payload: fields,
+                });
+                break;
+            }
+            case CreateWorkItemWebviewProviderMessageType.UpdatedSelectedProject: {
+                const fields = msg.payload;
+                dispatch({
+                    type: CreateFormActionType.UpdatedSelectedProject,
                     payload: fields,
                 });
                 break;
@@ -56,17 +72,40 @@ const CreateWorkItemWebview: React.FC = () => {
                 summary: 'Example Summary',
                 description: 'Example Description',
                 issueTypeId: state.selectedIssueTypeId || '',
-                projectKey: state.selectedProjectKey || '',
+                projectId: state.selectedProjectId || '',
             },
         });
-    }, [postMessage, state.selectedIssueTypeId, state.selectedProjectKey]);
+    }, [postMessage, state.selectedIssueTypeId, state.selectedProjectId]);
 
-    const constructSelectOptions = <T extends { id?: string; key?: string; name: string }>(items: T[]) => {
+    const handleChangeField = React.useCallback(
+        (newValue: any, type: 'site' | 'project' | 'issueType') => {
+            if (newValue) {
+                dispatch({
+                    type: CreateFormActionType.SetSelectedField,
+                    payload: {
+                        fieldType: type,
+                        id: newValue.value,
+                    },
+                });
+                postMessage({
+                    type: CreateWorkItemWebviewResponseType.UpdateField,
+                    payload: {
+                        feildType: type,
+                        id: newValue.value,
+                    },
+                });
+            }
+        },
+        [postMessage],
+    );
+
+    const constructSelectOptions = <T extends { value: string; name: string }>(items: T[]) => {
         return items.map((item) => ({
-            value: item.id || item.key || '',
+            value: item.value || '',
             label: item.name,
         }));
     };
+
     return (
         <div className="view-container">
             <div className="header"></div>
@@ -76,6 +115,7 @@ const CreateWorkItemWebview: React.FC = () => {
                     <Select
                         inputId="site-picker"
                         name="site-picker"
+                        onChange={(val: any) => handleChangeField(val, 'site')}
                         defaultValue={state.selectedSiteId}
                         options={constructSelectOptions(state.availableSites)}
                     />
@@ -85,7 +125,8 @@ const CreateWorkItemWebview: React.FC = () => {
                     <Select
                         inputId="project-picker"
                         name="project-picker"
-                        defaultValue={state.selectedProjectKey}
+                        onChange={(val: any) => handleChangeField(val, 'project')}
+                        defaultValue={state.selectedProjectId}
                         options={constructSelectOptions(state.availableProjects)}
                     />
                 </div>
@@ -94,6 +135,7 @@ const CreateWorkItemWebview: React.FC = () => {
                     <Select
                         inputId="issue-type-picker"
                         name="issue-type-picker"
+                        onChange={(val: any) => handleChangeField(val, 'issueType')}
                         defaultValue={state.selectedIssueTypeId}
                         options={constructSelectOptions(state.availableIssueTypes)}
                     />

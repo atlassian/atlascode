@@ -13,7 +13,7 @@ export interface CreateFormState {
     availableProjects: CreateOptionFields[];
     availableIssueTypes: CreateOptionFields[];
     selectedSiteId?: string;
-    selectedProjectKey?: string;
+    selectedProjectId?: string;
     selectedIssueTypeId?: string;
 }
 
@@ -22,9 +22,7 @@ export enum CreateFormActionType {
     InitFields = 'initFields',
     UpdatedSelectedSite = 'updateSelectedSite',
     UpdatedSelectedProject = 'updateSelectedProject',
-    SetSelectedSite = 'setSelectedSite',
-    SetSelectedProject = 'setSelectedProject',
-    SetSelectedIssueType = 'setSelectedIssueType',
+    SetSelectedField = 'setSelectedField',
 }
 
 type CreateFormAction =
@@ -35,7 +33,7 @@ type CreateFormAction =
               availableProjects: Project[];
               availableIssueTypes: IssueType[];
               selectedSiteId?: string;
-              selectedProjectKey?: string;
+              selectedProjectId?: string;
               selectedIssueTypeId?: string;
           };
       }
@@ -50,7 +48,7 @@ type CreateFormAction =
           payload: {
               availableProjects: Project[];
               availableIssueTypes: IssueType[];
-              selectedProjectKey?: string;
+              selectedProjectId?: string;
               selectedIssueTypeId?: string;
           };
       }
@@ -62,21 +60,10 @@ type CreateFormAction =
           };
       }
     | {
-          type: CreateFormActionType.SetSelectedSite;
+          type: CreateFormActionType.SetSelectedField;
           payload: {
-              selectedSiteId: string;
-          };
-      }
-    | {
-          type: CreateFormActionType.SetSelectedProject;
-          payload: {
-              selectedProjectKey: string;
-          };
-      }
-    | {
-          type: CreateFormActionType.SetSelectedIssueType;
-          payload: {
-              selectedIssueTypeId: string;
+              fieldType: 'site' | 'project' | 'issueType';
+              id: string;
           };
       };
 
@@ -92,7 +79,7 @@ export function createReducer(state: CreateFormState, action: CreateFormAction):
                 })),
                 availableProjects: action.payload.availableProjects.map((project) => ({
                     name: project.name,
-                    value: project.key,
+                    value: project.id,
                     iconPath: project.avatarUrls['48x48'],
                 })),
                 availableIssueTypes: action.payload.availableIssueTypes.map((issueType) => ({
@@ -101,7 +88,7 @@ export function createReducer(state: CreateFormState, action: CreateFormAction):
                     iconPath: issueType.iconUrl,
                 })),
                 selectedSiteId: action.payload.selectedSiteId || action.payload.availableSites[0]?.id,
-                selectedProjectKey: action.payload.selectedProjectKey || action.payload.availableProjects[0]?.key,
+                selectedProjectId: action.payload.selectedProjectId || action.payload.availableProjects[0]?.id,
                 selectedIssueTypeId: action.payload.selectedIssueTypeId || action.payload.availableIssueTypes[0]?.id,
             };
         }
@@ -124,7 +111,7 @@ export function createReducer(state: CreateFormState, action: CreateFormAction):
                     value: issueType.id,
                     iconPath: issueType.iconUrl,
                 })),
-                selectedProjectKey: action.payload.selectedProjectKey || action.payload.availableProjects[0]?.key,
+                selectedProjectId: action.payload.selectedProjectId || action.payload.availableProjects[0]?.id,
                 selectedIssueTypeId: action.payload.selectedIssueTypeId || action.payload.availableIssueTypes[0]?.id,
             };
         }
@@ -139,23 +126,26 @@ export function createReducer(state: CreateFormState, action: CreateFormAction):
                 selectedIssueTypeId: action.payload.selectedIssueTypeId || action.payload.availableIssueTypes[0]?.id,
             };
         }
-        case CreateFormActionType.SetSelectedSite: {
-            return {
-                ...state,
-                selectedSiteId: action.payload.selectedSiteId,
-            };
-        }
-        case CreateFormActionType.SetSelectedProject: {
-            return {
-                ...state,
-                selectedProjectKey: action.payload.selectedProjectKey,
-            };
-        }
-        case CreateFormActionType.SetSelectedIssueType: {
-            return {
-                ...state,
-                selectedIssueTypeId: action.payload.selectedIssueTypeId,
-            };
+        case CreateFormActionType.SetSelectedField: {
+            switch (action.payload.fieldType) {
+                case 'site':
+                    return {
+                        ...state,
+                        selectedSiteId: action.payload.id,
+                    };
+                case 'project':
+                    return {
+                        ...state,
+                        selectedProjectId: action.payload.id,
+                    };
+                case 'issueType':
+                    return {
+                        ...state,
+                        selectedIssueTypeId: action.payload.id,
+                    };
+                default:
+                    return state;
+            }
         }
         default:
             return state;

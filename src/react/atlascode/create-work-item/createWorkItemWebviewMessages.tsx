@@ -1,9 +1,7 @@
 export enum CreateWorkItemWebviewResponseType {
     WebviewReady = 'webviewReady',
     CreateWorkItem = 'createWorkItem',
-    UpdateSite = 'updateSite',
-    UpdateProject = 'updateProject',
-    UpdateIssueType = 'updateIssueType',
+    UpdateField = 'updateField',
 }
 
 export type CreateWorkItemWebviewResponse =
@@ -16,24 +14,13 @@ export type CreateWorkItemWebviewResponse =
               summary: string;
               description: string;
               issueTypeId: string;
-              projectKey: string;
+              projectId: string;
           };
       }
     | {
-          type: CreateWorkItemWebviewResponseType.UpdateSite;
+          type: CreateWorkItemWebviewResponseType.UpdateField;
           payload: {
-              siteId: string;
-          };
-      }
-    | {
-          type: CreateWorkItemWebviewResponseType.UpdateProject;
-          payload: {
-              projectKey: string;
-          };
-      }
-    | {
-          type: CreateWorkItemWebviewResponseType.UpdateIssueType;
-          payload: {
-              issueTypeId: string;
+              feildType: 'site' | 'project' | 'issueType';
+              id: string;
           };
       };

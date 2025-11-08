@@ -4,6 +4,7 @@ import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 export enum CreateWorkItemWebviewProviderMessageType {
     InitFields = 'initFields',
     UpdatedSelectedSite = 'updatedSelectedSite',
+    UpdatedSelectedProject = 'updatedSelectedProject',
 }
 
 export type CreateWorkItemWebviewProviderMessage =
@@ -14,7 +15,7 @@ export type CreateWorkItemWebviewProviderMessage =
               availableProjects: Project[];
               availableSites: DetailedSiteInfo[];
               selectedSiteId?: string;
-              selectedProjectKey?: string;
+              selectedProjectId?: string;
               selectedIssueTypeId?: string;
           };
       }
@@ -23,7 +24,14 @@ export type CreateWorkItemWebviewProviderMessage =
           payload: {
               availableProjects: Project[];
               availableIssueTypes: IssueType[];
-              selectedProjectKey?: string;
+              selectedProjectId?: string;
+              selectedIssueTypeId?: string;
+          };
+      }
+    | {
+          type: CreateWorkItemWebviewProviderMessageType.UpdatedSelectedProject;
+          payload: {
+              availableIssueTypes: IssueType[];
               selectedIssueTypeId?: string;
           };
       };
