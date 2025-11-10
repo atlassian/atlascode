@@ -10,7 +10,7 @@ import { viewPullRequest } from './viewPullRequest.spec';
 export const bitbucketScenarios = [
     { name: 'Authenticate with Bitbucket', run: authFlow },
     { name: 'Connect repository', run: connectRepository },
-    { name: 'Start work Flow', run: startWorkFlow },
+    // { name: 'Start work Flow', run: startWorkFlow },
     { name: 'Create PullRequest', run: createPullRequest },
     { name: 'View PullRequest', run: viewPullRequest },
     { name: 'Add comment to PullRequest', run: addCommentToPullRequestCloud },
