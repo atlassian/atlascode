@@ -135,11 +135,11 @@ jest.mock('path', () => ({
     sep: '/',
 }));
 
-jest.mock('../../src/util/fsPromises', () => ({
+jest.mock('./util/fsPromises', () => ({
     getFsPromise: jest.fn(),
 }));
 
-jest.mock('../../src/util/waitFor', () => ({
+jest.mock('./util/waitFor', () => ({
     safeWaitFor: jest.fn(),
 }));
 
