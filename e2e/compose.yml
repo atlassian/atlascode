@@ -9,7 +9,7 @@ services:
             - ./wiremock-mappings/jira-common:/home/wiremock/mappings-common
             - ./wiremock-mappings/jira-common/__files:/home/wiremock/__files
             - ./sslcerts:/home/wiremock_ssl_certs
-        entrypoint: ["/bin/sh", "-c"]
+        entrypoint: ['/bin/sh', '-c']
         command: >
             "cp -r /home/wiremock/mappings-common/* /home/wiremock/mappings/ &&
             /docker-entrypoint.sh
@@ -30,7 +30,7 @@ services:
             - ./wiremock-mappings/jira-common:/home/wiremock/mappings-common
             - ./wiremock-mappings/jira-common/__files:/home/wiremock/__files
             - ./sslcerts:/home/wiremock_ssl_certs
-        entrypoint: ["/bin/sh", "-c"]
+        entrypoint: ['/bin/sh', '-c']
         command: >
             "cp -r /home/wiremock/mappings-common/* /home/wiremock/mappings/ &&
             /docker-entrypoint.sh
@@ -78,5 +78,5 @@ services:
         networks:
             - e2e
         ports:
-            - "9988:9988"
-            - "31415:31415"
+            - '9988:9988'
+            - '31415:31415'
