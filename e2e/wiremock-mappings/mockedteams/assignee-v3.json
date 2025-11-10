@@ -1,0 +1,12 @@
+{
+  "request": {
+    "method": "PUT",
+    "urlPath": "/rest/api/3/issue/BTS-1/assignee"
+  },
+  "response": {
+    "status": 204,
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

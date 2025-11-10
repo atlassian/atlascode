@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/_edge/tenant_info"
+  },
+  "response": {
+    "status": 200,
+    "body": "{\"cloudId\":\"3036c423-78e7-442a-8bed-47870b5a7526\"}",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
