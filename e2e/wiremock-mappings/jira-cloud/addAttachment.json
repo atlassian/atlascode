@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/rest/api/2/issue/BTS-1/attachments"
+  },
+  "response": {
+    "status": 200,
+    "body": "[{\"id\":\"10001\",\"filename\":\"test.jpg\",\"size\":1024,\"mimeType\":\"image/jpeg\",\"content\":\"https://mockedteams.atlassian.net/secure/attachment/10001/test.jpg\"}]",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+} 

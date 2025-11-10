@@ -19,6 +19,7 @@ export const setupWireMockMapping = async (
     const wiremockHost = type === JiraTypes.Cloud ? 'wiremock-jira-cloud' : 'wiremock-jira-dc';
     const response = await request.post(`http://${wiremockHost}:8080/__admin/mappings`, {
         data: {
+            priority: 1,
             request: {
                 method,
                 urlPath,
@@ -47,6 +48,7 @@ export const setupWireMockMappingBitbucket = async (
 ) => {
     const response = await request.post('http://wiremock-bitbucket:8080/__admin/mappings', {
         data: {
+            priority: 1,
             request: {
                 method,
                 urlPathPattern: urlPath,
