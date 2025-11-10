@@ -1,10 +1,10 @@
 import { truncate } from 'lodash';
 import { Container } from 'src/container';
 import { getAxiosInstance } from 'src/jira/jira-client/providers';
-import { RovoDevLogger } from 'src/logger';
 import * as vscode from 'vscode';
 
 import { MIN_SUPPORTED_ROVODEV_VERSION } from './rovoDevProcessManager';
+import { RovoDevLogger } from './util/rovoDevLogger';
 
 interface FeedbackObject {
     feedbackType: 'bug' | 'reportContent' | 'general';

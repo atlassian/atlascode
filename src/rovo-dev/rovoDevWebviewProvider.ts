@@ -27,7 +27,6 @@ import {
 } from 'vscode';
 
 import { Container } from '../../src/container';
-import { RovoDevLogger } from '../../src/logger';
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { Commands } from '../constants';
 import { GitErrorCodes } from '../typings/git';
@@ -51,6 +50,7 @@ import {
 } from './rovoDevWebviewProviderMessages';
 import { ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './ui/rovoDevViewMessages';
 import { modifyFileTitleMap } from './ui/utils';
+import { RovoDevLogger } from './util/rovoDevLogger';
 
 export interface TypedWebview<MessageOut, MessageIn> extends Webview {
     readonly onDidReceiveMessage: Event<MessageIn>;

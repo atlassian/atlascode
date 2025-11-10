@@ -1,13 +1,13 @@
 import { Container } from 'src/container';
 import { getAxiosInstance } from 'src/jira/jira-client/providers';
-import { RovoDevLogger } from 'src/logger';
 import * as vscode from 'vscode';
 
 import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
+import { RovoDevLogger } from './util/rovoDevLogger';
 
 jest.mock('src/container');
 jest.mock('src/jira/jira-client/providers');
-jest.mock('src/logger');
+jest.mock('./util/rovoDevLogger');
 jest.mock('vscode');
 jest.mock('lodash', () => ({
     ...jest.requireActual('lodash'),
