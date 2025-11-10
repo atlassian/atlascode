@@ -1,0 +1,23 @@
+{
+    "request": {
+      "method": "PUT",
+      "urlPath": "/rest/api/2/issue/BTS-1",
+      "headers": {
+        "Content-Type": {
+          "contains": "application/json"
+        }
+      },
+      "bodyPatterns": [
+        {
+          "matchesJsonPath": "$.fields.summary",
+          "contains": "Check if renaming works"
+        }
+      ]
+    },
+    "response": {
+      "status": 204,
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  } 
