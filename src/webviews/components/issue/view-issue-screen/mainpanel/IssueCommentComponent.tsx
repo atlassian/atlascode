@@ -25,8 +25,8 @@ export type IssueCommentComponentProps = {
     currentUser: User;
     comments: JiraComment[];
     isServiceDeskProject: boolean;
-    onSave: (commentBody: string, commentId?: string, restriction?: CommentVisibility) => void;
-    onCreate: (commentBody: string, restriction?: CommentVisibility) => void;
+    onSave: (commentBody: any, commentId?: string, restriction?: CommentVisibility) => void;
+    onCreate: (commentBody: any, restriction?: CommentVisibility) => void;
     fetchUsers: (input: string) => Promise<any[]>;
     fetchImage: (url: string) => Promise<string>;
     onDelete: (commentId: string) => void;
@@ -41,7 +41,7 @@ export type IssueCommentComponentProps = {
 const CommentComponent: React.FC<{
     siteDetails: DetailedSiteInfo;
     comment: JiraComment;
-    onSave: (t: string, commentId?: string, restriction?: CommentVisibility) => void;
+    onSave: (t: any, commentId?: string, restriction?: CommentVisibility) => void;
     fetchImage: (url: string) => Promise<string>;
     onDelete: (commentId: string) => void;
     fetchUsers: (input: string) => Promise<any[]>;
@@ -200,7 +200,7 @@ const CommentComponent: React.FC<{
 const AddCommentComponent: React.FC<{
     fetchUsers: (i: string) => Promise<any[]>;
     user: User;
-    onCreate: (t: string, restriction?: CommentVisibility) => void;
+    onCreate: (t: any, restriction?: CommentVisibility) => void;
     isServiceDeskProject?: boolean;
     isAtlaskitEditorEnabled?: boolean;
     commentText: string;
@@ -288,7 +288,18 @@ const AddCommentComponent: React.FC<{
                         <AtlaskitEditor
                             defaultValue={commentText}
                             onSave={(content) => {
-                                if (content && content.trim() !== '') {
+                                const isEmpty =
+                                    !content ||
+                                    (typeof content === 'object' &&
+                                        (!content.content ||
+                                            content.content.length === 0 ||
+                                            (content.content.length === 1 &&
+                                                content.content[0].type === 'paragraph' &&
+                                                (!content.content[0].content ||
+                                                    content.content[0].content.length === 0)))) ||
+                                    (typeof content === 'string' && content.trim() === '');
+
+                                if (!isEmpty) {
                                     onCreate(content, undefined);
                                     setCommentText('');
                                     closeEditorHandler();
