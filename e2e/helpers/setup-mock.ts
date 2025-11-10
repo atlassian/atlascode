@@ -9,8 +9,15 @@ import { updateIssueField } from './update-jira-issue';
 /**
  * Helper function to set up WireMock mapping
  */
-export const setupWireMockMapping = async (request: APIRequestContext, method: string, body: any, urlPath: string) => {
-    const response = await request.post('http://wiremock-mockedteams:8080/__admin/mappings', {
+export const setupWireMockMapping = async (
+    request: APIRequestContext,
+    method: string,
+    body: any,
+    urlPath: string,
+    type: JiraTypes = JiraTypes.Cloud,
+) => {
+    const wiremockHost = type === JiraTypes.Cloud ? 'wiremock-jira-cloud' : 'wiremock-jira-dc';
+    const response = await request.post(`http://${wiremockHost}:8080/__admin/mappings`, {
         data: {
             request: {
                 method,
@@ -60,13 +67,37 @@ export const setupWireMockMappingBitbucket = async (
 /**
  * Helper function to clean up WireMock mapping
  */
-export const cleanupWireMockMapping = async (request: APIRequestContext, mappingId: string) => {
-    await request.delete(`http://wiremock-mockedteams:8080/__admin/mappings/${mappingId}`);
+export const cleanupWireMockMapping = async (
+    request: APIRequestContext,
+    mappingId: string,
+    type: JiraTypes = JiraTypes.Cloud,
+) => {
+    const wiremockHost = type === JiraTypes.Cloud ? 'wiremock-jira-cloud' : 'wiremock-jira-dc';
+    await request.delete(`http://${wiremockHost}:8080/__admin/mappings/${mappingId}`);
 };
+
+/**
+ * Get mock configuration based on Jira type (Cloud vs DC)
+ */
+function getMockConfig(type: JiraTypes) {
+    return type === JiraTypes.Cloud
+        ? {
+              mockDir: 'jira-cloud',
+              mockFile: 'bts1-v3.json',
+              apiPath: '/rest/api/3/issue/BTS-1',
+              apiVersion: 3,
+          }
+        : {
+              mockDir: 'jira-dc',
+              mockFile: 'bts1.json',
+              apiPath: '/rest/api/2/issue/BTS-1',
+              apiVersion: 2,
+          };
+}
 
 export async function setupSearchMock(request: APIRequestContext, status: string, type: JiraTypes) {
     const file = type === JiraTypes.DC ? 'search-dc.json' : 'search.json';
-    const searchJSON = JSON.parse(fs.readFileSync(`e2e/wiremock-mappings/mockedteams/${file}`, 'utf-8'));
+    const searchJSON = JSON.parse(fs.readFileSync(`e2e/wiremock-mappings/jira-common/${file}`, 'utf-8'));
 
     const parsedBody = JSON.parse(searchJSON.response.body);
     const updatedIssue = structuredClone(parsedBody);
@@ -75,24 +106,22 @@ export async function setupSearchMock(request: APIRequestContext, status: string
     updatedIssue.issues[issueIndex].fields.status.name = status;
     updatedIssue.issues[issueIndex].fields.status.statusCategory.name = status;
     const urlPath = type === JiraTypes.DC ? '/rest/api/2/search' : '/rest/api/3/search/jql';
-    const { id } = await setupWireMockMapping(request, 'GET', updatedIssue, urlPath);
-    return () => cleanupWireMockMapping(request, id);
+    const { id } = await setupWireMockMapping(request, 'GET', updatedIssue, urlPath, type);
+    return () => cleanupWireMockMapping(request, id, type);
 }
 
 export async function setupIssueMock(
     request: APIRequestContext,
     updates: Record<string, any>,
     method: 'GET' | 'PUT' = 'GET',
+    type: JiraTypes = JiraTypes.Cloud,
 ) {
-    const issueJSON = JSON.parse(fs.readFileSync('e2e/wiremock-mappings/mockedteams/BTS-1/bts1.json', 'utf-8'));
+    const { mockDir, mockFile, apiPath } = getMockConfig(type);
 
-    const { id } = await setupWireMockMapping(
-        request,
-        method,
-        updateIssueField(issueJSON, updates),
-        '/rest/api/2/issue/BTS-1',
-    );
-    return () => cleanupWireMockMapping(request, id);
+    const issueJSON = JSON.parse(fs.readFileSync(`e2e/wiremock-mappings/${mockDir}/BTS-1/${mockFile}`, 'utf-8'));
+
+    const { id } = await setupWireMockMapping(request, method, updateIssueField(issueJSON, updates), apiPath, type);
+    return () => cleanupWireMockMapping(request, id, type);
 }
 
 export async function setupPullrequests(request: APIRequestContext, values: Array<any>) {

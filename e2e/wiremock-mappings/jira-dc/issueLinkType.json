@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/rest/api/2/issueLinkType"
+  },
+  "response": {
+    "status": 200,
+    "body": "{\"issueLinkTypes\":[{\"id\":\"10000\",\"name\":\"Blocks\",\"inward\":\"is blocked by\",\"outward\":\"blocks\",\"self\":\"https://mockedteams.atlassian.net/rest/api/2/issueLinkType/10000\"},{\"id\":\"10001\",\"name\":\"Cloners\",\"inward\":\"is cloned by\",\"outward\":\"clones\",\"self\":\"https://mockedteams.atlassian.net/rest/api/2/issueLinkType/10001\"},{\"id\":\"10002\",\"name\":\"Duplicate\",\"inward\":\"is duplicated by\",\"outward\":\"duplicates\",\"self\":\"https://mockedteams.atlassian.net/rest/api/2/issueLinkType/10002\"},{\"id\":\"10003\",\"name\":\"Relates\",\"inward\":\"relates to\",\"outward\":\"relates to\",\"self\":\"https://mockedteams.atlassian.net/rest/api/2/issueLinkType/10003\"}]}",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

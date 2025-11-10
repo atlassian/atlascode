@@ -80,7 +80,7 @@ openssl genrsa -out rootCA.key 4096
 openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 3650 -out rootCA.crt -subj "/C=US/ST=Washington/L=Bellevue/O=Atlascode/CN=Atlascode CA"
 
 # Generates a certificate for both Jira Cloud and DC domains
-generate_service_cert "wiremock-mockedteams" "mockedteams.atlassian.net" "jira.mockeddomain.com"
+generate_service_cert "wiremock-jira" "mockedteams.atlassian.net" "jira.mockeddomain.com"
 
 # # Generates a certificate for bitbucket.mockeddomain.com
 generate_service_cert "wiremock-bitbucket" "bitbucket.mockeddomain.com"

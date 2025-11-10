@@ -2,20 +2,38 @@ networks:
     e2e:
 
 services:
-    wiremock-mockedteams:
+    wiremock-jira-cloud:
         image: wiremock/wiremock
         command: >
             --https-port 443
             --verbose
-            --https-keystore /home/wiremock_ssl_certs/wiremock-mockedteams.p12
+            --https-keystore /home/wiremock_ssl_certs/wiremock-jira.p12
         volumes:
-            - ./wiremock-mappings/mockedteams:/home/wiremock/mappings
-            - ./wiremock-mappings/mockedteams/__files:/home/wiremock/__files
+            - ./wiremock-mappings/jira-cloud:/home/wiremock/mappings/cloud
+            - ./wiremock-mappings/jira-common:/home/wiremock/mappings/common
+            - ./wiremock-mappings/jira-common/__files:/home/wiremock/__files
             - ./sslcerts:/home/wiremock_ssl_certs
         networks:
             e2e:
                 aliases:
                     - mockedteams.atlassian.net
+        expose:
+            - 443
+
+    wiremock-jira-dc:
+        image: wiremock/wiremock
+        command: >
+            --https-port 443
+            --verbose
+            --https-keystore /home/wiremock_ssl_certs/wiremock-jira.p12
+        volumes:
+            - ./wiremock-mappings/jira-dc:/home/wiremock/mappings/dc
+            - ./wiremock-mappings/jira-common:/home/wiremock/mappings/common
+            - ./wiremock-mappings/jira-common/__files:/home/wiremock/__files
+            - ./sslcerts:/home/wiremock_ssl_certs
+        networks:
+            e2e:
+                aliases:
                     - jira.mockeddomain.com
         expose:
             - 443
@@ -48,7 +66,8 @@ services:
             - TARGET
             - DISABLE_ANALYTICS=1
         depends_on:
-            - wiremock-mockedteams
+            - wiremock-jira-cloud
+            - wiremock-jira-dc
             - wiremock-bitbucket
         networks:
             - e2e
