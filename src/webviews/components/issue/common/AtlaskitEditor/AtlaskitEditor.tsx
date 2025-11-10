@@ -5,8 +5,11 @@ import { ComposableEditor, EditorNextProps } from '@atlaskit/editor-core/composa
 import { createDefaultPreset } from '@atlaskit/editor-core/preset-default';
 import { usePreset } from '@atlaskit/editor-core/use-preset';
 import { JSONTransformer } from '@atlaskit/editor-json-transformer';
+import { contentInsertionPlugin } from '@atlaskit/editor-plugin-content-insertion';
+import { gridPlugin } from '@atlaskit/editor-plugin-grid';
 import { insertBlockPlugin } from '@atlaskit/editor-plugin-insert-block';
 import { listPlugin } from '@atlaskit/editor-plugin-list';
+import { mediaPlugin } from '@atlaskit/editor-plugin-media';
 import { mentionsPlugin } from '@atlaskit/editor-plugin-mentions';
 import { tasksAndDecisionsPlugin } from '@atlaskit/editor-plugin-tasks-and-decisions';
 import { textColorPlugin } from '@atlaskit/editor-plugin-text-color';
@@ -96,6 +99,24 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                 ])
                 .add(mentionsPlugin)
                 .add(tasksAndDecisionsPlugin)
+                .add(contentInsertionPlugin)
+                .add(gridPlugin)
+                .add([
+                    mediaPlugin,
+                    {
+                        provider: Promise.resolve({
+                            viewMediaClientConfig: {
+                                authProvider: () =>
+                                    Promise.resolve({
+                                        token: '',
+                                        clientId: '',
+                                        baseUrl: 'https://api.media.atlassian.com',
+                                    }),
+                            },
+                        }),
+                        allowMediaSingle: true,
+                    },
+                ])
         );
     }, []);
     // Helper function to get current document content
@@ -118,6 +139,11 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                     {
                         transformer: editorApi.core.actions.createTransformer((scheme) => new JSONTransformer(scheme)),
                     },
+                    // {
+                    //     transformer: editorApi.core.actions.createTransformer(
+                    //         (scheme) => new WikiMarkupTransformer(scheme),
+                    //     ),
+                    // },
                 );
             });
         } catch (error) {
@@ -206,10 +232,10 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                 assistiveLabel="Rich text editor for comments"
                 preset={preset}
                 defaultValue={defaultValue}
-                contentTransformerProvider={(schema) => {
-                    // Transform between ADF JSON string and ProseMirror nodes
-                    return new StringADFTransformer(schema);
-                }}
+                // contentTransformerProvider={(schema) => {
+                //     // here we transforms ADF <-> wiki markup
+                //     return new WikiMarkupTransformer(schema);
+                // }}
                 mentionProvider={mentionProvider}
             />
             {(onSave || onCancel) && (

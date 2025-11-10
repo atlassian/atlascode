@@ -6,7 +6,6 @@ import { FieldUI, FieldUIs, FieldValues, IssueLinkTypeSelectOption } from '@atla
 import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
-import { AdfAwareContent } from '../../../AdfAwareContent';
 import { RenderedContent } from '../../../RenderedContent';
 import { AttachmentList } from '../../AttachmentList';
 import { AttachmentsModal } from '../../AttachmentsModal';
@@ -293,7 +292,7 @@ const IssueMainPanel: React.FC<Props> = ({
                             className="ac-inline-input-view-p"
                         >
                             {isAtlaskitEditorEnabled ? (
-                                <AdfAwareContent content={descriptionText} mentionProvider={mentionProvider} />
+                                <RenderedContent html={renderedDescription} fetchImage={fetchImage} />
                             ) : renderedDescription ? (
                                 <RenderedContent html={renderedDescription} fetchImage={fetchImage} />
                             ) : (
