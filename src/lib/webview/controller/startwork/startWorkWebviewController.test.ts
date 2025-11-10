@@ -1,5 +1,5 @@
-import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { createEmptyMinimalIssue, MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { defaultActionGuard } from 'src/ipc/messaging';
 import { Logger } from 'src/logger';
 
 import { DetailedSiteInfo, emptySiteInfo, ProductBitbucket } from '../../../../atlclients/authInfo';
@@ -24,7 +24,7 @@ import { StartWorkActionApi } from './startWorkActionApi';
 import { StartWorkWebviewController } from './startWorkWebviewController';
 
 // Mock dependencies
-jest.mock('@atlassianlabs/guipi-core-controller');
+jest.mock('src/ipc/messaging');
 jest.mock('../../../../container');
 jest.mock('../../formatError');
 jest.mock('../../../../util/featureFlags', () => ({
