@@ -241,6 +241,7 @@ export class ClientManager implements Disposable {
 
         // Success - clear any previous failure status for this site
         this._failedSites.delete(siteKey);
+        (newClient as any).apiVersion = '3';
         return newClient;
     }
 
