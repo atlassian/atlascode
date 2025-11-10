@@ -206,7 +206,7 @@ export class ClientManager implements Disposable {
         if (site.isCloud && isBasicAuthInfo(await Container.credentialManager.getAuthInfo(site, false))) {
             await newClient.getCurrentUser();
         }
-
+        (newClient as any).apiVersion = '3';
         return newClient;
     }
 

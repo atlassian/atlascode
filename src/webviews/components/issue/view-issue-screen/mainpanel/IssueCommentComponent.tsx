@@ -12,7 +12,6 @@ import { formatDistanceToNow, parseISO } from 'date-fns';
 import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
-import { AdfAwareContent } from '../../../AdfAwareContent';
 import { RenderedContent } from '../../../RenderedContent';
 import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
 import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
@@ -183,7 +182,7 @@ const CommentComponent: React.FC<{
                             />
                         )
                     ) : isAtlaskitEditorEnabled ? (
-                        <AdfAwareContent content={comment.body} mentionProvider={mentionProvider} />
+                        <RenderedContent html={bodyText} fetchImage={fetchImage} />
                     ) : (
                         <RenderedContent html={bodyText} fetchImage={fetchImage} />
                     )}

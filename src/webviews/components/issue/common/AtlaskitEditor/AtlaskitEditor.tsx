@@ -3,8 +3,11 @@ import './AtlaskitEditor.css';
 import { ComposableEditor, EditorNextProps } from '@atlaskit/editor-core/composable-editor';
 import { createDefaultPreset } from '@atlaskit/editor-core/preset-default';
 import { usePreset } from '@atlaskit/editor-core/use-preset';
+import { contentInsertionPlugin } from '@atlaskit/editor-plugin-content-insertion';
+import { gridPlugin } from '@atlaskit/editor-plugin-grid';
 import { insertBlockPlugin } from '@atlaskit/editor-plugin-insert-block';
 import { listPlugin } from '@atlaskit/editor-plugin-list';
+import { mediaPlugin } from '@atlaskit/editor-plugin-media';
 import { mentionsPlugin } from '@atlaskit/editor-plugin-mentions';
 import { textColorPlugin } from '@atlaskit/editor-plugin-text-color';
 import { toolbarListsIndentationPlugin } from '@atlaskit/editor-plugin-toolbar-lists-indentation';
@@ -62,6 +65,24 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                     { toolbarShowPlusInsertOnly: true, appearance: appearance, allowExpand: true },
                 ])
                 .add(mentionsPlugin)
+                .add(contentInsertionPlugin)
+                .add(gridPlugin)
+                .add([
+                    mediaPlugin,
+                    {
+                        provider: Promise.resolve({
+                            viewMediaClientConfig: {
+                                authProvider: () =>
+                                    Promise.resolve({
+                                        token: '',
+                                        clientId: '',
+                                        baseUrl: 'https://api.media.atlassian.com',
+                                    }),
+                            },
+                        }),
+                        allowMediaSingle: true,
+                    },
+                ])
         );
     }, []);
     // Helper function to get current document content
@@ -79,13 +100,13 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                             return;
                         }
                         // document is in wiki markup format because of transformer passed below
-                        resolve(document);
+                        resolve(JSON.stringify(document));
                     },
-                    {
-                        transformer: editorApi.core.actions.createTransformer(
-                            (scheme) => new WikiMarkupTransformer(scheme),
-                        ),
-                    },
+                    // {
+                    //     transformer: editorApi.core.actions.createTransformer(
+                    //         (scheme) => new WikiMarkupTransformer(scheme),
+                    //     ),
+                    // },
                 );
             });
         } catch (error) {
@@ -169,10 +190,10 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                 assistiveLabel="Rich text editor for comments"
                 preset={preset}
                 defaultValue={defaultValue}
-                contentTransformerProvider={(schema) => {
-                    // here we transforms ADF <-> wiki markup
-                    return new WikiMarkupTransformer(schema);
-                }}
+                // contentTransformerProvider={(schema) => {
+                //     // here we transforms ADF <-> wiki markup
+                //     return new WikiMarkupTransformer(schema);
+                // }}
                 mentionProvider={mentionProvider}
             />
             {(onSave || onCancel) && (
