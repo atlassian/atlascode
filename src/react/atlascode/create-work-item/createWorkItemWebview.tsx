@@ -113,8 +113,7 @@ const CreateWorkItemWebview: React.FC = () => {
             type: CreateWorkItemWebviewResponseType.CreateWorkItem,
             payload: {
                 summary: state.summary,
-                issueTypeId: state.selectedIssueTypeId || '',
-                projectId: state.selectedProjectId || '',
+                onCompletion: 'view',
             },
         });
     }, [postMessage, state.selectedIssueTypeId, state.selectedProjectId, state.selectedSiteId, state.summary]);

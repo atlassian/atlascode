@@ -3,6 +3,9 @@ import { isSelectFieldUI, IssueTypeUI, IssueTypeUIs } from '@atlassianlabs/jira-
 import path from 'path';
 import { DetailedSiteInfo, ProductJira } from 'src/atlclients/authInfo';
 import { setCommandContext } from 'src/commandContext';
+import { showIssue } from 'src/commands/jira/showIssue';
+import { startWorkOnIssue } from 'src/commands/jira/startWorkOnIssue';
+import { configuration } from 'src/config/configuration';
 import { Container } from 'src/container';
 import { fetchCreateIssueUI } from 'src/jira/fetchIssue';
 import {
@@ -16,6 +19,7 @@ import {
     commands,
     Disposable,
     ExtensionContext,
+    ProgressLocation,
     Uri,
     WebviewView,
     WebviewViewProvider,
@@ -112,8 +116,63 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
                 break;
             }
             case CreateWorkItemWebviewResponseType.CreateWorkItem: {
+                if (
+                    !this._selectedSite ||
+                    !this._selectedProject ||
+                    !this._selectedIssueType ||
+                    !message.payload.summary
+                ) {
+                    window.showErrorMessage('Cannot create work item. Missing required information.');
+                    break;
+                }
+                const completionAction = message.payload.onCompletion || 'view';
+                const resp = await window.withProgress(
+                    { location: ProgressLocation.Notification, title: 'Creating work item...', cancellable: true },
+                    async (progress, _token) => {
+                        try {
+                            await configuration.setLastCreateSiteAndProject({
+                                siteId: this._selectedSite!.id,
+                                projectKey: this._selectedProject!.key,
+                            });
+                            const payload = {
+                                summary: message.payload.summary,
+                                project: this._selectedProject!,
+                                issuetype: this._selectedIssueType!,
+                                reporter: { accountId: this._selectedSite!.userId },
+                            };
+
+                            const client = await Container.clientManager.jiraClient(this._selectedSite!);
+                            const response = await client.createIssue({ fields: payload });
+
+                            if (completionAction === 'startWork') {
+                                await startWorkOnIssue({ key: response.key, siteDetails: this._selectedSite! });
+                            } else if (completionAction === 'generateCode' && Container.config.rovodev.enabled) {
+                                const issueUrl = `${this._selectedSite!.baseLinkUrl}/browse/${response.key}`;
+                                await Container.rovodevWebviewProvider.setPromptTextWithFocus(
+                                    'Work on the attached Jira work item',
+                                    {
+                                        contextType: 'jiraWorkItem',
+                                        name: response.key,
+                                        url: issueUrl,
+                                    },
+                                );
+                            } else {
+                                await showIssue({ key: response.key, siteDetails: this._selectedSite! });
+                            }
+                            return true;
+                        } catch (e) {
+                            console.error('Failed to create work item', e);
+                            window.showErrorMessage('Failed to create work item', e);
+                            return false;
+                        }
+                    },
+                );
+
+                if (!resp) {
+                    break;
+                }
+
                 setCommandContext('atlascode:showCreateWorkItemWebview', false);
-                // this.dispose();
                 break;
             }
             case CreateWorkItemWebviewResponseType.UpdateField: {

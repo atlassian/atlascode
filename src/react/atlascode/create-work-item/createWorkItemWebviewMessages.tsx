@@ -19,8 +19,7 @@ export type CreateWorkItemWebviewResponse =
           type: CreateWorkItemWebviewResponseType.CreateWorkItem;
           payload: {
               summary: string;
-              issueTypeId: string;
-              projectId: string;
+              onCompletion?: 'view' | 'startWork' | 'generateCode';
           };
       }
     | {
