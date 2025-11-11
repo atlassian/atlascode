@@ -16,7 +16,7 @@ const NEXT_STATUS = 'In Progress';
 
 export async function startWorkFlow(page: Page, type: BitbucketTypes, request: APIRequestContext) {
     // This test is large and may run longer on slower machines
-    test.setTimeout(90_000);
+    test.setTimeout(60_000);
     await resetWireMockMappings({ request });
 
     // Login to Jira
