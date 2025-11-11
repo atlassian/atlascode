@@ -4,8 +4,8 @@ import path from 'path';
 import { CommandContext, setCommandContext } from 'src/commandContext';
 import { showIssueForURL } from 'src/commands/jira/showIssue';
 import { configuration } from 'src/config/configuration';
-import { getFsPromise } from 'src/util/fsPromises';
-import { safeWaitFor } from 'src/util/waitFor';
+import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
+import { safeWaitFor } from 'src/rovo-dev/util/waitFor';
 import { v4 } from 'uuid';
 import {
     CancellationToken,

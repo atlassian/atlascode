@@ -1,5 +1,5 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
+import { ReducerAction } from 'src/ipc/messaging';
 
 import { UIErrorInfo } from '../../../analyticsTypes';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';

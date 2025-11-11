@@ -1,6 +1,6 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { RovoDevContextItem, RovoDevPrompt, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 
+import { ReducerAction } from '../../ipc/messaging';
 import { FeedbackType } from './feedback-form/FeedbackForm';
 
 export const enum RovoDevViewResponseType {
