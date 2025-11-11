@@ -69,6 +69,7 @@ import { VSCStartWorkWebviewControllerFactory } from './webview/startwork/vscSta
 import { CreateIssueProblemsWebview } from './webviews/createIssueProblemsWebview';
 import { CreateIssueWebview } from './webviews/createIssueWebview';
 import { JiraIssueViewManager } from './webviews/jiraIssueViewManager';
+import { CreateWorkItemWebviewProvider } from './work-items/create-work-item/createWorkItemWebviewProvider';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
@@ -247,6 +248,10 @@ export class Container {
         SearchAllJiraHelper.initialize();
         context.subscriptions.push(new CustomJQLViewProvider());
         context.subscriptions.push((this._assignedWorkItemsView = new AssignedWorkItemsViewProvider()));
+
+        context.subscriptions.push(
+            (this._createWorkItemWebviewProvider = new CreateWorkItemWebviewProvider(context, context.extensionPath)),
+        );
 
         this._onboardingProvider = new OnboardingProvider();
 
@@ -658,6 +663,11 @@ export class Container {
     private static _rovodevWebviewProvider: RovoDevWebviewProvider;
     public static get rovodevWebviewProvider() {
         return this._rovodevWebviewProvider;
+    }
+
+    private static _createWorkItemWebviewProvider: CreateWorkItemWebviewProvider;
+    public static get createWorkItemWebviewProvider() {
+        return this._createWorkItemWebviewProvider;
     }
 }
 

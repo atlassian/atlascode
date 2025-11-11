@@ -24,6 +24,7 @@ const emptyState: CreateFormState = {
     selectedSiteId: undefined,
     selectedProjectId: undefined,
     selectedIssueTypeId: undefined,
+    requiredFieldsForIssueType: [],
 };
 
 const CreateWorkItemWebview: React.FC = () => {
@@ -90,10 +91,6 @@ const CreateWorkItemWebview: React.FC = () => {
         CreateWorkItemWebviewProviderMessage
     >(onMessageHandler);
 
-    React.useEffect(() => {
-        postMessage({ type: CreateWorkItemWebviewResponseType.WebviewReady });
-    }, [postMessage]);
-
     const handleSubmit = React.useCallback(() => {
         const errors: Record<string, string> = {};
         if (!state.selectedIssueTypeId) {
@@ -105,7 +102,9 @@ const CreateWorkItemWebview: React.FC = () => {
         if (!state.selectedSiteId) {
             errors['site'] = 'EMPTY';
         }
-        console.log('Form submission errors:', errors);
+        if (!state.summary || state.summary.trim().length === 0) {
+            errors['summary'] = 'EMPTY';
+        }
         if (Object.keys(errors).length > 0) {
             return errors;
         }
@@ -113,13 +112,12 @@ const CreateWorkItemWebview: React.FC = () => {
         return postMessage({
             type: CreateWorkItemWebviewResponseType.CreateWorkItem,
             payload: {
-                summary: 'Example Summary',
-                description: 'Example Description',
+                summary: state.summary,
                 issueTypeId: state.selectedIssueTypeId || '',
                 projectId: state.selectedProjectId || '',
             },
         });
-    }, [postMessage, state.selectedIssueTypeId, state.selectedProjectId, state.selectedSiteId]);
+    }, [postMessage, state.selectedIssueTypeId, state.selectedProjectId, state.selectedSiteId, state.summary]);
 
     const handleChangeField = React.useCallback(
         (newValue: any, type: 'site' | 'project' | 'issueType') => {
@@ -176,6 +174,20 @@ const CreateWorkItemWebview: React.FC = () => {
         },
         [postMessagePromise],
     );
+
+    const handleUpdateSummary = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const summary = e.target.value;
+        dispatch({
+            type: CreateFormActionType.SetSummary,
+            payload: {
+                summary,
+            },
+        });
+    }, []);
+
+    React.useEffect(() => {
+        postMessage({ type: CreateWorkItemWebviewResponseType.WebviewReady });
+    }, [postMessage]);
 
     return (
         <div className="view-container">
@@ -241,12 +253,15 @@ const CreateWorkItemWebview: React.FC = () => {
                                     className="form-input"
                                     placeholder="What needs to be done?"
                                     type="text"
+                                    onChange={handleUpdateSummary}
                                 />
                             )}
                         </Field>
                         <div className="form-actions">
-                            <button type="button">Cancel</button>
-                            <button type="submit" disabled={isLoading}>
+                            <button className="form-button button-secondary" type="button">
+                                Cancel
+                            </button>
+                            <button className="form-button" type="submit" disabled={isLoading}>
                                 Create Work Item
                             </button>
                         </div>

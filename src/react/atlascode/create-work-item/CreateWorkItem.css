@@ -47,13 +47,33 @@ label, label span {
     color: var(--vscode-foreground);
 }
 
+.form-button {
+    padding: 6px 12px;
+    border: none;
+    cursor: pointer;
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+}
+
+.form-button:disabled {
+    background-color: var(--vscode-button-disabledBackground);
+    color: var(--vscode-button-disabledForeground);
+    cursor: not-allowed;
+}
+
+.button-secondary {
+    background-color: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+}
+
 /* Copied from src/webviews/App.css to style react-select components */
 
 
 .ac-form-select__control {
     background: var(--vscode-input-background) !important;
     color: var(--vscode-dropdown-foreground) !important;
-    border: 1px solid var(--vscode-editor-background) !important;
+    border: 1px solid var(--vscode-input-border) !important;
+    border-radius: 0 !important;
 }
 
 .ac-form-select__control--is-focused,

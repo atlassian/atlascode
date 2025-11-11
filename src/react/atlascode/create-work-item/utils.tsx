@@ -1,6 +1,8 @@
 import { IssueType, Project } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
+import { CreateWorkItemViewRequiredField } from './createWorkItemWebviewMessages';
+
 export interface CreateOptionFields {
     name: string;
     value: string;
@@ -16,6 +18,7 @@ export interface CreateFormState {
     selectedProjectId?: string;
     selectedIssueTypeId?: string;
     hasMoreProjects?: boolean;
+    requiredFieldsForIssueType: CreateWorkItemViewRequiredField[];
 }
 
 export enum CreateFormActionType {
@@ -23,6 +26,7 @@ export enum CreateFormActionType {
     InitFields = 'initFields',
     UpdatedSelectedSite = 'updateSelectedSite',
     UpdatedSelectedProject = 'updateSelectedProject',
+    UpdatedSelectedIssueType = 'updatedSelectedIssueType',
     SetSelectedField = 'setSelectedField',
 }
 
@@ -37,6 +41,7 @@ type CreateFormAction =
               selectedSiteId?: string;
               selectedProjectId?: string;
               selectedIssueTypeId?: string;
+              requiredFields: CreateWorkItemViewRequiredField[];
           };
       }
     | {
@@ -53,6 +58,7 @@ type CreateFormAction =
               availableIssueTypes: IssueType[];
               selectedProjectId?: string;
               selectedIssueTypeId?: string;
+              requiredFields: CreateWorkItemViewRequiredField[];
           };
       }
     | {
@@ -60,6 +66,13 @@ type CreateFormAction =
           payload: {
               availableIssueTypes: IssueType[];
               selectedIssueTypeId?: string;
+              requiredFields: CreateWorkItemViewRequiredField[];
+          };
+      }
+    | {
+          type: CreateFormActionType.UpdatedSelectedIssueType;
+          payload: {
+              requiredFields: CreateWorkItemViewRequiredField[];
           };
       }
     | {
@@ -94,6 +107,7 @@ export function createReducer(state: CreateFormState, action: CreateFormAction):
                 selectedSiteId: action.payload.selectedSiteId || action.payload.availableSites[0]?.id,
                 selectedProjectId: action.payload.selectedProjectId || action.payload.availableProjects[0]?.id,
                 selectedIssueTypeId: action.payload.selectedIssueTypeId || action.payload.availableIssueTypes[0]?.id,
+                requiredFieldsForIssueType: action.payload.requiredFields,
             };
         }
         case CreateFormActionType.SetSummary: {
@@ -118,6 +132,7 @@ export function createReducer(state: CreateFormState, action: CreateFormAction):
                 })),
                 selectedProjectId: action.payload.selectedProjectId || action.payload.availableProjects[0]?.id,
                 selectedIssueTypeId: action.payload.selectedIssueTypeId || action.payload.availableIssueTypes[0]?.id,
+                requiredFieldsForIssueType: action.payload.requiredFields,
             };
         }
         case CreateFormActionType.UpdatedSelectedProject: {
@@ -129,6 +144,13 @@ export function createReducer(state: CreateFormState, action: CreateFormAction):
                     iconPath: issueType.iconUrl,
                 })),
                 selectedIssueTypeId: action.payload.selectedIssueTypeId || action.payload.availableIssueTypes[0]?.id,
+                requiredFieldsForIssueType: action.payload.requiredFields,
+            };
+        }
+        case CreateFormActionType.UpdatedSelectedIssueType: {
+            return {
+                ...state,
+                requiredFieldsForIssueType: action.payload.requiredFields,
             };
         }
         case CreateFormActionType.SetSelectedField: {

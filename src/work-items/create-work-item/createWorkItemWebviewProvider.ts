@@ -1,4 +1,5 @@
-import { IssueType, Project } from '@atlassianlabs/jira-pi-common-models';
+import { IssueType, JiraSiteInfo, Project } from '@atlassianlabs/jira-pi-common-models';
+import { isSelectFieldUI, IssueTypeUI, IssueTypeUIs } from '@atlassianlabs/jira-pi-meta-models';
 import path from 'path';
 import { DetailedSiteInfo, ProductJira } from 'src/atlclients/authInfo';
 import { setCommandContext } from 'src/commandContext';
@@ -12,6 +13,7 @@ import { TypedWebview } from 'src/rovo-dev/rovoDevWebviewProvider';
 import { getHtmlForView } from 'src/webview/common/getHtmlForView';
 import {
     CancellationToken,
+    commands,
     Disposable,
     ExtensionContext,
     Uri,
@@ -22,6 +24,7 @@ import {
 } from 'vscode';
 
 import {
+    CreateWorkItemRequiredField,
     CreateWorkItemWebviewProviderMessage,
     CreateWorkItemWebviewProviderMessageType,
 } from './messages/createWorkItemWebviewProviderMessages';
@@ -39,8 +42,10 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
     private _selectedProject?: Project;
     private _hasMoreProjects: boolean = false;
     private _selectedIssueType?: IssueType;
+    private _requiredFieldsForIssueType: CreateWorkItemRequiredField[] = [];
     private _id: string = 'createWorkItemWebview';
     private _disposables: Disposable[] = [];
+
     private _pendingState: boolean = false;
     private get _isPending(): boolean {
         return this._pendingState;
@@ -62,7 +67,11 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
                 },
             }),
         );
-        // this._availableSites = Container.siteManager.getSitesAvailable(ProductJira);
+    }
+
+    public async createOrShow(): Promise<void> {
+        setCommandContext('atlascode:showCreateWorkItemWebview', true);
+        await commands.executeCommand('atlascode.views.jira.createWorkItemWebview.focus');
     }
 
     public async resolveWebviewView(
@@ -95,6 +104,9 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
     private async onMessageHandler(message: CreateWorkItemWebviewResponse): Promise<void> {
         switch (message.type) {
             case CreateWorkItemWebviewResponseType.WebviewReady: {
+                if (this._isWebviewReady) {
+                    break;
+                }
                 this._webviewReady = true;
                 await this.initFields();
                 break;
@@ -140,6 +152,7 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
                 selectedSiteId: this._selectedSite?.id,
                 selectedProjectId: this._selectedProject?.id,
                 selectedIssueTypeId: this._selectedIssueType?.id,
+                requiredFields: this._requiredFieldsForIssueType,
             },
         });
     }
@@ -180,7 +193,7 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
 
             this._availableProjects = this.toFieldMap(projects);
 
-            const { issueTypes, selectedIssueType } = await this.getIssueTypesForProject(
+            const { issueTypes, selectedIssueType, issueTypeUIs } = await this.getIssueTypesForProject(
                 this._selectedSite,
                 this._selectedProject.key,
             );
@@ -188,6 +201,9 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
             this._availableIssueTypes = this.toFieldMap(issueTypes);
             this._selectedIssueType = selectedIssueType;
 
+            const requiredFields = this.getRequiredFieldsForIssueType(issueTypeUIs[this._selectedIssueType.id]);
+
+            this._requiredFieldsForIssueType = requiredFields;
             this._pendingState = false;
             if (this._isWebviewReady) {
                 await this.initFields();
@@ -275,13 +291,18 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
 
             this._availableProjects = this.toFieldMap(projects);
 
-            const { issueTypes, selectedIssueType } = await this.getIssueTypesForProject(
+            const { issueTypes, selectedIssueType, issueTypeUIs } = await this.getIssueTypesForProject(
                 this._selectedSite,
                 this._selectedProject.key,
             );
 
             this._selectedIssueType = selectedIssueType;
             this._availableIssueTypes = this.toFieldMap(issueTypes);
+
+            const requiredFields = this.getRequiredFieldsForIssueType(issueTypeUIs[this._selectedIssueType.id]);
+
+            this._requiredFieldsForIssueType = requiredFields;
+            this._pendingState = false;
 
             this.webview.postMessage({
                 type: CreateWorkItemWebviewProviderMessageType.UpdatedSelectedSite,
@@ -291,6 +312,7 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
                     availableIssueTypes: Object.values(this._availableIssueTypes),
                     selectedProjectId: this._selectedProject.id,
                     selectedIssueTypeId: this._selectedIssueType.id,
+                    requiredFields: this._requiredFieldsForIssueType,
                 },
             });
         } catch (err) {
@@ -333,7 +355,7 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
                 throw Error('No site selected');
             }
 
-            const { issueTypes, selectedIssueType } = await this.getIssueTypesForProject(
+            const { issueTypes, selectedIssueType, issueTypeUIs } = await this.getIssueTypesForProject(
                 this._selectedSite,
                 this._selectedProject.key,
             );
@@ -341,11 +363,16 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
             this._availableIssueTypes = this.toFieldMap(issueTypes);
             this._selectedIssueType = selectedIssueType;
 
+            const requiredFields = this.getRequiredFieldsForIssueType(issueTypeUIs[this._selectedIssueType.id]);
+
+            this._requiredFieldsForIssueType = requiredFields;
+
             await this.webview.postMessage({
                 type: CreateWorkItemWebviewProviderMessageType.UpdatedSelectedProject,
                 payload: {
                     availableIssueTypes: Object.values(this._availableIssueTypes),
                     selectedIssueTypeId: this._selectedIssueType.id,
+                    requiredFields: this._requiredFieldsForIssueType,
                 },
             });
             this._pendingState = false;
@@ -410,7 +437,11 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
     private async getIssueTypesForProject(
         site: DetailedSiteInfo,
         projectKey: string,
-    ): Promise<{ issueTypes: IssueType[]; selectedIssueType: IssueType }> {
+    ): Promise<{
+        issueTypes: IssueType[];
+        selectedIssueType: IssueType;
+        issueTypeUIs: IssueTypeUIs<DetailedSiteInfo>;
+    }> {
         const screenData = await fetchCreateIssueUI(site, projectKey);
         const issueTypes = screenData.issueTypes;
         const selectedIssueType = screenData.selectedIssueType || issueTypes[0];
@@ -419,7 +450,33 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
             throw Error('No issue types available for selected project');
         }
 
-        return { issueTypes, selectedIssueType };
+        return { issueTypes, selectedIssueType, issueTypeUIs: screenData.issueTypeUIs };
+    }
+
+    private getRequiredFieldsForIssueType<S extends JiraSiteInfo>(
+        issueTypeUI: IssueTypeUI<S>,
+    ): CreateWorkItemRequiredField[] {
+        const requiredFields: CreateWorkItemRequiredField[] = [];
+
+        for (const field of Object.values(issueTypeUI.fields)) {
+            let selectOptions: any[] | undefined = undefined;
+            // Skip non-required fields and summary (always required)
+            if (!field.required || field.key === 'summary') {
+                continue;
+            }
+
+            const isSelect = isSelectFieldUI(field);
+            if (isSelect) {
+                selectOptions = issueTypeUI.selectFieldOptions[field.key] || [];
+            }
+
+            requiredFields.push({
+                field,
+                selectOptions,
+            });
+        }
+
+        return requiredFields;
     }
 
     private toFieldMap<T extends { id: string }>(arr: T[]): Record<string, T> {

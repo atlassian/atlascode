@@ -569,6 +569,12 @@
                     "id": "atlascode.views.helpTreeView",
                     "name": "Help and Feedback",
                     "when": "!atlascode:bbyEnvironmentActive && config.atlascode.helpExplorerEnabled"
+                },
+                {
+                    "id": "atlascode.views.jira.createWorkItemWebview",
+                    "name": "Create Jira Work Item",
+                    "type": "webview",
+                    "when": "!atlascode:bbyEnvironmentActive && config.atlascode.jira.enabled && atlascode:showCreateWorkItemWebview"
                 }
             ],
             "atlascode-rovo-dev": [
@@ -577,14 +583,6 @@
                     "name": "Rovo Dev",
                     "type": "webview",
                     "when": "atlascode:rovoDevEnabled"
-                }
-            ],
-            "atlascode-jira-work-item": [
-                {
-                    "id": "atlascode.views.jira.createWorkItemWebview",
-                    "name": "Create Jira Work Item",
-                    "type": "webview",
-                    "when": "!atlascode:bbyEnvironmentActive && config.atlascode.jira.enabled && atlascode:showCreateWorkItemWebview"
                 }
             ]
         },

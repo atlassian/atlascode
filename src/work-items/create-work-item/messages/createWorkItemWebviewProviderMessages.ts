@@ -1,11 +1,18 @@
 import { IssueType, Project } from '@atlassianlabs/jira-pi-common-models';
+import { FieldUI } from '@atlassianlabs/jira-pi-meta-models';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
 export enum CreateWorkItemWebviewProviderMessageType {
     InitFields = 'initFields',
     UpdatedSelectedSite = 'updatedSelectedSite',
     UpdatedSelectedProject = 'updatedSelectedProject',
+    UpdatedSelectedIssueType = 'updatedSelectedIssueType',
     UpdateProjectOptions = 'updateProjectOptions',
+}
+// TODO implement required fields properly
+export interface CreateWorkItemRequiredField {
+    field: FieldUI;
+    selectOptions?: any[];
 }
 
 export type CreateWorkItemWebviewProviderMessage =
@@ -19,6 +26,7 @@ export type CreateWorkItemWebviewProviderMessage =
               selectedSiteId?: string;
               selectedProjectId?: string;
               selectedIssueTypeId?: string;
+              requiredFields: CreateWorkItemRequiredField[];
           };
       }
     | {
@@ -29,6 +37,7 @@ export type CreateWorkItemWebviewProviderMessage =
               availableIssueTypes: IssueType[];
               selectedProjectId?: string;
               selectedIssueTypeId?: string;
+              requiredFields: CreateWorkItemRequiredField[];
           };
       }
     | {
@@ -36,6 +45,13 @@ export type CreateWorkItemWebviewProviderMessage =
           payload: {
               availableIssueTypes: IssueType[];
               selectedIssueTypeId?: string;
+              requiredFields: CreateWorkItemRequiredField[];
+          };
+      }
+    | {
+          type: CreateWorkItemWebviewProviderMessageType.UpdatedSelectedIssueType;
+          payload: {
+              requiredFields: CreateWorkItemRequiredField[];
           };
       }
     | {

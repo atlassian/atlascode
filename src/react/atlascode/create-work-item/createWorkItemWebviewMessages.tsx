@@ -1,8 +1,14 @@
+import { FieldUI } from '@atlassianlabs/jira-pi-meta-models';
+
 export enum CreateWorkItemWebviewResponseType {
     WebviewReady = 'webviewReady',
     CreateWorkItem = 'createWorkItem',
     UpdateField = 'updateField',
     UpdateSelectOptions = 'updateSelectOptions',
+}
+export interface CreateWorkItemViewRequiredField {
+    field: FieldUI;
+    selectOptions?: any[];
 }
 
 export type CreateWorkItemWebviewResponse =
@@ -13,7 +19,6 @@ export type CreateWorkItemWebviewResponse =
           type: CreateWorkItemWebviewResponseType.CreateWorkItem;
           payload: {
               summary: string;
-              description: string;
               issueTypeId: string;
               projectId: string;
           };
