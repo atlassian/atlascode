@@ -1,6 +1,6 @@
-import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import Axios from 'axios';
+import { defaultActionGuard } from 'src/ipc/messaging';
 import { Logger } from 'src/logger';
 import { Uri } from 'vscode';
 

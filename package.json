@@ -1011,6 +1011,26 @@
                 {
                     "command": "atlascode.showExploreSettings",
                     "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.searchIssues",
+                    "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
+                },
+                {
+                    "command": "atlascode.jira.createIssue",
+                    "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
+                },
+                {
+                    "command": "atlascode.jira.refreshAssignedWorkItemsExplorer",
+                    "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
+                },
+                {
+                    "command": "atlascode.jira.createNewJql",
+                    "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
+                },
+                {
+                    "command": "atlascode.jira.refreshCustomJqlExplorer",
+                    "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
                 }
             ]
         },
@@ -1532,7 +1552,6 @@
         "@atlaskit/tooltip": "^20.4.3",
         "@atlaskit/width-detector": "^5.0.4",
         "@atlassianlabs/guipi-core-components": "^3.2.0",
-        "@atlassianlabs/guipi-core-controller": "^3.2.0",
         "@atlassianlabs/guipi-jira-components": "^3.2.0",
         "@atlassianlabs/jira-metaui-client": "^2.0.0",
         "@atlassianlabs/jira-metaui-transformer": "^2.0.0",

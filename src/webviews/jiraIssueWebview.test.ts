@@ -73,6 +73,7 @@ jest.mock('../views/notifications/notificationManager', () => ({
 jest.mock('../logger', () => ({
     Logger: {
         error: jest.fn(),
+        warn: jest.fn(),
     },
 }));
 jest.mock('form-data', () => ({
@@ -1882,6 +1883,292 @@ describe('JiraIssueWebview - Additional Method Tests', () => {
 
             expect(subtasks[0].transitions).toEqual(mockEnhancedIssues[0].transitions);
             expect(issuelinks[0].outwardIssue.transitions).toEqual(mockEnhancedIssues[1].transitions);
+        });
+    });
+
+    describe('refreshIssueHistory', () => {
+        beforeEach(() => {
+            (webview as any)._issue = mockIssue;
+            (webview as any)._editUIData = {
+                fields: {
+                    timespent: { key: 'timespent', name: 'Time Spent' },
+                    timeestimate: { key: 'timeestimate', name: 'Remaining Estimate' },
+                    status: { key: 'status', name: 'Status' },
+                },
+            };
+        });
+
+        it('should fetch and process history with changelog and worklogs', async () => {
+            const mockHistoryResponse = {
+                data: {
+                    fields: {
+                        created: '2025-11-05T10:00:00.000Z',
+                        reporter: {
+                            displayName: 'Reporter',
+                            accountId: 'reporter-1',
+                            avatarUrls: { '48x48': 'avatar.png' },
+                        },
+                    },
+                    changelog: {
+                        histories: [
+                            {
+                                id: 'history-1',
+                                created: '2025-11-05T15:58:00.000Z',
+                                author: {
+                                    displayName: 'John Doe',
+                                    accountId: 'user-1',
+                                    avatarUrls: { '48x48': 'avatar.png' },
+                                },
+                                items: [
+                                    {
+                                        field: 'status',
+                                        fieldId: 'status',
+                                        from: 'To Do',
+                                        to: 'In Progress',
+                                        fromString: 'To Do',
+                                        toString: 'In Progress',
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            };
+
+            const mockWorklogResponse = {
+                data: {
+                    worklogs: [
+                        {
+                            id: 'worklog-1',
+                            started: '2025-11-05T15:58:00.000Z',
+                            timeSpent: '1h',
+                            comment: 'Test work',
+                            author: {
+                                displayName: 'John Doe',
+                                accountId: 'user-1',
+                                avatarUrls: { '48x48': 'avatar.png' },
+                            },
+                        },
+                    ],
+                },
+            };
+
+            const mockGet = jest
+                .fn()
+                .mockResolvedValueOnce(mockHistoryResponse)
+                .mockResolvedValueOnce(mockWorklogResponse);
+            const mockTransport = { get: mockGet };
+            const mockClient = {
+                apiVersion: '2',
+                transportFactory: jest.fn(() => mockTransport),
+                authorizationProvider: jest.fn().mockResolvedValue('Bearer token'),
+            };
+
+            (Container.clientManager.jiraClient as jest.Mock).mockResolvedValue(mockClient);
+            (webview as any).postMessage = jest.fn();
+
+            await (webview as any).refreshIssueHistory();
+
+            expect(mockGet).toHaveBeenCalledTimes(2);
+            expect((webview as any).postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: 'historyUpdate',
+                    history: expect.arrayContaining([
+                        expect.objectContaining({
+                            id: '__CREATED__',
+                            field: '__CREATED__',
+                        }),
+                        expect.objectContaining({
+                            id: 'history-1-status',
+                            field: 'status',
+                            fieldDisplayName: 'Status',
+                        }),
+                        expect.objectContaining({
+                            id: 'worklog-worklog-1',
+                            field: 'worklog',
+                            fieldDisplayName: 'Work Log',
+                        }),
+                    ]),
+                }),
+            );
+        });
+
+        it('should filter out worklogid field changes', async () => {
+            const mockHistoryResponse = {
+                data: {
+                    fields: {
+                        created: '2025-11-05T10:00:00.000Z',
+                        reporter: {
+                            displayName: 'Reporter',
+                            accountId: 'reporter-1',
+                        },
+                    },
+                    changelog: {
+                        histories: [
+                            {
+                                id: 'history-1',
+                                created: '2025-11-05T15:58:00.000Z',
+                                author: {
+                                    displayName: 'John Doe',
+                                    accountId: 'user-1',
+                                },
+                                items: [
+                                    {
+                                        field: 'worklogid',
+                                        fieldId: 'worklogid',
+                                        from: null,
+                                        to: 'worklog-123',
+                                    },
+                                    {
+                                        field: 'status',
+                                        fieldId: 'status',
+                                        from: 'To Do',
+                                        to: 'In Progress',
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            };
+
+            const mockWorklogResponse = {
+                data: { worklogs: [] },
+            };
+
+            const mockGet = jest
+                .fn()
+                .mockResolvedValueOnce(mockHistoryResponse)
+                .mockResolvedValueOnce(mockWorklogResponse);
+            const mockTransport = { get: mockGet };
+            const mockClient = {
+                apiVersion: '2',
+                transportFactory: jest.fn(() => mockTransport),
+                authorizationProvider: jest.fn().mockResolvedValue('Bearer token'),
+            };
+
+            (Container.clientManager.jiraClient as jest.Mock).mockResolvedValue(mockClient);
+            (webview as any).postMessage = jest.fn();
+
+            await (webview as any).refreshIssueHistory();
+
+            const postMessageCalls = (webview as any).postMessage.mock.calls;
+            const historyUpdate = postMessageCalls.find((call: any) => call[0].type === 'historyUpdate');
+            expect(historyUpdate).toBeDefined();
+
+            const historyItems = historyUpdate[0].history;
+            const worklogidItems = historyItems.filter((item: any) => item.field === 'worklogid');
+            expect(worklogidItems.length).toBe(0);
+
+            const statusItems = historyItems.filter((item: any) => item.field === 'status');
+            expect(statusItems.length).toBe(1);
+        });
+
+        it('should use fieldNameForKey to get proper display names', async () => {
+            const mockHistoryResponse = {
+                data: {
+                    fields: {
+                        created: '2025-11-05T10:00:00.000Z',
+                        reporter: {
+                            displayName: 'Reporter',
+                            accountId: 'reporter-1',
+                        },
+                    },
+                    changelog: {
+                        histories: [
+                            {
+                                id: 'history-1',
+                                created: '2025-11-05T15:58:00.000Z',
+                                author: {
+                                    displayName: 'John Doe',
+                                    accountId: 'user-1',
+                                },
+                                items: [
+                                    {
+                                        field: 'timespent',
+                                        fieldId: 'timespent',
+                                        from: null,
+                                        to: '3600',
+                                        fromString: null,
+                                        toString: '3600',
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            };
+
+            const mockWorklogResponse = {
+                data: { worklogs: [] },
+            };
+
+            const mockGet = jest
+                .fn()
+                .mockResolvedValueOnce(mockHistoryResponse)
+                .mockResolvedValueOnce(mockWorklogResponse);
+            const mockTransport = { get: mockGet };
+            const mockClient = {
+                apiVersion: '2',
+                transportFactory: jest.fn(() => mockTransport),
+                authorizationProvider: jest.fn().mockResolvedValue('Bearer token'),
+            };
+
+            (Container.clientManager.jiraClient as jest.Mock).mockResolvedValue(mockClient);
+            (webview as any).postMessage = jest.fn();
+
+            await (webview as any).refreshIssueHistory();
+
+            const postMessageCalls = (webview as any).postMessage.mock.calls;
+            const historyUpdate = postMessageCalls.find((call: any) => call[0].type === 'historyUpdate');
+            const historyItems = historyUpdate[0].history;
+            const timeSpentItem = historyItems.find((item: any) => item.field === 'timespent');
+            expect(timeSpentItem).toBeDefined();
+            expect(timeSpentItem.fieldDisplayName).toBe('Time Spent');
+        });
+
+        it('should handle worklog fetch errors gracefully', async () => {
+            const mockHistoryResponse = {
+                data: {
+                    fields: {
+                        created: '2025-11-05T10:00:00.000Z',
+                        reporter: {
+                            displayName: 'Reporter',
+                            accountId: 'reporter-1',
+                        },
+                    },
+                    changelog: {
+                        histories: [],
+                    },
+                },
+            };
+
+            const mockGet = jest
+                .fn()
+                .mockResolvedValueOnce(mockHistoryResponse)
+                .mockRejectedValueOnce(new Error('Worklog fetch failed'));
+            const mockTransport = { get: mockGet };
+            const mockClient = {
+                apiVersion: '2',
+                transportFactory: jest.fn(() => mockTransport),
+                authorizationProvider: jest.fn().mockResolvedValue('Bearer token'),
+            };
+
+            (Container.clientManager.jiraClient as jest.Mock).mockResolvedValue(mockClient);
+            (webview as any).postMessage = jest.fn();
+
+            await (webview as any).refreshIssueHistory();
+
+            expect((webview as any).postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: 'historyUpdate',
+                    history: expect.arrayContaining([
+                        expect.objectContaining({
+                            id: '__CREATED__',
+                        }),
+                    ]),
+                }),
+            );
         });
     });
 });

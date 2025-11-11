@@ -1,4 +1,3 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import {
     AutocompleteSuggestion,
     FilterSearchResults,
@@ -6,6 +5,7 @@ import {
     JQLErrors,
 } from '@atlassianlabs/jira-pi-common-models';
 import { flatten } from 'flatten-anything';
+import { ReducerAction } from 'src/ipc/messaging';
 
 import { AuthInfo, DetailedSiteInfo, emptyBasicAuthInfo, emptySiteInfo } from '../../../atlclients/authInfo';
 import { emptyConfig } from '../../../config/model';

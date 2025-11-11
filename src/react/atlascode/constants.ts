@@ -15,3 +15,10 @@ export const FIELD_NAMES = {
     PFX_PATH: 'pfxPath',
     PFX_PASSPHRASE: 'pfxPassphrase',
 } as const;
+
+export const statusCategoryKeys = {
+    toDo: 'new',
+    inProgress: 'indeterminate',
+    done: 'done',
+    undefined: 'undefined',
+} as const;
