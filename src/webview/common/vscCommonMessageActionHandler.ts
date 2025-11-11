@@ -1,4 +1,4 @@
-import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
+import { defaultActionGuard } from 'src/ipc/messaging';
 import { env, Uri } from 'vscode';
 
 import { IntegrationsLinkParams } from '../../atlclients/authInfo';
