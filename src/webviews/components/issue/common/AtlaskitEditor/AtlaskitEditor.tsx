@@ -1,19 +1,52 @@
 import './AtlaskitEditor.css';
 
+import { Transformer } from '@atlaskit/editor-common/types';
 import { ComposableEditor, EditorNextProps } from '@atlaskit/editor-core/composable-editor';
 import { createDefaultPreset } from '@atlaskit/editor-core/preset-default';
 import { usePreset } from '@atlaskit/editor-core/use-preset';
+import { JSONTransformer } from '@atlaskit/editor-json-transformer';
 import { insertBlockPlugin } from '@atlaskit/editor-plugin-insert-block';
 import { listPlugin } from '@atlaskit/editor-plugin-list';
 import { mentionsPlugin } from '@atlaskit/editor-plugin-mentions';
+import { tasksAndDecisionsPlugin } from '@atlaskit/editor-plugin-tasks-and-decisions';
 import { textColorPlugin } from '@atlaskit/editor-plugin-text-color';
 import { toolbarListsIndentationPlugin } from '@atlaskit/editor-plugin-toolbar-lists-indentation';
-import { WikiMarkupTransformer } from '@atlaskit/editor-wikimarkup-transformer';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { Schema } from '@atlaskit/editor-prosemirror/model';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 import React from 'react';
 
+// Custom transformer that wraps JSONTransformer and handles string conversion
+class StringADFTransformer implements Transformer<string> {
+    private jsonTransformer: JSONTransformer;
+
+    constructor(schema: Schema) {
+        this.jsonTransformer = new JSONTransformer(schema);
+    }
+
+    encode(node: any): string {
+        const adfDoc = this.jsonTransformer.encode(node);
+        return JSON.stringify(adfDoc);
+    }
+
+    parse(content: string): any {
+        try {
+            const adfDoc = JSON.parse(content);
+            return this.jsonTransformer.parse(adfDoc);
+        } catch (error) {
+            console.error('Failed to parse ADF content:', error);
+            // Return empty document if parsing fails
+            return this.jsonTransformer.parse({
+                version: 1,
+                type: 'doc',
+                content: [],
+            });
+        }
+    }
+}
+
 interface AtlaskitEditorProps extends Omit<Partial<EditorNextProps>, 'onChange' | 'onSave'> {
-    onSave?: (content: string) => void;
+    onSave?: (content: any) => void; // Can be string or ADF object for v3 API
     onCancel?: () => void;
     defaultValue?: string;
     onContentChange?: (content: string) => void;
@@ -62,10 +95,11 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                     { toolbarShowPlusInsertOnly: true, appearance: appearance, allowExpand: true },
                 ])
                 .add(mentionsPlugin)
+                .add(tasksAndDecisionsPlugin)
         );
     }, []);
     // Helper function to get current document content
-    const getCurrentContent = React.useCallback(async (): Promise<string | null> => {
+    const getCurrentContent = React.useCallback(async (): Promise<any | null> => {
         try {
             if (!editorApi) {
                 return null;
@@ -78,13 +112,11 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                             resolve(null);
                             return;
                         }
-                        // document is in wiki markup format because of transformer passed below
+                        // For v3 API: Return ADF object directly, not stringified
                         resolve(document);
                     },
                     {
-                        transformer: editorApi.core.actions.createTransformer(
-                            (scheme) => new WikiMarkupTransformer(scheme),
-                        ),
+                        transformer: editorApi.core.actions.createTransformer((scheme) => new JSONTransformer(scheme)),
                     },
                 );
             });
@@ -95,7 +127,7 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
     }, [editorApi]);
 
     // Track previous content for change detection
-    const previousContentRef = React.useRef<string>('');
+    const previousContentRef = React.useRef<any>('');
 
     // Polling mechanism to detect content changes (for onChange support)
     React.useEffect(() => {
@@ -105,10 +137,16 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
 
         const checkForChanges = async () => {
             const content = await getCurrentContent();
-            if (content !== null && content !== previousContentRef.current) {
+            const contentString = typeof content === 'object' ? JSON.stringify(content) : content;
+            const previousString =
+                typeof previousContentRef.current === 'object'
+                    ? JSON.stringify(previousContentRef.current)
+                    : previousContentRef.current;
+
+            if (content !== null && contentString !== previousString) {
                 previousContentRef.current = content;
-                onChange?.(content);
-                onContentChange?.(content);
+                onChange?.(contentString);
+                onContentChange?.(contentString);
             }
         };
 
@@ -135,13 +173,12 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                     if (!document) {
                         throw new Error('document is not available');
                     }
-                    // document is in  wiki markup format because of transformer passed below
+                    // For v3 API: Send ADF object directly, not stringified
+                    // The v3 API expects an object, not a JSON string
                     onSave?.(document);
                 },
                 {
-                    transformer: editorApi.core.actions.createTransformer(
-                        (scheme) => new WikiMarkupTransformer(scheme),
-                    ),
+                    transformer: editorApi.core.actions.createTransformer((scheme) => new JSONTransformer(scheme)),
                 },
             );
         } catch (error) {
@@ -170,8 +207,8 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                 preset={preset}
                 defaultValue={defaultValue}
                 contentTransformerProvider={(schema) => {
-                    // here we transforms ADF <-> wiki markup
-                    return new WikiMarkupTransformer(schema);
+                    // Transform between ADF JSON string and ProseMirror nodes
+                    return new StringADFTransformer(schema);
                 }}
                 mentionProvider={mentionProvider}
             />
