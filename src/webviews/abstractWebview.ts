@@ -25,12 +25,17 @@ import { Experiments, Features } from '../util/featureFlags';
 import { ExperimentGateValues, FeatureGateValues } from '../util/features';
 import { UIWebsocket } from '../ws';
 
+export type ContextMenuCommandData = {
+    action: string;
+    data: Record<string, string | boolean>;
+};
 // ReactWebview is an interface that can be used to deal with webview objects when you don't know their generic typings.
 export interface ReactWebview extends Disposable {
     hide(): void;
     createOrShow(): Promise<void>;
     onDidPanelDispose(): Event<void>;
     invalidate(): void;
+    handleContextMenuCommand?({ action, data }: ContextMenuCommandData): void;
 }
 
 // InitializingWebview is an interface that exposes an initialize method that may be called to initialize the veiw object with data.
