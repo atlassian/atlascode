@@ -1,12 +1,11 @@
 import PullRequestIcon from '@atlaskit/icon/core/pull-request';
 import React from 'react';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
-import { ConnectionTimeout } from 'src/util/time';
 
 import { useMessagingApi } from '../../../react/atlascode/messagingApi';
 import { MarkedDown } from '../common/common';
 import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
-import { PullRequestMessage } from '../utils';
+import { ConnectionTimeout, PullRequestMessage } from '../utils';
 
 const PullRequestButton: React.FC<{
     onClick: (event: React.MouseEvent<HTMLButtonElement>) => Promise<void>;

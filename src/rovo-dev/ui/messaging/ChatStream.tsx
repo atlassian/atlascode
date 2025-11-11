@@ -2,7 +2,6 @@ import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
 import { State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
-import { ConnectionTimeout } from 'src/util/time';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { useMessagingApi } from '../../../react/atlascode/messagingApi';
@@ -14,7 +13,7 @@ import { RovoDevLanding } from '../landing-page/RovoDevLanding';
 import { McpConsentChoice, RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import { CodePlanButton } from '../technical-plan/CodePlanButton';
 import { ToolCallItem } from '../tools/ToolCallItem';
-import { DialogMessage, PullRequestMessage, Response, scrollToEnd } from '../utils';
+import { ConnectionTimeout, DialogMessage, PullRequestMessage, Response, scrollToEnd } from '../utils';
 import { ChatStreamMessageRenderer } from './ChatStreamMessageRenderer';
 import { DropdownButton } from './dropdown-button/DropdownButton';
 
