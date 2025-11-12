@@ -76,7 +76,7 @@ export async function createIssue(data: Uri | TodoIssueData | undefined, source?
         });
         return;
     }
-    if (Container.featureFlagClient.checkGate(Features.CreateWorkItemWebviewV2) || true) {
+    if (Container.featureFlagClient.checkGate(Features.CreateWorkItemWebviewV2)) {
         Container.createWorkItemWebviewProvider.createOrShow();
     } else {
         Container.createIssueWebview.createOrShow();
