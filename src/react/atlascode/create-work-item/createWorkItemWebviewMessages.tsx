@@ -5,6 +5,7 @@ export enum CreateWorkItemWebviewResponseType {
     CreateWorkItem = 'createWorkItem',
     UpdateField = 'updateField',
     UpdateSelectOptions = 'updateSelectOptions',
+    Cancel = 'cancel',
 }
 export interface CreateWorkItemViewRequiredField {
     field: FieldUI;
@@ -36,4 +37,7 @@ export type CreateWorkItemWebviewResponse =
               query: string;
               nonce: string;
           };
+      }
+    | {
+          type: CreateWorkItemWebviewResponseType.Cancel;
       };

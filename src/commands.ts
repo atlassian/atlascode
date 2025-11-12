@@ -10,6 +10,7 @@ import {
 } from './analytics';
 import { BasicAuthInfo, DetailedSiteInfo, ProductBitbucket, ProductJira } from './atlclients/authInfo';
 import { showBitbucketDebugInfo } from './bitbucket/bbDebug';
+import { setCommandContext } from './commandContext';
 import { addAtlascodeAsRecommendedExtension } from './commands/addRecommendedExtension';
 import { rerunPipeline } from './commands/bitbucket/rerunPipeline';
 import { runPipeline } from './commands/bitbucket/runPipeline';
@@ -452,6 +453,10 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 }
             }),
             commands.registerCommand(Commands.AddRecommendedExtension, addAtlascodeAsRecommendedExtension),
+            commands.registerCommand(Commands.ExpandCreateWorkItemWebview, () => {
+                Container.createIssueWebview.createOrShow();
+                setCommandContext('atlascode:showCreateWorkItemWebview', false);
+            }),
         );
     }
 }

@@ -184,6 +184,10 @@ const CreateWorkItemWebview: React.FC = () => {
         });
     }, []);
 
+    const handleCancel = React.useCallback(() => {
+        postMessage({ type: CreateWorkItemWebviewResponseType.Cancel });
+    }, [postMessage]);
+
     React.useEffect(() => {
         postMessage({ type: CreateWorkItemWebviewResponseType.WebviewReady });
     }, [postMessage]);
@@ -257,11 +261,11 @@ const CreateWorkItemWebview: React.FC = () => {
                             )}
                         </Field>
                         <div className="form-actions">
-                            <button className="form-button button-secondary" type="button">
+                            <button onClick={handleCancel} className="form-button button-secondary" type="button">
                                 Cancel
                             </button>
                             <button className="form-button" type="submit" disabled={isLoading}>
-                                Create Work Item
+                                Create work item
                             </button>
                         </div>
                     </form>

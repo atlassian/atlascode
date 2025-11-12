@@ -186,6 +186,10 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
                 await this.updateProjectOptions(input, message.payload.nonce);
                 break;
             }
+            case CreateWorkItemWebviewResponseType.Cancel: {
+                setCommandContext('atlascode:showCreateWorkItemWebview', false);
+                break;
+            }
             default: {
                 console.warn(`Unknown message type received in CreateWorkItemWebview: ${message}`);
             }
@@ -217,9 +221,6 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
     }
 
     private async initValues(): Promise<void> {
-        if (!this.webview) {
-            return;
-        }
         if (this._isPending) {
             return;
         }
