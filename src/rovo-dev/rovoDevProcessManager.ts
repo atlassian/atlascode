@@ -4,7 +4,6 @@ import fs from 'fs';
 import net from 'net';
 import packageJson from 'package.json';
 import path from 'path';
-import { RovoDevLogger } from 'src/logger';
 import { downloadAndUnzip } from 'src/rovo-dev/util/downloadFile';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { waitFor } from 'src/rovo-dev/util/waitFor';
@@ -14,6 +13,7 @@ import { DetailedSiteInfo, isBasicAuthInfo, ProductJira } from '../atlclients/au
 import { Container } from '../container';
 import { RovoDevApiClient } from './client';
 import { RovoDevDisabledReason, RovoDevEntitlementCheckFailedDetail } from './rovoDevWebviewProviderMessages';
+import { RovoDevLogger } from './util/rovoDevLogger';
 
 export const MIN_SUPPORTED_ROVODEV_VERSION = packageJson.rovoDev.version;
 

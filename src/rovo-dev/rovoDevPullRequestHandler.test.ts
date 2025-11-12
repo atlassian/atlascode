@@ -3,7 +3,7 @@ import { env } from 'vscode';
 
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 
-jest.mock('src/logger', () => ({
+jest.mock('./util/rovoDevLogger', () => ({
     RovoDevLogger: {
         info: jest.fn(),
         warn: jest.fn(),

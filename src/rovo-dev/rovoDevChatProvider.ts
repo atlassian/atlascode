@@ -1,5 +1,4 @@
 import { Container } from 'src/container';
-import { RovoDevLogger } from 'src/logger';
 import { RovoDevViewResponse } from 'src/rovo-dev/ui/rovoDevViewMessages';
 import { v4 } from 'uuid';
 
@@ -24,6 +23,7 @@ import {
 import { parseCustomCliTagsForMarkdown, statusJsonResponseToMarkdown } from './rovoDevUtils';
 import { TypedWebview } from './rovoDevWebviewProvider';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
+import { RovoDevLogger } from './util/rovoDevLogger';
 
 type StreamingApi = 'chat' | 'replay';
 

@@ -1,18 +1,18 @@
 import { performanceEvent } from '../analytics';
 import { Container } from '../container';
-import { Logger } from '../logger';
 import Perf from '../util/perf';
 import { PerformanceLogger } from './performanceLogger';
+import { RovoDevLogger } from './util/rovoDevLogger';
 
 // Mock dependencies
 jest.mock('../analytics');
 jest.mock('../container');
-jest.mock('../logger');
+jest.mock('./util/rovoDevLogger');
 jest.mock('../util/perf');
 
 const mockPerformanceEvent = performanceEvent as jest.MockedFunction<typeof performanceEvent>;
 const mockContainer = Container as jest.Mocked<typeof Container>;
-const mockLogger = Logger as jest.Mocked<typeof Logger>;
+const mockLogger = RovoDevLogger as jest.Mocked<typeof RovoDevLogger>;
 const mockPerf = Perf as jest.Mocked<typeof Perf>;
 
 describe('PerformanceLogger', () => {

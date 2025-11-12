@@ -39,7 +39,7 @@ jest.mock('../../src/container', () => ({
     },
 }));
 
-jest.mock('../../src/logger', () => ({
+jest.mock('./util/rovoDevLogger', () => ({
     RovoDevLogger: {
         error: jest.fn(),
     },
