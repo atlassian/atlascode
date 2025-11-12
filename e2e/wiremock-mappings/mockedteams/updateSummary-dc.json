@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "PUT",
-    "urlPath": "/rest/api/3/issue/BTS-1",
+    "urlPath": "/rest/api/2/issue/BTS-1",
     "headers": {
       "Content-Type": {
         "contains": "application/json"
@@ -9,8 +9,8 @@
     },
     "bodyPatterns": [
       {
-        "matchesJsonPath": "$.fields.description",
-        "contains": "Add e2e test for this functionality"
+        "matchesJsonPath": "$.fields.summary",
+        "contains": "Check if renaming works"
       }
     ]
   },
@@ -20,4 +20,4 @@
       "Content-Type": "application/json"
     }
   }
-} 
+}
