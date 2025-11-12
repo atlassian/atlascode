@@ -10,7 +10,8 @@ import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { waitFor } from 'src/rovo-dev/util/waitFor';
 import { Disposable, Event, EventEmitter, ExtensionContext, Terminal, Uri, window, workspace } from 'vscode';
 
-import { DetailedSiteInfo } from '../atlclients/authInfo';
+import { DetailedSiteInfo, isBasicAuthInfo, ProductJira } from '../atlclients/authInfo';
+import { ExtensionApi } from './api/extensionApi';
 import { Container } from '../container';
 import { RovoDevApiClient } from './client';
 import { RovoDevDisabledReason, RovoDevEntitlementCheckFailedDetail } from './rovoDevWebviewProviderMessages';
@@ -108,7 +109,58 @@ async function getOrAssignPortForWorkspace(): Promise<number> {
     throw new Error('unable to find an available port.');
 }
 
-function areCredentialsEqual(cred1?: ValidBasicAuthSiteData, cred2?: ValidBasicAuthSiteData) {
+/**
+ * Placeholder implementation for Rovo Dev CLI credential storage
+ */
+async function getCloudCredentials(): Promise<
+    { username: string; key: string; host: string; isValid: boolean; isStaging: boolean } | undefined
+> {
+    try {
+        const sites = Container.siteManager.getSitesAvailable(ProductJira);
+
+        const promises = sites.map(async (site) => {
+            // *.atlassian.net are PROD cloud sites
+            // *.jira-dev.com are Staging cloud sites
+            if (!site.host.endsWith('.atlassian.net') && !site.host.endsWith('.jira-dev.com')) {
+                return undefined;
+            }
+
+            const authInfo = await Container.credentialManager.getAuthInfo(site);
+            if (!isBasicAuthInfo(authInfo)) {
+                return undefined;
+            }
+
+            // verify the credentials work
+            let isValid: boolean;
+            try {
+                await Container.clientManager.jiraClient(site);
+                isValid = true;
+            } catch {
+                isValid = false;
+            }
+
+            return {
+                username: authInfo.username,
+                key: authInfo.password,
+                host: site.host,
+                isValid,
+                isStaging: site.host.endsWith('.jira-dev.com'),
+            };
+        });
+
+        const results = (await Promise.all(promises)).filter((result) => result !== undefined);
+
+        // give priority to staging sites
+        return results.filter((x) => x.isStaging)[0] || results[0];
+    } catch (error) {
+        RovoDevLogger.error(error, 'Error fetching cloud credentials for Rovo Dev');
+        return undefined;
+    }
+}
+
+type CloudCredentials = NonNullable<Awaited<ReturnType<typeof getCloudCredentials>>>;
+
+function areCredentialsEqual(cred1?: CloudCredentials, cred2?: CloudCredentials) {
     if (cred1 === cred2) {
         return true;
     }
@@ -194,6 +246,7 @@ export abstract class RovoDevProcessManager {
     }
 
     private static currentCredentials: ValidBasicAuthSiteData | undefined;
+    private static extensionApi: ExtensionApi = new ExtensionApi();
 
     /** This lock ensures this class is async-safe, preventing repeated invocations
      * of `initializeRovoDev` or `refreshRovoDevCredentials` to launch multiple processes
@@ -207,7 +260,7 @@ export abstract class RovoDevProcessManager {
     }
 
     public static get state(): RovoDevProcessState {
-        if (Container.isBoysenberryMode) {
+        if (this.extensionApi.metadata.isBoysenberry()) {
             const httpPort = parseInt(process.env[RovoDevInfo.envVars.port] || '0');
             return { state: 'Boysenberry', hostname: RovoDevInfo.hostname, httpPort };
         } else {
@@ -435,6 +488,7 @@ class RovoDevTerminalInstance extends Disposable {
     private started = false;
     private httpPort: number = 0;
     private disposables: Disposable[] = [];
+    private extensionApi = new ExtensionApi();
 
     public get stopped() {
         return !this.rovoDevTerminal;
@@ -493,7 +547,7 @@ class RovoDevTerminalInstance extends Disposable {
                         env: {
                             USER: process.env.USER || process.env.USERNAME,
                             USER_EMAIL: credentials.authInfo.username,
-                            ROVODEV_SANDBOX_ID: Container.appInstanceId,
+                            ROVODEV_SANDBOX_ID: this.extensionApi.metadata.appInstanceId(),
                             ...(credentials.authInfo.password ? { USER_API_TOKEN: credentials.authInfo.password } : {}),
                         },
                     });

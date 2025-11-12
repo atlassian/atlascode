@@ -26,11 +26,11 @@ import {
     workspace,
 } from 'vscode';
 
-import { Container } from '../../src/container';
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { Commands } from '../constants';
 import { GitErrorCodes } from '../typings/git';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
+import { ExtensionApi } from './api/extensionApi';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './client';
 import { RovoDevChatContextProvider } from './rovoDevChatContextProvider';
 import { RovoDevChatProvider } from './rovoDevChatProvider';
@@ -70,8 +70,10 @@ const RovoDevDisabledPriority: Record<RovoDevDisabledReason | 'none', number> = 
 };
 
 export class RovoDevWebviewProvider extends Disposable implements WebviewViewProvider {
+    private readonly extensionApi = new ExtensionApi();
+
     private readonly viewType = 'atlascodeRovoDev';
-    private readonly isBoysenberry = Container.isBoysenberryMode;
+    private readonly isBoysenberry = this.extensionApi.metadata.isBoysenberry();
     private readonly appInstanceId: string;
 
     private readonly _prHandler: RovoDevPullRequestHandler | undefined;
@@ -156,7 +158,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._extensionPath = extensionPath;
         this._extensionUri = Uri.file(this._extensionPath);
         this._context = context;
-        this._debugPanelEnabled = Container.config.rovodev.debugPanelEnabled;
+        this._debugPanelEnabled = this.extensionApi.config.isDebugPanelEnabled();
 
         // Register the webview view provider
         this._disposables.push(
@@ -173,10 +175,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             this._prHandler = new RovoDevPullRequestHandler();
             this.appInstanceId = process.env.ROVODEV_SANDBOX_ID as string;
         } else {
-            this.appInstanceId = Container.appInstanceId;
+            this.appInstanceId = this.extensionApi.metadata.appInstanceId();
         }
 
-        const onTelemetryError = Container.isDebugging
+        const onTelemetryError = this.extensionApi.metadata.isDebugging()
             ? (error: Error) => this.processError(error)
             : (error: Error) => RovoDevLogger.error(error);
 
@@ -201,7 +203,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private onConfigurationChanged(e: ConfigurationChangeEvent): void {
         if (configuration.changed(e, 'rovodev.debugPanelEnabled')) {
-            this._debugPanelEnabled = Container.config.rovodev.debugPanelEnabled;
+            this._debugPanelEnabled = this.extensionApi.config.isDebugPanelEnabled();
             this.refreshDebugPanel(true);
         }
         if (configuration.changed(e, 'rovodev.thinkingBlockEnabled')) {
@@ -227,7 +229,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async refreshThinkingBlock() {
-        const thinkingBlockEnabled = Container.config.rovodev.thinkingBlockEnabled;
+        const thinkingBlockEnabled = this.extensionApi.config.isThinkingBlockEnabled();
 
         await this._webView?.postMessage({
             type: RovoDevProviderMessageType.SetThinkingBlockEnabled,
@@ -498,7 +500,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // Listen for active editor changes
         this._disposables.push(
             window.onDidChangeActiveTextEditor((editor) => {
-                if (!Container.isRovoDevEnabled) {
+                if (!this.extensionApi.metadata.isRovoDevEnabled()) {
                     return;
                 }
                 this._chatContextprovider.forceUserFocusUpdate(editor);
@@ -507,7 +509,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // Listen for selection changes
         this._disposables.push(
             window.onDidChangeTextEditorSelection((event) => {
-                if (!Container.isRovoDevEnabled) {
+                if (!this.extensionApi.metadata.isRovoDevEnabled()) {
                     return;
                 }
                 this._chatContextprovider.forceUserFocusUpdate(event.textEditor);
@@ -1047,7 +1049,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this.refreshDebugPanel();
 
         // enable the 'show terminal' button only when in debugging
-        setCommandContext(CommandContext.RovoDevTerminalEnabled, !this.isBoysenberry && Container.isDebugging);
+        setCommandContext(
+            CommandContext.RovoDevTerminalEnabled,
+            !this.isBoysenberry && this.extensionApi.metadata.isDebugging(),
+        );
 
         return this.initializeWithHealthcheck();
     }
