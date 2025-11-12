@@ -11,8 +11,8 @@ export default defineConfig({
             width: 1600,
             height: 800,
         },
-        video: 'retain-on-failure',
-        trace: 'retain-on-failure',
+        video: 'on-first-retry',
+        trace: 'on-first-retry',
     },
     projects: [
         {
