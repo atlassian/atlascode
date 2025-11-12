@@ -56,14 +56,41 @@ label, label span {
 }
 
 .form-button:disabled {
-    background-color: var(--vscode-button-disabledBackground);
-    color: var(--vscode-button-disabledForeground);
+    background-color: var(--vscode-button-disabled-background);
+    color: var(--vscode-button-disabled-foreground);
     cursor: not-allowed;
+}
+
+.form-button:hover:enabled {
+    background-color: var(--vscode-button-hoverBackground);
 }
 
 .button-secondary {
     background-color: var(--vscode-button-secondaryBackground);
     color: var(--vscode-button-secondaryForeground);
+}
+
+.button-secondary:hover:enabled {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+.dropdown-container {
+    background-color: var(--vscode-dropdown-background);
+    border: 1px solid var(--vscode-editorWidget-border);
+}
+
+.dropdown-container button {
+    color: var(--vscode-dropdown-foreground);
+    background: var(--vscode-dropdown-background);
+}
+
+.dropdown-container button:hover {
+    background: var(--vscode-list-hoverBackground);
+}
+
+.dropdown-container button:active {
+    background: var(--vscode-list-activeSelectionBackground);
+    color: var(--vscode-list-activeSelectionForeground);
 }
 
 /* Copied from src/webviews/App.css to style react-select components */

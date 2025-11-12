@@ -70,6 +70,30 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
                     retainContextWhenHidden: true,
                 },
             }),
+            commands.registerCommand('atlascode.jira.createIssue.startWork', async () => {
+                if (!this.webview) {
+                    return;
+                }
+
+                this.webview.postMessage({
+                    type: CreateWorkItemWebviewProviderMessageType.TriggerCreateWorkItem,
+                    payload: {
+                        onCreateAction: 'startWork',
+                    },
+                });
+            }),
+            commands.registerCommand('atlascode.jira.createIssue.generateCode', async () => {
+                if (!this.webview) {
+                    return;
+                }
+
+                this.webview.postMessage({
+                    type: CreateWorkItemWebviewProviderMessageType.TriggerCreateWorkItem,
+                    payload: {
+                        onCreateAction: 'generateCode',
+                    },
+                });
+            }),
         );
     }
 
@@ -116,63 +140,8 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
                 break;
             }
             case CreateWorkItemWebviewResponseType.CreateWorkItem: {
-                if (
-                    !this._selectedSite ||
-                    !this._selectedProject ||
-                    !this._selectedIssueType ||
-                    !message.payload.summary
-                ) {
-                    window.showErrorMessage('Cannot create work item. Missing required information.');
-                    break;
-                }
-                const completionAction = message.payload.onCompletion || 'view';
-                const resp = await window.withProgress(
-                    { location: ProgressLocation.Notification, title: 'Creating work item...', cancellable: true },
-                    async (progress, _token) => {
-                        try {
-                            await configuration.setLastCreateSiteAndProject({
-                                siteId: this._selectedSite!.id,
-                                projectKey: this._selectedProject!.key,
-                            });
-                            const payload = {
-                                summary: message.payload.summary,
-                                project: this._selectedProject!,
-                                issuetype: this._selectedIssueType!,
-                                reporter: { accountId: this._selectedSite!.userId },
-                            };
-
-                            const client = await Container.clientManager.jiraClient(this._selectedSite!);
-                            const response = await client.createIssue({ fields: payload });
-
-                            if (completionAction === 'startWork') {
-                                await startWorkOnIssue({ key: response.key, siteDetails: this._selectedSite! });
-                            } else if (completionAction === 'generateCode' && Container.config.rovodev.enabled) {
-                                const issueUrl = `${this._selectedSite!.baseLinkUrl}/browse/${response.key}`;
-                                await Container.rovodevWebviewProvider.setPromptTextWithFocus(
-                                    'Work on the attached Jira work item',
-                                    {
-                                        contextType: 'jiraWorkItem',
-                                        name: response.key,
-                                        url: issueUrl,
-                                    },
-                                );
-                            } else {
-                                await showIssue({ key: response.key, siteDetails: this._selectedSite! });
-                            }
-                            return true;
-                        } catch (e) {
-                            console.error('Failed to create work item', e);
-                            window.showErrorMessage('Failed to create work item', e);
-                            return false;
-                        }
-                    },
-                );
-
-                if (!resp) {
-                    break;
-                }
-
-                setCommandContext('atlascode:showCreateWorkItemWebview', false);
+                const onCreateAction = message.payload.onCompletion || 'view';
+                await this.createIssue(message, onCreateAction);
                 break;
             }
             case CreateWorkItemWebviewResponseType.UpdateField: {
@@ -463,6 +432,65 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
             console.error('Error updating selected issue type in Create Work Item webview:', err);
         } finally {
             this._pendingState = false;
+        }
+    }
+
+    private async createIssue(
+        message: CreateWorkItemWebviewResponse,
+        onCreateAction: 'view' | 'generateCode' | 'startWork',
+    ): Promise<void> {
+        if (message.type !== CreateWorkItemWebviewResponseType.CreateWorkItem) {
+            return;
+        }
+        if (!this._selectedSite || !this._selectedProject || !this._selectedIssueType || !message.payload.summary) {
+            window.showErrorMessage('Cannot create work item. Missing required information.');
+            return;
+        }
+
+        const resp = await window.withProgress(
+            { location: ProgressLocation.Notification, title: 'Creating work item...', cancellable: true },
+            async (progress, _token) => {
+                try {
+                    await configuration.setLastCreateSiteAndProject({
+                        siteId: this._selectedSite!.id,
+                        projectKey: this._selectedProject!.key,
+                    });
+                    const payload = {
+                        summary: message.payload.summary,
+                        project: this._selectedProject!,
+                        issuetype: this._selectedIssueType!,
+                        reporter: { accountId: this._selectedSite!.userId },
+                    };
+
+                    const client = await Container.clientManager.jiraClient(this._selectedSite!);
+                    const response = await client.createIssue({ fields: payload });
+
+                    if (onCreateAction === 'startWork') {
+                        await startWorkOnIssue({ key: response.key, siteDetails: this._selectedSite! });
+                    } else if (onCreateAction === 'generateCode' && Container.config.rovodev.enabled) {
+                        const issueUrl = `${this._selectedSite!.baseLinkUrl}/browse/${response.key}`;
+                        await Container.rovodevWebviewProvider.setPromptTextWithFocus(
+                            'Work on the attached Jira work item',
+                            {
+                                contextType: 'jiraWorkItem',
+                                name: response.key,
+                                url: issueUrl,
+                            },
+                        );
+                    } else {
+                        await showIssue({ key: response.key, siteDetails: this._selectedSite! });
+                    }
+                    return true;
+                } catch (e) {
+                    console.error('Failed to create work item', e);
+                    window.showErrorMessage('Failed to create work item', e);
+                    return false;
+                }
+            },
+        );
+
+        if (resp) {
+            setCommandContext('atlascode:showCreateWorkItemWebview', false);
         }
     }
 

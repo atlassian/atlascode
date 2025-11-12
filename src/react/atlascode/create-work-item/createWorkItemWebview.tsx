@@ -1,7 +1,7 @@
 import './CreateWorkItem.css';
 
-import Form from '@atlaskit/form';
-import { Field } from '@atlaskit/form';
+import Form, { Field } from '@atlaskit/form';
+import ChevronDownIcon from '@atlaskit/icon/core/chevron-down';
 import Select from '@atlaskit/select';
 import React from 'react';
 import { ConnectionTimeout } from 'src/util/time';
@@ -30,6 +30,7 @@ const emptyState: CreateFormState = {
 const CreateWorkItemWebview: React.FC = () => {
     const [state, dispatch] = React.useReducer(createReducer, emptyState);
     const [isLoading, setIsLoading] = React.useState<boolean>(true);
+    const [pendingMessage, setPendingMessage] = React.useState<CreateWorkItemWebviewResponse | null>(null);
 
     const defaultSite = React.useMemo(
         () =>
@@ -53,37 +54,77 @@ const CreateWorkItemWebview: React.FC = () => {
         [state.availableIssueTypes, state.selectedIssueTypeId],
     );
 
-    const onMessageHandler = React.useCallback((msg: CreateWorkItemWebviewProviderMessage) => {
-        switch (msg.type) {
-            case CreateWorkItemWebviewProviderMessageType.InitFields: {
-                const fields = msg.payload;
-                dispatch({
-                    type: CreateFormActionType.InitFields,
-                    payload: fields,
-                });
-                setIsLoading(false);
-                break;
+    const handleSubmit = React.useCallback(
+        (onCompletion?: 'view' | 'generateCode' | 'startWork') => {
+            const errors: Record<string, string> = {};
+            if (!state.selectedIssueTypeId) {
+                errors['issueType'] = 'EMPTY';
             }
-            case CreateWorkItemWebviewProviderMessageType.UpdatedSelectedSite: {
-                const fields = msg.payload;
-                dispatch({
-                    type: CreateFormActionType.UpdatedSelectedSite,
-                    payload: fields,
-                });
-                break;
+            if (!state.selectedProjectId) {
+                errors['project'] = 'EMPTY';
             }
-            case CreateWorkItemWebviewProviderMessageType.UpdatedSelectedProject: {
-                const fields = msg.payload;
-                dispatch({
-                    type: CreateFormActionType.UpdatedSelectedProject,
-                    payload: fields,
-                });
-                break;
+            if (!state.selectedSiteId) {
+                errors['site'] = 'EMPTY';
             }
-            default:
-                break;
-        }
-    }, []);
+            if (!state.summary || state.summary.trim().length === 0) {
+                errors['summary'] = 'EMPTY';
+            }
+            if (Object.keys(errors).length > 0) {
+                return errors;
+            }
+
+            setPendingMessage({
+                type: CreateWorkItemWebviewResponseType.CreateWorkItem,
+                payload: {
+                    summary: state.summary,
+                    onCompletion: onCompletion || 'view',
+                },
+            });
+
+            return undefined;
+        },
+        [state.selectedIssueTypeId, state.selectedProjectId, state.selectedSiteId, state.summary],
+    );
+
+    const onMessageHandler = React.useCallback(
+        (msg: CreateWorkItemWebviewProviderMessage) => {
+            switch (msg.type) {
+                case CreateWorkItemWebviewProviderMessageType.InitFields: {
+                    const fields = msg.payload;
+                    dispatch({
+                        type: CreateFormActionType.InitFields,
+                        payload: fields,
+                    });
+                    setIsLoading(false);
+                    break;
+                }
+                case CreateWorkItemWebviewProviderMessageType.UpdatedSelectedSite: {
+                    const fields = msg.payload;
+                    dispatch({
+                        type: CreateFormActionType.UpdatedSelectedSite,
+                        payload: fields,
+                    });
+                    break;
+                }
+                case CreateWorkItemWebviewProviderMessageType.UpdatedSelectedProject: {
+                    const fields = msg.payload;
+                    dispatch({
+                        type: CreateFormActionType.UpdatedSelectedProject,
+                        payload: fields,
+                    });
+                    break;
+                }
+                case CreateWorkItemWebviewProviderMessageType.TriggerCreateWorkItem: {
+                    const onCreateAction = msg.payload.onCreateAction;
+                    handleSubmit(onCreateAction);
+                    break;
+                }
+                default:
+                    break;
+            }
+        },
+        [handleSubmit],
+    );
 
     const { postMessage, postMessagePromise } = useMessagingApi<
         CreateWorkItemWebviewResponse,
@@ -91,32 +132,12 @@ const CreateWorkItemWebview: React.FC = () => {
         CreateWorkItemWebviewProviderMessage
     >(onMessageHandler);
 
-    const handleSubmit = React.useCallback(() => {
-        const errors: Record<string, string> = {};
-        if (!state.selectedIssueTypeId) {
-            errors['issueType'] = 'EMPTY';
+    React.useEffect(() => {
+        if (pendingMessage) {
+            postMessage(pendingMessage);
+            setPendingMessage(null);
         }
-        if (!state.selectedProjectId) {
-            errors['project'] = 'EMPTY';
-        }
-        if (!state.selectedSiteId) {
-            errors['site'] = 'EMPTY';
-        }
-        if (!state.summary || state.summary.trim().length === 0) {
-            errors['summary'] = 'EMPTY';
-        }
-        if (Object.keys(errors).length > 0) {
-            return errors;
-        }
-
-        return postMessage({
-            type: CreateWorkItemWebviewResponseType.CreateWorkItem,
-            payload: {
-                summary: state.summary,
-                onCompletion: 'view',
-            },
-        });
-    }, [postMessage, state.selectedIssueTypeId, state.selectedProjectId, state.selectedSiteId, state.summary]);
+    }, [pendingMessage, postMessage]);
 
     const handleChangeField = React.useCallback(
         (newValue: any, type: 'site' | 'project' | 'issueType') => {
@@ -194,7 +215,7 @@ const CreateWorkItemWebview: React.FC = () => {
 
     return (
         <div className="view-container">
-            <Form name="create-work-item-form" onSubmit={handleSubmit}>
+            <Form id="create-work-item-form" name="create-work-item-form" onSubmit={handleSubmit}>
                 {(frmArgs: any) => (
                     <form {...frmArgs.formProps} className="form-container">
                         <Field label={<span>Site</span>} name="site" isRequired>
@@ -264,9 +285,32 @@ const CreateWorkItemWebview: React.FC = () => {
                             <button onClick={handleCancel} className="form-button button-secondary" type="button">
                                 Cancel
                             </button>
-                            <button className="form-button" type="submit" disabled={isLoading}>
-                                Create work item
-                            </button>
+                            <div>
+                                <button className="form-button button-primary" type="submit">
+                                    Create
+                                </button>
+                                <button
+                                    className="form-button button-primary"
+                                    style={{
+                                        borderLeft: '1px solid var(--vscode-button-foreground)',
+                                        padding: '6px',
+                                    }}
+                                    data-vscode-context='{"webviewSection": "createButton", "preventDefaultContextMenuItems": true}'
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.target.dispatchEvent(
+                                            new MouseEvent('contextmenu', {
+                                                bubbles: true,
+                                                clientX: e.clientX,
+                                                clientY: e.clientY,
+                                            }),
+                                        );
+                                        e.stopPropagation();
+                                    }}
+                                >
+                                    <ChevronDownIcon size="small" label="Expand" />
+                                </button>
+                            </div>
                         </div>
                     </form>
                 )}

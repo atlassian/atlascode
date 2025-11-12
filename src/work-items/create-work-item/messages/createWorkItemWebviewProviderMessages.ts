@@ -8,6 +8,7 @@ export enum CreateWorkItemWebviewProviderMessageType {
     UpdatedSelectedProject = 'updatedSelectedProject',
     UpdatedSelectedIssueType = 'updatedSelectedIssueType',
     UpdateProjectOptions = 'updateProjectOptions',
+    TriggerCreateWorkItem = 'triggerCreateWorkItem',
 }
 // TODO implement required fields properly
 export interface CreateWorkItemRequiredField {
@@ -61,4 +62,10 @@ export type CreateWorkItemWebviewProviderMessage =
               hasMoreProjects: boolean;
           };
           nonce: string;
+      }
+    | {
+          type: CreateWorkItemWebviewProviderMessageType.TriggerCreateWorkItem;
+          payload: {
+              onCreateAction: 'view' | 'startWork' | 'generateCode';
+          };
       };

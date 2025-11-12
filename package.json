@@ -200,6 +200,16 @@
                 "category": "Jira"
             },
             {
+                "command": "atlascode.jira.createIssue.startWork",
+                "title": "Create and start work",
+                "category": "Jira"
+            },
+            {
+                "command": "atlascode.jira.createIssue.generateCode",
+                "title": "Create and send to Rovo Dev",
+                "category": "Jira"
+            },
+            {
                 "command": "atlascode.jira.searchIssues",
                 "title": "Search Jira Issue Results",
                 "icon": {
@@ -1033,6 +1043,16 @@
                 {
                     "command": "atlascode.showExploreSettings",
                     "when": "false"
+                }
+            ],
+            "webview/context": [
+                {
+                    "command": "atlascode.jira.createIssue.startWork",
+                    "when": "webviewId == 'atlascode.views.jira.createWorkItemWebview' && webviewSection == 'createButton'"
+                },
+                {
+                    "command": "atlascode.jira.createIssue.generateCode",
+                    "when": "atlascode:rovoDevEnabled && webviewId == 'atlascode.views.jira.createWorkItemWebview' && webviewSection == 'createButton'"
                 }
             ]
         },
