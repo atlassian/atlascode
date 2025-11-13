@@ -1,6 +1,6 @@
-import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import React, { useCallback, useMemo, useReducer } from 'react';
+import { defaultActionGuard, defaultStateGuard, ReducerAction } from 'src/ipc/messaging';
 import { v4 } from 'uuid';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';

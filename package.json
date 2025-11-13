@@ -46,7 +46,7 @@
     ],
     "main": "./build/extension/extension",
     "rovoDev": {
-        "version": "0.12.14"
+        "version": "0.12.16"
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
@@ -1043,6 +1043,26 @@
                 {
                     "command": "atlascode.showExploreSettings",
                     "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.searchIssues",
+                    "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
+                },
+                {
+                    "command": "atlascode.jira.createIssue",
+                    "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
+                },
+                {
+                    "command": "atlascode.jira.refreshAssignedWorkItemsExplorer",
+                    "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
+                },
+                {
+                    "command": "atlascode.jira.createNewJql",
+                    "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
+                },
+                {
+                    "command": "atlascode.jira.refreshCustomJqlExplorer",
+                    "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
                 }
             ],
             "webview/context": [
@@ -1540,6 +1560,7 @@
         "@atlaskit/editor-plugin-insert-block": "^7.0.1",
         "@atlaskit/editor-plugin-list": "^8.0.0",
         "@atlaskit/editor-plugin-mentions": "^8.0.0",
+        "@atlaskit/editor-plugin-tasks-and-decisions": "^9.0.0",
         "@atlaskit/editor-plugin-text-color": "^6.0.1",
         "@atlaskit/editor-plugin-toolbar-lists-indentation": "^7.0.1",
         "@atlaskit/editor-wikimarkup-transformer": "^11.16.4",
@@ -1573,11 +1594,10 @@
         "@atlaskit/tooltip": "^20.4.3",
         "@atlaskit/width-detector": "^5.0.4",
         "@atlassianlabs/guipi-core-components": "^3.2.0",
-        "@atlassianlabs/guipi-core-controller": "^3.2.0",
         "@atlassianlabs/guipi-jira-components": "^3.2.0",
         "@atlassianlabs/jira-metaui-client": "^2.0.0",
         "@atlassianlabs/jira-metaui-transformer": "^2.0.0",
-        "@atlassianlabs/jira-pi-client": "^2.0.0",
+        "@atlassianlabs/jira-pi-client": "^2.0.1",
         "@atlassianlabs/jira-pi-common-models": "^2.0.0",
         "@atlassianlabs/jira-pi-meta-models": "^2.0.0",
         "@atlassianlabs/pi-client-common": "^2.0.0",

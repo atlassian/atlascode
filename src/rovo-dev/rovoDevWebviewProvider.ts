@@ -4,8 +4,8 @@ import path from 'path';
 import { CommandContext, setCommandContext } from 'src/commandContext';
 import { showIssueForURL } from 'src/commands/jira/showIssue';
 import { configuration } from 'src/config/configuration';
-import { getFsPromise } from 'src/util/fsPromises';
-import { safeWaitFor } from 'src/util/waitFor';
+import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
+import { safeWaitFor } from 'src/rovo-dev/util/waitFor';
 import { v4 } from 'uuid';
 import {
     CancellationToken,
@@ -27,15 +27,8 @@ import {
 } from 'vscode';
 
 import { Container } from '../../src/container';
-import { RovoDevLogger } from '../../src/logger';
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { Commands } from '../constants';
-import {
-    ModifiedFile,
-    RovoDevViewResponse,
-    RovoDevViewResponseType,
-} from '../react/atlascode/rovo-dev/rovoDevViewMessages';
-import { modifyFileTitleMap } from '../react/atlascode/rovo-dev/utils';
 import { GitErrorCodes } from '../typings/git';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './client';
@@ -55,6 +48,9 @@ import {
     RovoDevProviderMessage,
     RovoDevProviderMessageType,
 } from './rovoDevWebviewProviderMessages';
+import { ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './ui/rovoDevViewMessages';
+import { modifyFileTitleMap } from './ui/utils';
+import { RovoDevLogger } from './util/rovoDevLogger';
 
 export interface TypedWebview<MessageOut, MessageIn> extends Webview {
     readonly onDidReceiveMessage: Event<MessageIn>;

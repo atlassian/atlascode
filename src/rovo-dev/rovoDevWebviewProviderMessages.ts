@@ -1,9 +1,7 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
-import { ModifiedFile } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
-import { DialogMessage } from '../react/atlascode/rovo-dev/utils';
+import { ReducerAction } from '../ipc/messaging';
 import {
     EntitlementCheckRovoDevHealthcheckResponse,
     RovoDevRetryPromptResponse,
@@ -12,6 +10,8 @@ import {
     RovoDevToolReturnResponse,
 } from './client';
 import { DisabledState, RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
+import { ModifiedFile } from './ui/rovoDevViewMessages';
+import { DialogMessage } from './ui/utils';
 
 export const enum RovoDevProviderMessageType {
     RovoDevDisabled = 'rovoDevDisabled',

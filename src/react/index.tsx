@@ -43,15 +43,13 @@ const routes: Record<string, any> = {
     createPullRequestPageV2: React.lazy(
         () => import(/* webpackChunkName: "createPullRequestPageV2" */ './atlascode/pullrequest/CreatePullRequestPage'),
     ),
-    atlascodeRovoDev: React.lazy(
-        () => import(/* webpackChunkName: "atlascodeRovoDev" */ './atlascode/rovo-dev/rovoDevView'),
-    ),
     createWorkItemWebview: React.lazy(
         () =>
             import(
                 /* webpackChunkName: "createWorkItemWebview" */ './atlascode/create-work-item/createWorkItemWebview'
             ),
     ),
+    atlascodeRovoDev: React.lazy(() => import(/* webpackChunkName: "atlascodeRovoDev" */ '../rovo-dev/ui/rovoDevView')),
 };
 
 const view = document.getElementById('reactView') as HTMLElement;

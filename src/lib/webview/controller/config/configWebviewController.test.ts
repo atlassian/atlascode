@@ -19,7 +19,7 @@ import { ConfigActionApi } from './configActionApi';
 import { ConfigWebviewController, id } from './configWebviewController';
 
 jest.mock('uuid');
-jest.mock('@atlassianlabs/guipi-core-controller', () => ({
+jest.mock('src/ipc/messaging', () => ({
     defaultActionGuard: jest.fn(),
 }));
 jest.mock('vscode', () => {
@@ -544,7 +544,7 @@ describe('ConfigWebviewController', () => {
         });
 
         test('should call defaultActionGuard for unknown action types', async () => {
-            const { defaultActionGuard } = require('@atlassianlabs/guipi-core-controller');
+            const { defaultActionGuard } = require('src/ipc/messaging');
             const unknownAction = { type: 'unknown' };
 
             await controller.onMessageReceived(unknownAction as any);

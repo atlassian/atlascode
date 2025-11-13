@@ -77,7 +77,7 @@ export class RovoDevJiraItemsProvider extends Disposable {
 
         // Filter to only include MinimalIssue items (not IssueLinkIssue)
         let assignedIssuesForSite = this.fetchJiraIssuesFromCache(this.jiraSiteHostname);
-        if (assignedIssuesForSite) {
+        if (assignedIssuesForSite.length === 0) {
             assignedIssuesForSite = await this.fetchJiraIssuesFromAPI(this.jiraSiteHostname);
         }
 

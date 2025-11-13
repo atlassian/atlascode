@@ -1,5 +1,4 @@
 import { Container } from 'src/container';
-import { Logger } from 'src/logger';
 
 import {
     rovoDevAiResultViewedEvent,
@@ -15,6 +14,7 @@ import {
     rovoDevTechnicalPlanningShownEvent,
 } from '../../src/analytics';
 import { PerformanceLogger } from './performanceLogger';
+import { RovoDevLogger } from './util/rovoDevLogger';
 
 const rovoDevTelemetryEvents = {
     rovoDevFileChangedActionEvent,
@@ -110,7 +110,7 @@ export class RovoDevTelemetryProvider {
             );
             ret.then((evt) => Container.analyticsClient.sendTrackEvent(evt));
 
-            Logger.debug(`Event fired: ${funcName}(${params})`);
+            RovoDevLogger.debug(`Event fired: ${funcName}(${params})`);
         }
     }
 }

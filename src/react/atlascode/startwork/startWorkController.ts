@@ -1,6 +1,6 @@
-import { defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { Transition } from '@atlassianlabs/jira-pi-common-models';
 import React, { useCallback, useMemo, useReducer } from 'react';
+import { defaultStateGuard, ReducerAction } from 'src/ipc/messaging';
 
 import { WorkspaceRepo } from '../../../bitbucket/model';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';

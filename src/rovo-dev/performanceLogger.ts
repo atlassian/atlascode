@@ -1,7 +1,7 @@
 import { performanceEvent, RovoDevEnv } from '../../src/analytics';
 import { Container } from '../../src/container';
-import { Logger } from '../../src/logger';
 import Perf from '../util/perf';
+import { RovoDevLogger } from './util/rovoDevLogger';
 
 export class PerformanceLogger {
     private currentSessionId: string = '';
@@ -32,7 +32,7 @@ export class PerformanceLogger {
             rovoDevPromptId: promptId,
         });
 
-        Logger.debug(`Event fired: rovodev.response.timeToFirstByte ${measure} ms`);
+        RovoDevLogger.debug(`Event fired: rovodev.response.timeToFirstByte ${measure} ms`);
         await Container.analyticsClient.sendTrackEvent(evt);
     }
 
@@ -45,7 +45,7 @@ export class PerformanceLogger {
             rovoDevPromptId: promptId,
         });
 
-        Logger.debug(`Event fired: rovodev.response.timeToFirstMessage ${measure} ms`);
+        RovoDevLogger.debug(`Event fired: rovodev.response.timeToFirstMessage ${measure} ms`);
         await Container.analyticsClient.sendTrackEvent(evt);
     }
 
@@ -58,7 +58,7 @@ export class PerformanceLogger {
             rovoDevPromptId: promptId,
         });
 
-        Logger.debug(`Event fired: rovodev.response.timeToTechPlan ${measure} ms`);
+        RovoDevLogger.debug(`Event fired: rovodev.response.timeToTechPlan ${measure} ms`);
         await Container.analyticsClient.sendTrackEvent(evt);
     }
 
@@ -73,7 +73,7 @@ export class PerformanceLogger {
 
         Perf.clear(promptId);
 
-        Logger.debug(`Event fired: rovodev.response.timeToLastMessage ${measure} ms`);
+        RovoDevLogger.debug(`Event fired: rovodev.response.timeToLastMessage ${measure} ms`);
         await Container.analyticsClient.sendTrackEvent(evt);
     }
 }

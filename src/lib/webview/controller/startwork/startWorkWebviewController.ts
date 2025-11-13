@@ -1,4 +1,4 @@
-import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
+import { defaultActionGuard } from 'src/ipc/messaging';
 import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } from 'src/lib/ipc/models/config';
 import { Logger } from 'src/logger';
 import * as vscode from 'vscode';

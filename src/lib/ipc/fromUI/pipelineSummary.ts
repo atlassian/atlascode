@@ -1,4 +1,4 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
+import { ReducerAction } from 'src/ipc/messaging';
 
 import { PipelineLogReference } from '../../../pipelines/model';
 import { CommonAction } from './common';
