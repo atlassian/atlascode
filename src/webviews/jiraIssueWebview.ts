@@ -36,6 +36,7 @@ import {
     isCreateWorklog,
     isDeleteByIDAction,
     isDeleteWorklog,
+    isFetchEmoji,
     isGetImage,
     isHandleEditorFocus,
     isIssueComment,
@@ -1478,6 +1479,36 @@ export class JiraIssueWebview
                                 type: 'getImageDone',
                                 imgData: '',
                                 nonce: msg.nonce,
+                            });
+                        }
+                    }
+                    break;
+                }
+                case 'fetchEmoji': {
+                    if (isFetchEmoji(msg)) {
+                        handled = true;
+                        try {
+                            const url = msg.url;
+                            const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+                            const response = await client.transportFactory().get(url, {
+                                method: 'GET',
+                                headers: {
+                                    Authorization: await client.authorizationProvider('GET', url),
+                                    'Content-Type': 'application/json',
+                                },
+                            });
+                            this.postMessage({
+                                type: 'fetchEmojiDone',
+                                data: response.data,
+                                nonce: msg.nonce,
+                            });
+                        } catch (e) {
+                            Logger.error(e, `Error fetching emoji: ${msg.url}`);
+                            this.postMessage({
+                                type: 'fetchEmojiDone',
+                                data: null,
+                                nonce: msg.nonce,
+                                error: e instanceof Error ? e.message : 'Unknown error',
                             });
                         }
                     }

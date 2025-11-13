@@ -1522,6 +1522,7 @@
         "@atlaskit/editor-plugin-text-color": "^6.0.1",
         "@atlaskit/editor-plugin-toolbar-lists-indentation": "^7.0.1",
         "@atlaskit/editor-wikimarkup-transformer": "^11.16.4",
+        "@atlaskit/emoji": "^69.6.5",
         "@atlaskit/feature-gate-js-client": "^5.5.5",
         "@atlaskit/form": "^12.2.1",
         "@atlaskit/icon": "^27.12.0",

@@ -201,6 +201,11 @@ export interface GetImageAction extends Action {
     url: string;
 }
 
+export interface FetchEmojiAction extends Action {
+    action: 'fetchEmoji';
+    url: string;
+}
+
 export interface FetchIssueHistoryAction extends Action {
     action: 'fetchIssueHistory';
     issueKey: string;
@@ -234,6 +239,10 @@ export interface HandleEditorFocusAction extends Action {
 
 export function isGetImage(a: Action): a is GetImageAction {
     return (<GetImageAction>a).action === 'getImage';
+}
+
+export function isFetchEmoji(a: Action): a is FetchEmojiAction {
+    return (<FetchEmojiAction>a).action === 'fetchEmoji';
 }
 
 export function isTransitionIssue(a: Action): a is TransitionIssueAction {

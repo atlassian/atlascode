@@ -727,6 +727,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                     onSave={this.handleUpdateComment}
                                     fetchUsers={this.fetchAndTransformUsers}
                                     fetchImage={(img) => this.fetchImage(img)}
+                                    fetchEmoji={(url) => this.fetchEmoji(url)}
                                     onDelete={this.handleDeleteComment}
                                     isServiceDeskProject={
                                         this.state.fieldValues['project'] &&

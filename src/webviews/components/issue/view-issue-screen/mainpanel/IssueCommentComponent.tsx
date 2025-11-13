@@ -1,5 +1,10 @@
 import Avatar from '@atlaskit/avatar';
 import Comment, { CommentAction, CommentAuthor, CommentEdited } from '@atlaskit/comment';
+import { EmojiPicker } from '@atlaskit/emoji/picker';
+import { EmojiResource, EmojiResourceConfig } from '@atlaskit/emoji/resource';
+import EmojiAddIcon from '@atlaskit/icon/core/emoji-add';
+import ThumbsUpIcon from '@atlaskit/icon/core/thumbs-up';
+import Popup from '@atlaskit/popup';
 import TextField from '@atlaskit/textfield';
 import {
     Comment as JiraComment,
@@ -10,6 +15,7 @@ import {
 import { Box } from '@mui/material';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import React from 'react';
+import { IntlProvider } from 'react-intl-next';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
 import { AdfAwareContent } from '../../../AdfAwareContent';
@@ -29,6 +35,7 @@ export type IssueCommentComponentProps = {
     onCreate: (commentBody: any, restriction?: CommentVisibility) => void; // Can be string or ADF object
     fetchUsers: (input: string) => Promise<any[]>;
     fetchImage: (url: string) => Promise<string>;
+    fetchEmoji: (url: string) => Promise<any>;
     onDelete: (commentId: string) => void;
     commentText: string;
     onCommentTextChange: (text: string) => void;
@@ -43,28 +50,116 @@ const CommentComponent: React.FC<{
     comment: JiraComment;
     onSave: (t: any, commentId?: string, restriction?: CommentVisibility) => void; // Can be string or ADF object
     fetchImage: (url: string) => Promise<string>;
+    fetchEmoji: (url: string) => Promise<any>;
     onDelete: (commentId: string) => void;
     fetchUsers: (input: string) => Promise<any[]>;
     isServiceDeskProject?: boolean;
     isAtlaskitEditorEnabled?: boolean;
     mentionProvider: AtlascodeMentionProvider;
     handleEditorFocus: (isFocused: boolean) => void;
+    currentUserId: string;
 }> = ({
     siteDetails,
     comment,
     onSave,
     fetchImage,
+    fetchEmoji,
     onDelete,
     fetchUsers,
     isServiceDeskProject,
     isAtlaskitEditorEnabled,
     mentionProvider,
     handleEditorFocus,
+    currentUserId,
 }) => {
     const { openEditor, closeEditor, isEditorActive } = useEditorState();
     const editorId = `edit-comment-${comment.id}` as const;
     const [localIsEditing, setLocalIsEditing] = React.useState(false);
     const isEditing = isAtlaskitEditorEnabled ? isEditorActive(editorId) : localIsEditing;
+
+    const [thumbsUpCount, setThumbsUpCount] = React.useState(0);
+    const [hasUserLiked, setHasUserLiked] = React.useState(false);
+
+    const [reactions, setReactions] = React.useState<
+        Map<string, { emoji: any; count: number; hasUserReacted: boolean }>
+    >(new Map());
+
+    const [isEmojiPickerOpen, setIsEmojiPickerOpen] = React.useState(false);
+
+    const originalFetchRef = React.useRef<typeof window.fetch | null>(null);
+
+    React.useEffect(() => {
+        if (isEmojiPickerOpen && !originalFetchRef.current) {
+            originalFetchRef.current = window.fetch;
+
+            const proxyFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+                let url: string;
+                if (typeof input === 'string') {
+                    url = input;
+                } else if (input instanceof URL) {
+                    url = input.toString();
+                } else if (input instanceof Request) {
+                    url = input.url;
+                } else {
+                    url = String(input);
+                }
+
+                if (url.includes('api-private.atlassian.com/emoji')) {
+                    try {
+                        const data = await fetchEmoji(url);
+                        return new Response(JSON.stringify(data), {
+                            status: 200,
+                            statusText: 'OK',
+                            headers: { 'Content-Type': 'application/json' },
+                        });
+                    } catch (error) {
+                        return new Response(
+                            JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+                            {
+                                status: 500,
+                                statusText: 'Internal Server Error',
+                                headers: { 'Content-Type': 'application/json' },
+                            },
+                        );
+                    }
+                }
+
+                return originalFetchRef.current!(input, init);
+            };
+
+            window.fetch = proxyFetch as typeof fetch;
+        } else if (!isEmojiPickerOpen && originalFetchRef.current) {
+            window.fetch = originalFetchRef.current;
+            originalFetchRef.current = null;
+        }
+
+        return () => {
+            if (originalFetchRef.current) {
+                window.fetch = originalFetchRef.current;
+                originalFetchRef.current = null;
+            }
+        };
+    }, [isEmojiPickerOpen, fetchEmoji]);
+
+    const emojiProvider = React.useMemo(() => {
+        const config: EmojiResourceConfig = {
+            providers: [
+                {
+                    url: 'https://api-private.atlassian.com/emoji/standard',
+                },
+                ...(siteDetails.isCloud && siteDetails.id
+                    ? [
+                          {
+                              url: `https://api-private.atlassian.com/emoji/${siteDetails.id}/site`,
+                          },
+                      ]
+                    : []),
+            ],
+            currentUser: currentUserId ? { id: currentUserId } : undefined,
+        };
+
+        return Promise.resolve(new EmojiResource(config));
+    }, [siteDetails.isCloud, siteDetails.id, currentUserId]);
 
     // Define editor handlers based on feature flag
     const openEditorHandler = React.useMemo(
@@ -99,13 +194,132 @@ const CommentComponent: React.FC<{
         isAtlaskitEditorEnabled,
     );
 
-    const baseActions: JSX.Element[] = [<CommentAction onClick={openEditorHandler}>Edit</CommentAction>];
+    const handleThumbsUpClick = React.useCallback(() => {
+        if (hasUserLiked) {
+            setThumbsUpCount((prev) => Math.max(0, prev - 1));
+            setHasUserLiked(false);
+        } else {
+            setThumbsUpCount((prev) => prev + 1);
+            setHasUserLiked(true);
+        }
+    }, [hasUserLiked]);
+
+    const handleEmojiSelection = React.useCallback((emoji: any) => {
+        const emojiKey = emoji.id || emoji.shortName;
+        setReactions((prevReactions) => {
+            const newReactions = new Map(prevReactions);
+            const existing = newReactions.get(emojiKey);
+
+            if (existing) {
+                if (existing.hasUserReacted) {
+                    const newCount = existing.count - 1;
+                    if (newCount === 0) {
+                        newReactions.delete(emojiKey);
+                    } else {
+                        newReactions.set(emojiKey, { ...existing, count: newCount, hasUserReacted: false });
+                    }
+                } else {
+                    newReactions.set(emojiKey, { ...existing, count: existing.count + 1, hasUserReacted: true });
+                }
+            } else {
+                newReactions.set(emojiKey, { emoji, count: 1, hasUserReacted: true });
+            }
+
+            return newReactions;
+        });
+        setIsEmojiPickerOpen(false);
+    }, []);
+
+    const handleReactionClick = React.useCallback((emojiKey: string) => {
+        setReactions((prevReactions) => {
+            const newReactions = new Map(prevReactions);
+            const existing = newReactions.get(emojiKey);
+
+            if (existing) {
+                if (existing.hasUserReacted) {
+                    const newCount = existing.count - 1;
+                    if (newCount === 0) {
+                        newReactions.delete(emojiKey);
+                    } else {
+                        newReactions.set(emojiKey, { ...existing, count: newCount, hasUserReacted: false });
+                    }
+                } else {
+                    newReactions.set(emojiKey, { ...existing, count: existing.count + 1, hasUserReacted: true });
+                }
+            }
+
+            return newReactions;
+        });
+    }, []);
+
+    const thumbsUpAction = (
+        <CommentAction
+            key="thumbs-up"
+            onClick={handleThumbsUpClick}
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                color: hasUserLiked ? 'var(--vscode-textLink-foreground)' : undefined,
+            }}
+        >
+            <ThumbsUpIcon label="Thumbs up" size="small" />
+            {thumbsUpCount > 0 && <span>{thumbsUpCount}</span>}
+        </CommentAction>
+    );
+
+    const reactionActions = Array.from(reactions.entries()).map(([emojiKey, { emoji, count, hasUserReacted }]) => (
+        <CommentAction
+            key={`reaction-${emojiKey}`}
+            onClick={() => handleReactionClick(emojiKey)}
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                color: hasUserReacted ? 'var(--vscode-textLink-foreground)' : undefined,
+            }}
+        >
+            <span style={{ fontSize: '16px' }}>{emoji.fallback || emoji.shortName}</span>
+            <span>{count}</span>
+        </CommentAction>
+    ));
+
+    const baseActions: JSX.Element[] = [
+        thumbsUpAction,
+        ...reactionActions,
+        <Popup
+            key="add-reaction"
+            isOpen={isEmojiPickerOpen}
+            onClose={() => setIsEmojiPickerOpen(false)}
+            placement="bottom-start"
+            content={() => (
+                <IntlProvider locale="en">
+                    <div style={{ zIndex: 1000 }}>
+                        <EmojiPicker emojiProvider={emojiProvider} onSelection={handleEmojiSelection} />
+                    </div>
+                </IntlProvider>
+            )}
+            trigger={(triggerProps) => (
+                <CommentAction
+                    {...triggerProps}
+                    onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
+                    style={{ display: 'flex', alignItems: 'center' }}
+                >
+                    <EmojiAddIcon label="Add reaction" size="small" />
+                </CommentAction>
+            )}
+        />,
+        <CommentAction key="edit" onClick={openEditorHandler}>
+            Edit
+        </CommentAction>,
+    ];
 
     const actions =
         comment.author.accountId === siteDetails.userId
             ? [
                   ...baseActions,
                   <CommentAction
+                      key="delete"
                       onClick={() => {
                           onDelete(comment.id);
                           setIsSaving(true);
@@ -361,6 +575,7 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
     onSave,
     fetchUsers,
     fetchImage,
+    fetchEmoji,
     onDelete,
     commentText,
     onCommentTextChange,
@@ -397,12 +612,14 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
                         comment={comment}
                         onSave={onSave}
                         fetchImage={fetchImage}
+                        fetchEmoji={fetchEmoji}
                         onDelete={onDelete}
                         fetchUsers={fetchUsers}
                         isServiceDeskProject={isServiceDeskProject}
                         isAtlaskitEditorEnabled={isAtlaskitEditorEnabled}
                         mentionProvider={mentionProvider}
                         handleEditorFocus={handleEditorFocus}
+                        currentUserId={currentUser.accountId}
                     />
                 ))}
         </Box>

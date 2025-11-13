@@ -144,4 +144,22 @@ export abstract class WebviewComponent<A extends Action, R, P, S> extends React.
             )
         ).imgData;
     }
+
+    protected async fetchEmoji(url: string): Promise<any> {
+        const nonce = v4();
+        const result = await this.postMessageWithEventPromise(
+            {
+                action: 'fetchEmoji',
+                nonce: nonce,
+                url: url,
+            },
+            'fetchEmojiDone',
+            ConnectionTimeout,
+            nonce,
+        );
+        if (result.error) {
+            throw new Error(result.error);
+        }
+        return result.data;
+    }
 }
