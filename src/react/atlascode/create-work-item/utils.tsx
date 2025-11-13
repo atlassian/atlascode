@@ -1,5 +1,7 @@
-import { IssueType, Project } from '@atlassianlabs/jira-pi-common-models';
-import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+import {
+    CreateWorkItemWebviewProviderMessage,
+    CreateWorkItemWebviewProviderMessageType,
+} from 'src/work-items/create-work-item/messages/createWorkItemWebviewProviderMessages';
 
 import { CreateWorkItemViewRequiredField } from './createWorkItemWebviewMessages';
 
@@ -30,49 +32,17 @@ export enum CreateFormActionType {
     SetSelectedField = 'setSelectedField',
 }
 
+/**
+ * Actions for the create work item form reducer.
+ * Implements CreateWorkItemWebviewProviderMessage for some actions and
+ * adds additional actions for setting summary and selected fields
+ */
 type CreateFormAction =
-    | {
-          type: CreateFormActionType.InitFields;
-          payload: {
-              availableSites: DetailedSiteInfo[];
-              availableProjects: Project[];
-              hasMoreProjects: boolean;
-              availableIssueTypes: IssueType[];
-              selectedSiteId?: string;
-              selectedProjectId?: string;
-              selectedIssueTypeId?: string;
-              requiredFields: CreateWorkItemViewRequiredField[];
-          };
-      }
+    | CreateWorkItemWebviewProviderMessage
     | {
           type: CreateFormActionType.SetSummary;
           payload: {
               summary: string;
-          };
-      }
-    | {
-          type: CreateFormActionType.UpdatedSelectedSite;
-          payload: {
-              availableProjects: Project[];
-              hasMoreProjects: boolean;
-              availableIssueTypes: IssueType[];
-              selectedProjectId?: string;
-              selectedIssueTypeId?: string;
-              requiredFields: CreateWorkItemViewRequiredField[];
-          };
-      }
-    | {
-          type: CreateFormActionType.UpdatedSelectedProject;
-          payload: {
-              availableIssueTypes: IssueType[];
-              selectedIssueTypeId?: string;
-              requiredFields: CreateWorkItemViewRequiredField[];
-          };
-      }
-    | {
-          type: CreateFormActionType.UpdatedSelectedIssueType;
-          payload: {
-              requiredFields: CreateWorkItemViewRequiredField[];
           };
       }
     | {
@@ -85,7 +55,7 @@ type CreateFormAction =
 
 export function createReducer(state: CreateFormState, action: CreateFormAction): CreateFormState {
     switch (action.type) {
-        case CreateFormActionType.InitFields: {
+        case CreateWorkItemWebviewProviderMessageType.InitFields: {
             return {
                 ...state,
                 availableSites: action.payload.availableSites.map((site) => ({
@@ -116,7 +86,7 @@ export function createReducer(state: CreateFormState, action: CreateFormAction):
                 summary: action.payload.summary,
             };
         }
-        case CreateFormActionType.UpdatedSelectedSite: {
+        case CreateWorkItemWebviewProviderMessageType.UpdatedSelectedSite: {
             return {
                 ...state,
                 availableProjects: action.payload.availableProjects.map((project) => ({
@@ -135,7 +105,7 @@ export function createReducer(state: CreateFormState, action: CreateFormAction):
                 requiredFieldsForIssueType: action.payload.requiredFields,
             };
         }
-        case CreateFormActionType.UpdatedSelectedProject: {
+        case CreateWorkItemWebviewProviderMessageType.UpdatedSelectedProject: {
             return {
                 ...state,
                 availableIssueTypes: action.payload.availableIssueTypes.map((issueType) => ({
@@ -147,7 +117,7 @@ export function createReducer(state: CreateFormState, action: CreateFormAction):
                 requiredFieldsForIssueType: action.payload.requiredFields,
             };
         }
-        case CreateFormActionType.UpdatedSelectedIssueType: {
+        case CreateWorkItemWebviewProviderMessageType.UpdatedSelectedIssueType: {
             return {
                 ...state,
                 requiredFieldsForIssueType: action.payload.requiredFields,

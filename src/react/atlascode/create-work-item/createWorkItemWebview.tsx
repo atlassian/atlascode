@@ -90,30 +90,16 @@ const CreateWorkItemWebview: React.FC = () => {
         (msg: CreateWorkItemWebviewProviderMessage) => {
             switch (msg.type) {
                 case CreateWorkItemWebviewProviderMessageType.InitFields: {
-                    const fields = msg.payload;
-                    dispatch({
-                        type: CreateFormActionType.InitFields,
-                        payload: fields,
-                    });
+                    dispatch(msg);
                     setIsLoading(false);
                     break;
                 }
-                case CreateWorkItemWebviewProviderMessageType.UpdatedSelectedSite: {
-                    const fields = msg.payload;
-                    dispatch({
-                        type: CreateFormActionType.UpdatedSelectedSite,
-                        payload: fields,
-                    });
-                    break;
-                }
+                case CreateWorkItemWebviewProviderMessageType.UpdatedSelectedSite:
                 case CreateWorkItemWebviewProviderMessageType.UpdatedSelectedProject: {
-                    const fields = msg.payload;
-                    dispatch({
-                        type: CreateFormActionType.UpdatedSelectedProject,
-                        payload: fields,
-                    });
+                    dispatch(msg);
                     break;
                 }
+
                 case CreateWorkItemWebviewProviderMessageType.TriggerCreateWorkItem: {
                     const onCreateAction = msg.payload.onCreateAction;
                     handleSubmit(onCreateAction);
