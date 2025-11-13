@@ -242,6 +242,18 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         );
     } else {
         vscodeContext.subscriptions.push(
+            commands.registerCommand(
+                'atlascode.jira.copyImageElement',
+                (commandContext: { viewKey: string; webviewSection: string; isContextMenuOnImage: boolean }) => {
+                    if (commandContext.webviewSection === 'jiraImageElement') {
+                        Container.jiraIssueViewManager.handleContextMenu({
+                            viewKey: commandContext.viewKey,
+                            action: 'copy',
+                            data: commandContext,
+                        });
+                    }
+                },
+            ),
             commands.registerCommand(Commands.AddJiraSite, () =>
                 Container.settingsWebviewFactory.createOrShow({
                     section: ConfigSection.Jira,

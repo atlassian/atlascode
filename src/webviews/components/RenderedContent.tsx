@@ -20,7 +20,10 @@ export const RenderedContent: React.FC<Props> = (props: Props) => {
                     const handled = targetEL.getAttribute('atlascode-original-src-handled');
                     if (originalSrc !== null && handled === null) {
                         targetEL.setAttribute('atlascode-original-src-handled', 'handled');
-
+                        targetEL.setAttribute(
+                            'data-vscode-context',
+                            `{"webviewSection": "jiraImageElement", "preventDefaultContextMenuItems": true}`,
+                        );
                         const imgData = await props.fetchImage?.(originalSrc);
                         if (imgData && imgData.length > 0) {
                             targetEL.src = `data:image/*;base64,${imgData}`;

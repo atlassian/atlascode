@@ -200,6 +200,10 @@
                 "category": "Jira"
             },
             {
+                "command": "atlascode.jira.copyImageElement",
+                "title": "Copy Image"
+            },
+            {
                 "command": "atlascode.jira.searchIssues",
                 "title": "Search Jira Issue Results",
                 "icon": {
@@ -635,6 +639,12 @@
                     "command": "atlascode.bb.editThisFile",
                     "group": "atlascode",
                     "when": "resourceScheme == atlascode.bbpr && config.atlascode.bitbucket.enabled"
+                }
+            ],
+            "webview/context": [
+                {
+                    "command": "atlascode.jira.copyImageElement",
+                    "when": "webviewSection == 'jiraImageElement'"
                 }
             ],
             "view/title": [

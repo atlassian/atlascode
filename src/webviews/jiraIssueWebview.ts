@@ -60,7 +60,7 @@ import { OnJiraEditedRefreshDelay } from '../util/time';
 import { getJiraIssueUri } from '../views/jira/treeViews/utils';
 import { NotificationManagerImpl } from '../views/notifications/notificationManager';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
-import { InitializingWebview } from './abstractWebview';
+import { ContextMenuCommandData, InitializingWebview } from './abstractWebview';
 
 const EditJiraIssueUIRenderEventName = 'ui.jira.editJiraIssue.render.lcp';
 const EditJiraIssueUpdatesEventName = 'ui.jira.editJiraIssue.update.lcp';
@@ -1692,5 +1692,9 @@ export class JiraIssueWebview
         );
 
         return relatedPrs.filter((pr) => pr !== undefined).map((p) => p!.data);
+    }
+
+    public handleContextMenuCommand?({ data }: ContextMenuCommandData): void {
+        this.postMessage({ type: 'copyImage', data });
     }
 }
