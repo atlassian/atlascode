@@ -28,6 +28,7 @@ import { Time } from '../util/time';
 import {
     AuthInfo,
     AuthInfoState,
+    BasicAuthInfo,
     DetailedSiteInfo,
     isBasicAuthInfo,
     isOAuthInfo,
@@ -38,6 +39,14 @@ import { BasicInterceptor } from './basicInterceptor';
 
 const oauthTTL: number = 45 * Time.MINUTES;
 const serverTTL: number = Time.FOREVER;
+
+export type ValidBasicAuthSiteData = {
+    authInfo: BasicAuthInfo;
+    host: string;
+    siteCloudId: string;
+    isValid: boolean;
+    isStaging: boolean;
+};
 
 export class ClientManager implements Disposable {
     private _clients: CacheMap = new CacheMap();
@@ -199,6 +208,59 @@ export class ClientManager implements Disposable {
         }
 
         return newClient;
+    }
+
+    public async getValidBasicAuthCloudSites(): Promise<ValidBasicAuthSiteData[]> {
+        try {
+            const allJiraSites = Container.siteManager.getSitesAvailable(ProductJira);
+
+            const promises = allJiraSites.map(async (site) => {
+                if (!site.isCloud && !site.host.endsWith('.jira-dev.com')) {
+                    return;
+                }
+
+                const authInfo = await Container.credentialManager.getApiTokenIfExists(site);
+
+                if (!authInfo) {
+                    return;
+                }
+
+                // verify the credentials work
+                let isValid: boolean;
+                try {
+                    await this.jiraClient(site);
+                    isValid = true;
+                } catch {
+                    isValid = false;
+                }
+
+                return {
+                    authInfo,
+                    host: site.host,
+                    siteCloudId: site.id,
+                    isValid,
+                    isStaging: site.host.endsWith('.jira-dev.com'),
+                };
+            });
+
+            const results = (await Promise.all(promises)).filter((res) => res !== undefined);
+
+            return results.sort((a, b) => {
+                return a.host.localeCompare(b.host);
+            });
+        } catch (error) {
+            Logger.error(error, 'Error checking for Rovo Dev Entitlement');
+            return [];
+        }
+    }
+
+    public async getCloudPrimarySite(): Promise<ValidBasicAuthSiteData | undefined> {
+        const results = await this.getValidBasicAuthCloudSites();
+        if (results.length === 0) {
+            return undefined;
+        }
+
+        return results.filter((s) => s.isStaging)[0] || results[0];
     }
 
     private createOAuthHTTPClient(site: DetailedSiteInfo, token: string): HTTPClient {
