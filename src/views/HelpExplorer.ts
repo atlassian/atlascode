@@ -30,6 +30,7 @@ export class HelpExplorer extends Explorer implements Disposable {
     }
 
     refresh() {
+        console.log('[RovoDev Debug] HelpExplorer.refresh() called - rebuilding tree view');
         this.newTreeView();
     }
 }

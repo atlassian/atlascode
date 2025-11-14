@@ -24,6 +24,17 @@ export class HelpDataProvider extends BaseTreeDataProvider {
             Experiments.AtlascodeNewSettingsExperiment,
         );
 
+        const isRovoDevEnabled = Container.isRovoDevEnabled;
+        const hasJiraSites = Container.siteManager.productHasAtLeastOneSite(ProductJira);
+        const shouldShowRovoDevChat = isRovoDevEnabled && hasJiraSites;
+
+        console.log('[RovoDev Debug] HelpDataProvider.getChildren called:', {
+            isRovoDevEnabled,
+            hasJiraSites,
+            shouldShowRovoDevChat,
+            jiraSitesCount: Container.siteManager.getSitesAvailable(ProductJira).length,
+        });
+
         if (renderExplorePanel) {
             return [
                 new LinkNode(
