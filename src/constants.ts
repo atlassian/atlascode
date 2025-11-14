@@ -46,6 +46,7 @@ export const enum Commands {
     EditThisFile = 'atlascode.bb.editThisFile',
     CreateIssue = 'atlascode.jira.createIssue',
     RefreshAssignedWorkItemsExplorer = 'atlascode.jira.refreshAssignedWorkItemsExplorer',
+    JiraFilter = 'atlascode.jira.filter',
     RefreshCustomJqlExplorer = 'atlascode.jira.refreshCustomJqlExplorer',
     AddJiraSite = 'atlascode.jira.addJiraSite',
     ShowJiraIssueSettings = 'atlascode.jira.showJiraIssueSettings',
