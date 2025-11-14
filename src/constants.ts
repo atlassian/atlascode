@@ -100,6 +100,7 @@ export const enum Commands {
     QuickAuth = 'atlascode.rovodev.quickAuth',
     JiraLogin = 'atlascode.jira.login',
     JiraAPITokenLogin = 'atlascode.jira.apiTokenLogin',
+    ExpandCreateWorkItemWebview = 'atlascode.jira.expandCreateWorkItem',
 
     // Debug mode-only commands
     DebugQuickCommand = 'atlascode.debug.quickCommand',
