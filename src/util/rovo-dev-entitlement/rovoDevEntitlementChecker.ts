@@ -61,13 +61,13 @@ export class RovoDevEntitlementChecker extends Disposable {
 
             const value = await response.text();
             Logger.debug(`Entitlement response: ${value}`);
-            const rovoDevEnabled = value !== 'NO_ACTIVE_PRODUCT';
+            const rovoDevEnabled = this._entitledResponse.includes(value);
 
             rovoDevEntitlementCheckEvent(rovoDevEnabled, value).then((e) => {
                 this._analyticsClient.sendTrackEvent(e);
             });
 
-            return this._entitledResponse.includes(value);
+            return rovoDevEnabled;
         } catch (err) {
             Logger.error(err, 'Unable to check Rovo Dev entitlement');
             rovoDevEntitlementCheckEvent(false, err.message).then((e) => {
