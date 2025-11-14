@@ -316,11 +316,6 @@ export abstract class RovoDevProcessManager {
 
         await getFsPromise((callback) => fs.mkdir(versionDir, { recursive: true }, callback));
 
-        // Make binary executable on Unix systems
-        if (process.platform !== 'win32') {
-            await getFsPromise((callback) => fs.chmod(rovoDevURIs.RovoDevBinPath, 0o755, callback));
-        }
-
         this.setState({
             state: 'Starting',
             jiraSiteHostname: credentialsHost,
