@@ -58,6 +58,7 @@ module.exports = {
         fallback: {
             path: require.resolve('path-browserify'),
             process: false,
+            buffer: require.resolve('buffer'),
         },
         alias: {
             // Resolve ProseMirror conflicts by using unified versions
@@ -113,6 +114,7 @@ module.exports = {
         }),
         new webpack.ProvidePlugin({
             process: 'process/browser',
+            Buffer: ['buffer', 'Buffer'],
         }),
     ],
     module: {

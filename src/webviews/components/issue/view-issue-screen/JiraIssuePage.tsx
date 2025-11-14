@@ -690,6 +690,16 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     onIssueUpdate={this.handleChildIssueUpdate}
                     mentionProvider={this.mentionProvider}
                     handleEditorFocus={this.handleEditorFocus}
+                    getMediaAuth={async () => {
+                        const nonce = v4();
+                        return (await this.postMessageWithEventPromise(
+                            { action: 'getMediaAuth', site: this.state.siteDetails, issueKey: this.state.key, nonce },
+                            'mediaAuth',
+                            15000,
+                            nonce,
+                        )) as any;
+                    }}
+                    issueKey={this.state.key}
                 />
                 {this.advancedMain()}
                 {this.state.fields['comment'] && (

@@ -1529,6 +1529,8 @@
         "@atlaskit/inline-dialog": "^18.0.4",
         "@atlaskit/layering": "^3.0.0",
         "@atlaskit/lozenge": "^13.0.8",
+        "@atlaskit/media-client": "^35.6.0",
+        "@atlaskit/media-core": "^37.0.0",
         "@atlaskit/mention": "^24.2.18",
         "@atlaskit/modal-dialog": "^14.3.4",
         "@atlaskit/page": "^14.0.1",
