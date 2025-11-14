@@ -316,6 +316,11 @@ export abstract class RovoDevProcessManager {
 
         await getFsPromise((callback) => fs.mkdir(versionDir, { recursive: true }, callback));
 
+        // Make binary executable on Unix systems
+        if (process.platform !== 'win32') {
+            await getFsPromise((callback) => fs.chmod(rovoDevURIs.RovoDevBinPath, 0o755, callback));
+        }
+
         this.setState({
             state: 'Starting',
             jiraSiteHostname: credentialsHost,
@@ -508,7 +513,23 @@ class RovoDevTerminalInstance extends Disposable {
         return new Promise<void>((resolve, reject) => {
             access(this.rovoDevBinPath, constants.X_OK, async (err) => {
                 if (err) {
-                    reject(new Error(`executable not found.`));
+                    if (err.code === 'ENOENT') {
+                        reject(
+                            new Error(
+                                `Executable not found at: ${this.rovoDevBinPath}. Error: ${err.message} (${err.code})`,
+                            ),
+                        );
+                    } else if (err.code === 'EACCES') {
+                        reject(
+                            new Error(
+                                `Executable found but not executable. Please check permissions: ${this.rovoDevBinPath}. Error: ${err.message} (${err.code})`,
+                            ),
+                        );
+                    } else {
+                        reject(
+                            new Error(`Cannot access executable: ${err.message}${err.code ? ` (${err.code})` : ''}`),
+                        );
+                    }
                     return;
                 }
 
@@ -537,6 +558,7 @@ class RovoDevTerminalInstance extends Disposable {
                         isTransient: true,
                         iconPath: this.rovoDevIconUri,
                         env: {
+                            ...process.env,
                             USER: process.env.USER || process.env.USERNAME,
                             USER_EMAIL: credentials.username,
                             ROVODEV_SANDBOX_ID: Container.appInstanceId,
