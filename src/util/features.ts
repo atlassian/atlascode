@@ -6,6 +6,7 @@ export enum Features {
     UseNewAuthFlow = 'atlascode-use-new-auth-flow',
     EnableAiSuggestions = 'atlascode-enable-ai-suggestions-new',
     AtlaskitEditor = 'atlascode-use-new-atlaskit-editor',
+    CreateWorkItemWebviewV2 = 'atlascode-create-work-item-webview-test',
 }
 
 export const enum Experiments {

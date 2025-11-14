@@ -17,6 +17,7 @@ export enum CommandContext {
     DebugMode = 'atlascode:debugMode',
     UseNewAuthFlow = 'atlascode:useNewAuthFlow',
     IsEditorFocused = 'atlascode:isEditorFocused',
+    ShowCreateWorkItemWebview = 'atlascode:showCreateWorkItemWebview',
 }
 
 export function setCommandContext(key: CommandContext | string, value: any) {
