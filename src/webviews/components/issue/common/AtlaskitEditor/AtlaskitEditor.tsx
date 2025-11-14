@@ -9,6 +9,7 @@ import { JSONTransformer } from '@atlaskit/editor-json-transformer';
 import { gridPlugin } from '@atlaskit/editor-plugin-grid';
 import { insertBlockPlugin } from '@atlaskit/editor-plugin-insert-block';
 import { listPlugin } from '@atlaskit/editor-plugin-list';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { mediaPlugin } from '@atlaskit/editor-plugin-media';
 import { mentionsPlugin } from '@atlaskit/editor-plugin-mentions';
 import { tasksAndDecisionsPlugin } from '@atlaskit/editor-plugin-tasks-and-decisions';
@@ -57,6 +58,8 @@ interface AtlaskitEditorProps extends Omit<Partial<EditorNextProps>, 'onChange' 
     onFocus: () => void;
     onBlur: () => void;
     isSaveOnBlur?: boolean;
+    getMediaAuth?: () => Promise<{ token: string; clientId: string; baseUrl?: string }>;
+    issueKey?: string;
 }
 
 const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProps) => {
@@ -131,6 +134,7 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
             },
         });
         return { ...base, provider };
+        // Only recreate if issueKey changes or if getMediaAuth changes from undefined to defined or vice versa
     }, [getMediaAuth, issueKey]);
 
     const { preset, editorApi } = usePreset(() => {
@@ -162,7 +166,8 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                 .add(mentionsPlugin)
                 .add(tasksAndDecisionsPlugin)
         );
-    }, [mediaOptions, mentionProvider]);
+        // Only recreate preset when mediaOptions or appearance changes, NOT when mentionProvider changes
+    }, [mediaOptions, appearance]);
     // Helper function to get current document content
     const getCurrentContent = React.useCallback(async (): Promise<any | null> => {
         try {
