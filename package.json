@@ -1703,7 +1703,7 @@
         "@types/vscode": ">=1.77.0 <=1.96.0",
         "@types/websocket": "^1.0.0",
         "@types/ws": "^8.18.1",
-        "@vscode/vsce": "^3.6.0",
+        "@vscode/vsce": "^3.7.0",
         "ajv": "^8.17.1",
         "ajv-formats": "^3.0.1",
         "audit-ci": "^7.1.0",
@@ -1787,6 +1787,7 @@
         "transition-hook@1.5.2": {
             "react-dom": "^18.3.1",
             "react": "^18.3.1"
-        }
+        },
+        "js-yaml": "^4.1.1"
     }
 }
