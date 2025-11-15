@@ -252,6 +252,11 @@ export function performanceEvent(tag: string, measure: number, params?: Record<s
 
 export type RovoDevEnv = 'IDE' | 'Boysenberry';
 
+export function rovoDevEntitlementCheckEvent(isEntitled: boolean, type: string, source?: string) {
+    return trackEvent('checked', 'rovoDevEntitlement', {
+        attributes: { source, isEntitled, type },
+    });
+}
 export function rovoDevNewSessionActionEvent(
     rovoDevEnv: RovoDevEnv,
     appInstanceId: string,

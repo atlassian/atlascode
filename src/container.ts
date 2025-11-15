@@ -41,6 +41,7 @@ import { RovoDevLogger } from './rovo-dev/util/rovoDevLogger';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, SETTINGS_URL } from './uriHandler';
 import { Experiments, FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
+import { RovoDevEntitlementChecker } from './util/rovo-dev-entitlement/rovoDevEntitlementChecker';
 import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
 import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
@@ -222,6 +223,13 @@ export class Container {
         } else {
             setCommandContext(CommandContext.UseNewAuthFlow, false);
         }
+
+        context.subscriptions.push(
+            (this._rovoDevEntitlementChecker = new RovoDevEntitlementChecker(this._analyticsClient)),
+        );
+
+        // Check Rovo Dev entitlement on startup
+        await this._rovoDevEntitlementChecker.checkEntitlement();
 
         // in Boysenberry we don't need to listen to Jira auth updates
         if (!process.env.ROVODEV_BBY) {
@@ -664,6 +672,11 @@ export class Container {
     private static _rovodevWebviewProvider: RovoDevWebviewProvider;
     public static get rovodevWebviewProvider() {
         return this._rovodevWebviewProvider;
+    }
+
+    private static _rovoDevEntitlementChecker: RovoDevEntitlementChecker;
+    public static get rovoDevEntitlementChecker() {
+        return this._rovoDevEntitlementChecker;
     }
 
     private static _createWorkItemWebviewProvider: CreateWorkItemWebviewProvider;
