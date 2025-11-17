@@ -1,13 +1,14 @@
-import { MinimalIssue, User } from '@atlassianlabs/jira-pi-common-models';
-import { showIssue } from 'src/commands/jira/showIssue';
-import { QuickPick, window } from 'vscode';
+import { User } from '@atlassianlabs/jira-pi-common-models';
+import { commands, QuickPick, window } from 'vscode';
 
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { currentUserJira } from '../../commands/jira/currentUser';
+import { Commands } from '../../constants';
 import { Container } from '../../container';
+import { TreeViewIssue } from '../../views/jira/treeViews/utils';
 import { JiraIssueService } from './JiraIssueService';
 import { JiraUserService } from './JiraUserService';
-import { QuickPickIssue, QuickPickUser, QuickPickUtils } from './QuickPickUtils';
+import { QuickPickUser, QuickPickUtils } from './QuickPickUtils';
 
 export class AssigneeFilterProvider {
     static currentToken = 0;
@@ -22,10 +23,8 @@ export class AssigneeFilterProvider {
             return;
         }
 
-        let currentUser: User | null = null;
         try {
-            currentUser = await currentUserJira(sites[0]);
-            this.currentUser = currentUser;
+            this.currentUser = await currentUserJira(sites[0]);
         } catch (error) {
             console.error('Failed to fetch current user:', error);
             this.currentUser = null;
@@ -37,7 +36,7 @@ export class AssigneeFilterProvider {
         quickPick.matchOnDescription = true;
         quickPick.matchOnDetail = true;
         quickPick.canSelectMany = true;
-        quickPick.items = QuickPickUtils.getDefaultAssigneeOptions(this.previousSelectedItems, currentUser);
+        quickPick.items = QuickPickUtils.getDefaultAssigneeOptions(this.previousSelectedItems, this.currentUser);
         quickPick.selectedItems = [];
 
         quickPick.show();
@@ -50,7 +49,7 @@ export class AssigneeFilterProvider {
             quickPick.dispose();
         });
 
-        quickPick.onDidChangeValue((value) => this.handleSearchInput(value, quickPick, sites, currentUser));
+        quickPick.onDidChangeValue((value) => this.handleSearchInput(value, quickPick, sites, this.currentUser));
         quickPick.onDidAccept(() => this.handleUserAccept(quickPick));
         quickPick.onDidChangeSelection((selected) => this.handleSelectionChange(selected));
     }
@@ -148,33 +147,33 @@ export class AssigneeFilterProvider {
             return;
         }
 
-        const issuesQuickPick = window.createQuickPick<QuickPickIssue>();
-        const userNames = selectedUsers.map((u) => u.label).join(', ');
-        issuesQuickPick.title = `Issues Assigned to ${userNames}`;
-        issuesQuickPick.placeholder = 'Fetching issues...';
-        issuesQuickPick.matchOnDescription = true;
-        issuesQuickPick.matchOnDetail = true;
-        issuesQuickPick.canSelectMany = false;
-        issuesQuickPick.items = [];
-        issuesQuickPick.busy = true;
+        const selectedUsersCount = filterParams.regularUsers.length + (filterParams.hasCurrentUser ? 1 : 0);
 
-        issuesQuickPick.show();
-
-        issuesQuickPick.onDidHide(() => {
-            issuesQuickPick.dispose();
-        });
-        this.setupIssueSelectionHandler(issuesQuickPick);
+        Container.assignedWorkItemsView.setFilteredIssues([], selectedUsersCount);
+        commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
+        Container.assignedWorkItemsView.focus();
 
         try {
             const issues = await JiraIssueService.getAssignedIssuesFromAllSites(
                 filterParams.regularUsers,
                 sites,
-                filterParams.hasUnassigned,
                 filterParams.hasCurrentUser,
             );
-            this.displayIssues(issuesQuickPick, issues, userNames);
+
+            const treeViewIssues: TreeViewIssue[] = issues.map((issue) => ({
+                ...issue,
+                source: { id: 'filtered-assignee' },
+                children: [],
+            }));
+
+            Container.assignedWorkItemsView.setFilteredIssues(treeViewIssues, selectedUsersCount);
+            commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
         } catch (error) {
-            this.displayError(issuesQuickPick, error);
+            Container.assignedWorkItemsView.setFilteredIssues(null);
+            commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
+            window.showErrorMessage(
+                `Failed to fetch issues: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            );
         }
     }
 
@@ -184,60 +183,5 @@ export class AssigneeFilterProvider {
             window.showInformationMessage('No Jira sites connected.');
         }
         return sites;
-    }
-
-    static displayIssues(
-        quickPick: QuickPick<QuickPickIssue>,
-        issues: MinimalIssue<DetailedSiteInfo>[],
-        userNames: string,
-    ): void {
-        if (issues.length === 0) {
-            this.displayEmptyState(quickPick, userNames);
-            return;
-        }
-        quickPick.title = `Issues Assigned to ${userNames} (${issues.length})`;
-        quickPick.placeholder = `Found ${issues.length} issues`;
-        quickPick.items = QuickPickUtils.mapIssuesToQuickPickItems(issues);
-        quickPick.busy = false;
-    }
-
-    private static displayEmptyState(quickPick: QuickPick<QuickPickIssue>, userNames: string): void {
-        quickPick.items = [
-            {
-                label: 'No Issues Found',
-                description: 'No issues assigned to selected users',
-                detail: 'Try selecting different users or check if they have any assigned issues',
-                issue: null as any,
-            },
-        ];
-        quickPick.title = `Issues Assigned to ${userNames} (0)`;
-        quickPick.placeholder = 'No issues found';
-        quickPick.busy = false;
-    }
-
-    private static displayError(quickPick: QuickPick<QuickPickIssue>, error: unknown): void {
-        quickPick.items = [
-            {
-                label: 'Error Loading Issues',
-                description: 'Failed to fetch issues',
-                detail: 'Please try again or check your connection',
-                issue: null as any,
-            },
-        ];
-        quickPick.title = 'Error Loading Issues';
-        quickPick.placeholder = 'Failed to load issues';
-        quickPick.busy = false;
-    }
-
-    private static setupIssueSelectionHandler(quickPick: QuickPick<QuickPickIssue>): void {
-        quickPick.onDidAccept(async () => {
-            const selected = quickPick.selectedItems[0];
-            if (!selected?.issue) {
-                return;
-            }
-
-            quickPick.hide();
-            await showIssue(selected.issue);
-        });
     }
 }

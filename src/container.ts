@@ -420,6 +420,10 @@ export class Container {
         this._assignedWorkItemsView.focus();
     }
 
+    static get assignedWorkItemsView() {
+        return this._assignedWorkItemsView;
+    }
+
     static setIsEditorFocused(isFocused: boolean) {
         setCommandContext(CommandContext.IsEditorFocused, isFocused);
     }

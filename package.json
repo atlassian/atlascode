@@ -548,7 +548,7 @@
             "atlascode-drawer": [
                 {
                     "id": "atlascode.views.jira.assignedWorkItemsTreeView",
-                    "name": "Assigned Jira Work Items",
+                    "name": "Jira Work Items",
                     "when": "!atlascode:bbyEnvironmentActive && atlascode:assignedIssueExplorerEnabled && config.atlascode.jira.enabled"
                 },
                 {

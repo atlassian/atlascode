@@ -23,13 +23,6 @@ export const QuickPickUtils = {
             });
         }
 
-        defaultOptions.push({
-            label: 'Unassigned',
-            description: 'Filter by unassigned issues',
-            detail: 'Shows only issues with no assignee',
-            user: null as any,
-        });
-
         const existingLabels = new Set(defaultOptions.map((item) => item.label));
 
         for (const previousItem of previousSelectedItems) {
@@ -43,7 +36,7 @@ export const QuickPickUtils = {
     mapIssuesToQuickPickItems(issues: MinimalIssue<DetailedSiteInfo>[]): QuickPickIssue[] {
         return issues.map((issue) => {
             const assignee = (issue as any).assignee;
-            const assigneeName = assignee?.displayName || assignee?.name || 'Unassigned';
+            const assigneeName = assignee?.displayName || assignee?.name || 'No assignee';
             return {
                 label: `${issue.key}: ${issue.summary || 'No summary'}`,
                 description: issue.status?.name || 'Unknown Status',
@@ -70,26 +63,19 @@ export const QuickPickUtils = {
 
     extractFilterParameters(selectedUsers: readonly QuickPickUser[], currentUser: User | null) {
         const currentUserAccountId = currentUser?.accountId;
-        const hasUnassigned = selectedUsers.some((item) => item.label === 'Unassigned');
-        const hasCurrentUser = currentUserAccountId
-            ? selectedUsers.some((item) => item.user?.accountId === currentUserAccountId)
-            : false;
-        const regularUsers = selectedUsers.filter(
-            (item) =>
-                item.user &&
-                item.label !== 'Unassigned' &&
-                (!currentUserAccountId || item.user.accountId !== currentUserAccountId),
-        );
+        const hasCurrentUser =
+            currentUserAccountId !== undefined &&
+            selectedUsers.some((item) => item.user?.accountId === currentUserAccountId);
+        const regularUsers = selectedUsers.filter((item) => item.user && item.user.accountId !== currentUserAccountId);
 
         return {
-            hasUnassigned,
             hasCurrentUser,
             regularUsers,
         };
     },
 
-    isValidFilter(params: { hasUnassigned: boolean; hasCurrentUser: boolean; regularUsers: QuickPickUser[] }): boolean {
-        return params.hasUnassigned || params.hasCurrentUser || params.regularUsers.length > 0;
+    isValidFilter(params: { hasCurrentUser: boolean; regularUsers: QuickPickUser[] }): boolean {
+        return params.hasCurrentUser || params.regularUsers.length > 0;
     },
 
     formatUserNames(selectedUsers: readonly QuickPickUser[]): string {

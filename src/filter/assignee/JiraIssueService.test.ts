@@ -138,12 +138,7 @@ describe('JiraIssueService', () => {
                     total: 1,
                 } as any);
 
-            const result = await JiraIssueService.getAssignedIssuesFromAllSites(
-                [user],
-                [mockSite1, mockSite2],
-                false,
-                false,
-            );
+            const result = await JiraIssueService.getAssignedIssuesFromAllSites([user], [mockSite1, mockSite2], false);
 
             expect(result).toHaveLength(2);
             expect(result).toEqual(expect.arrayContaining([issue1, issue2]));
@@ -198,12 +193,7 @@ describe('JiraIssueService', () => {
                     total: 1,
                 } as any);
 
-            const result = await JiraIssueService.getAssignedIssuesFromAllSites(
-                [user],
-                [mockSite1, mockSite2],
-                false,
-                false,
-            );
+            const result = await JiraIssueService.getAssignedIssuesFromAllSites([user], [mockSite1, mockSite2], false);
 
             expect(result).toHaveLength(1);
             expect(result[0].key).toBe('TEST-1');
@@ -217,7 +207,7 @@ describe('JiraIssueService', () => {
                 user: mockUser1 as any,
             };
 
-            const result = await JiraIssueService.getAssignedIssuesFromAllSites([user], [], false, false);
+            const result = await JiraIssueService.getAssignedIssuesFromAllSites([user], [], false);
 
             expect(result).toEqual([]);
         });
@@ -253,12 +243,7 @@ describe('JiraIssueService', () => {
                 total: 1,
             } as any);
 
-            const result = await JiraIssueService.getAssignedIssuesFromAllSites(
-                [user],
-                [mockSite1, mockSite2],
-                false,
-                false,
-            );
+            const result = await JiraIssueService.getAssignedIssuesFromAllSites([user], [mockSite1, mockSite2], false);
 
             expect(result).toHaveLength(1);
             expect(result[0]).toBe(issue1);
@@ -293,7 +278,7 @@ describe('JiraIssueService', () => {
                 total: 1,
             } as any);
 
-            await JiraIssueService.getAssignedIssuesFromSite([user], mockSite1, false, false);
+            await JiraIssueService.getAssignedIssuesFromSite([user], mockSite1, false);
 
             expect(mockJiraClient.searchForIssuesUsingJqlGet).toHaveBeenCalledWith(
                 expect.stringContaining('assignee in ("user-1")'),
@@ -302,60 +287,11 @@ describe('JiraIssueService', () => {
                 expect.anything(),
             );
             expect(mockJiraClient.searchForIssuesUsingJqlGet).toHaveBeenCalledWith(
-                expect.stringContaining('status != "Done"'),
+                expect.stringContaining('StatusCategory != Done'),
                 expect.anything(),
                 expect.anything(),
                 expect.anything(),
             );
-        });
-
-        it('should build correct JQL for Unassigned option', async () => {
-            const mockResponse = {
-                issues: [],
-                total: 0,
-            };
-
-            mockJiraClient.searchForIssuesUsingJqlGet.mockResolvedValue(mockResponse);
-            jest.mocked(readSearchResults).mockResolvedValue({
-                issues: [],
-                total: 0,
-            } as any);
-
-            await JiraIssueService.getAssignedIssuesFromSite([], mockSite1, true, false);
-
-            expect(mockJiraClient.searchForIssuesUsingJqlGet).toHaveBeenCalledWith(
-                expect.stringContaining('assignee is EMPTY'),
-                expect.anything(),
-                expect.anything(),
-                expect.anything(),
-            );
-        });
-
-        it('should build correct JQL for both users and Unassigned', async () => {
-            const user: QuickPickUser = {
-                label: 'John Doe',
-                description: 'john@example.com',
-                detail: 'Active',
-                user: mockUser1 as any,
-            };
-
-            const mockResponse = {
-                issues: [],
-                total: 0,
-            };
-
-            mockJiraClient.searchForIssuesUsingJqlGet.mockResolvedValue(mockResponse);
-            jest.mocked(readSearchResults).mockResolvedValue({
-                issues: [],
-                total: 0,
-            } as any);
-
-            await JiraIssueService.getAssignedIssuesFromSite([user], mockSite1, true, false);
-
-            const jqlCall = mockJiraClient.searchForIssuesUsingJqlGet.mock.calls[0][0];
-            expect(jqlCall).toContain('assignee in ("user-1")');
-            expect(jqlCall).toContain('assignee is EMPTY');
-            expect(jqlCall).toContain('OR');
         });
 
         it('should attach assignee information to issues', async () => {
@@ -387,7 +323,7 @@ describe('JiraIssueService', () => {
                 total: 1,
             } as any);
 
-            const result = await JiraIssueService.getAssignedIssuesFromSite([user], mockSite1, false, false);
+            const result = await JiraIssueService.getAssignedIssuesFromSite([user], mockSite1, false);
 
             expect(result).toHaveLength(1);
             expect((result[0] as any).assignee).toEqual(assignee);
@@ -403,7 +339,7 @@ describe('JiraIssueService', () => {
 
             mockJiraClient.searchForIssuesUsingJqlGet.mockRejectedValue(new Error('API Error'));
 
-            const result = await JiraIssueService.getAssignedIssuesFromSite([user], mockSite1, false, false);
+            const result = await JiraIssueService.getAssignedIssuesFromSite([user], mockSite1, false);
 
             expect(result).toEqual([]);
         });
@@ -416,12 +352,7 @@ describe('JiraIssueService', () => {
                 user: { ...mockUser1, accountId: null as any } as any,
             };
 
-            const result = await JiraIssueService.getAssignedIssuesFromSite(
-                [userWithoutAccountId],
-                mockSite1,
-                false,
-                false,
-            );
+            const result = await JiraIssueService.getAssignedIssuesFromSite([userWithoutAccountId], mockSite1, false);
 
             expect(result).toEqual([]);
             expect(mockJiraClient.searchForIssuesUsingJqlGet).not.toHaveBeenCalled();
@@ -452,7 +383,7 @@ describe('JiraIssueService', () => {
                 total: 0,
             } as any);
 
-            await JiraIssueService.getAssignedIssuesFromSite([user1, user2], mockSite1, false, false);
+            await JiraIssueService.getAssignedIssuesFromSite([user1, user2], mockSite1, false);
 
             const jqlCall = mockJiraClient.searchForIssuesUsingJqlGet.mock.calls[0][0];
             expect(jqlCall).toContain('assignee in ("user-1", "user-2")');

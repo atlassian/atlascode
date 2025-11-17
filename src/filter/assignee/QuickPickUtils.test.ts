@@ -373,46 +373,7 @@ describe('QuickPickUtils', () => {
     });
 
     describe('extractFilterParameters', () => {
-        it('should correctly identify Unassigned option', () => {
-            const items: QuickPickUser[] = [
-                {
-                    label: 'Unassigned',
-                    description: 'Filter by unassigned issues',
-                    detail: 'Shows only issues with no assignee',
-                    user: null as any,
-                },
-            ];
-
-            const result = QuickPickUtils.extractFilterParameters(items, null);
-
-            expect(result.hasUnassigned).toBe(true);
-            expect(result.regularUsers).toHaveLength(0);
-        });
-
-        it('should filter out Unassigned from regular users', () => {
-            const items: QuickPickUser[] = [
-                {
-                    label: 'John Doe',
-                    description: 'john@example.com',
-                    detail: 'Active',
-                    user: mockUser1,
-                },
-                {
-                    label: 'Unassigned',
-                    description: 'Filter by unassigned issues',
-                    detail: 'Shows only issues with no assignee',
-                    user: null as any,
-                },
-            ];
-
-            const result = QuickPickUtils.extractFilterParameters(items, null);
-
-            expect(result.hasUnassigned).toBe(true);
-            expect(result.regularUsers).toHaveLength(1);
-            expect(result.regularUsers[0].label).toBe('John Doe');
-        });
-
-        it('should return only regular users when Unassigned is not selected', () => {
+        it('should return only regular users', () => {
             const items: QuickPickUser[] = [
                 {
                     label: 'John Doe',
@@ -430,7 +391,6 @@ describe('QuickPickUtils', () => {
 
             const result = QuickPickUtils.extractFilterParameters(items, null);
 
-            expect(result.hasUnassigned).toBe(false);
             expect(result.regularUsers).toHaveLength(2);
         });
 
@@ -459,25 +419,13 @@ describe('QuickPickUtils', () => {
         it('should handle empty array', () => {
             const result = QuickPickUtils.extractFilterParameters([], null);
 
-            expect(result.hasUnassigned).toBe(false);
             expect(result.regularUsers).toHaveLength(0);
         });
     });
 
     describe('isValidFilter', () => {
-        it('should return true when hasUnassigned is true', () => {
-            const result = QuickPickUtils.isValidFilter({
-                hasUnassigned: true,
-                hasCurrentUser: false,
-                regularUsers: [],
-            });
-
-            expect(result).toBe(true);
-        });
-
         it('should return true when regularUsers has items', () => {
             const result = QuickPickUtils.isValidFilter({
-                hasUnassigned: false,
                 hasCurrentUser: false,
                 regularUsers: [
                     {
@@ -492,18 +440,10 @@ describe('QuickPickUtils', () => {
             expect(result).toBe(true);
         });
 
-        it('should return true when both hasUnassigned and regularUsers are set', () => {
+        it('should return true when hasCurrentUser is true', () => {
             const result = QuickPickUtils.isValidFilter({
-                hasUnassigned: true,
-                hasCurrentUser: false,
-                regularUsers: [
-                    {
-                        label: 'John Doe',
-                        description: 'john@example.com',
-                        detail: 'Active',
-                        user: mockUser1,
-                    },
-                ],
+                hasCurrentUser: true,
+                regularUsers: [],
             });
 
             expect(result).toBe(true);
@@ -511,7 +451,6 @@ describe('QuickPickUtils', () => {
 
         it('should return false when both are empty', () => {
             const result = QuickPickUtils.isValidFilter({
-                hasUnassigned: false,
                 hasCurrentUser: false,
                 regularUsers: [],
             });
