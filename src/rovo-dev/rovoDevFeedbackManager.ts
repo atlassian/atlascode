@@ -17,10 +17,9 @@ interface FeedbackObject {
 const FEEDBACK_ENDPOINT = `https://jsd-widget.atlassian.com/api/embeddable/57037b9e-743e-407d-bb03-441a13c7afd0/request?requestTypeId=3066`;
 
 export class RovoDevFeedbackManager {
-    private static readonly extensionApi = new ExtensionApi();
-
     public static async submitFeedback(feedback: FeedbackObject, isBBY: boolean = false): Promise<void> {
         const transport = getAxiosInstance();
+        const extensionApi = new ExtensionApi();
         const context = this.getContext(isBBY, feedback.rovoDevSessionId);
 
         let userEmail = 'do-not-reply@atlassian.com';
@@ -28,7 +27,7 @@ export class RovoDevFeedbackManager {
 
         if (feedback.canContact) {
             // Get user info from primary site if available
-            const info = await this.extensionApi.auth.getPrimaryAuthInfo();
+            const info = await extensionApi.auth.getPrimaryAuthInfo();
 
             if (info && info.user) {
                 userEmail = info.user.email;
@@ -104,9 +103,10 @@ export class RovoDevFeedbackManager {
     }
 
     private static getContext(isBBY: boolean = false, rovoDevSessionId?: string): any {
+        const extensionApi = new ExtensionApi();
         return {
             component: isBBY ? 'Boysenberry - vscode' : 'IDE - vscode',
-            extensionVersion: this.extensionApi.metadata.version(),
+            extensionVersion: extensionApi.metadata.version(),
             vscodeVersion: vscode.version,
             rovoDevVersion: MIN_SUPPORTED_ROVODEV_VERSION,
             ...(rovoDevSessionId && { rovoDevSessionId }),
