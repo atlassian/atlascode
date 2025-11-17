@@ -1,5 +1,6 @@
 import { isMinimalIssue, MinimalIssue, readSearchResults } from '@atlassianlabs/jira-pi-common-models';
-import { DetailedSiteInfo, ProductJira } from 'src/atlclients/authInfo';
+import { AuthInfo, DetailedSiteInfo, ProductJira } from 'src/atlclients/authInfo';
+import { ValidBasicAuthSiteData } from 'src/atlclients/clientManager';
 import { Container } from 'src/container';
 import { SearchJiraHelper } from 'src/views/jira/searchJiraHelper';
 
@@ -73,16 +74,33 @@ export class ExtensionApi {
     };
 
     public readonly auth = {
-        // TODO delete?
-        getPrimarySite: (): DetailedSiteInfo | undefined => {
-            return Container.siteManager.primarySite;
-        },
-        // TODO delete?
-        getAuthInfoForSite: async (site: DetailedSiteInfo) => {
-            return Container.credentialManager.getAuthInfo(site);
+        // TODO: rectify these 2 methods
+
+        /**
+         * Get valid credentials for the 1st available cloud site with an API token,
+         * resolved alphabetically and with priority given to staging sites.
+         *
+         * ONLY returns sites with API token auth (not OAuth).
+         * Validates that credentials actually work before returning.
+         * Used primarily for Rovo Dev credential validation.
+         *
+         * @returns ValidBasicAuthSiteData with working API token credentials, or undefined
+         */
+        getCloudPrimaryAuthInfo: async (): Promise<ValidBasicAuthSiteData | undefined> => {
+            return await Container.clientManager.getCloudPrimarySite();
         },
 
-        getPrimaryAuthInfo: async () => {
+        /**
+         * Get auth info from the "primary" site determined by siteManager.
+         *
+         * Returns the first cloud site alphabetically (with "hello" site prioritized for internal users).
+         * Accepts ANY auth type (OAuth or API token).
+         * Does NOT validate credentials.
+         * Used for feature flags tenant ID and general-purpose primary site resolution.
+         *
+         * @returns AuthInfo for the primary site (any auth type), or undefined if no cloud sites
+         */
+        getPrimaryAuthInfo: async (): Promise<AuthInfo | undefined> => {
             const primarySite = Container.siteManager.primarySite;
             if (primarySite) {
                 return Container.credentialManager.getAuthInfo(primarySite);

@@ -10,9 +10,8 @@ import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { waitFor } from 'src/rovo-dev/util/waitFor';
 import { Disposable, Event, EventEmitter, ExtensionContext, Terminal, Uri, window, workspace } from 'vscode';
 
-import { DetailedSiteInfo, isBasicAuthInfo, ProductJira } from '../atlclients/authInfo';
+import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { ExtensionApi } from './api/extensionApi';
-import { Container } from '../container';
 import { RovoDevApiClient } from './client';
 import { RovoDevDisabledReason, RovoDevEntitlementCheckFailedDetail } from './rovoDevWebviewProviderMessages';
 import { RovoDevLogger } from './util/rovoDevLogger';
@@ -109,58 +108,7 @@ async function getOrAssignPortForWorkspace(): Promise<number> {
     throw new Error('unable to find an available port.');
 }
 
-/**
- * Placeholder implementation for Rovo Dev CLI credential storage
- */
-async function getCloudCredentials(): Promise<
-    { username: string; key: string; host: string; isValid: boolean; isStaging: boolean } | undefined
-> {
-    try {
-        const sites = Container.siteManager.getSitesAvailable(ProductJira);
-
-        const promises = sites.map(async (site) => {
-            // *.atlassian.net are PROD cloud sites
-            // *.jira-dev.com are Staging cloud sites
-            if (!site.host.endsWith('.atlassian.net') && !site.host.endsWith('.jira-dev.com')) {
-                return undefined;
-            }
-
-            const authInfo = await Container.credentialManager.getAuthInfo(site);
-            if (!isBasicAuthInfo(authInfo)) {
-                return undefined;
-            }
-
-            // verify the credentials work
-            let isValid: boolean;
-            try {
-                await Container.clientManager.jiraClient(site);
-                isValid = true;
-            } catch {
-                isValid = false;
-            }
-
-            return {
-                username: authInfo.username,
-                key: authInfo.password,
-                host: site.host,
-                isValid,
-                isStaging: site.host.endsWith('.jira-dev.com'),
-            };
-        });
-
-        const results = (await Promise.all(promises)).filter((result) => result !== undefined);
-
-        // give priority to staging sites
-        return results.filter((x) => x.isStaging)[0] || results[0];
-    } catch (error) {
-        RovoDevLogger.error(error, 'Error fetching cloud credentials for Rovo Dev');
-        return undefined;
-    }
-}
-
-type CloudCredentials = NonNullable<Awaited<ReturnType<typeof getCloudCredentials>>>;
-
-function areCredentialsEqual(cred1?: CloudCredentials, cred2?: CloudCredentials) {
+function areCredentialsEqual(cred1?: ValidBasicAuthSiteData, cred2?: ValidBasicAuthSiteData) {
     if (cred1 === cred2) {
         return true;
     }
@@ -410,7 +358,7 @@ export abstract class RovoDevProcessManager {
                 this.failIfRovoDevInstanceIsRunning();
             }
 
-            const credentials = await Container.clientManager.getCloudPrimarySite();
+            const credentials = await this.extensionApi.auth.getCloudPrimaryAuthInfo();
             await this.internalInitializeRovoDev(context, credentials, forceNewInstance);
         } finally {
             this.asyncLocked = false;
@@ -426,7 +374,7 @@ export abstract class RovoDevProcessManager {
             this.asyncLocked = true;
 
             try {
-                const credentials = await Container.clientManager.getCloudPrimarySite();
+                const credentials = await this.extensionApi.auth.getCloudPrimaryAuthInfo();
                 if (areCredentialsEqual(credentials, this.currentCredentials)) {
                     return;
                 }
