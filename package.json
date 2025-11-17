@@ -79,7 +79,7 @@
         "watch:extension": "WATCH=true webpack --mode development --config webpack.react.dev.js --progress --watch",
         "watch:react": "WATCH=true webpack --mode development --config webpack.extension.dev.js --progress --watch",
         "dev": "concurrently -r npm:watch:extension npm:watch:react",
-        "audit-ci": "audit-ci --config .audit-ci.json >/dev/null"
+        "audit-ci": "audit-ci --config .audit-ci.json"
     },
     "contributes": {
         "keybindings": [

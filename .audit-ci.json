@@ -6,5 +6,6 @@
     "pdfjs-dist"
   ],
   "show-not-found": true,
-  "output-format": "text"
+  "output-format": "text",
+  "report-type": "summary"
 }
