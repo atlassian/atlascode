@@ -66,11 +66,11 @@ describe('QuickPickUtils', () => {
     });
 
     describe('getDefaultAssigneeOptions', () => {
-        it('should include Unassigned option by default', () => {
+        it('should return empty array when no previous items and no current user', () => {
             const result = QuickPickUtils.getDefaultAssigneeOptions([], null);
 
-            expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ label: 'Unassigned' })]));
-            expect(result.length).toBe(1);
+            expect(result).toEqual([]);
+            expect(result.length).toBe(0);
         });
 
         it('should include previous selected items', () => {
@@ -85,26 +85,21 @@ describe('QuickPickUtils', () => {
 
             const result = QuickPickUtils.getDefaultAssigneeOptions(previousItems, null);
 
-            expect(result).toEqual(
-                expect.arrayContaining([
-                    expect.objectContaining({ label: 'Unassigned' }),
-                    expect.objectContaining({ label: 'John Doe' }),
-                ]),
-            );
-            expect(result.length).toBe(2);
+            expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ label: 'John Doe' })]));
+            expect(result.length).toBe(1);
         });
 
         it('should exclude duplicate labels from previous items', () => {
             const previousItems: QuickPickUser[] = [
                 {
-                    label: 'Unassigned',
-                    description: 'Duplicate',
-                    detail: '',
-                    user: null as any,
+                    label: 'John Doe',
+                    description: 'john@example.com',
+                    detail: 'Active',
+                    user: mockUser1,
                 },
                 {
                     label: 'John Doe',
-                    description: 'john@example.com',
+                    description: 'different@example.com',
                     detail: 'Active',
                     user: mockUser1,
                 },
@@ -112,14 +107,9 @@ describe('QuickPickUtils', () => {
 
             const result = QuickPickUtils.getDefaultAssigneeOptions(previousItems, null);
 
-            const unassignedCount = result.filter((item) => item.label === 'Unassigned').length;
-            expect(unassignedCount).toBe(1);
-            expect(result).toEqual(
-                expect.arrayContaining([
-                    expect.objectContaining({ label: 'Unassigned' }),
-                    expect.objectContaining({ label: 'John Doe' }),
-                ]),
-            );
+            const johnDoeCount = result.filter((item) => item.label === 'John Doe').length;
+            expect(johnDoeCount).toBe(1);
+            expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ label: 'John Doe' })]));
         });
 
         it('should handle multiple previous items', () => {
@@ -140,10 +130,9 @@ describe('QuickPickUtils', () => {
 
             const result = QuickPickUtils.getDefaultAssigneeOptions(previousItems, null);
 
-            expect(result.length).toBe(3);
+            expect(result.length).toBe(2);
             expect(result).toEqual(
                 expect.arrayContaining([
-                    expect.objectContaining({ label: 'Unassigned' }),
                     expect.objectContaining({ label: 'John Doe' }),
                     expect.objectContaining({ label: 'Jane Smith' }),
                 ]),
@@ -203,12 +192,12 @@ describe('QuickPickUtils', () => {
             expect(result[0].detail).toBe('john');
         });
 
-        it('should show Unassigned when no assignee', () => {
+        it('should show No assignee when no assignee', () => {
             const issue = createMockIssue('TEST-1', 'Test Issue', mockSite1);
 
             const result = QuickPickUtils.mapIssuesToQuickPickItems([issue]);
 
-            expect(result[0].detail).toBe('Unassigned');
+            expect(result[0].detail).toBe('No assignee');
         });
 
         it('should map multiple issues', () => {

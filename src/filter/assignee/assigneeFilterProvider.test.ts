@@ -1,6 +1,5 @@
 import { MinimalIssue, User } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo, ProductJira } from 'src/atlclients/authInfo';
-import { showIssue } from 'src/commands/jira/showIssue';
 import * as vscode from 'vscode';
 
 import { Container } from '../../container';
@@ -24,12 +23,15 @@ jest.mock('../../container', () => ({
         jiraProjectManager: {
             getProjects: jest.fn(),
         },
+        assignedWorkItemsView: {
+            setFilteredIssues: jest.fn(),
+            focus: jest.fn(),
+        },
     },
 }));
 
 jest.mock('./JiraUserService');
 jest.mock('./JiraIssueService');
-jest.mock('src/commands/jira/showIssue');
 
 const createMockSite = (id: string, host: string): DetailedSiteInfo => ({
     id,
@@ -143,6 +145,8 @@ describe('AssigneeFilterProvider', () => {
         );
 
         jest.spyOn(vscode.window, 'showInformationMessage').mockImplementation();
+        jest.spyOn(vscode.window, 'showErrorMessage').mockImplementation();
+        jest.spyOn(vscode.commands, 'executeCommand').mockResolvedValue(undefined);
 
         jest.mocked(Container.siteManager.getSitesAvailable).mockReturnValue([mockSite1, mockSite2]);
     });
@@ -162,27 +166,6 @@ describe('AssigneeFilterProvider', () => {
             expect(vscode.window.createQuickPick).not.toHaveBeenCalled();
         });
 
-        it('should create and configure QuickPick with default options', async () => {
-            await AssigneeFilterProvider.create();
-
-            expect(vscode.window.createQuickPick).toHaveBeenCalled();
-            expect(mockQuickPick.title).toBe('Filter by Assignee - Select Users');
-            expect(mockQuickPick.placeholder).toBe('Search for assignees');
-            expect(mockQuickPick.matchOnDescription).toBe(true);
-            expect(mockQuickPick.matchOnDetail).toBe(true);
-            expect(mockQuickPick.canSelectMany).toBe(true);
-            expect(mockQuickPick.items).toEqual(
-                expect.arrayContaining([
-                    expect.objectContaining({
-                        label: 'Unassigned',
-                        description: 'Filter by unassigned issues',
-                    }),
-                ]),
-            );
-            expect(mockQuickPick.selectedItems).toEqual([]);
-            expect(mockQuickPick.show).toHaveBeenCalled();
-        });
-
         it('should include previous selected items in default options', async () => {
             const previousUser: QuickPickUser = {
                 label: 'Previous User',
@@ -195,10 +178,7 @@ describe('AssigneeFilterProvider', () => {
             await AssigneeFilterProvider.create();
 
             expect(mockQuickPick.items).toEqual(
-                expect.arrayContaining([
-                    expect.objectContaining({ label: 'Unassigned' }),
-                    expect.objectContaining({ label: 'Previous User' }),
-                ]),
+                expect.arrayContaining([expect.objectContaining({ label: 'Previous User' })]),
             );
         });
     });
@@ -216,9 +196,7 @@ describe('AssigneeFilterProvider', () => {
             expect(mockQuickPick.title).toBe('Filter by Assignee - Select Users');
             expect(mockQuickPick.placeholder).toBe('Search for assignees');
             expect(mockQuickPick.busy).toBe(false);
-            expect(mockQuickPick.items).toEqual(
-                expect.arrayContaining([expect.objectContaining({ label: 'Unassigned' })]),
-            );
+            expect(mockQuickPick.items).toEqual([]);
         });
     });
 
@@ -331,7 +309,6 @@ describe('AssigneeFilterProvider', () => {
                 [selectedUser],
                 [mockSite1, mockSite2],
                 false,
-                false,
             );
         });
 
@@ -358,7 +335,7 @@ describe('AssigneeFilterProvider', () => {
             await AssigneeFilterProvider.create();
         });
 
-        it('should create issues QuickPick and display results', async () => {
+        it('should set filtered issues in sidebar and display results', async () => {
             const selectedUser: QuickPickUser = {
                 label: 'John Doe',
                 description: 'john@example.com',
@@ -371,12 +348,18 @@ describe('AssigneeFilterProvider', () => {
             const acceptHandler = mockQuickPick.onDidAccept.mock.calls[0][0];
             await acceptHandler();
 
-            expect(vscode.window.createQuickPick).toHaveBeenCalledTimes(2);
-            expect(mockIssuesQuickPick.title).toBe('Issues Assigned to John Doe (2)');
-            expect(mockIssuesQuickPick.placeholder).toBe('Found 2 issues');
-            expect(mockIssuesQuickPick.busy).toBe(false);
-            expect(mockIssuesQuickPick.items.length).toBe(2);
-            expect(mockIssuesQuickPick.show).toHaveBeenCalled();
+            expect(Container.assignedWorkItemsView.setFilteredIssues).toHaveBeenCalledTimes(2);
+            expect(Container.assignedWorkItemsView.setFilteredIssues).toHaveBeenNthCalledWith(1, [], 1);
+            expect(Container.assignedWorkItemsView.setFilteredIssues).toHaveBeenNthCalledWith(
+                2,
+                expect.arrayContaining([
+                    expect.objectContaining({ key: 'TEST-1' }),
+                    expect.objectContaining({ key: 'TEST-2' }),
+                ]),
+                1,
+            );
+            expect(vscode.commands.executeCommand).toHaveBeenCalled();
+            expect(Container.assignedWorkItemsView.focus).toHaveBeenCalled();
         });
 
         it('should display empty state when no issues found', async () => {
@@ -392,14 +375,8 @@ describe('AssigneeFilterProvider', () => {
             const acceptHandler = mockQuickPick.onDidAccept.mock.calls[0][0];
             await acceptHandler();
 
-            expect(mockIssuesQuickPick.title).toBe('Issues Assigned to John Doe (0)');
-            expect(mockIssuesQuickPick.placeholder).toBe('No issues found');
-            expect(mockIssuesQuickPick.items).toEqual([
-                expect.objectContaining({
-                    label: 'No Issues Found',
-                    description: 'No issues assigned to selected users',
-                }),
-            ]);
+            expect(Container.assignedWorkItemsView.setFilteredIssues).toHaveBeenCalledTimes(2);
+            expect(Container.assignedWorkItemsView.setFilteredIssues).toHaveBeenNthCalledWith(2, [], 1);
         });
 
         it('should display error state when fetch fails', async () => {
@@ -415,68 +392,10 @@ describe('AssigneeFilterProvider', () => {
             const acceptHandler = mockQuickPick.onDidAccept.mock.calls[0][0];
             await acceptHandler();
 
-            expect(mockIssuesQuickPick.title).toBe('Error Loading Issues');
-            expect(mockIssuesQuickPick.placeholder).toBe('Failed to load issues');
-            expect(mockIssuesQuickPick.items).toEqual([
-                expect.objectContaining({
-                    label: 'Error Loading Issues',
-                    description: 'Failed to fetch issues',
-                }),
-            ]);
-        });
-
-        it('should open issue when selected in issues QuickPick', async () => {
-            const selectedUser: QuickPickUser = {
-                label: 'John Doe',
-                description: 'john@example.com',
-                detail: 'Active',
-                user: mockUser1,
-            };
-            AssigneeFilterProvider['persistentSelectedItems'] = [selectedUser];
-            jest.mocked(JiraIssueService.getAssignedIssuesFromAllSites).mockResolvedValue([mockIssue1]);
-
-            const acceptHandler = mockQuickPick.onDidAccept.mock.calls[0][0];
-            await acceptHandler();
-
-            await Promise.resolve();
-
-            const issueAcceptHandler = mockIssuesQuickPick.onDidAccept.mock.calls[0][0];
-            mockIssuesQuickPick.selectedItems = [
-                {
-                    label: 'TEST-1: Test Issue 1',
-                    description: 'To Do',
-                    detail: 'Unassigned',
-                    issue: mockIssue1,
-                } as QuickPickIssue,
-            ];
-
-            await issueAcceptHandler();
-
-            expect(mockIssuesQuickPick.hide).toHaveBeenCalled();
-            expect(showIssue).toHaveBeenCalledWith(mockIssue1);
-        });
-
-        it('should not open issue if no issue is selected', async () => {
-            const selectedUser: QuickPickUser = {
-                label: 'John Doe',
-                description: 'john@example.com',
-                detail: 'Active',
-                user: mockUser1,
-            };
-            AssigneeFilterProvider['persistentSelectedItems'] = [selectedUser];
-            jest.mocked(JiraIssueService.getAssignedIssuesFromAllSites).mockResolvedValue([mockIssue1]);
-
-            const acceptHandler = mockQuickPick.onDidAccept.mock.calls[0][0];
-            await acceptHandler();
-
-            await Promise.resolve();
-
-            const issueAcceptHandler = mockIssuesQuickPick.onDidAccept.mock.calls[0][0];
-            mockIssuesQuickPick.selectedItems = [];
-
-            await issueAcceptHandler();
-
-            expect(showIssue).not.toHaveBeenCalled();
+            expect(Container.assignedWorkItemsView.setFilteredIssues).toHaveBeenCalledTimes(2);
+            expect(Container.assignedWorkItemsView.setFilteredIssues).toHaveBeenNthCalledWith(1, [], 1);
+            expect(Container.assignedWorkItemsView.setFilteredIssues).toHaveBeenNthCalledWith(2, null);
+            expect(vscode.window.showErrorMessage).toHaveBeenCalledWith('Failed to fetch issues: Fetch failed');
         });
 
         it('should not fetch issues if no sites available', async () => {
@@ -494,10 +413,10 @@ describe('AssigneeFilterProvider', () => {
             await acceptHandler();
 
             expect(JiraIssueService.getAssignedIssuesFromAllSites).not.toHaveBeenCalled();
-            expect(vscode.window.createQuickPick).toHaveBeenCalledTimes(1);
+            expect(Container.assignedWorkItemsView.setFilteredIssues).not.toHaveBeenCalled();
         });
 
-        it('should format multiple user names in title', async () => {
+        it('should handle multiple users correctly', async () => {
             const selectedUser1: QuickPickUser = {
                 label: 'John Doe',
                 description: 'john@example.com',
@@ -516,7 +435,12 @@ describe('AssigneeFilterProvider', () => {
             const acceptHandler = mockQuickPick.onDidAccept.mock.calls[0][0];
             await acceptHandler();
 
-            expect(mockIssuesQuickPick.title).toBe('Issues Assigned to John Doe, Jane Smith (1)');
+            expect(Container.assignedWorkItemsView.setFilteredIssues).toHaveBeenNthCalledWith(1, [], 2);
+            expect(Container.assignedWorkItemsView.setFilteredIssues).toHaveBeenNthCalledWith(
+                2,
+                expect.arrayContaining([expect.objectContaining({ key: 'TEST-1' })]),
+                2,
+            );
         });
     });
 

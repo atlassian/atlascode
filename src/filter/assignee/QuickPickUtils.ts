@@ -28,6 +28,7 @@ export const QuickPickUtils = {
         for (const previousItem of previousSelectedItems) {
             if (!existingLabels.has(previousItem.label)) {
                 defaultOptions.push(previousItem);
+                existingLabels.add(previousItem.label);
             }
         }
         return defaultOptions;
