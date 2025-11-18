@@ -450,7 +450,7 @@ export abstract class AbstractIssueEditorPage<
             return this.loadSelectOptions(input, userSearchUrl);
         }
 
-        return this.loadSelectOptions(input, this.fixAutocompleteUrl(field), field); //
+        return this.loadSelectOptions(input, this.fixAutocompleteUrl(field), field);
     };
 
     protected loadSelectOptions = (input: string, url: string, field?: SelectFieldUI): Promise<any[]> => {
