@@ -50,6 +50,13 @@ jest.mock('./api/extensionApi', () => ({
             getSites: jest.fn(() => []),
             fetchWorkItems: jest.fn(() => Promise.resolve([])),
         },
+        commands: {
+            openFolder: jest.fn(),
+            focusRovodevView: jest.fn(),
+            showUserAuthentication: jest.fn(),
+            showDiff: jest.fn(),
+            setCommandContext: jest.fn(),
+        },
     })),
 }));
 
@@ -163,13 +170,6 @@ jest.mock('./util/fsPromises', () => ({
 
 jest.mock('./util/waitFor', () => ({
     safeWaitFor: jest.fn(),
-}));
-
-jest.mock('../../src/commandContext', () => ({
-    setCommandContext: jest.fn(),
-    CommandContext: {
-        RovoDevTerminalEnabled: 'rovoDevTerminalEnabled',
-    },
 }));
 
 describe('RovoDevWebviewProvider - Real Implementation Tests', () => {

@@ -1,7 +1,10 @@
 import { isMinimalIssue, MinimalIssue, readSearchResults } from '@atlassianlabs/jira-pi-common-models';
 import { ValidBasicAuthSiteData } from 'src/atlclients/clientManager';
+import { showIssueForURL } from 'src/commands/jira/showIssue';
+import { Commands } from 'src/constants';
 import { Container } from 'src/container';
 import { SearchJiraHelper } from 'src/views/jira/searchJiraHelper';
+import { commands, Uri } from 'vscode';
 
 import { AuthInfo, DetailedSiteInfo, ProductJira } from './extensionApiTypes';
 
@@ -11,6 +14,10 @@ export * from './extensionApiTypes';
 export class JiraApi {
     public getSites = (): DetailedSiteInfo[] => {
         return Container.siteManager.getSitesAvailable(ProductJira);
+    };
+
+    public showIssue = async (issueURL: string): Promise<void> => {
+        await showIssueForURL(issueURL);
     };
 
     public fetchWorkItems = async (site: DetailedSiteInfo): Promise<MinimalIssue<DetailedSiteInfo>[]> => {
@@ -119,6 +126,28 @@ export class ExtensionApi {
             } catch {
                 return false;
             }
+        },
+    };
+
+    commands = {
+        openFolder: async (): Promise<void> => {
+            await commands.executeCommand(Commands.WorkbenchOpenFolder);
+        },
+        focusRovodevView: async (): Promise<void> => {
+            await commands.executeCommand('atlascode.views.rovoDev.webView.focus');
+        },
+        showUserAuthentication: async ({ openApiTokenLogin }: { openApiTokenLogin: boolean }) => {
+            if (openApiTokenLogin) {
+                await commands.executeCommand(Commands.JiraAPITokenLogin);
+            } else {
+                await commands.executeCommand(Commands.ShowJiraAuth);
+            }
+        },
+        showDiff: async (args: { left: Uri; right: Uri; title: string }) => {
+            await commands.executeCommand('vscode.diff', args.left, args.right, args.title);
+        },
+        setCommandContext: async (key: string, value: any) => {
+            await commands.executeCommand('setContext', key, value);
         },
     };
 
