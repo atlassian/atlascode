@@ -5,6 +5,8 @@ import { Container } from 'src/container';
 import { Logger } from 'src/logger';
 import { Disposable } from 'vscode';
 
+import { RovoDevEntitlementError, RovoDevEntitlementErrorType } from './rovoDevEntitlementError';
+
 export class RovoDevEntitlementChecker extends Disposable {
     private readonly _endpoint = `/gateway/api/rovodev/v3/sites/type`;
     private readonly _entitledResponse = [
@@ -26,32 +28,56 @@ export class RovoDevEntitlementChecker extends Disposable {
             const credentials = await Container.clientManager.getCloudPrimarySite();
 
             if (!credentials) {
-                throw new Error('No valid Rovo Dev credentials found');
+                throw new RovoDevEntitlementError(
+                    RovoDevEntitlementErrorType.CREDENTIAL_ERROR,
+                    'No valid Rovo Dev credentials found',
+                );
             }
 
             const options = {
                 method: 'GET',
                 headers: { ...this.createHeaders(credentials) },
             };
-            const response = await fetch(`https://${credentials.host}${this._endpoint}`, options);
+            const response = await fetch(`https://${credentials.host}${this._endpoint}`, options).catch((err) => {
+                throw new RovoDevEntitlementError(
+                    RovoDevEntitlementErrorType.FETCH_FAILED,
+                    `Failed to fetch Rovo Dev entitlement: ${err.message}`,
+                );
+            });
 
             if (!response.ok) {
-                throw new Error(`Entitlement check failed with status ${response.status}`);
+                const message = await response.json();
+                throw new RovoDevEntitlementError(
+                    RovoDevEntitlementErrorType.FETCH_FAILED,
+                    `Failed to fetch Rovo Dev entitlement: ${message}`,
+                    response.status,
+                );
             }
 
             const value = await response.text();
             Logger.debug(`Entitlement response: ${value}`);
 
-            const rovoDevEnabled = this._entitledResponse.includes(value);
+            if (!this._entitledResponse.includes(value.trim())) {
+                throw new RovoDevEntitlementError(
+                    RovoDevEntitlementErrorType.NO_ACTIVE_PRODUCT,
+                    'No active Rovo Dev product found for the provided credentials',
+                );
+            }
 
-            rovoDevEntitlementCheckEvent(rovoDevEnabled, value).then((e) => {
+            rovoDevEntitlementCheckEvent(true, value).then((e) => {
                 this._analyticsClient.sendTrackEvent(e);
             });
 
-            return rovoDevEnabled;
+            return true;
         } catch (err) {
             Logger.error(err, 'Unable to check Rovo Dev entitlement');
-            rovoDevEntitlementCheckEvent(false, err.message).then((e) => {
+            let errType: string =
+                err instanceof RovoDevEntitlementError ? err.errorType : RovoDevEntitlementErrorType.UNKOWN_ERROR;
+            if (errType === RovoDevEntitlementErrorType.FETCH_FAILED && err.statusCode) {
+                errType = `${errType}_${err.statusCode}`;
+            }
+
+            rovoDevEntitlementCheckEvent(false, errType).then((e) => {
                 this._analyticsClient.sendTrackEvent(e);
             });
             return false;
