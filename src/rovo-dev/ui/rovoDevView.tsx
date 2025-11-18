@@ -12,8 +12,8 @@ import { RovoDevToolReturnResponse } from 'src/rovo-dev/client';
 import { RovoDevContextItem, State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
-import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { useMessagingApi } from '../../react/atlascode/messagingApi';
+import { DetailedSiteInfo } from '../api/extensionApiTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../rovoDevWebviewProviderMessages';
 import { FeedbackType } from './feedback-form/FeedbackForm';
 import { ChatStream } from './messaging/ChatStream';

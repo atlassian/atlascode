@@ -26,11 +26,10 @@ import {
     workspace,
 } from 'vscode';
 
-import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { Commands } from '../constants';
 import { GitErrorCodes } from '../typings/git';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
-import { ExtensionApi } from './api/extensionApi';
+import { DetailedSiteInfo, ExtensionApi } from './api/extensionApi';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './client';
 import { RovoDevChatContextProvider } from './rovoDevChatContextProvider';
 import { RovoDevChatProvider } from './rovoDevChatProvider';

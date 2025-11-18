@@ -1,8 +1,12 @@
 import { isMinimalIssue, MinimalIssue, readSearchResults } from '@atlassianlabs/jira-pi-common-models';
-import { AuthInfo, DetailedSiteInfo, ProductJira } from 'src/atlclients/authInfo';
 import { ValidBasicAuthSiteData } from 'src/atlclients/clientManager';
 import { Container } from 'src/container';
 import { SearchJiraHelper } from 'src/views/jira/searchJiraHelper';
+
+import { AuthInfo, DetailedSiteInfo, ProductJira } from './extensionApiTypes';
+
+// Re-export types for convenience
+export * from './extensionApiTypes';
 
 export class JiraApi {
     public getSites = (): DetailedSiteInfo[] => {
@@ -74,7 +78,7 @@ export class ExtensionApi {
     };
 
     public readonly auth = {
-        // TODO: rectify these 2 methods
+        // TODO [AXON-1531]: rectify these 2 methods
 
         /**
          * Get valid credentials for the 1st available cloud site with an API token,
