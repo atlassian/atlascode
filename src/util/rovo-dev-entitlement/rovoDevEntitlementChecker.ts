@@ -7,6 +7,16 @@ import { Disposable } from 'vscode';
 
 import { RovoDevEntitlementError, RovoDevEntitlementErrorType } from './rovoDevEntitlementError';
 
+export enum EntitlementType {
+    ROVO_DEV_EVERYWHERE = 'ROVO_DEV_EVERYWHERE',
+    ROVO_DEV_STANDARD = 'ROVO_DEV_STANDARD',
+    ROVO_DEV_STANDARD_TRIAL = 'ROVO_DEV_STANDARD_TRIAL',
+    ROVO_DEV_BETA = 'ROVO_DEV_BETA',
+}
+interface EntitlementResponse {
+    isEntitled: boolean;
+    type: EntitlementType | RovoDevEntitlementErrorType;
+}
 export class RovoDevEntitlementChecker extends Disposable {
     private readonly _endpoint = `/gateway/api/rovodev/v3/sites/type`;
     private readonly _entitledResponse = [
@@ -23,7 +33,7 @@ export class RovoDevEntitlementChecker extends Disposable {
         this._analyticsClient = analyticsClient;
     }
 
-    public async checkEntitlement(): Promise<boolean> {
+    public async checkEntitlement(): Promise<EntitlementResponse> {
         try {
             const credentials = await Container.clientManager.getCloudPrimarySite();
 
@@ -38,6 +48,7 @@ export class RovoDevEntitlementChecker extends Disposable {
                 method: 'GET',
                 headers: { ...this.createHeaders(credentials) },
             };
+
             const response = await fetch(`https://${credentials.host}${this._endpoint}`, options).catch((err) => {
                 throw new RovoDevEntitlementError(
                     RovoDevEntitlementErrorType.FETCH_FAILED,
@@ -46,7 +57,7 @@ export class RovoDevEntitlementChecker extends Disposable {
             });
 
             if (!response.ok) {
-                const message = await response.json();
+                const message = response.toString();
                 throw new RovoDevEntitlementError(
                     RovoDevEntitlementErrorType.FETCH_FAILED,
                     `Failed to fetch Rovo Dev entitlement: ${message}`,
@@ -68,19 +79,27 @@ export class RovoDevEntitlementChecker extends Disposable {
                 this._analyticsClient.sendTrackEvent(e);
             });
 
-            return true;
+            return {
+                isEntitled: true,
+                type: value.trim() as EntitlementType,
+            };
         } catch (err) {
             Logger.error(err, 'Unable to check Rovo Dev entitlement');
-            let errType: string =
+            const errType: string =
                 err instanceof RovoDevEntitlementError ? err.errorType : RovoDevEntitlementErrorType.UNKOWN_ERROR;
+            let errTypeFinal = errType;
             if (errType === RovoDevEntitlementErrorType.FETCH_FAILED && err.statusCode) {
-                errType = `${errType}_${err.statusCode}`;
+                errTypeFinal = `${errType}_${err.statusCode}`;
             }
 
-            rovoDevEntitlementCheckEvent(false, errType).then((e) => {
+            rovoDevEntitlementCheckEvent(false, errTypeFinal).then((e) => {
                 this._analyticsClient.sendTrackEvent(e);
             });
-            return false;
+
+            return {
+                isEntitled: false,
+                type: errType as RovoDevEntitlementErrorType,
+            };
         }
     }
 

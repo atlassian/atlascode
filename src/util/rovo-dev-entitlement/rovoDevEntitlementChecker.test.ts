@@ -58,7 +58,7 @@ describe('RovoDevEntitlementChecker', () => {
 
             const result = await checker.checkEntitlement();
 
-            expect(result).toBe(true);
+            expect(result).toStrictEqual({ isEntitled: true, type: 'ROVO_DEV_EVERYWHERE' });
             expect(fetch).toHaveBeenCalledWith(
                 'https://test.atlassian.net/gateway/api/rovodev/v3/sites/type',
                 expect.objectContaining({
@@ -86,7 +86,7 @@ describe('RovoDevEntitlementChecker', () => {
 
             const result = await checker.checkEntitlement();
 
-            expect(result).toBe(false);
+            expect(result).toStrictEqual({ isEntitled: false, type: 'NO_ACTIVE_PRODUCT' });
         });
 
         it('should return false when no valid credentials found', async () => {
@@ -94,7 +94,7 @@ describe('RovoDevEntitlementChecker', () => {
 
             const result = await checker.checkEntitlement();
 
-            expect(result).toBe(false);
+            expect(result).toStrictEqual({ isEntitled: false, type: 'CREDENTIAL_ERROR' });
             expect(Logger.error).toHaveBeenCalledWith(expect.any(Error), 'Unable to check Rovo Dev entitlement');
         });
 
@@ -113,7 +113,7 @@ describe('RovoDevEntitlementChecker', () => {
 
             const result = await checker.checkEntitlement();
 
-            expect(result).toBe(false);
+            expect(result).toStrictEqual({ isEntitled: false, type: 'FETCH_FAILED' });
             expect(Logger.error).toHaveBeenCalledWith(expect.any(Error), 'Unable to check Rovo Dev entitlement');
         });
 
@@ -129,7 +129,7 @@ describe('RovoDevEntitlementChecker', () => {
 
             const result = await checker.checkEntitlement();
 
-            expect(result).toBe(false);
+            expect(result).toStrictEqual({ isEntitled: false, type: 'FETCH_FAILED' });
         });
     });
 });
