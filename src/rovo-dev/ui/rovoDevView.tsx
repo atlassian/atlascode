@@ -805,6 +805,12 @@ const RovoDevView: React.FC = () => {
 
     const onYoloModeToggled = useCallback(() => setIsYoloModeToggled((prev) => !prev), [setIsYoloModeToggled]);
 
+    const onLinkClick = React.useCallback(
+        (href: string) => {
+            postMessage({ type: RovoDevViewResponseType.OpenExternalLink, href });
+        },
+        [postMessage],
+    );
     React.useEffect(() => {
         // the event below (YoloModeToggled) with value true automatically approves any pending confirmation
         if (isYoloModeToggled) {
@@ -859,6 +865,7 @@ const RovoDevView: React.FC = () => {
                         currentState={currentState}
                         debugContext={debugPanelContext}
                         debugMcpContext={debugPanelMcpContext}
+                        onLinkClick={onLinkClick}
                     />
                 )}
                 <ChatStream
@@ -891,6 +898,7 @@ const RovoDevView: React.FC = () => {
                     jiraWorkItems={jiraWorkItems}
                     onJiraItemClick={onJiraItemClick}
                     onToolPermissionChoice={onToolPermissionChoice}
+                    onLinkClick={onLinkClick}
                 />
                 {!hidePromptBox && (
                     <div className="input-section-container">
