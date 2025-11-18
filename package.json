@@ -78,7 +78,8 @@
         "watch": "concurrently -r \"npm:watch:*\"",
         "watch:extension": "WATCH=true webpack --mode development --config webpack.react.dev.js --progress --watch",
         "watch:react": "WATCH=true webpack --mode development --config webpack.extension.dev.js --progress --watch",
-        "dev": "concurrently -r npm:watch:extension npm:watch:react"
+        "dev": "concurrently -r npm:watch:extension npm:watch:react",
+        "audit-ci": "audit-ci --config .audit-ci.json"
     },
     "contributes": {
         "keybindings": [
@@ -1560,7 +1561,6 @@
         "@atlaskit/editor-plugin-insert-block": "^7.0.1",
         "@atlaskit/editor-plugin-list": "^8.0.0",
         "@atlaskit/editor-plugin-mentions": "^8.0.0",
-        "@atlaskit/editor-plugin-tasks-and-decisions": "^9.0.0",
         "@atlaskit/editor-plugin-text-color": "^6.0.1",
         "@atlaskit/editor-plugin-toolbar-lists-indentation": "^7.0.1",
         "@atlaskit/editor-wikimarkup-transformer": "^11.16.4",
@@ -1597,7 +1597,7 @@
         "@atlassianlabs/guipi-jira-components": "^3.2.0",
         "@atlassianlabs/jira-metaui-client": "^2.0.0",
         "@atlassianlabs/jira-metaui-transformer": "^2.0.0",
-        "@atlassianlabs/jira-pi-client": "^2.0.1",
+        "@atlassianlabs/jira-pi-client": "2.0.0",
         "@atlassianlabs/jira-pi-common-models": "^2.0.0",
         "@atlassianlabs/jira-pi-meta-models": "^2.0.0",
         "@atlassianlabs/pi-client-common": "^2.0.0",
@@ -1788,6 +1788,18 @@
             "react-dom": "^18.3.1",
             "react": "^18.3.1"
         },
-        "js-yaml": "^4.1.1"
+        "js-yaml": "^4.1.1",
+        "@jest/core": {
+            "glob": "^11.1.0"
+        },
+        "@jest/reporters": {
+            "glob": "^11.1.0"
+        },
+        "jest-config": {
+            "glob": "^11.1.0"
+        },
+        "jest-runtime": {
+            "glob": "^11.1.0"
+        }
     }
 }

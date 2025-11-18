@@ -34,6 +34,7 @@ import { Logger } from './logger';
 import OnboardingProvider from './onboarding/onboardingProvider';
 import { registerQuickAuthCommand } from './onboarding/quickFlow';
 import { Pipeline } from './pipelines/model';
+import { RovodevCommandContext } from './rovo-dev/api/componentApi';
 import { RovoDevCodeActionProvider } from './rovo-dev/rovoDevCodeActionProvider';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
@@ -350,7 +351,7 @@ export class Container {
                 context.subscriptions.push(this._rovodevDisposable);
 
                 // this enables the Rovo Dev activity bar
-                await setCommandContext(CommandContext.RovoDevEnabled, true);
+                await setCommandContext(RovodevCommandContext.RovoDevEnabled, true);
 
                 // only in Boysenberry, we auto-focus the Rovo Dev view
                 if (this.isBoysenberryMode) {
@@ -397,7 +398,7 @@ export class Container {
             this._rovodevDisposable.dispose();
             this._rovodevDisposable = undefined;
 
-            await setCommandContext(CommandContext.RovoDevEnabled, false);
+            await setCommandContext(RovodevCommandContext.RovoDevEnabled, false);
             await RovoDevProcessManager.deactivateRovoDevProcessManager();
         } catch (error) {
             RovoDevLogger.error(error, 'Disabling Rovo Dev');

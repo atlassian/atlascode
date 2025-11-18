@@ -417,13 +417,23 @@ export abstract class AbstractIssueEditorPage<
         });
     };
 
-    /**
-     * AXON-49 This is a workaround for the suggested autocomplete URL
-     * (.../user/recommend/...) not being accessible
-     */
-    protected fixAutocompleteUrl(url: string): string {
+    protected fixAutocompleteUrl(field: SelectFieldUI): string {
+        let url = field.autoCompleteUrl;
+
+        /**
+         * AXON-49 This is a workaround for the suggested autocomplete URL
+         * (.../user/recommend/...) not being accessible
+         */
         if (url.includes('user/recommend')) {
             url = url.replace('user/recommend', 'user/search') + '&query=';
+        }
+
+        /**
+         * AXON-75 This is a workaround for the epic link field autocomplete URL
+         * for a case when epic field is renamed
+         */
+        if (field.schema.endsWith('epic-link')) {
+            url = url.split('?')[0] + '?fieldName=Epic Link&fieldValue=';
         }
 
         return url;
@@ -440,7 +450,7 @@ export abstract class AbstractIssueEditorPage<
             return this.loadSelectOptions(input, userSearchUrl);
         }
 
-        return this.loadSelectOptions(input, this.fixAutocompleteUrl(field.autoCompleteUrl), field);
+        return this.loadSelectOptions(input, this.fixAutocompleteUrl(field), field);
     };
 
     protected loadSelectOptions = (input: string, url: string, field?: SelectFieldUI): Promise<any[]> => {
