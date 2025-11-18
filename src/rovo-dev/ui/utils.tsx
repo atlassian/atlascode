@@ -49,6 +49,7 @@ export interface AbstractDialogMessage {
         text: string;
         link: string;
     };
+    details?: string;
 }
 
 export interface ErrorDialogMessage extends AbstractDialogMessage {

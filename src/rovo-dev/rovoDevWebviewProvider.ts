@@ -517,6 +517,33 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         );
     }
 
+    private buildErrorDetails(error: Error & { gitErrorCode?: GitErrorCodes }): string {
+        const sections: string[] = [];
+
+        // Add stack trace if available
+        if (error.stack) {
+            sections.push('Stack Trace:\n' + error.stack);
+        }
+
+        // Add error type
+        if (error.name && error.name !== 'Error') {
+            sections.push(`Error Type: ${error.name}`);
+        }
+
+        // Add git error code if available
+        if (error.gitErrorCode) {
+            sections.push(`Git Error Code: ${error.gitErrorCode}`);
+        }
+
+        // Add recent CLI server logs
+        const recentLogs = RovoDevProcessManager.getRecentLogs(5);
+        if (recentLogs.length > 0) {
+            sections.push(`Last ${recentLogs.length} CLI Server Log Lines:\n${recentLogs.join('\n')}`);
+        }
+
+        return sections.join('\n\n');
+    }
+
     private processError(
         error: Error & { gitErrorCode?: GitErrorCodes },
         {
@@ -546,6 +573,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 isRetriable,
                 isProcessTerminated,
                 uid: v4(),
+                details: this.buildErrorDetails(error),
             },
         });
     }

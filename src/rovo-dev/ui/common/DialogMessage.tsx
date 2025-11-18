@@ -22,6 +22,8 @@ export const DialogMessageItem: React.FC<{
     onToolPermissionChoice?: (toolCallId: string, choice: ToolPermissionChoice) => void;
     customButton?: { text: string; onClick: () => void };
 }> = ({ msg, isRetryAfterErrorButtonEnabled, retryAfterError, onToolPermissionChoice, customButton }) => {
+    const [isDetailsExpanded, setIsDetailsExpanded] = React.useState(false);
+
     const [title, icon] = React.useMemo(() => {
         let title: string;
         let icon: React.JSX.Element;
@@ -125,6 +127,53 @@ export const DialogMessageItem: React.FC<{
                     )}
 
                     {msg.statusCode && <div style={{ fontSize: 'smaller', textAlign: 'right' }}>{msg.statusCode}</div>}
+
+                    {msg.details && (
+                        <div style={{ marginTop: '8px' }}>
+                            <button
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: 'var(--vscode-textLink-foreground)',
+                                    cursor: 'pointer',
+                                    padding: '0',
+                                    fontSize: 'inherit',
+                                    textDecoration: 'underline',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                }}
+                                onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
+                            >
+                                <span
+                                    style={{
+                                        transform: isDetailsExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                                        transition: 'transform 0.2s',
+                                    }}
+                                >
+                                    ▶
+                                </span>
+                                Details
+                            </button>
+                            {isDetailsExpanded && (
+                                <div
+                                    style={{
+                                        marginTop: '8px',
+                                        padding: '8px',
+                                        backgroundColor: 'var(--vscode-editor-background)',
+                                        border: '1px solid var(--vscode-panel-border)',
+                                        borderRadius: '4px',
+                                        fontSize: 'smaller',
+                                        fontFamily: 'var(--vscode-editor-font-family)',
+                                        whiteSpace: 'pre-wrap',
+                                        wordBreak: 'break-word',
+                                    }}
+                                >
+                                    {msg.details}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
