@@ -11,7 +11,12 @@ import { v4 } from 'uuid';
 
 import { AnalyticsView } from '../../../../analyticsTypes';
 import { EditIssueAction, IssueCommentAction } from '../../../../ipc/issueActions';
-import { EditIssueData, emptyEditIssueData, isIssueCreated } from '../../../../ipc/issueMessaging';
+import {
+    EditIssueData,
+    emptyDevelopmentInfo,
+    emptyEditIssueData,
+    isIssueCreated,
+} from '../../../../ipc/issueMessaging';
 import { IssueHistoryItem } from '../../../../ipc/issueMessaging';
 import { LegacyPMFData } from '../../../../ipc/messaging';
 import { AtlascodeErrorBoundary } from '../../../../react/atlascode/common/ErrorBoundary';
@@ -30,6 +35,7 @@ import {
     MentionInfo,
 } from '../AbstractIssueEditorPage';
 import { AtlascodeMentionProvider } from '../common/AtlaskitEditor/AtlascodeMentionsProvider';
+import { Development } from '../Development';
 import NavItem from '../NavItem';
 import PullRequests from '../PullRequests';
 import { EditorStateProvider } from './EditorStateContext';
@@ -126,6 +132,17 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 }
                 case 'pullRequestUpdate': {
                     this.setState({ recentPullRequests: e.recentPullRequests });
+                    break;
+                }
+                case 'developmentInfoUpdate': {
+                    console.log('[DEV_INFO] Received developmentInfoUpdate in UI:', e.developmentInfo);
+                    const totalCount =
+                        (e.developmentInfo?.branches?.length || 0) +
+                        (e.developmentInfo?.commits?.length || 0) +
+                        (e.developmentInfo?.pullRequests?.length || 0) +
+                        (e.developmentInfo?.builds?.length || 0);
+                    console.log(`[DEV_INFO] Total items in UI: ${totalCount}`);
+                    this.setState({ developmentInfo: e.developmentInfo });
                     break;
                 }
                 case 'currentUserUpdate': {
@@ -787,6 +804,30 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         ),
                     };
                 });
+        }
+
+        // Add Development field after parent field
+        const developmentInfo = this.state.developmentInfo || emptyDevelopmentInfo;
+        const totalDevCount =
+            (developmentInfo.branches?.length || 0) +
+            (developmentInfo.commits?.length || 0) +
+            (developmentInfo.pullRequests?.length || 0) +
+            (developmentInfo.builds?.length || 0);
+
+        console.log('[DEV_INFO] Rendering sidebar - developmentInfo:', developmentInfo);
+        console.log('[DEV_INFO] Total dev count:', totalDevCount);
+        console.log('[DEV_INFO] Will show Development field:', totalDevCount > 0);
+
+        if (totalDevCount > 0) {
+            commonItems.push({
+                itemLabel: 'Development',
+                itemComponent: (
+                    <Development
+                        developmentInfo={developmentInfo}
+                        onOpenPullRequest={(pr: any) => this.postMessage({ action: 'openPullRequest', prHref: pr.url })}
+                    />
+                ),
+            });
         }
 
         const advancedItems: SidebarItem[] = this.advancedSidebarFields

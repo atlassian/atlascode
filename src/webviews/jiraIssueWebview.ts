@@ -259,6 +259,7 @@ export class JiraIssueWebview
                 this.updateWatchers(),
                 this.updateVoters(),
                 this.updateRelatedPullRequests(),
+                this.updateDevelopmentInfo(),
                 this.fetchFullHierarchy(),
             ]);
 
@@ -313,6 +314,200 @@ export class JiraIssueWebview
         if (relatedPrs.length > 0) {
             this.postMessage({ type: 'pullRequestUpdate', recentPullRequests: relatedPrs });
         }
+    }
+
+    async updateDevelopmentInfo() {
+        try {
+            Logger.debug(`[DEV_INFO] Starting updateDevelopmentInfo for issue ${this._issue.key}`);
+
+            // First, try to fetch development info from Jira's development panel API
+            const jiraDevInfo = await this.fetchJiraDevelopmentInfo();
+            Logger.debug(
+                `[DEV_INFO] Jira API returned: ${jiraDevInfo.branches.length} branches, ${jiraDevInfo.commits.length} commits, ${jiraDevInfo.pullRequests.length} PRs, ${jiraDevInfo.builds.length} builds`,
+            );
+
+            // Also get local repository information as a fallback
+            const [localBranches, localCommits, pullRequests, localBuilds] = await Promise.all([
+                this.relatedBranches(),
+                this.relatedCommits(),
+                this.recentPullRequests(),
+                this.relatedBuilds(),
+            ]);
+            Logger.debug(
+                `[DEV_INFO] Local data: ${localBranches.length} branches, ${localCommits.length} commits, ${pullRequests.length} PRs, ${localBuilds.length} builds`,
+            );
+
+            // Merge Jira dev info with local info
+            const branches = jiraDevInfo.branches.length > 0 ? jiraDevInfo.branches : localBranches;
+            const commits = jiraDevInfo.commits.length > 0 ? jiraDevInfo.commits : localCommits;
+            const builds = jiraDevInfo.builds.length > 0 ? jiraDevInfo.builds : localBuilds;
+
+            const finalDevInfo = {
+                branches,
+                commits,
+                pullRequests: jiraDevInfo.pullRequests.length > 0 ? jiraDevInfo.pullRequests : pullRequests,
+                builds,
+            };
+
+            const totalCount =
+                finalDevInfo.branches.length +
+                finalDevInfo.commits.length +
+                finalDevInfo.pullRequests.length +
+                finalDevInfo.builds.length;
+            Logger.debug(`[DEV_INFO] Final merged data: ${totalCount} total items`);
+            Logger.debug(`[DEV_INFO] Posting developmentInfoUpdate message to UI`);
+
+            this.postMessage({
+                type: 'developmentInfoUpdate',
+                developmentInfo: finalDevInfo,
+            });
+        } catch (e) {
+            Logger.error(e, '[DEV_INFO] Error updating development info');
+        }
+    }
+
+    private async fetchJiraDevelopmentInfo(): Promise<{
+        branches: any[];
+        commits: any[];
+        pullRequests: any[];
+        builds: any[];
+    }> {
+        const emptyResult = { branches: [], commits: [], pullRequests: [], builds: [] };
+
+        try {
+            Logger.debug(
+                `[DEV_INFO] fetchJiraDevelopmentInfo called for issue ${this._issue.key} (id: ${this._issue.id})`,
+            );
+
+            // Only available in Jira Cloud
+            if (!this._issue.siteDetails.isCloud) {
+                Logger.debug(`[DEV_INFO] Skipping - not a Cloud instance`);
+                return emptyResult;
+            }
+
+            const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+            const baseApiUrl = this._issue.siteDetails.baseApiUrl.replace(/\/rest$/, '');
+
+            // Try multiple application types - the web interface queries all of them
+            const applicationTypes = ['bitbucket', 'github', 'gitlab', 'stash'];
+            const allData = { branches: [], commits: [], pullRequests: [], builds: [] } as any;
+
+            for (const appType of applicationTypes) {
+                try {
+                    const devStatusUrl = `${baseApiUrl}/rest/dev-status/1.0/issue/detail?issueId=${this._issue.id}&applicationType=${appType}&dataType=branch&dataType=pullrequest&dataType=repository`;
+
+                    Logger.debug(`[DEV_INFO] Calling Jira dev-status API for ${appType}: ${devStatusUrl}`);
+
+                    const response = await client.transportFactory().get(devStatusUrl, {
+                        method: 'GET',
+                        headers: {
+                            Authorization: await client.authorizationProvider('GET', devStatusUrl),
+                        },
+                        timeout: 5000, // 5 second timeout per app type
+                    });
+
+                    Logger.debug(`[DEV_INFO] API response status for ${appType}: ${response.status}`);
+
+                    const devData = response.data;
+
+                    // Merge data from this app type
+                    if (devData.detail && devData.detail.length > 0) {
+                        Logger.debug(`[DEV_INFO] Found ${devData.detail.length} detail entries for ${appType}`);
+                        const parsed = this.parseDevStatusData(devData);
+                        allData.branches.push(...parsed.branches);
+                        allData.commits.push(...parsed.commits);
+                        allData.pullRequests.push(...parsed.pullRequests);
+                        allData.builds.push(...parsed.builds);
+                    }
+                } catch (appError: any) {
+                    Logger.debug(`[DEV_INFO] No data from ${appType}: ${appError.message}`);
+                    // Continue to next app type
+                }
+            }
+
+            Logger.debug(
+                `[DEV_INFO] Parsed Jira development info: ${allData.branches.length} branches, ${allData.commits.length} commits, ${allData.pullRequests.length} PRs, ${allData.builds.length} builds`,
+            );
+            return allData;
+        } catch (e) {
+            Logger.error(e, '[DEV_INFO] Could not fetch Jira development info, falling back to local data');
+            return emptyResult;
+        }
+    }
+
+    private parseDevStatusData(devData: any): {
+        branches: any[];
+        commits: any[];
+        pullRequests: any[];
+        builds: any[];
+    } {
+        const branches: any[] = [];
+        const commits: any[] = [];
+        const pullRequests: any[] = [];
+        const builds: any[] = [];
+
+        // Parse development data
+        if (devData.detail && devData.detail.length > 0) {
+            for (const app of devData.detail) {
+                // Extract branches
+                if (app.branches) {
+                    for (const branch of app.branches) {
+                        branches.push({
+                            name: branch.name,
+                            url: branch.url,
+                        });
+                    }
+                }
+
+                // Extract pull requests
+                if (app.pullRequests) {
+                    for (const pr of app.pullRequests) {
+                        pullRequests.push({
+                            id: pr.id,
+                            title: pr.name,
+                            url: pr.url,
+                            state: pr.status,
+                            author: pr.author,
+                        });
+
+                        // Extract commits from PRs
+                        if (pr.commits) {
+                            for (const commit of pr.commits) {
+                                commits.push({
+                                    hash: commit.id,
+                                    message: commit.message,
+                                    authorName: commit.author?.name || commit.authorTimestamp,
+                                    url: commit.url,
+                                });
+                            }
+                        }
+                    }
+                }
+
+                // Extract build statuses
+                if (app.repositories) {
+                    for (const repo of app.repositories) {
+                        if (repo.commits) {
+                            for (const commit of repo.commits) {
+                                if (commit.builds) {
+                                    for (const build of commit.builds) {
+                                        builds.push({
+                                            name: build.name || build.buildNumber,
+                                            key: build.buildNumber,
+                                            state: build.state,
+                                            url: build.url,
+                                            ts: build.lastUpdated,
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return { branches, commits, pullRequests, builds };
     }
 
     async updateWatchers() {
@@ -1692,5 +1887,111 @@ export class JiraIssueWebview
         );
 
         return relatedPrs.filter((pr) => pr !== undefined).map((p) => p!.data);
+    }
+
+    private async relatedBranches(): Promise<any[]> {
+        if (!Container.bitbucketContext) {
+            return [];
+        }
+
+        try {
+            const repos = Container.bitbucketContext.getAllRepositories();
+            const allBranches: any[] = [];
+
+            for (const repo of repos) {
+                const scm = Container.bitbucketContext.getRepositoryScm(repo.rootUri);
+                if (!scm) {
+                    continue;
+                }
+
+                try {
+                    const [localBranches, remoteBranches] = await Promise.all([
+                        scm.getBranches({ remote: false }),
+                        scm.getBranches({ remote: true }),
+                    ]);
+
+                    const issueKeyLower = this._issue.key.toLowerCase();
+                    const relatedBranches = [...localBranches, ...remoteBranches].filter(
+                        (branch) => branch.name && branch.name.toLowerCase().includes(issueKeyLower),
+                    );
+
+                    allBranches.push(...relatedBranches);
+                } catch (e) {
+                    Logger.debug(`Could not fetch branches for repo ${repo.rootUri}`, e);
+                }
+            }
+
+            return allBranches;
+        } catch (e) {
+            Logger.error(e, 'Error fetching related branches');
+            return [];
+        }
+    }
+
+    private async relatedCommits(): Promise<any[]> {
+        if (!Container.bitbucketContext) {
+            return [];
+        }
+
+        try {
+            const repos = Container.bitbucketContext.getAllRepositories();
+            const allCommits: any[] = [];
+
+            for (const repo of repos) {
+                const scm = Container.bitbucketContext.getRepositoryScm(repo.rootUri);
+                if (!scm) {
+                    continue;
+                }
+
+                try {
+                    // Get log of recent commits
+                    const commits = await scm.log({ maxEntries: 100 });
+                    const issueKeyLower = this._issue.key.toLowerCase();
+
+                    // Filter commits that mention the issue key
+                    const relatedCommits = commits.filter(
+                        (commit) => commit.message && commit.message.toLowerCase().includes(issueKeyLower),
+                    );
+
+                    allCommits.push(...relatedCommits);
+                } catch (e) {
+                    Logger.debug(`Could not fetch commits for repo ${repo.rootUri}`, e);
+                }
+            }
+
+            return allCommits;
+        } catch (e) {
+            Logger.error(e, 'Error fetching related commits');
+            return [];
+        }
+    }
+
+    private async relatedBuilds(): Promise<any[]> {
+        // Get builds from pull requests
+        const prs = await this.recentPullRequests();
+        const allBuilds: any[] = [];
+
+        for (const pr of prs) {
+            try {
+                const site = pr.siteDetails;
+                const bbApi = await clientForSite({
+                    details: site,
+                    ownerSlug: pr.destination?.repo?.fullName?.split('/')[0] || '',
+                    repoSlug: pr.destination?.repo?.fullName?.split('/')[1] || '',
+                });
+
+                const builds = await bbApi.pullrequests.getBuildStatuses({
+                    site: { details: site, ownerSlug: '', repoSlug: '' },
+                    data: pr,
+                    workspaceRepo: undefined,
+                });
+
+                allBuilds.push(...builds);
+            } catch (e) {
+                Logger.debug(`Could not fetch builds for PR ${pr.id}`, e);
+            }
+        }
+
+        return allBuilds;
     }
 }

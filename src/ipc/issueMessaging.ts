@@ -13,6 +13,20 @@ import { PullRequestData } from '../bitbucket/model';
 import { HostErrorMessage, Message } from './messaging';
 import { RepoData } from './prMessaging';
 
+export interface DevelopmentInfo {
+    branches: any[];
+    commits: any[];
+    pullRequests: PullRequestData[];
+    builds: any[];
+}
+
+export const emptyDevelopmentInfo: DevelopmentInfo = {
+    branches: [],
+    commits: [],
+    pullRequests: [],
+    builds: [],
+};
+
 // IssueData is the message that gets sent to the JiraIssuePage react view containing the issue details.
 // we simply use the same name with two extend statements to merge the multiple interfaces
 export interface EditIssueData extends Message {}
@@ -20,6 +34,7 @@ export interface EditIssueData extends EditIssueUI<DetailedSiteInfo> {
     currentUser: User;
     workInProgress: boolean;
     recentPullRequests: PullRequestData[];
+    developmentInfo?: DevelopmentInfo;
 }
 
 export const emptyEditIssueData: EditIssueData = {
@@ -28,6 +43,7 @@ export const emptyEditIssueData: EditIssueData = {
     currentUser: emptyUser,
     workInProgress: false,
     recentPullRequests: [],
+    developmentInfo: emptyDevelopmentInfo,
 };
 
 export interface IssueProblemsData extends Message {
