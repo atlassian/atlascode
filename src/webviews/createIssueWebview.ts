@@ -304,7 +304,13 @@ export class CreateIssueWebview
         const cacheKey = JSON.stringify({ siteId, startAt, maxResults, query: query || null });
 
         if (this._projectsWithCreateIssuesPermission[cacheKey]) {
-            return this._projectsWithCreateIssuesPermission[cacheKey];
+            const cached = this._projectsWithCreateIssuesPermission[cacheKey];
+            const projects = Array.isArray(cached) ? cached : cached.projects;
+
+            // if ther are no projects, we should refetch in case permissions have changed
+            if (projects.length > 0) {
+                return cached;
+            }
         }
 
         const paginatedResult = await Container.jiraProjectManager.getProjectsPaginated(
