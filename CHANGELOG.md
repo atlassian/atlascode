@@ -6,6 +6,10 @@
 
 - Added activity history support
 
+### Bug Fixes 
+
+- Fixed issue with project loading in Jira Cloud Create Issue Screen 
+
 ## What's new in 4.0.7
 
 ### Features
