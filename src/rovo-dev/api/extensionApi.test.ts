@@ -1,7 +1,6 @@
-import { ProductJira } from 'src/atlclients/authInfo';
 import { Container } from 'src/container';
 
-import { ExtensionApi, JiraApi } from './extensionApi';
+import { ExtensionApi, JiraApi, ProductJira } from './extensionApi';
 
 // Create a mutable primarySite property for testing
 const mockSiteManager = {

@@ -3,8 +3,8 @@ import * as React from 'react';
 import { State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
-import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { useMessagingApi } from '../../../react/atlascode/messagingApi';
+import { DetailedSiteInfo } from '../../api/extensionApiTypes';
 import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
 import { PullRequestForm } from '../create-pr/PullRequestForm';

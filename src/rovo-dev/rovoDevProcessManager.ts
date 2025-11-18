@@ -10,8 +10,7 @@ import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { waitFor } from 'src/rovo-dev/util/waitFor';
 import { Disposable, Event, EventEmitter, ExtensionContext, Terminal, Uri, window, workspace } from 'vscode';
 
-import { DetailedSiteInfo } from '../atlclients/authInfo';
-import { ExtensionApi } from './api/extensionApi';
+import { DetailedSiteInfo, ExtensionApi } from './api/extensionApi';
 import { RovoDevApiClient } from './client';
 import { RovoDevDisabledReason, RovoDevEntitlementCheckFailedDetail } from './rovoDevWebviewProviderMessages';
 import { RovoDevLogger } from './util/rovoDevLogger';
