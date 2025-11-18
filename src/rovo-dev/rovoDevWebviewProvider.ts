@@ -1,15 +1,12 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import * as fs from 'fs';
 import path from 'path';
-import { CommandContext, setCommandContext } from 'src/commandContext';
-import { showIssueForURL } from 'src/commands/jira/showIssue';
 import { configuration } from 'src/config/configuration';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { safeWaitFor } from 'src/rovo-dev/util/waitFor';
 import { v4 } from 'uuid';
 import {
     CancellationToken,
-    commands,
     ConfigurationChangeEvent,
     Disposable,
     env,
@@ -26,9 +23,9 @@ import {
     workspace,
 } from 'vscode';
 
-import { Commands } from '../constants';
 import { GitErrorCodes } from '../typings/git';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
+import { RovodevCommandContext } from './api/componentApi';
 import { DetailedSiteInfo, ExtensionApi } from './api/extensionApi';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './client';
 import { RovoDevChatContextProvider } from './rovoDevChatContextProvider';
@@ -435,19 +432,17 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.LaunchJiraAuth:
-                        if (e.openApiTokenLogin) {
-                            await commands.executeCommand(Commands.JiraAPITokenLogin);
-                        } else {
-                            await commands.executeCommand(Commands.ShowJiraAuth);
-                        }
+                        await this.extensionApi.commands.showUserAuthentication({
+                            openApiTokenLogin: !!e.openApiTokenLogin,
+                        });
                         break;
 
                     case RovoDevViewResponseType.OpenFolder:
-                        await commands.executeCommand(Commands.WorkbenchOpenFolder);
+                        await this.extensionApi.commands.openFolder();
                         break;
 
                     case RovoDevViewResponseType.OpenJira:
-                        await showIssueForURL(e.url);
+                        await this.extensionApi.jira.showIssue(e.url);
                         break;
 
                     case RovoDevViewResponseType.McpConsentChoiceSubmit:
@@ -693,12 +688,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         const resolvedPath = this.makeRelativePathAbsolute(filePath);
 
         if (cachedFilePath && fs.existsSync(cachedFilePath)) {
-            commands.executeCommand(
-                'vscode.diff',
-                Uri.file(cachedFilePath),
-                Uri.file(resolvedPath),
-                `${filePath} (Rovo Dev)`,
-            );
+            await this.extensionApi.commands.showDiff({
+                left: Uri.file(cachedFilePath),
+                right: Uri.file(resolvedPath),
+                title: `${filePath} (Rovo Dev)`,
+            });
             this._dwellTracker?.startDwellTimer();
         } else {
             let range: Range | undefined;
@@ -889,7 +883,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     public async invokeRovoDevAskCommand(prompt: string, context?: RovoDevContextItem[]): Promise<void> {
         // Always focus on the specific vscode view, even if disabled (so user can see the login prompt)
-        commands.executeCommand('atlascode.views.rovoDev.webView.focus');
+        await this.extensionApi.commands.focusRovodevView();
 
         // Wait for the webview to initialize, up to 5 seconds
         const initialized = await safeWaitFor({
@@ -933,7 +927,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
      */
     public async setPromptTextWithFocus(text: string, contextItem?: RovoDevContextItem): Promise<void> {
         // Focus and wait for webview to be ready to receive messages
-        await commands.executeCommand('atlascode.views.rovoDev.webView.focus');
+        await this.extensionApi.commands.focusRovodevView();
 
         const webview = await safeWaitFor({
             condition: (value) => !!value,
@@ -1048,8 +1042,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this.refreshDebugPanel();
 
         // enable the 'show terminal' button only when in debugging
-        setCommandContext(
-            CommandContext.RovoDevTerminalEnabled,
+        this.extensionApi.commands.setCommandContext(
+            RovodevCommandContext.RovoDevTerminalEnabled,
             !this.isBoysenberry && this.extensionApi.metadata.isDebugging(),
         );
 
