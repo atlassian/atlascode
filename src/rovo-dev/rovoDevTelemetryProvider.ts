@@ -1,5 +1,3 @@
-import { Container } from 'src/container';
-
 import {
     rovoDevAiResultViewedEvent,
     rovoDevCreatePrButtonClickedEvent,
@@ -13,6 +11,7 @@ import {
     rovoDevStopActionEvent,
     rovoDevTechnicalPlanningShownEvent,
 } from '../../src/analytics';
+import { ExtensionApi } from './api/extensionApi';
 import { PerformanceLogger } from './performanceLogger';
 import { RovoDevLogger } from './util/rovoDevLogger';
 
@@ -44,6 +43,7 @@ export class RovoDevTelemetryProvider {
     private _currentPromptId: string = '';
 
     private _firedTelemetryForCurrentPrompt: TelemetryRecord<boolean> = {};
+    private _extensionApi: ExtensionApi = new ExtensionApi();
 
     private readonly _perfLogger: PerformanceLogger;
     public get perfLogger() {
@@ -108,7 +108,7 @@ export class RovoDevTelemetryProvider {
                 undefined,
                 params,
             );
-            ret.then((evt) => Container.analyticsClient.sendTrackEvent(evt));
+            ret.then((evt) => this._extensionApi.analytics.sendTrackEvent(evt));
 
             RovoDevLogger.debug(`Event fired: ${funcName}(${params})`);
         }

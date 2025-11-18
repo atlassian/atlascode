@@ -11,7 +11,7 @@ import { waitFor } from 'src/rovo-dev/util/waitFor';
 import { Disposable, Event, EventEmitter, ExtensionContext, Terminal, Uri, window, workspace } from 'vscode';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
-import { Container } from '../container';
+import { ExtensionApi } from './api/extensionApi';
 import { RovoDevApiClient } from './client';
 import { RovoDevDisabledReason, RovoDevEntitlementCheckFailedDetail } from './rovoDevWebviewProviderMessages';
 import { RovoDevLogger } from './util/rovoDevLogger';
@@ -194,6 +194,7 @@ export abstract class RovoDevProcessManager {
     }
 
     private static currentCredentials: ValidBasicAuthSiteData | undefined;
+    private static extensionApi: ExtensionApi = new ExtensionApi();
 
     /** This lock ensures this class is async-safe, preventing repeated invocations
      * of `initializeRovoDev` or `refreshRovoDevCredentials` to launch multiple processes
@@ -207,7 +208,7 @@ export abstract class RovoDevProcessManager {
     }
 
     public static get state(): RovoDevProcessState {
-        if (Container.isBoysenberryMode) {
+        if (this.extensionApi.metadata.isBoysenberry()) {
             const httpPort = parseInt(process.env[RovoDevInfo.envVars.port] || '0');
             return { state: 'Boysenberry', hostname: RovoDevInfo.hostname, httpPort };
         } else {
@@ -357,7 +358,7 @@ export abstract class RovoDevProcessManager {
                 this.failIfRovoDevInstanceIsRunning();
             }
 
-            const credentials = await Container.clientManager.getCloudPrimarySite();
+            const credentials = await this.extensionApi.auth.getCloudPrimaryAuthInfo();
             await this.internalInitializeRovoDev(context, credentials, forceNewInstance);
         } finally {
             this.asyncLocked = false;
@@ -373,7 +374,7 @@ export abstract class RovoDevProcessManager {
             this.asyncLocked = true;
 
             try {
-                const credentials = await Container.clientManager.getCloudPrimarySite();
+                const credentials = await this.extensionApi.auth.getCloudPrimaryAuthInfo();
                 if (areCredentialsEqual(credentials, this.currentCredentials)) {
                     return;
                 }
@@ -435,6 +436,7 @@ class RovoDevTerminalInstance extends Disposable {
     private started = false;
     private httpPort: number = 0;
     private disposables: Disposable[] = [];
+    private extensionApi = new ExtensionApi();
 
     public get stopped() {
         return !this.rovoDevTerminal;
@@ -493,7 +495,7 @@ class RovoDevTerminalInstance extends Disposable {
                         env: {
                             USER: process.env.USER || process.env.USERNAME,
                             USER_EMAIL: credentials.authInfo.username,
-                            ROVODEV_SANDBOX_ID: Container.appInstanceId,
+                            ROVODEV_SANDBOX_ID: this.extensionApi.metadata.appInstanceId(),
                             ...(credentials.authInfo.password ? { USER_API_TOKEN: credentials.authInfo.password } : {}),
                         },
                     });
