@@ -78,7 +78,8 @@
         "watch": "concurrently -r \"npm:watch:*\"",
         "watch:extension": "WATCH=true webpack --mode development --config webpack.react.dev.js --progress --watch",
         "watch:react": "WATCH=true webpack --mode development --config webpack.extension.dev.js --progress --watch",
-        "dev": "concurrently -r npm:watch:extension npm:watch:react"
+        "dev": "concurrently -r npm:watch:extension npm:watch:react",
+        "audit-ci": "audit-ci --config .audit-ci.json"
     },
     "contributes": {
         "keybindings": [
@@ -1788,6 +1789,18 @@
             "react-dom": "^18.3.1",
             "react": "^18.3.1"
         },
-        "js-yaml": "^4.1.1"
+        "js-yaml": "^4.1.1",
+        "@jest/core": {
+            "glob": "^11.1.0"
+        },
+        "@jest/reporters": {
+            "glob": "^11.1.0"
+        },
+        "jest-config": {
+            "glob": "^11.1.0"
+        },
+        "jest-runtime": {
+            "glob": "^11.1.0"
+        }
     }
 }
