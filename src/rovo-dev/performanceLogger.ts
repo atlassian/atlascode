@@ -1,10 +1,11 @@
 import { performanceEvent, RovoDevEnv } from '../../src/analytics';
-import { Container } from '../../src/container';
 import Perf from '../util/perf';
+import { ExtensionApi } from './api/extensionApi';
 import { RovoDevLogger } from './util/rovoDevLogger';
 
 export class PerformanceLogger {
     private currentSessionId: string = '';
+    private extensionApi = new ExtensionApi();
 
     constructor(
         private readonly rovoDevEnv: RovoDevEnv,
@@ -33,7 +34,7 @@ export class PerformanceLogger {
         });
 
         RovoDevLogger.debug(`Event fired: rovodev.response.timeToFirstByte ${measure} ms`);
-        await Container.analyticsClient.sendTrackEvent(evt);
+        await this.extensionApi.analytics.sendTrackEvent(evt);
     }
 
     public async promptFirstMessageReceived(promptId: string) {
@@ -46,7 +47,7 @@ export class PerformanceLogger {
         });
 
         RovoDevLogger.debug(`Event fired: rovodev.response.timeToFirstMessage ${measure} ms`);
-        await Container.analyticsClient.sendTrackEvent(evt);
+        await this.extensionApi.analytics.sendTrackEvent(evt);
     }
 
     public async promptTechnicalPlanReceived(promptId: string) {
@@ -59,7 +60,7 @@ export class PerformanceLogger {
         });
 
         RovoDevLogger.debug(`Event fired: rovodev.response.timeToTechPlan ${measure} ms`);
-        await Container.analyticsClient.sendTrackEvent(evt);
+        await this.extensionApi.analytics.sendTrackEvent(evt);
     }
 
     public async promptLastMessageReceived(promptId: string) {
@@ -74,6 +75,6 @@ export class PerformanceLogger {
         Perf.clear(promptId);
 
         RovoDevLogger.debug(`Event fired: rovodev.response.timeToLastMessage ${measure} ms`);
-        await Container.analyticsClient.sendTrackEvent(evt);
+        await this.extensionApi.analytics.sendTrackEvent(evt);
     }
 }

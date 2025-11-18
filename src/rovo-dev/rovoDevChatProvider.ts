@@ -1,7 +1,7 @@
-import { Container } from 'src/container';
 import { RovoDevViewResponse } from 'src/rovo-dev/ui/rovoDevViewMessages';
 import { v4 } from 'uuid';
 
+import { ExtensionApi } from './api/extensionApi';
 import {
     RovoDevApiClient,
     RovoDevChatRequest,
@@ -34,7 +34,8 @@ type StreamingApi = 'chat' | 'replay';
 const PromptCommands = ['/prune', '/clear', '/status'];
 
 export class RovoDevChatProvider {
-    private readonly isDebugging = Container.isDebugging;
+    private readonly extensionApi = new ExtensionApi();
+    private readonly isDebugging = this.extensionApi.metadata.isDebugging();
 
     private _pendingToolConfirmation: Record<string, ToolPermissionChoice | 'undecided'> = {};
     private _pendingToolConfirmationLeft = 0;
@@ -46,7 +47,7 @@ export class RovoDevChatProvider {
     private _replayInProgress = false;
 
     private get isDebugPanelEnabled() {
-        return Container.config.rovodev.debugPanelEnabled;
+        return this.extensionApi.config.isDebugPanelEnabled();
     }
 
     private get isRetryPromptEnabled() {

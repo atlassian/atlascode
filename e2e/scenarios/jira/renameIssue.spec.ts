@@ -1,12 +1,11 @@
 import { APIRequestContext, Page } from '@playwright/test';
 import { getIssueFrame, setupIssueMock } from 'e2e/helpers';
-import { JiraTypes } from 'e2e/helpers/types';
 import { AtlascodeDrawer, AtlassianSettings, JiraIssuePage } from 'e2e/page-objects';
 
 const OLD_TITLE = 'User Interface Bugs';
 const NEW_TITLE = 'Check if renaming works';
 
-export async function renameIssue(page: Page, request: APIRequestContext, type: JiraTypes) {
+export async function renameIssue(page: Page, request: APIRequestContext) {
     await new AtlassianSettings(page).closeSettingsPage();
     await new AtlascodeDrawer(page).jira.openIssue('BTS-1 - User Interface Bugs');
 
@@ -16,7 +15,7 @@ export async function renameIssue(page: Page, request: APIRequestContext, type: 
     await issuePage.title.expectEqual(OLD_TITLE);
 
     // Add the updated mock
-    const cleanupIssueMock = await setupIssueMock(request, { summary: NEW_TITLE }, 'GET', type);
+    const cleanupIssueMock = await setupIssueMock(request, { summary: NEW_TITLE });
 
     await issuePage.title.changeTo(NEW_TITLE);
     await page.waitForTimeout(2_000);

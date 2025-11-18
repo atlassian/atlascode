@@ -48,6 +48,7 @@ interface ChatStreamProps {
     jiraWorkItems: MinimalIssue<DetailedSiteInfo>[] | undefined;
     onJiraItemClick: (issue: MinimalIssue<DetailedSiteInfo>) => void;
     onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionDialogChoice | 'enableYolo') => void;
+    onLinkClick: (href: string) => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -71,6 +72,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     jiraWorkItems,
     onJiraItemClick,
     onToolPermissionChoice,
+    onLinkClick,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -88,13 +90,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         );
         setHasChangesInGit(response.hasChanges);
     }, [messagingApi]);
-
-    const onLinkClick = React.useCallback(
-        (href: string) => {
-            messagingApi.postMessage({ type: RovoDevViewResponseType.OpenExternalLink, href });
-        },
-        [messagingApi],
-    );
     const [autoScrollEnabled, setAutoScrollEnabled] = React.useState(true);
 
     // Helper to perform auto-scroll when enabled
