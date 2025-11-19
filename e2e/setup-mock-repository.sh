@@ -45,7 +45,7 @@ echo '{"description": "Updated configuration for testing", "enabled": true, "set
 # Commit the changes
 git add .
 git commit -m "Add test feature with script.js and updated files"
-
+git checkout main
 cd ..
 
 
@@ -85,5 +85,5 @@ echo '{"description": "Updated configuration for testing", "enabled": true, "set
 # Commit the changes
 git add .
 git commit -m "Add test feature with script.js and updated files"
-
+git checkout main
 cd ..

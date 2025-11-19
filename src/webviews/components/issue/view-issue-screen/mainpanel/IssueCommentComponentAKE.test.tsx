@@ -99,6 +99,7 @@ const mockFetchImage = jest.fn();
 const mockOnDelete = jest.fn();
 const mockOnCommentTextChange = jest.fn();
 const mockOnEditingCommentChange = jest.fn();
+const mockHandleEditorFocus = jest.fn();
 
 // Mock mention provider
 const mockMentionProvider = AtlascodeMentionProvider.init({ url: '' }, jest.fn().mockResolvedValue([]));
@@ -139,6 +140,7 @@ describe('IssueCommentComponent with Atlaskit Editor', () => {
                     onEditingCommentChange={onEditingCommentChange}
                     isAtlaskitEditorEnabled={isAtlaskitEditorEnabled}
                     mentionProvider={mentionProvider}
+                    handleEditorFocus={mockHandleEditorFocus}
                 />
             </EditorStateProvider>
         );

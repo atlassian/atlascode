@@ -9,6 +9,7 @@ type Props = {
     value: string;
     onChange: (input: string) => void;
     onEditorFocus?: (e: any) => void;
+    onEditorBlur?: (e: any) => void;
     onSave?: (i: string) => void;
     onCancel?: () => void;
     fetchUsers?: (input: string) => Promise<{ displayName: string; mention: string; avatarUrl?: string }[]>;
@@ -23,6 +24,7 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
     value,
     onChange,
     onEditorFocus,
+    onEditorBlur,
     onCancel,
     onSave,
     fetchUsers,
@@ -67,6 +69,7 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                 <TextArea
                     style={{
                         background: 'var(--vscode-input-background)',
+                        color: isDisabled ? 'var(--vscode-disabledForeground)' : 'var(--vscode-input-foreground)',
                         border: '1px solid var(--vscode-input-border)',
                         caretColor: 'var(--vscode-editorCursor-background)',
                         minHeight: isDescription ? '175px' : '100px',
@@ -77,6 +80,7 @@ const JiraIssueTextAreaEditor: React.FC<Props> = ({
                     ref={inputTextAreaRef}
                     autoFocus
                     onFocus={onEditorFocus ? onEditorFocus : undefined}
+                    onBlur={onEditorBlur ? onEditorBlur : undefined}
                     onChange={(e) => onChange(e.target.value)}
                     isDisabled={saving || isDisabled}
                 />

@@ -11,6 +11,7 @@ type NestedCommentListProps = {
     fetchUsers: (input: string) => Promise<User[]>;
     onDelete: (comment: Comment) => Promise<void>;
     pullRequestState: PullRequestState;
+    handleEditorFocus: (isFocused: boolean) => void;
 };
 
 const useStyles = makeStyles({
@@ -25,6 +26,7 @@ export const NestedCommentList: React.FunctionComponent<NestedCommentListProps> 
     fetchUsers,
     onDelete,
     pullRequestState,
+    handleEditorFocus,
 }) => {
     const classes = useStyles();
     return (
@@ -37,6 +39,7 @@ export const NestedCommentList: React.FunctionComponent<NestedCommentListProps> 
                         fetchUsers={fetchUsers}
                         onDelete={onDelete}
                         pullRequestState={pullRequestState}
+                        handleEditorFocus={handleEditorFocus}
                     />
                 </Grid>
             ))}

@@ -14,7 +14,7 @@ import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
 import timer from 'src/util/perf';
-import { commands, env } from 'vscode';
+import { commands, env, window } from 'vscode';
 
 import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../analytics';
 import { performanceEvent } from '../analytics';
@@ -22,6 +22,7 @@ import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlcli
 import { clientForSite } from '../bitbucket/bbUtils';
 import { PullRequestData } from '../bitbucket/model';
 import { postComment } from '../commands/jira/postComment';
+import { showIssue } from '../commands/jira/showIssue';
 import { startWorkOnIssue } from '../commands/jira/startWorkOnIssue';
 import { Commands } from '../constants';
 import { Container } from '../container';
@@ -29,17 +30,21 @@ import {
     EditChildIssueAction,
     EditIssueAction,
     isAddAttachmentsAction,
+    isCloneIssue,
     isCreateIssue,
     isCreateIssueLink,
     isCreateWorklog,
     isDeleteByIDAction,
+    isDeleteWorklog,
     isGetImage,
+    isHandleEditorFocus,
     isIssueComment,
     isIssueDeleteComment,
     isOpenStartWorkPageAction,
     isTransitionIssue,
     isUpdateVoteAction,
     isUpdateWatcherAction,
+    isUpdateWorklog,
     TransitionChildIssueAction,
 } from '../ipc/issueActions';
 import { EditIssueData, emptyEditIssueData } from '../ipc/issueMessaging';
@@ -436,7 +441,12 @@ export class JiraIssueWebview
                     const newFieldValues: FieldValues = (msg as EditIssueAction).fields;
                     try {
                         const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
-                        await client.editIssue(this._issue!.key, newFieldValues);
+                        const teamId = (msg as EditIssueAction).teamId;
+
+                        await client.editIssue(
+                            this._issue!.key,
+                            teamId ? { [Object.keys(newFieldValues)[0]]: teamId } : newFieldValues,
+                        );
                         if (
                             Object.keys(newFieldValues).some(
                                 (fieldKey) => this._editUIData.fieldValues[`${fieldKey}.rendered`] !== undefined,
@@ -768,13 +778,12 @@ export class JiraIssueWebview
                         handled = true;
                         try {
                             const client = await Container.clientManager.jiraClient(msg.site);
-                            let queryParams: any = { adjustEstimate: msg.worklogData.adjustEstimate };
-                            delete msg.worklogData.adjustEstimate;
-                            if (queryParams.adjustEstimate === 'new') {
-                                queryParams = { ...queryParams, newEstimate: msg.worklogData.newEstimate };
-                                delete msg.worklogData.newEstimate;
+                            const { adjustEstimate, newEstimate, ...worklogBody } = msg.worklogData as any;
+                            let queryParams: any = { adjustEstimate };
+                            if (adjustEstimate === 'new' && newEstimate) {
+                                queryParams = { ...queryParams, newEstimate };
                             }
-                            const resp = await client.addWorklog(msg.issueKey, msg.worklogData, queryParams);
+                            const resp = await client.addWorklog(msg.issueKey, worklogBody, queryParams);
 
                             if (!Array.isArray(this._editUIData.fieldValues['worklog']?.worklogs)) {
                                 this._editUIData.fieldValues['worklog'] = { worklogs: [] };
@@ -785,6 +794,7 @@ export class JiraIssueWebview
                                 type: 'fieldValueUpdate',
                                 fieldValues: { worklog: this._editUIData.fieldValues['worklog'], nonce: msg.nonce },
                             });
+                            this.refreshIssueHistory();
                             issueUpdatedEvent(
                                 this._issue.siteDetails,
                                 this._issue.key,
@@ -798,6 +808,106 @@ export class JiraIssueWebview
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error creating worklog'),
+                                nonce: msg.nonce,
+                            });
+                        }
+                    }
+                    break;
+                }
+
+                case 'updateWorklog': {
+                    if (isUpdateWorklog(msg)) {
+                        handled = true;
+                        try {
+                            const client = await Container.clientManager.jiraClient(msg.site);
+                            const { adjustEstimate, newEstimate, ...worklogBody } = msg.worklogData as any;
+                            let queryParams: any = { adjustEstimate };
+                            if (adjustEstimate === 'new' && newEstimate) {
+                                queryParams = { ...queryParams, newEstimate };
+                            }
+
+                            const resp = await (client as any).putToJira(
+                                `issue/${msg.issueKey}/worklog/${msg.worklogId}`,
+                                worklogBody,
+                                queryParams,
+                            );
+
+                            if (Array.isArray(this._editUIData.fieldValues['worklog']?.worklogs)) {
+                                const worklogIndex = this._editUIData.fieldValues['worklog'].worklogs.findIndex(
+                                    (w: any) => w.id === msg.worklogId,
+                                );
+                                if (worklogIndex !== -1) {
+                                    this._editUIData.fieldValues['worklog'].worklogs[worklogIndex] = resp;
+                                }
+                            }
+
+                            this.postMessage({
+                                type: 'fieldValueUpdate',
+                                fieldValues: { worklog: this._editUIData.fieldValues['worklog'], nonce: msg.nonce },
+                            });
+                            this.refreshIssueHistory();
+                            issueUpdatedEvent(
+                                this._issue.siteDetails,
+                                this._issue.key,
+                                'worklog',
+                                this.fieldNameForKey('worklog'),
+                            ).then((e) => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
+                        } catch (e) {
+                            Logger.error(e, 'Error updating worklog');
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Error updating worklog'),
+                                nonce: msg.nonce,
+                            });
+                        }
+                    }
+                    break;
+                }
+
+                case 'deleteWorklog': {
+                    if (isDeleteWorklog(msg)) {
+                        handled = true;
+                        try {
+                            const client = await Container.clientManager.jiraClient(msg.site);
+                            const queryParams: any = {};
+                            if (msg.adjustEstimate) {
+                                queryParams.adjustEstimate = msg.adjustEstimate;
+                                if (msg.adjustEstimate === 'new' && msg.newEstimate) {
+                                    queryParams.newEstimate = msg.newEstimate;
+                                }
+                            }
+
+                            await (client as any).deleteToJira(
+                                `issue/${msg.issueKey}/worklog/${msg.worklogId}`,
+                                queryParams,
+                            );
+
+                            if (Array.isArray(this._editUIData.fieldValues['worklog']?.worklogs)) {
+                                this._editUIData.fieldValues['worklog'].worklogs = this._editUIData.fieldValues[
+                                    'worklog'
+                                ].worklogs.filter((w: any) => w.id !== msg.worklogId);
+                            }
+
+                            this.postMessage({
+                                type: 'fieldValueUpdate',
+                                fieldValues: { worklog: this._editUIData.fieldValues['worklog'], nonce: msg.nonce },
+                            });
+                            this.refreshIssueHistory();
+                            issueUpdatedEvent(
+                                this._issue.siteDetails,
+                                this._issue.key,
+                                'worklog',
+                                this.fieldNameForKey('worklog'),
+                            ).then((e) => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
+                        } catch (e) {
+                            Logger.error(e, 'Error deleting worklog');
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Error deleting worklog'),
                                 nonce: msg.nonce,
                             });
                         }
@@ -1128,6 +1238,170 @@ export class JiraIssueWebview
                     }
                     break;
                 }
+                case 'cloneIssue': {
+                    if (isCloneIssue(msg)) {
+                        handled = true;
+                        try {
+                            window.showInformationMessage(
+                                `Cloning ${this._issue.key}\n\nWhen cloning is complete, the cloned work item will be linked to ${this._issue.key} and you'll receive another pop-up here just like this one.`,
+                                'OK',
+                            );
+
+                            const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+
+                            const clonedIssueData = {
+                                fields: {
+                                    summary: msg.issueData.summary,
+                                    project: { key: this._issue.key.split('-')[0] },
+                                    issuetype: { name: 'Task' }, // Default to Task, could be made configurable
+                                    assignee: msg.issueData.assignee
+                                        ? { accountId: msg.issueData.assignee.accountId }
+                                        : undefined,
+                                    reporter: msg.issueData.reporter
+                                        ? { accountId: msg.issueData.reporter.accountId }
+                                        : undefined,
+                                },
+                            };
+
+                            if (msg.issueData.cloneOptions?.includeDescription) {
+                                try {
+                                    const originalIssue = await client.getIssue(this._issue.key, ['description'], '');
+                                    if (originalIssue.fields.description) {
+                                        (clonedIssueData.fields as any).description = originalIssue.fields.description;
+                                        Logger.info('Including description in cloned issue');
+                                    }
+                                } catch (e) {
+                                    Logger.warn('Could not fetch description for cloning', e);
+                                }
+                            }
+
+                            const resp = await client.createIssue(clonedIssueData);
+
+                            // Create a link between the original and cloned issue
+                            await client.createIssueLink(resp.key, {
+                                type: { name: 'Cloners' },
+                                inwardIssue: { key: this._issue.key },
+                                outwardIssue: { key: resp.key },
+                            });
+
+                            // Handle linked issues if requested
+                            if (msg.issueData.cloneOptions?.includeLinkedIssues) {
+                                try {
+                                    const originalIssue = await client.getIssue(this._issue.key, ['issuelinks'], '');
+                                    if (originalIssue.fields.issuelinks && originalIssue.fields.issuelinks.length > 0) {
+                                        Logger.info(`Cloning ${originalIssue.fields.issuelinks.length} linked issues`);
+
+                                        for (const link of originalIssue.fields.issuelinks) {
+                                            try {
+                                                const linkedKey = link.outwardIssue
+                                                    ? link.outwardIssue.key
+                                                    : link.inwardIssue.key;
+
+                                                await client.createIssueLink(resp.key, {
+                                                    type: { name: link.type.name },
+                                                    inwardIssue: { key: resp.key },
+                                                    outwardIssue: { key: linkedKey },
+                                                });
+                                                Logger.info(`Cloned link to issue: ${linkedKey}`);
+                                            } catch (linkError) {
+                                                Logger.warn(
+                                                    `Failed to clone link to issue ${link.outwardIssue?.key || link.inwardIssue?.key}:`,
+                                                    linkError,
+                                                );
+                                            }
+                                        }
+                                    }
+                                } catch (e) {
+                                    Logger.warn('Could not clone linked issues', e);
+                                }
+                            }
+
+                            // Handle child issues if requested
+                            if (msg.issueData.cloneOptions?.includeChildIssues) {
+                                try {
+                                    const originalIssue = await client.getIssue(this._issue.key, ['subtasks'], '');
+                                    if (originalIssue.fields.subtasks && originalIssue.fields.subtasks.length > 0) {
+                                        Logger.info(`Cloning ${originalIssue.fields.subtasks.length} child issues`);
+
+                                        for (const subtask of originalIssue.fields.subtasks) {
+                                            try {
+                                                const subtaskDetails = await client.getIssue(
+                                                    subtask.key,
+                                                    ['summary', 'description', 'assignee', 'reporter', 'issuetype'],
+                                                    '',
+                                                );
+
+                                                const clonedSubtaskData = {
+                                                    fields: {
+                                                        summary: `CLONE - ${subtaskDetails.fields.summary}`,
+                                                        project: { key: this._issue.key.split('-')[0] },
+                                                        issuetype: { name: subtaskDetails.fields.issuetype.name },
+                                                        parent: { key: resp.key }, // Set the cloned issue as parent
+                                                        assignee: subtaskDetails.fields.assignee
+                                                            ? { accountId: subtaskDetails.fields.assignee.accountId }
+                                                            : undefined,
+                                                        reporter: subtaskDetails.fields.reporter
+                                                            ? { accountId: subtaskDetails.fields.reporter.accountId }
+                                                            : undefined,
+                                                        description: subtaskDetails.fields.description,
+                                                    },
+                                                };
+
+                                                const clonedSubtask = await client.createIssue(clonedSubtaskData);
+                                                Logger.info(
+                                                    `Cloned child issue: ${subtask.key} -> ${clonedSubtask.key}`,
+                                                );
+                                            } catch (subtaskError) {
+                                                Logger.warn(
+                                                    `Failed to clone child issue ${subtask.key}:`,
+                                                    subtaskError,
+                                                );
+                                            }
+                                        }
+                                    }
+                                } catch (e) {
+                                    Logger.warn('Could not clone child issues', e);
+                                }
+                            }
+
+                            issueCreatedEvent(this._issue.siteDetails, resp.key).then((e) => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
+
+                            commands.executeCommand(
+                                Commands.RefreshAssignedWorkItemsExplorer,
+                                OnJiraEditedRefreshDelay,
+                            );
+                            commands.executeCommand(Commands.RefreshCustomJqlExplorer, OnJiraEditedRefreshDelay);
+
+                            // Show VS Code notification
+                            window
+                                .showInformationMessage(
+                                    `Cloning complete! Issue ${resp.key} has been cloned from ${this._issue.key} and linked successfully.`,
+                                    'Open Cloned Issue',
+                                )
+                                .then((selection: string | undefined) => {
+                                    if (selection === 'Open Cloned Issue') {
+                                        showIssue({ key: resp.key, siteDetails: this._issue.siteDetails });
+                                    }
+                                });
+
+                            this.postMessage({
+                                type: 'fieldValueUpdate',
+                                fieldValues: { loadingField: '' },
+                                nonce: msg.nonce,
+                            });
+                        } catch (e) {
+                            Logger.error(e, 'Error cloning issue');
+                            this.postMessage({
+                                type: 'error',
+                                reason: 'Error cloning issue',
+                                nonce: msg.nonce,
+                            });
+                        }
+                    }
+                    break;
+                }
                 case 'setRovoDevPromptText': {
                     Container.rovodevWebviewProvider.setPromptTextWithFocus((msg as any).text);
                     break;
@@ -1209,6 +1483,26 @@ export class JiraIssueWebview
                     }
                     break;
                 }
+                case 'fetchIssueHistory': {
+                    handled = true;
+                    try {
+                        await this.refreshIssueHistory();
+                    } catch (e) {
+                        Logger.error(e, 'Error fetching issue history');
+                        this.postMessage({
+                            type: 'historyUpdate',
+                            history: [],
+                        });
+                    }
+                    break;
+                }
+                case 'handleEditorFocus': {
+                    if (isHandleEditorFocus(msg)) {
+                        handled = true;
+                        Container.setIsEditorFocused(msg.isFocused);
+                    }
+                    break;
+                }
             }
         }
 
@@ -1238,6 +1532,148 @@ export class JiraIssueWebview
         }
 
         return hierarchy;
+    }
+
+    private async refreshIssueHistory() {
+        try {
+            const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+            const apiVersion = client.apiVersion || '2';
+            const baseApiUrl = this._issue.siteDetails.baseApiUrl.replace(/\/rest$/, '');
+            const historyUrl = `${baseApiUrl}/rest/api/${apiVersion}/issue/${this._issue.key}?expand=changelog`;
+
+            const [historyResponse, worklogResponse] = await Promise.all([
+                client.transportFactory().get(historyUrl, {
+                    method: 'GET',
+                    headers: {
+                        Authorization: await client.authorizationProvider('GET', historyUrl),
+                    },
+                }),
+                client
+                    .transportFactory()
+                    .get(`${baseApiUrl}/rest/api/${apiVersion}/issue/${this._issue.key}/worklog`, {
+                        method: 'GET',
+                        headers: {
+                            Authorization: await client.authorizationProvider(
+                                'GET',
+                                `${baseApiUrl}/rest/api/${apiVersion}/issue/${this._issue.key}/worklog`,
+                            ),
+                        },
+                    })
+                    .catch((e) => {
+                        Logger.warn(e, 'Error fetching worklogs for history');
+                        return { data: { worklogs: [] } };
+                    }),
+            ]);
+
+            const historyItems: any[] = [];
+            const changelog = historyResponse.data.changelog;
+            const issueData = historyResponse.data;
+            const worklogs = worklogResponse.data.worklogs || [];
+
+            // Add the "Work item created" event
+            if (issueData.fields?.created && issueData.fields?.reporter) {
+                const reporter = issueData.fields.reporter;
+                historyItems.push({
+                    id: '__CREATED__',
+                    timestamp: issueData.fields.created,
+                    author: {
+                        displayName: reporter.displayName || reporter.name,
+                        accountId: reporter.accountId,
+                        avatarUrl: reporter.avatarUrls?.['48x48'] || reporter.avatarUrls?.['32x32'],
+                    },
+                    field: '__CREATED__',
+                    fieldDisplayName: '__CREATED__',
+                    from: null,
+                    to: null,
+                    fromString: undefined,
+                    toString: undefined,
+                });
+            }
+
+            if (changelog && changelog.histories) {
+                changelog.histories.forEach((history: any) => {
+                    history.items.forEach((item: any) => {
+                        let fieldKey = item.fieldId || item.field;
+                        if (fieldKey && fieldKey.toLowerCase() === 'worklogid') {
+                            return;
+                        }
+                        if (fieldKey) {
+                            const lowerFieldKey = fieldKey.toLowerCase();
+                            if (lowerFieldKey === 'assignee' || item.field?.toLowerCase() === 'assignee') {
+                                fieldKey = 'assignee';
+                            }
+                        }
+                        const fieldDisplayName = this.fieldNameForKey(fieldKey) || item.field || fieldKey;
+                        const fromValue =
+                            item.fromString ||
+                            (typeof item.from === 'string'
+                                ? item.from
+                                : item.from?.displayName || item.from?.name || null);
+                        const toValue =
+                            item.toString ||
+                            (typeof item.to === 'string' ? item.to : item.to?.displayName || item.to?.name || null);
+                        historyItems.push({
+                            id: `${history.id}-${fieldKey}`,
+                            timestamp: history.created,
+                            author: {
+                                displayName: history.author.displayName || history.author.name,
+                                accountId: history.author.accountId,
+                                avatarUrl: history.author.avatarUrls?.['48x48'] || history.author.avatarUrls?.['32x32'],
+                            },
+                            field: fieldKey,
+                            fieldDisplayName: fieldDisplayName,
+                            from: fromValue,
+                            to: toValue,
+                            fromString: item.fromString,
+                            toString: item.toString,
+                        });
+                    });
+                });
+            }
+
+            worklogs.forEach((worklog: any) => {
+                if (worklog.started) {
+                    historyItems.push({
+                        id: `worklog-${worklog.id}`,
+                        timestamp: worklog.started,
+                        author: {
+                            displayName: worklog.author?.displayName || worklog.author?.name || 'Unknown',
+                            accountId: worklog.author?.accountId,
+                            avatarUrl: worklog.author?.avatarUrls?.['48x48'] || worklog.author?.avatarUrls?.['32x32'],
+                        },
+                        field: 'worklog',
+                        fieldDisplayName: 'Work Log',
+                        from: null,
+                        to: worklog.timeSpent,
+                        fromString: undefined,
+                        toString: worklog.comment || '',
+                        worklogComment: worklog.comment,
+                        worklogTimeSpent: worklog.timeSpent,
+                    });
+                }
+            });
+
+            historyItems.sort((a, b) => {
+                if (a.id === '__CREATED__') {
+                    return 1;
+                }
+                if (b.id === '__CREATED__') {
+                    return -1;
+                }
+                return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+            });
+
+            this.postMessage({
+                type: 'historyUpdate',
+                history: historyItems,
+            });
+        } catch (e) {
+            Logger.error(e, 'Error refreshing issue history');
+            this.postMessage({
+                type: 'historyUpdate',
+                history: [],
+            });
+        }
     }
 
     private async recentPullRequests(): Promise<PullRequestData[]> {

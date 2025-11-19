@@ -263,7 +263,7 @@ describe('CustomJqlViewProvider', () => {
         );
 
         it.each([[false], [true]])(
-            "should return a 'Login to Jira' node if no sites are available (nestSubtasks %p)",
+            'should return empty array if no sites are available (nestSubtasks %p)',
             async (nestSubtasks) => {
                 Container.config.jira.explorer.nestSubtasks = nestSubtasks;
 
@@ -273,10 +273,8 @@ describe('CustomJqlViewProvider', () => {
                 const children = await provider.getChildren();
 
                 expect(Container.jqlManager.enabledJQLEntries).toHaveBeenCalled();
-                expect(children).toHaveLength(1);
-
-                expect(children[0].label).toEqual('Please login to Jira');
-                expect(children[0].command).toBeDefined();
+                // Should return empty array to show viewsWelcome with login button
+                expect(children).toHaveLength(0);
             },
         );
     });

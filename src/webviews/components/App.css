@@ -835,6 +835,10 @@ section button span {
     background-color: var(--vscode-editor-background--darken-05);
 }
 
+.ac-worklog-inline-dialog > div {
+    background: transparent !important;
+}
+
 .ac-inline-items-container {
     width: 100%;
 }
@@ -1934,6 +1938,9 @@ pre {
 .ac-attachment-thumb-img-inline {
     width: 34px;
     height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .ac-attachment-overlay-container {

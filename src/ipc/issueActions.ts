@@ -23,6 +23,7 @@ export interface RefreshIssueAction extends Action {
 export interface EditIssueAction extends Action {
     action: 'editIssue';
     fields: FieldValues;
+    teamId?: string;
 }
 
 export interface EditChildIssueAction extends Action {
@@ -78,6 +79,7 @@ export interface FetchQueryAction extends Action {
     autocompleteUrl?: string;
     valueType: ValueType;
     currentJQL?: string;
+    fieldName?: string;
 }
 
 export interface ScreensForProjectsAction extends Action {
@@ -87,6 +89,13 @@ export interface ScreensForProjectsAction extends Action {
 
 export interface ScreensForSiteAction extends Action {
     site: DetailedSiteInfo;
+}
+
+export interface LoadMoreProjectsAction extends Action {
+    action: 'loadMoreProjects';
+    maxResults?: number;
+    startAt?: number;
+    query?: string;
 }
 
 export interface CreateSelectOptionAction extends Action {
@@ -127,6 +136,12 @@ export interface OpenStartWorkPageAction extends Action {
     issue: MinimalIssue<DetailedSiteInfo>;
 }
 
+export interface CloneIssueAction extends Action {
+    action: 'cloneIssue';
+    site: DetailedSiteInfo;
+    issueData: any;
+}
+
 export interface WorklogData {
     comment: string;
     started: string;
@@ -139,6 +154,23 @@ export interface CreateWorklogAction extends Action {
     site: DetailedSiteInfo;
     issueKey: string;
     worklogData: WorklogData;
+}
+
+export interface UpdateWorklogAction extends Action {
+    action: 'updateWorklog';
+    site: DetailedSiteInfo;
+    issueKey: string;
+    worklogId: string;
+    worklogData: WorklogData;
+}
+
+export interface DeleteWorklogAction extends Action {
+    action: 'deleteWorklog';
+    site: DetailedSiteInfo;
+    issueKey: string;
+    worklogId: string;
+    adjustEstimate?: string;
+    newEstimate?: string;
 }
 
 export interface UpdateWatcherAction extends Action {
@@ -169,6 +201,11 @@ export interface GetImageAction extends Action {
     url: string;
 }
 
+export interface FetchIssueHistoryAction extends Action {
+    action: 'fetchIssueHistory';
+    issueKey: string;
+}
+
 export interface UpdateAiSettingsAction extends Action {
     action: 'updateAiSettings';
     newState: IssueSuggestionSettings;
@@ -188,6 +225,11 @@ export interface AiSuggeestionFeedbackAction extends Action {
         description: string;
         contactMe: boolean;
     };
+}
+
+export interface HandleEditorFocusAction extends Action {
+    action: 'handleEditorFocus';
+    isFocused: boolean;
 }
 
 export function isGetImage(a: Action): a is GetImageAction {
@@ -226,6 +268,10 @@ export function isScreensForSite(a: Action): a is ScreensForSiteAction {
     return (<ScreensForSiteAction>a).site !== undefined;
 }
 
+export function isLoadMoreProjects(a: Action): a is LoadMoreProjectsAction {
+    return a && a.action === 'loadMoreProjects';
+}
+
 export function isCreateSelectOption(a: Action): a is CreateSelectOptionAction {
     return a && (<CreateSelectOptionAction>a).createData !== undefined;
 }
@@ -240,6 +286,25 @@ export function isCreateWorklog(a: Action): a is CreateWorklogAction {
         (<CreateWorklogAction>a).worklogData !== undefined &&
         (<CreateWorklogAction>a).site !== undefined &&
         (<CreateWorklogAction>a).issueKey !== undefined
+    );
+}
+
+export function isUpdateWorklog(a: Action): a is UpdateWorklogAction {
+    return (
+        a &&
+        (<UpdateWorklogAction>a).worklogData !== undefined &&
+        (<UpdateWorklogAction>a).site !== undefined &&
+        (<UpdateWorklogAction>a).issueKey !== undefined &&
+        (<UpdateWorklogAction>a).worklogId !== undefined
+    );
+}
+
+export function isDeleteWorklog(a: Action): a is DeleteWorklogAction {
+    return (
+        a &&
+        (<DeleteWorklogAction>a).site !== undefined &&
+        (<DeleteWorklogAction>a).issueKey !== undefined &&
+        (<DeleteWorklogAction>a).worklogId !== undefined
     );
 }
 
@@ -296,6 +361,10 @@ export function isOpenStartWorkPageAction(a: Action): a is OpenStartWorkPageActi
     return (<OpenStartWorkPageAction>a).issue !== undefined;
 }
 
+export function isCloneIssue(a: Action): a is CloneIssueAction {
+    return a && a.action === 'cloneIssue';
+}
+
 export function isUpdateAiSettings(a: Action): a is UpdateAiSettingsAction {
     return a && a.action === 'updateAiSettings' && (<UpdateAiSettingsAction>a).newState !== undefined;
 }
@@ -316,4 +385,8 @@ export function isAiSuggestionFeedback(a: Action): a is AiSuggeestionFeedbackAct
         (<AiSuggeestionFeedbackAction>a).isPositive !== undefined &&
         (<AiSuggeestionFeedbackAction>a).todoData !== undefined
     );
+}
+
+export function isHandleEditorFocus(a: Action): a is HandleEditorFocusAction {
+    return a && a.action === 'handleEditorFocus';
 }

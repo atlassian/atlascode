@@ -1,11 +1,10 @@
-import { isMinimalIssue, MinimalIssue, readSearchResults } from '@atlassianlabs/jira-pi-common-models';
-import { Container } from 'src/container';
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { Disposable, Event, EventEmitter } from 'vscode';
 
-import { DetailedSiteInfo, ProductJira } from '../atlclients/authInfo';
-import { SearchJiraHelper } from '../views/jira/searchJiraHelper';
+import { DetailedSiteInfo, ExtensionApi } from './api/extensionApi';
 
 export class RovoDevJiraItemsProvider extends Disposable {
+    private extensionApi = new ExtensionApi();
     private jiraSiteHostname: DetailedSiteInfo | undefined = undefined;
     private pollTimer: NodeJS.Timeout | undefined = undefined;
 
@@ -24,6 +23,17 @@ export class RovoDevJiraItemsProvider extends Disposable {
     }
 
     public setJiraSite(jiraSiteHostname: DetailedSiteInfo | string) {
+        // if the site hasn't changed, do nothing
+        if (this.jiraSiteHostname) {
+            if (typeof jiraSiteHostname === 'object') {
+                if (this.jiraSiteHostname === jiraSiteHostname) {
+                    return;
+                }
+            } else if (this.jiraSiteHostname.host === jiraSiteHostname) {
+                return;
+            }
+        }
+
         this.stop();
         this._onNewJiraItems.fire(undefined);
 
@@ -32,7 +42,7 @@ export class RovoDevJiraItemsProvider extends Disposable {
         if (typeof jiraSiteHostname === 'object') {
             this.jiraSiteHostname = jiraSiteHostname;
         } else if (typeof jiraSiteHostname === 'string') {
-            const sites = Container.siteManager.getSitesAvailable(ProductJira);
+            const sites = this.extensionApi.jira.getSites();
             for (const site of sites) {
                 if (site.host === jiraSiteHostname) {
                     this.jiraSiteHostname = site;
@@ -65,10 +75,7 @@ export class RovoDevJiraItemsProvider extends Disposable {
         }
 
         // Filter to only include MinimalIssue items (not IssueLinkIssue)
-        let assignedIssuesForSite = this.fetchJiraIssuesFromCache(this.jiraSiteHostname);
-        if (assignedIssuesForSite) {
-            assignedIssuesForSite = await this.fetchJiraIssuesFromAPI(this.jiraSiteHostname);
-        }
+        const assignedIssuesForSite = await this.extensionApi.jira.fetchWorkItems(this.jiraSiteHostname);
 
         const filteredIssues = assignedIssuesForSite.filter(
             (issue) => issue.status?.statusCategory?.name.toLowerCase() === 'to do',
@@ -76,22 +83,5 @@ export class RovoDevJiraItemsProvider extends Disposable {
 
         this.pollTimer = setTimeout(() => this.checkForIssues(), 60000);
         this._onNewJiraItems.fire(filteredIssues.slice(0, 3));
-    }
-
-    private fetchJiraIssuesFromCache(site: DetailedSiteInfo) {
-        const issues = SearchJiraHelper.getAssignedIssuesPerSite(site.id);
-        return issues.filter((issue) => isMinimalIssue(issue));
-    }
-
-    private async fetchJiraIssuesFromAPI(site: DetailedSiteInfo): Promise<MinimalIssue<DetailedSiteInfo>[]> {
-        const jql = 'assignee = currentUser() AND StatusCategory = "To Do" ORDER BY updated DESC';
-
-        const client = await Container.clientManager.jiraClient(site);
-        const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
-        const fields = Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(epicFieldInfo);
-
-        const res = await client.searchForIssuesUsingJqlGet(jql, fields, 30, 0);
-        const searchResults = await readSearchResults(res, site, epicFieldInfo);
-        return searchResults.issues.filter((issue) => isMinimalIssue(issue));
     }
 }

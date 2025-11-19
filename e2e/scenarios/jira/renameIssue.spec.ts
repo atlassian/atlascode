@@ -2,7 +2,7 @@ import { APIRequestContext, Page } from '@playwright/test';
 import { getIssueFrame, setupIssueMock } from 'e2e/helpers';
 import { AtlascodeDrawer, AtlassianSettings, JiraIssuePage } from 'e2e/page-objects';
 
-const OLD_TITLE = 'Sample: User Interface Bugs';
+const OLD_TITLE = 'User Interface Bugs';
 const NEW_TITLE = 'Check if renaming works';
 
 export async function renameIssue(page: Page, request: APIRequestContext) {

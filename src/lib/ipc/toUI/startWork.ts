@@ -1,5 +1,5 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { createEmptyMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { ReducerAction } from 'src/ipc/messaging';
 
 import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
 import { BitbucketBranchingModel, WorkspaceRepo } from '../../../bitbucket/model';
@@ -54,6 +54,7 @@ export interface RepoData {
     hasLocalChanges?: boolean;
     branchingModel?: BitbucketBranchingModel;
     isCloud: boolean;
+    currentBranch?: string;
 }
 
 export const emptyStartWorkIssueMessage = {
@@ -91,4 +92,5 @@ export const emptyRepoData: RepoData = {
     hasLocalChanges: undefined,
     branchingModel: undefined,
     isCloud: false,
+    currentBranch: undefined,
 };

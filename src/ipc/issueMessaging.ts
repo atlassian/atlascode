@@ -39,6 +39,12 @@ export interface CreateIssueData extends Message {}
 export interface CreateIssueData extends IssueTypeUI<DetailedSiteInfo> {
     currentUser: User;
     transformerProblems: CreateMetaTransformerProblems;
+    projectPagination?: {
+        total: number;
+        loaded: number;
+        hasMore: boolean;
+        isLoadingMore: boolean;
+    };
 }
 
 export const emptyCreateIssueData: CreateIssueData = {
@@ -99,4 +105,27 @@ export function isStartWorkOnIssueData(m: Message): m is StartWorkOnIssueData {
 
 export function isStartWorkOnIssueResult(m: Message): m is StartWorkOnIssueResult {
     return (<StartWorkOnIssueResult>m).type === 'startWorkOnIssueResult';
+}
+
+export interface IssueHistoryItem {
+    id: string;
+    timestamp: string;
+    author: {
+        displayName: string;
+        accountId?: string;
+        avatarUrl?: string;
+    };
+    field: string;
+    fieldDisplayName: string;
+    from?: string | null;
+    to?: string | null;
+    fromString?: string;
+    toString?: string;
+    worklogTimeSpent?: string;
+    worklogComment?: string;
+}
+
+export interface IssueHistoryUpdate extends Message {
+    type: 'historyUpdate';
+    history: IssueHistoryItem[];
 }

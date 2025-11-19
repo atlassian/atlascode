@@ -109,6 +109,17 @@ export async function authenticatedEvent(
     });
 }
 
+export async function aiInstallCompletedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
+    return instanceTrackEvent(site, 'completed', 'aiInstall', {
+        attributes: {
+            targetProduct: 'rovodev',
+            productStage: 'onboarding',
+            onboardingStep: 'install',
+            xid: 'rovodev-ide-vscode',
+        },
+    });
+}
+
 export async function editedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
     return instanceTrackEvent(site, 'edited', 'atlascode', {
         attributes: { machineId: Container.machineId, hostProduct: site.product.name },
@@ -133,7 +144,9 @@ function sanitazeErrorMessage(message?: string): string | undefined {
 
 function sanitizeStackTrace(stack?: string): string | undefined {
     if (stack) {
-        stack = stack.replace(/\/Users\/[^/]+\//g, '/Users/<user>/');
+        stack = stack.replace(/\/Users\/[^/]+\//gi, '/Users/<user>/'); // *nix Users folder
+        stack = stack.replace(/\/home\/[^/]+\//gi, '/home/<user>/'); // *nix home folder
+        stack = stack.replace(/\\Users\\[^\\]+\\/gi, '\\Users\\<user>\\'); // windows Users folder
     }
     return stack || undefined;
 }
@@ -239,6 +252,11 @@ export function performanceEvent(tag: string, measure: number, params?: Record<s
 
 export type RovoDevEnv = 'IDE' | 'Boysenberry';
 
+export function rovoDevEntitlementCheckEvent(isEntitled: boolean, type: string, source?: string) {
+    return trackEvent('checked', 'rovoDevEntitlement', {
+        attributes: { source, isEntitled, type },
+    });
+}
 export function rovoDevNewSessionActionEvent(
     rovoDevEnv: RovoDevEnv,
     appInstanceId: string,
@@ -507,6 +525,12 @@ export async function pmfSnoozed(): Promise<TrackEvent> {
 
 export async function pmfClosed(): Promise<TrackEvent> {
     return trackEvent('closed', 'atlascodePmf');
+}
+
+export async function addRecommendedExtensionTriggeredEvent(source: string): Promise<TrackEvent> {
+    return trackEvent('triggered', 'addRecommendedExtension', {
+        attributes: { source: source },
+    });
 }
 
 export type DeepLinkEventErrorType = 'Success' | 'NotFound' | 'Exception';

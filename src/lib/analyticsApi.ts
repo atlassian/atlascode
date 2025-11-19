@@ -21,6 +21,7 @@ export interface AnalyticsApi {
     ): Promise<void>;
     fireFeatureChangeEvent(featureId: string, enabled: boolean): Promise<void>;
     fireAuthenticatedEvent(site: DetailedSiteInfo): Promise<void>;
+    fireAiInstallCompletedEvent(site: DetailedSiteInfo): Promise<void>;
     fireLoggedOutEvent(site: DetailedSiteInfo): Promise<void>;
     fireIssueCreatedEvent(site: DetailedSiteInfo, issueKey: string): Promise<void>;
     fireIssueTransitionedEvent(site: DetailedSiteInfo, issueKey: string): Promise<void>;

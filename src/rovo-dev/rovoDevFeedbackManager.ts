@@ -1,10 +1,10 @@
 import { truncate } from 'lodash';
-import { Container } from 'src/container';
 import { getAxiosInstance } from 'src/jira/jira-client/providers';
-import { RovoDevLogger } from 'src/logger';
 import * as vscode from 'vscode';
 
+import { ExtensionApi } from './api/extensionApi';
 import { MIN_SUPPORTED_ROVODEV_VERSION } from './rovoDevProcessManager';
+import { RovoDevLogger } from './util/rovoDevLogger';
 
 interface FeedbackObject {
     feedbackType: 'bug' | 'reportContent' | 'general';
@@ -19,6 +19,7 @@ const FEEDBACK_ENDPOINT = `https://jsd-widget.atlassian.com/api/embeddable/57037
 export class RovoDevFeedbackManager {
     public static async submitFeedback(feedback: FeedbackObject, isBBY: boolean = false): Promise<void> {
         const transport = getAxiosInstance();
+        const extensionApi = new ExtensionApi();
         const context = this.getContext(isBBY, feedback.rovoDevSessionId);
 
         let userEmail = 'do-not-reply@atlassian.com';
@@ -26,8 +27,7 @@ export class RovoDevFeedbackManager {
 
         if (feedback.canContact) {
             // Get user info from primary site if available
-            const primarySite = Container.siteManager.primarySite;
-            const info = primarySite ? await Container.credentialManager.getAuthInfo(primarySite) : undefined;
+            const info = await extensionApi.auth.getPrimaryAuthInfo();
 
             if (info && info.user) {
                 userEmail = info.user.email;
@@ -103,9 +103,10 @@ export class RovoDevFeedbackManager {
     }
 
     private static getContext(isBBY: boolean = false, rovoDevSessionId?: string): any {
+        const extensionApi = new ExtensionApi();
         return {
             component: isBBY ? 'Boysenberry - vscode' : 'IDE - vscode',
-            extensionVersion: Container.version,
+            extensionVersion: extensionApi.metadata.version(),
             vscodeVersion: vscode.version,
             rovoDevVersion: MIN_SUPPORTED_ROVODEV_VERSION,
             ...(rovoDevSessionId && { rovoDevSessionId }),

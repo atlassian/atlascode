@@ -18,7 +18,9 @@ interface AtlaskitEditorProps extends Omit<Partial<EditorNextProps>, 'onChange' 
     defaultValue?: string;
     onContentChange?: (content: string) => void;
     onChange?: (content: string) => void;
-    onBlur?: (content: string) => void;
+    onFocus: () => void;
+    onBlur: () => void;
+    isSaveOnBlur?: boolean;
 }
 
 const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProps) => {
@@ -28,9 +30,11 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
         onSave,
         defaultValue = '',
         onChange,
+        onFocus,
         onBlur,
         onContentChange,
         mentionProvider,
+        isSaveOnBlur,
     } = props;
 
     const { preset, editorApi } = usePreset(() => {
@@ -119,31 +123,8 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
     // Handle blur events using DOM events with a ref to the editor container
     const editorContainerRef = React.useRef<HTMLDivElement>(null);
 
-    React.useEffect(() => {
-        if (!onBlur || !editorContainerRef.current) {
-            return;
-        }
-
-        const handleDOMBlur = async (event: FocusEvent) => {
-            // Check if focus is moving outside the editor container
-            if (!editorContainerRef.current?.contains(event.relatedTarget as Node)) {
-                const content = await getCurrentContent();
-                if (content !== null) {
-                    onBlur(content);
-                }
-            }
-        };
-
-        const container = editorContainerRef.current;
-        container.addEventListener('focusout', handleDOMBlur);
-
-        return () => {
-            container.removeEventListener('focusout', handleDOMBlur);
-        };
-    }, [onBlur, getCurrentContent]);
-
     // Handle save button click using EditorActions
-    const handleSave = async () => {
+    const handleSave = React.useCallback(async () => {
         try {
             if (!editorApi) {
                 throw new Error('editorApi is not available');
@@ -166,7 +147,20 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
         } catch (error) {
             console.error(error);
         }
-    };
+    }, [editorApi, onSave]);
+
+    React.useEffect(() => {
+        return editorApi?.focus.sharedState.onChange(({ nextSharedState }) => {
+            if (nextSharedState.hasFocus && onFocus) {
+                onFocus();
+            } else if (!nextSharedState.hasFocus && onBlur) {
+                onBlur();
+                if (isSaveOnBlur) {
+                    handleSave();
+                }
+            }
+        });
+    }, [editorApi?.focus.sharedState, onFocus, onBlur, isSaveOnBlur, handleSave]);
 
     return (
         <div ref={editorContainerRef}>
@@ -192,7 +186,7 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                     }}
                 >
                     <div style={{ display: 'flex', gap: '8px' }}>
-                        {onSave && (
+                        {!isSaveOnBlur && onSave && (
                             <VSCodeButton appearance="primary" data-testid="comment-save-button" onClick={handleSave}>
                                 Save
                             </VSCodeButton>

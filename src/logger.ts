@@ -4,7 +4,16 @@ import { EventEmitter } from 'vscode';
 import { ErrorProductArea } from './analyticsTypes';
 import { configuration, OutputLevel } from './config/configuration';
 import { extensionOutputChannelName } from './constants';
-import { Container } from './container';
+
+// Let's prevent a circular dependency with Container and the other modules that it imports
+function isDebugging(): boolean {
+    try {
+        const { Container } = require('./container');
+        return Container.isDebugging;
+    } catch {
+        return false;
+    }
+}
 
 function getConsolePrefix(productArea?: string) {
     return productArea ? `[${extensionOutputChannelName} ${productArea}]` : `[${extensionOutputChannelName}]`;
@@ -21,7 +30,7 @@ export type ErrorEvent = {
 /** This function must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
  * If not, the function will return the name of a method inside Logger.
  */
-function retrieveCallerName(): string | undefined {
+export function retrieveCallerName(): string | undefined {
     try {
         const stack = new Error().stack;
         if (!stack) {
@@ -66,7 +75,7 @@ export class Logger {
         const initializing = configuration.initializing(e);
 
         const section = 'outputLevel';
-        if (initializing && Container.isDebugging) {
+        if (initializing && isDebugging()) {
             this.level = OutputLevel.Debug;
         } else if (initializing || configuration.changed(e, section)) {
             this.level = configuration.get<OutputLevel>(section);
@@ -105,7 +114,7 @@ export class Logger {
             return;
         }
 
-        if (Container.isDebugging) {
+        if (isDebugging()) {
             console.log(this.timestamp, getConsolePrefix(), message, ...params);
         }
 
@@ -151,7 +160,7 @@ export class Logger {
             return;
         }
 
-        if (Container.isDebugging) {
+        if (isDebugging()) {
             console.error(this.timestamp, getConsolePrefix(productArea), errorMessage, ...params, ex);
         }
 
@@ -169,7 +178,7 @@ export class Logger {
             return;
         }
 
-        if (Container.isDebugging) {
+        if (isDebugging()) {
             console.warn(this.timestamp, getConsolePrefix(), message, ...params);
         }
 
@@ -188,21 +197,5 @@ export class Logger {
         const now = new Date();
         const time = now.toISOString().replace(/T/, ' ').replace(/\..+/, '');
         return `[${time}:${('00' + now.getUTCMilliseconds()).slice(-3)}]`;
-    }
-}
-
-export class RovoDevLogger extends Logger {
-    public static override error(ex: Error, errorMessage?: string, ...params: string[]): void {
-        // `retrieveCallerName` must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
-        // If not, the function will return the name of a method inside Logger.
-        const callerName = retrieveCallerName();
-        this.errorInternal('RovoDev', ex, callerName, errorMessage, ...params);
-    }
-
-    public override error(ex: Error, errorMessage?: string, ...params: string[]): void {
-        // `retrieveCallerName` must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
-        // If not, the function will return the name of a method inside Logger.
-        const callerName = retrieveCallerName();
-        this.errorInternal('RovoDev', ex, callerName, errorMessage, ...params);
     }
 }

@@ -125,7 +125,7 @@ describe('VSCStartWorkActionApi', () => {
             getConfig: jest.fn(),
             getGlobalConfig: jest.fn(),
             getBranches: jest.fn(),
-            state: { submodules: [] },
+            state: { submodules: [], HEAD: { name: 'main' } },
             fetch: jest.fn(),
             getBranch: jest.fn(),
             checkout: jest.fn(),
@@ -294,6 +294,7 @@ describe('VSCStartWorkActionApi', () => {
                 localBranches: [mockBranch],
                 remoteBranches: [{ ...mockBranch, name: 'origin/main', type: RefType.RemoteHead }],
                 hasSubmodules: false,
+                currentBranch: 'main',
             });
         });
 
@@ -308,6 +309,7 @@ describe('VSCStartWorkActionApi', () => {
                 localBranches: [mockBranch],
                 remoteBranches: [{ ...mockBranch, name: 'origin/main', type: RefType.RemoteHead }],
                 hasSubmodules: false,
+                currentBranch: 'main',
             });
         });
 

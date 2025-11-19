@@ -1,24 +1,34 @@
 import * as fs from 'fs';
+import path from 'path';
 import { window, workspace } from 'vscode';
 
-export type SupportedConfigFiles = '.rovodev/config.yml' | '.rovodev/mcp.json' | '.rovodev/.agent.md';
+import { RovoDevStatusResponse } from './client';
 
-export async function openRovoDevConfigFile(configFile: SupportedConfigFiles, friendlyName: string) {
+export type SupportedConfigFiles = 'config.yml' | 'mcp.json' | '.agent.md' | 'rovodev.log';
+
+const FriendlyName: Record<SupportedConfigFiles, string> = {
+    'config.yml': 'Rovo Dev settings file',
+    'mcp.json': 'Rovo Dev MCP configuration',
+    '.agent.md': 'Rovo Dev Global Memory file',
+    'rovodev.log': 'Rovo Dev log file',
+};
+
+export async function openRovoDevConfigFile(configFile: SupportedConfigFiles) {
     const home = process.env.HOME || process.env.USERPROFILE;
     if (!home) {
         window.showErrorMessage('Could not determine home directory.');
         return;
     }
 
-    const filePath = `${home}/${configFile}`;
+    const filePath = path.join(home, '.rovodev', configFile);
 
     // create the file if it doesn't exist
     if (!fs.existsSync(filePath)) {
         switch (configFile) {
-            case '.rovodev/mcp.json':
+            case 'mcp.json':
                 fs.writeFileSync(filePath, '{\n    "mcpServers": {}\n}', { flush: true });
                 break;
-            case '.rovodev/.agent.md':
+            case '.agent.md':
                 fs.writeFileSync(filePath, '', { flush: true });
                 break;
         }
@@ -28,6 +38,96 @@ export async function openRovoDevConfigFile(configFile: SupportedConfigFiles, fr
         const doc = await workspace.openTextDocument(filePath);
         await window.showTextDocument(doc);
     } catch (err) {
-        window.showErrorMessage(`Could not open ${friendlyName} (${filePath}): ${err}`);
+        window.showErrorMessage(`Could not open ${FriendlyName[configFile]} (${filePath}): ${err}`);
     }
+}
+
+export function statusJsonResponseToMarkdown(response: RovoDevStatusResponse): string {
+    const data = response.data;
+
+    let buffer = '';
+    buffer += '**Rovo Dev**\n';
+    buffer += `- Session ID: ${data.cliVersion.sessionId}\n`;
+    buffer += `- Version: ${data.cliVersion.version}\n`;
+    buffer += '\n';
+
+    buffer += '**Working directory**\n';
+    buffer += `- ${data.workingDirectory}\n`;
+    buffer += '\n';
+
+    buffer += '**Account**\n';
+    buffer += `- Email: ${data.account.email}\n`;
+    buffer += `- Atlassian account ID: ${data.account.accountId}\n`;
+    buffer += `- Atlassian organization ID: ${data.account.orgId}\n`;
+    buffer += '\n';
+
+    if (data.memory.hasMemoryFiles) {
+        buffer += '**Memory**\n';
+        for (const memFile of data.memory.memoryPaths) {
+            buffer += `- ${memFile}\n`;
+        }
+        buffer += '\n';
+    }
+
+    buffer += '**Model**\n';
+    buffer += `- ${parseCustomCliTagsForMarkdown(data.model.humanReadableName, [])}`;
+
+    return buffer;
+}
+
+function formatText(text: string, cliTags: string[], links: { text: string; link: string }[]) {
+    if (cliTags.includes('italic')) {
+        text = `*${text}*`;
+    }
+    if (cliTags.includes('bold')) {
+        text = `**${text}**`;
+    }
+
+    const linkIndex = cliTags.findIndex((x) => x.startsWith('link='));
+    if (linkIndex >= 0) {
+        const link = cliTags[linkIndex].substring('link='.length);
+        links.push({ text, link });
+        text = '{link' + links.length + '}';
+    }
+    return text;
+}
+
+// this function doesn't work well with nested identical tags - hopefully we don't need that
+export function parseCustomCliTagsForMarkdown(text: string, links: { text: string; link: string }[]): string {
+    // no valid tags
+    if (!text || !text.includes('[/') || !text.includes(']', text.indexOf('['))) {
+        return text;
+    }
+
+    const firstTagPosition = text.indexOf('[');
+
+    // handle unopened tags
+    if (text[firstTagPosition + 1] === '/') {
+        const startingPosition = text.indexOf(']', firstTagPosition) + 1;
+        return (
+            text.substring(0, startingPosition) + parseCustomCliTagsForMarkdown(text.substring(startingPosition), links)
+        );
+    }
+
+    const firstTagContent = text.substring(firstTagPosition + 1, text.indexOf(']'));
+    const closingTagPosition = firstTagContent.startsWith('link=')
+        ? text.indexOf('[/link]')
+        : text.indexOf('[/' + firstTagContent + ']');
+
+    // handle unclosed tags
+    if (closingTagPosition === -1) {
+        const startingPosition = text.indexOf(']', firstTagPosition) + 1;
+        return (
+            text.substring(0, startingPosition) + parseCustomCliTagsForMarkdown(text.substring(startingPosition), links)
+        );
+    }
+
+    const contentWithinTags = text.substring(text.indexOf(']', firstTagPosition) + 1, closingTagPosition);
+    const afterTags = text.indexOf(']', closingTagPosition) + 1;
+
+    return (
+        text.substring(0, firstTagPosition) +
+        formatText(parseCustomCliTagsForMarkdown(contentWithinTags, links), firstTagContent.split(' '), links) +
+        parseCustomCliTagsForMarkdown(text.substring(afterTags), links)
+    );
 }

@@ -1,10 +1,9 @@
-import { ToolPermissionChoice } from './rovoDevApiClientInterfaces';
+import { ToolPermissionChoice } from './client';
 import { RovoDevEntitlementCheckFailedDetail } from './rovoDevWebviewProviderMessages';
 
 export type RovoDevContextFileInfo = {
     name: string;
     absolutePath: string;
-    relativePath: string;
 };
 
 export type RovoDevContextSelectionInfo = {
@@ -12,12 +11,21 @@ export type RovoDevContextSelectionInfo = {
     end: number;
 };
 
-export type RovoDevContextItem = {
+export interface RovoDevFileContext {
+    contextType: 'file';
     isFocus: boolean;
     file: RovoDevContextFileInfo;
     selection?: RovoDevContextSelectionInfo;
     enabled: boolean;
-};
+}
+
+export interface RovoDevJiraContext {
+    contextType: 'jiraWorkItem';
+    name: string;
+    url: string;
+}
+
+export type RovoDevContextItem = RovoDevFileContext | RovoDevJiraContext;
 
 export interface RovoDevPrompt {
     text: string;
@@ -73,7 +81,7 @@ export type InitializingState = InitializingOtherState | InitializingDownladingS
 
 export interface BasicDisabledState {
     state: 'Disabled';
-    subState: 'NeedAuth' | 'NoWorkspaceOpen' | 'Other';
+    subState: 'NeedAuth' | 'UnauthorizedAuth' | 'NoWorkspaceOpen' | 'UnsupportedArch' | 'Other';
 }
 
 export interface EntitlementCheckDisabledState {

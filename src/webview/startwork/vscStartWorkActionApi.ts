@@ -34,6 +34,7 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         localBranches: Branch[];
         remoteBranches: Branch[];
         hasSubmodules: boolean;
+        currentBranch: string | undefined;
     }> {
         const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri)!;
 
@@ -43,6 +44,7 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
             localBranches: await scm.getBranches({ remote: false }),
             remoteBranches: await scm.getBranches({ remote: true }),
             hasSubmodules: scm.state.submodules.length > 0,
+            currentBranch: scm.state.HEAD?.name,
         };
     }
 
@@ -134,7 +136,10 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
 
     async openRovoDev(issue: MinimalIssue<DetailedSiteInfo>): Promise<void> {
         const issueUrl = `${issue.siteDetails.baseLinkUrl}/browse/${issue.key}`;
-        const prompt = `Please work on [${issue.key}](${issueUrl})`;
-        await Container.rovodevWebviewProvider.setPromptTextWithFocus(prompt);
+        await Container.rovodevWebviewProvider.setPromptTextWithFocus('Work on the attached Jira work item', {
+            contextType: 'jiraWorkItem',
+            name: issue.key,
+            url: issueUrl,
+        });
     }
 }

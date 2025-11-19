@@ -10,6 +10,7 @@ type CommentFormProps = {
     onSave: (content: string) => Promise<void>;
     onCancel?: () => void;
     fetchUsers?: (input: string) => Promise<User[]>;
+    handleEditorFocus: (isFocused: boolean) => void;
 };
 
 const CommentForm: React.FC<CommentFormProps> = (props: CommentFormProps) => {
@@ -26,6 +27,8 @@ const CommentForm: React.FC<CommentFormProps> = (props: CommentFormProps) => {
                             onSave={props.onSave}
                             onCancel={props.onCancel}
                             fetchUsers={props.fetchUsers}
+                            onFocus={() => props.handleEditorFocus(true)}
+                            onBlur={() => props.handleEditorFocus(false)}
                         />
                     </Grid>
                 </Grid>

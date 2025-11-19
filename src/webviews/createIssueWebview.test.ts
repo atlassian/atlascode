@@ -27,6 +27,7 @@ jest.mock('../container', () => ({
             getFirstProject: jest.fn(),
             getProjectForKey: jest.fn(),
             getProjects: jest.fn(),
+            getProjectsPaginated: jest.fn(),
             filterProjectsByPermission: jest.fn(),
         },
         pmfStats: {
@@ -175,6 +176,11 @@ describe('CreateIssueWebview', () => {
         Container.jiraProjectManager.getFirstProject = jest.fn().mockResolvedValue(mockProject);
         Container.jiraProjectManager.getProjectForKey = jest.fn().mockResolvedValue(mockProject);
         Container.jiraProjectManager.getProjects = jest.fn().mockResolvedValue([mockProject]);
+        Container.jiraProjectManager.getProjectsPaginated = jest.fn().mockResolvedValue({
+            projects: [mockProject],
+            total: 1,
+            hasMore: false,
+        });
         Container.jiraProjectManager.filterProjectsByPermission = jest.fn().mockResolvedValue([mockProject]);
 
         Container.clientManager.jiraClient = jest.fn().mockResolvedValue(mockClient);
@@ -306,7 +312,14 @@ describe('CreateIssueWebview', () => {
 
             expect(fetchIssue.fetchCreateIssueUI).toHaveBeenCalledWith(mockSiteDetails, mockProject.key);
             expect(Container.siteManager.getSitesAvailable).toHaveBeenCalledWith(ProductJira);
-            expect(Container.jiraProjectManager.getProjects).toHaveBeenCalledWith(mockSiteDetails);
+            expect(Container.jiraProjectManager.getProjectsPaginated).toHaveBeenCalledWith(
+                mockSiteDetails,
+                50,
+                0,
+                'key',
+                undefined,
+                'create',
+            );
             expect(webviewPostMessageMock).toHaveBeenCalled();
         });
 
@@ -377,10 +390,13 @@ describe('CreateIssueWebview', () => {
 
             await webview.forceUpdateFields();
 
-            expect(Container.jiraProjectManager.filterProjectsByPermission).toHaveBeenCalledWith(
+            expect(Container.jiraProjectManager.getProjectsPaginated).toHaveBeenCalledWith(
                 mockSiteDetails,
-                [mockProject],
-                'CREATE_ISSUES',
+                50,
+                0,
+                'key',
+                undefined,
+                'create',
             );
             expect(fetchIssue.fetchCreateIssueUI).toHaveBeenCalledWith(mockSiteDetails, mockProject.key);
             expect(webviewPostMessageMock).toHaveBeenCalledWith(
@@ -402,10 +418,11 @@ describe('CreateIssueWebview', () => {
             });
 
             // Mock projects with permission (different from current)
-            const projectsWithPermission = [mockProject];
-            Container.jiraProjectManager.filterProjectsByPermission = jest
-                .fn()
-                .mockResolvedValue(projectsWithPermission);
+            Container.jiraProjectManager.getProjectsPaginated = jest.fn().mockResolvedValue({
+                projects: [mockProject],
+                total: 1,
+                hasMore: false,
+            });
 
             await webview.forceUpdateFields();
 

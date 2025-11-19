@@ -59,6 +59,10 @@ export function isValidNumber(value: string): boolean {
 }
 
 export function validateUrl(value: string, state?: any): string | undefined {
+    if (!value || (typeof value === 'string' && value.trim().length === 0)) {
+        return undefined;
+    }
+
     let err = undefined;
 
     try {

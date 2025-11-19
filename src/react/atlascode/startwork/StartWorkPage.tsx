@@ -3,9 +3,11 @@ import { emptyTransition, Transition } from '@atlassianlabs/jira-pi-common-model
 import CloseIcon from '@mui/icons-material/Close';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { Alert, AlertTitle, Autocomplete } from '@mui/lab';
 import {
+    Alert,
+    AlertTitle,
     AppBar,
+    Autocomplete,
     Box,
     Button,
     Card,
@@ -52,6 +54,7 @@ import { ErrorDisplay } from '../common/ErrorDisplay';
 import Lozenge from '../common/Lozenge';
 import { PMFDisplay } from '../common/pmf/PMFDisplay';
 import { PrepareCommitTip } from '../common/PrepareCommitTip';
+import { statusCategoryKeys } from '../constants';
 import { StartWorkControllerContext, useStartWorkController } from './startWorkController';
 
 const useStyles = makeStyles((theme: Theme) => ({
@@ -378,6 +381,11 @@ const StartWorkPage: React.FunctionComponent = () => {
             setStartWithRovoDev(state.rovoDevPreference);
         }
     }, [state.rovoDevPreference]);
+
+    useEffect(() => {
+        const isInProgress = state.issue.status?.statusCategory?.key === statusCategoryKeys.inProgress;
+        setTransitionIssueEnabled(!isInProgress);
+    }, [state.issue.status?.statusCategory?.key]);
 
     const postMessageWithEventPromise = (
         send: StartWorkAction,

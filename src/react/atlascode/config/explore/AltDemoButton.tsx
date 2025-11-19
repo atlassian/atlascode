@@ -1,5 +1,4 @@
-import Skeleton from '@mui/lab/Skeleton';
-import { Box, Button, darken, Divider, Grid, lighten, Theme, Typography } from '@mui/material';
+import { Box, Button, darken, Divider, Grid, lighten, Skeleton, Theme, Typography } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import React, { useCallback, useState } from 'react';
 

@@ -2,6 +2,7 @@ name: Build
 permissions:
   contents: read
   packages: read
+  actions: write
 
 on:
   pull_request:
@@ -14,43 +15,124 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
+  setup-dependencies:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+        
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
 
       - name: Install dependencies
-        run: |
-          npm ci --no-audit
+        run: npm ci
+
+      - name: Compress node_modules
+        run: tar -czf node_modules.tar.gz node_modules
+
+      - name: Upload node_modules for reuse
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-modules
+          path: node_modules.tar.gz
+          retention-days: 1
+
+  lint:
+    needs: [setup-dependencies]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
+
+      - name: Extract node_modules
+        run: tar -xzf node_modules.tar.gz
 
       - name: Run vulnerability audit
         # "There is no Vulnerability in Media Viewer after 48.5.4. since it was fixed by patching, but npm audit still reports it.",
         # So that switched to audit-ci with allowlist
-        run: npx audit-ci --config=".audit-ci.json"
+        run: npm run audit-ci
 
       - name: Run linter
         run: npm run lint
 
-  ci-matrix:
-    needs: [lint]
+  test-unit:
+    needs: [setup-dependencies]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
+
+      - name: Extract node_modules
+        run: tar -xzf node_modules.tar.gz
+
+      - name: Run unit tests
+        run: npm test
+
+  build-extension:
+    needs: [setup-dependencies]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
+
+      - name: Extract node_modules
+        run: tar -xzf node_modules.tar.gz
+
+      - name: Package the extension
+        run: npm run extension:package
+
+      - name: Upload extension package
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-package
+          path: atlascode-*.vsix
+          retention-days: 1
+
+  test-e2e:
+    needs: [build-extension]
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
-        include:
-          - kind: unit
-          - kind: e2e
-            target: jira-cloud
-          - kind: e2e
-            target: jira-dc
-          - kind: e2e
-            target: bitbucket-cloud
-          - kind: e2e
-            target: bitbucket-dc
+        target:
+          - jira-cloud
+          - jira-dc
+          - bitbucket-cloud
+          - bitbucket-dc
 
     env:
       ATLASCODE_FX3_API_KEY: ${{ secrets.ATLASCODE_FX3_API_KEY }}
@@ -60,40 +142,39 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+      
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
 
-      - name: Install dependencies
-        run: npm ci --no-audit
+      - name: Extract node_modules
+        run: tar -xzf node_modules.tar.gz
 
-      - name: Run unit tests
-        if: matrix.kind == 'unit'
-        run: npm run test
-
-      - name: Build and package the extension
-        if: matrix.kind == 'e2e'
-        run: npm run extension:package
+      - name: Download extension package
+        uses: actions/download-artifact@v4
+        with:
+          name: extension-package
 
       - name: Generate SSL certs for E2E test
-        if: matrix.kind == 'e2e'
         run: npm run test:e2e:sslcerts
 
       - name: Fetch E2E image
-        if: matrix.kind == 'e2e'
         run: |
           docker pull ghcr.io/atlassian/atlascode-e2e:latest
           docker tag ghcr.io/atlassian/atlascode-e2e:latest atlascode-e2e
 
       - name: Run E2E (${{ matrix.target }})
-        if: matrix.kind == 'e2e'
         run: npm run test:e2e:docker
         env:
           TARGET: ${{ matrix.target }}
 
       - name: Upload E2E artifacts (${{ matrix.target }})
-        if: matrix.kind == 'e2e' && failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-test-results-${{ matrix.target }}
@@ -102,14 +183,35 @@ jobs:
           if-no-files-found: ignore
 
   finalize:
-    needs: [ci-matrix]
+    needs: [setup-dependencies, lint, test-unit, build-extension, test-e2e]
     runs-on: ubuntu-latest
     if: always()
     steps:
+      - name: Delete node_modules artifact
+        if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: node-modules
+          failOnError: false
+
+      - name: Delete extension package artifact
+        if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: extension-package
+          failOnError: false
+
       - name: Check if all jobs succeeded
         run: |
-          if [[ "${{ needs.ci-matrix.result }}" != "success" ]]; then
-            echo "One of the ci-matrix jobs failed"
+          results='${{ toJSON(needs.*.result) }}'
+          if echo "$results" | jq -e 'any(. != "success")' > /dev/null; then
+            echo "One or more jobs failed:"
+            echo "  setup-dependencies: ${{ needs.setup-dependencies.result }}"
+            echo "  lint: ${{ needs.lint.result }}"
+            echo "  test-unit: ${{ needs.test-unit.result }}"
+            echo "  build-extension: ${{ needs.build-extension.result }}"
+            echo "  test-e2e: ${{ needs.test-e2e.result }}"
+            echo "Artifacts are retained for 1 day to allow rerunning failed jobs"
             exit 1
           fi
           echo "All steps completed successfully"

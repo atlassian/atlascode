@@ -1,5 +1,79 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.8
+
+### Features
+
+- Added activity history support
+
+### Bug Fixes 
+
+- Fixed issue with project loading in Jira Cloud Create Issue Screen 
+
+## What's new in 4.0.7
+
+### Features
+
+- Added edit and delete work log support
+- Added Call-to-Action links for Rovo Dev enablement errors and credit limit errors
+
+### Bug Fixes
+
+- Fix issue with not working team adding functionality
+- Disabled CMD+B hotkey when Jira/Bitbucket editor has focus
+
+## What's new in 4.0.6
+
+### Features
+
+- Added clone jira work items support
+
+### Improvements
+
+- Added validation checks to ensure the Jira API Token hasn't expired
+- Rovo Dev now doesn't start, and prompts for fixing the API Token authentication, when the API Token is expired
+
+### Bug Fixes
+
+- Fix executable not found for Rovo Dev on Windows
+- Fix some of the exit code 1 reason 2 failures of Rovo Dev on Windows
+- Fixed UI flickering of Jira suggestions in Rovo Dev
+
+## What's new in 4.0.5
+
+### Features
+
+- Added drag and drop support into the Rovo Dev view for prompt context (requires pressing the `shift` key to drop)
+- Added native support for Jira work items for Rovo Dev prompt context
+
+## What's new in 4.0.4
+
+### Improvements
+
+- Added support for Rovo Dev /status command
+
+### Bug Fixes
+
+- Fixed duplicated slash commands in Rovo Dev's prompt box
+- Fixed broken entitlement check disabled view in 4.0.3
+
+## What's new in 4.0.3
+
+### Improvements
+
+- Improved the initialization time for Rovo Dev, allowing the process to start before its webview is ready
+- Added assignee column for child and linked issues
+
+### Bug Fixes
+
+- Fixed issue with infinite loading when searching labels
+
+## What's new in 4.0.2
+
+### Improvements
+
+- Removed the hint on code selection to send the text to Rovo Dev
+
 ## What's new in 4.0.1
 
 ### Features
@@ -11,7 +85,7 @@
 ### Features
 
 - **Rovo Dev: Atlassian AI Agent** is now available in beta
-    - New sidebar icon that opens the Rovo Dev view. Rovo Dev can answer questions about your codebase and complete tasks for you 
+    - New sidebar icon that opens the Rovo Dev view. Rovo Dev can answer questions about your codebase and complete tasks for you
     - Read our docs here: https://github.com/atlassian/atlascode/wiki
 
 ### Bug Fixes

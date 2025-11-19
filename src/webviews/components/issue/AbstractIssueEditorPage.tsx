@@ -35,6 +35,7 @@ import EdiText, { EdiTextType } from 'react-editext';
 import { v4 } from 'uuid';
 
 import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
+import { ProjectsPagination } from '../../../constants';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import {
     CreatedSelectOption,
@@ -61,6 +62,7 @@ import JiraIssueTextAreaEditor from './common/JiraIssueTextArea';
 import { EditRenderedTextArea } from './EditRenderedTextArea';
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import InlineSubtaskEditor from './InlineSubtaskEditor';
+import { LazyLoadingSelect } from './LazyLoadingSelect';
 import { ParticipantList } from './ParticipantList';
 import { TextAreaEditor } from './TextAreaEditor';
 
@@ -93,6 +95,12 @@ export interface CommonEditorViewState extends Message {
     isGeneratingSuggestions?: boolean;
     summaryKey: string;
     isAtlaskitEditorEnabled: boolean;
+    projectPagination?: {
+        total: number;
+        loaded: number;
+        hasMore: boolean;
+        isLoadingMore: boolean;
+    };
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -386,7 +394,6 @@ export abstract class AbstractIssueEditorPage<
     ): Promise<IssuePickerIssue[]> => {
         return new Promise((resolve) => {
             const nonce: string = v4();
-            // this.postMessage({ action: 'fetchIssues', query: input, site: this.state.siteDetails, autocompleteUrl: field.autoCompleteUrl, nonce: nonce });
             (async () => {
                 try {
                     const listEvent = await this.postMessageWithEventPromise(
@@ -410,13 +417,23 @@ export abstract class AbstractIssueEditorPage<
         });
     };
 
-    /**
-     * AXON-49 This is a workaround for the suggested autocomplete URL
-     * (.../user/recommend/...) not being accessible
-     */
-    protected fixAutocompleteUrl(url: string): string {
+    protected fixAutocompleteUrl(field: SelectFieldUI): string {
+        let url = field.autoCompleteUrl;
+
+        /**
+         * AXON-49 This is a workaround for the suggested autocomplete URL
+         * (.../user/recommend/...) not being accessible
+         */
         if (url.includes('user/recommend')) {
             url = url.replace('user/recommend', 'user/search') + '&query=';
+        }
+
+        /**
+         * AXON-75 This is a workaround for the epic link field autocomplete URL
+         * for a case when epic field is renamed
+         */
+        if (field.schema.endsWith('epic-link')) {
+            url = url.split('?')[0] + '?fieldName=Epic Link&fieldValue=';
         }
 
         return url;
@@ -433,10 +450,10 @@ export abstract class AbstractIssueEditorPage<
             return this.loadSelectOptions(input, userSearchUrl);
         }
 
-        return this.loadSelectOptions(input, this.fixAutocompleteUrl(field.autoCompleteUrl));
+        return this.loadSelectOptions(input, this.fixAutocompleteUrl(field), field);
     };
 
-    protected loadSelectOptions = (input: string, url: string): Promise<any[]> => {
+    protected loadSelectOptions = (input: string, url: string, field?: SelectFieldUI): Promise<any[]> => {
         this.setState({ isSomethingLoading: true });
         return new Promise((resolve) => {
             const nonce: string = v4();
@@ -448,6 +465,8 @@ export abstract class AbstractIssueEditorPage<
                             query: input,
                             site: this.state.siteDetails,
                             autocompleteUrl: url,
+                            fieldName: field?.name,
+                            fieldKey: field?.key,
                             nonce,
                         },
                         'selectOptionsList',
@@ -455,10 +474,10 @@ export abstract class AbstractIssueEditorPage<
                         nonce,
                     );
 
-                    this.setState({ isSomethingLoading: false });
-                    resolve(listEvent.options);
+                    this.setState({ isSomethingLoading: false, loadingField: '' });
+                    resolve(listEvent.options || []);
                 } catch {
-                    this.setState({ isSomethingLoading: false });
+                    this.setState({ isSomethingLoading: false, loadingField: '' });
                     resolve([]);
                 }
             })();
@@ -505,6 +524,13 @@ export abstract class AbstractIssueEditorPage<
             })();
         }
     }, 100);
+
+    handleEditorFocus = (isFocused: boolean) => {
+        this.postMessage({
+            action: 'handleEditorFocus',
+            isFocused,
+        });
+    };
 
     protected getInputMarkup(
         field: FieldUI,
@@ -575,7 +601,7 @@ export abstract class AbstractIssueEditorPage<
                     <>
                         {field.key === 'summary' && <AISuggestionHeader vscodeApi={this._api} />}
                         <Field
-                            key={this.state.summaryKey}
+                            key={field.key === 'summary' ? this.state.summaryKey : field.key}
                             defaultValue={defaultVal}
                             label={<span>{field.name}</span>}
                             isRequired={field.required}
@@ -592,9 +618,11 @@ export abstract class AbstractIssueEditorPage<
                                 let markup = (
                                     <Textfield
                                         {...fieldArgs.fieldProps}
-                                        value={defaultVal}
                                         className="ac-inputField"
-                                        isDisabled={this.state.isSomethingLoading || this.state.isGeneratingSuggestions}
+                                        isDisabled={
+                                            (this.state.isSomethingLoading && this.state.loadingField === field.key) ||
+                                            this.state.isGeneratingSuggestions
+                                        }
                                         onChange={chain(fieldArgs.fieldProps.onChange, (e: any) =>
                                             this.handleInlineEdit(field, e.currentTarget.value),
                                         )}
@@ -605,9 +633,10 @@ export abstract class AbstractIssueEditorPage<
                                     markup = this.state.isAtlaskitEditorEnabled ? (
                                         <AtlaskitEditor
                                             defaultValue={this.state.fieldValues[field.key] || ''}
-                                            onBlur={(content: string) => {
-                                                this.handleInlineEdit(field, content);
-                                            }}
+                                            isSaveOnBlur={true}
+                                            onBlur={() => this.handleEditorFocus(false)}
+                                            onFocus={() => this.handleEditorFocus(true)}
+                                            onSave={(content) => this.handleInlineEdit(field, content)}
                                             mentionProvider={Promise.resolve(this.getMentionProvider())}
                                         />
                                     ) : (
@@ -615,12 +644,16 @@ export abstract class AbstractIssueEditorPage<
                                             {...fieldArgs.fieldProps}
                                             value={this.coerceToString(this.state.fieldValues[field.key])}
                                             isDisabled={
-                                                this.state.isSomethingLoading || this.state.isGeneratingSuggestions
+                                                (this.state.isSomethingLoading &&
+                                                    this.state.loadingField === field.key) ||
+                                                this.state.isGeneratingSuggestions
                                             }
                                             onChange={chain(fieldArgs.fieldProps.onChange, (val: string) =>
                                                 this.handleInlineEdit(field, val),
                                             )}
                                             fetchUsers={this.fetchAndTransformUsers}
+                                            onEditorFocus={() => this.handleEditorFocus(true)}
+                                            onEditorBlur={() => this.handleEditorFocus(false)}
                                         />
                                     );
                                 }
@@ -678,6 +711,7 @@ export abstract class AbstractIssueEditorPage<
                                 <div>
                                     <DatePicker
                                         {...fieldArgs.fieldProps}
+                                        defaultValue={this.coerceToString(this.state.fieldValues[field.key])}
                                         isDisabled={this.state.isSomethingLoading}
                                         className="ac-select-container"
                                         selectProps={{
@@ -743,6 +777,7 @@ export abstract class AbstractIssueEditorPage<
                                 <div>
                                     <DateTimePicker
                                         {...fieldArgs.fieldProps}
+                                        defaultValue={this.coerceToString(this.state.fieldValues[field.key])}
                                         isDisabled={this.state.isSomethingLoading}
                                         className="ac-select-container"
                                         datePickerSelectProps={{
@@ -854,6 +889,8 @@ export abstract class AbstractIssueEditorPage<
                     }
                 } else if (currentIssueType.name !== 'Epic') {
                     // This will never run for DC because it does not have 'parent' field
+                    const defaultParent = this.state.fieldValues['parent'] || undefined;
+
                     return (
                         <Field
                             label={<span>{field.name}</span>}
@@ -865,6 +902,7 @@ export abstract class AbstractIssueEditorPage<
                                 return (
                                     <AsyncSelect
                                         {...fieldArgs.fieldProps}
+                                        defaultValue={defaultParent}
                                         isClearable={!field.required}
                                         isMulti={false}
                                         className="ac-form-select-container"
@@ -915,6 +953,8 @@ export abstract class AbstractIssueEditorPage<
                     );
                 } else {
                     const validateFunc = field.required ? FieldValidators.validateSingleSelect : undefined;
+                    const defaultLinkType = this.state.fieldValues[field.key]?.type || undefined;
+
                     return (
                         <React.Fragment>
                             <Field
@@ -934,6 +974,8 @@ export abstract class AbstractIssueEditorPage<
                                         <div>
                                             <Select
                                                 {...fieldArgs.fieldProps}
+                                                key={`${field.key}.type-${defaultLinkType?.id || 'empty'}`}
+                                                defaultValue={defaultLinkType}
                                                 isMulti={false}
                                                 isClearable={!field.required}
                                                 className="ac-form-select-container"
@@ -968,9 +1010,14 @@ export abstract class AbstractIssueEditorPage<
                             </Field>
                             <Field id={`${field.key}.issue`} name={`${field.key}.issue`}>
                                 {(fieldArgs: any) => {
+                                    const defaultLinkedIssues = this.state.fieldValues[field.key]?.issue || undefined;
+                                    const linkedIssuesKey = `${field.key}.issue-${JSON.stringify(defaultLinkedIssues || [])}`;
+
                                     return (
                                         <AsyncSelect
                                             {...fieldArgs.fieldProps}
+                                            key={linkedIssuesKey}
+                                            defaultValue={defaultLinkedIssues}
                                             isClearable={true}
                                             isMulti={true}
                                             className="ac-form-select-container"
@@ -1277,6 +1324,55 @@ export abstract class AbstractIssueEditorPage<
                                     if (fieldArgs.error === 'EMPTY') {
                                         errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
                                     }
+                                    if (field.valueType === ValueType.Project) {
+                                        return (
+                                            <React.Fragment>
+                                                <LazyLoadingSelect
+                                                    {...fieldArgs.fieldProps}
+                                                    {...commonProps}
+                                                    value={defVal}
+                                                    className="ac-form-select-container"
+                                                    classNamePrefix="ac-form-select"
+                                                    placeholder="Type to search"
+                                                    noOptionsMessage={() => 'Type to search'}
+                                                    isClearable={this.isClearableSelect(selectField)}
+                                                    options={this.state.selectFieldOptions[field.key]}
+                                                    isDisabled={
+                                                        this.state.isSomethingLoading &&
+                                                        this.state.loadingField !== field.key
+                                                    }
+                                                    isLoading={this.state.loadingField === field.key}
+                                                    hasMore={this.state.projectPagination?.hasMore || false}
+                                                    isLoadingMore={this.state.projectPagination?.isLoadingMore || false}
+                                                    totalCount={this.state.projectPagination?.total || 0}
+                                                    loadedCount={this.state.projectPagination?.loaded || 0}
+                                                    onLoadMore={this.handleLoadMoreProjects}
+                                                    loadOptions={async (input: any) =>
+                                                        await this.loadSelectOptionsForField(
+                                                            field as SelectFieldUI,
+                                                            input,
+                                                        )
+                                                    }
+                                                    onChange={FieldValidators.chain(
+                                                        fieldArgs.fieldProps.onChange,
+                                                        (selected: any) => {
+                                                            this.handleSelectChange(selectField, selected);
+                                                        },
+                                                    )}
+                                                    onMenuClose={() => {
+                                                        if (this.state.loadingField === field.key) {
+                                                            this.setState({
+                                                                isSomethingLoading: false,
+                                                                loadingField: '',
+                                                            });
+                                                        }
+                                                    }}
+                                                />
+                                                {errDiv}
+                                            </React.Fragment>
+                                        );
+                                    }
+
                                     return (
                                         <React.Fragment>
                                             <AsyncSelect
@@ -1459,20 +1555,44 @@ export abstract class AbstractIssueEditorPage<
                 );
                 const checkboxItems: any[] = [];
                 const checkField = field as OptionableFieldUI;
+
+                // FIX: Multi-select checkbox handling - manage array of selected values instead of boolean
+                const currentSelectedValues = this.state.fieldValues[field.key] || [];
+                const selectedIds = Array.isArray(currentSelectedValues)
+                    ? currentSelectedValues.map((val: any) => val.id || val)
+                    : [];
+
+                const handleCheckboxChange = (optionValue: any, isChecked: boolean) => {
+                    const newSelectedValues = isChecked
+                        ? selectedIds.includes(optionValue.id)
+                            ? currentSelectedValues // Already selected, no change
+                            : [...currentSelectedValues, optionValue] // Add to selection
+                        : currentSelectedValues.filter((val: any) => (val.id || val) !== optionValue.id); // Remove from selection
+
+                    this.handleInlineEdit(field, newSelectedValues);
+                };
+
                 checkField.allowedValues.forEach((value) => {
+                    const isChecked = selectedIds.includes(value.id);
+
                     checkboxItems.push(
-                        <CheckboxField name={field.key} id={field.key} value={value.id} isRequired={field.required}>
-                            {(fieldArgs: any) => {
-                                return (
-                                    <Checkbox
-                                        {...fieldArgs.fieldProps}
-                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (e: any) => {
-                                            this.handleInlineEdit(field, e.target.checked);
-                                        })}
-                                        label={value.value}
-                                    />
-                                );
-                            }}
+                        <CheckboxField
+                            key={`${field.key}-${value.id}`}
+                            name={`${field.key}-${value.id}`}
+                            id={`${field.key}-${value.id}`}
+                            value={value.id}
+                            isRequired={field.required}
+                        >
+                            {(fieldArgs: any) => (
+                                <Checkbox
+                                    {...fieldArgs.fieldProps}
+                                    isChecked={isChecked}
+                                    onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (e: any) => {
+                                        handleCheckboxChange(value, e.target.checked);
+                                    })}
+                                    label={value.value}
+                                />
+                            )}
                         </CheckboxField>,
                     );
                 });
@@ -1830,6 +1950,7 @@ export abstract class AbstractIssueEditorPage<
                             isInline={true}
                             field={field}
                             onFilesChanged={this.handleCreateModeAttachments}
+                            initialFiles={this.state.fieldValues[field.key]}
                         />
                     </div>
                 );
@@ -2028,4 +2149,22 @@ export abstract class AbstractIssueEditorPage<
                 return 'text';
         }
     }
+
+    protected handleLoadMoreProjects = (startAt: number) => {
+        if (this.state.projectPagination) {
+            this.setState({
+                projectPagination: {
+                    ...this.state.projectPagination,
+                    isLoadingMore: true,
+                },
+            });
+        }
+
+        this.postMessage({
+            action: 'loadMoreProjects',
+            maxResults: ProjectsPagination.pageSize,
+            startAt: startAt,
+            nonce: v4(),
+        });
+    };
 }

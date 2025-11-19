@@ -17,13 +17,14 @@ import {
     IssueSuggestionSettings,
     SimplifiedTodoIssueData,
 } from '../config/configuration';
-import { Commands } from '../constants';
+import { Commands, ProjectsPagination } from '../constants';
 import { Container } from '../container';
 import {
     CreateIssueAction,
     isAiSuggestionFeedback,
     isCreateIssue,
     isGenerateIssueSuggestions,
+    isLoadMoreProjects,
     isScreensForProjects,
     isScreensForSite,
     isSetIssueType,
@@ -77,7 +78,9 @@ export class CreateIssueWebview
     private _screenData: CreateMetaTransformerResult<DetailedSiteInfo>;
     private _selectedIssueTypeId: string | undefined;
     private _siteDetails: DetailedSiteInfo;
-    private _projectsWithCreateIssuesPermission: { [siteId: string]: Project[] };
+    private _projectsWithCreateIssuesPermission: {
+        [siteId: string]: Project[] | { projects: Project[]; total: number; hasMore: boolean };
+    };
 
     private _issueSuggestionSettings: IssueSuggestionSettings | undefined;
     private _todoData: SimplifiedTodoIssueData | undefined;
@@ -291,21 +294,36 @@ export class CreateIssueWebview
         }
     }
 
-    private async getProjectsWithPermission(siteDetails: DetailedSiteInfo) {
+    private async getProjectsWithPermission(
+        siteDetails: DetailedSiteInfo,
+        maxResults: number = ProjectsPagination.pageSize,
+        startAt: number = ProjectsPagination.startAt,
+        query?: string,
+    ) {
         const siteId = siteDetails.id;
-        if (this._projectsWithCreateIssuesPermission[siteId]) {
-            return this._projectsWithCreateIssuesPermission[siteId];
+        const cacheKey = JSON.stringify({ siteId, startAt, maxResults, query: query || null });
+
+        if (this._projectsWithCreateIssuesPermission[cacheKey]) {
+            const cached = this._projectsWithCreateIssuesPermission[cacheKey];
+            const projects = Array.isArray(cached) ? cached : cached.projects;
+
+            // if ther are no projects, we should refetch in case permissions have changed
+            if (projects.length > 0) {
+                return cached;
+            }
         }
 
-        const availableProjects = await Container.jiraProjectManager.getProjects(siteDetails);
-        const projectsWithPermission = await Container.jiraProjectManager.filterProjectsByPermission(
+        const paginatedResult = await Container.jiraProjectManager.getProjectsPaginated(
             siteDetails,
-            availableProjects,
-            'CREATE_ISSUES',
+            maxResults,
+            startAt,
+            'key',
+            query,
+            'create', // Filter by CREATE_ISSUES permission on the API side (Cloud only)
         );
 
-        this._projectsWithCreateIssuesPermission = { [siteId]: projectsWithPermission };
-        return projectsWithPermission;
+        this._projectsWithCreateIssuesPermission[cacheKey] = paginatedResult;
+        return paginatedResult;
     }
 
     private async selectedProjectHasCreatePermission(project: Project): Promise<boolean> {
@@ -416,12 +434,20 @@ export class CreateIssueWebview
             const availableSites = Container.siteManager.getSitesAvailable(ProductJira);
             timer.mark(CreateJiraIssueRenderEventName);
 
-            const [projectsWithCreateIssuesPermission, screenData] = await Promise.all([
-                this.getProjectsWithPermission(this._siteDetails),
+            const [paginatedProjectsResult, screenData] = await Promise.all([
+                this.getProjectsWithPermission(
+                    this._siteDetails,
+                    ProjectsPagination.pageSize,
+                    ProjectsPagination.startAt,
+                ),
                 fetchCreateIssueUI(this._siteDetails, this._currentProject.key),
             ]);
+
+            const projectsWithCreateIssuesPermission = (
+                paginatedProjectsResult as { projects: Project[]; total: number; hasMore: boolean }
+            ).projects;
             const currentProjectHasCreatePermission = projectsWithCreateIssuesPermission.find(
-                (project) => project.id === this._currentProject?.id,
+                (project: Project) => project.id === this._currentProject?.id,
             );
 
             // if the selected or current project does not have create issues permission, we will select the first project with permission
@@ -483,6 +509,14 @@ export class CreateIssueWebview
             createData.transformerProblems = Container.config.jira.showCreateIssueProblems
                 ? this._screenData.problems
                 : {};
+
+            const paginatedResult = paginatedProjectsResult as { projects: Project[]; total: number; hasMore: boolean };
+            createData.projectPagination = {
+                total: paginatedResult.total,
+                loaded: projectsWithCreateIssuesPermission.length,
+                hasMore: paginatedResult.hasMore,
+                isLoadingMore: false,
+            };
 
             this.postMessage(createData);
             const createDuration = timer.measureAndClear(CreateJiraIssueRenderEventName);
@@ -697,6 +731,38 @@ export class CreateIssueWebview
                         await this.updateSiteAndProject(msg.site, undefined);
                         // Note: we can't send fieldValues when site changes because custom field ids are different.
                         await this.forceUpdateFields();
+                    }
+                    break;
+                }
+
+                case 'loadMoreProjects': {
+                    handled = true;
+                    if (isLoadMoreProjects(msg)) {
+                        try {
+                            const result = await this.getProjectsWithPermission(
+                                this._siteDetails,
+                                msg.maxResults || ProjectsPagination.pageSize,
+                                msg.startAt || ProjectsPagination.startAt,
+                                msg.query,
+                            );
+
+                            const paginatedResult = result as { projects: Project[]; total: number; hasMore: boolean };
+                            this.postMessage({
+                                type: 'projectsLoaded',
+                                projects: paginatedResult.projects,
+                                total: paginatedResult.total,
+                                hasMore: paginatedResult.hasMore,
+                                startAt: msg.startAt || ProjectsPagination.startAt,
+                                nonce: msg.nonce,
+                            });
+                        } catch (error) {
+                            Logger.error(error, 'Failed to load more projects');
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(error, 'Failed to load more projects'),
+                                nonce: msg.nonce,
+                            });
+                        }
                     }
                     break;
                 }

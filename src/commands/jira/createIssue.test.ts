@@ -68,7 +68,7 @@ jest.mock('../../container', () => ({
             getRepositoryScm: jest.fn(),
         },
         featureFlagClient: {
-            checkGate: jest.fn().mockReturnValue(true),
+            checkGate: jest.fn().mockReturnValue(false),
         },
     },
 }));

@@ -1,5 +1,5 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { ReducerAction } from 'src/ipc/messaging';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import {
@@ -31,6 +31,7 @@ export enum PullRequestDetailsActionType {
     Merge = 'merge',
     OpenJiraIssue = 'openJiraIssue',
     OpenBuildStatus = 'openBuildStatus',
+    HandleEditorFocus = 'handleEditorFocus',
 }
 
 export type PullRequestDetailsAction =
@@ -50,6 +51,7 @@ export type PullRequestDetailsAction =
     | ReducerAction<PullRequestDetailsActionType.Merge, MergeAction>
     | ReducerAction<PullRequestDetailsActionType.OpenJiraIssue, OpenJiraIssueAction>
     | ReducerAction<PullRequestDetailsActionType.OpenBuildStatus, OpenBuildStatusAction>
+    | ReducerAction<PullRequestDetailsActionType.HandleEditorFocus, HandleEditorFocusAction>
     | CommonAction;
 
 export interface FetchUsersRequestAction {
@@ -118,4 +120,8 @@ export interface OpenJiraIssueAction {
 
 export interface OpenBuildStatusAction {
     buildStatus: BuildStatus;
+}
+
+export interface HandleEditorFocusAction {
+    isFocused: boolean;
 }

@@ -43,6 +43,7 @@ type Props = {
     onIssueUpdate?: (issueKey: string, fieldKey: string, newValue: any) => void;
     isAtlaskitEditorEnabled?: boolean;
     mentionProvider: AtlascodeMentionProvider;
+    handleEditorFocus: (isFocused: boolean) => void;
 };
 
 const IssueMainPanel: React.FC<Props> = ({
@@ -66,6 +67,7 @@ const IssueMainPanel: React.FC<Props> = ({
     onIssueUpdate,
     isAtlaskitEditorEnabled,
     mentionProvider,
+    handleEditorFocus,
 }) => {
     const attachments = fields['attachment'] && fieldValues['attachment'] ? fieldValues['attachment'] : undefined;
     const subtasks =
@@ -137,6 +139,27 @@ const IssueMainPanel: React.FC<Props> = ({
         }
     };
 
+    const handleConfirmDeleteWorklog = (worklog: any) => {
+        handleInlineEdit(fields['worklog'], {
+            action: 'deleteWorklog',
+            worklogId: worklog.id,
+            adjustEstimate: 'auto',
+        });
+    };
+
+    const handleWorklogSave = (worklogData: any) => {
+        handleInlineEdit(fields['worklog'], worklogData);
+        setIsInlineDialogOpen(false);
+    };
+
+    const handleWorklogCancel = () => {
+        setIsInlineDialogOpen(false);
+    };
+
+    const handleWorklogEdit = (worklogData: any) => {
+        handleInlineEdit(fields['worklog'], worklogData);
+    };
+
     const addContentDropDown = (
         <Tooltip content="Add content">
             <AddContentDropdown
@@ -187,13 +210,13 @@ const IssueMainPanel: React.FC<Props> = ({
                             <InlineDialog
                                 content={
                                     <WorklogForm
-                                        onSave={(val: any) => handleInlineEdit(fields['worklog'], val)}
-                                        onCancel={() => setIsInlineDialogOpen(false)}
+                                        onSave={handleWorklogSave}
+                                        onCancel={handleWorklogCancel}
                                         originalEstimate={originalEstimate}
                                     />
                                 }
                                 isOpen={isInlineDialogOpen}
-                                onClose={() => setIsInlineDialogOpen(false)}
+                                onClose={handleWorklogCancel}
                                 placement="top"
                             >
                                 {addContentDropDown}
@@ -226,6 +249,8 @@ const IssueMainPanel: React.FC<Props> = ({
                                     setDescriptionText(content);
                                 }}
                                 mentionProvider={Promise.resolve(mentionProvider)}
+                                onFocus={() => handleEditorFocus(true)}
+                                onBlur={() => handleEditorFocus(false)}
                             />
                         ) : (
                             <JiraIssueTextAreaEditor
@@ -244,6 +269,8 @@ const IssueMainPanel: React.FC<Props> = ({
                                 fetchUsers={fetchUsers}
                                 isDescription
                                 saving={loadingField === 'description'}
+                                onEditorFocus={() => handleEditorFocus(true)}
+                                onEditorBlur={() => handleEditorFocus(false)}
                             />
                         )
                     ) : (
@@ -347,7 +374,12 @@ const IssueMainPanel: React.FC<Props> = ({
                                 onClick={() => setIsInlineDialogOpen(true)}
                             ></Button>
                         </div>
-                        <Worklogs worklogs={fieldValues['worklog']} />
+                        <Worklogs
+                            worklogs={fieldValues['worklog']}
+                            onEditWorklog={handleWorklogEdit}
+                            onConfirmDelete={handleConfirmDeleteWorklog}
+                            originalEstimate={originalEstimate}
+                        />
                     </div>
                 )}
         </div>

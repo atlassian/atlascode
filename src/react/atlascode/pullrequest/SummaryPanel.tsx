@@ -11,10 +11,11 @@ interface SummaryPanelProps {
     summaryChange: (text: string) => void;
     isLoading: boolean;
     isDefaultExpanded?: boolean;
+    handleEditorFocus: (isFocused: boolean) => void;
 }
 
 export const SummaryPanel: React.FC<SummaryPanelProps> = memo(
-    ({ rawSummary, htmlSummary, fetchUsers, summaryChange, isLoading, isDefaultExpanded }) => {
+    ({ rawSummary, htmlSummary, fetchUsers, summaryChange, isLoading, isDefaultExpanded, handleEditorFocus }) => {
         const handleFetchUsers = useCallback(
             async (input: string) => {
                 return await fetchUsers(input);
@@ -41,6 +42,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = memo(
                     htmlContent={htmlSummary}
                     onSave={handleSummaryChange}
                     fetchUsers={handleFetchUsers}
+                    handleEditorFocus={handleEditorFocus}
                 />
             </BasicPanel>
         );

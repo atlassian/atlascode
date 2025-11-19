@@ -1,4 +1,3 @@
-import Skeleton from '@mui/lab/Skeleton';
 import {
     Box,
     Button,
@@ -7,6 +6,7 @@ import {
     DialogContent,
     DialogContentText,
     DialogTitle,
+    Skeleton,
     Tooltip,
     Typography,
 } from '@mui/material';
