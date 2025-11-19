@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.9
+
+### Features
+
+- Added filter by assignee support
+
 ## What's new in 4.0.8
 
 ### Features

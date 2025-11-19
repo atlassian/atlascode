@@ -8,7 +8,7 @@ export class JiraNavigation {
     constructor(page: Page) {
         this.page = page;
 
-        this.jiraItemsTree = page.getByRole('tree', { name: 'Assigned Jira Work Items' });
+        this.jiraItemsTree = page.getByRole('tree', { name: 'Jira Work Items' });
     }
 
     async openIssue(name: string) {

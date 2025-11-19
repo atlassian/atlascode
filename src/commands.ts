@@ -21,6 +21,7 @@ import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
 import { configuration } from './config/configuration';
 import { Commands, HelpTreeViewId } from './constants';
 import { Container } from './container';
+import { FilterProvider } from './filter/filterProvider';
 import { transitionIssue } from './jira/transitionIssue';
 import { knownLinkIdMap } from './lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } from './lib/ipc/models/config';
@@ -217,6 +218,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 Container.openPullRequestHandler(data.pullRequestUrl);
             }),
             commands.registerCommand(Commands.ShowOnboardingFlow, () => Container.onboardingProvider.start()),
+            commands.registerCommand(Commands.JiraFilter, () => FilterProvider.createFilterQuickPick()),
             commands.registerCommand(Commands.JiraLogin, () => {
                 const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
                 if (useNewAuthFlow) {

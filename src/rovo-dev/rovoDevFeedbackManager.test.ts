@@ -1,4 +1,3 @@
-jest.mock('src/jira/jira-client/providers');
 jest.mock('./util/rovoDevLogger');
 jest.mock('vscode');
 
@@ -12,6 +11,7 @@ const mockExtensionApiInstance = {
 };
 
 jest.mock('./api/extensionApi', () => ({
+    getAxiosInstance: jest.fn(),
     ExtensionApi: jest.fn().mockImplementation(() => mockExtensionApiInstance),
 }));
 
@@ -20,9 +20,9 @@ jest.mock('lodash', () => ({
     truncate: jest.fn((str, options) => str),
 }));
 
-import { getAxiosInstance } from 'src/jira/jira-client/providers';
 import * as vscode from 'vscode';
 
+import { getAxiosInstance } from './api/extensionApi';
 import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
 import { RovoDevLogger } from './util/rovoDevLogger';
 
