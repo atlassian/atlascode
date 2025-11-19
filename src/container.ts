@@ -18,7 +18,6 @@ import { registerDebugCommands } from './commands';
 import { openPullRequest } from './commands/bitbucket/pullRequest';
 import { configuration, IConfig } from './config/configuration';
 import { PmfStats } from './feedback/pmfStats';
-import { FilterProvider } from './filter/filterProvider';
 import { JQLManager } from './jira/jqlManager';
 import { JiraProjectManager } from './jira/projectManager';
 import { JiraSettingsManager } from './jira/settingsManager';
@@ -265,7 +264,6 @@ export class Container {
         );
 
         this._onboardingProvider = new OnboardingProvider();
-        FilterProvider.initialize();
 
         this.refreshRovoDev(context);
     }
