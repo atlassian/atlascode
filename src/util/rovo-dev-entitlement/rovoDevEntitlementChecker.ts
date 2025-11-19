@@ -35,7 +35,7 @@ const entitlementTypeToReadableString: Record<RovoDevEntitlementType, string> = 
 
 const ENTITLED_MESSAGE = (type: RovoDevEntitlementType) =>
     `Your Jira site now has access to ${entitlementTypeToReadableString[type]}.  
-        Atlassian's AI agent designed for software teams, using your team’s knowledge to streamline  dev work from idea to deployment.`;
+        Atlassian's AI agent designed for software teams, using your team's knowledge to streamline  dev work from idea to deployment.`;
 
 export class RovoDevEntitlementChecker extends Disposable {
     private readonly _endpoint = `/gateway/api/rovodev/v3/sites/type`;
@@ -197,7 +197,9 @@ export class RovoDevEntitlementChecker extends Disposable {
                 let buttonType = 'dismiss';
                 if (selection === 'Open Rovo Dev') {
                     buttonType = 'openRovoDev';
-                    commands.executeCommand(RovodevCommands.FocusRovoDevWindow);
+                    commands.executeCommand(RovodevCommands.FocusRovoDevWindow).then(() => {
+                        this._disable();
+                    });
                 } else if (selection === 'Learn more') {
                     buttonType = 'learnMore';
                     this.openInfoLink();
