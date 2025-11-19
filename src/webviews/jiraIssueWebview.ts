@@ -1260,7 +1260,7 @@ export class JiraIssueWebview
 
                             const issue = this._issue.key === issueFromMessage.key ? this._issue : issueFromMessage;
                             const issueUrl = `${issue.siteDetails.baseLinkUrl}/browse/${issue.key}`;
-                            const promptText = `Work on the attached Jira work item: ${issue.key}${issue.summary ? ` - ${issue.summary}` : ''}`;
+                            const promptText = `Work on the attached Jira work item: ${issue.key}`;
 
                             Logger.debug(
                                 `Opening Rovo Dev with issue: ${issue.key} from site: ${issue.siteDetails.host}`,
