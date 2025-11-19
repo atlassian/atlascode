@@ -8,6 +8,7 @@ import {
     RovoDevChatRequestContext,
     RovoDevChatRequestContextFileEntry,
     RovoDevChatRequestContextOtherEntry,
+    RovoDevExceptionResponse,
     RovoDevResponse,
     RovoDevResponseParser,
     ToolPermissionChoice,
