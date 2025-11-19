@@ -443,6 +443,10 @@ export async function searchIssuesEvent(product: Product): Promise<TrackEvent> {
     return trackEvent('searchIssues', 'issue', { attributes: { hostProduct: product.name } });
 }
 
+export async function issueOpenRovoDevEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
+    return instanceTrackEvent(site, 'openRovoDev', 'issue');
+}
+
 export async function notificationChangeEvent(
     source: NotificationSource,
     uri: Uri | undefined,
