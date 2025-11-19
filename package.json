@@ -1562,7 +1562,7 @@
         "@atlaskit/editor-plugin-list": "^8.0.0",
         "@atlaskit/editor-plugin-mentions": "^8.0.0",
         "@atlaskit/editor-plugin-text-color": "^6.0.1",
-        "@atlaskit/editor-plugin-toolbar-lists-indentation": "^7.0.1",
+        "@atlaskit/editor-plugin-toolbar-lists-indentation": "^7.0.19",
         "@atlaskit/editor-wikimarkup-transformer": "^11.16.4",
         "@atlaskit/feature-gate-js-client": "^5.5.5",
         "@atlaskit/form": "^12.2.1",
