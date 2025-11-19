@@ -14,6 +14,7 @@ import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
 import timer from 'src/util/perf';
+import * as vscode from 'vscode';
 import { commands, env, window } from 'vscode';
 
 import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../analytics';
@@ -49,7 +50,7 @@ import {
 } from '../ipc/issueActions';
 import { EditIssueData, emptyEditIssueData } from '../ipc/issueMessaging';
 import { Action } from '../ipc/messaging';
-import { isOpenPullRequest } from '../ipc/prActions';
+import { isOpenExternalUrl, isOpenPullRequest } from '../ipc/prActions';
 import { fetchEditIssueUI, fetchMinimalIssue } from '../jira/fetchIssue';
 import { fetchMultipleIssuesWithTransitions } from '../jira/fetchIssueWithTransitions';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
@@ -1581,6 +1582,14 @@ export class JiraIssueWebview
                 }
                 case 'setRovoDevPromptText': {
                     Container.rovodevWebviewProvider.setPromptTextWithFocus((msg as any).text);
+                    break;
+                }
+                case 'openExternalUrl': {
+                    // Open URL in external browser
+                    if (isOpenExternalUrl(msg)) {
+                        handled = true;
+                        vscode.env.openExternal(vscode.Uri.parse(msg.url));
+                    }
                     break;
                 }
                 case 'openPullRequest': {

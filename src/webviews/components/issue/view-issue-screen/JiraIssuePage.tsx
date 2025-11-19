@@ -817,6 +817,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     <Development
                         developmentInfo={developmentInfo}
                         onOpenPullRequest={(pr: any) => this.postMessage({ action: 'openPullRequest', prHref: pr.url })}
+                        onOpenExternalUrl={(url: string) => this.postMessage({ action: 'openExternalUrl', url })}
                     />
                 ),
             });

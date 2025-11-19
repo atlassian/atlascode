@@ -6,8 +6,6 @@ import CrossCircleIcon from '@atlaskit/icon/core/cross-circle';
 import { Box } from '@mui/material';
 import React from 'react';
 
-import { PullRequestData } from '../../../bitbucket/model';
-
 export interface DevelopmentInfo {
     branches: any[]; // Can be Git Branch or simplified branch object from Jira API
     commits: any[]; // Can be Git Commit or simplified commit object from Jira API
@@ -17,7 +15,8 @@ export interface DevelopmentInfo {
 
 interface DevelopmentProps {
     developmentInfo: DevelopmentInfo;
-    onOpenPullRequest: (pr: PullRequestData) => void;
+    onOpenPullRequest: (pr: any) => void;
+    onOpenExternalUrl: (url: string) => void;
 }
 
 const DevelopmentIcon: React.FC<{ type: string }> = ({ type }) => {
@@ -99,7 +98,10 @@ const DevelopmentItem: React.FC<{
     );
 };
 
-const BranchList: React.FC<{ branches: any[] }> = ({ branches }) => {
+const BranchList: React.FC<{ branches: any[]; onOpenExternalUrl: (url: string) => void }> = ({
+    branches,
+    onOpenExternalUrl,
+}) => {
     return (
         <Box style={{ marginLeft: '24px', marginTop: '4px' }}>
             {branches.map((branch, index) => (
@@ -113,16 +115,16 @@ const BranchList: React.FC<{ branches: any[] }> = ({ branches }) => {
                     }}
                 >
                     <DevelopmentIcon type="branch" />
-                    <span>{branch.name}</span>
-                    {branch.url && (
+                    {branch.url ? (
                         <Button
-                            appearance="subtle"
-                            spacing="none"
-                            onClick={() => window.open(branch.url, '_blank')}
-                            style={{ marginLeft: '8px', padding: '0 4px', height: 'auto', fontSize: '11px' }}
+                            appearance="link"
+                            onClick={() => onOpenExternalUrl(branch.url)}
+                            style={{ padding: 0, height: 'auto', fontSize: '13px' }}
                         >
-                            View
+                            {branch.name}
                         </Button>
+                    ) : (
+                        <span>{branch.name}</span>
                     )}
                 </div>
             ))}
@@ -130,7 +132,10 @@ const BranchList: React.FC<{ branches: any[] }> = ({ branches }) => {
     );
 };
 
-const CommitList: React.FC<{ commits: any[] }> = ({ commits }) => {
+const CommitList: React.FC<{ commits: any[]; onOpenExternalUrl: (url: string) => void }> = ({
+    commits,
+    onOpenExternalUrl,
+}) => {
     return (
         <Box style={{ marginLeft: '24px', marginTop: '4px' }}>
             {commits.slice(0, 5).map((commit, index) => (
@@ -145,19 +150,19 @@ const CommitList: React.FC<{ commits: any[] }> = ({ commits }) => {
                 >
                     <DevelopmentIcon type="commit" />
                     <div style={{ flex: 1 }}>
-                        <div>{commit.message?.split('\n')[0] || 'No message'}</div>
+                        {commit.url ? (
+                            <Button
+                                appearance="link"
+                                onClick={() => onOpenExternalUrl(commit.url)}
+                                style={{ padding: 0, height: 'auto', fontSize: '13px', textAlign: 'left' }}
+                            >
+                                {commit.message?.split('\n')[0] || 'No message'}
+                            </Button>
+                        ) : (
+                            <div>{commit.message?.split('\n')[0] || 'No message'}</div>
+                        )}
                         <div style={{ fontSize: '12px', color: 'var(--vscode-descriptionForeground)' }}>
                             {commit.hash?.substring(0, 7)} by {commit.authorName || 'Unknown'}
-                            {commit.url && (
-                                <Button
-                                    appearance="link"
-                                    spacing="none"
-                                    onClick={() => window.open(commit.url, '_blank')}
-                                    style={{ marginLeft: '8px', padding: 0, height: 'auto', fontSize: '11px' }}
-                                >
-                                    View
-                                </Button>
-                            )}
                         </div>
                     </div>
                 </div>
@@ -176,13 +181,8 @@ const PullRequestList: React.FC<{ pullRequests: any[]; onOpen: (pr: any) => void
         <Box style={{ marginLeft: '24px', marginTop: '4px' }}>
             {pullRequests.map((pr, index) => {
                 const handleClick = () => {
-                    if (pr.url && !pr.data) {
-                        // If it's a simplified PR from Jira API with just a URL, open it
-                        window.open(pr.url, '_blank');
-                    } else {
-                        // Otherwise use the existing onOpen handler
-                        onOpen(pr);
-                    }
+                    // Always use the onOpen handler which will send message to extension host
+                    onOpen(pr);
                 };
 
                 return (
@@ -193,15 +193,12 @@ const PullRequestList: React.FC<{ pullRequests: any[]; onOpen: (pr: any) => void
                             alignItems: 'center',
                             padding: '4px 0',
                             fontSize: '13px',
+                            gap: '8px',
                         }}
                     >
                         <DevelopmentIcon type="pr" />
-                        <Button appearance="link" onClick={handleClick} style={{ padding: 0, height: 'auto' }}>
-                            #{pr.id} - {pr.title || `Pull request #${pr.id}`}
-                        </Button>
                         <span
                             style={{
-                                marginLeft: '8px',
                                 fontSize: '11px',
                                 padding: '2px 6px',
                                 borderRadius: '3px',
@@ -211,10 +208,14 @@ const PullRequestList: React.FC<{ pullRequests: any[]; onOpen: (pr: any) => void
                                         : pr.state === 'MERGED'
                                           ? 'var(--vscode-statusBarItem-prominentBackground)'
                                           : 'var(--vscode-statusBarItem-errorBackground)',
+                                whiteSpace: 'nowrap',
                             }}
                         >
                             {pr.state}
                         </span>
+                        <Button appearance="link" onClick={handleClick} style={{ padding: 0, height: 'auto' }}>
+                            #{pr.id} - {pr.title || `Pull request #${pr.id}`}
+                        </Button>
                     </div>
                 );
             })}
@@ -258,7 +259,7 @@ const BuildList: React.FC<{ builds: any[] }> = ({ builds }) => {
     );
 };
 
-export const Development: React.FC<DevelopmentProps> = ({ developmentInfo, onOpenPullRequest }) => {
+export const Development: React.FC<DevelopmentProps> = ({ developmentInfo, onOpenPullRequest, onOpenExternalUrl }) => {
     const [isOpen, setIsOpen] = React.useState<boolean>(false);
     const [expandedSection, setExpandedSection] = React.useState<string | null>(null);
 
@@ -306,7 +307,9 @@ export const Development: React.FC<DevelopmentProps> = ({ developmentInfo, onOpe
                         isExpanded={expandedSection === 'branches'}
                         onToggle={() => toggleSection('branches')}
                     />
-                    {expandedSection === 'branches' && <BranchList branches={branches} />}
+                    {expandedSection === 'branches' && (
+                        <BranchList branches={branches} onOpenExternalUrl={onOpenExternalUrl} />
+                    )}
 
                     <DevelopmentItem
                         icon="commit"
@@ -315,7 +318,9 @@ export const Development: React.FC<DevelopmentProps> = ({ developmentInfo, onOpe
                         isExpanded={expandedSection === 'commits'}
                         onToggle={() => toggleSection('commits')}
                     />
-                    {expandedSection === 'commits' && <CommitList commits={commits} />}
+                    {expandedSection === 'commits' && (
+                        <CommitList commits={commits} onOpenExternalUrl={onOpenExternalUrl} />
+                    )}
 
                     <DevelopmentItem
                         icon="pr"
