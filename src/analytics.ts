@@ -257,6 +257,7 @@ export function rovoDevEntitlementCheckEvent(isEntitled: boolean, type: string, 
         attributes: { source, isEntitled, type },
     });
 }
+
 export function rovoDevNewSessionActionEvent(
     rovoDevEnv: RovoDevEnv,
     appInstanceId: string,

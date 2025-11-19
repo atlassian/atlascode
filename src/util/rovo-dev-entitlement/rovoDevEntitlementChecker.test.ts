@@ -18,6 +18,7 @@ describe('RovoDevEntitlementChecker', () => {
     let checker: RovoDevEntitlementChecker;
     let mockAnalyticsClient: jest.Mocked<AnalyticsClient>;
     let mockClientManager: any;
+    let mockConfig: any;
 
     beforeEach(() => {
         mockAnalyticsClient = {
@@ -28,8 +29,14 @@ describe('RovoDevEntitlementChecker', () => {
             getCloudPrimarySite: jest.fn(),
         };
 
-        (Container as any).clientManager = mockClientManager;
+        mockConfig = {
+            rovodev: {
+                showEntitlementNotifications: true,
+            },
+        };
 
+        (Container as any).clientManager = mockClientManager;
+        (Container as any).config = mockConfig;
         (Logger.debug as jest.Mock).mockImplementation(() => {});
         (Logger.error as jest.Mock).mockImplementation(() => {});
         (rovoDevEntitlementCheckEvent as jest.Mock).mockResolvedValue({});
