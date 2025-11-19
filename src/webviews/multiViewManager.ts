@@ -60,14 +60,12 @@ export abstract class AbstractMultiViewManager<T> implements Disposable {
         action: string;
         data: Record<string, string | boolean>;
     }): boolean {
-        {
-            const view = this._viewMap.get(viewKey);
-            if (view && view.handleContextMenuCommand && typeof view.handleContextMenuCommand === 'function') {
-                view.handleContextMenuCommand({ action, data });
-                return true;
-            }
-            return false;
+        const view = this._viewMap.get(viewKey);
+        if (view && view.handleContextMenuCommand && typeof view.handleContextMenuCommand === 'function') {
+            view.handleContextMenuCommand({ action, data });
+            return true;
         }
+        return false;
     }
 
     public refreshAll(): void {

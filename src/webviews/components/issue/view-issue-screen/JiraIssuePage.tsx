@@ -953,7 +953,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                     return (
                                         <div
                                             style={{ margin: '20px 16px 0px 16px' }}
-                                            data-vscode-context={`{"viewKey": "${this.state.key}"}`}
+                                            data-vscode-context={JSON.stringify({ viewKey: this.state.key })}
                                             onContextMenu={this.handleContextMenuOpen}
                                         >
                                             {this.getMainPanelNavMarkup()}
