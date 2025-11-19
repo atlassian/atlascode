@@ -16,7 +16,7 @@ import FormData from 'form-data';
 import timer from 'src/util/perf';
 import { commands, env, window } from 'vscode';
 
-import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../analytics';
+import { issueCreatedEvent, issueOpenRovoDevEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../analytics';
 import { performanceEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { clientForSite } from '../bitbucket/bbUtils';
@@ -1243,6 +1243,10 @@ export class JiraIssueWebview
                 case 'openRovoDevWithIssue': {
                     if (isOpenRovoDevWithIssueAction(msg)) {
                         handled = true;
+                        issueOpenRovoDevEvent(this._issue.siteDetails).then((e) => {
+                            Container.analyticsClient.sendTrackEvent(e);
+                        });
+
                         try {
                             const issueFromMessage = msg.issue;
 
