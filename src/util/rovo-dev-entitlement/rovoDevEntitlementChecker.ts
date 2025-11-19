@@ -8,7 +8,7 @@ import { Logger } from 'src/logger';
 import { RovodevCommands } from 'src/rovo-dev/api/componentApi';
 import { NotificationSurface } from 'src/views/notifications/notificationManager';
 import { NotificationSource } from 'src/views/notifications/notificationSources';
-import { commands, ConfigurationChangeEvent, Disposable, window } from 'vscode';
+import { commands, ConfigurationChangeEvent, Disposable, env, Uri, window } from 'vscode';
 
 import { RovoDevEntitlementError, RovoDevEntitlementErrorType } from './rovoDevEntitlementError';
 
@@ -22,27 +22,30 @@ interface EntitlementResponse {
     isEntitled: boolean;
     type: RovoDevEntitlementType | RovoDevEntitlementErrorType;
 }
+
 const CREDENTIAL_ERROR_MESSAGE =
-    'It looks like you are not signed in to the Atlassian extension using an API Token! Please add an API token to unlock new features.';
+    'It looks like you are not signed in to the Atlassian extension using an API Token. Please add an API token to unlock new features.';
+
+const entitlementTypeToReadableString: Record<RovoDevEntitlementType, string> = {
+    [RovoDevEntitlementType.ROVO_DEV_EVERYWHERE]: 'Rovo Dev Everywhere',
+    [RovoDevEntitlementType.ROVO_DEV_STANDARD]: 'Rovo Dev Standard',
+    [RovoDevEntitlementType.ROVO_DEV_STANDARD_TRIAL]: 'Rovo Dev Standard Trial',
+    [RovoDevEntitlementType.ROVO_DEV_BETA]: 'Rovo Dev Beta',
+};
 
 const ENTITLED_MESSAGE = (type: RovoDevEntitlementType) =>
-    `Your Jira site now has access to ${type.replaceAll('_', ' ')}! Try out Rovo Dev, Atlassian AI assistant for developers.`;
+    `Your Jira site now has access to ${entitlementTypeToReadableString[type]}.  
+        Atlassian's AI agent designed for software teams, using your team’s knowledge to streamline  dev work from idea to deployment.`;
 
 export class RovoDevEntitlementChecker extends Disposable {
     private readonly _endpoint = `/gateway/api/rovodev/v3/sites/type`;
-    private readonly _entitledResponse = [
-        'ROVO_DEV_EVERYWHERE',
-        'ROVO_DEV_STANDARD',
-        'ROVO_DEV_STANDARD_TRIAL',
-        'ROVO_DEV_BETA',
-        // NO_ACTIVE_PRODUCT
-    ];
-
+    private readonly _infoUri = Uri.parse('https://support.atlassian.com/rovo/docs/work-with-rovo-dev-in-the-ide/');
     private _analyticsClient: AnalyticsClient;
 
     private _enabled: boolean;
 
     private disposable: Disposable;
+
     constructor(analyticsClient: AnalyticsClient) {
         super(() => this._dispose());
         this._analyticsClient = analyticsClient;
@@ -51,7 +54,7 @@ export class RovoDevEntitlementChecker extends Disposable {
         this.disposable = Disposable.from(configuration.onDidChange(this.onDidChangeConfiguration, this));
     }
 
-    onDidChangeConfiguration(e: ConfigurationChangeEvent) {
+    private onDidChangeConfiguration(e: ConfigurationChangeEvent) {
         if (configuration.changed(e, 'rovodev.showEntitlementNotifications')) {
             this._enabled = Container.config.rovodev.showEntitlementNotifications;
         }
@@ -92,7 +95,7 @@ export class RovoDevEntitlementChecker extends Disposable {
             const value = await response.text();
             Logger.debug(`Entitlement response: ${value}`);
 
-            if (!this._entitledResponse.includes(value.trim())) {
+            if (!(value.trim() in RovoDevEntitlementType)) {
                 throw new RovoDevEntitlementError(
                     RovoDevEntitlementErrorType.NO_ACTIVE_PRODUCT,
                     'No active Rovo Dev product found for the provided credentials',
@@ -134,7 +137,7 @@ export class RovoDevEntitlementChecker extends Disposable {
 
         const { isEntitled, type } = await this.checkEntitlement();
 
-        if (!this._enabled) {
+        if (!this._enabled || !Container.config.rovodev.enabled) {
             return;
         }
 
@@ -189,16 +192,15 @@ export class RovoDevEntitlementChecker extends Disposable {
         });
 
         window
-            .showInformationMessage(ENTITLED_MESSAGE(entitlementType), 'Try it out', dontShowAgain)
+            .showInformationMessage(ENTITLED_MESSAGE(entitlementType), 'Open Rovo Dev', 'Learn more', dontShowAgain)
             .then((selection) => {
                 let buttonType = 'dismiss';
-                if (selection === 'Try it out') {
+                if (selection === 'Open Rovo Dev') {
                     buttonType = 'openRovoDev';
-                    if (Container.isRovoDevEnabled) {
-                        commands.executeCommand(RovodevCommands.FocusRovoDevWindow);
-                    } else {
-                        commands.executeCommand('workbench.action.openSettings', 'rovodev.enabled');
-                    }
+                    commands.executeCommand(RovodevCommands.FocusRovoDevWindow);
+                } else if (selection === 'Learn more') {
+                    buttonType = 'learnMore';
+                    this.openInfoLink();
                 } else if (selection === dontShowAgain) {
                     buttonType = 'dontShowAgain';
                     this._disable();
@@ -224,6 +226,10 @@ export class RovoDevEntitlementChecker extends Disposable {
         headers['X-RovoDev-Billing-CloudId'] = cred.siteCloudId;
 
         return headers;
+    }
+
+    private openInfoLink() {
+        env.openExternal(this._infoUri);
     }
 
     private _disable() {
