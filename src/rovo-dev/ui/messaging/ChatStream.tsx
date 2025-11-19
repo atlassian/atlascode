@@ -3,8 +3,8 @@ import * as React from 'react';
 import { State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
-import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { useMessagingApi } from '../../../react/atlascode/messagingApi';
+import { DetailedSiteInfo } from '../../api/extensionApiTypes';
 import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
 import { PullRequestForm } from '../create-pr/PullRequestForm';
@@ -48,6 +48,7 @@ interface ChatStreamProps {
     jiraWorkItems: MinimalIssue<DetailedSiteInfo>[] | undefined;
     onJiraItemClick: (issue: MinimalIssue<DetailedSiteInfo>) => void;
     onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionDialogChoice | 'enableYolo') => void;
+    onLinkClick: (href: string) => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -71,6 +72,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     jiraWorkItems,
     onJiraItemClick,
     onToolPermissionChoice,
+    onLinkClick,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -88,13 +90,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         );
         setHasChangesInGit(response.hasChanges);
     }, [messagingApi]);
-
-    const onLinkClick = React.useCallback(
-        (href: string) => {
-            messagingApi.postMessage({ type: RovoDevViewResponseType.OpenExternalLink, href });
-        },
-        [messagingApi],
-    );
     const [autoScrollEnabled, setAutoScrollEnabled] = React.useState(true);
 
     // Helper to perform auto-scroll when enabled

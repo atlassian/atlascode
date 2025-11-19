@@ -4,13 +4,13 @@ import fs from 'fs';
 import net from 'net';
 import packageJson from 'package.json';
 import path from 'path';
+import { ValidBasicAuthSiteData } from 'src/atlclients/clientManager';
 import { downloadAndUnzip } from 'src/rovo-dev/util/downloadFile';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { waitFor } from 'src/rovo-dev/util/waitFor';
 import { Disposable, Event, EventEmitter, ExtensionContext, Terminal, Uri, window, workspace } from 'vscode';
 
-import { DetailedSiteInfo, isBasicAuthInfo, ProductJira } from '../atlclients/authInfo';
-import { Container } from '../container';
+import { DetailedSiteInfo, ExtensionApi } from './api/extensionApi';
 import { RovoDevApiClient } from './client';
 import { RovoDevDisabledReason, RovoDevEntitlementCheckFailedDetail } from './rovoDevWebviewProviderMessages';
 import { RovoDevLogger } from './util/rovoDevLogger';
@@ -107,58 +107,7 @@ async function getOrAssignPortForWorkspace(): Promise<number> {
     throw new Error('unable to find an available port.');
 }
 
-/**
- * Placeholder implementation for Rovo Dev CLI credential storage
- */
-async function getCloudCredentials(): Promise<
-    { username: string; key: string; host: string; isValid: boolean; isStaging: boolean } | undefined
-> {
-    try {
-        const sites = Container.siteManager.getSitesAvailable(ProductJira);
-
-        const promises = sites.map(async (site) => {
-            // *.atlassian.net are PROD cloud sites
-            // *.jira-dev.com are Staging cloud sites
-            if (!site.host.endsWith('.atlassian.net') && !site.host.endsWith('.jira-dev.com')) {
-                return undefined;
-            }
-
-            const authInfo = await Container.credentialManager.getAuthInfo(site);
-            if (!isBasicAuthInfo(authInfo)) {
-                return undefined;
-            }
-
-            // verify the credentials work
-            let isValid: boolean;
-            try {
-                await Container.clientManager.jiraClient(site);
-                isValid = true;
-            } catch {
-                isValid = false;
-            }
-
-            return {
-                username: authInfo.username,
-                key: authInfo.password,
-                host: site.host,
-                isValid,
-                isStaging: site.host.endsWith('.jira-dev.com'),
-            };
-        });
-
-        const results = (await Promise.all(promises)).filter((result) => result !== undefined);
-
-        // give priority to staging sites
-        return results.filter((x) => x.isStaging)[0] || results[0];
-    } catch (error) {
-        RovoDevLogger.error(error, 'Error fetching cloud credentials for Rovo Dev');
-        return undefined;
-    }
-}
-
-type CloudCredentials = NonNullable<Awaited<ReturnType<typeof getCloudCredentials>>>;
-
-function areCredentialsEqual(cred1?: CloudCredentials, cred2?: CloudCredentials) {
+function areCredentialsEqual(cred1?: ValidBasicAuthSiteData, cred2?: ValidBasicAuthSiteData) {
     if (cred1 === cred2) {
         return true;
     }
@@ -167,7 +116,11 @@ function areCredentialsEqual(cred1?: CloudCredentials, cred2?: CloudCredentials)
         return false;
     }
 
-    return cred1.host === cred2.host && cred1.key === cred2.key && cred1.username === cred2.username;
+    return (
+        cred1.host === cred2.host &&
+        cred1.authInfo.password === cred2.authInfo.password &&
+        cred1.authInfo.username === cred2.authInfo.username
+    );
 }
 
 export interface RovoDevProcessNotStartedState {
@@ -239,7 +192,8 @@ export abstract class RovoDevProcessManager {
         return this._onStateChanged.event;
     }
 
-    private static currentCredentials: CloudCredentials | undefined;
+    private static currentCredentials: ValidBasicAuthSiteData | undefined;
+    private static extensionApi: ExtensionApi = new ExtensionApi();
 
     /** This lock ensures this class is async-safe, preventing repeated invocations
      * of `initializeRovoDev` or `refreshRovoDevCredentials` to launch multiple processes
@@ -253,7 +207,7 @@ export abstract class RovoDevProcessManager {
     }
 
     public static get state(): RovoDevProcessState {
-        if (Container.isBoysenberryMode) {
+        if (this.extensionApi.metadata.isBoysenberry()) {
             const httpPort = parseInt(process.env[RovoDevInfo.envVars.port] || '0');
             return { state: 'Boysenberry', hostname: RovoDevInfo.hostname, httpPort };
         } else {
@@ -324,7 +278,7 @@ export abstract class RovoDevProcessManager {
 
     private static async internalInitializeRovoDev(
         context: ExtensionContext,
-        credentials: CloudCredentials | undefined,
+        credentials: ValidBasicAuthSiteData | undefined,
         forceNewInstance?: boolean,
     ) {
         if (!workspace.workspaceFolders?.length) {
@@ -403,7 +357,7 @@ export abstract class RovoDevProcessManager {
                 this.failIfRovoDevInstanceIsRunning();
             }
 
-            const credentials = await getCloudCredentials();
+            const credentials = await this.extensionApi.auth.getCloudPrimaryAuthInfo();
             await this.internalInitializeRovoDev(context, credentials, forceNewInstance);
         } finally {
             this.asyncLocked = false;
@@ -419,7 +373,7 @@ export abstract class RovoDevProcessManager {
             this.asyncLocked = true;
 
             try {
-                const credentials = await getCloudCredentials();
+                const credentials = await this.extensionApi.auth.getCloudPrimaryAuthInfo();
                 if (areCredentialsEqual(credentials, this.currentCredentials)) {
                     return;
                 }
@@ -451,7 +405,7 @@ export abstract class RovoDevProcessManager {
 
     private static async startRovoDev(
         context: ExtensionContext,
-        credentials: CloudCredentials,
+        credentials: ValidBasicAuthSiteData,
         rovoDevURIs: RovoDevURIs,
     ) {
         // skip if there is no workspace folder open
@@ -481,6 +435,7 @@ class RovoDevTerminalInstance extends Disposable {
     private started = false;
     private httpPort: number = 0;
     private disposables: Disposable[] = [];
+    private extensionApi = new ExtensionApi();
 
     public get stopped() {
         return !this.rovoDevTerminal;
@@ -495,7 +450,7 @@ class RovoDevTerminalInstance extends Disposable {
     }
 
     public async start(
-        credentials: CloudCredentials,
+        credentials: ValidBasicAuthSiteData,
         setState: (newState: RovoDevProcessState) => void,
     ): Promise<void> {
         if (this.started) {
@@ -538,9 +493,9 @@ class RovoDevTerminalInstance extends Disposable {
                         iconPath: this.rovoDevIconUri,
                         env: {
                             USER: process.env.USER || process.env.USERNAME,
-                            USER_EMAIL: credentials.username,
-                            ROVODEV_SANDBOX_ID: Container.appInstanceId,
-                            ...(credentials.key ? { USER_API_TOKEN: credentials.key } : {}),
+                            USER_EMAIL: credentials.authInfo.username,
+                            ROVODEV_SANDBOX_ID: this.extensionApi.metadata.appInstanceId(),
+                            ...(credentials.authInfo.password ? { USER_API_TOKEN: credentials.authInfo.password } : {}),
                         },
                     });
 

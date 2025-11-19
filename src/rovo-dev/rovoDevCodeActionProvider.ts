@@ -1,9 +1,12 @@
 import path from 'path';
-import { Commands } from 'src/constants';
-import { Container } from 'src/container';
 import * as vscode from 'vscode';
 
+import { RovodevCommands } from './api/componentApi';
+import { ExtensionApi } from './api/extensionApi';
+
 export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
+    private readonly extensionApi = new ExtensionApi();
+
     public provideCodeActions(
         document: vscode.TextDocument,
         range: vscode.Range | vscode.Selection,
@@ -11,7 +14,7 @@ export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
         token: vscode.CancellationToken,
     ): vscode.ProviderResult<vscode.CodeAction[]> {
         // Disable completely if Rovo Dev is not enabled
-        if (!Container.isRovoDevEnabled) {
+        if (!this.extensionApi.metadata.isRovoDevEnabled()) {
             return [];
         }
 
@@ -32,7 +35,7 @@ export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
             {
                 title: 'Rovo Dev: Add to Context',
                 command: {
-                    command: Commands.RovodevAddToContext,
+                    command: RovodevCommands.RovodevAddToContext,
                     title: 'Add to Rovo Dev Context',
                 },
             },
@@ -55,7 +58,7 @@ export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
             : prompt;
 
         action.command = {
-            command: Commands.RovodevAsk,
+            command: RovodevCommands.RovodevAsk,
             title: 'Ask Rovo Dev',
             arguments: [
                 finalPrompt,

@@ -34,6 +34,7 @@ import { Logger } from './logger';
 import OnboardingProvider from './onboarding/onboardingProvider';
 import { registerQuickAuthCommand } from './onboarding/quickFlow';
 import { Pipeline } from './pipelines/model';
+import { RovodevCommandContext } from './rovo-dev/api/componentApi';
 import { RovoDevCodeActionProvider } from './rovo-dev/rovoDevCodeActionProvider';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
@@ -41,6 +42,7 @@ import { RovoDevLogger } from './rovo-dev/util/rovoDevLogger';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, SETTINGS_URL } from './uriHandler';
 import { Experiments, FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
+import { RovoDevEntitlementChecker } from './util/rovo-dev-entitlement/rovoDevEntitlementChecker';
 import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
 import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
@@ -70,6 +72,7 @@ import { VSCStartWorkWebviewControllerFactory } from './webview/startwork/vscSta
 import { CreateIssueProblemsWebview } from './webviews/createIssueProblemsWebview';
 import { CreateIssueWebview } from './webviews/createIssueWebview';
 import { JiraIssueViewManager } from './webviews/jiraIssueViewManager';
+import { CreateWorkItemWebviewProvider } from './work-items/create-work-item/createWorkItemWebviewProvider';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
@@ -222,6 +225,13 @@ export class Container {
             setCommandContext(CommandContext.UseNewAuthFlow, false);
         }
 
+        context.subscriptions.push(
+            (this._rovoDevEntitlementChecker = new RovoDevEntitlementChecker(this._analyticsClient)),
+        );
+
+        // Check Rovo Dev entitlement on startup
+        await this._rovoDevEntitlementChecker.checkEntitlement();
+
         // in Boysenberry we don't need to listen to Jira auth updates
         if (!process.env.ROVODEV_BBY) {
             // refresh Rovo Dev when auth sites change
@@ -248,6 +258,10 @@ export class Container {
         SearchAllJiraHelper.initialize();
         context.subscriptions.push(new CustomJQLViewProvider());
         context.subscriptions.push((this._assignedWorkItemsView = new AssignedWorkItemsViewProvider()));
+
+        context.subscriptions.push(
+            (this._createWorkItemWebviewProvider = new CreateWorkItemWebviewProvider(context, context.extensionPath)),
+        );
 
         this._onboardingProvider = new OnboardingProvider();
 
@@ -337,7 +351,7 @@ export class Container {
                 context.subscriptions.push(this._rovodevDisposable);
 
                 // this enables the Rovo Dev activity bar
-                await setCommandContext(CommandContext.RovoDevEnabled, true);
+                await setCommandContext(RovodevCommandContext.RovoDevEnabled, true);
 
                 // only in Boysenberry, we auto-focus the Rovo Dev view
                 if (this.isBoysenberryMode) {
@@ -384,7 +398,7 @@ export class Container {
             this._rovodevDisposable.dispose();
             this._rovodevDisposable = undefined;
 
-            await setCommandContext(CommandContext.RovoDevEnabled, false);
+            await setCommandContext(RovodevCommandContext.RovoDevEnabled, false);
             await RovoDevProcessManager.deactivateRovoDevProcessManager();
         } catch (error) {
             RovoDevLogger.error(error, 'Disabling Rovo Dev');
@@ -659,6 +673,16 @@ export class Container {
     private static _rovodevWebviewProvider: RovoDevWebviewProvider;
     public static get rovodevWebviewProvider() {
         return this._rovodevWebviewProvider;
+    }
+
+    private static _rovoDevEntitlementChecker: RovoDevEntitlementChecker;
+    public static get rovoDevEntitlementChecker() {
+        return this._rovoDevEntitlementChecker;
+    }
+
+    private static _createWorkItemWebviewProvider: CreateWorkItemWebviewProvider;
+    public static get createWorkItemWebviewProvider() {
+        return this._createWorkItemWebviewProvider;
     }
 }
 

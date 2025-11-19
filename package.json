@@ -78,7 +78,8 @@
         "watch": "concurrently -r \"npm:watch:*\"",
         "watch:extension": "WATCH=true webpack --mode development --config webpack.react.dev.js --progress --watch",
         "watch:react": "WATCH=true webpack --mode development --config webpack.extension.dev.js --progress --watch",
-        "dev": "concurrently -r npm:watch:extension npm:watch:react"
+        "dev": "concurrently -r npm:watch:extension npm:watch:react",
+        "audit-ci": "audit-ci --config .audit-ci.json"
     },
     "contributes": {
         "keybindings": [
@@ -197,6 +198,16 @@
                     "dark": "resources/dark/add.svg",
                     "light": "resources/light/add.svg"
                 },
+                "category": "Jira"
+            },
+            {
+                "command": "atlascode.jira.createIssue.startWork",
+                "title": "Create and start work",
+                "category": "Jira"
+            },
+            {
+                "command": "atlascode.jira.createIssue.generateCode",
+                "title": "Create and send to Rovo Dev",
                 "category": "Jira"
             },
             {
@@ -345,6 +356,12 @@
             {
                 "command": "atlascode.jira.startWorkOnIssue",
                 "title": "Start work on Jira issue",
+                "category": "Jira"
+            },
+            {
+                "command": "atlascode.jira.expandCreateWorkItem",
+                "title": "Expand create work item webview",
+                "icon": "$(screen-full)",
                 "category": "Jira"
             },
             {
@@ -535,6 +552,11 @@
                     "id": "atlascode-rovo-dev",
                     "title": "Rovo Dev",
                     "icon": "resources/rovodev-sidebar-icon.svg"
+                },
+                {
+                    "id": "atlascode-jira-work-item",
+                    "title": "Jira Work Item",
+                    "icon": "resources/issues.svg"
                 }
             ]
         },
@@ -564,6 +586,12 @@
                     "id": "atlascode.views.helpTreeView",
                     "name": "Help and Feedback",
                     "when": "!atlascode:bbyEnvironmentActive && config.atlascode.helpExplorerEnabled"
+                },
+                {
+                    "id": "atlascode.views.jira.createWorkItemWebview",
+                    "name": "Create Jira Work Item",
+                    "type": "webview",
+                    "when": "!atlascode:bbyEnvironmentActive && config.atlascode.jira.enabled && atlascode:showCreateWorkItemWebview"
                 }
             ],
             "atlascode-rovo-dev": [
@@ -667,6 +695,11 @@
                     "command": "atlascode.rovodev.shareFeedback",
                     "when": "view == atlascode.views.rovoDev.webView",
                     "group": "rovoDevContextMenu2@1"
+                },
+                {
+                    "command": "atlascode.jira.expandCreateWorkItem",
+                    "when": "view == atlascode.views.jira.createWorkItemWebview && atlascode:isJiraAuthenticated",
+                    "group": "navigation@1"
                 },
                 {
                     "command": "atlascode.jira.createIssue",
@@ -1031,6 +1064,16 @@
                 {
                     "command": "atlascode.jira.refreshCustomJqlExplorer",
                     "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
+                }
+            ],
+            "webview/context": [
+                {
+                    "command": "atlascode.jira.createIssue.startWork",
+                    "when": "webviewId == 'atlascode.views.jira.createWorkItemWebview' && webviewSection == 'createButton'"
+                },
+                {
+                    "command": "atlascode.jira.createIssue.generateCode",
+                    "when": "atlascode:rovoDevEnabled && webviewId == 'atlascode.views.jira.createWorkItemWebview' && webviewSection == 'createButton'"
                 }
             ]
         },
@@ -1518,7 +1561,6 @@
         "@atlaskit/editor-plugin-insert-block": "^7.0.1",
         "@atlaskit/editor-plugin-list": "^8.0.0",
         "@atlaskit/editor-plugin-mentions": "^8.0.0",
-        "@atlaskit/editor-plugin-tasks-and-decisions": "^9.0.0",
         "@atlaskit/editor-plugin-text-color": "^6.0.1",
         "@atlaskit/editor-plugin-toolbar-lists-indentation": "^7.0.1",
         "@atlaskit/editor-wikimarkup-transformer": "^11.16.4",
@@ -1555,7 +1597,7 @@
         "@atlassianlabs/guipi-jira-components": "^3.2.0",
         "@atlassianlabs/jira-metaui-client": "^2.0.0",
         "@atlassianlabs/jira-metaui-transformer": "^2.0.0",
-        "@atlassianlabs/jira-pi-client": "^2.0.1",
+        "@atlassianlabs/jira-pi-client": "2.0.0",
         "@atlassianlabs/jira-pi-common-models": "^2.0.0",
         "@atlassianlabs/jira-pi-meta-models": "^2.0.0",
         "@atlassianlabs/pi-client-common": "^2.0.0",
@@ -1661,7 +1703,7 @@
         "@types/vscode": ">=1.77.0 <=1.96.0",
         "@types/websocket": "^1.0.0",
         "@types/ws": "^8.18.1",
-        "@vscode/vsce": "^3.6.0",
+        "@vscode/vsce": "^3.7.0",
         "ajv": "^8.17.1",
         "ajv-formats": "^3.0.1",
         "audit-ci": "^7.1.0",
@@ -1745,6 +1787,19 @@
         "transition-hook@1.5.2": {
             "react-dom": "^18.3.1",
             "react": "^18.3.1"
+        },
+        "js-yaml": "^4.1.1",
+        "@jest/core": {
+            "glob": "^11.1.0"
+        },
+        "@jest/reporters": {
+            "glob": "^11.1.0"
+        },
+        "jest-config": {
+            "glob": "^11.1.0"
+        },
+        "jest-runtime": {
+            "glob": "^11.1.0"
         }
     }
 }

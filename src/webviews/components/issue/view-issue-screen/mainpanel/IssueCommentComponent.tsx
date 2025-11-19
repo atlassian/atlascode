@@ -25,8 +25,8 @@ export type IssueCommentComponentProps = {
     currentUser: User;
     comments: JiraComment[];
     isServiceDeskProject: boolean;
-    onSave: (commentBody: any, commentId?: string, restriction?: CommentVisibility) => void; // Can be string or ADF object
-    onCreate: (commentBody: any, restriction?: CommentVisibility) => void; // Can be string or ADF object
+    onSave: (commentBody: string, commentId?: string, restriction?: CommentVisibility) => void;
+    onCreate: (commentBody: string, restriction?: CommentVisibility) => void;
     fetchUsers: (input: string) => Promise<any[]>;
     fetchImage: (url: string) => Promise<string>;
     onDelete: (commentId: string) => void;
@@ -41,7 +41,7 @@ export type IssueCommentComponentProps = {
 const CommentComponent: React.FC<{
     siteDetails: DetailedSiteInfo;
     comment: JiraComment;
-    onSave: (t: any, commentId?: string, restriction?: CommentVisibility) => void; // Can be string or ADF object
+    onSave: (t: string, commentId?: string, restriction?: CommentVisibility) => void;
     fetchImage: (url: string) => Promise<string>;
     onDelete: (commentId: string) => void;
     fetchUsers: (input: string) => Promise<any[]>;
@@ -200,7 +200,7 @@ const CommentComponent: React.FC<{
 const AddCommentComponent: React.FC<{
     fetchUsers: (i: string) => Promise<any[]>;
     user: User;
-    onCreate: (t: any, restriction?: CommentVisibility) => void; // Can be string or ADF object
+    onCreate: (t: string, restriction?: CommentVisibility) => void;
     isServiceDeskProject?: boolean;
     isAtlaskitEditorEnabled?: boolean;
     commentText: string;
@@ -288,20 +288,7 @@ const AddCommentComponent: React.FC<{
                         <AtlaskitEditor
                             defaultValue={commentText}
                             onSave={(content) => {
-                                // For v3 API: content is ADF object, not string
-                                // Check if it's empty by checking the content structure
-                                const isEmpty =
-                                    !content ||
-                                    (typeof content === 'object' &&
-                                        (!content.content ||
-                                            content.content.length === 0 ||
-                                            (content.content.length === 1 &&
-                                                content.content[0].type === 'paragraph' &&
-                                                (!content.content[0].content ||
-                                                    content.content[0].content.length === 0)))) ||
-                                    (typeof content === 'string' && content.trim() === '');
-
-                                if (!isEmpty) {
+                                if (content && content.trim() !== '') {
                                     onCreate(content, undefined);
                                     setCommentText('');
                                     closeEditorHandler();

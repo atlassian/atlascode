@@ -1,8 +1,8 @@
 import AiChatIcon from '@atlaskit/icon/core/ai-chat';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
-import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
+import { DetailedSiteInfo } from '../../api/extensionApiTypes';
 import { ActionItem } from './action-item/ActionItem';
 import { JiraWorkItem } from './jira-work-item/JiraWorkItem';
 

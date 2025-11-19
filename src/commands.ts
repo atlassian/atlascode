@@ -10,6 +10,7 @@ import {
 } from './analytics';
 import { BasicAuthInfo, DetailedSiteInfo, ProductBitbucket, ProductJira } from './atlclients/authInfo';
 import { showBitbucketDebugInfo } from './bitbucket/bbDebug';
+import { setCommandContext } from './commandContext';
 import { addAtlascodeAsRecommendedExtension } from './commands/addRecommendedExtension';
 import { rerunPipeline } from './commands/bitbucket/rerunPipeline';
 import { runPipeline } from './commands/bitbucket/runPipeline';
@@ -26,6 +27,7 @@ import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } 
 import { Logger } from './logger';
 import { runQuickAuth } from './onboarding/quickFlow';
 import { AuthenticationType } from './onboarding/quickFlow/authentication/types';
+import { RovodevCommands } from './rovo-dev/api/componentApi';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevContextItem } from './rovo-dev/rovoDevTypes';
 import { openRovoDevConfigFile } from './rovo-dev/rovoDevUtils';
@@ -452,6 +454,10 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 }
             }),
             commands.registerCommand(Commands.AddRecommendedExtension, addAtlascodeAsRecommendedExtension),
+            commands.registerCommand(Commands.ExpandCreateWorkItemWebview, () => {
+                Container.createIssueWebview.createOrShow();
+                setCommandContext('atlascode:showCreateWorkItemWebview', false);
+            }),
         );
     }
 }
@@ -484,7 +490,7 @@ const buildContext = (editor?: TextEditor, vscodeContext?: ExtensionContext): Ro
 
 export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
     vscodeContext.subscriptions.push(
-        commands.registerCommand(Commands.RovodevAskInteractive, async () => {
+        commands.registerCommand(RovodevCommands.RovodevAskInteractive, async () => {
             const context = buildContext(window.activeTextEditor, vscodeContext);
 
             const prompt = await window.showInputBox({
@@ -497,17 +503,17 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
             }
             Container.rovodevWebviewProvider.invokeRovoDevAskCommand(prompt, context);
         }),
-        commands.registerCommand(Commands.RovodevAsk, (prompt: string, context?: RovoDevContextItem[]) => {
+        commands.registerCommand(RovodevCommands.RovodevAsk, (prompt: string, context?: RovoDevContextItem[]) => {
             Container.rovodevWebviewProvider.invokeRovoDevAskCommand(prompt, context);
         }),
-        commands.registerCommand(Commands.RovodevNewSession, () => {
+        commands.registerCommand(RovodevCommands.RovodevNewSession, () => {
             Container.rovodevWebviewProvider.executeNewSession();
         }),
-        commands.registerCommand(Commands.RovodevShowTerminal, () => RovoDevProcessManager.showTerminal()),
-        commands.registerCommand(Commands.RovodevShareFeedback, () =>
+        commands.registerCommand(RovodevCommands.RovodevShowTerminal, () => RovoDevProcessManager.showTerminal()),
+        commands.registerCommand(RovodevCommands.RovodevShareFeedback, () =>
             Container.rovodevWebviewProvider.executeTriggerFeedback(),
         ),
-        commands.registerCommand(Commands.RovodevAddToContext, async () => {
+        commands.registerCommand(RovodevCommands.RovodevAddToContext, async () => {
             const context = buildContext(window.activeTextEditor, vscodeContext);
             if (!context || context.length === 0) {
                 // Do nothing, this should only have effect in editor context
@@ -518,13 +524,22 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
                 Container.rovodevWebviewProvider.addToContext(item);
             });
         }),
-        commands.registerCommand(Commands.OpenRovoDevConfig, async () => await openRovoDevConfigFile('config.yml')),
-        commands.registerCommand(Commands.OpenRovoDevMcpJson, async () => await openRovoDevConfigFile('mcp.json')),
         commands.registerCommand(
-            Commands.OpenRovoDevGlobalMemory,
+            RovodevCommands.OpenRovoDevConfig,
+            async () => await openRovoDevConfigFile('config.yml'),
+        ),
+        commands.registerCommand(
+            RovodevCommands.OpenRovoDevMcpJson,
+            async () => await openRovoDevConfigFile('mcp.json'),
+        ),
+        commands.registerCommand(
+            RovodevCommands.OpenRovoDevGlobalMemory,
             async () => await openRovoDevConfigFile('.agent.md'),
         ),
-        commands.registerCommand(Commands.OpenRovoDevLogFile, async () => await openRovoDevConfigFile('rovodev.log')),
+        commands.registerCommand(
+            RovodevCommands.OpenRovoDevLogFile,
+            async () => await openRovoDevConfigFile('rovodev.log'),
+        ),
     );
 }
 
