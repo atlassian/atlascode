@@ -1266,7 +1266,7 @@ export class JiraIssueWebview
                                 `Opening Rovo Dev with issue: ${issue.key} from site: ${issue.siteDetails.host}`,
                             );
 
-                            issueOpenRovoDevEvent(this._issue.siteDetails).then((e) => {
+                            issueOpenRovoDevEvent(this._issue.siteDetails, this.id).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
 
