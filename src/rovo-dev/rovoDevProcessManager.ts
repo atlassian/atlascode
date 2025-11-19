@@ -93,11 +93,25 @@ async function shutdownRovoDev(port: number) {
     }
 }
 
+function getRandomInt(min: number, max: number): number {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min)) + min;
+}
+
 async function getOrAssignPortForWorkspace(): Promise<number> {
     const portStart = RovoDevInfo.portRange.start;
     const portEnd = RovoDevInfo.portRange.end;
 
-    for (let port = portStart; port <= portEnd; ++port) {
+    const len = portEnd - portStart + 1;
+    const a = getRandomInt(3, len);
+    const b = getRandomInt(3, len);
+
+    // use a bijective function to "randomize" the next port without picking the same port twice
+    const pickPort = (x: number) => ((a * x + b) % len) + portStart;
+
+    for (let i = 0; i < len; ++i) {
+        const port = pickPort(i);
         if (await isPortAvailable(port)) {
             return port;
         }
