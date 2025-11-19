@@ -40,6 +40,7 @@ import {
     isHandleEditorFocus,
     isIssueComment,
     isIssueDeleteComment,
+    isOpenRovoDevWithIssueAction,
     isOpenStartWorkPageAction,
     isTransitionIssue,
     isUpdateVoteAction,
@@ -56,6 +57,7 @@ import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
+import { RovoDevContextItem } from '../rovo-dev/rovoDevTypes';
 import { OnJiraEditedRefreshDelay } from '../util/time';
 import { getJiraIssueUri } from '../views/jira/treeViews/utils';
 import { NotificationManagerImpl } from '../views/notifications/notificationManager';
@@ -1235,6 +1237,49 @@ export class JiraIssueWebview
                     if (isOpenStartWorkPageAction(msg)) {
                         handled = true;
                         startWorkOnIssue(this._issue);
+                    }
+                    break;
+                }
+                case 'openRovoDevWithIssue': {
+                    if (isOpenRovoDevWithIssueAction(msg)) {
+                        handled = true;
+                        try {
+                            const issueFromMessage = msg.issue;
+
+                            if (!issueFromMessage || !issueFromMessage.key || !issueFromMessage.siteDetails) {
+                                Logger.error(
+                                    new Error('Invalid issue data in openRovoDevWithIssue action'),
+                                    'Missing required issue fields',
+                                );
+                                this.postMessage({
+                                    type: 'error',
+                                    reason: 'Invalid issue data. Please refresh the issue and try again.',
+                                });
+                                break;
+                            }
+
+                            const issue = this._issue.key === issueFromMessage.key ? this._issue : issueFromMessage;
+                            const issueUrl = `${issue.siteDetails.baseLinkUrl}/browse/${issue.key}`;
+                            const promptText = `Work on the attached Jira work item: ${issue.key}${issue.summary ? ` - ${issue.summary}` : ''}`;
+
+                            Logger.debug(
+                                `Opening Rovo Dev with issue: ${issue.key} from site: ${issue.siteDetails.host}`,
+                            );
+
+                            const jiraContext: RovoDevContextItem = {
+                                contextType: 'jiraWorkItem',
+                                name: issue.key,
+                                url: issueUrl,
+                            };
+
+                            await Container.rovodevWebviewProvider.setPromptTextWithFocus(promptText, jiraContext);
+                        } catch (e) {
+                            Logger.error(e, 'Error opening Rovo Dev with issue context');
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Error opening Rovo Dev'),
+                            });
+                        }
                     }
                     break;
                 }
