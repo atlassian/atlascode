@@ -1243,10 +1243,6 @@ export class JiraIssueWebview
                 case 'openRovoDevWithIssue': {
                     if (isOpenRovoDevWithIssueAction(msg)) {
                         handled = true;
-                        issueOpenRovoDevEvent(this._issue.siteDetails).then((e) => {
-                            Container.analyticsClient.sendTrackEvent(e);
-                        });
-
                         try {
                             const issueFromMessage = msg.issue;
 
@@ -1269,6 +1265,10 @@ export class JiraIssueWebview
                             Logger.debug(
                                 `Opening Rovo Dev with issue: ${issue.key} from site: ${issue.siteDetails.host}`,
                             );
+
+                            issueOpenRovoDevEvent(this._issue.siteDetails).then((e) => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
 
                             const jiraContext: RovoDevContextItem = {
                                 contextType: 'jiraWorkItem',
