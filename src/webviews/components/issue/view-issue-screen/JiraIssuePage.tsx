@@ -135,13 +135,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     break;
                 }
                 case 'developmentInfoUpdate': {
-                    console.log('[DEV_INFO] Received developmentInfoUpdate in UI:', e.developmentInfo);
-                    const totalCount =
-                        (e.developmentInfo?.branches?.length || 0) +
-                        (e.developmentInfo?.commits?.length || 0) +
-                        (e.developmentInfo?.pullRequests?.length || 0) +
-                        (e.developmentInfo?.builds?.length || 0);
-                    console.log(`[DEV_INFO] Total items in UI: ${totalCount}`);
                     this.setState({ developmentInfo: e.developmentInfo });
                     break;
                 }
@@ -806,7 +799,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 });
         }
 
-        // Add Development field after parent field
+        // Add Development field after parent field (only if there's data)
         const developmentInfo = this.state.developmentInfo || emptyDevelopmentInfo;
         const totalDevCount =
             (developmentInfo.branches?.length || 0) +
@@ -814,12 +807,11 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             (developmentInfo.pullRequests?.length || 0) +
             (developmentInfo.builds?.length || 0);
 
-        console.log('[DEV_INFO] Rendering sidebar - developmentInfo:', developmentInfo);
-        console.log('[DEV_INFO] Total dev count:', totalDevCount);
-        console.log('[DEV_INFO] Will show Development field:', totalDevCount > 0);
+        if (this.state.siteDetails.isCloud && totalDevCount > 0) {
+            const parentIndex = commonItems.findIndex((item) => item.itemLabel === 'Parent');
+            const insertIndex = parentIndex >= 0 ? parentIndex + 1 : commonItems.length;
 
-        if (totalDevCount > 0) {
-            commonItems.push({
+            commonItems.splice(insertIndex, 0, {
                 itemLabel: 'Development',
                 itemComponent: (
                     <Development

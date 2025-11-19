@@ -318,13 +318,8 @@ export class JiraIssueWebview
 
     async updateDevelopmentInfo() {
         try {
-            Logger.debug(`[DEV_INFO] Starting updateDevelopmentInfo for issue ${this._issue.key}`);
-
             // First, try to fetch development info from Jira's development panel API
             const jiraDevInfo = await this.fetchJiraDevelopmentInfo();
-            Logger.debug(
-                `[DEV_INFO] Jira API returned: ${jiraDevInfo.branches.length} branches, ${jiraDevInfo.commits.length} commits, ${jiraDevInfo.pullRequests.length} PRs, ${jiraDevInfo.builds.length} builds`,
-            );
 
             // Also get local repository information as a fallback
             const [localBranches, localCommits, pullRequests, localBuilds] = await Promise.all([
@@ -333,9 +328,6 @@ export class JiraIssueWebview
                 this.recentPullRequests(),
                 this.relatedBuilds(),
             ]);
-            Logger.debug(
-                `[DEV_INFO] Local data: ${localBranches.length} branches, ${localCommits.length} commits, ${pullRequests.length} PRs, ${localBuilds.length} builds`,
-            );
 
             // Merge Jira dev info with local info
             const branches = jiraDevInfo.branches.length > 0 ? jiraDevInfo.branches : localBranches;
@@ -349,20 +341,12 @@ export class JiraIssueWebview
                 builds,
             };
 
-            const totalCount =
-                finalDevInfo.branches.length +
-                finalDevInfo.commits.length +
-                finalDevInfo.pullRequests.length +
-                finalDevInfo.builds.length;
-            Logger.debug(`[DEV_INFO] Final merged data: ${totalCount} total items`);
-            Logger.debug(`[DEV_INFO] Posting developmentInfoUpdate message to UI`);
-
             this.postMessage({
                 type: 'developmentInfoUpdate',
                 developmentInfo: finalDevInfo,
             });
         } catch (e) {
-            Logger.error(e, '[DEV_INFO] Error updating development info');
+            Logger.error(e, 'Error updating development info');
         }
     }
 
@@ -375,13 +359,8 @@ export class JiraIssueWebview
         const emptyResult = { branches: [], commits: [], pullRequests: [], builds: [] };
 
         try {
-            Logger.debug(
-                `[DEV_INFO] fetchJiraDevelopmentInfo called for issue ${this._issue.key} (id: ${this._issue.id})`,
-            );
-
             // Only available in Jira Cloud
             if (!this._issue.siteDetails.isCloud) {
-                Logger.debug(`[DEV_INFO] Skipping - not a Cloud instance`);
                 return emptyResult;
             }
 
@@ -394,9 +373,7 @@ export class JiraIssueWebview
 
             for (const appType of applicationTypes) {
                 try {
-                    const devStatusUrl = `${baseApiUrl}/rest/dev-status/1.0/issue/detail?issueId=${this._issue.id}&applicationType=${appType}&dataType=branch&dataType=pullrequest&dataType=repository`;
-
-                    Logger.debug(`[DEV_INFO] Calling Jira dev-status API for ${appType}: ${devStatusUrl}`);
+                    const devStatusUrl = `${baseApiUrl}/rest/dev-status/1.0/issue/detail?issueId=${this._issue.id}&applicationType=${appType}&dataType=repository`;
 
                     const response = await client.transportFactory().get(devStatusUrl, {
                         method: 'GET',
@@ -406,31 +383,24 @@ export class JiraIssueWebview
                         timeout: 5000, // 5 second timeout per app type
                     });
 
-                    Logger.debug(`[DEV_INFO] API response status for ${appType}: ${response.status}`);
-
                     const devData = response.data;
 
                     // Merge data from this app type
                     if (devData.detail && devData.detail.length > 0) {
-                        Logger.debug(`[DEV_INFO] Found ${devData.detail.length} detail entries for ${appType}`);
                         const parsed = this.parseDevStatusData(devData);
                         allData.branches.push(...parsed.branches);
                         allData.commits.push(...parsed.commits);
                         allData.pullRequests.push(...parsed.pullRequests);
                         allData.builds.push(...parsed.builds);
                     }
-                } catch (appError: any) {
-                    Logger.debug(`[DEV_INFO] No data from ${appType}: ${appError.message}`);
+                } catch {
                     // Continue to next app type
                 }
             }
 
-            Logger.debug(
-                `[DEV_INFO] Parsed Jira development info: ${allData.branches.length} branches, ${allData.commits.length} commits, ${allData.pullRequests.length} PRs, ${allData.builds.length} builds`,
-            );
             return allData;
         } catch (e) {
-            Logger.error(e, '[DEV_INFO] Could not fetch Jira development info, falling back to local data');
+            Logger.error(e, 'Could not fetch Jira development info, falling back to local data');
             return emptyResult;
         }
     }
@@ -484,11 +454,23 @@ export class JiraIssueWebview
                     }
                 }
 
-                // Extract build statuses
+                // Extract commits and builds from repositories
                 if (app.repositories) {
                     for (const repo of app.repositories) {
                         if (repo.commits) {
                             for (const commit of repo.commits) {
+                                // Add commits that aren't already in the list (from PRs)
+                                const commitExists = commits.some((c) => c.hash === commit.id);
+                                if (!commitExists) {
+                                    commits.push({
+                                        hash: commit.id,
+                                        message: commit.message,
+                                        authorName: commit.author?.name || commit.authorTimestamp,
+                                        url: commit.url,
+                                    });
+                                }
+
+                                // Extract builds from commits
                                 if (commit.builds) {
                                     for (const build of commit.builds) {
                                         builds.push({

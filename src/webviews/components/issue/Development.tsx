@@ -1,5 +1,7 @@
 import Button from '@atlaskit/button';
 import CheckCircleIcon from '@atlaskit/icon/core/check-circle';
+import ChevronDownIcon from '@atlaskit/icon/core/chevron-down';
+import ChevronRightIcon from '@atlaskit/icon/core/chevron-right';
 import CrossCircleIcon from '@atlaskit/icon/core/cross-circle';
 import { Box } from '@mui/material';
 import React from 'react';
@@ -257,9 +259,8 @@ const BuildList: React.FC<{ builds: any[] }> = ({ builds }) => {
 };
 
 export const Development: React.FC<DevelopmentProps> = ({ developmentInfo, onOpenPullRequest }) => {
+    const [isOpen, setIsOpen] = React.useState<boolean>(false);
     const [expandedSection, setExpandedSection] = React.useState<string | null>(null);
-
-    console.log('[DEV_INFO] Development component rendering with:', developmentInfo);
 
     const { branches, commits, pullRequests, builds } = developmentInfo;
 
@@ -270,55 +271,73 @@ export const Development: React.FC<DevelopmentProps> = ({ developmentInfo, onOpe
     const totalCount =
         (branches?.length || 0) + (commits?.length || 0) + (pullRequests?.length || 0) + (builds?.length || 0);
 
-    console.log('[DEV_INFO] Development component total count:', totalCount);
-
     if (totalCount === 0) {
-        return (
-            <div style={{ fontSize: '13px', color: 'var(--vscode-descriptionForeground)' }}>
-                No development information
-            </div>
-        );
+        return null;
     }
 
     return (
-        <Box style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <DevelopmentItem
-                icon="branch"
-                count={branches.length}
-                label="branch"
-                isExpanded={expandedSection === 'branches'}
-                onToggle={() => toggleSection('branches')}
+        <Box>
+            <Button
+                appearance="subtle"
+                onClick={() => setIsOpen(!isOpen)}
+                iconBefore={
+                    isOpen ? (
+                        <ChevronDownIcon label="Collapse" size="small" />
+                    ) : (
+                        <ChevronRightIcon label="Expand" size="small" />
+                    )
+                }
+                style={{
+                    justifyContent: 'flex-start',
+                    padding: 0,
+                    height: 'auto',
+                    fontSize: '13px',
+                    minHeight: '20px',
+                    marginLeft: '-8px',
+                }}
             />
-            {expandedSection === 'branches' && <BranchList branches={branches} />}
 
-            <DevelopmentItem
-                icon="commit"
-                count={commits.length}
-                label="commit"
-                isExpanded={expandedSection === 'commits'}
-                onToggle={() => toggleSection('commits')}
-            />
-            {expandedSection === 'commits' && <CommitList commits={commits} />}
+            {isOpen && (
+                <Box style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '8px' }}>
+                    <DevelopmentItem
+                        icon="branch"
+                        count={branches.length}
+                        label="branch"
+                        isExpanded={expandedSection === 'branches'}
+                        onToggle={() => toggleSection('branches')}
+                    />
+                    {expandedSection === 'branches' && <BranchList branches={branches} />}
 
-            <DevelopmentItem
-                icon="pr"
-                count={pullRequests.length}
-                label="pull request"
-                isExpanded={expandedSection === 'pullRequests'}
-                onToggle={() => toggleSection('pullRequests')}
-            />
-            {expandedSection === 'pullRequests' && (
-                <PullRequestList pullRequests={pullRequests} onOpen={onOpenPullRequest} />
+                    <DevelopmentItem
+                        icon="commit"
+                        count={commits.length}
+                        label="commit"
+                        isExpanded={expandedSection === 'commits'}
+                        onToggle={() => toggleSection('commits')}
+                    />
+                    {expandedSection === 'commits' && <CommitList commits={commits} />}
+
+                    <DevelopmentItem
+                        icon="pr"
+                        count={pullRequests.length}
+                        label="pull request"
+                        isExpanded={expandedSection === 'pullRequests'}
+                        onToggle={() => toggleSection('pullRequests')}
+                    />
+                    {expandedSection === 'pullRequests' && (
+                        <PullRequestList pullRequests={pullRequests} onOpen={onOpenPullRequest} />
+                    )}
+
+                    <DevelopmentItem
+                        icon="build"
+                        count={builds.length}
+                        label="build"
+                        isExpanded={expandedSection === 'builds'}
+                        onToggle={() => toggleSection('builds')}
+                    />
+                    {expandedSection === 'builds' && <BuildList builds={builds} />}
+                </Box>
             )}
-
-            <DevelopmentItem
-                icon="build"
-                count={builds.length}
-                label="build"
-                isExpanded={expandedSection === 'builds'}
-                onToggle={() => toggleSection('builds')}
-            />
-            {expandedSection === 'builds' && <BuildList builds={builds} />}
         </Box>
     );
 };
