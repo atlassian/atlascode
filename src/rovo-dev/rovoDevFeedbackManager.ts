@@ -1,8 +1,7 @@
 import { truncate } from 'lodash';
-import { getAxiosInstance } from 'src/jira/jira-client/providers';
 import * as vscode from 'vscode';
 
-import { ExtensionApi } from './api/extensionApi';
+import { ExtensionApi, getAxiosInstance } from './api/extensionApi';
 import { MIN_SUPPORTED_ROVODEV_VERSION } from './rovoDevProcessManager';
 import { RovoDevLogger } from './util/rovoDevLogger';
 
