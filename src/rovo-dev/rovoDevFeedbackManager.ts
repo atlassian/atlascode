@@ -1,4 +1,5 @@
 import { truncate } from 'lodash';
+import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import * as vscode from 'vscode';
 
 import { ExtensionApi, getAxiosInstance } from './api/extensionApi';
@@ -16,22 +17,20 @@ interface FeedbackObject {
 const FEEDBACK_ENDPOINT = `https://jsd-widget.atlassian.com/api/embeddable/57037b9e-743e-407d-bb03-441a13c7afd0/request?requestTypeId=3066`;
 
 export class RovoDevFeedbackManager {
-    public static async submitFeedback(feedback: FeedbackObject, isBBY: boolean = false): Promise<void> {
+    public static async submitFeedback(
+        feedback: FeedbackObject,
+        user?: UserInfo,
+        isBBY: boolean = false,
+    ): Promise<void> {
         const transport = getAxiosInstance();
-        const extensionApi = new ExtensionApi();
         const context = this.getContext(isBBY, feedback.rovoDevSessionId);
 
         let userEmail = 'do-not-reply@atlassian.com';
         let userName = 'unknown';
 
-        if (feedback.canContact) {
-            // Get user info from primary site if available
-            const info = await extensionApi.auth.getPrimaryAuthInfo();
-
-            if (info && info.user) {
-                userEmail = info.user.email;
-                userName = info.user.displayName;
-            }
+        if (feedback.canContact && user) {
+            userEmail = user.email;
+            userName = user.displayName;
         }
 
         let descriptionHeader = '';
