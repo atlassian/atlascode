@@ -14,7 +14,7 @@ import { IssueSuggestionSettings } from './config/configuration';
 import { BitbucketIssuesTreeViewId, PullRequestTreeViewId } from './constants';
 import { Container } from './container';
 import { QuickFlowAnalyticsEvent } from './onboarding/quickFlow/types';
-import { RovoDevCommonParams, RovoDevPerfEvent } from './rovo-dev/analytics/rovodevAnalyticsTypes';
+import { RovoDevCommonParams, RovodevPerformanceTag } from './rovo-dev/analytics/events';
 import { NotificationSurface, NotificationType } from './views/notifications/notificationManager';
 import { NotificationSource } from './views/notifications/notificationSources';
 
@@ -222,7 +222,7 @@ interface JiraIssueTypeParams {
 }
 
 export function performanceEvent(
-    tag: RovoDevPerfEvent,
+    tag: RovodevPerformanceTag,
     measure: number,
     params: RovoDevCommonParams,
 ): Promise<TrackEvent>;
