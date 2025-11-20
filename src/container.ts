@@ -229,15 +229,15 @@ export class Container {
             (this._rovoDevEntitlementChecker = new RovoDevEntitlementChecker(this._analyticsClient)),
         );
 
-        // Check Rovo Dev entitlement on startup
-        await this._rovoDevEntitlementChecker.checkEntitlement();
-
         // in Boysenberry we don't need to listen to Jira auth updates
         if (!process.env.ROVODEV_BBY) {
+            // Check Rovo Dev entitlement on startup
+            await this._rovoDevEntitlementChecker.triggerEntitlementNotification();
             // refresh Rovo Dev when auth sites change
             this._siteManager.onDidSitesAvailableChange(async () => {
                 await this.updateFeatureFlagTenantId();
                 await this.refreshRovoDev(context);
+                await this._rovoDevEntitlementChecker.triggerEntitlementNotification();
             });
 
             // refresh Rovo Dev when Jira gets enabled or disabled
@@ -245,6 +245,7 @@ export class Container {
                 configuration.onDidChange(async (e) => {
                     if (configuration.changed(e, 'jira.enabled') || configuration.changed(e, 'rovodev.enabled')) {
                         await this.refreshRovoDev(context);
+                        await this._rovoDevEntitlementChecker.triggerEntitlementNotification();
                     }
                 }, this),
             );

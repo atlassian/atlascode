@@ -1136,6 +1136,12 @@
                     "description": "Enable Rovo Dev thinking block.\nThis collapses intermediate thinking steps into a single block.",
                     "scope": "window"
                 },
+                "atlascode.rovodev.showEntitlementNotifications": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show notifications about Rovo Dev entitlement status changes",
+                    "scope": "window"
+                },
                 "atlascode.issueSuggestion.enabled": {
                     "type": "boolean",
                     "default": true,
