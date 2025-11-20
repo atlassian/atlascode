@@ -39,7 +39,20 @@ describe('RovoDevDwellTracker', () => {
 
         await jest.advanceTimersByTimeAsync(1100);
 
-        expect(fireTelemetryEvent).toHaveBeenCalledWith('rovoDevAiResultViewedEvent', 'prompt-123', 1000);
+        expect(fireTelemetryEvent).toHaveBeenCalledWith({
+            action: 'viewed',
+            subject: 'aiResult',
+            attributes: {
+                promptId: 'prompt-123',
+                dwellMs: 1000,
+                xid: 'rovodev-sessions',
+                singleInstrumentationID: 'prompt-123',
+                aiFeatureName: 'rovodevSessions',
+                proactiveGeneratedAI: 0,
+                userGeneratedAI: 1,
+                isAIFeature: 1,
+            },
+        });
 
         tracker.dispose();
     });
