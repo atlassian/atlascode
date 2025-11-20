@@ -85,7 +85,6 @@ const DevelopmentItem: React.FC<{
                 alignItems: 'center',
                 padding: '4px 8px',
                 justifyContent: 'flex-start',
-                width: '100%',
                 color: 'var(--vscode-textLink-foreground)',
             }}
         >
@@ -189,7 +188,6 @@ const PullRequestList: React.FC<{ pullRequests: any[]; onOpen: (pr: any) => void
                         key={pr.id || index}
                         style={{
                             display: 'flex',
-                            alignItems: 'center',
                             padding: '4px 0',
                             fontSize: '13px',
                             gap: '8px',
@@ -291,43 +289,41 @@ export const Development: React.FC<DevelopmentProps> = ({ developmentInfo, onOpe
     const summaryText = summaryParts.join(', ');
 
     return (
-        <Box>
-            <Button
-                appearance="subtle"
-                onClick={() => setIsOpen(!isOpen)}
-                iconBefore={
-                    isOpen ? (
-                        <ChevronDownIcon label="Collapse" size="small" />
-                    ) : (
-                        <ChevronRightIcon label="Expand" size="small" />
-                    )
-                }
-                style={{
-                    justifyContent: 'flex-start',
-                    padding: 0,
-                    height: 'auto',
-                    fontSize: '13px',
-                    minHeight: '20px',
-                    marginLeft: '-8px',
-                }}
-            >
-                Development
-            </Button>
-
-            {/* Summary line - always show when any items exist */}
-            <Box
-                style={{
-                    marginLeft: '0px',
-                    marginTop: '4px',
-                    fontSize: '13px',
-                    color: 'var(--vscode-descriptionForeground)',
-                }}
-            >
-                {summaryText}
+        <Box style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
+            {/* Summary row with chevron and text */}
+            <Box style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                <Button
+                    appearance="subtle"
+                    onClick={() => setIsOpen(!isOpen)}
+                    iconBefore={
+                        isOpen ? (
+                            <ChevronDownIcon label="Collapse" size="small" />
+                        ) : (
+                            <ChevronRightIcon label="Expand" size="small" />
+                        )
+                    }
+                    style={{
+                        padding: 0,
+                        height: 'auto',
+                        minHeight: '20px',
+                        minWidth: '20px',
+                    }}
+                />
+                <div
+                    onClick={() => setIsOpen(!isOpen)}
+                    style={{
+                        fontSize: '13px',
+                        color: 'var(--vscode-foreground)',
+                        cursor: 'pointer',
+                    }}
+                >
+                    {summaryText}
+                </div>
             </Box>
 
+            {/* Expandable sections */}
             {isOpen && (
-                <Box style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '8px' }}>
+                <Box style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px', width: '60%' }}>
                     <DevelopmentItem
                         icon="branch"
                         count={branches.length}
