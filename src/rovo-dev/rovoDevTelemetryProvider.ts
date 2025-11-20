@@ -1,47 +1,38 @@
-import {
-    rovoDevAiResultViewedEvent,
-    rovoDevCreatePrButtonClickedEvent,
-    rovoDevDetailsExpandedEvent,
-    rovoDevFileChangedActionEvent,
-    rovoDevFilesSummaryShownEvent,
-    rovoDevGitPushActionEvent,
-    rovoDevNewSessionActionEvent,
-    rovoDevPromptSentEvent,
-    rovoDevStopActionEvent,
-    rovoDevTechnicalPlanningShownEvent,
-} from './analytics/rovodevAnalyticsApi';
+import { Track, TrackEvent } from './analytics/events';
 import { ExtensionApi, RovoDevEnv } from './api/extensionApi';
 import { PerformanceLogger } from './performanceLogger';
 import { RovoDevLogger } from './util/rovoDevLogger';
 
-const rovoDevTelemetryEvents = {
-    rovoDevFileChangedActionEvent,
-    rovoDevFilesSummaryShownEvent,
-    rovoDevGitPushActionEvent,
-    rovoDevNewSessionActionEvent,
-    rovoDevPromptSentEvent,
-    rovoDevStopActionEvent,
-    rovoDevTechnicalPlanningShownEvent,
-    rovoDevDetailsExpandedEvent,
-    rovoDevAiResultViewedEvent,
-    rovoDevCreatePrButtonClickedEvent,
+// Common attributes that appear in most events
+export type CommonSessionAttributes = {
+    rovoDevEnv: RovoDevEnv;
+    appInstanceId: string;
+    sessionId: string;
 };
 
-type ParametersSkip3<T extends (...args: any) => any> =
-    // eslint-disable-next-line no-unused-vars
-    Parameters<T> extends [infer _1, infer _2, infer _3, ...infer Rest] ? Rest : never;
+export type PartialEvent<T extends { action: string; subject: string; attributes: object }> = Pick<
+    T,
+    'action' | 'subject'
+> & { attributes: Omit<T['attributes'], keyof CommonSessionAttributes> };
 
-type TelemetryFunction = keyof typeof rovoDevTelemetryEvents;
-
-type TelemetryRecord<T> = {
-    [x in TelemetryFunction]?: T;
-};
+// Events supported by RovoDevTelemetryProvider
+// (these have common attributes: rovoDevEnv, appInstanceId, sessionId)
+export type TelemetryEvent =
+    | PartialEvent<Track.NewSessionAction>
+    | PartialEvent<Track.PromptSent>
+    | PartialEvent<Track.TechnicalPlanningShown>
+    | PartialEvent<Track.FilesSummaryShown>
+    | PartialEvent<Track.FileChangedAction>
+    | PartialEvent<Track.StopAction>
+    | PartialEvent<Track.GitPushAction>
+    | PartialEvent<Track.DetailsExpanded>
+    | PartialEvent<Track.CreatePrButtonClicked>
+    | PartialEvent<Track.AiResultViewed>;
 
 export class RovoDevTelemetryProvider {
     private _chatSessionId: string = '';
-    private _currentPromptId: string = '';
 
-    private _firedTelemetryForCurrentPrompt: TelemetryRecord<boolean> = {};
+    private _firedTelemetryForCurrentPrompt: Record<string, boolean> = {};
     private _extensionApi: ExtensionApi = new ExtensionApi();
 
     private readonly _perfLogger: PerformanceLogger;
@@ -57,59 +48,80 @@ export class RovoDevTelemetryProvider {
         this._perfLogger = new PerformanceLogger(this.rovoDevEnv, this.appInstanceId);
     }
 
-    public startNewSession(chatSessionId: string, manuallyCreated: boolean) {
+    public startNewSession(chatSessionId: string, manuallyCreated: boolean): Promise<void> {
         this._chatSessionId = chatSessionId;
-        this._currentPromptId = '';
         this._firedTelemetryForCurrentPrompt = {};
 
-        this.fireTelemetryEvent('rovoDevNewSessionActionEvent', manuallyCreated);
+        const telemetryPromise = this.fireTelemetryEvent({
+            action: 'rovoDevNewSessionAction',
+            subject: 'atlascode',
+            attributes: { isManuallyCreated: manuallyCreated },
+        });
 
         this.perfLogger.sessionStarted(this._chatSessionId);
+
+        return telemetryPromise;
     }
 
     public startNewPrompt(promptId: string) {
-        this._currentPromptId = promptId;
         this._firedTelemetryForCurrentPrompt = {};
     }
 
     public shutdown() {
         this._chatSessionId = '';
-        this._currentPromptId = '';
         this._firedTelemetryForCurrentPrompt = {};
     }
 
-    // This function ensures that the same telemetry event is not sent twice for the same prompt
-    public fireTelemetryEvent<T extends TelemetryFunction>(
-        funcName: T,
-        ...params: ParametersSkip3<(typeof rovoDevTelemetryEvents)[T]>
-    ): void {
-        if (!this._chatSessionId) {
+    private hasValidMetadata(event: TelemetryEvent, metadata: CommonSessionAttributes): boolean {
+        if (!metadata.sessionId) {
             this.onError(new Error('Unable to send Rovo Dev telemetry: ChatSessionId not initialized'));
-            return;
+            return false;
         }
+
         // rovoDevNewSessionActionEvent is the only event that doesn't need the promptId
-        if (funcName !== 'rovoDevNewSessionActionEvent' && !this._currentPromptId) {
+        if (event.action !== 'rovoDevNewSessionAction' && !event.attributes.promptId) {
             this.onError(new Error('Unable to send Rovo Dev telemetry: PromptId not initialized'));
+            return false;
+        }
+        return true;
+    }
+
+    private canFire(eventId: string): boolean {
+        return (
+            // Allow multiple firings for these events
+            eventId === 'atlascode_rovoDevFileChangedAction' ||
+            eventId === 'rovoDevCreatePrButton_clicked' ||
+            // Otherwise, only allow if not fired yet
+            !this._firedTelemetryForCurrentPrompt[eventId]
+        );
+    }
+
+    // This function ensures that the same telemetry event is not sent twice for the same prompt
+    async fireTelemetryEvent(event: TelemetryEvent): Promise<void> {
+        const eventId = `${event.subject}_${event.action}`;
+
+        if (!this.hasValidMetadata(event, this.metadata) && !this.canFire(eventId)) {
             return;
         }
 
-        // the following events can be fired multiple times during the same prompt
-        delete this._firedTelemetryForCurrentPrompt['rovoDevFileChangedActionEvent'];
-        delete this._firedTelemetryForCurrentPrompt['rovoDevCreatePrButtonClickedEvent'];
+        this._firedTelemetryForCurrentPrompt[eventId] = true;
+        await this._extensionApi.analytics.sendTrackEvent({
+            action: event.action,
+            subject: event.subject,
+            attributes: {
+                ...this.metadata,
+                ...event.attributes,
+            },
+        } as TrackEvent);
 
-        if (!this._firedTelemetryForCurrentPrompt[funcName]) {
-            this._firedTelemetryForCurrentPrompt[funcName] = true;
+        RovoDevLogger.debug(`Event fired: ${event.subject} ${event.action} (${JSON.stringify(event.attributes)})`);
+    }
 
-            // add `rovoDevEnv` and `sessionId` as the first two arguments
-            params.unshift(this.rovoDevEnv, this.appInstanceId, this._chatSessionId);
-
-            const ret: ReturnType<(typeof rovoDevTelemetryEvents)[T]> = rovoDevTelemetryEvents[funcName].apply(
-                undefined,
-                params,
-            );
-            ret.then((evt) => this._extensionApi.analytics.sendTrackEvent(evt));
-
-            RovoDevLogger.debug(`Event fired: ${funcName}(${params})`);
-        }
+    private get metadata(): CommonSessionAttributes {
+        return {
+            rovoDevEnv: this.rovoDevEnv,
+            appInstanceId: this.appInstanceId,
+            sessionId: this._chatSessionId,
+        };
     }
 }
