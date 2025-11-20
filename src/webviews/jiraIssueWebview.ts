@@ -1276,7 +1276,7 @@ export class JiraIssueWebview
                                 url: issueUrl,
                             };
 
-                            await Container.rovodevWebviewProvider.setPromptTextWithFocus(promptText, jiraContext);
+                            await Container.rovodevWebviewProvider.invokeRovoDevAskCommand(promptText, [jiraContext]);
                         } catch (e) {
                             Logger.error(e, 'Error opening Rovo Dev with issue context');
                             this.postMessage({
