@@ -1,6 +1,5 @@
-import { commands, QuickPick, QuickPickItem, window } from 'vscode';
+import { QuickPick, QuickPickItem, window } from 'vscode';
 
-import { Commands } from '../constants';
 import { AssigneeFilterProvider } from './assignee/assigneeFilterProvider';
 
 interface FilterQuickPickItem extends QuickPickItem {
@@ -8,12 +7,6 @@ interface FilterQuickPickItem extends QuickPickItem {
 }
 
 export class FilterProvider {
-    public static initialize(): void {
-        commands.registerCommand(Commands.JiraFilter, () => {
-            this.createFilterQuickPick();
-        });
-    }
-
     public static createFilterQuickPick(): void {
         const quickPick = window.createQuickPick<FilterQuickPickItem>();
         quickPick.title = 'Filter Jira Issues';

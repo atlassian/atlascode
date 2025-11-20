@@ -10,7 +10,7 @@ import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { v4 } from 'uuid';
 
 import { AnalyticsView } from '../../../../analyticsTypes';
-import { EditIssueAction, IssueCommentAction } from '../../../../ipc/issueActions';
+import { EditIssueAction, IssueCommentAction, OpenRovoDevWithIssueAction } from '../../../../ipc/issueActions';
 import { EditIssueData, emptyEditIssueData, isIssueCreated } from '../../../../ipc/issueMessaging';
 import { IssueHistoryItem } from '../../../../ipc/issueMessaging';
 import { LegacyPMFData } from '../../../../ipc/messaging';
@@ -39,7 +39,7 @@ import IssueMainPanel from './mainpanel/IssueMainPanel';
 import { IssueSidebarButtonGroup } from './sidebar/IssueSidebarButtonGroup';
 import { IssueSidebarCollapsible, SidebarItem } from './sidebar/IssueSidebarCollapsible';
 
-type Emit = CommonEditorPageEmit | EditIssueAction | IssueCommentAction;
+type Emit = CommonEditorPageEmit | EditIssueAction | IssueCommentAction | OpenRovoDevWithIssueAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
 
 export interface ViewState extends CommonEditorViewState, EditIssueData {
@@ -180,6 +180,13 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     handleStartWorkOnIssue = () => {
         this.postMessage({
             action: 'openStartWorkPage',
+            issue: { key: this.state.key, siteDetails: this.state.siteDetails },
+        });
+    };
+
+    handleOpenRovoDev = () => {
+        this.postMessage({
+            action: 'openRovoDevWithIssue',
             issue: { key: this.state.key, siteDetails: this.state.siteDetails },
         });
     };
@@ -839,6 +846,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     handleStatusChange={this.handleStatusChange}
                     handleStartWork={this.handleStartWorkOnIssue}
                     handleCloneIssue={(cloneData: any) => this.handleCloneIssue(cloneData)}
+                    handleOpenRovoDev={this.handleOpenRovoDev}
+                    isRovoDevEnabled={this.state.isRovoDevEnabled}
                 />
                 <IssueSidebarCollapsible label="Details" items={commonItems} defaultOpen />
                 <IssueSidebarCollapsible label="More fields" items={advancedItems} />
