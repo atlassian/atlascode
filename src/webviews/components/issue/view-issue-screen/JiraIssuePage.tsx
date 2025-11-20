@@ -657,14 +657,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             ))}
                     </div>
                 </div>
-                {this.state.isErrorBannerOpen && (
-                    <ErrorBanner
-                        onDismissError={this.handleDismissError}
-                        onRetry={this.handleRetryLastAction}
-                        onSignIn={this.handleSignIn}
-                        errorDetails={this.state.errorDetails}
-                    />
-                )}
             </div>
         );
     }
@@ -909,6 +901,37 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
         if (!this.state.isOnline) {
             return <Offline />;
+        }
+
+        // If there's an error, show only the error banner without the content
+        if (this.state.isErrorBannerOpen) {
+            return (
+                <Page>
+                    <AtlascodeErrorBoundary
+                        context={{ view: AnalyticsView.JiraIssuePage }}
+                        postMessageFunc={(e) => {
+                            this.postMessage(e); /* just {this.postMessage} doesn't work */
+                        }}
+                    >
+                        <div
+                            style={{
+                                display: 'flex',
+                                maxWidth: '1200px',
+                                margin: '20px auto 36px auto',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <div style={{ width: '60%' }}>
+                                <ErrorBanner
+                                    onRetry={this.handleRetryLastAction}
+                                    onSignIn={this.handleSignIn}
+                                    errorDetails={this.state.errorDetails}
+                                />
+                            </div>
+                        </div>
+                    </AtlascodeErrorBoundary>
+                </Page>
+            );
         }
 
         return (
