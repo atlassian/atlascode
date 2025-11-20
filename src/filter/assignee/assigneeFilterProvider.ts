@@ -36,8 +36,9 @@ export class AssigneeFilterProvider {
         quickPick.matchOnDescription = true;
         quickPick.matchOnDetail = true;
         quickPick.canSelectMany = true;
-        quickPick.items = QuickPickUtils.getDefaultAssigneeOptions(this.previousSelectedItems, this.currentUser);
-        quickPick.selectedItems = [];
+        const defaultOptions = QuickPickUtils.getDefaultAssigneeOptions(this.previousSelectedItems, this.currentUser);
+        quickPick.items = QuickPickUtils.mergeItemsWithPersistent(this.persistentSelectedItems, defaultOptions);
+        quickPick.selectedItems = this.persistentSelectedItems;
 
         quickPick.show();
 
@@ -95,7 +96,6 @@ export class AssigneeFilterProvider {
             await this.fetchAssignedIssues(selected);
 
             this.previousSelectedItems = [...selected];
-            this.persistentSelectedItems = [];
         }
     }
 

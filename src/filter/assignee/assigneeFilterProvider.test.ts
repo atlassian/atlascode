@@ -312,7 +312,7 @@ describe('AssigneeFilterProvider', () => {
             );
         });
 
-        it('should move selected items to previous selections and clear persistent items', async () => {
+        it('should move selected items to previous selections and keep persistent items', async () => {
             const selectedUser: QuickPickUser = {
                 label: 'John Doe',
                 description: 'john@example.com',
@@ -326,7 +326,7 @@ describe('AssigneeFilterProvider', () => {
             await acceptHandler();
 
             expect(AssigneeFilterProvider['previousSelectedItems']).toEqual([selectedUser]);
-            expect(AssigneeFilterProvider['persistentSelectedItems']).toEqual([]);
+            expect(AssigneeFilterProvider['persistentSelectedItems']).toEqual([selectedUser]);
         });
     });
 
