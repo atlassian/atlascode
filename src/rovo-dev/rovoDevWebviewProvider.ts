@@ -1,6 +1,7 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import * as fs from 'fs';
 import path from 'path';
+import { UserInfo } from 'src/atlclients/authInfo';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { safeWaitFor } from 'src/rovo-dev/util/waitFor';
 import { v4 } from 'uuid';
@@ -85,6 +86,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _debugPanelEnabled = false;
     private _debugPanelContext: Record<string, string> = {};
     private _debugPanelMcpContext: Record<string, string> = {};
+
+    private _userInfo: UserInfo | undefined;
 
     // we keep the data in this collection so we can attach some metadata to the next
     // prompt informing Rovo Dev that those files has been reverted
@@ -425,6 +428,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                                 lastTenMessages: e.lastTenMessages,
                                 rovoDevSessionId: process.env.SANDBOX_SESSION_ID,
                             },
+                            this._userInfo,
                             !!this.isBoysenberry,
                         );
                         break;
@@ -972,6 +976,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private async handleProcessStateChanged(newState: RovoDevProcessState) {
         if (newState.state === 'Downloading' || newState.state === 'Starting' || newState.state === 'Started') {
+            this._userInfo = newState.jiraSiteUserInfo;
             this._jiraItemsProvider.setJiraSite(newState.jiraSiteHostname);
         }
 

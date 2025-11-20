@@ -112,7 +112,7 @@ describe('ExtensionApi', () => {
                 };
                 (Container.clientManager.getCloudPrimarySite as jest.Mock).mockResolvedValue(mockAuthData);
 
-                const result = await api.auth.getCloudPrimaryAuthInfo();
+                const result = await api.auth.getCloudPrimaryAuthSite();
 
                 expect(Container.clientManager.getCloudPrimarySite).toHaveBeenCalled();
                 expect(result).toBe(mockAuthData);
@@ -121,7 +121,7 @@ describe('ExtensionApi', () => {
             it('should return undefined when no cloud primary site exists', async () => {
                 (Container.clientManager.getCloudPrimarySite as jest.Mock).mockResolvedValue(undefined);
 
-                const result = await api.auth.getCloudPrimaryAuthInfo();
+                const result = await api.auth.getCloudPrimaryAuthSite();
 
                 expect(result).toBeUndefined();
             });

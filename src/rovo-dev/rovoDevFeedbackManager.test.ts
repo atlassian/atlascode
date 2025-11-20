@@ -2,9 +2,6 @@ jest.mock('./util/rovoDevLogger');
 jest.mock('vscode');
 
 const mockExtensionApiInstance = {
-    auth: {
-        getPrimaryAuthInfo: jest.fn(),
-    },
     metadata: {
         version: jest.fn(),
     },
@@ -20,6 +17,8 @@ jest.mock('lodash', () => ({
     truncate: jest.fn((str, options) => str),
 }));
 
+import { UserInfo } from 'src/atlclients/authInfo';
+import { expansionCastTo } from 'testsutil/miscFunctions';
 import * as vscode from 'vscode';
 
 import { getAxiosInstance } from './api/extensionApi';
@@ -36,7 +35,6 @@ describe('RovoDevFeedbackManager', () => {
         mockTransport.mockResolvedValue({});
 
         // Default return values
-        mockExtensionApiInstance.auth.getPrimaryAuthInfo.mockResolvedValue(undefined);
         mockExtensionApiInstance.metadata.version.mockReturnValue('1.0.0');
     });
 
@@ -70,7 +68,6 @@ describe('RovoDevFeedbackManager', () => {
                 email: 'user@example.com',
                 displayName: 'Test User',
             };
-            mockExtensionApiInstance.auth.getPrimaryAuthInfo.mockResolvedValue({ user: mockUser });
 
             const feedback = {
                 feedbackType: 'bug' as const,
@@ -78,7 +75,7 @@ describe('RovoDevFeedbackManager', () => {
                 canContact: true,
             };
 
-            await RovoDevFeedbackManager.submitFeedback(feedback);
+            await RovoDevFeedbackManager.submitFeedback(feedback, expansionCastTo<UserInfo>(mockUser));
 
             expect(mockTransport).toHaveBeenCalledWith(
                 expect.any(String),
@@ -183,7 +180,7 @@ describe('RovoDevFeedbackManager', () => {
                 canContact: false,
             };
 
-            await RovoDevFeedbackManager.submitFeedback(feedback, true);
+            await RovoDevFeedbackManager.submitFeedback(feedback, undefined, true);
 
             expect(mockTransport).toHaveBeenCalledWith(
                 expect.any(String),
@@ -225,9 +222,6 @@ describe('RovoDevFeedbackManager', () => {
         });
 
         it('should handle missing primary site gracefully', async () => {
-            // When getPrimaryAuthInfo returns undefined, it means no primary site
-            mockExtensionApiInstance.auth.getPrimaryAuthInfo.mockResolvedValue(undefined);
-
             const feedback = {
                 feedbackType: 'general' as const,
                 feedbackMessage: 'Test feedback',

@@ -109,7 +109,7 @@ export class ExtensionApi {
          *
          * @returns ValidBasicAuthSiteData with working API token credentials, or undefined
          */
-        getCloudPrimaryAuthInfo: async (): Promise<ValidBasicAuthSiteData | undefined> => {
+        getCloudPrimaryAuthSite: async (): Promise<ValidBasicAuthSiteData | undefined> => {
             return await Container.clientManager.getCloudPrimarySite();
         },
 
