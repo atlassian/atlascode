@@ -89,13 +89,13 @@ export interface CommonEditorViewState extends Message {
     isOnline: boolean;
     isErrorBannerOpen: boolean;
     showPMF: boolean;
-    errorDetails: any;
+    errorDetails: string | { message?: string; title?: string } | undefined;
     commentInputValue: string;
     isRovoDevEnabled: boolean;
     isGeneratingSuggestions?: boolean;
     summaryKey: string;
     isAtlaskitEditorEnabled: boolean;
-    lastFailedAction?: any;
+    lastFailedAction?: CommonEditorPageEmit;
     projectPagination?: {
         total: number;
         loaded: number;
