@@ -157,7 +157,7 @@ export default class ErrorBanner extends React.Component<ErrorBannerProps, { err
             typeof errorDetails === 'object' && 'title' in errorDetails && errorDetails.title
                 ? errorDetails.title
                 : 'Something went wrong';
-        const canRetry = this.canRetry(this.state.errorDetails);
+        const canRetry = this.canRetry(errorDetails);
         const isAuthError = !canRetry;
 
         const showRetryButton = canRetry && this.props.onRetry;
