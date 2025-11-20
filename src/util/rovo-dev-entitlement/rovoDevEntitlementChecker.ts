@@ -10,6 +10,7 @@ import { NotificationSurface } from 'src/views/notifications/notificationManager
 import { NotificationSource } from 'src/views/notifications/notificationSources';
 import { commands, ConfigurationChangeEvent, Disposable, env, Uri, window } from 'vscode';
 
+import { Features } from '../features';
 import { RovoDevEntitlementError, RovoDevEntitlementErrorType } from './rovoDevEntitlementError';
 
 export enum RovoDevEntitlementType {
@@ -131,13 +132,14 @@ export class RovoDevEntitlementChecker extends Disposable {
     }
 
     public async triggerEntitlementNotification(): Promise<void> {
+        const showNotification = Container.featureFlagClient.checkGate(Features.RovoDevEntitlementNotification);
         if (!Container.config.jira.enabled || Container.isBoysenberryMode) {
             return;
         }
 
         const { isEntitled, type } = await this.checkEntitlement();
 
-        if (!this._enabled || !Container.config.rovodev.enabled) {
+        if (!this._enabled || !Container.config.rovodev.enabled || !showNotification) {
             return;
         }
 
