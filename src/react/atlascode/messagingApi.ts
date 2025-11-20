@@ -100,6 +100,13 @@ export function useMessagingApi<A, M extends ReducerAction<any, any>, R extends 
         [errorController, pmfController, onMessageHandler],
     );
 
+    const setState = useCallback(
+        (state: {}): void => {
+            apiRef.setState(state);
+        },
+        [apiRef],
+    );
+
     useEffect(() => {
         window.addEventListener('message', internalMessageHandler);
         apiRef.postMessage({ type: 'refresh' });
@@ -109,5 +116,5 @@ export function useMessagingApi<A, M extends ReducerAction<any, any>, R extends 
         };
     }, [onMessageHandler, internalMessageHandler, apiRef]);
 
-    return { postMessage, postMessagePromise };
+    return { postMessage, postMessagePromise, setState };
 }
