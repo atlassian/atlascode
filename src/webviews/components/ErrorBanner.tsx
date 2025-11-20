@@ -4,7 +4,7 @@ import * as React from 'react';
 
 export type ErrorBannerProps = {
     errorDetails: any;
-    onDismissError: () => void;
+    onDismissError?: () => void;
     onRetry?: () => void;
     onSignIn?: () => void;
 };

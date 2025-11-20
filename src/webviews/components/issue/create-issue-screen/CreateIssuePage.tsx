@@ -488,6 +488,38 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
             this.postMessage({ action: 'refresh' });
             return <AtlLoader />;
         }
+
+        // If there's an error, show only the error banner without the form
+        if (this.state.isErrorBannerOpen) {
+            return (
+                <Page>
+                    <AtlascodeErrorBoundary
+                        postMessageFunc={(e) => {
+                            this.postMessage(e); /* just {this.postMessage} doesn't work */
+                        }}
+                        context={{ view: AnalyticsView.CreateJiraIssuePage }}
+                    >
+                        <div
+                            style={{
+                                display: 'flex',
+                                maxWidth: '1200px',
+                                margin: '20px auto 36px auto',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <div style={{ width: '60%' }}>
+                                <ErrorBanner
+                                    onRetry={this.handleRetryLastAction}
+                                    onSignIn={this.handleSignIn}
+                                    errorDetails={this.state.errorDetails}
+                                />
+                            </div>
+                        </div>
+                    </AtlascodeErrorBoundary>
+                </Page>
+            );
+        }
+
         return (
             <Page>
                 <AtlascodeErrorBoundary
@@ -514,14 +546,6 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                         onPMFLater={() => this.onPMFLater()}
                                         onPMFNever={() => this.onPMFNever()}
                                         onPMFSubmit={(data: LegacyPMFData) => this.onPMFSubmit(data)}
-                                    />
-                                )}
-                                {this.state.isErrorBannerOpen && (
-                                    <ErrorBanner
-                                        onDismissError={this.handleDismissError}
-                                        onRetry={this.handleRetryLastAction}
-                                        onSignIn={this.handleSignIn}
-                                        errorDetails={this.state.errorDetails}
                                     />
                                 )}
                                 <Form name="create-issue" key={this.state.formKey} onSubmit={this.handleSubmit}>
