@@ -7,10 +7,10 @@ import { Box } from '@mui/material';
 import React from 'react';
 
 export interface DevelopmentInfo {
-    branches: any[]; // Can be Git Branch or simplified branch object from Jira API
-    commits: any[]; // Can be Git Commit or simplified commit object from Jira API
-    pullRequests: any[]; // Can be PullRequestData or simplified PR from Jira API
-    builds: any[]; // Can be BuildStatus or simplified build from Jira API
+    branches: any[];
+    commits: any[];
+    pullRequests: any[];
+    builds: any[];
 }
 
 interface DevelopmentProps {
@@ -181,7 +181,6 @@ const PullRequestList: React.FC<{ pullRequests: any[]; onOpen: (pr: any) => void
         <Box style={{ marginLeft: '24px', marginTop: '4px' }}>
             {pullRequests.map((pr, index) => {
                 const handleClick = () => {
-                    // Always use the onOpen handler which will send message to extension host
                     onOpen(pr);
                 };
 
@@ -276,6 +275,21 @@ export const Development: React.FC<DevelopmentProps> = ({ developmentInfo, onOpe
         return null;
     }
 
+    const summaryParts = [];
+    if (branches.length > 0) {
+        summaryParts.push(`${branches.length} branch${branches.length > 1 ? 'es' : ''}`);
+    }
+    if (commits.length > 0) {
+        summaryParts.push(`${commits.length} commit${commits.length > 1 ? 's' : ''}`);
+    }
+    if (pullRequests.length > 0) {
+        summaryParts.push(`${pullRequests.length} pull request${pullRequests.length > 1 ? 's' : ''}`);
+    }
+    if (builds.length > 0) {
+        summaryParts.push(`${builds.length} build${builds.length > 1 ? 's' : ''}`);
+    }
+    const summaryText = summaryParts.join(', ');
+
     return (
         <Box>
             <Button
@@ -296,7 +310,21 @@ export const Development: React.FC<DevelopmentProps> = ({ developmentInfo, onOpe
                     minHeight: '20px',
                     marginLeft: '-8px',
                 }}
-            />
+            >
+                Development
+            </Button>
+
+            {/* Summary line - always show when any items exist */}
+            <Box
+                style={{
+                    marginLeft: '0px',
+                    marginTop: '4px',
+                    fontSize: '13px',
+                    color: 'var(--vscode-descriptionForeground)',
+                }}
+            >
+                {summaryText}
+            </Box>
 
             {isOpen && (
                 <Box style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '8px' }}>

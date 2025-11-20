@@ -799,7 +799,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 });
         }
 
-        // Add Development field after parent field (only if there's data)
         const developmentInfo = this.state.developmentInfo || emptyDevelopmentInfo;
         const totalDevCount =
             (developmentInfo.branches?.length || 0) +

@@ -319,10 +319,8 @@ export class JiraIssueWebview
 
     async updateDevelopmentInfo() {
         try {
-            // First, try to fetch development info from Jira's development panel API
             const jiraDevInfo = await this.fetchJiraDevelopmentInfo();
 
-            // Also get local repository information as a fallback
             const [localBranches, localCommits, pullRequests, localBuilds] = await Promise.all([
                 this.relatedBranches(),
                 this.relatedCommits(),
@@ -330,13 +328,14 @@ export class JiraIssueWebview
                 this.relatedBuilds(),
             ]);
 
-            // Merge Jira dev info with local info
             const branches = jiraDevInfo.branches.length > 0 ? jiraDevInfo.branches : localBranches;
             const commits = jiraDevInfo.commits.length > 0 ? jiraDevInfo.commits : localCommits;
             const builds = jiraDevInfo.builds.length > 0 ? jiraDevInfo.builds : localBuilds;
 
+            const deduplicatedBranches = this.deduplicateBranches(branches);
+
             const finalDevInfo = {
-                branches,
+                branches: deduplicatedBranches,
                 commits,
                 pullRequests: jiraDevInfo.pullRequests.length > 0 ? jiraDevInfo.pullRequests : pullRequests,
                 builds,
@@ -351,6 +350,25 @@ export class JiraIssueWebview
         }
     }
 
+    private deduplicateBranches(branches: any[]): any[] {
+        const seen = new Set<string>();
+        const deduplicated: any[] = [];
+
+        for (const branch of branches) {
+            const branchName = branch.name?.replace(/^[^/]+\//, '') || branch.name;
+
+            if (!seen.has(branchName)) {
+                seen.add(branchName);
+                deduplicated.push({
+                    ...branch,
+                    name: branchName,
+                });
+            }
+        }
+
+        return deduplicated;
+    }
+
     private async fetchJiraDevelopmentInfo(): Promise<{
         branches: any[];
         commits: any[];
@@ -360,7 +378,6 @@ export class JiraIssueWebview
         const emptyResult = { branches: [], commits: [], pullRequests: [], builds: [] };
 
         try {
-            // Only available in Jira Cloud
             if (!this._issue.siteDetails.isCloud) {
                 return emptyResult;
             }
@@ -368,38 +385,24 @@ export class JiraIssueWebview
             const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
             const baseApiUrl = this._issue.siteDetails.baseApiUrl.replace(/\/rest$/, '');
 
-            // Try multiple application types - the web interface queries all of them
-            const applicationTypes = ['bitbucket', 'github', 'gitlab', 'stash'];
-            const allData = { branches: [], commits: [], pullRequests: [], builds: [] } as any;
+            // Query Bitbucket for development information
+            const devStatusUrl = `${baseApiUrl}/rest/dev-status/1.0/issue/detail?issueId=${this._issue.id}&applicationType=bitbucket&dataType=repository`;
 
-            for (const appType of applicationTypes) {
-                try {
-                    const devStatusUrl = `${baseApiUrl}/rest/dev-status/1.0/issue/detail?issueId=${this._issue.id}&applicationType=${appType}&dataType=repository`;
+            const response = await client.transportFactory().get(devStatusUrl, {
+                method: 'GET',
+                headers: {
+                    Authorization: await client.authorizationProvider('GET', devStatusUrl),
+                },
+                timeout: 5000,
+            });
 
-                    const response = await client.transportFactory().get(devStatusUrl, {
-                        method: 'GET',
-                        headers: {
-                            Authorization: await client.authorizationProvider('GET', devStatusUrl),
-                        },
-                        timeout: 5000, // 5 second timeout per app type
-                    });
+            const devData = response.data;
 
-                    const devData = response.data;
-
-                    // Merge data from this app type
-                    if (devData.detail && devData.detail.length > 0) {
-                        const parsed = this.parseDevStatusData(devData);
-                        allData.branches.push(...parsed.branches);
-                        allData.commits.push(...parsed.commits);
-                        allData.pullRequests.push(...parsed.pullRequests);
-                        allData.builds.push(...parsed.builds);
-                    }
-                } catch {
-                    // Continue to next app type
-                }
+            if (devData.detail && devData.detail.length > 0) {
+                return this.parseDevStatusData(devData);
             }
 
-            return allData;
+            return emptyResult;
         } catch (e) {
             Logger.error(e, 'Could not fetch Jira development info, falling back to local data');
             return emptyResult;
@@ -430,7 +433,6 @@ export class JiraIssueWebview
                     }
                 }
 
-                // Extract pull requests
                 if (app.pullRequests) {
                     for (const pr of app.pullRequests) {
                         pullRequests.push({
@@ -441,7 +443,6 @@ export class JiraIssueWebview
                             author: pr.author,
                         });
 
-                        // Extract commits from PRs
                         if (pr.commits) {
                             for (const commit of pr.commits) {
                                 commits.push({
@@ -455,12 +456,34 @@ export class JiraIssueWebview
                     }
                 }
 
-                // Extract commits and builds from repositories
                 if (app.repositories) {
                     for (const repo of app.repositories) {
+                        if (repo.branches) {
+                            for (const branch of repo.branches) {
+                                branches.push({
+                                    name: branch.name,
+                                    url: branch.url,
+                                });
+                            }
+                        }
+
+                        if (repo.pullRequests) {
+                            for (const pr of repo.pullRequests) {
+                                const prExists = pullRequests.some((p) => p.id === pr.id);
+                                if (!prExists) {
+                                    pullRequests.push({
+                                        id: pr.id,
+                                        title: pr.name,
+                                        url: pr.url,
+                                        state: pr.status,
+                                        author: pr.author,
+                                    });
+                                }
+                            }
+                        }
+
                         if (repo.commits) {
                             for (const commit of repo.commits) {
-                                // Add commits that aren't already in the list (from PRs)
                                 const commitExists = commits.some((c) => c.hash === commit.id);
                                 if (!commitExists) {
                                     commits.push({
@@ -471,7 +494,6 @@ export class JiraIssueWebview
                                     });
                                 }
 
-                                // Extract builds from commits
                                 if (commit.builds) {
                                     for (const build of commit.builds) {
                                         builds.push({
