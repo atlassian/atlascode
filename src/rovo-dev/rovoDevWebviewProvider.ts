@@ -1,7 +1,7 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import * as fs from 'fs';
 import path from 'path';
-import { UserInfo } from 'src/atlclients/authInfo';
+import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { safeWaitFor } from 'src/rovo-dev/util/waitFor';
 import { v4 } from 'uuid';

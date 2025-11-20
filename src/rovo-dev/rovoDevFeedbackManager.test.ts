@@ -17,7 +17,7 @@ jest.mock('lodash', () => ({
     truncate: jest.fn((str, options) => str),
 }));
 
-import { UserInfo } from 'src/atlclients/authInfo';
+import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import { expansionCastTo } from 'testsutil/miscFunctions';
 import * as vscode from 'vscode';
 

@@ -1,5 +1,5 @@
 import { truncate } from 'lodash';
-import { UserInfo } from 'src/atlclients/authInfo';
+import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import * as vscode from 'vscode';
 
 import { ExtensionApi, getAxiosInstance } from './api/extensionApi';

@@ -4,7 +4,7 @@ import fs from 'fs';
 import net from 'net';
 import packageJson from 'package.json';
 import path from 'path';
-import { UserInfo } from 'src/atlclients/authInfo';
+import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import { downloadAndUnzip } from 'src/rovo-dev/util/downloadFile';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { waitFor } from 'src/rovo-dev/util/waitFor';
