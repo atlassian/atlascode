@@ -1,4 +1,9 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
+## What's new in 4.0.9
+
+### Bug Fixes 
+
+- Add more logging for Rovo Dev failures. Provided more env vars for linux users. 
 
 ## What's new in 4.0.9
 
