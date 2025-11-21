@@ -104,13 +104,13 @@ describe('WorklogFormDialog Component', () => {
         it('should render Modal with correct testId', () => {
             render(<WorklogFormDialog {...defaultProps} />);
 
-            expect(screen.getByTestId('worklog-modal-dialog')).toBeTruthy();
+            expect(screen.getByTestId('issue.worklog-modal-dialog')).toBeTruthy();
         });
 
         it('should render Modal with correct dimensions', () => {
             render(<WorklogFormDialog {...defaultProps} />);
 
-            const modal = screen.getByTestId('worklog-modal-dialog');
+            const modal = screen.getByTestId('issue.worklog-modal-dialog');
             expect(modal.getAttribute('data-width')).toBe('280');
             expect(modal.getAttribute('data-height')).toBe('372');
         });
@@ -132,7 +132,7 @@ describe('WorklogFormDialog Component', () => {
         it('should pass onClose prop to Modal', () => {
             render(<WorklogFormDialog {...defaultProps} />);
 
-            const modal = screen.getByTestId('worklog-modal-dialog');
+            const modal = screen.getByTestId('issue.worklog-modal-dialog');
             expect(modal.getAttribute('data-on-close')).toBe('defined');
         });
     });
@@ -162,14 +162,14 @@ describe('WorklogFormDialog Component', () => {
 
             render(<WorklogFormDialog {...defaultProps} triggerRef={triggerRef} />);
 
-            const modal = screen.getByTestId('worklog-modal-dialog');
+            const modal = screen.getByTestId('issue.worklog-modal-dialog');
             expect(modal.getAttribute('data-should-return-focus')).toBe('true');
         });
 
         it('should handle no triggerRef', () => {
             render(<WorklogFormDialog {...defaultProps} />);
 
-            const modal = screen.getByTestId('worklog-modal-dialog');
+            const modal = screen.getByTestId('issue.worklog-modal-dialog');
             expect(modal.getAttribute('data-should-return-focus')).toBe('false');
         });
     });
