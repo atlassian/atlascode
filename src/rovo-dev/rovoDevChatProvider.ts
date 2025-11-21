@@ -8,12 +8,11 @@ import {
     RovoDevChatRequestContext,
     RovoDevChatRequestContextFileEntry,
     RovoDevChatRequestContextOtherEntry,
-    RovoDevExceptionResponse,
     RovoDevResponse,
     RovoDevResponseParser,
     ToolPermissionChoice,
 } from './client';
-import { RovoDevProcessManager } from './rovoDevProcessManager';
+import { buildErrorDetails, buildExceptionDetails } from './errorDetailsBuilder';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import {
     RovoDevContextItem,
@@ -22,7 +21,7 @@ import {
     RovoDevPrompt,
     TechnicalPlan,
 } from './rovoDevTypes';
-import { parseCustomCliTagsForMarkdown, statusJsonResponseToMarkdown } from './rovoDevUtils';
+import { parseCustomCliTagsForMarkdown, readLastNLogLines, statusJsonResponseToMarkdown } from './rovoDevUtils';
 import { TypedWebview } from './rovoDevWebviewProvider';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 import { RovoDevLogger } from './util/rovoDevLogger';
@@ -403,7 +402,8 @@ export class RovoDevChatProvider {
                         ctaLink: link,
                         statusCode: `Error code: ${response.type}`,
                         uid: v4(),
-                        details: this.buildExceptionDetails(response),
+                        details: buildExceptionDetails(response),
+                        rovoDevLogs: readLastNLogLines(),
                     },
                 });
                 break;
@@ -561,50 +561,6 @@ export class RovoDevChatProvider {
         });
     }
 
-    private buildExceptionDetails(response: RovoDevExceptionResponse): string {
-        const sections: string[] = [];
-
-        // Add error code and type
-        if (response.type) {
-            sections.push(`Error Code: ${response.type}`);
-        }
-
-        // Add full message
-        if (response.message) {
-            sections.push(`Message: ${response.message}`);
-        }
-
-        // Add recent CLI server logs
-        const recentLogs = RovoDevProcessManager.getRecentLogs(5);
-        if (recentLogs.length > 0) {
-            sections.push(`Last ${recentLogs.length} CLI Server Log Lines:\n${recentLogs.join('\n')}`);
-        }
-
-        return sections.join('\n\n');
-    }
-
-    private buildErrorDetails(error: Error): string {
-        const sections: string[] = [];
-
-        // Add stack trace if available
-        if (error.stack) {
-            sections.push('Stack Trace:\n' + error.stack);
-        }
-
-        // Add error name and message
-        if (error.name && error.name !== 'Error') {
-            sections.push(`Error Type: ${error.name}`);
-        }
-
-        // Add recent CLI server logs
-        const recentLogs = RovoDevProcessManager.getRecentLogs(5);
-        if (recentLogs.length > 0) {
-            sections.push(`Last ${recentLogs.length} CLI Server Log Lines:\n${recentLogs.join('\n')}`);
-        }
-
-        return sections.join('\n\n');
-    }
-
     private async processError(
         error: Error,
         {
@@ -626,7 +582,8 @@ export class RovoDevChatProvider {
                     isRetriable,
                     isProcessTerminated,
                     uid: v4(),
-                    details: this.buildErrorDetails(error),
+                    details: buildErrorDetails(error),
+                    rovoDevLogs: readLastNLogLines(),
                 },
             });
         }

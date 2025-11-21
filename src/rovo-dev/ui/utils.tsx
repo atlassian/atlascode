@@ -50,6 +50,7 @@ export interface AbstractDialogMessage {
         link: string;
     };
     details?: string;
+    rovoDevLogs?: string[];
 }
 
 export interface ErrorDialogMessage extends AbstractDialogMessage {

@@ -195,8 +195,6 @@ export abstract class RovoDevProcessManager {
 
     private static currentCredentials: ValidBasicAuthSiteData | undefined;
     private static extensionApi: ExtensionApi = new ExtensionApi();
-    private static recentLogs: string[] = [];
-    private static readonly MAX_LOG_LINES = 100;
 
     /** This lock ensures this class is async-safe, preventing repeated invocations
      * of `initializeRovoDev` or `refreshRovoDevCredentials` to launch multiple processes
@@ -430,17 +428,6 @@ export abstract class RovoDevProcessManager {
 
     public static showTerminal() {
         this.rovoDevInstance?.showTerminal();
-    }
-
-    public static addLogLine(logLine: string) {
-        this.recentLogs.push(logLine);
-        if (this.recentLogs.length > this.MAX_LOG_LINES) {
-            this.recentLogs.shift();
-        }
-    }
-
-    public static getRecentLogs(count: number = 5): string[] {
-        return this.recentLogs.slice(-count);
     }
 }
 

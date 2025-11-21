@@ -28,6 +28,7 @@ interface ChatStreamProps {
         checkFileExists: CheckFileExistsFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
+        onOpenLogFile: () => void;
     };
     messagingApi: ReturnType<
         typeof useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>
@@ -276,6 +277,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
                             retryAfterError={renderProps.retryPromptAfterError}
                             onToolPermissionChoice={onToolPermissionChoice}
+                            onOpenLogFile={renderProps.onOpenLogFile}
                         />
                     ))}
                     {modalDialogs.length > 1 && modalDialogs.every((d) => d.type === 'toolPermissionRequest') && (

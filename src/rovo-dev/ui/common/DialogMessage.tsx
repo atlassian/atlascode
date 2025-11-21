@@ -1,6 +1,10 @@
+import CheckCircleIcon from '@atlaskit/icon/core/check-circle';
+import CopyIcon from '@atlaskit/icon/core/copy';
+import LinkExternalIcon from '@atlaskit/icon/core/link-external';
 import StatusErrorIcon from '@atlaskit/icon/core/status-error';
 import StatusInfoIcon from '@atlaskit/icon/core/status-information';
 import StatusWarningIcon from '@atlaskit/icon/core/status-warning';
+import Tooltip from '@atlaskit/tooltip';
 import React from 'react';
 import { RovoDevToolName } from 'src/rovo-dev/client';
 import { ToolPermissionChoice } from 'src/rovo-dev/client';
@@ -21,8 +25,39 @@ export const DialogMessageItem: React.FC<{
     retryAfterError?: () => void;
     onToolPermissionChoice?: (toolCallId: string, choice: ToolPermissionChoice) => void;
     customButton?: { text: string; onClick: () => void };
-}> = ({ msg, isRetryAfterErrorButtonEnabled, retryAfterError, onToolPermissionChoice, customButton }) => {
+    onOpenLogFile?: () => void;
+}> = ({
+    msg,
+    isRetryAfterErrorButtonEnabled,
+    retryAfterError,
+    onToolPermissionChoice,
+    customButton,
+    onOpenLogFile,
+}) => {
     const [isDetailsExpanded, setIsDetailsExpanded] = React.useState(false);
+    const [isStackTraceExpanded, setIsStackTraceExpanded] = React.useState(false);
+    const [isLogsExpanded, setIsLogsExpanded] = React.useState(false);
+    const [isCopied, setIsCopied] = React.useState(false);
+
+    const copyToClipboard = () => {
+        const parts = [];
+        parts.push(`${msg.title || 'Error'}`);
+        if (msg.text) {
+            parts.push(`\n${msg.text}`);
+        }
+        if (msg.statusCode) {
+            parts.push(`\n${msg.statusCode}`);
+        }
+        if (msg.details) {
+            parts.push(`\n\nStack Trace:\n${msg.details}`);
+        }
+        if (msg.rovoDevLogs && msg.rovoDevLogs.length > 0) {
+            parts.push(`\n\nRovo Dev Logs:\n${msg.rovoDevLogs.join('\n')}`);
+        }
+        navigator.clipboard.writeText(parts.join(''));
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 3000);
+    };
 
     const [title, icon] = React.useMemo(() => {
         let title: string;
@@ -128,7 +163,7 @@ export const DialogMessageItem: React.FC<{
 
                     {msg.statusCode && <div style={{ fontSize: 'smaller', textAlign: 'right' }}>{msg.statusCode}</div>}
 
-                    {msg.details && (
+                    {(msg.details || (msg.rovoDevLogs && msg.rovoDevLogs.length > 0)) && (
                         <div style={{ marginTop: '8px' }}>
                             <button
                                 style={{
@@ -156,20 +191,162 @@ export const DialogMessageItem: React.FC<{
                                 Details
                             </button>
                             {isDetailsExpanded && (
-                                <div
-                                    style={{
-                                        marginTop: '8px',
-                                        padding: '8px',
-                                        backgroundColor: 'var(--vscode-editor-background)',
-                                        border: '1px solid var(--vscode-panel-border)',
-                                        borderRadius: '4px',
-                                        fontSize: 'smaller',
-                                        fontFamily: 'var(--vscode-editor-font-family)',
-                                        whiteSpace: 'pre-wrap',
-                                        wordBreak: 'break-word',
-                                    }}
-                                >
-                                    {msg.details}
+                                <div style={{ marginLeft: '20px' }}>
+                                    {msg.details && (
+                                        <div style={{ marginTop: '8px' }}>
+                                            <button
+                                                style={{
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    color: 'var(--vscode-textLink-foreground)',
+                                                    cursor: 'pointer',
+                                                    padding: '0',
+                                                    fontSize: 'inherit',
+                                                    textDecoration: 'underline',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px',
+                                                }}
+                                                onClick={() => setIsStackTraceExpanded(!isStackTraceExpanded)}
+                                            >
+                                                <span
+                                                    style={{
+                                                        transform: isStackTraceExpanded
+                                                            ? 'rotate(90deg)'
+                                                            : 'rotate(0deg)',
+                                                        transition: 'transform 0.2s',
+                                                    }}
+                                                >
+                                                    ▶
+                                                </span>
+                                                Stack Trace
+                                            </button>
+                                            {isStackTraceExpanded && (
+                                                <div
+                                                    style={{
+                                                        marginTop: '8px',
+                                                        padding: '8px',
+                                                        backgroundColor: 'var(--vscode-editor-background)',
+                                                        border: '1px solid var(--vscode-panel-border)',
+                                                        borderRadius: '4px',
+                                                        fontSize: 'smaller',
+                                                        fontFamily: 'var(--vscode-editor-font-family)',
+                                                        whiteSpace: 'pre-wrap',
+                                                        wordBreak: 'break-word',
+                                                        maxHeight: '200px',
+                                                        overflowY: 'auto',
+                                                    }}
+                                                >
+                                                    {msg.details}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {msg.rovoDevLogs && msg.rovoDevLogs.length > 0 && (
+                                        <div style={{ marginTop: '8px' }}>
+                                            <div
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                }}
+                                            >
+                                                <button
+                                                    style={{
+                                                        background: 'none',
+                                                        border: 'none',
+                                                        color: 'var(--vscode-textLink-foreground)',
+                                                        cursor: 'pointer',
+                                                        padding: '0',
+                                                        fontSize: 'inherit',
+                                                        textDecoration: 'underline',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '4px',
+                                                    }}
+                                                    onClick={() => setIsLogsExpanded(!isLogsExpanded)}
+                                                >
+                                                    <span
+                                                        style={{
+                                                            transform: isLogsExpanded
+                                                                ? 'rotate(90deg)'
+                                                                : 'rotate(0deg)',
+                                                            transition: 'transform 0.2s',
+                                                        }}
+                                                    >
+                                                        ▶
+                                                    </span>
+                                                    Rovo Dev Logs
+                                                </button>
+                                                {onOpenLogFile && (
+                                                    <Tooltip content="Open log file in editor">
+                                                        <button
+                                                            aria-label="open-log-file-button"
+                                                            className="chat-message-action"
+                                                            onClick={onOpenLogFile}
+                                                            style={{
+                                                                background: 'none',
+                                                                border: 'none',
+                                                                cursor: 'pointer',
+                                                                padding: '4px',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                color: 'var(--vscode-foreground)',
+                                                            }}
+                                                        >
+                                                            <LinkExternalIcon label="Open log file" spacing="none" />
+                                                        </button>
+                                                    </Tooltip>
+                                                )}
+                                            </div>
+                                            {isLogsExpanded && (
+                                                <div
+                                                    style={{
+                                                        marginTop: '8px',
+                                                        padding: '8px',
+                                                        backgroundColor: 'var(--vscode-editor-background)',
+                                                        border: '1px solid var(--vscode-panel-border)',
+                                                        borderRadius: '4px',
+                                                        fontSize: 'smaller',
+                                                        fontFamily: 'var(--vscode-editor-font-family)',
+                                                        whiteSpace: 'pre-wrap',
+                                                        wordBreak: 'break-word',
+                                                        maxHeight: '200px',
+                                                        overflowY: 'auto',
+                                                    }}
+                                                >
+                                                    {msg.rovoDevLogs.join('\n')}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            justifyContent: 'flex-end',
+                                            width: '100%',
+                                            marginTop: '12px',
+                                        }}
+                                    >
+                                        <Tooltip
+                                            key={isCopied ? 'copied' : 'copy'}
+                                            content={isCopied ? 'Copied!' : 'Copy to clipboard'}
+                                        >
+                                            <button
+                                                aria-label="copy-details-button"
+                                                className={`chat-message-action copy-button ${isCopied ? 'copied' : ''}`}
+                                                onClick={copyToClipboard}
+                                            >
+                                                {isCopied ? (
+                                                    <CheckCircleIcon label="Copied!" spacing="none" />
+                                                ) : (
+                                                    <CopyIcon label="Copy to clipboard" spacing="none" />
+                                                )}
+                                            </button>
+                                        </Tooltip>
+                                    </div>
                                 </div>
                             )}
                         </div>

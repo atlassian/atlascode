@@ -32,6 +32,7 @@ import { GitErrorCodes } from '../typings/git';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { ExtensionApi } from './api/extensionApi';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './client';
+import { buildErrorDetails } from './errorDetailsBuilder';
 import { RovoDevChatContextProvider } from './rovoDevChatContextProvider';
 import { RovoDevChatProvider } from './rovoDevChatProvider';
 import { RovoDevContentTracker } from './rovoDevContentTracker';
@@ -42,6 +43,7 @@ import { RovoDevProcessManager, RovoDevProcessState } from './rovoDevProcessMana
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import { RovoDevContextItem } from './rovoDevTypes';
+import { readLastNLogLines } from './rovoDevUtils';
 import {
     RovoDevDisabledReason,
     RovoDevEntitlementCheckFailedDetail,
@@ -480,6 +482,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await env.openExternal(Uri.parse(e.href));
                         break;
 
+                    case RovoDevViewResponseType.OpenRovoDevLogFile:
+                        await commands.executeCommand(Commands.OpenRovoDevLogFile);
+                        break;
+
                     default:
                         // @ts-expect-error ts(2339) - e here should be 'never'
                         this.processError(new Error(`Unknown message type: ${e.type}`));
@@ -517,33 +523,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         );
     }
 
-    private buildErrorDetails(error: Error & { gitErrorCode?: GitErrorCodes }): string {
-        const sections: string[] = [];
-
-        // Add stack trace if available
-        if (error.stack) {
-            sections.push('Stack Trace:\n' + error.stack);
-        }
-
-        // Add error type
-        if (error.name && error.name !== 'Error') {
-            sections.push(`Error Type: ${error.name}`);
-        }
-
-        // Add git error code if available
-        if (error.gitErrorCode) {
-            sections.push(`Git Error Code: ${error.gitErrorCode}`);
-        }
-
-        // Add recent CLI server logs
-        const recentLogs = RovoDevProcessManager.getRecentLogs(5);
-        if (recentLogs.length > 0) {
-            sections.push(`Last ${recentLogs.length} CLI Server Log Lines:\n${recentLogs.join('\n')}`);
-        }
-
-        return sections.join('\n\n');
-    }
-
     private processError(
         error: Error & { gitErrorCode?: GitErrorCodes },
         {
@@ -573,7 +552,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 isRetriable,
                 isProcessTerminated,
                 uid: v4(),
-                details: this.buildErrorDetails(error),
+                details: buildErrorDetails(error),
+                rovoDevLogs: readLastNLogLines(),
             },
         });
     }
