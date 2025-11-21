@@ -1,4 +1,6 @@
 import CheckCircleIcon from '@atlaskit/icon/core/check-circle';
+import ChevronDownIcon from '@atlaskit/icon/core/chevron-down';
+import ChevronRightIcon from '@atlaskit/icon/core/chevron-right';
 import CopyIcon from '@atlaskit/icon/core/copy';
 import LinkExternalIcon from '@atlaskit/icon/core/link-external';
 import StatusErrorIcon from '@atlaskit/icon/core/status-error';
@@ -180,14 +182,11 @@ export const DialogMessageItem: React.FC<{
                                 }}
                                 onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
                             >
-                                <span
-                                    style={{
-                                        transform: isDetailsExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                                        transition: 'transform 0.2s',
-                                    }}
-                                >
-                                    ▶
-                                </span>
+                                {isDetailsExpanded ? (
+                                    <ChevronDownIcon label="" spacing="none" />
+                                ) : (
+                                    <ChevronRightIcon label="" spacing="none" />
+                                )}
                                 Details
                             </button>
                             {isDetailsExpanded && (
@@ -209,16 +208,11 @@ export const DialogMessageItem: React.FC<{
                                                 }}
                                                 onClick={() => setIsStackTraceExpanded(!isStackTraceExpanded)}
                                             >
-                                                <span
-                                                    style={{
-                                                        transform: isStackTraceExpanded
-                                                            ? 'rotate(90deg)'
-                                                            : 'rotate(0deg)',
-                                                        transition: 'transform 0.2s',
-                                                    }}
-                                                >
-                                                    ▶
-                                                </span>
+                                                {isStackTraceExpanded ? (
+                                                    <ChevronDownIcon label="" spacing="none" />
+                                                ) : (
+                                                    <ChevronRightIcon label="" spacing="none" />
+                                                )}
                                                 Stack Trace
                                             </button>
                                             {isStackTraceExpanded && (
@@ -267,16 +261,11 @@ export const DialogMessageItem: React.FC<{
                                                     }}
                                                     onClick={() => setIsLogsExpanded(!isLogsExpanded)}
                                                 >
-                                                    <span
-                                                        style={{
-                                                            transform: isLogsExpanded
-                                                                ? 'rotate(90deg)'
-                                                                : 'rotate(0deg)',
-                                                            transition: 'transform 0.2s',
-                                                        }}
-                                                    >
-                                                        ▶
-                                                    </span>
+                                                    {isLogsExpanded ? (
+                                                        <ChevronDownIcon label="" spacing="none" />
+                                                    ) : (
+                                                        <ChevronRightIcon label="" spacing="none" />
+                                                    )}
                                                     Rovo Dev Logs
                                                 </button>
                                                 {onOpenLogFile && (
