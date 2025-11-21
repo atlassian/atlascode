@@ -657,6 +657,13 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             ))}
                     </div>
                 </div>
+                {this.state.isErrorBannerOpen && (
+                    <ErrorBanner
+                        onRetry={this.handleRetryLastAction}
+                        onSignIn={this.handleSignIn}
+                        errorDetails={this.state.errorDetails}
+                    />
+                )}
             </div>
         );
     }
@@ -912,24 +919,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             this.postMessage(e); /* just {this.postMessage} doesn't work */
                         }}
                     >
-                        {this.state.isErrorBannerOpen && (
-                            <div
-                                style={{
-                                    display: 'flex',
-                                    maxWidth: '1200px',
-                                    margin: '20px auto 0 auto',
-                                    justifyContent: 'center',
-                                }}
-                            >
-                                <div style={{ width: '100%' }}>
-                                    <ErrorBanner
-                                        onRetry={this.handleRetryLastAction}
-                                        onSignIn={this.handleSignIn}
-                                        errorDetails={this.state.errorDetails}
-                                    />
-                                </div>
-                            </div>
-                        )}
                         <WidthObserver>
                             {(width?: number) => {
                                 if (width && width < 800) {

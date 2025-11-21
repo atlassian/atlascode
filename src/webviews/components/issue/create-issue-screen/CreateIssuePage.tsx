@@ -508,13 +508,6 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                         <div style={{ width: '60%' }}>
                             <div style={{ width: '100%' }}>
                                 {!this.state.isOnline && <Offline />}
-                                {this.state.isErrorBannerOpen && (
-                                    <ErrorBanner
-                                        onRetry={this.handleRetryLastAction}
-                                        onSignIn={this.handleSignIn}
-                                        errorDetails={this.state.errorDetails}
-                                    />
-                                )}
                                 {this.state.showPMF && (
                                     <PMFBBanner
                                         onPMFOpen={() => this.onPMFOpen()}
@@ -522,6 +515,13 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                         onPMFLater={() => this.onPMFLater()}
                                         onPMFNever={() => this.onPMFNever()}
                                         onPMFSubmit={(data: LegacyPMFData) => this.onPMFSubmit(data)}
+                                    />
+                                )}
+                                {this.state.isErrorBannerOpen && (
+                                    <ErrorBanner
+                                        onRetry={this.handleRetryLastAction}
+                                        onSignIn={this.handleSignIn}
+                                        errorDetails={this.state.errorDetails}
                                     />
                                 )}
                                 <Form name="create-issue" key={this.state.formKey} onSubmit={this.handleSubmit}>
