@@ -253,10 +253,11 @@ export function performanceEvent(tag: string, measure: number, params?: Record<s
 export type RovoDevEnv = 'IDE' | 'Boysenberry';
 
 export function rovoDevEntitlementCheckEvent(isEntitled: boolean, type: string, source?: string) {
-    return trackEvent('checked', 'rovoDevEntitlement', {
+    return trackEvent('rovoDevEntitlement', 'atlascode', {
         attributes: { source, isEntitled, type },
     });
 }
+
 export function rovoDevNewSessionActionEvent(
     rovoDevEnv: RovoDevEnv,
     appInstanceId: string,
@@ -441,6 +442,12 @@ export async function startIssueCreationEvent(source: string, product: Product):
 
 export async function searchIssuesEvent(product: Product): Promise<TrackEvent> {
     return trackEvent('searchIssues', 'issue', { attributes: { hostProduct: product.name } });
+}
+
+export async function issueOpenRovoDevEvent(site: DetailedSiteInfo, source?: string): Promise<TrackEvent> {
+    return instanceTrackEvent(site, 'openRovoDev', 'issue', {
+        attributes: { issueSource: source || '' },
+    });
 }
 
 export async function notificationChangeEvent(

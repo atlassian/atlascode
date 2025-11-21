@@ -1,7 +1,7 @@
 import path from 'path';
-import { Commands } from 'src/constants';
 import * as vscode from 'vscode';
 
+import { RovodevCommands } from './api/componentApi';
 import { ExtensionApi } from './api/extensionApi';
 
 export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
@@ -35,7 +35,7 @@ export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
             {
                 title: 'Rovo Dev: Add to Context',
                 command: {
-                    command: Commands.RovodevAddToContext,
+                    command: RovodevCommands.RovodevAddToContext,
                     title: 'Add to Rovo Dev Context',
                 },
             },
@@ -58,7 +58,7 @@ export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
             : prompt;
 
         action.command = {
-            command: Commands.RovodevAsk,
+            command: RovodevCommands.RovodevAsk,
             title: 'Ask Rovo Dev',
             arguments: [
                 finalPrompt,

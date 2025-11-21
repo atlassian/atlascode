@@ -27,4 +27,5 @@ resources/rovo-dev/*
 !resources/rovo-dev/script.sh
 
 !.vscode/launch.json.example
+!.vscode/tasks.json.example
 /.idea/

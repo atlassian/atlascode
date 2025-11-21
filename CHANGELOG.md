@@ -1,10 +1,20 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.9
+
+### Features
+
+- Added filter by assignee support
+
 ## What's new in 4.0.8
 
 ### Features
 
 - Added activity history support
+
+### Bug Fixes 
+
+- Fixed issue with project loading in Jira Cloud Create Issue Screen 
 
 ## What's new in 4.0.7
 

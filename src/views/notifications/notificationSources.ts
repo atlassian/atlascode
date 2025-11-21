@@ -7,6 +7,8 @@ export const enum NotificationSource {
     BitbucketPullRequest = 'atlascode.bitbucket.pullRequest',
     BitbucketTerminalUri = '',
     BitbucketPipeline = '',
+    RovoDevEntitlementCheckCredentialError = 'atlascode.rovoDevEntitlementCheck.credentialError',
+    RovoDevEntitlementCheckEntitled = 'atlascode.rovoDevEntitlementCheck.entitled',
 }
 
 export function determineNotificationSource(uri: Uri | string): NotificationSource {

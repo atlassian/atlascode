@@ -34,6 +34,7 @@ import { Logger } from './logger';
 import OnboardingProvider from './onboarding/onboardingProvider';
 import { registerQuickAuthCommand } from './onboarding/quickFlow';
 import { Pipeline } from './pipelines/model';
+import { RovodevCommandContext } from './rovo-dev/api/componentApi';
 import { RovoDevCodeActionProvider } from './rovo-dev/rovoDevCodeActionProvider';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
@@ -228,15 +229,15 @@ export class Container {
             (this._rovoDevEntitlementChecker = new RovoDevEntitlementChecker(this._analyticsClient)),
         );
 
-        // Check Rovo Dev entitlement on startup
-        await this._rovoDevEntitlementChecker.checkEntitlement();
-
         // in Boysenberry we don't need to listen to Jira auth updates
         if (!process.env.ROVODEV_BBY) {
+            // Check Rovo Dev entitlement on startup
+            await this._rovoDevEntitlementChecker.triggerEntitlementNotification();
             // refresh Rovo Dev when auth sites change
             this._siteManager.onDidSitesAvailableChange(async () => {
                 await this.updateFeatureFlagTenantId();
                 await this.refreshRovoDev(context);
+                await this._rovoDevEntitlementChecker.triggerEntitlementNotification();
             });
 
             // refresh Rovo Dev when Jira gets enabled or disabled
@@ -244,6 +245,7 @@ export class Container {
                 configuration.onDidChange(async (e) => {
                     if (configuration.changed(e, 'jira.enabled') || configuration.changed(e, 'rovodev.enabled')) {
                         await this.refreshRovoDev(context);
+                        await this._rovoDevEntitlementChecker.triggerEntitlementNotification();
                     }
                 }, this),
             );
@@ -350,7 +352,7 @@ export class Container {
                 context.subscriptions.push(this._rovodevDisposable);
 
                 // this enables the Rovo Dev activity bar
-                await setCommandContext(CommandContext.RovoDevEnabled, true);
+                await setCommandContext(RovodevCommandContext.RovoDevEnabled, true);
 
                 // only in Boysenberry, we auto-focus the Rovo Dev view
                 if (this.isBoysenberryMode) {
@@ -397,7 +399,7 @@ export class Container {
             this._rovodevDisposable.dispose();
             this._rovodevDisposable = undefined;
 
-            await setCommandContext(CommandContext.RovoDevEnabled, false);
+            await setCommandContext(RovodevCommandContext.RovoDevEnabled, false);
             await RovoDevProcessManager.deactivateRovoDevProcessManager();
         } catch (error) {
             RovoDevLogger.error(error, 'Disabling Rovo Dev');
@@ -429,6 +431,10 @@ export class Container {
 
     static focus() {
         this._assignedWorkItemsView.focus();
+    }
+
+    static get assignedWorkItemsView() {
+        return this._assignedWorkItemsView;
     }
 
     static setIsEditorFocused(isFocused: boolean) {
