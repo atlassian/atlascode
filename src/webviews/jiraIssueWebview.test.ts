@@ -74,6 +74,7 @@ jest.mock('../logger', () => ({
     Logger: {
         error: jest.fn(),
         warn: jest.fn(),
+        debug: jest.fn(),
     },
 }));
 jest.mock('form-data', () => ({
@@ -2169,6 +2170,192 @@ describe('JiraIssueWebview - Additional Method Tests', () => {
                     ]),
                 }),
             );
+        });
+    });
+
+    describe('Development Feature Methods', () => {
+        describe('updateDevelopmentInfo', () => {
+            it('should fetch and merge development info from Jira API and local sources', async () => {
+                const mockJiraDevInfo = {
+                    branches: [{ name: 'jira-branch', url: 'https://bitbucket.org/repo/branch/jira-branch' }],
+                    commits: [{ hash: 'abc123', message: 'Jira commit', url: 'https://bitbucket.org/commits/abc123' }],
+                    pullRequests: [
+                        { id: '1', title: 'PR from Jira', url: 'https://bitbucket.org/pr/1', state: 'OPEN' },
+                    ],
+                    builds: [],
+                };
+
+                const mockLocalBranches = [{ name: 'local-branch', url: undefined }];
+                const mockLocalCommits = [{ hash: 'def456', message: 'Local commit', url: undefined }];
+
+                (webview as any).fetchJiraDevelopmentInfo = jest.fn().mockResolvedValue(mockJiraDevInfo);
+                (webview as any).relatedBranches = jest.fn().mockResolvedValue(mockLocalBranches);
+                (webview as any).relatedCommits = jest.fn().mockResolvedValue(mockLocalCommits);
+                (webview as any).recentPullRequests = jest.fn().mockResolvedValue([]);
+                (webview as any).relatedBuilds = jest.fn().mockResolvedValue([]);
+                (webview as any).deduplicateBranches = jest.fn((branches) => branches);
+                (webview as any).postMessage = jest.fn();
+
+                await (webview as any).updateDevelopmentInfo();
+
+                expect((webview as any).postMessage).toHaveBeenCalledWith({
+                    type: 'developmentInfoUpdate',
+                    developmentInfo: expect.objectContaining({
+                        branches: expect.arrayContaining([{ name: 'jira-branch', url: expect.any(String) }]),
+                        commits: expect.arrayContaining([
+                            { hash: 'abc123', message: 'Jira commit', url: expect.any(String) },
+                        ]),
+                        pullRequests: expect.arrayContaining([expect.objectContaining({ id: '1' })]),
+                    }),
+                });
+            });
+
+            it('should fallback to local data when Jira API returns empty', async () => {
+                const emptyJiraDevInfo = {
+                    branches: [],
+                    commits: [],
+                    pullRequests: [],
+                    builds: [],
+                };
+
+                const mockLocalBranches = [{ name: 'local-branch', url: undefined }];
+                const mockLocalCommits = [{ hash: 'def456', message: 'Local commit', url: undefined }];
+
+                (webview as any).fetchJiraDevelopmentInfo = jest.fn().mockResolvedValue(emptyJiraDevInfo);
+                (webview as any).relatedBranches = jest.fn().mockResolvedValue(mockLocalBranches);
+                (webview as any).relatedCommits = jest.fn().mockResolvedValue(mockLocalCommits);
+                (webview as any).recentPullRequests = jest.fn().mockResolvedValue([]);
+                (webview as any).relatedBuilds = jest.fn().mockResolvedValue([]);
+                (webview as any).deduplicateBranches = jest.fn((branches) => branches);
+                (webview as any).postMessage = jest.fn();
+
+                await (webview as any).updateDevelopmentInfo();
+
+                expect((webview as any).postMessage).toHaveBeenCalledWith({
+                    type: 'developmentInfoUpdate',
+                    developmentInfo: expect.objectContaining({
+                        branches: mockLocalBranches,
+                        commits: mockLocalCommits,
+                    }),
+                });
+            });
+
+            it('should handle errors gracefully', async () => {
+                (webview as any).fetchJiraDevelopmentInfo = jest.fn().mockRejectedValue(new Error('API Error'));
+                (webview as any).relatedBranches = jest.fn().mockResolvedValue([]);
+                (webview as any).relatedCommits = jest.fn().mockResolvedValue([]);
+                (webview as any).recentPullRequests = jest.fn().mockResolvedValue([]);
+                (webview as any).relatedBuilds = jest.fn().mockResolvedValue([]);
+
+                await expect((webview as any).updateDevelopmentInfo()).resolves.not.toThrow();
+            });
+        });
+
+        describe('deduplicateBranches', () => {
+            it('should remove duplicate branches with remote prefixes', () => {
+                const branches = [
+                    { name: 'feature-1', url: 'https://bitbucket.org/branch/feature-1' },
+                    { name: 'origin/feature-1', url: 'https://bitbucket.org/branch/feature-1' },
+                    { name: 'feature-2', url: 'https://bitbucket.org/branch/feature-2' },
+                ];
+
+                const result = (webview as any).deduplicateBranches(branches);
+
+                expect(result).toHaveLength(2);
+                expect(result[0].name).toBe('feature-1');
+                expect(result[1].name).toBe('feature-2');
+            });
+
+            it('should handle branches without remote prefixes', () => {
+                const branches = [
+                    { name: 'main', url: 'https://bitbucket.org/branch/main' },
+                    { name: 'develop', url: 'https://bitbucket.org/branch/develop' },
+                ];
+
+                const result = (webview as any).deduplicateBranches(branches);
+
+                expect(result).toHaveLength(2);
+            });
+
+            it('should handle empty array', () => {
+                const result = (webview as any).deduplicateBranches([]);
+
+                expect(result).toEqual([]);
+            });
+        });
+
+        describe('relatedBuilds', () => {
+            it('should skip PRs without valid repository information', async () => {
+                const mockPRs = [
+                    {
+                        id: '1',
+                        siteDetails: mockSiteDetails,
+                        destination: {
+                            repo: {
+                                fullName: undefined,
+                            },
+                        },
+                    },
+                ];
+
+                (webview as any).recentPullRequests = jest.fn().mockResolvedValue(mockPRs);
+
+                const result = await (webview as any).relatedBuilds();
+
+                expect(result).toEqual([]);
+            });
+
+            it('should skip PRs with invalid repository format', async () => {
+                const mockPRs = [
+                    {
+                        id: '1',
+                        siteDetails: mockSiteDetails,
+                        destination: {
+                            repo: {
+                                fullName: 'invalid-format',
+                            },
+                        },
+                    },
+                ];
+
+                (webview as any).recentPullRequests = jest.fn().mockResolvedValue(mockPRs);
+
+                const result = await (webview as any).relatedBuilds();
+
+                expect(result).toEqual([]);
+            });
+
+            it('should handle errors gracefully and continue with other PRs', async () => {
+                const mockPRs = [
+                    {
+                        id: '1',
+                        siteDetails: mockSiteDetails,
+                        destination: { repo: { fullName: 'owner/repo1' } },
+                    },
+                    {
+                        id: '2',
+                        siteDetails: mockSiteDetails,
+                        destination: { repo: { fullName: 'owner/repo2' } },
+                    },
+                ];
+
+                const mockBbClient = {
+                    pullrequests: {
+                        getBuildStatuses: jest
+                            .fn()
+                            .mockRejectedValueOnce(new Error('Build fetch failed'))
+                            .mockResolvedValueOnce([{ name: 'Build #2', state: 'SUCCESSFUL' }]),
+                    },
+                };
+
+                (webview as any).recentPullRequests = jest.fn().mockResolvedValue(mockPRs);
+                require('../bitbucket/bbUtils').clientForSite = jest.fn().mockResolvedValue(mockBbClient);
+
+                const result = await (webview as any).relatedBuilds();
+
+                expect(result).toHaveLength(1);
+                expect(result[0].name).toBe('Build #2');
+            });
         });
     });
 });
