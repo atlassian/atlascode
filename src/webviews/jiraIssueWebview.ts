@@ -352,12 +352,19 @@ export class JiraIssueWebview
         }
     }
 
+    private normalizeBranchName(branchName: string | undefined): string {
+        if (!branchName) {
+            return '';
+        }
+        return branchName.replace(/^[^/]+\//, '');
+    }
+
     private deduplicateBranches(branches: any[]): any[] {
         const seen = new Set<string>();
         const deduplicated: any[] = [];
 
         for (const branch of branches) {
-            const branchName = branch.name?.replace(/^[^/]+\//, '') || branch.name;
+            const branchName = this.normalizeBranchName(branch.name) || branch.name;
 
             if (!seen.has(branchName)) {
                 seen.add(branchName);
@@ -450,7 +457,7 @@ export class JiraIssueWebview
                                 commits.push({
                                     hash: commit.id,
                                     message: commit.message,
-                                    authorName: commit.author?.name || commit.authorTimestamp,
+                                    authorName: commit.author?.name || 'Unknown',
                                     url: commit.url,
                                 });
                             }
@@ -491,7 +498,7 @@ export class JiraIssueWebview
                                     commits.push({
                                         hash: commit.id,
                                         message: commit.message,
-                                        authorName: commit.author?.name || commit.authorTimestamp,
+                                        authorName: commit.author?.name || 'Unknown',
                                         url: commit.url,
                                     });
                                 }
@@ -1989,7 +1996,7 @@ export class JiraIssueWebview
                     }
 
                     const branchesWithUrls = relatedBranches.map((branch) => {
-                        const branchName = branch.name?.replace(/^[^/]+\//, '') || branch.name || '';
+                        const branchName = this.normalizeBranchName(branch.name) || branch.name || '';
                         return {
                             name: branchName,
                             url:

@@ -1,7 +1,8 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
-import { Development, DevelopmentInfo } from './Development';
+import { DevelopmentInfo } from '../../../ipc/issueMessaging';
+import { Development } from './Development';
 
 describe('Development Component', () => {
     const mockOnOpenPullRequest = jest.fn();
@@ -32,14 +33,13 @@ describe('Development Component', () => {
                 title: 'Feature implementation',
                 url: 'https://bitbucket.org/repo/pull-requests/1',
                 state: 'OPEN',
-            },
+            } as any,
         ],
         builds: [
             {
                 name: 'Build #123',
                 key: '123',
                 state: 'SUCCESSFUL',
-                url: 'https://bitbucket.org/repo/builds/123',
             },
         ],
     };
@@ -396,7 +396,7 @@ describe('Development Component', () => {
         it('should handle missing optional fields', () => {
             const minimalInfo: DevelopmentInfo = {
                 branches: [{ name: 'main' }],
-                commits: [{ message: 'Update' }],
+                commits: [{ hash: 'abc123', message: 'Update' }],
                 pullRequests: [],
                 builds: [],
             };
@@ -451,7 +451,7 @@ describe('Development Component', () => {
             });
         });
 
-        it('should limit commits display to 5 items', async () => {
+        it('should display all commits', async () => {
             const manyCommitsInfo: DevelopmentInfo = {
                 branches: [],
                 commits: Array.from({ length: 10 }, (_, i) => ({
@@ -482,8 +482,12 @@ describe('Development Component', () => {
             fireEvent.click(commitsButton);
 
             await waitFor(() => {
-                expect(screen.getByText('And 5 more...')).toBeTruthy();
+                expect(screen.getByText('Commit 0')).toBeTruthy();
+                expect(screen.getByText('Commit 5')).toBeTruthy();
+                expect(screen.getByText('Commit 9')).toBeTruthy();
             });
+
+            expect(screen.queryByText(/And \d+ more\.\.\./)).toBeNull();
         });
     });
 });

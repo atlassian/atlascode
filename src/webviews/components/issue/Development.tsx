@@ -7,18 +7,27 @@ import Modal, { ModalBody, ModalFooter, ModalHeader, ModalTitle, ModalTransition
 import { Box } from '@mui/material';
 import React from 'react';
 
-export interface DevelopmentInfo {
-    branches: any[];
-    commits: any[];
-    pullRequests: any[];
-    builds: any[];
-}
+import { PullRequestData } from '../../../bitbucket/model';
+import { BranchInfo, BuildInfo, CommitInfo, DevelopmentInfo } from '../../../ipc/issueMessaging';
 
 interface DevelopmentProps {
     developmentInfo: DevelopmentInfo;
-    onOpenPullRequest: (pr: any) => void;
+    onOpenPullRequest: (pr: PullRequestData) => void;
     onOpenExternalUrl: (url: string) => void;
 }
+
+/**
+ * Utility function to get the plural form of a label based on count
+ */
+const getPluralLabel = (baseLabel: string, count: number): string => {
+    if (count === 1) {
+        return baseLabel;
+    }
+    if (baseLabel === 'branch') {
+        return 'branches';
+    }
+    return baseLabel + 's';
+};
 
 const DevelopmentIcon: React.FC<{ type: string }> = ({ type }) => {
     const iconStyle = {
@@ -76,16 +85,6 @@ const DevelopmentItem: React.FC<{
         return null;
     }
 
-    const getPluralLabel = (baseLabel: string, count: number) => {
-        if (count === 1) {
-            return baseLabel;
-        }
-        if (baseLabel === 'branch') {
-            return 'branches';
-        }
-        return baseLabel + 's';
-    };
-
     return (
         <Button
             appearance="link"
@@ -107,15 +106,15 @@ const DevelopmentItem: React.FC<{
     );
 };
 
-const BranchList: React.FC<{ branches: any[]; onOpenExternalUrl: (url: string) => void }> = ({
+const BranchList: React.FC<{ branches: BranchInfo[]; onOpenExternalUrl: (url: string) => void }> = ({
     branches,
     onOpenExternalUrl,
 }) => {
     return (
         <Box style={{ marginLeft: '24px', marginTop: '4px' }}>
-            {branches.map((branch, index) => (
+            {branches.map((branch) => (
                 <div
-                    key={index}
+                    key={branch.name}
                     style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -127,7 +126,7 @@ const BranchList: React.FC<{ branches: any[]; onOpenExternalUrl: (url: string) =
                     {branch.url ? (
                         <Button
                             appearance="link"
-                            onClick={() => onOpenExternalUrl(branch.url)}
+                            onClick={() => onOpenExternalUrl(branch.url!)}
                             style={{
                                 padding: 0,
                                 height: 'auto',
@@ -159,17 +158,17 @@ const BranchList: React.FC<{ branches: any[]; onOpenExternalUrl: (url: string) =
     );
 };
 
-const CommitList: React.FC<{ commits: any[]; onOpenExternalUrl: (url: string) => void }> = ({
+const CommitList: React.FC<{ commits: CommitInfo[]; onOpenExternalUrl: (url: string) => void }> = ({
     commits,
     onOpenExternalUrl,
 }) => {
     return (
         <Box style={{ marginLeft: '24px', marginTop: '4px' }}>
-            {commits.slice(0, 5).map((commit, index) => {
+            {commits.map((commit) => {
                 const commitMessage = commit.message?.split('\n')[0] || 'No message';
                 return (
                     <div
-                        key={index}
+                        key={commit.hash}
                         style={{
                             display: 'flex',
                             alignItems: 'flex-start',
@@ -182,7 +181,7 @@ const CommitList: React.FC<{ commits: any[]; onOpenExternalUrl: (url: string) =>
                             {commit.url ? (
                                 <Button
                                     appearance="link"
-                                    onClick={() => onOpenExternalUrl(commit.url)}
+                                    onClick={() => onOpenExternalUrl(commit.url!)}
                                     style={{
                                         padding: 0,
                                         height: 'auto',
@@ -216,16 +215,14 @@ const CommitList: React.FC<{ commits: any[]; onOpenExternalUrl: (url: string) =>
                     </div>
                 );
             })}
-            {commits.length > 5 && (
-                <div style={{ fontSize: '12px', color: 'var(--vscode-descriptionForeground)', marginLeft: '24px' }}>
-                    And {commits.length - 5} more...
-                </div>
-            )}
         </Box>
     );
 };
 
-const PullRequestList: React.FC<{ pullRequests: any[]; onOpen: (pr: any) => void }> = ({ pullRequests, onOpen }) => {
+const PullRequestList: React.FC<{ pullRequests: PullRequestData[]; onOpen: (pr: PullRequestData) => void }> = ({
+    pullRequests,
+    onOpen,
+}) => {
     return (
         <Box style={{ marginLeft: '24px', marginTop: '4px' }}>
             {pullRequests.map((pr, index) => {
@@ -250,11 +247,12 @@ const PullRequestList: React.FC<{ pullRequests: any[]; onOpen: (pr: any) => void
                         <span
                             style={{
                                 fontSize: '11px',
+                                color: 'var(--vscode-foreground)',
                                 padding: '2px 6px',
                                 borderRadius: '3px',
                                 background:
                                     pr.state === 'OPEN'
-                                        ? 'var(--vscode-statusBarItem-warningBackground)'
+                                        ? 'var(--vscode-statusBarItem-prominentHoverBackground)'
                                         : pr.state === 'MERGED'
                                           ? 'var(--vscode-statusBarItem-prominentBackground)'
                                           : 'var(--vscode-statusBarItem-errorBackground)',
@@ -285,7 +283,7 @@ const PullRequestList: React.FC<{ pullRequests: any[]; onOpen: (pr: any) => void
     );
 };
 
-const BuildList: React.FC<{ builds: any[] }> = ({ builds }) => {
+const BuildList: React.FC<{ builds: BuildInfo[] }> = ({ builds }) => {
     const getStatusIcon = (state: string) => {
         if (state === 'SUCCESSFUL') {
             return (
@@ -305,7 +303,7 @@ const BuildList: React.FC<{ builds: any[] }> = ({ builds }) => {
         <Box style={{ marginLeft: '24px', marginTop: '4px' }}>
             {builds.map((build, index) => (
                 <div
-                    key={index}
+                    key={build.key || build.name || index}
                     style={{
                         display: 'flex',
                         alignItems: 'center',

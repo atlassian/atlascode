@@ -13,11 +13,29 @@ import { PullRequestData } from '../bitbucket/model';
 import { HostErrorMessage, Message } from './messaging';
 import { RepoData } from './prMessaging';
 
+export interface BranchInfo {
+    name: string;
+    url?: string;
+}
+
+export interface CommitInfo {
+    hash: string;
+    message: string;
+    url?: string;
+    authorName?: string;
+}
+
+export interface BuildInfo {
+    name?: string;
+    key?: string;
+    state: string;
+}
+
 export interface DevelopmentInfo {
-    branches: any[];
-    commits: any[];
+    branches: BranchInfo[];
+    commits: CommitInfo[];
     pullRequests: PullRequestData[];
-    builds: any[];
+    builds: BuildInfo[];
 }
 
 export const emptyDevelopmentInfo: DevelopmentInfo = {
