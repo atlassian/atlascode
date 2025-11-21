@@ -50,7 +50,7 @@ function getRovoDevLogFilePath(): string | undefined {
     return path.join(home, '.rovodev', 'rovodev.log');
 }
 
-export function readLastNLogLines(n: number = 5): string[] {
+export function readLastNLogLines(n: number = 10): string[] {
     const logFilePath = getRovoDevLogFilePath();
     if (!logFilePath || !fs.existsSync(logFilePath)) {
         return ['rovo dev log file could not be found'];
