@@ -77,6 +77,16 @@ const DevelopmentItem: React.FC<{
         return null;
     }
 
+    const getPluralLabel = (baseLabel: string, count: number) => {
+        if (count === 1) {
+            return baseLabel;
+        }
+        if (baseLabel === 'branch') {
+            return 'branches';
+        }
+        return baseLabel + 's';
+    };
+
     return (
         <Button
             appearance="link"
@@ -92,8 +102,7 @@ const DevelopmentItem: React.FC<{
         >
             <DevelopmentIcon type={icon} />
             <span>
-                {count} {label}
-                {count > 1 ? 's' : ''}
+                {count} {getPluralLabel(label, count)}
             </span>
         </Button>
     );
