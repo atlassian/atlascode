@@ -49,7 +49,7 @@ export interface AbstractDialogMessage {
         text: string;
         link: string;
     };
-    details?: string;
+    stackTrace?: string;
     rovoDevLogs?: string[];
 }
 

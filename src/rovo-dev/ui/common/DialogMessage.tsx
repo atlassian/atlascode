@@ -48,8 +48,8 @@ export const DialogMessageItem: React.FC<{
         if (msg.statusCode) {
             parts.push(`\n${msg.statusCode}`);
         }
-        if (msg.details) {
-            parts.push(`\n\nStack Trace:\n${msg.details}`);
+        if (msg.stackTrace) {
+            parts.push(`\n\nStack Trace:\n${msg.stackTrace}`);
         }
         if (msg.rovoDevLogs && msg.rovoDevLogs.length > 0) {
             parts.push(`\n\nRovo Dev Logs:\n${msg.rovoDevLogs.join('\n')}`);
@@ -163,7 +163,7 @@ export const DialogMessageItem: React.FC<{
 
                     {msg.statusCode && <div style={{ fontSize: 'smaller', textAlign: 'right' }}>{msg.statusCode}</div>}
 
-                    {(msg.details || (msg.rovoDevLogs && msg.rovoDevLogs.length > 0)) && (
+                    {(msg.stackTrace || (msg.rovoDevLogs && msg.rovoDevLogs.length > 0)) && (
                         <div style={{ marginTop: '8px' }}>
                             <button
                                 style={{
@@ -192,7 +192,7 @@ export const DialogMessageItem: React.FC<{
                             </button>
                             {isDetailsExpanded && (
                                 <div style={{ marginLeft: '20px' }}>
-                                    {msg.details && (
+                                    {msg.stackTrace && (
                                         <div style={{ marginTop: '8px' }}>
                                             <button
                                                 style={{
@@ -237,7 +237,7 @@ export const DialogMessageItem: React.FC<{
                                                         overflowY: 'auto',
                                                     }}
                                                 >
-                                                    {msg.details}
+                                                    {msg.stackTrace}
                                                 </div>
                                             )}
                                         </div>

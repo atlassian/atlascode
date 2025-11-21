@@ -402,7 +402,7 @@ export class RovoDevChatProvider {
                         ctaLink: link,
                         statusCode: `Error code: ${response.type}`,
                         uid: v4(),
-                        details: buildExceptionDetails(response),
+                        stackTrace: buildExceptionDetails(response),
                         rovoDevLogs: readLastNLogLines(),
                     },
                 });
@@ -582,7 +582,7 @@ export class RovoDevChatProvider {
                     isRetriable,
                     isProcessTerminated,
                     uid: v4(),
-                    details: buildErrorDetails(error),
+                    stackTrace: buildErrorDetails(error),
                     rovoDevLogs: readLastNLogLines(),
                 },
             });

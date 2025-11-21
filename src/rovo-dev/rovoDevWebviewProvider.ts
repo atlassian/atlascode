@@ -552,7 +552,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 isRetriable,
                 isProcessTerminated,
                 uid: v4(),
-                details: buildErrorDetails(error),
+                stackTrace: buildErrorDetails(error),
                 rovoDevLogs: readLastNLogLines(),
             },
         });
