@@ -489,37 +489,6 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
             return <AtlLoader />;
         }
 
-        // If there's an error, show only the error banner without the form
-        if (this.state.isErrorBannerOpen) {
-            return (
-                <Page>
-                    <AtlascodeErrorBoundary
-                        postMessageFunc={(e) => {
-                            this.postMessage(e); /* just {this.postMessage} doesn't work */
-                        }}
-                        context={{ view: AnalyticsView.CreateJiraIssuePage }}
-                    >
-                        <div
-                            style={{
-                                display: 'flex',
-                                maxWidth: '1200px',
-                                margin: '20px auto 36px auto',
-                                justifyContent: 'center',
-                            }}
-                        >
-                            <div style={{ width: '60%' }}>
-                                <ErrorBanner
-                                    onRetry={this.handleRetryLastAction}
-                                    onSignIn={this.handleSignIn}
-                                    errorDetails={this.state.errorDetails}
-                                />
-                            </div>
-                        </div>
-                    </AtlascodeErrorBoundary>
-                </Page>
-            );
-        }
-
         return (
             <Page>
                 <AtlascodeErrorBoundary
@@ -539,6 +508,13 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                         <div style={{ width: '60%' }}>
                             <div style={{ width: '100%' }}>
                                 {!this.state.isOnline && <Offline />}
+                                {this.state.isErrorBannerOpen && (
+                                    <ErrorBanner
+                                        onRetry={this.handleRetryLastAction}
+                                        onSignIn={this.handleSignIn}
+                                        errorDetails={this.state.errorDetails}
+                                    />
+                                )}
                                 {this.state.showPMF && (
                                     <PMFBBanner
                                         onPMFOpen={() => this.onPMFOpen()}

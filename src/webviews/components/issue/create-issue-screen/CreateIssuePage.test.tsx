@@ -123,7 +123,7 @@ describe('CreateIssuePage', () => {
     });
 
     describe('Error state rendering', () => {
-        it('should show only ErrorBanner when isErrorBannerOpen is true', () => {
+        it('should show ErrorBanner and form content when isErrorBannerOpen is true', () => {
             const component = new CreateIssuePage({});
             component.state = {
                 ...component.state,
@@ -134,18 +134,34 @@ describe('CreateIssuePage', () => {
                     issuetype: { id: '1', name: 'Task' },
                     project: { key: 'TEST', name: 'Test Project' },
                 },
+                fields: {
+                    summary: {
+                        key: 'summary',
+                        name: 'Summary',
+                        required: true,
+                        uiType: UIType.Input,
+                        displayOrder: 1,
+                        valueType: ValueType.String,
+                        advanced: false,
+                        isArray: false,
+                        schema: 'summary',
+                    },
+                },
+                selectFieldOptions: {
+                    site: [mockSiteDetails],
+                },
             };
 
             const { container, queryByTestId } = render(component.render());
 
             // Error banner should be visible
+            expect(queryByTestId('error-banner')).not.toBeNull();
             expect(container.textContent).toContain('Error:');
             expect(container.textContent).toContain('Test error message');
 
-            // Form elements should NOT be visible
-            expect(queryByTestId('form-header')).toBeNull();
-            expect(queryByTestId('form-footer')).toBeNull();
-            expect(queryByTestId('form-field')).toBeNull();
+            // Form elements SHOULD also be visible (content always shows now)
+            expect(queryByTestId('form-header')).not.toBeNull();
+            expect(queryByTestId('form-footer')).not.toBeNull();
         });
 
         it('should show form content when isErrorBannerOpen is false', () => {
