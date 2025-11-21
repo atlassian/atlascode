@@ -36,6 +36,8 @@ type Props = {
     handleStatusChange: (t: Transition) => void;
     handleStartWork: () => void;
     handleCloneIssue: (cloneData: any) => void;
+    handleOpenRovoDev?: () => void;
+    isRovoDevEnabled?: boolean;
     transitions: Transition[];
 };
 
@@ -54,6 +56,8 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
     handleStatusChange,
     handleStartWork,
     handleCloneIssue,
+    handleOpenRovoDev,
+    isRovoDevEnabled,
     transitions,
 }) => {
     const originalEstimate: string = fieldValues['timetracking'] ? fieldValues['timetracking'].originalEstimate : '';
@@ -94,6 +98,18 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                         Start work
                     </LoadingButton>
                 </Tooltip>
+                {isRovoDevEnabled && handleOpenRovoDev && (
+                    <Tooltip content="Open Rovo Dev with this issue context">
+                        <LoadingButton
+                            className="ac-button-secondary"
+                            testId="issue.open-rovodev-button"
+                            onClick={handleOpenRovoDev}
+                            isLoading={false}
+                        >
+                            Generate code
+                        </LoadingButton>
+                    </Tooltip>
+                )}
                 {fields['status'] && (
                     <Box
                         data-testid="issue.status-transition-menu"

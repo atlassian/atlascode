@@ -1,7 +1,7 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import * as fs from 'fs';
 import path from 'path';
-import { configuration } from 'src/config/configuration';
+import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { safeWaitFor } from 'src/rovo-dev/util/waitFor';
 import { v4 } from 'uuid';
@@ -24,7 +24,6 @@ import {
 } from 'vscode';
 
 import { GitErrorCodes } from '../typings/git';
-import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { RovodevCommandContext } from './api/componentApi';
 import { DetailedSiteInfo, ExtensionApi } from './api/extensionApi';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './client';
@@ -87,6 +86,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _debugPanelEnabled = false;
     private _debugPanelContext: Record<string, string> = {};
     private _debugPanelMcpContext: Record<string, string> = {};
+
+    private _userInfo: UserInfo | undefined;
 
     // we keep the data in this collection so we can attach some metadata to the next
     // prompt informing Rovo Dev that those files has been reverted
@@ -161,7 +162,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             window.registerWebviewViewProvider('atlascode.views.rovoDev.webView', this, {
                 webviewOptions: { retainContextWhenHidden: true },
             }),
-            configuration.onDidChange(this.onConfigurationChanged, this),
+            this.extensionApi.config.onDidChange(this.onConfigurationChanged, this),
         );
 
         // Register editor listeners
@@ -198,11 +199,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private onConfigurationChanged(e: ConfigurationChangeEvent): void {
-        if (configuration.changed(e, 'rovodev.debugPanelEnabled')) {
+        if (this.extensionApi.config.changed(e, 'rovodev.debugPanelEnabled')) {
             this._debugPanelEnabled = this.extensionApi.config.isDebugPanelEnabled();
             this.refreshDebugPanel(true);
         }
-        if (configuration.changed(e, 'rovodev.thinkingBlockEnabled')) {
+        if (this.extensionApi.config.changed(e, 'rovodev.thinkingBlockEnabled')) {
             this.refreshThinkingBlock();
         }
     }
@@ -260,13 +261,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             Uri.joinPath(this._extensionUri, 'node_modules', '@vscode', 'codicons', 'dist', 'codicon.css'),
         );
 
-        webview.html = getHtmlForView(
-            this._extensionPath,
-            webview.asWebviewUri(this._extensionUri),
-            webview.cspSource,
-            this.viewType,
-            codiconsUri,
-        );
+        webview.html = this.extensionApi.getHtmlForView({
+            extensionPath: this._extensionPath,
+            cspSource: webview.cspSource,
+            viewId: this.viewType,
+            baseUri: webview.asWebviewUri(this._extensionUri),
+            stylesUri: codiconsUri,
+        });
 
         webview.onDidReceiveMessage(async (e) => {
             try {
@@ -427,6 +428,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                                 lastTenMessages: e.lastTenMessages,
                                 rovoDevSessionId: process.env.SANDBOX_SESSION_ID,
                             },
+                            this._userInfo,
                             !!this.isBoysenberry,
                         );
                         break;
@@ -974,6 +976,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private async handleProcessStateChanged(newState: RovoDevProcessState) {
         if (newState.state === 'Downloading' || newState.state === 'Starting' || newState.state === 'Started') {
+            this._userInfo = newState.jiraSiteUserInfo;
             this._jiraItemsProvider.setJiraSite(newState.jiraSiteHostname);
         }
 

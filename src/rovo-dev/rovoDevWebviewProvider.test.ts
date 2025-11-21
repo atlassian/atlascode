@@ -37,6 +37,7 @@ jest.mock('./api/extensionApi', () => ({
         config: {
             isDebugPanelEnabled: jest.fn(() => false),
             isThinkingBlockEnabled: jest.fn(() => false),
+            onDidChange: jest.fn(),
         },
         analytics: {
             sendTrackEvent: jest.fn(),
@@ -71,12 +72,6 @@ import { RovoDevWebviewProvider } from './rovoDevWebviewProvider';
 jest.mock('./util/rovoDevLogger', () => ({
     RovoDevLogger: {
         error: jest.fn(),
-    },
-}));
-
-jest.mock('../../src/config/configuration', () => ({
-    configuration: {
-        onDidChange: jest.fn(),
     },
 }));
 
