@@ -9,7 +9,7 @@ import { Worklog, WorklogContainer } from '@atlassianlabs/jira-pi-common-models'
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import * as React from 'react';
 
-import WorklogForm from './WorklogForm';
+import { WorklogFormDialog } from './WorklogFormDialog';
 
 type ItemData = { worklog: Worklog; onEdit?: (worklog: Worklog) => void; onDelete?: (worklog: Worklog) => void };
 
@@ -46,34 +46,33 @@ const Actions = (
 ) => {
     const isEditing = data.editingWorklogId === data.worklog.id;
     const isDeleting = data.deletingWorklogId === data.worklog.id;
+    const worklogDialogTriggerRef = React.useRef(null);
 
     return (
         <div style={{ display: 'flex', gap: '4px', flexDirection: 'column' }}>
             {data.onEditWorklog && (
-                <div className={`ac-inline-dialog ac-worklog-inline-dialog ${isEditing ? 'active' : ''}`}>
-                    <InlineDialog
-                        content={
-                            <WorklogForm
-                                onSave={data.onSaveWorklog!}
-                                onCancel={data.onCancelEdit!}
-                                originalEstimate={data.originalEstimate || ''}
-                                editingWorklog={data.worklog}
-                                worklogId={data.worklog.id}
-                            />
-                        }
-                        isOpen={isEditing}
-                        onClose={data.onCancelEdit!}
-                        placement="left-end"
-                    >
-                        <Tooltip content="Edit" position="top">
-                            <Button
-                                appearance="subtle"
-                                iconBefore={<EditIcon size="small" label="Edit" />}
-                                onClick={() => data.onEditWorklog?.(data.worklog)}
-                                spacing="compact"
-                            />
-                        </Tooltip>
-                    </InlineDialog>
+                <div>
+                    <Tooltip content="Edit" position="top">
+                        <Button
+                            appearance="subtle"
+                            iconBefore={<EditIcon size="small" label="Edit" />}
+                            onClick={() => data.onEditWorklog?.(data.worklog)}
+                            spacing="compact"
+                            ref={worklogDialogTriggerRef}
+                        />
+                    </Tooltip>
+
+                    {isEditing && (
+                        <WorklogFormDialog
+                            onClose={data.onCancelEdit!}
+                            onSave={data.onSaveWorklog!}
+                            onCancel={data.onCancelEdit!}
+                            originalEstimate={data.originalEstimate || ''}
+                            editingWorklog={data.worklog}
+                            worklogId={data.worklog.id}
+                            triggerRef={worklogDialogTriggerRef}
+                        />
+                    )}
                 </div>
             )}
             {data.onDeleteWorklog && (
