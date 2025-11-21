@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.10
+
+### Features
+
+- Added development field support
+
 ## What's new in 4.0.9
 
 ### Features
@@ -12,9 +18,9 @@
 
 - Added activity history support
 
-### Bug Fixes 
+### Bug Fixes
 
-- Fixed issue with project loading in Jira Cloud Create Issue Screen 
+- Fixed issue with project loading in Jira Cloud Create Issue Screen
 
 ## What's new in 4.0.7
 
