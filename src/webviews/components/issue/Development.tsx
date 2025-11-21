@@ -3,8 +3,7 @@ import CheckCircleIcon from '@atlaskit/icon/core/check-circle';
 import ChevronDownIcon from '@atlaskit/icon/core/chevron-down';
 import ChevronRightIcon from '@atlaskit/icon/core/chevron-right';
 import CrossCircleIcon from '@atlaskit/icon/core/cross-circle';
-import Modal, { ModalBody, ModalHeader, ModalTitle, ModalTransition } from '@atlaskit/modal-dialog';
-import Tooltip from '@atlaskit/tooltip';
+import Modal, { ModalBody, ModalFooter, ModalHeader, ModalTitle, ModalTransition } from '@atlaskit/modal-dialog';
 import { Box } from '@mui/material';
 import React from 'react';
 
@@ -125,37 +124,35 @@ const BranchList: React.FC<{ branches: any[]; onOpenExternalUrl: (url: string) =
                     }}
                 >
                     <DevelopmentIcon type="branch" />
-                    <Tooltip content={branch.name}>
-                        {branch.url ? (
-                            <Button
-                                appearance="link"
-                                onClick={() => onOpenExternalUrl(branch.url)}
-                                style={{
-                                    padding: 0,
-                                    height: 'auto',
-                                    fontSize: '13px',
-                                    maxWidth: '400px',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap',
-                                }}
-                            >
-                                {branch.name}
-                            </Button>
-                        ) : (
-                            <span
-                                style={{
-                                    maxWidth: '400px',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap',
-                                    display: 'inline-block',
-                                }}
-                            >
-                                {branch.name}
-                            </span>
-                        )}
-                    </Tooltip>
+                    {branch.url ? (
+                        <Button
+                            appearance="link"
+                            onClick={() => onOpenExternalUrl(branch.url)}
+                            style={{
+                                padding: 0,
+                                height: 'auto',
+                                fontSize: '13px',
+                                maxWidth: '400px',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
+                            {branch.name}
+                        </Button>
+                    ) : (
+                        <span
+                            style={{
+                                maxWidth: '400px',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                display: 'inline-block',
+                            }}
+                        >
+                            {branch.name}
+                        </span>
+                    )}
                 </div>
             ))}
         </Box>
@@ -182,38 +179,36 @@ const CommitList: React.FC<{ commits: any[]; onOpenExternalUrl: (url: string) =>
                     >
                         <DevelopmentIcon type="commit" />
                         <div style={{ flex: 1, minWidth: 0 }}>
-                            <Tooltip content={commitMessage}>
-                                {commit.url ? (
-                                    <Button
-                                        appearance="link"
-                                        onClick={() => onOpenExternalUrl(commit.url)}
-                                        style={{
-                                            padding: 0,
-                                            height: 'auto',
-                                            fontSize: '13px',
-                                            textAlign: 'left',
-                                            maxWidth: '100%',
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                            whiteSpace: 'nowrap',
-                                            display: 'block',
-                                        }}
-                                    >
-                                        {commitMessage}
-                                    </Button>
-                                ) : (
-                                    <div
-                                        style={{
-                                            maxWidth: '100%',
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                            whiteSpace: 'nowrap',
-                                        }}
-                                    >
-                                        {commitMessage}
-                                    </div>
-                                )}
-                            </Tooltip>
+                            {commit.url ? (
+                                <Button
+                                    appearance="link"
+                                    onClick={() => onOpenExternalUrl(commit.url)}
+                                    style={{
+                                        padding: 0,
+                                        height: 'auto',
+                                        fontSize: '13px',
+                                        textAlign: 'left',
+                                        maxWidth: '100%',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap',
+                                        display: 'block',
+                                    }}
+                                >
+                                    {commitMessage}
+                                </Button>
+                            ) : (
+                                <div
+                                    style={{
+                                        maxWidth: '100%',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap',
+                                    }}
+                                >
+                                    {commitMessage}
+                                </div>
+                            )}
                             <div style={{ fontSize: '12px', color: 'var(--vscode-descriptionForeground)' }}>
                                 {commit.hash?.substring(0, 7)} by {commit.authorName || 'Unknown'}
                             </div>
@@ -269,22 +264,20 @@ const PullRequestList: React.FC<{ pullRequests: any[]; onOpen: (pr: any) => void
                         >
                             {pr.state}
                         </span>
-                        <Tooltip content={prTitle}>
-                            <Button
-                                appearance="link"
-                                onClick={handleClick}
-                                style={{
-                                    padding: 0,
-                                    height: 'auto',
-                                    maxWidth: '350px',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap',
-                                }}
-                            >
-                                {prTitle}
-                            </Button>
-                        </Tooltip>
+                        <Button
+                            appearance="link"
+                            onClick={handleClick}
+                            style={{
+                                padding: 0,
+                                height: 'auto',
+                                maxWidth: '350px',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
+                            {prTitle}
+                        </Button>
                     </div>
                 );
             })}
@@ -457,6 +450,11 @@ export const Development: React.FC<DevelopmentProps> = ({ developmentInfo, onOpe
                             <ModalTitle>{getModalTitle()}</ModalTitle>
                         </ModalHeader>
                         <ModalBody>{getModalContent()}</ModalBody>
+                        <ModalFooter>
+                            <Button appearance="subtle" onClick={() => setOpenModal(null)}>
+                                Cancel
+                            </Button>
+                        </ModalFooter>
                     </Modal>
                 )}
             </ModalTransition>
