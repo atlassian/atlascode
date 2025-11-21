@@ -3,6 +3,8 @@ import CheckCircleIcon from '@atlaskit/icon/core/check-circle';
 import ChevronDownIcon from '@atlaskit/icon/core/chevron-down';
 import ChevronRightIcon from '@atlaskit/icon/core/chevron-right';
 import CrossCircleIcon from '@atlaskit/icon/core/cross-circle';
+import Modal, { ModalBody, ModalHeader, ModalTitle, ModalTransition } from '@atlaskit/modal-dialog';
+import Tooltip from '@atlaskit/tooltip';
 import { Box } from '@mui/material';
 import React from 'react';
 
@@ -69,23 +71,23 @@ const DevelopmentItem: React.FC<{
     icon: string;
     count: number;
     label: string;
-    isExpanded: boolean;
-    onToggle: () => void;
-}> = ({ icon, count, label, isExpanded, onToggle }) => {
+    onClick: () => void;
+}> = ({ icon, count, label, onClick }) => {
     if (count === 0) {
         return null;
     }
 
     return (
         <Button
-            appearance="subtle"
-            onClick={onToggle}
+            appearance="link"
+            onClick={onClick}
             style={{
                 display: 'flex',
                 alignItems: 'center',
-                padding: '4px 8px',
+                padding: '4px 0',
                 justifyContent: 'flex-start',
                 color: 'var(--vscode-textLink-foreground)',
+                textDecoration: 'none',
             }}
         >
             <DevelopmentIcon type={icon} />
@@ -114,17 +116,37 @@ const BranchList: React.FC<{ branches: any[]; onOpenExternalUrl: (url: string) =
                     }}
                 >
                     <DevelopmentIcon type="branch" />
-                    {branch.url ? (
-                        <Button
-                            appearance="link"
-                            onClick={() => onOpenExternalUrl(branch.url)}
-                            style={{ padding: 0, height: 'auto', fontSize: '13px' }}
-                        >
-                            {branch.name}
-                        </Button>
-                    ) : (
-                        <span>{branch.name}</span>
-                    )}
+                    <Tooltip content={branch.name}>
+                        {branch.url ? (
+                            <Button
+                                appearance="link"
+                                onClick={() => onOpenExternalUrl(branch.url)}
+                                style={{
+                                    padding: 0,
+                                    height: 'auto',
+                                    fontSize: '13px',
+                                    maxWidth: '400px',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                }}
+                            >
+                                {branch.name}
+                            </Button>
+                        ) : (
+                            <span
+                                style={{
+                                    maxWidth: '400px',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    display: 'inline-block',
+                                }}
+                            >
+                                {branch.name}
+                            </span>
+                        )}
+                    </Tooltip>
                 </div>
             ))}
         </Box>
@@ -137,35 +159,59 @@ const CommitList: React.FC<{ commits: any[]; onOpenExternalUrl: (url: string) =>
 }) => {
     return (
         <Box style={{ marginLeft: '24px', marginTop: '4px' }}>
-            {commits.slice(0, 5).map((commit, index) => (
-                <div
-                    key={index}
-                    style={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        padding: '4px 0',
-                        fontSize: '13px',
-                    }}
-                >
-                    <DevelopmentIcon type="commit" />
-                    <div style={{ flex: 1 }}>
-                        {commit.url ? (
-                            <Button
-                                appearance="link"
-                                onClick={() => onOpenExternalUrl(commit.url)}
-                                style={{ padding: 0, height: 'auto', fontSize: '13px', textAlign: 'left' }}
-                            >
-                                {commit.message?.split('\n')[0] || 'No message'}
-                            </Button>
-                        ) : (
-                            <div>{commit.message?.split('\n')[0] || 'No message'}</div>
-                        )}
-                        <div style={{ fontSize: '12px', color: 'var(--vscode-descriptionForeground)' }}>
-                            {commit.hash?.substring(0, 7)} by {commit.authorName || 'Unknown'}
+            {commits.slice(0, 5).map((commit, index) => {
+                const commitMessage = commit.message?.split('\n')[0] || 'No message';
+                return (
+                    <div
+                        key={index}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            padding: '4px 0',
+                            fontSize: '13px',
+                        }}
+                    >
+                        <DevelopmentIcon type="commit" />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <Tooltip content={commitMessage}>
+                                {commit.url ? (
+                                    <Button
+                                        appearance="link"
+                                        onClick={() => onOpenExternalUrl(commit.url)}
+                                        style={{
+                                            padding: 0,
+                                            height: 'auto',
+                                            fontSize: '13px',
+                                            textAlign: 'left',
+                                            maxWidth: '100%',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            whiteSpace: 'nowrap',
+                                            display: 'block',
+                                        }}
+                                    >
+                                        {commitMessage}
+                                    </Button>
+                                ) : (
+                                    <div
+                                        style={{
+                                            maxWidth: '100%',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            whiteSpace: 'nowrap',
+                                        }}
+                                    >
+                                        {commitMessage}
+                                    </div>
+                                )}
+                            </Tooltip>
+                            <div style={{ fontSize: '12px', color: 'var(--vscode-descriptionForeground)' }}>
+                                {commit.hash?.substring(0, 7)} by {commit.authorName || 'Unknown'}
+                            </div>
                         </div>
                     </div>
-                </div>
-            ))}
+                );
+            })}
             {commits.length > 5 && (
                 <div style={{ fontSize: '12px', color: 'var(--vscode-descriptionForeground)', marginLeft: '24px' }}>
                     And {commits.length - 5} more...
@@ -182,6 +228,7 @@ const PullRequestList: React.FC<{ pullRequests: any[]; onOpen: (pr: any) => void
                 const handleClick = () => {
                     onOpen(pr);
                 };
+                const prTitle = `#${pr.id} - ${pr.title || `Pull request #${pr.id}`}`;
 
                 return (
                     <div
@@ -192,6 +239,7 @@ const PullRequestList: React.FC<{ pullRequests: any[]; onOpen: (pr: any) => void
                             padding: '4px 0',
                             fontSize: '13px',
                             gap: '8px',
+                            minWidth: 0,
                         }}
                     >
                         <DevelopmentIcon type="pr" />
@@ -207,13 +255,27 @@ const PullRequestList: React.FC<{ pullRequests: any[]; onOpen: (pr: any) => void
                                           ? 'var(--vscode-statusBarItem-prominentBackground)'
                                           : 'var(--vscode-statusBarItem-errorBackground)',
                                 whiteSpace: 'nowrap',
+                                flexShrink: 0,
                             }}
                         >
                             {pr.state}
                         </span>
-                        <Button appearance="link" onClick={handleClick} style={{ padding: 0, height: 'auto' }}>
-                            #{pr.id} - {pr.title || `Pull request #${pr.id}`}
-                        </Button>
+                        <Tooltip content={prTitle}>
+                            <Button
+                                appearance="link"
+                                onClick={handleClick}
+                                style={{
+                                    padding: 0,
+                                    height: 'auto',
+                                    maxWidth: '350px',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                }}
+                            >
+                                {prTitle}
+                            </Button>
+                        </Tooltip>
                     </div>
                 );
             })}
@@ -259,13 +321,9 @@ const BuildList: React.FC<{ builds: any[] }> = ({ builds }) => {
 
 export const Development: React.FC<DevelopmentProps> = ({ developmentInfo, onOpenPullRequest, onOpenExternalUrl }) => {
     const [isOpen, setIsOpen] = React.useState<boolean>(false);
-    const [expandedSection, setExpandedSection] = React.useState<string | null>(null);
+    const [openModal, setOpenModal] = React.useState<'branches' | 'commits' | 'pullRequests' | 'builds' | null>(null);
 
     const { branches, commits, pullRequests, builds } = developmentInfo;
-
-    const toggleSection = (section: string) => {
-        setExpandedSection(expandedSection === section ? null : section);
-    };
 
     const totalCount =
         (branches?.length || 0) + (commits?.length || 0) + (pullRequests?.length || 0) + (builds?.length || 0);
@@ -288,6 +346,36 @@ export const Development: React.FC<DevelopmentProps> = ({ developmentInfo, onOpe
         summaryParts.push(`${builds.length} build${builds.length > 1 ? 's' : ''}`);
     }
     const summaryText = summaryParts.join(', ');
+
+    const getModalTitle = () => {
+        switch (openModal) {
+            case 'branches':
+                return `Branches (${branches.length})`;
+            case 'commits':
+                return `Commits (${commits.length})`;
+            case 'pullRequests':
+                return `Pull Requests (${pullRequests.length})`;
+            case 'builds':
+                return `Builds (${builds.length})`;
+            default:
+                return '';
+        }
+    };
+
+    const getModalContent = () => {
+        switch (openModal) {
+            case 'branches':
+                return <BranchList branches={branches} onOpenExternalUrl={onOpenExternalUrl} />;
+            case 'commits':
+                return <CommitList commits={commits} onOpenExternalUrl={onOpenExternalUrl} />;
+            case 'pullRequests':
+                return <PullRequestList pullRequests={pullRequests} onOpen={onOpenPullRequest} />;
+            case 'builds':
+                return <BuildList builds={builds} />;
+            default:
+                return null;
+        }
+    };
 
     return (
         <Box style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
@@ -322,52 +410,47 @@ export const Development: React.FC<DevelopmentProps> = ({ developmentInfo, onOpe
                 </div>
             </Box>
 
-            {/* Expandable sections */}
+            {/* Clickable items that open modals - only show when expanded */}
             {isOpen && (
-                <Box style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px', width: '60%' }}>
+                <Box style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
                     <DevelopmentItem
                         icon="branch"
                         count={branches.length}
                         label="branch"
-                        isExpanded={expandedSection === 'branches'}
-                        onToggle={() => toggleSection('branches')}
+                        onClick={() => setOpenModal('branches')}
                     />
-                    {expandedSection === 'branches' && (
-                        <BranchList branches={branches} onOpenExternalUrl={onOpenExternalUrl} />
-                    )}
-
                     <DevelopmentItem
                         icon="commit"
                         count={commits.length}
                         label="commit"
-                        isExpanded={expandedSection === 'commits'}
-                        onToggle={() => toggleSection('commits')}
+                        onClick={() => setOpenModal('commits')}
                     />
-                    {expandedSection === 'commits' && (
-                        <CommitList commits={commits} onOpenExternalUrl={onOpenExternalUrl} />
-                    )}
-
                     <DevelopmentItem
                         icon="pr"
                         count={pullRequests.length}
                         label="pull request"
-                        isExpanded={expandedSection === 'pullRequests'}
-                        onToggle={() => toggleSection('pullRequests')}
+                        onClick={() => setOpenModal('pullRequests')}
                     />
-                    {expandedSection === 'pullRequests' && (
-                        <PullRequestList pullRequests={pullRequests} onOpen={onOpenPullRequest} />
-                    )}
-
                     <DevelopmentItem
                         icon="build"
                         count={builds.length}
                         label="build"
-                        isExpanded={expandedSection === 'builds'}
-                        onToggle={() => toggleSection('builds')}
+                        onClick={() => setOpenModal('builds')}
                     />
-                    {expandedSection === 'builds' && <BuildList builds={builds} />}
                 </Box>
             )}
+
+            {/* Modal */}
+            <ModalTransition>
+                {openModal && (
+                    <Modal onClose={() => setOpenModal(null)} width="large">
+                        <ModalHeader>
+                            <ModalTitle>{getModalTitle()}</ModalTitle>
+                        </ModalHeader>
+                        <ModalBody>{getModalContent()}</ModalBody>
+                    </Modal>
+                )}
+            </ModalTransition>
         </Box>
     );
 };

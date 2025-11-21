@@ -2009,14 +2009,28 @@ export class JiraIssueWebview
         for (const pr of prs) {
             try {
                 const site = pr.siteDetails;
+                const fullName = pr.destination?.repo?.fullName;
+
+                if (!fullName || !fullName.includes('/')) {
+                    Logger.debug(`Skipping builds for PR ${pr.id} - missing repository information`);
+                    continue;
+                }
+
+                const [ownerSlug, repoSlug] = fullName.split('/');
+
+                if (!ownerSlug || !repoSlug) {
+                    Logger.debug(`Skipping builds for PR ${pr.id} - invalid repository: ${fullName}`);
+                    continue;
+                }
+
                 const bbApi = await clientForSite({
                     details: site,
-                    ownerSlug: pr.destination?.repo?.fullName?.split('/')[0] || '',
-                    repoSlug: pr.destination?.repo?.fullName?.split('/')[1] || '',
+                    ownerSlug,
+                    repoSlug,
                 });
 
                 const builds = await bbApi.pullrequests.getBuildStatuses({
-                    site: { details: site, ownerSlug: '', repoSlug: '' },
+                    site: { details: site, ownerSlug, repoSlug },
                     data: pr,
                     workspaceRepo: undefined,
                 });
