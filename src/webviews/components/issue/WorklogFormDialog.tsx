@@ -30,7 +30,13 @@ export const WorklogFormDialog = ({
     triggerRef,
 }: Props) => (
     <ModalTransition>
-        <Modal onClose={onClose} width="280" height="372" shouldReturnFocus={triggerRef} testId="worklog-modal-dialog">
+        <Modal
+            onClose={onClose}
+            width="280"
+            height="372"
+            shouldReturnFocus={triggerRef}
+            testId="issue.worklog-modal-dialog"
+        >
             <ModalBody>
                 <WorklogForm
                     onSave={onSave}
