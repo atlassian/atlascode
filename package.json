@@ -675,12 +675,6 @@
                     "when": "resourceScheme == atlascode.bbpr && config.atlascode.bitbucket.enabled"
                 }
             ],
-            "webview/context": [
-                {
-                    "command": "atlascode.jira.copyImageElement",
-                    "when": "webviewSection == 'jiraImageElement'"
-                }
-            ],
             "view/title": [
                 {
                     "command": "atlascode.rovodev.newChatSession",
@@ -1099,6 +1093,10 @@
                 {
                     "command": "atlascode.jira.createIssue.generateCode",
                     "when": "atlascode:rovoDevEnabled && webviewId == 'atlascode.views.jira.createWorkItemWebview' && webviewSection == 'createButton'"
+                },
+                {
+                    "command": "atlascode.jira.copyImageElement",
+                    "when": "webviewSection == 'jiraImageElement'"
                 }
             ]
         },

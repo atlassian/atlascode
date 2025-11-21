@@ -53,7 +53,8 @@ export interface ViewState extends CommonEditorViewState, EditIssueData {
     commentsTabIndex: number;
     history: IssueHistoryItem[];
     historyLoading: boolean;
-    imageToCopy?: HTMLImageElement | null;
+    imageToCopy: HTMLImageElement | null;
+    vsCodeContext: string;
 }
 
 const emptyState: ViewState = {
@@ -69,6 +70,7 @@ const emptyState: ViewState = {
     history: [],
     historyLoading: false,
     imageToCopy: null,
+    vsCodeContext: '',
 };
 
 export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
@@ -897,6 +899,15 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     override componentDidMount() {
         this.postMessage({ action: 'getFeatureFlags' });
     }
+    override shouldComponentUpdate(_nextProps: Readonly<{}>, nextState: Readonly<ViewState>): boolean {
+        const prevIssueKey = this.state.key;
+        const currentIssueKey = nextState.key;
+
+        if (prevIssueKey !== currentIssueKey) {
+            this.setState({ vsCodeContext: JSON.stringify({ viewKey: currentIssueKey }) });
+        }
+        return true;
+    }
 
     private handleContextMenuOpen = (e: React.MouseEvent<HTMLDivElement>) => {
         // save the image if image to be used when context menu item is clicked
@@ -953,7 +964,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                     return (
                                         <div
                                             style={{ margin: '20px 16px 0px 16px' }}
-                                            data-vscode-context={JSON.stringify({ viewKey: this.state.key })}
+                                            data-vscode-context={this.state.vsCodeContext}
                                             onContextMenu={this.handleContextMenuOpen}
                                         >
                                             {this.getMainPanelNavMarkup()}
@@ -974,7 +985,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 return (
                                     <div
                                         style={{ maxWidth: '1200px', margin: '20px auto 0 auto' }}
-                                        data-vscode-context={`{"viewKey": "${this.state.key}"}`}
+                                        data-vscode-context={this.state.vsCodeContext}
                                         onContextMenu={this.handleContextMenuOpen}
                                     >
                                         <Grid layout="fluid">
