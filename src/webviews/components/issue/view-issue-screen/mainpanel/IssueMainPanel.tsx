@@ -83,7 +83,7 @@ const IssueMainPanel: React.FC<Props> = ({
     const [enableEpicChildren, setEnableEpicChildren] = React.useState(false);
     const [enableLinkedIssues, setEnableLinkedIssues] = React.useState(false);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
-    const [isWorklogModalTriggered, setIsWorklogModalTriggered] = React.useState<null | React.RefObject<HTMLElement>>(
+    const [worklogModalTriggerRef, setWorklogModalTriggerRef] = React.useState<null | React.RefObject<HTMLElement>>(
         null,
     );
     const menuWorklogDialogTriggerRef = React.useRef(null);
@@ -152,11 +152,11 @@ const IssueMainPanel: React.FC<Props> = ({
 
     const handleWorklogSave = (worklogData: any) => {
         handleInlineEdit(fields['worklog'], worklogData);
-        setIsWorklogModalTriggered(null);
+        setWorklogModalTriggerRef(null);
     };
 
     const handleWorklogCancel = () => {
-        setIsWorklogModalTriggered(null);
+        setWorklogModalTriggerRef(null);
     };
 
     const handleWorklogEdit = (worklogData: any) => {
@@ -180,7 +180,7 @@ const IssueMainPanel: React.FC<Props> = ({
                     setEnableLinkedIssues(true);
                 }}
                 handleLogWorkClick={() => {
-                    setIsWorklogModalTriggered(menuWorklogDialogTriggerRef);
+                    setWorklogModalTriggerRef(menuWorklogDialogTriggerRef);
                 }}
                 loading={loadingField === 'attachment'}
             />
@@ -360,7 +360,7 @@ const IssueMainPanel: React.FC<Props> = ({
                                 className="ac-button-secondary"
                                 appearance="subtle"
                                 iconBefore={<AddIcon size="small" label="Add" />}
-                                onClick={() => setIsWorklogModalTriggered(worklogDialogTriggerRef)}
+                                onClick={() => setWorklogModalTriggerRef(worklogDialogTriggerRef)}
                                 ref={worklogDialogTriggerRef}
                             ></Button>
                         </div>
@@ -372,13 +372,13 @@ const IssueMainPanel: React.FC<Props> = ({
                         />
                     </div>
                 )}
-            {isWorklogModalTriggered && (
+            {worklogModalTriggerRef && (
                 <WorklogFormDialog
                     onClose={handleWorklogCancel}
                     onSave={handleWorklogSave}
                     onCancel={handleWorklogCancel}
                     originalEstimate={originalEstimate}
-                    triggerRef={isWorklogModalTriggered}
+                    triggerRef={worklogModalTriggerRef}
                 />
             )}
         </div>

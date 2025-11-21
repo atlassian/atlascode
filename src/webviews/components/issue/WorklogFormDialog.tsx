@@ -6,7 +6,13 @@ import WorklogForm from './WorklogForm';
 
 type Props = {
     onClose: () => void;
-    onSave: (val: any) => void;
+    onSave: (val: {
+        adjustEstimate: string;
+        comment?: string;
+        newEstimate?: string;
+        started: string;
+        timeSpent: string;
+    }) => void;
     onCancel: () => void;
     originalEstimate: string;
     editingWorklog?: Worklog;
@@ -23,19 +29,17 @@ export const WorklogFormDialog = ({
     worklogId,
     triggerRef,
 }: Props) => (
-    <div data-testid="worklog-modal-dialog">
-        <ModalTransition>
-            <Modal onClose={onClose} width="280" height="372" shouldReturnFocus={triggerRef}>
-                <ModalBody>
-                    <WorklogForm
-                        onSave={onSave}
-                        onCancel={onCancel}
-                        originalEstimate={originalEstimate}
-                        editingWorklog={editingWorklog}
-                        worklogId={worklogId}
-                    />
-                </ModalBody>
-            </Modal>
-        </ModalTransition>
-    </div>
+    <ModalTransition>
+        <Modal onClose={onClose} width="280" height="372" shouldReturnFocus={triggerRef} testId="worklog-modal-dialog">
+            <ModalBody>
+                <WorklogForm
+                    onSave={onSave}
+                    onCancel={onCancel}
+                    originalEstimate={originalEstimate}
+                    editingWorklog={editingWorklog}
+                    worklogId={worklogId}
+                />
+            </ModalBody>
+        </Modal>
+    </ModalTransition>
 );
