@@ -188,6 +188,7 @@ const PullRequestList: React.FC<{ pullRequests: any[]; onOpen: (pr: any) => void
                         key={pr.id || index}
                         style={{
                             display: 'flex',
+                            alignItems: 'center',
                             padding: '4px 0',
                             fontSize: '13px',
                             gap: '8px',

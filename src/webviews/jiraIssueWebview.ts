@@ -1928,7 +1928,29 @@ export class JiraIssueWebview
                         (branch) => branch.name && branch.name.toLowerCase().includes(issueKeyLower),
                     );
 
-                    allBranches.push(...relatedBranches);
+                    let repoUrl: string | undefined;
+                    if (repo.mainSiteRemote?.site) {
+                        try {
+                            const bbClient = await clientForSite(repo.mainSiteRemote.site);
+                            const bbRepo = await bbClient.repositories.get(repo.mainSiteRemote.site);
+                            repoUrl = bbRepo?.url;
+                        } catch (e) {
+                            Logger.debug(`Could not fetch repo details for ${repo.rootUri}`, e);
+                        }
+                    }
+
+                    const branchesWithUrls = relatedBranches.map((branch) => {
+                        const branchName = branch.name?.replace(/^[^/]+\//, '') || branch.name || '';
+                        return {
+                            name: branchName,
+                            url:
+                                repoUrl && branchName
+                                    ? `${repoUrl}/branch/${encodeURIComponent(branchName)}`
+                                    : undefined,
+                        };
+                    });
+
+                    allBranches.push(...branchesWithUrls);
                 } catch (e) {
                     Logger.debug(`Could not fetch branches for repo ${repo.rootUri}`, e);
                 }
