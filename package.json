@@ -211,6 +211,10 @@
                 "category": "Jira"
             },
             {
+                "command": "atlascode.jira.copyImageElement",
+                "title": "Copy Image"
+            },
+            {
                 "command": "atlascode.jira.searchIssues",
                 "title": "Search Jira Issue Results",
                 "icon": {
@@ -1089,6 +1093,10 @@
                 {
                     "command": "atlascode.jira.createIssue.generateCode",
                     "when": "atlascode:rovoDevEnabled && webviewId == 'atlascode.views.jira.createWorkItemWebview' && webviewSection == 'createButton'"
+                },
+                {
+                    "command": "atlascode.jira.copyImageElement",
+                    "when": "webviewSection == 'jiraImageElement'"
                 }
             ]
         },
