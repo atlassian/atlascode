@@ -20,6 +20,7 @@ const mockRenderProps = {
     checkFileExists: jest.fn(),
     isRetryAfterErrorButtonEnabled: jest.fn(),
     retryPromptAfterError: jest.fn(),
+    onOpenLogFile: jest.fn(),
 };
 
 const mockCurrentState: State = {

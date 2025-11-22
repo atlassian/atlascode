@@ -23,6 +23,7 @@ interface ChatItemProps {
         checkFileExists: CheckFileExistsFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
+        onOpenLogFile: () => void;
     };
     drawerOpen: boolean;
     onLinkClick: (href: string) => void;
@@ -97,6 +98,7 @@ export const ChatItem = React.memo<ChatItemProps>(
                     retryAfterError={renderProps.retryPromptAfterError}
                     onToolPermissionChoice={onToolPermissionChoice}
                     customButton={customButton}
+                    onOpenLogFile={renderProps.onOpenLogFile}
                 />
             );
         } else if (block.event_kind === '_RovoDevPullRequest') {

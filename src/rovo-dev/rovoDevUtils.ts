@@ -42,6 +42,29 @@ export async function openRovoDevConfigFile(configFile: SupportedConfigFiles) {
     }
 }
 
+function getRovoDevLogFilePath(): string | undefined {
+    const home = process.env.HOME || process.env.USERPROFILE;
+    if (!home) {
+        return undefined;
+    }
+    return path.join(home, '.rovodev', 'rovodev.log');
+}
+
+export function readLastNLogLines(n: number = 10): string[] {
+    const logFilePath = getRovoDevLogFilePath();
+    if (!logFilePath || !fs.existsSync(logFilePath)) {
+        return ['rovo dev log file could not be found'];
+    }
+
+    try {
+        const content = fs.readFileSync(logFilePath, 'utf-8');
+        const lines = content.split('\n').filter((line) => line.trim() !== '');
+        return lines.slice(-n);
+    } catch (err) {
+        return [`error reading rovo dev log file: ${err}`];
+    }
+}
+
 export function statusJsonResponseToMarkdown(response: RovoDevStatusResponse): string {
     const data = response.data;
 

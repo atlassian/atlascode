@@ -35,6 +35,7 @@ export const enum RovoDevViewResponseType {
     YoloModeToggled = 'yoloModeToggled',
     FilterModifiedFilesByContent = 'filterModifiedFilesByContent',
     OpenExternalLink = 'openExternalLink',
+    OpenRovoDevLogFile = 'openRovoDevLogFile',
 }
 
 export type FileOperationType = 'modify' | 'create' | 'delete';
@@ -83,4 +84,5 @@ export type RovoDevViewResponse =
       >
     | ReducerAction<RovoDevViewResponseType.YoloModeToggled, { value: boolean }>
     | ReducerAction<RovoDevViewResponseType.FilterModifiedFilesByContent, { files: ModifiedFile[] }>
-    | ReducerAction<RovoDevViewResponseType.OpenExternalLink, { href: string }>;
+    | ReducerAction<RovoDevViewResponseType.OpenExternalLink, { href: string }>
+    | ReducerAction<RovoDevViewResponseType.OpenRovoDevLogFile>;

@@ -93,6 +93,16 @@ jest.mock('../../src/rovo-dev/rovoDevTelemetryProvider', () => ({
     })),
 }));
 
+jest.mock('./rovoDevUtils', () => ({
+    readLastNLogLines: jest.fn(() => ['mock log line 1', 'mock log line 2']),
+    openRovoDevConfigFile: jest.fn(),
+}));
+
+jest.mock('./errorDetailsBuilder', () => ({
+    buildErrorDetails: jest.fn((error: Error) => `Stack trace for: ${error.message}`),
+    buildExceptionDetails: jest.fn(),
+}));
+
 jest.mock('../../src/rovo-dev/rovoDevChatProvider', () => ({
     RovoDevChatProvider: jest.fn().mockImplementation(() => ({
         setWebview: jest.fn(),
