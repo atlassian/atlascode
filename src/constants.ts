@@ -100,6 +100,7 @@ export const enum Commands {
 
     // Extension management commands
     AddRecommendedExtension = 'atlascode.addRecommendedExtension',
+    OpenRovoDevLogFile = 'OpenRovoDevLogFile',
 }
 
 // Jira projects field pagination
