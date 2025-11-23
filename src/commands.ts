@@ -117,9 +117,8 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 ),
         ),
         commands.registerCommand(Commands.ViewDiff, async (...diffArgs: [() => {}, Uri, Uri, string]) => {
-            viewScreenEvent(Registry.screen.pullRequestDiffScreen, undefined, ProductBitbucket).then((e) => {
-                Container.analyticsClient.sendScreenEvent(e);
-            });
+            const e = await viewScreenEvent(Registry.screen.pullRequestDiffScreen, undefined, ProductBitbucket);
+            Container.analyticsClient.sendScreenEvent(e);
             diffArgs[0]();
             commands.executeCommand('vscode.diff', ...diffArgs.slice(1));
         }),
@@ -133,16 +132,19 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             Container.pipelinesSummaryWebview.createOrShow(pipelineInfo.uuid, pipelineInfo);
         }),
         commands.registerCommand(Commands.DebugBitbucketSites, showBitbucketDebugInfo),
-        commands.registerCommand(Commands.WorkbenchOpenRepository, (source: string) => {
-            openWorkbenchRepositoryButtonEvent(source).then((event) => Container.analyticsClient.sendUIEvent(event));
+        commands.registerCommand(Commands.WorkbenchOpenRepository, async (source: string) => {
+            const e = await openWorkbenchRepositoryButtonEvent(source);
+            Container.analyticsClient.sendUIEvent(e);
             commands.executeCommand('workbench.action.addRootFolder');
         }),
         commands.registerCommand(Commands.WorkbenchOpenWorkspace, (source: string) => {
-            openWorkbenchWorkspaceButtonEvent(source).then((event) => Container.analyticsClient.sendUIEvent(event));
+            const e = await openWorkbenchWorkspaceButtonEvent(source);
+            Container.analyticsClient.sendUIEvent(e);
             commands.executeCommand('workbench.action.openWorkspace');
         }),
         commands.registerCommand(Commands.CloneRepository, async (source: string, repoUrl?: string) => {
-            cloneRepositoryButtonEvent(source).then((event) => Container.analyticsClient.sendUIEvent(event));
+            const e = cloneRepositoryButtonEvent(source);
+            Container.analyticsClient.sendUIEvent(e);
             await commands.executeCommand('git.clone', repoUrl);
         }),
         commands.registerCommand(Commands.DisableHelpExplorer, () => {
