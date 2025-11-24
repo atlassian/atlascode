@@ -49,7 +49,14 @@ import {
     isUpdateWorklog,
     TransitionChildIssueAction,
 } from '../ipc/issueActions';
-import { EditIssueData, emptyEditIssueData } from '../ipc/issueMessaging';
+import {
+    BranchInfo,
+    BuildInfo,
+    CommitInfo,
+    DevelopmentInfo,
+    EditIssueData,
+    emptyEditIssueData,
+} from '../ipc/issueMessaging';
 import { Action } from '../ipc/messaging';
 import { isOpenExternalUrl, isOpenPullRequest } from '../ipc/prActions';
 import { fetchEditIssueUI, fetchMinimalIssue } from '../jira/fetchIssue';
@@ -378,13 +385,8 @@ export class JiraIssueWebview
         return deduplicated;
     }
 
-    private async fetchJiraDevelopmentInfo(): Promise<{
-        branches: any[];
-        commits: any[];
-        pullRequests: any[];
-        builds: any[];
-    }> {
-        const emptyResult = { branches: [], commits: [], pullRequests: [], builds: [] };
+    private async fetchJiraDevelopmentInfo(): Promise<DevelopmentInfo> {
+        const emptyResult: DevelopmentInfo = { branches: [], commits: [], pullRequests: [], builds: [] };
 
         try {
             if (!this._issue.siteDetails.isCloud) {
@@ -418,16 +420,11 @@ export class JiraIssueWebview
         }
     }
 
-    private parseDevStatusData(devData: any): {
-        branches: any[];
-        commits: any[];
-        pullRequests: any[];
-        builds: any[];
-    } {
-        const branches: any[] = [];
-        const commits: any[] = [];
+    private parseDevStatusData(devData: any): DevelopmentInfo {
+        const branches: BranchInfo[] = [];
+        const commits: CommitInfo[] = [];
         const pullRequests: any[] = [];
-        const builds: any[] = [];
+        const builds: BuildInfo[] = [];
 
         // Parse development data
         if (devData.detail && devData.detail.length > 0) {
@@ -509,8 +506,6 @@ export class JiraIssueWebview
                                             name: build.name || build.buildNumber,
                                             key: build.buildNumber,
                                             state: build.state,
-                                            url: build.url,
-                                            ts: build.lastUpdated,
                                         });
                                     }
                                 }
