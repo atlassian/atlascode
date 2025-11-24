@@ -28,8 +28,6 @@ import { RovoDevLogger } from './util/rovoDevLogger';
 
 type StreamingApi = 'chat' | 'replay';
 
-const PromptCommands = ['/prune', '/clear', '/status'];
-
 export class RovoDevChatProvider {
     private readonly extensionApi = new ExtensionApi();
     private readonly isDebugging = this.extensionApi.metadata.isDebugging();
@@ -116,7 +114,7 @@ export class RovoDevChatProvider {
         // remove hidden focused item from the context
         context = context.filter((x) => x.contextType !== 'file' || x.enabled);
 
-        const isCommand = PromptCommands.includes(text.trim());
+        const isCommand = text.trim().startsWith('/');
         if (isCommand) {
             enable_deep_plan = false;
             context = [];
@@ -496,6 +494,11 @@ export class RovoDevChatProvider {
 
             case 'close':
                 // response terminated
+                break;
+
+            case 'replay_end':
+                // signals that the replay has ended, and the API is now streaming live data
+                // NOTE: ignore for now
                 break;
 
             default:
