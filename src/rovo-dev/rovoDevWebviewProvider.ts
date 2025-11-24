@@ -1,12 +1,14 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import * as fs from 'fs';
 import path from 'path';
+import { Commands } from 'src/constants';
 import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { safeWaitFor } from 'src/rovo-dev/util/waitFor';
 import { v4 } from 'uuid';
 import {
     CancellationToken,
+    commands,
     ConfigurationChangeEvent,
     Disposable,
     env,
@@ -27,6 +29,7 @@ import { GitErrorCodes } from '../typings/git';
 import { RovodevCommandContext } from './api/componentApi';
 import { DetailedSiteInfo, ExtensionApi } from './api/extensionApi';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './client';
+import { buildErrorDetails } from './errorDetailsBuilder';
 import { RovoDevChatContextProvider } from './rovoDevChatContextProvider';
 import { RovoDevChatProvider } from './rovoDevChatProvider';
 import { RovoDevContentTracker } from './rovoDevContentTracker';
@@ -37,6 +40,7 @@ import { RovoDevProcessManager, RovoDevProcessState } from './rovoDevProcessMana
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import { RovoDevContextItem } from './rovoDevTypes';
+import { readLastNLogLines } from './rovoDevUtils';
 import {
     RovoDevDisabledReason,
     RovoDevEntitlementCheckFailedDetail,
@@ -476,6 +480,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await env.openExternal(Uri.parse(e.href));
                         break;
 
+                    case RovoDevViewResponseType.OpenRovoDevLogFile:
+                        await commands.executeCommand(Commands.OpenRovoDevLogFile);
+                        break;
+
                     default:
                         // @ts-expect-error ts(2339) - e here should be 'never'
                         this.processError(new Error(`Unknown message type: ${e.type}`));
@@ -542,6 +550,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 isRetriable,
                 isProcessTerminated,
                 uid: v4(),
+                stackTrace: buildErrorDetails(error),
+                rovoDevLogs: readLastNLogLines(),
             },
         });
     }
