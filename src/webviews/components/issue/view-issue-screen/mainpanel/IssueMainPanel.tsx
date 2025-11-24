@@ -139,6 +139,12 @@ const IssueMainPanel: React.FC<Props> = ({
         }
     };
 
+    const handleAssigneeChange = (issueKey: string, assignee: any) => {
+        if (onIssueUpdate) {
+            onIssueUpdate(issueKey, 'assignee', assignee);
+        }
+    };
+
     const handleConfirmDeleteWorklog = (worklog: any) => {
         handleInlineEdit(fields['worklog'], {
             action: 'deleteWorklog',
@@ -358,6 +364,8 @@ const IssueMainPanel: React.FC<Props> = ({
                         onDelete={onDelete}
                         enableLinkedIssues={{ enable: enableLinkedIssues, setEnableLinkedIssues }}
                         onStatusChange={handleStatusChange}
+                        onAssigneeChange={handleAssigneeChange}
+                        fetchUsers={fetchUsers}
                     />
                 </div>
             )}

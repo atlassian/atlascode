@@ -1,7 +1,7 @@
 import Button from '@atlaskit/button';
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
-import { IssueLinkIssue, MinimalIssueLink, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
+import { IssueLinkIssue, MinimalIssueLink, MinimalIssueOrKeyAndSite, User } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
@@ -12,6 +12,8 @@ type LinkedIssuesProps = {
     onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => void;
     onDelete: (issueLink: any) => void;
     onStatusChange?: (issueKey: string, statusName: string) => void;
+    onAssigneeChange?: (issueKey: string, assignee: User | null) => void;
+    fetchUsers?: (input: string) => Promise<User[]>;
 };
 
 type ItemData = {
@@ -55,6 +57,8 @@ export const LinkedIssues: React.FunctionComponent<LinkedIssuesProps> = ({
     onIssueClick,
     onDelete,
     onStatusChange,
+    onAssigneeChange,
+    fetchUsers,
 }) => {
     return (
         <TableTree
@@ -69,6 +73,8 @@ export const LinkedIssues: React.FunctionComponent<LinkedIssuesProps> = ({
                         onIssueClick: onIssueClick,
                         onDelete: onDelete,
                         onStatusChange: onStatusChange,
+                        onAssigneeChange: onAssigneeChange,
+                        fetchUsers: fetchUsers,
                     },
                 };
             })}
