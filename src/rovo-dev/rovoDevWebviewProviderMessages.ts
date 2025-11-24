@@ -1,6 +1,4 @@
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
-
-import { DetailedSiteInfo } from './api/extensionApi';
+import { DetailedSiteInfo, MinimalIssue } from './api/extensionApi';
 import {
     EntitlementCheckRovoDevHealthcheckResponse,
     RovoDevRetryPromptResponse,

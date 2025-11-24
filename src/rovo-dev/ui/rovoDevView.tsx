@@ -3,7 +3,6 @@ import './RovoDevCodeHighlighting.css';
 
 import InformationCircleIcon from '@atlaskit/icon/core/information-circle';
 import { setGlobalTheme } from '@atlaskit/tokens';
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
@@ -12,7 +11,7 @@ import { RovoDevToolReturnResponse } from 'src/rovo-dev/client';
 import { RovoDevContextItem, State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
-import { DetailedSiteInfo } from '../api/extensionApiTypes';
+import { DetailedSiteInfo, MinimalIssue } from '../api/extensionApiTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../rovoDevWebviewProviderMessages';
 import { FeedbackType } from './feedback-form/FeedbackForm';
 import { ChatStream } from './messaging/ChatStream';
