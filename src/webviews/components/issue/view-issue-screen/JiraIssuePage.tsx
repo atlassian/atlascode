@@ -11,7 +11,12 @@ import { v4 } from 'uuid';
 
 import { AnalyticsView } from '../../../../analyticsTypes';
 import { EditIssueAction, IssueCommentAction, OpenRovoDevWithIssueAction } from '../../../../ipc/issueActions';
-import { EditIssueData, emptyEditIssueData, isIssueCreated } from '../../../../ipc/issueMessaging';
+import {
+    EditIssueData,
+    emptyDevelopmentInfo,
+    emptyEditIssueData,
+    isIssueCreated,
+} from '../../../../ipc/issueMessaging';
 import { IssueHistoryItem } from '../../../../ipc/issueMessaging';
 import { LegacyPMFData } from '../../../../ipc/messaging';
 import { AtlascodeErrorBoundary } from '../../../../react/atlascode/common/ErrorBoundary';
@@ -30,6 +35,7 @@ import {
     MentionInfo,
 } from '../AbstractIssueEditorPage';
 import { AtlascodeMentionProvider } from '../common/AtlaskitEditor/AtlascodeMentionsProvider';
+import { Development } from '../Development';
 import NavItem from '../NavItem';
 import PullRequests from '../PullRequests';
 import { EditorStateProvider } from './EditorStateContext';
@@ -130,6 +136,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 }
                 case 'pullRequestUpdate': {
                     this.setState({ recentPullRequests: e.recentPullRequests });
+                    break;
+                }
+                case 'developmentInfoUpdate': {
+                    this.setState({ developmentInfo: e.developmentInfo });
                     break;
                 }
                 case 'currentUserUpdate': {
@@ -802,6 +812,29 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         ),
                     };
                 });
+        }
+
+        const developmentInfo = this.state.developmentInfo || emptyDevelopmentInfo;
+        const totalDevCount =
+            (developmentInfo.branches?.length || 0) +
+            (developmentInfo.commits?.length || 0) +
+            (developmentInfo.pullRequests?.length || 0) +
+            (developmentInfo.builds?.length || 0);
+
+        if (this.state.siteDetails.isCloud && totalDevCount > 0) {
+            const parentIndex = commonItems.findIndex((item) => item.itemLabel === 'Parent');
+            const insertIndex = parentIndex >= 0 ? parentIndex + 1 : commonItems.length;
+
+            commonItems.splice(insertIndex, 0, {
+                itemLabel: 'Development',
+                itemComponent: (
+                    <Development
+                        developmentInfo={developmentInfo}
+                        onOpenPullRequest={(pr: any) => this.postMessage({ action: 'openPullRequest', prHref: pr.url })}
+                        onOpenExternalUrl={(url: string) => this.postMessage({ action: 'openExternalUrl', url })}
+                    />
+                ),
+            });
         }
 
         const advancedItems: SidebarItem[] = this.advancedSidebarFields
