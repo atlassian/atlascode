@@ -12,6 +12,7 @@ import {
     RovoDevResponseParser,
     ToolPermissionChoice,
 } from './client';
+import { buildErrorDetails, buildExceptionDetails } from './errorDetailsBuilder';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import {
     RovoDevContextItem,
@@ -20,7 +21,7 @@ import {
     RovoDevPrompt,
     TechnicalPlan,
 } from './rovoDevTypes';
-import { parseCustomCliTagsForMarkdown, statusJsonResponseToMarkdown } from './rovoDevUtils';
+import { parseCustomCliTagsForMarkdown, readLastNLogLines, statusJsonResponseToMarkdown } from './rovoDevUtils';
 import { TypedWebview } from './rovoDevWebviewProvider';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from './rovoDevWebviewProviderMessages';
 import { RovoDevLogger } from './util/rovoDevLogger';
@@ -401,6 +402,8 @@ export class RovoDevChatProvider {
                         ctaLink: link,
                         statusCode: `Error code: ${response.type}`,
                         uid: v4(),
+                        stackTrace: buildExceptionDetails(response),
+                        rovoDevLogs: readLastNLogLines(),
                     },
                 });
                 break;
@@ -579,6 +582,8 @@ export class RovoDevChatProvider {
                     isRetriable,
                     isProcessTerminated,
                     uid: v4(),
+                    stackTrace: buildErrorDetails(error),
+                    rovoDevLogs: readLastNLogLines(),
                 },
             });
         }

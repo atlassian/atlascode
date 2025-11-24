@@ -1,11 +1,10 @@
-import { performanceEvent } from '../analytics';
 import Perf from '../util/perf';
+import { RovodevAnalyticsApi } from './analytics/rovodevAnalyticsApi';
 import { ExtensionApi } from './api/extensionApi';
 import { PerformanceLogger } from './performanceLogger';
 import { RovoDevLogger } from './util/rovoDevLogger';
 
 // Mock dependencies
-jest.mock('../analytics');
 jest.mock('./util/rovoDevLogger');
 jest.mock('../util/perf');
 jest.mock('./api/extensionApi', () => {
@@ -14,13 +13,13 @@ jest.mock('./api/extensionApi', () => {
     };
 });
 
-const mockPerformanceEvent = performanceEvent as jest.MockedFunction<typeof performanceEvent>;
+const mockPerformanceEvent = jest.fn();
 const mockLogger = RovoDevLogger as jest.Mocked<typeof RovoDevLogger>;
 const mockPerf = Perf as jest.Mocked<typeof Perf>;
 
 describe('PerformanceLogger', () => {
     let performanceLogger: PerformanceLogger;
-    let mockAnalyticsClient: { sendTrackEvent: jest.Mock };
+    let mockAnalyticsClient: jest.Mocked<RovodevAnalyticsApi>;
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -28,6 +27,7 @@ describe('PerformanceLogger', () => {
         // Setup mock analytics client
         mockAnalyticsClient = {
             sendTrackEvent: jest.fn().mockResolvedValue(undefined),
+            performanceEvent: mockPerformanceEvent,
         };
 
         // Mock ExtensionApi constructor to return an instance with analytics
