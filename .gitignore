@@ -29,3 +29,6 @@ resources/rovo-dev/*
 !.vscode/launch.json.example
 !.vscode/tasks.json.example
 /.idea/
+
+#Ignore vscode AI rules
+.github\instructions\codacy.instructions.md

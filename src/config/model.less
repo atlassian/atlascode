@@ -47,7 +47,6 @@ export interface RovoDevConfig {
     enabled: boolean;
     debugPanelEnabled: boolean;
     thinkingBlockEnabled: boolean;
-    showEntitlementNotifications: boolean;
 }
 
 export interface JiraConfig {
@@ -219,10 +218,9 @@ const emptyJiraConfig: JiraConfig = {
 };
 
 const emptyRovoDevConfig: RovoDevConfig = {
-    enabled: true,
+    enabled: false,
     debugPanelEnabled: false,
     thinkingBlockEnabled: false,
-    showEntitlementNotifications: false,
 };
 
 const emptyRelatedJiraIssues: BitbucketRelatedJiraIssues = {
