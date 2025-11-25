@@ -7,9 +7,16 @@ import { PullRequestChatItem, PullRequestForm } from './PullRequestForm';
 
 const mockPostMessage = jest.fn();
 const mockPostMessagePromise = jest.fn();
+const mockSetState = jest.fn();
 const mockOnCancel = jest.fn();
 const mockOnPullRequestCreated = jest.fn();
 const mockSetFormVisible = jest.fn();
+
+const mockMessagingApi = {
+    postMessage: mockPostMessage,
+    postMessagePromise: mockPostMessagePromise,
+    setState: mockSetState,
+};
 
 describe('PullRequestForm', () => {
     beforeEach(() => {
@@ -20,7 +27,7 @@ describe('PullRequestForm', () => {
         render(
             <PullRequestForm
                 onCancel={mockOnCancel}
-                messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                messagingApi={mockMessagingApi}
                 onPullRequestCreated={mockOnPullRequestCreated}
                 isFormVisible={false}
                 setFormVisible={mockSetFormVisible}
@@ -34,7 +41,7 @@ describe('PullRequestForm', () => {
         render(
             <PullRequestForm
                 onCancel={mockOnCancel}
-                messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                messagingApi={mockMessagingApi}
                 onPullRequestCreated={mockOnPullRequestCreated}
                 isFormVisible={true}
                 setFormVisible={mockSetFormVisible}
@@ -53,7 +60,7 @@ describe('PullRequestForm', () => {
         render(
             <PullRequestForm
                 onCancel={mockOnCancel}
-                messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                messagingApi={mockMessagingApi}
                 onPullRequestCreated={mockOnPullRequestCreated}
                 isFormVisible={false}
                 setFormVisible={mockSetFormVisible}
@@ -76,7 +83,7 @@ describe('PullRequestForm', () => {
         render(
             <PullRequestForm
                 onCancel={mockOnCancel}
-                messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                messagingApi={mockMessagingApi}
                 onPullRequestCreated={mockOnPullRequestCreated}
                 isFormVisible={true}
             />,
@@ -92,7 +99,7 @@ describe('PullRequestForm', () => {
         render(
             <PullRequestForm
                 onCancel={mockOnCancel}
-                messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                messagingApi={mockMessagingApi}
                 onPullRequestCreated={mockOnPullRequestCreated}
                 isFormVisible={true}
             />,
@@ -124,7 +131,7 @@ describe('PullRequestForm', () => {
         render(
             <PullRequestForm
                 onCancel={mockOnCancel}
-                messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                messagingApi={mockMessagingApi}
                 onPullRequestCreated={mockOnPullRequestCreated}
                 isFormVisible={true}
             />,
@@ -149,7 +156,7 @@ describe('PullRequestForm', () => {
         render(
             <PullRequestForm
                 onCancel={mockOnCancel}
-                messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                messagingApi={mockMessagingApi}
                 onPullRequestCreated={mockOnPullRequestCreated}
                 isFormVisible={true}
             />,
@@ -178,7 +185,7 @@ describe('PullRequestForm', () => {
             render(
                 <PullRequestForm
                     onCancel={mockOnCancel}
-                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    messagingApi={mockMessagingApi}
                     onPullRequestCreated={mockOnPullRequestCreated}
                     isFormVisible={true}
                 />,
@@ -193,7 +200,7 @@ describe('PullRequestForm', () => {
             render(
                 <PullRequestForm
                     onCancel={mockOnCancel}
-                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    messagingApi={mockMessagingApi}
                     onPullRequestCreated={mockOnPullRequestCreated}
                     isFormVisible={true}
                 />,
@@ -207,7 +214,7 @@ describe('PullRequestForm', () => {
             render(
                 <PullRequestForm
                     onCancel={mockOnCancel}
-                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    messagingApi={mockMessagingApi}
                     onPullRequestCreated={mockOnPullRequestCreated}
                     isFormVisible={true}
                 />,
@@ -223,7 +230,7 @@ describe('PullRequestForm', () => {
             render(
                 <PullRequestForm
                     onCancel={mockOnCancel}
-                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    messagingApi={mockMessagingApi}
                     onPullRequestCreated={mockOnPullRequestCreated}
                     isFormVisible={false}
                     setFormVisible={mockSetFormVisible}
@@ -239,7 +246,7 @@ describe('PullRequestForm', () => {
             render(
                 <PullRequestForm
                     onCancel={mockOnCancel}
-                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    messagingApi={mockMessagingApi}
                     onPullRequestCreated={mockOnPullRequestCreated}
                     isFormVisible={true}
                 />,
@@ -265,7 +272,7 @@ describe('PullRequestForm', () => {
             render(
                 <PullRequestForm
                     onCancel={mockOnCancel}
-                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    messagingApi={mockMessagingApi}
                     onPullRequestCreated={mockOnPullRequestCreated}
                     isFormVisible={true}
                 />,
@@ -293,7 +300,7 @@ describe('PullRequestForm', () => {
             render(
                 <PullRequestForm
                     onCancel={mockOnCancel}
-                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    messagingApi={mockMessagingApi}
                     onPullRequestCreated={mockOnPullRequestCreated}
                     isFormVisible={true}
                 />,
@@ -318,7 +325,7 @@ describe('PullRequestForm', () => {
             render(
                 <PullRequestForm
                     onCancel={mockOnCancel}
-                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    messagingApi={mockMessagingApi}
                     onPullRequestCreated={mockOnPullRequestCreated}
                     isFormVisible={false}
                     setFormVisible={mockSetFormVisible}
@@ -342,7 +349,7 @@ describe('PullRequestForm', () => {
             render(
                 <PullRequestForm
                     onCancel={mockOnCancel}
-                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    messagingApi={mockMessagingApi}
                     onPullRequestCreated={mockOnPullRequestCreated}
                     isFormVisible={false}
                     setFormVisible={mockSetFormVisible}
@@ -364,7 +371,7 @@ describe('PullRequestForm', () => {
             render(
                 <PullRequestForm
                     onCancel={mockOnCancel}
-                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    messagingApi={mockMessagingApi}
                     onPullRequestCreated={mockOnPullRequestCreated}
                     isFormVisible={true}
                 />,
@@ -397,7 +404,7 @@ describe('PullRequestForm', () => {
             render(
                 <PullRequestForm
                     onCancel={mockOnCancel}
-                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    messagingApi={mockMessagingApi}
                     onPullRequestCreated={mockOnPullRequestCreated}
                     isFormVisible={true}
                 />,
@@ -430,7 +437,7 @@ describe('PullRequestForm', () => {
             render(
                 <PullRequestForm
                     onCancel={mockOnCancel}
-                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    messagingApi={mockMessagingApi}
                     onPullRequestCreated={mockOnPullRequestCreated}
                     isFormVisible={true}
                 />,
@@ -463,7 +470,7 @@ describe('PullRequestForm', () => {
             render(
                 <PullRequestForm
                     onCancel={mockOnCancel}
-                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    messagingApi={mockMessagingApi}
                     onPullRequestCreated={mockOnPullRequestCreated}
                     isFormVisible={false}
                 />,
@@ -478,7 +485,7 @@ describe('PullRequestForm', () => {
             const { rerender } = render(
                 <PullRequestForm
                     onCancel={mockOnCancel}
-                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    messagingApi={mockMessagingApi}
                     onPullRequestCreated={mockOnPullRequestCreated}
                     isFormVisible={false}
                     setFormVisible={mockSetFormVisible}
@@ -491,7 +498,7 @@ describe('PullRequestForm', () => {
             rerender(
                 <PullRequestForm
                     onCancel={mockOnCancel}
-                    messagingApi={{ postMessage: mockPostMessage, postMessagePromise: mockPostMessagePromise }}
+                    messagingApi={mockMessagingApi}
                     onPullRequestCreated={mockOnPullRequestCreated}
                     isFormVisible={true}
                     setFormVisible={mockSetFormVisible}
