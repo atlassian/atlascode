@@ -46,7 +46,7 @@
     ],
     "main": "./build/extension/extension",
     "rovoDev": {
-        "version": "0.12.16"
+        "version": "0.13.4"
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
@@ -596,12 +596,6 @@
                     "id": "atlascode.views.helpTreeView",
                     "name": "Help and Feedback",
                     "when": "!atlascode:bbyEnvironmentActive && config.atlascode.helpExplorerEnabled"
-                },
-                {
-                    "id": "atlascode.views.jira.createWorkItemWebview",
-                    "name": "Create Jira Work Item",
-                    "type": "webview",
-                    "when": "!atlascode:bbyEnvironmentActive && config.atlascode.jira.enabled && atlascode:showCreateWorkItemWebview"
                 }
             ],
             "atlascode-rovo-dev": [
@@ -610,6 +604,14 @@
                     "name": "Rovo Dev",
                     "type": "webview",
                     "when": "atlascode:rovoDevEnabled"
+                }
+            ],
+            "atlascode-jira-work-item": [
+                {
+                    "id": "atlascode.views.jira.createWorkItemWebview",
+                    "name": "Create Jira Work Item",
+                    "type": "webview",
+                    "when": "!atlascode:bbyEnvironmentActive && config.atlascode.jira.enabled && atlascode:showCreateWorkItemWebview"
                 }
             ]
         },

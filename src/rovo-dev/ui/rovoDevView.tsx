@@ -428,24 +428,6 @@ const RovoDevView: React.FC = () => {
                     setThinkingBlockEnabled(() => event.enabled);
                     break;
 
-                case RovoDevProviderMessageType.RestoreState:
-                    if (event.state.history) {
-                        setHistory(event.state.history);
-                    }
-                    if (event.state.isDeepPlanCreated !== undefined) {
-                        setIsDeepPlanCreated(event.state.isDeepPlanCreated);
-                    }
-                    if (event.state.isDeepPlanToggled !== undefined) {
-                        setIsDeepPlanToggled(event.state.isDeepPlanToggled);
-                    }
-                    if (event.state.isYoloModeToggled !== undefined) {
-                        setIsYoloModeToggled(event.state.isYoloModeToggled);
-                    }
-                    if (event.state.promptContextCollection) {
-                        setPromptContextCollection(event.state.promptContextCollection);
-                    }
-                    break;
-
                 default:
                     // this is never supposed to happen since there aren't other type of messages
                     handleAppendResponse({
@@ -462,7 +444,7 @@ const RovoDevView: React.FC = () => {
         [handleAppendResponse, currentState.state, setSummaryMessageInHistory, clearChatHistory],
     );
 
-    const { postMessage, postMessagePromise, setState } = useMessagingApi<
+    const { postMessage, postMessagePromise } = useMessagingApi<
         RovoDevViewResponse,
         RovoDevProviderMessage,
         RovoDevProviderMessage
@@ -488,17 +470,6 @@ const RovoDevView: React.FC = () => {
             setPendingFilesForFiltering(null);
         }
     }, [pendingFilesForFiltering, postMessage]);
-
-    // Effect to save webview state when moved between panels
-    React.useEffect(() => {
-        setState({
-            history,
-            isDeepPlanCreated,
-            isDeepPlanToggled,
-            isYoloModeToggled,
-            promptContextCollection,
-        });
-    }, [history, isDeepPlanCreated, isDeepPlanToggled, isYoloModeToggled, promptContextCollection, setState]);
 
     const sendPrompt = useCallback(
         (text: string): boolean => {
@@ -911,7 +882,6 @@ const RovoDevView: React.FC = () => {
                     messagingApi={{
                         postMessage,
                         postMessagePromise,
-                        setState,
                     }}
                     pendingToolCall={pendingToolCallMessage}
                     deepPlanCreated={isDeepPlanCreated}

@@ -11,7 +11,7 @@ import {
 } from './client';
 import { DisabledState, RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 import { ModifiedFile } from './ui/rovoDevViewMessages';
-import { ChatMessage, DialogMessage } from './ui/utils';
+import { DialogMessage } from './ui/utils';
 
 export const enum RovoDevProviderMessageType {
     RovoDevDisabled = 'rovoDevDisabled',
@@ -38,7 +38,6 @@ export const enum RovoDevProviderMessageType {
     SetJiraWorkItems = 'setJiraWorkItems',
     CheckFileExistsComplete = 'checkFileExistsComplete',
     SetThinkingBlockEnabled = 'setThinkingBlockEnabled',
-    RestoreState = 'restoreState',
 }
 
 export type RovoDevDisabledReason = DisabledState['subState'];
@@ -50,14 +49,6 @@ export type RovoDevResponseMessageType =
     | RovoDevToolCallResponse
     | RovoDevToolReturnResponse
     | RovoDevRetryPromptResponse;
-
-export interface RovoDevWebviewState {
-    history: ChatMessage[];
-    isDeepPlanCreated: boolean;
-    isDeepPlanToggled: boolean;
-    isYoloModeToggled: boolean;
-    promptContextCollection: RovoDevContextItem[];
-}
 
 export type RovoDevProviderMessage =
     | ReducerAction<
@@ -104,5 +95,4 @@ export type RovoDevProviderMessage =
           RovoDevProviderMessageType.CheckFileExistsComplete,
           { requestId: string; filePath: string; exists: boolean }
       >
-    | ReducerAction<RovoDevProviderMessageType.SetThinkingBlockEnabled, { enabled: boolean }>
-    | ReducerAction<RovoDevProviderMessageType.RestoreState, { state: RovoDevWebviewState }>;
+    | ReducerAction<RovoDevProviderMessageType.SetThinkingBlockEnabled, { enabled: boolean }>;
