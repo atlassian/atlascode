@@ -42,7 +42,6 @@ export const QuickPickUtils = {
         return projects.map((project) => ({
             label: project.name || project.key || 'Unknown Project',
             description: project.key || '',
-            detail: project.projectTypeKey || 'Standard',
             project,
         }));
     },
