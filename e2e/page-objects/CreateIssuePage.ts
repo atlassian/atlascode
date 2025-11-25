@@ -25,4 +25,9 @@ export class CreateIssuePage {
         await this.page.waitForTimeout(500);
         await createButton.click();
     }
+
+    async expectIssueCreated(issueKey: string) {
+        const newIssueFrame = this.page.frameLocator('iframe.webview').frameLocator(`iframe[title="${issueKey}"]`);
+        await expect(newIssueFrame.getByRole('heading', { name: issueKey })).toBeVisible();
+    }
 }

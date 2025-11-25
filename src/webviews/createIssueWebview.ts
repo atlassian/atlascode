@@ -7,7 +7,7 @@ import { startWorkOnIssue } from 'src/commands/jira/startWorkOnIssue';
 import timer from 'src/util/perf';
 import { commands, ConfigurationTarget, Disposable, Position, Uri, ViewColumn } from 'vscode';
 
-import { issueCreatedEvent } from '../analytics';
+import { issueCreatedEvent, issueOpenRovoDevEvent } from '../analytics';
 import { performanceEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { buildSuggestionSettings, IssueSuggestionManager } from '../commands/jira/issueSuggestionManager';
@@ -856,6 +856,10 @@ export class CreateIssueWebview
                                         url: issueUrl,
                                     },
                                 );
+
+                                issueOpenRovoDevEvent(msg.site, this.id).then((e) => {
+                                    Container.analyticsClient.sendTrackEvent(e);
+                                });
                             } else {
                                 await showIssue({ key: resp.key, siteDetails: msg.site });
                             }
