@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import FormData from 'form-data';
 import { startWorkOnIssue } from 'src/commands/jira/startWorkOnIssue';
 import timer from 'src/util/perf';
-import { commands, ConfigurationTarget, Disposable, Position, ProgressLocation, Uri, ViewColumn, window } from 'vscode';
+import { commands, ConfigurationTarget, Disposable, Position, Uri, ViewColumn } from 'vscode';
 
 import { issueCreatedEvent } from '../analytics';
 import { performanceEvent } from '../analytics';
@@ -788,100 +788,85 @@ export class CreateIssueWebview
                 case 'createIssue': {
                     handled = true;
                     if (isCreateIssue(msg)) {
-                        window.withProgress(
-                            {
-                                location: ProgressLocation.Notification,
-                                title: 'Creating work item...',
-                                cancellable: false,
-                            },
-                            async (progress, _token) => {
-                                try {
-                                    await configuration.setLastCreateSiteAndProject({
-                                        siteId: this._siteDetails.id,
-                                        projectKey: this._currentProject!.key,
-                                    });
-                                    const [payload, worklog, issuelinks, attachments] = this.formatCreatePayload(msg);
+                        try {
+                            await configuration.setLastCreateSiteAndProject({
+                                siteId: this._siteDetails.id,
+                                projectKey: this._currentProject!.key,
+                            });
+                            const [payload, worklog, issuelinks, attachments] = this.formatCreatePayload(msg);
 
-                                    // Handle parent payload
-                                    if (this._siteDetails.isCloud && payload.parent) {
-                                        payload.parent = {
-                                            id: payload.parent.id.toString(),
-                                            key: payload.parent.key,
-                                        };
+                            // Handle parent payload
+                            if (this._siteDetails.isCloud && payload.parent) {
+                                payload.parent = {
+                                    id: payload.parent.id.toString(),
+                                    key: payload.parent.key,
+                                };
+                            }
+
+                            const client = await Container.clientManager.jiraClient(msg.site);
+                            const resp = await client.createIssue({ fields: payload, update: worklog });
+
+                            issueCreatedEvent(msg.site, resp.key).then((e) => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
+
+                            if (issuelinks) {
+                                this.formatIssueLinks(resp.key, issuelinks).forEach(async (link: any) => {
+                                    await client.createIssueLink(resp.key, link);
+                                });
+                            }
+
+                            if (attachments && attachments.length > 0) {
+                                const formData = new FormData();
+                                attachments.forEach((file: any) => {
+                                    if (!file.fileContent) {
+                                        throw new Error(`Unable to read the file '${file.name}'`);
                                     }
-
-                                    const client = await Container.clientManager.jiraClient(msg.site);
-                                    const resp = await client.createIssue({ fields: payload, update: worklog });
-
-                                    issueCreatedEvent(msg.site, resp.key).then((e) => {
-                                        Container.analyticsClient.sendTrackEvent(e);
+                                    formData.append('file', Buffer.from(decode(file.fileContent)), {
+                                        filename: file.name,
+                                        contentType: file.type,
                                     });
+                                });
+                                await client.addAttachments(resp.key, formData);
+                            }
+                            // TODO: [VSCODE-601] add a new analytic event for issue updates
+                            commands.executeCommand(
+                                Commands.RefreshAssignedWorkItemsExplorer,
+                                OnJiraEditedRefreshDelay,
+                            );
+                            commands.executeCommand(Commands.RefreshCustomJqlExplorer, OnJiraEditedRefreshDelay);
 
-                                    if (issuelinks) {
-                                        this.formatIssueLinks(resp.key, issuelinks).forEach(async (link: any) => {
-                                            await client.createIssueLink(resp.key, link);
-                                        });
-                                    }
+                            this.postMessage({
+                                type: 'issueCreated',
+                                issueData: { ...resp, siteDetails: msg.site },
+                                nonce: msg.nonce,
+                            });
 
-                                    if (attachments && attachments.length > 0) {
-                                        const formData = new FormData();
-                                        attachments.forEach((file: any) => {
-                                            if (!file.fileContent) {
-                                                throw new Error(`Unable to read the file '${file.name}'`);
-                                            }
-                                            formData.append('file', Buffer.from(decode(file.fileContent)), {
-                                                filename: file.name,
-                                                contentType: file.type,
-                                            });
-                                        });
-                                        await client.addAttachments(resp.key, formData);
-                                    }
-                                    // TODO: [VSCODE-601] add a new analytic event for issue updates
-                                    commands.executeCommand(
-                                        Commands.RefreshAssignedWorkItemsExplorer,
-                                        OnJiraEditedRefreshDelay,
-                                    );
-                                    commands.executeCommand(
-                                        Commands.RefreshCustomJqlExplorer,
-                                        OnJiraEditedRefreshDelay,
-                                    );
+                            if (msg.onCreateAction === 'createAndStartWork') {
+                                await startWorkOnIssue({ key: resp.key, siteDetails: msg.site });
+                            } else if (msg.onCreateAction === 'createAndGenerateCode' && Container.isRovoDevEnabled) {
+                                const issueUrl = `${msg.site.baseLinkUrl}/browse/${resp.key}`;
+                                await Container.rovodevWebviewProvider.setPromptTextWithFocus(
+                                    'Work on the attached Jira work item',
+                                    {
+                                        contextType: 'jiraWorkItem',
+                                        name: resp.key,
+                                        url: issueUrl,
+                                    },
+                                );
+                            } else {
+                                await showIssue({ key: resp.key, siteDetails: msg.site });
+                            }
 
-                                    this.postMessage({
-                                        type: 'issueCreated',
-                                        issueData: { ...resp, siteDetails: msg.site },
-                                        nonce: msg.nonce,
-                                    });
-
-                                    if (msg.onCreateAction === 'createAndStartWork') {
-                                        await startWorkOnIssue({ key: resp.key, siteDetails: msg.site });
-                                    } else if (
-                                        msg.onCreateAction === 'createAndGenerateCode' &&
-                                        Container.isRovoDevEnabled
-                                    ) {
-                                        const issueUrl = `${msg.site.baseLinkUrl}/browse/${resp.key}`;
-                                        await Container.rovodevWebviewProvider.setPromptTextWithFocus(
-                                            'Work on the attached Jira work item',
-                                            {
-                                                contextType: 'jiraWorkItem',
-                                                name: resp.key,
-                                                url: issueUrl,
-                                            },
-                                        );
-                                    } else {
-                                        await showIssue({ key: resp.key, siteDetails: msg.site });
-                                    }
-
-                                    this.fireCallback(resp.key, payload.summary);
-                                } catch (e) {
-                                    Logger.error(e, 'Error creating issue');
-                                    this.postMessage({
-                                        type: 'error',
-                                        reason: this.formatErrorReason(e, 'Error creating issue'),
-                                        nonce: msg.nonce,
-                                    });
-                                }
-                            },
-                        );
+                            this.fireCallback(resp.key, payload.summary);
+                        } catch (e) {
+                            Logger.error(e, 'Error creating issue');
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Error creating issue'),
+                                nonce: msg.nonce,
+                            });
+                        }
                     }
                     break;
                 }
