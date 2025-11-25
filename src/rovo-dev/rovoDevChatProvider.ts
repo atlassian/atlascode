@@ -288,7 +288,8 @@ export class RovoDevChatProvider {
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        const parser = new RovoDevResponseParser();
+        // Use immediate streaming for better UX - don't merge text chunks
+        const parser = new RovoDevResponseParser({ mergeAllChunks: false });
 
         let isFirstByte = true;
         let isFirstMessage = true;
@@ -312,13 +313,19 @@ export class RovoDevChatProvider {
             }
 
             const data = decoder.decode(value, { stream: true });
-            for (const msg of parser.parse(data)) {
+            
+            // Process messages immediately as they arrive for faster streaming
+            const messages = Array.from(parser.parse(data));
+            for (const msg of messages) {
                 if (isFirstMessage) {
                     this._telemetryProvider.perfLogger.promptFirstMessageReceived(this._currentPromptId);
                     isFirstMessage = false;
                 }
 
-                await this.processRovoDevResponse('chat', msg);
+                // Use setImmediate to yield control and allow UI updates
+                setImmediate(async () => {
+                    await this.processRovoDevResponse('chat', msg);
+                });
             }
         }
     }
