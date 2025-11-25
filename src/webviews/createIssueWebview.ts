@@ -4,7 +4,7 @@ import { decode } from 'base64-arraybuffer-es6';
 import { format } from 'date-fns';
 import FormData from 'form-data';
 import timer from 'src/util/perf';
-import { commands, ConfigurationTarget, Position, Uri, ViewColumn, window } from 'vscode';
+import { commands, ConfigurationTarget, Disposable, Position, Uri, ViewColumn, window } from 'vscode';
 
 import { issueCreatedEvent } from '../analytics';
 import { performanceEvent } from '../analytics';
@@ -85,6 +85,7 @@ export class CreateIssueWebview
     private _issueSuggestionSettings: IssueSuggestionSettings | undefined;
     private _todoData: SimplifiedTodoIssueData | undefined;
     private _generatingSuggestions: boolean = false;
+    private _disposables: Disposable[] = [];
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -116,6 +117,8 @@ export class CreateIssueWebview
     private reset() {
         this._screenData = emptyCreateMetaResult;
         this._siteDetails = emptySiteInfo;
+        this._disposables.forEach((d) => d.dispose());
+        this._disposables = [];
     }
 
     override async createOrShow(
@@ -177,6 +180,17 @@ export class CreateIssueWebview
         });
     }
 
+    async initializeActions() {
+        this._disposables.push(
+            commands.registerCommand('atlascode.jira.createIssue.startWork', async () => {
+                await this.postMessage({ type: 'createIssueWithAction', action: 'createAndStartWork' });
+            }),
+            commands.registerCommand('atlascode.jira.createIssue.generateCode', async () => {
+                await this.postMessage({ type: 'createIssueWithAction', action: 'createAndGenerateCode' });
+            }),
+        );
+    }
+
     async initialize(data?: PartialIssue) {
         this._partialIssue = data;
 
@@ -189,6 +203,8 @@ export class CreateIssueWebview
         }
 
         await this.invalidate();
+
+        await this.initializeActions();
 
         await this.updateSuggestionData({
             suggestions: this._issueSuggestionSettings,

@@ -34,6 +34,7 @@ type Accept = CommonEditorPageAccept | CreateIssueData;
 interface ViewState extends CommonEditorViewState, CreateIssueData {
     createdIssue: IssueKeyAndSite<DetailedSiteInfo>;
     formKey: string;
+    onCreateAction: 'createAndView' | 'createAndStartWork' | 'createAndGenerateCode';
 }
 
 const emptyState: ViewState = {
@@ -41,6 +42,7 @@ const emptyState: ViewState = {
     ...emptyCreateIssueData,
     createdIssue: { key: '', siteDetails: emptySiteInfo },
     formKey: v4(),
+    onCreateAction: 'createAndView',
 };
 
 const fallbackTimerDuration = 5000; // 5 seconds
@@ -108,6 +110,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     private attachingInProgress = false;
     private initialFieldValues: FieldValues = {};
     private suggestionFallbackTimer: NodeJS.Timeout | null = null;
+    private formRef = React.createRef<HTMLFormElement>();
 
     getProjectKey(): string {
         return this.state.fieldValues['project'].key;
@@ -236,6 +239,15 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                     });
                     break;
                 }
+                case 'createIssueWithAction': {
+                    handled = true;
+
+                    this.setState({ onCreateAction: e.action }, () => {
+                        this.formRef.current?.requestSubmit();
+                        this.setState({ onCreateAction: 'createAndView' });
+                    });
+                    break;
+                }
             }
         }
 
@@ -300,6 +312,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
             action: 'createIssue',
             site: this.state.siteDetails,
             issueData: this.state.fieldValues,
+            onCreateAction: this.state.onCreateAction,
         });
 
         return undefined;
@@ -506,7 +519,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                 <Form name="create-issue" key={this.state.formKey} onSubmit={this.handleSubmit}>
                                     {(frmArgs: any) => {
                                         return (
-                                            <form {...frmArgs.formProps}>
+                                            <form {...frmArgs.formProps} ref={this.formRef}>
                                                 <FormHeader title={this.formHeader()}>
                                                     <p>
                                                         Required fields are marked with an asterisk <RequiredAsterisk />
@@ -544,7 +557,11 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                                     </Panel>
                                                 )}
                                                 <FormFooter actions={{}}>
-                                                    <CreateIssueButton type="submit" className="ac-button">
+                                                    <CreateIssueButton
+                                                        type="submit"
+                                                        className="ac-button"
+                                                        disabled={this.state.isSomethingLoading}
+                                                    >
                                                         Create
                                                     </CreateIssueButton>
                                                 </FormFooter>
