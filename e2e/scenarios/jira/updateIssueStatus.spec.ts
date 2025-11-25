@@ -19,7 +19,7 @@ export async function updateIssueStatus(page: Page, request: APIRequestContext, 
     await jiraIssuePage.status.expectEqual(CURRENT_STATUS);
 
     // setup mocks for next status
-    const cleanupIssueMock = await setupIssueMock(request, { status: NEXT_STATUS });
+    const cleanupIssueMock = await setupIssueMock(request, { status: NEXT_STATUS }, 'GET', type);
     const cleanupSearchMock = await setupSearchMock(request, NEXT_STATUS, type);
 
     await jiraIssuePage.status.changeTo(NEXT_STATUS);
