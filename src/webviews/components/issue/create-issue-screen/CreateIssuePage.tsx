@@ -559,6 +559,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                                 <FormFooter actions={{}}>
                                                     <CreateIssueButton
                                                         type="submit"
+                                                        name="Create"
                                                         className="ac-button"
                                                         disabled={this.state.isSomethingLoading}
                                                         isLoading={
