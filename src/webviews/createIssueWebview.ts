@@ -665,6 +665,11 @@ export class CreateIssueWebview
             delete rawAny['worklog'];
         }
 
+        if (rawAny['customfield_10001']) {
+            // special case for handling the team field from the system
+            rawAny['customfield_10001'] = rawAny['customfield_10001'].value;
+        }
+
         // Filter out fields that are not present on the current screen and drop empty values
         const allowedFieldKeys = this._selectedIssueTypeId
             ? Object.keys(this._screenData.issueTypeUIs[this._selectedIssueTypeId].fields)
