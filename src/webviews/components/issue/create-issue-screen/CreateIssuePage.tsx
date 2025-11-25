@@ -561,6 +561,10 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                                         type="submit"
                                                         className="ac-button"
                                                         disabled={this.state.isSomethingLoading}
+                                                        isLoading={
+                                                            this.state.isSomethingLoading &&
+                                                            this.state.loadingField === 'submitButton'
+                                                        }
                                                     >
                                                         Create
                                                     </CreateIssueButton>

@@ -1,7 +1,8 @@
 import ChevronDownIcon from '@atlaskit/icon/core/chevron-down';
+import Spinner from '@atlaskit/spinner';
 import React, { ButtonHTMLAttributes } from 'react';
 
-type CreateIssueButtonProps = ButtonHTMLAttributes<HTMLButtonElement>;
+type CreateIssueButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & { isLoading?: boolean };
 
 export const CreateIssueButton: React.FC<CreateIssueButtonProps> = (props) => {
     return (
@@ -25,8 +26,13 @@ export const CreateIssueButton: React.FC<CreateIssueButtonProps> = (props) => {
                 }}
             />
             <button
-                style={{ border: 'none', padding: '4px', color: 'var(--vscode-button-foreground)', cursor: 'pointer' }}
-                className="ac-button"
+                style={{
+                    border: 'none',
+                    padding: '6px',
+                    color: 'var(--vscode-button-foreground)',
+                    cursor: 'pointer',
+                }}
+                className="ac-button ac-button-spinner"
                 data-vscode-context='{"webviewSection": "createButton", "preventDefaultContextMenuItems": true}'
                 onClick={(e) => {
                     e.preventDefault();
@@ -40,7 +46,11 @@ export const CreateIssueButton: React.FC<CreateIssueButtonProps> = (props) => {
                     e.stopPropagation();
                 }}
             >
-                <ChevronDownIcon label="Create issue options" size="small" />
+                {props.isLoading ? (
+                    <Spinner size="small" label="Loading create issue options" />
+                ) : (
+                    <ChevronDownIcon label="Create issue options" size="small" />
+                )}
             </button>
         </div>
     );
