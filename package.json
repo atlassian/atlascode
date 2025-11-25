@@ -1083,6 +1083,18 @@
                 {
                     "command": "atlascode.jira.filter",
                     "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.createIssue.startWork",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.createIssue.generateCode",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.expandCreateWorkItem",
+                    "when": "false"
                 }
             ],
             "webview/context": [
