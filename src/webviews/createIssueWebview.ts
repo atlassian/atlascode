@@ -842,6 +842,8 @@ export class CreateIssueWebview
                                 nonce: msg.nonce,
                             });
 
+                            this.fireCallback(resp.key, payload.summary);
+
                             if (msg.onCreateAction === 'createAndStartWork') {
                                 await startWorkOnIssue({ key: resp.key, siteDetails: msg.site });
                             } else if (msg.onCreateAction === 'createAndGenerateCode' && Container.isRovoDevEnabled) {
@@ -857,8 +859,6 @@ export class CreateIssueWebview
                             } else {
                                 await showIssue({ key: resp.key, siteDetails: msg.site });
                             }
-
-                            this.fireCallback(resp.key, payload.summary);
                         } catch (e) {
                             Logger.error(e, 'Error creating issue');
                             this.postMessage({
