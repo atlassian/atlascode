@@ -3,8 +3,8 @@ import { DetailedSiteInfo, ProductJira } from 'src/atlclients/authInfo';
 import * as vscode from 'vscode';
 
 import { Container } from '../../container';
+import { JiraIssueService } from '../JiraIssueService';
 import { AssigneeFilterProvider } from './assigneeFilterProvider';
-import { JiraIssueService } from './JiraIssueService';
 import { JiraUserService } from './JiraUserService';
 import { QuickPickIssue, QuickPickUser } from './QuickPickUtils';
 
@@ -31,7 +31,7 @@ jest.mock('../../container', () => ({
 }));
 
 jest.mock('./JiraUserService');
-jest.mock('./JiraIssueService');
+jest.mock('../JiraIssueService');
 
 const createMockSite = (id: string, host: string): DetailedSiteInfo => ({
     id,
@@ -282,13 +282,13 @@ describe('AssigneeFilterProvider', () => {
         });
 
         it('should do nothing if no items are selected', async () => {
-            jest.mocked(JiraIssueService.getAssignedIssuesFromAllSites).mockResolvedValue([]);
+            jest.mocked(JiraIssueService.getIssuesFromAllSites).mockResolvedValue([]);
 
             const acceptHandler = mockQuickPick.onDidAccept.mock.calls[0][0];
             await acceptHandler();
 
             expect(mockQuickPick.hide).not.toHaveBeenCalled();
-            expect(JiraIssueService.getAssignedIssuesFromAllSites).not.toHaveBeenCalled();
+            expect(JiraIssueService.getIssuesFromAllSites).not.toHaveBeenCalled();
         });
 
         it('should fetch issues when users are selected', async () => {
@@ -299,17 +299,16 @@ describe('AssigneeFilterProvider', () => {
                 user: mockUser1,
             };
             AssigneeFilterProvider['persistentSelectedItems'] = [selectedUser];
-            jest.mocked(JiraIssueService.getAssignedIssuesFromAllSites).mockResolvedValue([mockIssue1, mockIssue2]);
+            jest.mocked(JiraIssueService.getIssuesFromAllSites).mockResolvedValue([mockIssue1, mockIssue2]);
 
             const acceptHandler = mockQuickPick.onDidAccept.mock.calls[0][0];
             await acceptHandler();
 
             expect(mockQuickPick.hide).toHaveBeenCalled();
-            expect(JiraIssueService.getAssignedIssuesFromAllSites).toHaveBeenCalledWith(
-                [selectedUser],
-                [mockSite1, mockSite2],
-                false,
-            );
+            expect(JiraIssueService.getIssuesFromAllSites).toHaveBeenCalledWith([mockSite1, mockSite2], {
+                users: [selectedUser],
+                hasCurrentUser: false,
+            });
         });
 
         it('should move selected items to previous selections and keep persistent items', async () => {
@@ -320,7 +319,7 @@ describe('AssigneeFilterProvider', () => {
                 user: mockUser1,
             };
             AssigneeFilterProvider['persistentSelectedItems'] = [selectedUser];
-            jest.mocked(JiraIssueService.getAssignedIssuesFromAllSites).mockResolvedValue([]);
+            jest.mocked(JiraIssueService.getIssuesFromAllSites).mockResolvedValue([]);
 
             const acceptHandler = mockQuickPick.onDidAccept.mock.calls[0][0];
             await acceptHandler();
@@ -343,7 +342,7 @@ describe('AssigneeFilterProvider', () => {
                 user: mockUser1,
             };
             AssigneeFilterProvider['persistentSelectedItems'] = [selectedUser];
-            jest.mocked(JiraIssueService.getAssignedIssuesFromAllSites).mockResolvedValue([mockIssue1, mockIssue2]);
+            jest.mocked(JiraIssueService.getIssuesFromAllSites).mockResolvedValue([mockIssue1, mockIssue2]);
 
             const acceptHandler = mockQuickPick.onDidAccept.mock.calls[0][0];
             await acceptHandler();
@@ -370,7 +369,7 @@ describe('AssigneeFilterProvider', () => {
                 user: mockUser1,
             };
             AssigneeFilterProvider['persistentSelectedItems'] = [selectedUser];
-            jest.mocked(JiraIssueService.getAssignedIssuesFromAllSites).mockResolvedValue([]);
+            jest.mocked(JiraIssueService.getIssuesFromAllSites).mockResolvedValue([]);
 
             const acceptHandler = mockQuickPick.onDidAccept.mock.calls[0][0];
             await acceptHandler();
@@ -387,7 +386,7 @@ describe('AssigneeFilterProvider', () => {
                 user: mockUser1,
             };
             AssigneeFilterProvider['persistentSelectedItems'] = [selectedUser];
-            jest.mocked(JiraIssueService.getAssignedIssuesFromAllSites).mockRejectedValue(new Error('Fetch failed'));
+            jest.mocked(JiraIssueService.getIssuesFromAllSites).mockRejectedValue(new Error('Fetch failed'));
 
             const acceptHandler = mockQuickPick.onDidAccept.mock.calls[0][0];
             await acceptHandler();
@@ -407,12 +406,12 @@ describe('AssigneeFilterProvider', () => {
             };
             AssigneeFilterProvider['persistentSelectedItems'] = [selectedUser];
             jest.mocked(Container.siteManager.getSitesAvailable).mockReturnValue([]);
-            jest.mocked(JiraIssueService.getAssignedIssuesFromAllSites).mockResolvedValue([]);
+            jest.mocked(JiraIssueService.getIssuesFromAllSites).mockResolvedValue([]);
 
             const acceptHandler = mockQuickPick.onDidAccept.mock.calls[0][0];
             await acceptHandler();
 
-            expect(JiraIssueService.getAssignedIssuesFromAllSites).not.toHaveBeenCalled();
+            expect(JiraIssueService.getIssuesFromAllSites).not.toHaveBeenCalled();
             expect(Container.assignedWorkItemsView.setFilteredIssues).not.toHaveBeenCalled();
         });
 
@@ -430,7 +429,7 @@ describe('AssigneeFilterProvider', () => {
                 user: mockUser2,
             };
             AssigneeFilterProvider['persistentSelectedItems'] = [selectedUser1, selectedUser2];
-            jest.mocked(JiraIssueService.getAssignedIssuesFromAllSites).mockResolvedValue([mockIssue1]);
+            jest.mocked(JiraIssueService.getIssuesFromAllSites).mockResolvedValue([mockIssue1]);
 
             const acceptHandler = mockQuickPick.onDidAccept.mock.calls[0][0];
             await acceptHandler();
