@@ -5,6 +5,7 @@
 ### Features
 
 - Added development field support
+- Added Branch creation and Rovo Dev actions in Create Issue Page
 
 ## What's new in 4.0.9
 
