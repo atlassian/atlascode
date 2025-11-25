@@ -14,7 +14,7 @@ import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
 import { AdfAwareContent } from '../../../AdfAwareContent';
 import { RenderedContent } from '../../../RenderedContent';
-import { convertAdfToWikimarkup } from '../../common/adfToWikimarkup';
+import { convertAdfToWikimarkup, convertWikimarkupToAdf } from '../../common/adfToWikimarkup';
 import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
 import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
@@ -181,17 +181,21 @@ const CommentComponent: React.FC<{
                                 onSave={() => {
                                     setIsSaving(true);
                                     closeEditorHandler();
-                                    onSave(commentText, comment.id, undefined);
+                                    // Convert WikiMarkup to ADF before saving (API v3 requires ADF)
+                                    const adfContent = convertWikimarkupToAdf(commentText);
+                                    onSave(adfContent, comment.id, undefined);
                                 }}
                                 onCancel={() => {
                                     setIsSaving(false);
                                     closeEditorHandler();
-                                    setCommentText(comment.body);
+                                    setCommentText(getCommentTextForEditor(comment.body));
                                 }}
                                 onInternalCommentSave={() => {
                                     setIsSaving(false);
                                     closeEditorHandler();
-                                    onSave(commentText, comment.id, JsdInternalCommentVisibility);
+                                    // Convert WikiMarkup to ADF before saving (API v3 requires ADF)
+                                    const adfContent = convertWikimarkupToAdf(commentText);
+                                    onSave(adfContent, comment.id, JsdInternalCommentVisibility);
                                 }}
                                 fetchUsers={fetchUsers}
                                 isServiceDeskProject={isServiceDeskProject}
@@ -342,13 +346,17 @@ const AddCommentComponent: React.FC<{
                         onChange={(e: string) => setCommentText(e)}
                         onSave={(i: string) => {
                             if (i !== '') {
-                                onCreate(i, undefined);
+                                // Convert WikiMarkup to ADF before saving (API v3 requires ADF)
+                                const adfContent = convertWikimarkupToAdf(i);
+                                onCreate(adfContent, undefined);
                                 setCommentText('');
                                 closeEditorHandler();
                             }
                         }}
                         onInternalCommentSave={() => {
-                            onCreate(commentText, JsdInternalCommentVisibility);
+                            // Convert WikiMarkup to ADF before saving (API v3 requires ADF)
+                            const adfContent = convertWikimarkupToAdf(commentText);
+                            onCreate(adfContent, JsdInternalCommentVisibility);
                             setCommentText('');
                             closeEditorHandler();
                         }}

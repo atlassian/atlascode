@@ -92,14 +92,68 @@ export function convertAdfToWikimarkup(adf: any): string {
 }
 
 /**
+ * Sanitizes ADF by removing invalid attributes that Jira API doesn't accept
+ * Removes null localId values - Jira API v3 requires either a valid UUID or no localId at all
+ */
+function sanitizeAdf(node: any): any {
+    if (!node || typeof node !== 'object') {
+        return node;
+    }
+
+    const sanitized: any = { ...node };
+
+    // Remove null or undefined localId attributes - Jira API doesn't accept them
+    if (sanitized.attrs) {
+        if (sanitized.attrs.localId === null || sanitized.attrs.localId === undefined) {
+            // eslint-disable-next-line no-unused-vars
+            const { localId, ...restAttrs } = sanitized.attrs;
+            sanitized.attrs = restAttrs;
+        }
+        // If attrs is now empty, remove it entirely
+        if (Object.keys(sanitized.attrs).length === 0) {
+            delete sanitized.attrs;
+        }
+    }
+
+    // Recursively sanitize content array
+    if (Array.isArray(sanitized.content)) {
+        sanitized.content = sanitized.content.map(sanitizeAdf);
+    }
+
+    // Recursively sanitize marks array
+    if (Array.isArray(sanitized.marks)) {
+        sanitized.marks = sanitized.marks.map(sanitizeAdf);
+    }
+
+    return sanitized;
+}
+
+/**
  * Converts WikiMarkup to ADF
  * Used when saving content from the legacy editor
  */
 export function convertWikimarkupToAdf(wikimarkup: string): any {
     try {
+        // Handle empty or whitespace-only input
+        if (!wikimarkup || wikimarkup.trim() === '') {
+            return {
+                version: 1,
+                type: 'doc',
+                content: [],
+            };
+        }
+
         const transformer = new WikiMarkupTransformer();
-        const adfNode = transformer.parse(wikimarkup);
-        return adfNode;
+        const pmNode = transformer.parse(wikimarkup);
+        // Convert ProseMirror Node to plain ADF JSON object
+        const adfJson = pmNode.toJSON();
+        // Ensure version field is present
+        if (!adfJson.version) {
+            adfJson.version = 1;
+        }
+        // Sanitize the ADF to remove ProseMirror-specific attributes
+        const sanitized = sanitizeAdf(adfJson);
+        return sanitized;
     } catch (error) {
         console.error('Failed to convert WikiMarkup to ADF:', error);
         // Return as plain text in ADF format

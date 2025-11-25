@@ -10,7 +10,7 @@ import { AdfAwareContent } from '../../../AdfAwareContent';
 import { RenderedContent } from '../../../RenderedContent';
 import { AttachmentList } from '../../AttachmentList';
 import { AttachmentsModal } from '../../AttachmentsModal';
-import { convertAdfToWikimarkup } from '../../common/adfToWikimarkup';
+import { convertAdfToWikimarkup, convertWikimarkupToAdf } from '../../common/adfToWikimarkup';
 import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
 import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
@@ -254,7 +254,9 @@ const IssueMainPanel: React.FC<Props> = ({
                                     setDescriptionText(e);
                                 }}
                                 onSave={(i: string) => {
-                                    handleInlineEdit(fields['description'], i);
+                                    // Convert WikiMarkup to ADF before saving (API v3 requires ADF)
+                                    const adfContent = convertWikimarkupToAdf(i);
+                                    handleInlineEdit(fields['description'], adfContent);
                                     closeEditorHandler();
                                 }}
                                 onCancel={() => {
