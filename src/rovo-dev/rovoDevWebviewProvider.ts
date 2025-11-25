@@ -46,7 +46,6 @@ import {
     RovoDevEntitlementCheckFailedDetail,
     RovoDevProviderMessage,
     RovoDevProviderMessageType,
-    RovoDevWebviewState,
 } from './rovoDevWebviewProviderMessages';
 import { ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './ui/rovoDevViewMessages';
 import { modifyFileTitleMap } from './ui/utils';
@@ -91,7 +90,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _debugPanelEnabled = false;
     private _debugPanelContext: Record<string, string> = {};
     private _debugPanelMcpContext: Record<string, string> = {};
-    private _savedState: RovoDevWebviewState | undefined = undefined;
 
     private _userInfo: UserInfo | undefined;
 
@@ -242,7 +240,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     public resolveWebviewView(
         webviewView: WebviewView,
-        context: WebviewViewResolveContext,
+        _context: WebviewViewResolveContext,
         _token: CancellationToken,
     ): Thenable<void> | void {
         this._webView = webviewView.webview;
@@ -252,10 +250,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         this._chatProvider.setWebview(webview);
         this._chatContextprovider.setWebview(webview);
-
-        if (context.state) {
-            this._savedState = context.state as RovoDevWebviewState;
-        }
 
         webview.options = {
             enableCommandUris: true,
@@ -396,14 +390,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         this._webviewReady = true;
                         this.refreshDebugPanel(true);
                         this.refreshThinkingBlock();
-
-                        if (this._savedState) {
-                            await webview.postMessage({
-                                type: RovoDevProviderMessageType.RestoreState,
-                                state: this._savedState,
-                            });
-                            this._savedState = undefined;
-                        }
 
                         if (!this.isBoysenberry) {
                             // listen to change of process state by the process manager
