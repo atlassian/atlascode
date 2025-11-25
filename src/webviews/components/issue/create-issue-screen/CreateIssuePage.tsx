@@ -1,5 +1,4 @@
 import Button from '@atlaskit/button';
-import LoadingButton from '@atlaskit/button/loading-button';
 import Form, { ErrorMessage, Field, FormFooter, FormHeader, RequiredAsterisk } from '@atlaskit/form';
 import Page from '@atlaskit/page';
 import Select, { components } from '@atlaskit/select';
@@ -27,6 +26,7 @@ import {
     CommonEditorViewState,
     emptyCommonEditorState,
 } from '../AbstractIssueEditorPage';
+import { CreateIssueButton } from './actions/CreateIssueButton';
 import { Panel } from './Panel';
 
 type Emit = CommonEditorPageEmit;
@@ -544,15 +544,9 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                                     </Panel>
                                                 )}
                                                 <FormFooter actions={{}}>
-                                                    <LoadingButton
-                                                        type="submit"
-                                                        spacing="compact"
-                                                        className="ac-button"
-                                                        isDisabled={this.state.isSomethingLoading}
-                                                        isLoading={this.state.loadingField === 'submitButton'}
-                                                    >
+                                                    <CreateIssueButton type="submit" className="ac-button">
                                                         Create
-                                                    </LoadingButton>
+                                                    </CreateIssueButton>
                                                 </FormFooter>
                                             </form>
                                         );

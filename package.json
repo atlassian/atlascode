@@ -202,7 +202,7 @@
             },
             {
                 "command": "atlascode.jira.createIssue.startWork",
-                "title": "Create and start work",
+                "title": "Create and create branch",
                 "category": "Jira"
             },
             {
@@ -1088,11 +1088,11 @@
             "webview/context": [
                 {
                     "command": "atlascode.jira.createIssue.startWork",
-                    "when": "webviewId == 'atlascode.views.jira.createWorkItemWebview' && webviewSection == 'createButton'"
+                    "when": "webviewSection == 'createButton'"
                 },
                 {
                     "command": "atlascode.jira.createIssue.generateCode",
-                    "when": "atlascode:rovoDevEnabled && webviewId == 'atlascode.views.jira.createWorkItemWebview' && webviewSection == 'createButton'"
+                    "when": "atlascode:rovoDevEnabled && webviewSection == 'createButton'"
                 },
                 {
                     "command": "atlascode.jira.copyImageElement",
