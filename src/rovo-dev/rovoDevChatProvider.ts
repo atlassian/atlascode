@@ -507,6 +507,20 @@ export class RovoDevChatProvider {
         }
     }
 
+    public generateNewChat() {
+        if (this._currentPrompt)
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.ShowDialog,
+                message: {
+                    type: 'info',
+                    title: 'Status response',
+                    text: statusJsonResponseToMarkdown(response),
+                    event_kind: '_RovoDevDialog',
+                },
+            });
+        }
+    }
+
     public async signalToolRequestChoiceSubmit(toolCallId: string, choice: ToolPermissionChoice) {
         if (!this._pendingToolConfirmation[toolCallId]) {
             throw new Error('Received an unexpected tool confirmation: not found.');
