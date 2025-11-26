@@ -456,9 +456,9 @@ export class Container {
         }
 
         const telemetryEnabled = env.isTelemetryEnabled || this.isBoysenberryMode;
-        Logger.debug(`[Analytics] VS Code telemetry enabled: ${telementryEnabled}`);
+        Logger.debug(`[Analytics] VS Code telemetry enabled: ${telemetryEnabled}`);
 
-        return telementryEnabled;
+        return telemetryEnabled;
     }
 
     static initializeBitbucket(bbCtx: BitbucketContext) {
