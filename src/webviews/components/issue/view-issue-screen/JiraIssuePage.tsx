@@ -174,15 +174,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     this.handleImageCopy();
                     break;
                 }
-                case 'rovoDevEntitlementUpdate': {
-                    this.setState({
-                        showRovoDevPromoBanner: e.isEntitled || false,
-                        rovoDevEntitlementType: e.isEntitled
-                            ? (e.entitlementType as RovoDevEntitlementType)
-                            : undefined,
-                    });
-                    break;
-                }
             }
         }
         return handled;
@@ -627,7 +618,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     <RovoDevPromoBanner
                         entitlementType={this.state.rovoDevEntitlementType}
                         onOpen={this.handleOpenRovoDev}
-                        onDismiss={() => this.setState({ showRovoDevPromoBanner: false })}
+                        onDismiss={() => {
+                            this.onDismissRovoDevPromoBanner();
+                            this.setState({ showRovoDevPromoBanner: false });
+                        }}
                     />
                 )}
                 <div className="ac-page-header">

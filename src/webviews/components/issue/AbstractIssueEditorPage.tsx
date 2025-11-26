@@ -46,7 +46,9 @@ import {
     UserList,
 } from '../../../ipc/issueMessaging';
 import { Action, HostErrorMessage, Message } from '../../../ipc/messaging';
+import { CommonMessageType } from '../../../lib/ipc/toUI/common';
 import { Features } from '../../../util/features';
+import { RovoDevEntitlementType } from '../../../util/rovo-dev-entitlement/rovoDevEntitlementChecker';
 import { ConnectionTimeout } from '../../../util/time';
 import AISuggestionFooter from '../aiCreateIssue/AISuggestionFooter';
 import AISuggestionHeader from '../aiCreateIssue/AISuggestionHeader';
@@ -95,6 +97,9 @@ export interface CommonEditorViewState extends Message {
     isGeneratingSuggestions?: boolean;
     summaryKey: string;
     isAtlaskitEditorEnabled: boolean;
+    showRovoDevPromoBanner: boolean;
+    rovoDevEntitlementType?: RovoDevEntitlementType;
+    rovoDevPromoBannerDismissed: boolean;
     projectPagination?: {
         total: number;
         loaded: number;
@@ -119,6 +124,9 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     isRovoDevEnabled: false,
     summaryKey: v4(),
     isAtlaskitEditorEnabled: false,
+    showRovoDevPromoBanner: false,
+    rovoDevEntitlementType: undefined,
+    rovoDevPromoBannerDismissed: false,
 };
 
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
@@ -303,6 +311,14 @@ export abstract class AbstractIssueEditorPage<
             }
             case 'additionalSettings': {
                 this.setState({ isRovoDevEnabled: e.settings.rovoDevEnabled });
+                break;
+            }
+            case CommonMessageType.RovoDevEntitlementBanner: {
+                handled = true;
+                this.setState({
+                    showRovoDevPromoBanner: e.enabled || false,
+                    rovoDevEntitlementType: e.enabled ? (e.entitlementType as RovoDevEntitlementType) : undefined,
+                });
                 break;
             }
         }
