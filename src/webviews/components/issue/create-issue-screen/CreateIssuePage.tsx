@@ -26,8 +26,8 @@ import {
     CommonEditorViewState,
     emptyCommonEditorState,
 } from '../AbstractIssueEditorPage';
-import { CreateIssueButton } from './actions/CreateIssueButton';
 import { convertWikimarkupToAdf } from '../common/adfToWikimarkup';
+import { CreateIssueButton } from './actions/CreateIssueButton';
 import { Panel } from './Panel';
 
 type Emit = CommonEditorPageEmit;
