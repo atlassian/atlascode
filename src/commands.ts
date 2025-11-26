@@ -21,12 +21,14 @@ import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
 import { configuration } from './config/configuration';
 import { Commands, HelpTreeViewId } from './constants';
 import { Container } from './container';
+import { FilterProvider } from './filter/filterProvider';
 import { transitionIssue } from './jira/transitionIssue';
 import { knownLinkIdMap } from './lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } from './lib/ipc/models/config';
 import { Logger } from './logger';
 import { runQuickAuth } from './onboarding/quickFlow';
 import { AuthenticationType } from './onboarding/quickFlow/authentication/types';
+import { RovodevCommands } from './rovo-dev/api/componentApi';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevContextItem } from './rovo-dev/rovoDevTypes';
 import { openRovoDevConfigFile } from './rovo-dev/rovoDevUtils';
@@ -36,9 +38,153 @@ import { IssueNode } from './views/nodes/issueNode';
 import { PipelineNode } from './views/pipelines/PipelinesTree';
 
 export function registerCommands(vscodeContext: ExtensionContext) {
+    // here, add any setting that doesn't depend on which settings page is enabled
+    vscodeContext.subscriptions.push(
+        commands.registerCommand(
+            Commands.ViewInWebBrowser,
+            async (prNode: AbstractBaseNode, source?: string, linkId?: string) => {
+                if (source && linkId && knownLinkIdMap.has(linkId)) {
+                    Container.analyticsApi.fireExternalLinkEvent(source, linkId);
+                }
+                const uri = (await prNode.getTreeItem()).resourceUri;
+                if (uri) {
+                    env.openExternal(uri);
+                }
+            },
+        ),
+        commands.registerCommand(Commands.CreateIssue, (data: any, source?: string) => createIssue(data, source)),
+        commands.registerCommand(
+            Commands.ShowIssue,
+            async (issueOrKeyAndSite: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => await showIssue(issueOrKeyAndSite),
+        ),
+        commands.registerCommand(
+            Commands.ShowIssueForKey,
+            async (issueKey?: string) => await showIssueForKey(issueKey),
+        ),
+        commands.registerCommand(
+            Commands.ShowIssueForSiteIdAndKey,
+            async (siteId: string, issueKey: string) => await showIssueForSiteIdAndKey(siteId, issueKey),
+        ),
+        commands.registerCommand(Commands.ShowIssueForURL, async (issueURL: string) => await showIssueForURL(issueURL)),
+        commands.registerCommand(Commands.ToDoIssue, (issueNode) =>
+            commands.executeCommand(Commands.ShowIssue, issueNode.issue),
+        ),
+        commands.registerCommand(Commands.InProgressIssue, (issueNode) =>
+            commands.executeCommand(Commands.ShowIssue, issueNode.issue),
+        ),
+        commands.registerCommand(Commands.DoneIssue, (issueNode) =>
+            commands.executeCommand(Commands.ShowIssue, issueNode.issue),
+        ),
+        commands.registerCommand(Commands.AssignIssueToMe, (issueNode: IssueNode) => assignIssue(issueNode)),
+        commands.registerCommand(Commands.TransitionIssue, async (issueNode: IssueNode) => {
+            if (!isMinimalIssue(issueNode.issue)) {
+                // Should be unreachable, but let's fail gracefully
+                return;
+            }
+
+            const issue = issueNode.issue as MinimalIssue<DetailedSiteInfo>;
+            Container.analyticsApi.fireViewScreenEvent('atlascodeTransitionQuickPick', issue.siteDetails, ProductJira);
+            window
+                .showQuickPick(
+                    issue.transitions.map((x) => ({
+                        label: x.name,
+                        detail: x.name !== x.to.name ? `${x.to.name}` : '',
+                    })),
+                    {
+                        placeHolder: `Select a transition for ${issue.key}`,
+                    },
+                )
+                .then(async (transition) => {
+                    if (!transition) {
+                        return;
+                    }
+
+                    const target = issue.transitions.find((x) => x.name === transition.label);
+                    if (!target) {
+                        window.showErrorMessage(`Transition ${transition.label} not found`);
+                        Logger.error(new Error('Transition not found'));
+                        return;
+                    }
+
+                    await transitionIssue(issue, target, { source: 'quickPick' });
+                });
+        }),
+        commands.registerCommand(
+            Commands.StartWorkOnIssue,
+            (issueNodeOrMinimalIssue: IssueNode | MinimalIssue<DetailedSiteInfo>) =>
+                startWorkOnIssue(
+                    isMinimalIssue(issueNodeOrMinimalIssue) ? issueNodeOrMinimalIssue : issueNodeOrMinimalIssue.issue,
+                ),
+        ),
+        commands.registerCommand(Commands.ViewDiff, async (...diffArgs: [() => {}, Uri, Uri, string]) => {
+            viewScreenEvent(Registry.screen.pullRequestDiffScreen, undefined, ProductBitbucket).then((e) => {
+                Container.analyticsClient.sendScreenEvent(e);
+            });
+            diffArgs[0]();
+            commands.executeCommand('vscode.diff', ...diffArgs.slice(1));
+        }),
+        commands.registerCommand(Commands.RerunPipeline, (node: PipelineNode) => {
+            rerunPipeline(node.pipeline);
+        }),
+        commands.registerCommand(Commands.RunPipelineForBranch, () => {
+            runPipeline();
+        }),
+        commands.registerCommand(Commands.ShowPipeline, (pipelineInfo: any) => {
+            Container.pipelinesSummaryWebview.createOrShow(pipelineInfo.uuid, pipelineInfo);
+        }),
+        commands.registerCommand(Commands.DebugBitbucketSites, showBitbucketDebugInfo),
+        commands.registerCommand(Commands.WorkbenchOpenRepository, (source: string) => {
+            openWorkbenchRepositoryButtonEvent(source).then((event) => Container.analyticsClient.sendUIEvent(event));
+            commands.executeCommand('workbench.action.addRootFolder');
+        }),
+        commands.registerCommand(Commands.WorkbenchOpenWorkspace, (source: string) => {
+            openWorkbenchWorkspaceButtonEvent(source).then((event) => Container.analyticsClient.sendUIEvent(event));
+            commands.executeCommand('workbench.action.openWorkspace');
+        }),
+        commands.registerCommand(Commands.CloneRepository, async (source: string, repoUrl?: string) => {
+            cloneRepositoryButtonEvent(source).then((event) => Container.analyticsClient.sendUIEvent(event));
+            await commands.executeCommand('git.clone', repoUrl);
+        }),
+        commands.registerCommand(Commands.DisableHelpExplorer, () => {
+            configuration.updateEffective('helpExplorerEnabled', false, null, true);
+        }),
+        commands.registerCommand(Commands.BitbucketOpenPullRequest, (data: { pullRequestUrl: string }) => {
+            Container.openPullRequestHandler(data.pullRequestUrl);
+        }),
+        commands.registerCommand(Commands.ShowOnboardingFlow, () => Container.onboardingProvider.start()),
+        commands.registerCommand(Commands.JiraFilter, () => FilterProvider.createFilterQuickPick()),
+        commands.registerCommand(Commands.JiraLogin, () => {
+            const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
+            if (useNewAuthFlow) {
+                runQuickAuth({ initialState: { product: ProductJira }, origin: 'settings' });
+            } else {
+                commands.executeCommand(Commands.ShowConfigPage);
+            }
+        }),
+        commands.registerCommand(Commands.AddRecommendedExtension, addAtlascodeAsRecommendedExtension),
+        commands.registerCommand(Commands.ExpandCreateWorkItemWebview, () => {
+            Container.createIssueWebview.createOrShow();
+            setCommandContext('atlascode:showCreateWorkItemWebview', false);
+        }),
+        commands.registerCommand(
+            Commands.CopyImageElement,
+            (commandContext: { viewKey: string; webviewSection: string; isContextMenuOnImage: boolean }) => {
+                if (commandContext.webviewSection === 'jiraImageElement') {
+                    Container.jiraIssueViewManager.handleContextMenu({
+                        viewKey: commandContext.viewKey,
+                        action: 'copy',
+                        data: commandContext,
+                    });
+                }
+            },
+        ),
+    );
+
     const settingsFeatureValue = Container.featureFlagClient.checkExperimentValue(
         Experiments.AtlascodeNewSettingsExperiment,
     );
+
+    // here, add any setting for which their implementation depends on which settings page is enabled
     if (settingsFeatureValue) {
         vscodeContext.subscriptions.push(
             commands.registerCommand(Commands.AddJiraSite, () =>
@@ -91,139 +237,6 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             commands.registerCommand(Commands.ShowPipelineSettings, () =>
                 commands.executeCommand('workbench.action.openSettings', '@ext:atlassian.atlascode pipeline'),
             ),
-            // -----------------------------------
-            commands.registerCommand(
-                Commands.ViewInWebBrowser,
-                async (prNode: AbstractBaseNode, source?: string, linkId?: string) => {
-                    if (source && linkId && knownLinkIdMap.has(linkId)) {
-                        Container.analyticsApi.fireExternalLinkEvent(source, linkId);
-                    }
-                    const uri = (await prNode.getTreeItem()).resourceUri;
-                    if (uri) {
-                        env.openExternal(uri);
-                    }
-                },
-            ),
-            commands.registerCommand(Commands.CreateIssue, (data: any, source?: string) => createIssue(data, source)),
-            commands.registerCommand(
-                Commands.ShowIssue,
-                async (issueOrKeyAndSite: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) =>
-                    await showIssue(issueOrKeyAndSite),
-            ),
-            commands.registerCommand(
-                Commands.ShowIssueForKey,
-                async (issueKey?: string) => await showIssueForKey(issueKey),
-            ),
-            commands.registerCommand(
-                Commands.ShowIssueForSiteIdAndKey,
-                async (siteId: string, issueKey: string) => await showIssueForSiteIdAndKey(siteId, issueKey),
-            ),
-            commands.registerCommand(
-                Commands.ShowIssueForURL,
-                async (issueURL: string) => await showIssueForURL(issueURL),
-            ),
-            commands.registerCommand(Commands.ToDoIssue, (issueNode) =>
-                commands.executeCommand(Commands.ShowIssue, issueNode.issue),
-            ),
-            commands.registerCommand(Commands.InProgressIssue, (issueNode) =>
-                commands.executeCommand(Commands.ShowIssue, issueNode.issue),
-            ),
-            commands.registerCommand(Commands.DoneIssue, (issueNode) =>
-                commands.executeCommand(Commands.ShowIssue, issueNode.issue),
-            ),
-            commands.registerCommand(Commands.AssignIssueToMe, (issueNode: IssueNode) => assignIssue(issueNode)),
-            commands.registerCommand(Commands.TransitionIssue, async (issueNode: IssueNode) => {
-                if (!isMinimalIssue(issueNode.issue)) {
-                    // Should be unreachable, but let's fail gracefully
-                    return;
-                }
-
-                const issue = issueNode.issue as MinimalIssue<DetailedSiteInfo>;
-                Container.analyticsApi.fireViewScreenEvent(
-                    'atlascodeTransitionQuickPick',
-                    issue.siteDetails,
-                    ProductJira,
-                );
-                window
-                    .showQuickPick(
-                        issue.transitions.map((x) => ({
-                            label: x.name,
-                            detail: x.name !== x.to.name ? `${x.to.name}` : '',
-                        })),
-                        {
-                            placeHolder: `Select a transition for ${issue.key}`,
-                        },
-                    )
-                    .then(async (transition) => {
-                        if (!transition) {
-                            return;
-                        }
-
-                        const target = issue.transitions.find((x) => x.name === transition.label);
-                        if (!target) {
-                            window.showErrorMessage(`Transition ${transition.label} not found`);
-                            Logger.error(new Error('Transition not found'));
-                            return;
-                        }
-
-                        await transitionIssue(issue, target, { source: 'quickPick' });
-                    });
-            }),
-            commands.registerCommand(
-                Commands.StartWorkOnIssue,
-                (issueNodeOrMinimalIssue: IssueNode | MinimalIssue<DetailedSiteInfo>) =>
-                    startWorkOnIssue(
-                        isMinimalIssue(issueNodeOrMinimalIssue)
-                            ? issueNodeOrMinimalIssue
-                            : issueNodeOrMinimalIssue.issue,
-                    ),
-            ),
-            commands.registerCommand(Commands.ViewDiff, async (...diffArgs: [() => {}, Uri, Uri, string]) => {
-                viewScreenEvent(Registry.screen.pullRequestDiffScreen, undefined, ProductBitbucket).then((e) => {
-                    Container.analyticsClient.sendScreenEvent(e);
-                });
-                diffArgs[0]();
-                commands.executeCommand('vscode.diff', ...diffArgs.slice(1));
-            }),
-            commands.registerCommand(Commands.RerunPipeline, (node: PipelineNode) => {
-                rerunPipeline(node.pipeline);
-            }),
-            commands.registerCommand(Commands.RunPipelineForBranch, () => {
-                runPipeline();
-            }),
-            commands.registerCommand(Commands.ShowPipeline, (pipelineInfo: any) => {
-                Container.pipelinesSummaryWebview.createOrShow(pipelineInfo.uuid, pipelineInfo);
-            }),
-            commands.registerCommand(Commands.DebugBitbucketSites, showBitbucketDebugInfo),
-            commands.registerCommand(Commands.WorkbenchOpenRepository, (source: string) => {
-                openWorkbenchRepositoryButtonEvent(source).then((event) =>
-                    Container.analyticsClient.sendUIEvent(event),
-                );
-                commands.executeCommand('workbench.action.addRootFolder');
-            }),
-            commands.registerCommand(Commands.WorkbenchOpenWorkspace, (source: string) => {
-                openWorkbenchWorkspaceButtonEvent(source).then((event) => Container.analyticsClient.sendUIEvent(event));
-                commands.executeCommand('workbench.action.openWorkspace');
-            }),
-            commands.registerCommand(Commands.CloneRepository, async (source: string, repoUrl?: string) => {
-                cloneRepositoryButtonEvent(source).then((event) => Container.analyticsClient.sendUIEvent(event));
-                await commands.executeCommand('git.clone', repoUrl);
-            }),
-            commands.registerCommand(Commands.DisableHelpExplorer, () => {
-                configuration.updateEffective('helpExplorerEnabled', false, null, true);
-            }),
-            commands.registerCommand(Commands.BitbucketOpenPullRequest, (data: { pullRequestUrl: string }) => {
-                Container.openPullRequestHandler(data.pullRequestUrl);
-            }),
-            commands.registerCommand(Commands.ShowOnboardingFlow, () => Container.onboardingProvider.start()),
-            commands.registerCommand(Commands.JiraLogin, () => {
-                const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
-                if (useNewAuthFlow) {
-                    runQuickAuth({ initialState: { product: ProductJira }, origin: 'settings' });
-                } else {
-                    commands.executeCommand(Commands.ShowConfigPage);
-                }
-            }),
             commands.registerCommand(Commands.JiraAPITokenLogin, () => {
                 const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
                 if (useNewAuthFlow) {
@@ -239,7 +252,6 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                     });
                 }
             }),
-            commands.registerCommand(Commands.AddRecommendedExtension, addAtlascodeAsRecommendedExtension),
         );
     } else {
         vscodeContext.subscriptions.push(
@@ -305,138 +317,6 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                     subSection: undefined,
                 });
             }),
-            commands.registerCommand(
-                Commands.ViewInWebBrowser,
-                async (prNode: AbstractBaseNode, source?: string, linkId?: string) => {
-                    if (source && linkId && knownLinkIdMap.has(linkId)) {
-                        Container.analyticsApi.fireExternalLinkEvent(source, linkId);
-                    }
-                    const uri = (await prNode.getTreeItem()).resourceUri;
-                    if (uri) {
-                        env.openExternal(uri);
-                    }
-                },
-            ),
-            commands.registerCommand(Commands.CreateIssue, (data: any, source?: string) => createIssue(data, source)),
-            commands.registerCommand(
-                Commands.ShowIssue,
-                async (issueOrKeyAndSite: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) =>
-                    await showIssue(issueOrKeyAndSite),
-            ),
-            commands.registerCommand(
-                Commands.ShowIssueForKey,
-                async (issueKey?: string) => await showIssueForKey(issueKey),
-            ),
-            commands.registerCommand(
-                Commands.ShowIssueForSiteIdAndKey,
-                async (siteId: string, issueKey: string) => await showIssueForSiteIdAndKey(siteId, issueKey),
-            ),
-            commands.registerCommand(
-                Commands.ShowIssueForURL,
-                async (issueURL: string) => await showIssueForURL(issueURL),
-            ),
-            commands.registerCommand(Commands.ToDoIssue, (issueNode) =>
-                commands.executeCommand(Commands.ShowIssue, issueNode.issue),
-            ),
-            commands.registerCommand(Commands.InProgressIssue, (issueNode) =>
-                commands.executeCommand(Commands.ShowIssue, issueNode.issue),
-            ),
-            commands.registerCommand(Commands.DoneIssue, (issueNode) =>
-                commands.executeCommand(Commands.ShowIssue, issueNode.issue),
-            ),
-            commands.registerCommand(Commands.AssignIssueToMe, (issueNode: IssueNode) => assignIssue(issueNode)),
-            commands.registerCommand(Commands.TransitionIssue, async (issueNode: IssueNode) => {
-                if (!isMinimalIssue(issueNode.issue)) {
-                    // Should be unreachable, but let's fail gracefully
-                    return;
-                }
-
-                const issue = issueNode.issue as MinimalIssue<DetailedSiteInfo>;
-                Container.analyticsApi.fireViewScreenEvent(
-                    'atlascodeTransitionQuickPick',
-                    issue.siteDetails,
-                    ProductJira,
-                );
-                window
-                    .showQuickPick(
-                        issue.transitions.map((x) => ({
-                            label: x.name,
-                            detail: x.name !== x.to.name ? `${x.to.name}` : '',
-                        })),
-                        {
-                            placeHolder: `Select a transition for ${issue.key}`,
-                        },
-                    )
-                    .then(async (transition) => {
-                        if (!transition) {
-                            return;
-                        }
-
-                        const target = issue.transitions.find((x) => x.name === transition.label);
-                        if (!target) {
-                            window.showErrorMessage(`Transition ${transition.label} not found`);
-                            Logger.error(new Error('Transition not found'));
-                            return;
-                        }
-
-                        await transitionIssue(issue, target, { source: 'quickPick' });
-                    });
-            }),
-            commands.registerCommand(
-                Commands.StartWorkOnIssue,
-                (issueNodeOrMinimalIssue: IssueNode | MinimalIssue<DetailedSiteInfo>) =>
-                    startWorkOnIssue(
-                        isMinimalIssue(issueNodeOrMinimalIssue)
-                            ? issueNodeOrMinimalIssue
-                            : issueNodeOrMinimalIssue.issue,
-                    ),
-            ),
-            commands.registerCommand(Commands.ViewDiff, async (...diffArgs: [() => {}, Uri, Uri, string]) => {
-                viewScreenEvent(Registry.screen.pullRequestDiffScreen, undefined, ProductBitbucket).then((e) => {
-                    Container.analyticsClient.sendScreenEvent(e);
-                });
-                diffArgs[0]();
-                commands.executeCommand('vscode.diff', ...diffArgs.slice(1));
-            }),
-            commands.registerCommand(Commands.RerunPipeline, (node: PipelineNode) => {
-                rerunPipeline(node.pipeline);
-            }),
-            commands.registerCommand(Commands.RunPipelineForBranch, () => {
-                runPipeline();
-            }),
-            commands.registerCommand(Commands.ShowPipeline, (pipelineInfo: any) => {
-                Container.pipelinesSummaryWebview.createOrShow(pipelineInfo.uuid, pipelineInfo);
-            }),
-            commands.registerCommand(Commands.DebugBitbucketSites, showBitbucketDebugInfo),
-            commands.registerCommand(Commands.WorkbenchOpenRepository, (source: string) => {
-                openWorkbenchRepositoryButtonEvent(source).then((event) =>
-                    Container.analyticsClient.sendUIEvent(event),
-                );
-                commands.executeCommand('workbench.action.addRootFolder');
-            }),
-            commands.registerCommand(Commands.WorkbenchOpenWorkspace, (source: string) => {
-                openWorkbenchWorkspaceButtonEvent(source).then((event) => Container.analyticsClient.sendUIEvent(event));
-                commands.executeCommand('workbench.action.openWorkspace');
-            }),
-            commands.registerCommand(Commands.CloneRepository, async (source: string, repoUrl?: string) => {
-                cloneRepositoryButtonEvent(source).then((event) => Container.analyticsClient.sendUIEvent(event));
-                await commands.executeCommand('git.clone', repoUrl);
-            }),
-            commands.registerCommand(Commands.DisableHelpExplorer, () => {
-                configuration.updateEffective('helpExplorerEnabled', false, null, true);
-            }),
-            commands.registerCommand(Commands.BitbucketOpenPullRequest, (data: { pullRequestUrl: string }) => {
-                Container.openPullRequestHandler(data.pullRequestUrl);
-            }),
-            commands.registerCommand(Commands.ShowOnboardingFlow, () => Container.onboardingProvider.start()),
-            commands.registerCommand(Commands.JiraLogin, () => {
-                const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
-                if (useNewAuthFlow) {
-                    runQuickAuth({ initialState: { product: ProductJira }, origin: 'settings' });
-                } else {
-                    commands.executeCommand(Commands.ShowConfigPage);
-                }
-            }),
             commands.registerCommand(Commands.JiraAPITokenLogin, () => {
                 const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
                 if (useNewAuthFlow) {
@@ -451,11 +331,6 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                         initiateApiTokenAuth: true,
                     });
                 }
-            }),
-            commands.registerCommand(Commands.AddRecommendedExtension, addAtlascodeAsRecommendedExtension),
-            commands.registerCommand(Commands.ExpandCreateWorkItemWebview, () => {
-                Container.createIssueWebview.createOrShow();
-                setCommandContext('atlascode:showCreateWorkItemWebview', false);
             }),
         );
     }
@@ -489,7 +364,7 @@ const buildContext = (editor?: TextEditor, vscodeContext?: ExtensionContext): Ro
 
 export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
     vscodeContext.subscriptions.push(
-        commands.registerCommand(Commands.RovodevAskInteractive, async () => {
+        commands.registerCommand(RovodevCommands.RovodevAskInteractive, async () => {
             const context = buildContext(window.activeTextEditor, vscodeContext);
 
             const prompt = await window.showInputBox({
@@ -502,17 +377,17 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
             }
             Container.rovodevWebviewProvider.invokeRovoDevAskCommand(prompt, context);
         }),
-        commands.registerCommand(Commands.RovodevAsk, (prompt: string, context?: RovoDevContextItem[]) => {
+        commands.registerCommand(RovodevCommands.RovodevAsk, (prompt: string, context?: RovoDevContextItem[]) => {
             Container.rovodevWebviewProvider.invokeRovoDevAskCommand(prompt, context);
         }),
-        commands.registerCommand(Commands.RovodevNewSession, () => {
+        commands.registerCommand(RovodevCommands.RovodevNewSession, () => {
             Container.rovodevWebviewProvider.executeNewSession();
         }),
-        commands.registerCommand(Commands.RovodevShowTerminal, () => RovoDevProcessManager.showTerminal()),
-        commands.registerCommand(Commands.RovodevShareFeedback, () =>
+        commands.registerCommand(RovodevCommands.RovodevShowTerminal, () => RovoDevProcessManager.showTerminal()),
+        commands.registerCommand(RovodevCommands.RovodevShareFeedback, () =>
             Container.rovodevWebviewProvider.executeTriggerFeedback(),
         ),
-        commands.registerCommand(Commands.RovodevAddToContext, async () => {
+        commands.registerCommand(RovodevCommands.RovodevAddToContext, async () => {
             const context = buildContext(window.activeTextEditor, vscodeContext);
             if (!context || context.length === 0) {
                 // Do nothing, this should only have effect in editor context
@@ -523,13 +398,22 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
                 Container.rovodevWebviewProvider.addToContext(item);
             });
         }),
-        commands.registerCommand(Commands.OpenRovoDevConfig, async () => await openRovoDevConfigFile('config.yml')),
-        commands.registerCommand(Commands.OpenRovoDevMcpJson, async () => await openRovoDevConfigFile('mcp.json')),
         commands.registerCommand(
-            Commands.OpenRovoDevGlobalMemory,
+            RovodevCommands.OpenRovoDevConfig,
+            async () => await openRovoDevConfigFile('config.yml'),
+        ),
+        commands.registerCommand(
+            RovodevCommands.OpenRovoDevMcpJson,
+            async () => await openRovoDevConfigFile('mcp.json'),
+        ),
+        commands.registerCommand(
+            RovodevCommands.OpenRovoDevGlobalMemory,
             async () => await openRovoDevConfigFile('.agent.md'),
         ),
-        commands.registerCommand(Commands.OpenRovoDevLogFile, async () => await openRovoDevConfigFile('rovodev.log')),
+        commands.registerCommand(
+            RovodevCommands.OpenRovoDevLogFile,
+            async () => await openRovoDevConfigFile('rovodev.log'),
+        ),
     );
 }
 

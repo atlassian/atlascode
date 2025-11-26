@@ -3,8 +3,8 @@ import * as React from 'react';
 import { State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
-import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { useMessagingApi } from '../../../react/atlascode/messagingApi';
+import { DetailedSiteInfo } from '../../api/extensionApiTypes';
 import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
 import { PullRequestForm } from '../create-pr/PullRequestForm';
@@ -28,6 +28,7 @@ interface ChatStreamProps {
         checkFileExists: CheckFileExistsFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
+        onOpenLogFile: () => void;
     };
     messagingApi: ReturnType<
         typeof useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>
@@ -276,6 +277,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
                             retryAfterError={renderProps.retryPromptAfterError}
                             onToolPermissionChoice={onToolPermissionChoice}
+                            onOpenLogFile={renderProps.onOpenLogFile}
                         />
                     ))}
                     {modalDialogs.length > 1 && modalDialogs.every((d) => d.type === 'toolPermissionRequest') && (

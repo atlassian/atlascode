@@ -2,7 +2,6 @@ import {
     rovoDevAiResultViewedEvent,
     rovoDevCreatePrButtonClickedEvent,
     rovoDevDetailsExpandedEvent,
-    RovoDevEnv,
     rovoDevFileChangedActionEvent,
     rovoDevFilesSummaryShownEvent,
     rovoDevGitPushActionEvent,
@@ -10,8 +9,8 @@ import {
     rovoDevPromptSentEvent,
     rovoDevStopActionEvent,
     rovoDevTechnicalPlanningShownEvent,
-} from '../../src/analytics';
-import { ExtensionApi } from './api/extensionApi';
+} from './analytics/rovodevAnalyticsApi';
+import { ExtensionApi, RovoDevEnv } from './api/extensionApi';
 import { PerformanceLogger } from './performanceLogger';
 import { RovoDevLogger } from './util/rovoDevLogger';
 

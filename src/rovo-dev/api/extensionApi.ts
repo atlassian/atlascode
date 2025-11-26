@@ -1,12 +1,31 @@
 import { isMinimalIssue, MinimalIssue, readSearchResults } from '@atlassianlabs/jira-pi-common-models';
-import { AuthInfo, DetailedSiteInfo, ProductJira } from 'src/atlclients/authInfo';
 import { ValidBasicAuthSiteData } from 'src/atlclients/clientManager';
+import { showIssueForURL } from 'src/commands/jira/showIssue';
+import { configuration } from 'src/config/configuration';
+import { Commands } from 'src/constants';
 import { Container } from 'src/container';
 import { SearchJiraHelper } from 'src/views/jira/searchJiraHelper';
+import { getHtmlForView } from 'src/webview/common/getHtmlForView';
+import { commands, ConfigurationChangeEvent, Uri } from 'vscode';
+
+import { RovodevAnalyticsApi } from '../analytics/rovodevAnalyticsApi';
+import { AuthInfo, DetailedSiteInfo, ProductJira } from './extensionApiTypes';
+
+// Re-export types for convenience
+export * from './extensionApiTypes';
+export * from '../analytics/rovodevAnalyticsTypes';
+
+// TODO: getAxiosInstance is being re-exported for now, to not break compatability with curl logging
+//       in the future, we'd need to re-implement it, or just use the library directly
+export { getAxiosInstance } from 'src/jira/jira-client/providers';
 
 export class JiraApi {
     public getSites = (): DetailedSiteInfo[] => {
         return Container.siteManager.getSitesAvailable(ProductJira);
+    };
+
+    public showIssue = async (issueURL: string): Promise<void> => {
+        await showIssueForURL(issueURL);
     };
 
     public fetchWorkItems = async (site: DetailedSiteInfo): Promise<MinimalIssue<DetailedSiteInfo>[]> => {
@@ -40,11 +59,7 @@ export class JiraApi {
  * This class defines what rovodev needs from the rest of the extension
  */
 export class ExtensionApi {
-    public readonly analytics = {
-        sendTrackEvent: async (event: any) => {
-            await Container.analyticsClient.sendTrackEvent(event);
-        },
-    };
+    public readonly analytics = new RovodevAnalyticsApi();
 
     public readonly metadata = {
         isDebugging: (): boolean => {
@@ -71,10 +86,16 @@ export class ExtensionApi {
         isThinkingBlockEnabled: (): boolean => {
             return Container.config.rovodev.thinkingBlockEnabled;
         },
+        onDidChange: (listener: (e: ConfigurationChangeEvent) => any, thisArg?: any) => {
+            return configuration.onDidChange(listener, thisArg);
+        },
+        changed(e: ConfigurationChangeEvent, section: string, resource?: Uri | null): boolean {
+            return configuration.changed(e, section, resource);
+        },
     };
 
     public readonly auth = {
-        // TODO: rectify these 2 methods
+        // TODO [AXON-1531]: rectify these 2 methods
 
         /**
          * Get valid credentials for the 1st available cloud site with an API token,
@@ -86,7 +107,7 @@ export class ExtensionApi {
          *
          * @returns ValidBasicAuthSiteData with working API token credentials, or undefined
          */
-        getCloudPrimaryAuthInfo: async (): Promise<ValidBasicAuthSiteData | undefined> => {
+        getCloudPrimaryAuthSite: async (): Promise<ValidBasicAuthSiteData | undefined> => {
             return await Container.clientManager.getCloudPrimarySite();
         },
 
@@ -118,5 +139,44 @@ export class ExtensionApi {
         },
     };
 
+    commands = {
+        openFolder: async (): Promise<void> => {
+            await commands.executeCommand(Commands.WorkbenchOpenFolder);
+        },
+        focusRovodevView: async (): Promise<void> => {
+            await commands.executeCommand('atlascode.views.rovoDev.webView.focus');
+        },
+        showUserAuthentication: async ({ openApiTokenLogin }: { openApiTokenLogin: boolean }) => {
+            if (openApiTokenLogin) {
+                await commands.executeCommand(Commands.JiraAPITokenLogin);
+            } else {
+                await commands.executeCommand(Commands.ShowJiraAuth);
+            }
+        },
+        showDiff: async (args: { left: Uri; right: Uri; title: string }) => {
+            await commands.executeCommand('vscode.diff', args.left, args.right, args.title);
+        },
+        setCommandContext: async (key: string, value: any) => {
+            await commands.executeCommand('setContext', key, value);
+        },
+    };
+
     public readonly jira = new JiraApi();
+
+    // Not technically part of the ExtensionApi, but convenient to have here for now
+    public getHtmlForView({
+        extensionPath,
+        cspSource,
+        viewId,
+        baseUri,
+        stylesUri,
+    }: {
+        extensionPath: string;
+        baseUri: Uri;
+        cspSource: string;
+        viewId: string;
+        stylesUri?: Uri;
+    }): string {
+        return getHtmlForView(extensionPath, baseUri, cspSource, viewId, stylesUri);
+    }
 }

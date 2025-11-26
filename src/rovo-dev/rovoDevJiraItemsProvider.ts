@@ -1,8 +1,7 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { Disposable, Event, EventEmitter } from 'vscode';
 
-import { DetailedSiteInfo } from '../atlclients/authInfo';
-import { ExtensionApi } from './api/extensionApi';
+import { DetailedSiteInfo, ExtensionApi } from './api/extensionApi';
 
 export class RovoDevJiraItemsProvider extends Disposable {
     private extensionApi = new ExtensionApi();

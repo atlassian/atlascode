@@ -12,6 +12,7 @@ import {
     RovoDevResponseParser,
     ToolPermissionChoice,
 } from './client';
+import { buildErrorDetails, buildExceptionDetails } from './errorDetailsBuilder';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import {
     RovoDevContextItem,
@@ -20,7 +21,7 @@ import {
     RovoDevPrompt,
     TechnicalPlan,
 } from './rovoDevTypes';
-import { parseCustomCliTagsForMarkdown, statusJsonResponseToMarkdown } from './rovoDevUtils';
+import { parseCustomCliTagsForMarkdown, readLastNLogLines, statusJsonResponseToMarkdown } from './rovoDevUtils';
 import { TypedWebview } from './rovoDevWebviewProvider';
 import {
     RovoDevProviderMessage,
@@ -30,8 +31,6 @@ import {
 import { RovoDevLogger } from './util/rovoDevLogger';
 
 type StreamingApi = 'chat' | 'replay';
-
-const PromptCommands = ['/prune', '/clear', '/status'];
 
 export class RovoDevChatProvider {
     private readonly extensionApi = new ExtensionApi();
@@ -119,7 +118,7 @@ export class RovoDevChatProvider {
         // remove hidden focused item from the context
         context = context.filter((x) => x.contextType !== 'file' || x.enabled);
 
-        const isCommand = PromptCommands.includes(text.trim());
+        const isCommand = text.trim().startsWith('/');
         if (isCommand) {
             enable_deep_plan = false;
             context = [];
@@ -443,6 +442,8 @@ export class RovoDevChatProvider {
                         ctaLink: link,
                         statusCode: `Error code: ${response.type}`,
                         uid: v4(),
+                        stackTrace: buildExceptionDetails(response),
+                        rovoDevLogs: readLastNLogLines(),
                     },
                 });
                 break;
@@ -542,6 +543,11 @@ export class RovoDevChatProvider {
                 // response terminated
                 break;
 
+            case 'replay_end':
+                // signals that the replay has ended, and the API is now streaming live data
+                // NOTE: ignore for now
+                break;
+
             default:
                 // this should really never happen, as unknown messages are caugh and wrapped into the
                 // message `_parsing_error`
@@ -626,6 +632,8 @@ export class RovoDevChatProvider {
                     isRetriable,
                     isProcessTerminated,
                     uid: v4(),
+                    stackTrace: buildErrorDetails(error),
+                    rovoDevLogs: readLastNLogLines(),
                 },
             });
         }
