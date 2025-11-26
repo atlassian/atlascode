@@ -166,6 +166,18 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             Container.createIssueWebview.createOrShow();
             setCommandContext('atlascode:showCreateWorkItemWebview', false);
         }),
+        commands.registerCommand(
+            Commands.CopyImageElement,
+            (commandContext: { viewKey: string; webviewSection: string; isContextMenuOnImage: boolean }) => {
+                if (commandContext.webviewSection === 'jiraImageElement') {
+                    Container.jiraIssueViewManager.handleContextMenu({
+                        viewKey: commandContext.viewKey,
+                        action: 'copy',
+                        data: commandContext,
+                    });
+                }
+            },
+        ),
     );
 
     const settingsFeatureValue = Container.featureFlagClient.checkExperimentValue(

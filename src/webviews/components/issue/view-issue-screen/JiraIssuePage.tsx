@@ -11,7 +11,12 @@ import { v4 } from 'uuid';
 
 import { AnalyticsView } from '../../../../analyticsTypes';
 import { EditIssueAction, IssueCommentAction, OpenRovoDevWithIssueAction } from '../../../../ipc/issueActions';
-import { EditIssueData, emptyEditIssueData, isIssueCreated } from '../../../../ipc/issueMessaging';
+import {
+    EditIssueData,
+    emptyDevelopmentInfo,
+    emptyEditIssueData,
+    isIssueCreated,
+} from '../../../../ipc/issueMessaging';
 import { IssueHistoryItem } from '../../../../ipc/issueMessaging';
 import { LegacyPMFData } from '../../../../ipc/messaging';
 import { AtlascodeErrorBoundary } from '../../../../react/atlascode/common/ErrorBoundary';
@@ -30,6 +35,7 @@ import {
     MentionInfo,
 } from '../AbstractIssueEditorPage';
 import { AtlascodeMentionProvider } from '../common/AtlaskitEditor/AtlascodeMentionsProvider';
+import { Development } from '../Development';
 import NavItem from '../NavItem';
 import PullRequests from '../PullRequests';
 import { EditorStateProvider } from './EditorStateContext';
@@ -53,6 +59,8 @@ export interface ViewState extends CommonEditorViewState, EditIssueData {
     commentsTabIndex: number;
     history: IssueHistoryItem[];
     historyLoading: boolean;
+    imageToCopy: HTMLImageElement | null;
+    vsCodeContext: string;
 }
 
 const emptyState: ViewState = {
@@ -67,6 +75,8 @@ const emptyState: ViewState = {
     commentsTabIndex: 0,
     history: [],
     historyLoading: false,
+    imageToCopy: null,
+    vsCodeContext: '',
 };
 
 export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
@@ -128,6 +138,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     this.setState({ recentPullRequests: e.recentPullRequests });
                     break;
                 }
+                case 'developmentInfoUpdate': {
+                    this.setState({ developmentInfo: e.developmentInfo });
+                    break;
+                }
                 case 'currentUserUpdate': {
                     this.setState({ currentUser: e.currentUser });
                     break;
@@ -148,6 +162,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 }
                 case 'historyUpdate': {
                     this.setState({ history: e.history, historyLoading: false });
+                    break;
+                }
+                case 'copyImage': {
+                    this.handleImageCopy();
                     break;
                 }
             }
@@ -800,6 +818,29 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 });
         }
 
+        const developmentInfo = this.state.developmentInfo || emptyDevelopmentInfo;
+        const totalDevCount =
+            (developmentInfo.branches?.length || 0) +
+            (developmentInfo.commits?.length || 0) +
+            (developmentInfo.pullRequests?.length || 0) +
+            (developmentInfo.builds?.length || 0);
+
+        if (this.state.siteDetails.isCloud && totalDevCount > 0) {
+            const parentIndex = commonItems.findIndex((item) => item.itemLabel === 'Parent');
+            const insertIndex = parentIndex >= 0 ? parentIndex + 1 : commonItems.length;
+
+            commonItems.splice(insertIndex, 0, {
+                itemLabel: 'Development',
+                itemComponent: (
+                    <Development
+                        developmentInfo={developmentInfo}
+                        onOpenPullRequest={(pr: any) => this.postMessage({ action: 'openPullRequest', prHref: pr.url })}
+                        onOpenExternalUrl={(url: string) => this.postMessage({ action: 'openExternalUrl', url })}
+                    />
+                ),
+            });
+        }
+
         const advancedItems: SidebarItem[] = this.advancedSidebarFields
             .map((field) => {
                 if (field.advanced && field.uiType !== UIType.NonEditable) {
@@ -895,6 +936,41 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     override componentDidMount() {
         this.postMessage({ action: 'getFeatureFlags' });
     }
+    override shouldComponentUpdate(_nextProps: Readonly<{}>, nextState: Readonly<ViewState>): boolean {
+        const prevIssueKey = this.state.key;
+        const currentIssueKey = nextState.key;
+
+        if (prevIssueKey !== currentIssueKey) {
+            this.setState({ vsCodeContext: JSON.stringify({ viewKey: currentIssueKey }) });
+        }
+        return true;
+    }
+
+    private handleContextMenuOpen = (e: React.MouseEvent<HTMLDivElement>) => {
+        // save the image if image to be used when context menu item is clicked
+        const target = e.target as HTMLElement | null;
+        const isImage = target?.tagName === 'IMG';
+        this.setState({ imageToCopy: isImage ? (target as HTMLImageElement) : null });
+    };
+
+    private handleImageCopy = async () => {
+        const imageElement = this.state.imageToCopy;
+        if (!imageElement) {
+            console.error('No image element to copy');
+            return;
+        }
+        const selection = window.getSelection();
+        if (selection) {
+            if (selection.rangeCount > 0) {
+                selection.removeAllRanges();
+            }
+            const range = document.createRange();
+            range.selectNode(imageElement);
+            selection.addRange(range);
+            document.execCommand('copy');
+            selection.removeAllRanges();
+        }
+    };
 
     public override render() {
         if (
@@ -923,7 +999,11 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             {(width?: number) => {
                                 if (width && width < 800) {
                                     return (
-                                        <div style={{ margin: '20px 16px 0px 16px' }}>
+                                        <div
+                                            style={{ margin: '20px 16px 0px 16px' }}
+                                            data-vscode-context={this.state.vsCodeContext}
+                                            onContextMenu={this.handleContextMenuOpen}
+                                        >
                                             {this.getMainPanelNavMarkup()}
                                             <h1>
                                                 {this.getInputMarkup(
@@ -940,7 +1020,11 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                     );
                                 }
                                 return (
-                                    <div style={{ maxWidth: '1200px', margin: '20px auto 0 auto' }}>
+                                    <div
+                                        style={{ maxWidth: '1200px', margin: '20px auto 0 auto' }}
+                                        data-vscode-context={this.state.vsCodeContext}
+                                        onContextMenu={this.handleContextMenuOpen}
+                                    >
                                         <Grid layout="fluid">
                                             <GridColumn>
                                                 {this.getMainPanelNavMarkup()}

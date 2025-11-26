@@ -4,12 +4,13 @@ import fs from 'fs';
 import net from 'net';
 import packageJson from 'package.json';
 import path from 'path';
+import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import { downloadAndUnzip } from 'src/rovo-dev/util/downloadFile';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { waitFor } from 'src/rovo-dev/util/waitFor';
 import { Disposable, Event, EventEmitter, ExtensionContext, Terminal, Uri, window, workspace } from 'vscode';
 
-import { DetailedSiteInfo, ExtensionApi, ValidBasicAuthSiteData } from './api/extensionApi';
+import { ExtensionApi, ValidBasicAuthSiteData } from './api/extensionApi';
 import { RovoDevApiClient } from './client';
 import { RovoDevDisabledReason, RovoDevEntitlementCheckFailedDetail } from './rovoDevWebviewProviderMessages';
 import { RovoDevLogger } from './util/rovoDevLogger';
@@ -142,19 +143,22 @@ export interface RovoDevProcessNotStartedState {
 
 export interface RovoDevProcessDownloadingState {
     state: 'Downloading';
-    jiraSiteHostname: DetailedSiteInfo | string;
+    jiraSiteHostname: string;
+    jiraSiteUserInfo: UserInfo;
     totalBytes: number;
     downloadedBytes: number;
 }
 
 export interface RovoDevProcessStartingState {
     state: 'Starting';
-    jiraSiteHostname: DetailedSiteInfo | string;
+    jiraSiteHostname: string;
+    jiraSiteUserInfo: UserInfo;
 }
 
 export interface RovoDevProcessStartedState {
     state: 'Started';
-    jiraSiteHostname: DetailedSiteInfo | string;
+    jiraSiteHostname: string;
+    jiraSiteUserInfo: UserInfo;
     hostname: string;
     httpPort: number;
     timeStarted: number;
@@ -242,7 +246,7 @@ export abstract class RovoDevProcessManager {
         this.stopRovoDevInstance();
     }
 
-    private static async downloadBinaryThenInitialize(credentialsHost: string, rovoDevURIs: RovoDevURIs) {
+    private static async downloadBinaryThenInitialize(credentials: ValidBasicAuthSiteData, rovoDevURIs: RovoDevURIs) {
         const baseDir = rovoDevURIs.RovoDevBaseDir;
         const versionDir = rovoDevURIs.RovoDevVersionDir;
         const zipUrl = rovoDevURIs.RovoDevZipUrl;
@@ -259,7 +263,8 @@ export abstract class RovoDevProcessManager {
         // and we want to show 0% downloaded
         this.setState({
             state: 'Downloading',
-            jiraSiteHostname: credentialsHost,
+            jiraSiteHostname: credentials.host,
+            jiraSiteUserInfo: credentials.authInfo.user,
             totalBytes: 1,
             downloadedBytes: 0,
         });
@@ -272,7 +277,8 @@ export abstract class RovoDevProcessManager {
             if (totalBytes) {
                 this.setState({
                     state: 'Downloading',
-                    jiraSiteHostname: credentialsHost,
+                    jiraSiteHostname: credentials.host,
+                    jiraSiteUserInfo: credentials.authInfo.user,
                     totalBytes,
                     downloadedBytes,
                 });
@@ -285,7 +291,8 @@ export abstract class RovoDevProcessManager {
 
         this.setState({
             state: 'Starting',
-            jiraSiteHostname: credentialsHost,
+            jiraSiteHostname: credentials.host,
+            jiraSiteUserInfo: credentials.authInfo.user,
         });
     }
 
@@ -327,6 +334,7 @@ export abstract class RovoDevProcessManager {
         this.setState({
             state: 'Starting',
             jiraSiteHostname: credentials.host,
+            jiraSiteUserInfo: credentials.authInfo.user,
         });
 
         let rovoDevURIs: ReturnType<typeof GetRovoDevURIs>;
@@ -335,7 +343,7 @@ export abstract class RovoDevProcessManager {
             rovoDevURIs = GetRovoDevURIs(context);
 
             if (!fs.existsSync(rovoDevURIs.RovoDevBinPath)) {
-                await this.downloadBinaryThenInitialize(credentials.host, rovoDevURIs);
+                await this.downloadBinaryThenInitialize(credentials, rovoDevURIs);
             }
         } catch (error) {
             RovoDevLogger.error(error, 'Error downloading Rovo Dev');
@@ -370,7 +378,7 @@ export abstract class RovoDevProcessManager {
                 this.failIfRovoDevInstanceIsRunning();
             }
 
-            const credentials = await this.extensionApi.auth.getCloudPrimaryAuthInfo();
+            const credentials = await this.extensionApi.auth.getCloudPrimaryAuthSite();
             await this.internalInitializeRovoDev(context, credentials, forceNewInstance);
         } finally {
             this.asyncLocked = false;
@@ -386,7 +394,7 @@ export abstract class RovoDevProcessManager {
             this.asyncLocked = true;
 
             try {
-                const credentials = await this.extensionApi.auth.getCloudPrimaryAuthInfo();
+                const credentials = await this.extensionApi.auth.getCloudPrimaryAuthSite();
                 if (areCredentialsEqual(credentials, this.currentCredentials)) {
                     return;
                 }
@@ -544,6 +552,7 @@ class RovoDevTerminalInstance extends Disposable {
                     setState({
                         state: 'Started',
                         jiraSiteHostname: credentials.host,
+                        jiraSiteUserInfo: credentials.authInfo.user,
                         hostname: RovoDevInfo.hostname,
                         httpPort: port,
                         timeStarted: timeStarted.getTime(),

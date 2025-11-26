@@ -147,6 +147,11 @@ interface RovoDevCloseChunk {
     event_kind: 'close';
 }
 
+// doc missing
+interface RovoDevReplayEndChunk {
+    event_kind: 'replay_end';
+}
+
 type RovoDevSingleResponseRaw =
     | RovoDevUserPromptResponseRaw
     | RovoDevTextResponseRaw
@@ -171,7 +176,8 @@ type RovoDevSingleChunk =
     | RovoDevPruneChunk
     | RovoDevOnCallToolStartChunk
     | RovoDevStatusChunk
-    | RovoDevCloseChunk;
+    | RovoDevCloseChunk
+    | RovoDevReplayEndChunk;
 
 // https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.PartStartEvent
 interface RovoDevPartStartResponseRaw {
@@ -513,10 +519,12 @@ export class RovoDevResponseParser {
                     ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
                     : chunk;
 
+            // events with no payload
             case 'close':
+            case 'replay_end':
                 return buffer
                     ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
-                    : { event_kind: 'close' };
+                    : { event_kind: chunk.event_kind };
 
             default:
                 // @ts-expect-error ts(2339) - chunk here should be 'never'

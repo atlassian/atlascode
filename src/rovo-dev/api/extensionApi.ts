@@ -8,10 +8,12 @@ import { SearchJiraHelper } from 'src/views/jira/searchJiraHelper';
 import { getHtmlForView } from 'src/webview/common/getHtmlForView';
 import { commands, ConfigurationChangeEvent, Uri } from 'vscode';
 
+import { RovodevAnalyticsApi } from '../analytics/rovodevAnalyticsApi';
 import { AuthInfo, DetailedSiteInfo, ProductJira } from './extensionApiTypes';
 
 // Re-export types for convenience
 export * from './extensionApiTypes';
+export * from '../analytics/rovodevAnalyticsTypes';
 
 // TODO: getAxiosInstance is being re-exported for now, to not break compatability with curl logging
 //       in the future, we'd need to re-implement it, or just use the library directly
@@ -57,11 +59,7 @@ export class JiraApi {
  * This class defines what rovodev needs from the rest of the extension
  */
 export class ExtensionApi {
-    public readonly analytics = {
-        sendTrackEvent: async (event: any) => {
-            await Container.analyticsClient.sendTrackEvent(event);
-        },
-    };
+    public readonly analytics = new RovodevAnalyticsApi();
 
     public readonly metadata = {
         isDebugging: (): boolean => {
@@ -109,7 +107,7 @@ export class ExtensionApi {
          *
          * @returns ValidBasicAuthSiteData with working API token credentials, or undefined
          */
-        getCloudPrimaryAuthInfo: async (): Promise<ValidBasicAuthSiteData | undefined> => {
+        getCloudPrimaryAuthSite: async (): Promise<ValidBasicAuthSiteData | undefined> => {
             return await Container.clientManager.getCloudPrimarySite();
         },
 

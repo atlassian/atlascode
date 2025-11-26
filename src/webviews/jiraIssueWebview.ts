@@ -14,6 +14,7 @@ import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
 import timer from 'src/util/perf';
+import * as vscode from 'vscode';
 import { commands, env, window } from 'vscode';
 
 import { issueCreatedEvent, issueOpenRovoDevEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../analytics';
@@ -48,9 +49,16 @@ import {
     isUpdateWorklog,
     TransitionChildIssueAction,
 } from '../ipc/issueActions';
-import { EditIssueData, emptyEditIssueData } from '../ipc/issueMessaging';
+import {
+    BranchInfo,
+    BuildInfo,
+    CommitInfo,
+    DevelopmentInfo,
+    EditIssueData,
+    emptyEditIssueData,
+} from '../ipc/issueMessaging';
 import { Action } from '../ipc/messaging';
-import { isOpenPullRequest } from '../ipc/prActions';
+import { isOpenExternalUrl, isOpenPullRequest } from '../ipc/prActions';
 import { fetchEditIssueUI, fetchMinimalIssue } from '../jira/fetchIssue';
 import { fetchMultipleIssuesWithTransitions } from '../jira/fetchIssueWithTransitions';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
@@ -62,7 +70,7 @@ import { OnJiraEditedRefreshDelay } from '../util/time';
 import { getJiraIssueUri } from '../views/jira/treeViews/utils';
 import { NotificationManagerImpl } from '../views/notifications/notificationManager';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
-import { InitializingWebview } from './abstractWebview';
+import { ContextMenuCommandData, InitializingWebview } from './abstractWebview';
 
 const EditJiraIssueUIRenderEventName = 'ui.jira.editJiraIssue.render.lcp';
 const EditJiraIssueUpdatesEventName = 'ui.jira.editJiraIssue.update.lcp';
@@ -261,6 +269,7 @@ export class JiraIssueWebview
                 this.updateWatchers(),
                 this.updateVoters(),
                 this.updateRelatedPullRequests(),
+                this.updateDevelopmentInfo(),
                 this.fetchFullHierarchy(),
             ]);
 
@@ -315,6 +324,199 @@ export class JiraIssueWebview
         if (relatedPrs.length > 0) {
             this.postMessage({ type: 'pullRequestUpdate', recentPullRequests: relatedPrs });
         }
+    }
+
+    async updateDevelopmentInfo() {
+        try {
+            const jiraDevInfo = await this.fetchJiraDevelopmentInfo();
+
+            const [localBranches, localCommits, pullRequests, localBuilds] = await Promise.all([
+                this.relatedBranches(),
+                this.relatedCommits(),
+                this.recentPullRequests(),
+                this.relatedBuilds(),
+            ]);
+
+            const branches = jiraDevInfo.branches.length > 0 ? jiraDevInfo.branches : localBranches;
+            const commits = jiraDevInfo.commits.length > 0 ? jiraDevInfo.commits : localCommits;
+            const builds = jiraDevInfo.builds.length > 0 ? jiraDevInfo.builds : localBuilds;
+
+            const deduplicatedBranches = this.deduplicateBranches(branches);
+
+            const finalDevInfo = {
+                branches: deduplicatedBranches,
+                commits,
+                pullRequests: jiraDevInfo.pullRequests.length > 0 ? jiraDevInfo.pullRequests : pullRequests,
+                builds,
+            };
+
+            this.postMessage({
+                type: 'developmentInfoUpdate',
+                developmentInfo: finalDevInfo,
+            });
+        } catch (e) {
+            Logger.error(e, 'Error updating development info');
+        }
+    }
+
+    private normalizeBranchName(branchName: string | undefined): string {
+        if (!branchName) {
+            return '';
+        }
+        return branchName.replace(/^[^/]+\//, '');
+    }
+
+    private deduplicateBranches(branches: any[]): any[] {
+        const seen = new Set<string>();
+        const deduplicated: any[] = [];
+
+        for (const branch of branches) {
+            const branchName = this.normalizeBranchName(branch.name) || branch.name;
+
+            if (!seen.has(branchName)) {
+                seen.add(branchName);
+                deduplicated.push({
+                    ...branch,
+                    name: branchName,
+                });
+            }
+        }
+
+        return deduplicated;
+    }
+
+    private async fetchJiraDevelopmentInfo(): Promise<DevelopmentInfo> {
+        const emptyResult: DevelopmentInfo = { branches: [], commits: [], pullRequests: [], builds: [] };
+
+        try {
+            if (!this._issue.siteDetails.isCloud) {
+                return emptyResult;
+            }
+
+            const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+            const baseApiUrl = this._issue.siteDetails.baseApiUrl.replace(/\/rest$/, '');
+
+            // Query Bitbucket for development information
+            const devStatusUrl = `${baseApiUrl}/rest/dev-status/1.0/issue/detail?issueId=${this._issue.id}&applicationType=bitbucket&dataType=repository`;
+
+            const response = await client.transportFactory().get(devStatusUrl, {
+                method: 'GET',
+                headers: {
+                    Authorization: await client.authorizationProvider('GET', devStatusUrl),
+                },
+                timeout: 5000,
+            });
+
+            const devData = response.data;
+
+            if (devData.detail && devData.detail.length > 0) {
+                return this.parseDevStatusData(devData);
+            }
+
+            return emptyResult;
+        } catch (e) {
+            Logger.error(e, 'Could not fetch Jira development info, falling back to local data');
+            return emptyResult;
+        }
+    }
+
+    private parseDevStatusData(devData: any): DevelopmentInfo {
+        const branches: BranchInfo[] = [];
+        const commits: CommitInfo[] = [];
+        const pullRequests: any[] = [];
+        const builds: BuildInfo[] = [];
+
+        // Parse development data
+        if (devData.detail && devData.detail.length > 0) {
+            for (const app of devData.detail) {
+                // Extract branches
+                if (app.branches) {
+                    for (const branch of app.branches) {
+                        branches.push({
+                            name: branch.name,
+                            url: branch.url,
+                        });
+                    }
+                }
+
+                if (app.pullRequests) {
+                    for (const pr of app.pullRequests) {
+                        pullRequests.push({
+                            id: pr.id,
+                            title: pr.name,
+                            url: pr.url,
+                            state: pr.status,
+                            author: pr.author,
+                        });
+
+                        if (pr.commits) {
+                            for (const commit of pr.commits) {
+                                commits.push({
+                                    hash: commit.id,
+                                    message: commit.message,
+                                    authorName: commit.author?.name || 'Unknown',
+                                    url: commit.url,
+                                });
+                            }
+                        }
+                    }
+                }
+
+                if (app.repositories) {
+                    for (const repo of app.repositories) {
+                        if (repo.branches) {
+                            for (const branch of repo.branches) {
+                                branches.push({
+                                    name: branch.name,
+                                    url: branch.url,
+                                });
+                            }
+                        }
+
+                        if (repo.pullRequests) {
+                            for (const pr of repo.pullRequests) {
+                                const prExists = pullRequests.some((p) => p.id === pr.id);
+                                if (!prExists) {
+                                    pullRequests.push({
+                                        id: pr.id,
+                                        title: pr.name,
+                                        url: pr.url,
+                                        state: pr.status,
+                                        author: pr.author,
+                                    });
+                                }
+                            }
+                        }
+
+                        if (repo.commits) {
+                            for (const commit of repo.commits) {
+                                const commitExists = commits.some((c) => c.hash === commit.id);
+                                if (!commitExists) {
+                                    commits.push({
+                                        hash: commit.id,
+                                        message: commit.message,
+                                        authorName: commit.author?.name || 'Unknown',
+                                        url: commit.url,
+                                    });
+                                }
+
+                                if (commit.builds) {
+                                    for (const build of commit.builds) {
+                                        builds.push({
+                                            name: build.name || build.buildNumber,
+                                            key: build.buildNumber,
+                                            state: build.state,
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return { branches, commits, pullRequests, builds };
     }
 
     async updateWatchers() {
@@ -1460,6 +1662,14 @@ export class JiraIssueWebview
                     Container.rovodevWebviewProvider.setPromptTextWithFocus((msg as any).text);
                     break;
                 }
+                case 'openExternalUrl': {
+                    // Open URL in external browser
+                    if (isOpenExternalUrl(msg)) {
+                        handled = true;
+                        vscode.env.openExternal(vscode.Uri.parse(msg.url));
+                    }
+                    break;
+                }
                 case 'openPullRequest': {
                     if (isOpenPullRequest(msg)) {
                         handled = true;
@@ -1746,5 +1956,151 @@ export class JiraIssueWebview
         );
 
         return relatedPrs.filter((pr) => pr !== undefined).map((p) => p!.data);
+    }
+
+    private async relatedBranches(): Promise<any[]> {
+        if (!Container.bitbucketContext) {
+            return [];
+        }
+
+        try {
+            const repos = Container.bitbucketContext.getAllRepositories();
+            const allBranches: any[] = [];
+
+            for (const repo of repos) {
+                const scm = Container.bitbucketContext.getRepositoryScm(repo.rootUri);
+                if (!scm) {
+                    continue;
+                }
+
+                try {
+                    const [localBranches, remoteBranches] = await Promise.all([
+                        scm.getBranches({ remote: false }),
+                        scm.getBranches({ remote: true }),
+                    ]);
+
+                    const issueKeyLower = this._issue.key.toLowerCase();
+                    const relatedBranches = [...localBranches, ...remoteBranches].filter(
+                        (branch) => branch.name && branch.name.toLowerCase().includes(issueKeyLower),
+                    );
+
+                    let repoUrl: string | undefined;
+                    if (repo.mainSiteRemote?.site) {
+                        try {
+                            const bbClient = await clientForSite(repo.mainSiteRemote.site);
+                            const bbRepo = await bbClient.repositories.get(repo.mainSiteRemote.site);
+                            repoUrl = bbRepo?.url;
+                        } catch (e) {
+                            Logger.debug(`Could not fetch repo details for ${repo.rootUri}`, e);
+                        }
+                    }
+
+                    const branchesWithUrls = relatedBranches.map((branch) => {
+                        const branchName = this.normalizeBranchName(branch.name) || branch.name || '';
+                        return {
+                            name: branchName,
+                            url:
+                                repoUrl && branchName
+                                    ? `${repoUrl}/branch/${encodeURIComponent(branchName)}`
+                                    : undefined,
+                        };
+                    });
+
+                    allBranches.push(...branchesWithUrls);
+                } catch (e) {
+                    Logger.debug(`Could not fetch branches for repo ${repo.rootUri}`, e);
+                }
+            }
+
+            return allBranches;
+        } catch (e) {
+            Logger.error(e, 'Error fetching related branches');
+            return [];
+        }
+    }
+
+    private async relatedCommits(): Promise<any[]> {
+        if (!Container.bitbucketContext) {
+            return [];
+        }
+
+        try {
+            const repos = Container.bitbucketContext.getAllRepositories();
+            const allCommits: any[] = [];
+
+            for (const repo of repos) {
+                const scm = Container.bitbucketContext.getRepositoryScm(repo.rootUri);
+                if (!scm) {
+                    continue;
+                }
+
+                try {
+                    // Get log of recent commits
+                    const commits = await scm.log({ maxEntries: 100 });
+                    const issueKeyLower = this._issue.key.toLowerCase();
+
+                    // Filter commits that mention the issue key
+                    const relatedCommits = commits.filter(
+                        (commit) => commit.message && commit.message.toLowerCase().includes(issueKeyLower),
+                    );
+
+                    allCommits.push(...relatedCommits);
+                } catch (e) {
+                    Logger.debug(`Could not fetch commits for repo ${repo.rootUri}`, e);
+                }
+            }
+
+            return allCommits;
+        } catch (e) {
+            Logger.error(e, 'Error fetching related commits');
+            return [];
+        }
+    }
+
+    private async relatedBuilds(): Promise<any[]> {
+        // Get builds from pull requests
+        const prs = await this.recentPullRequests();
+        const allBuilds: any[] = [];
+
+        for (const pr of prs) {
+            try {
+                const site = pr.siteDetails;
+                const fullName = pr.destination?.repo?.fullName;
+
+                if (!fullName || !fullName.includes('/')) {
+                    Logger.debug(`Skipping builds for PR ${pr.id} - missing repository information`);
+                    continue;
+                }
+
+                const [ownerSlug, repoSlug] = fullName.split('/');
+
+                if (!ownerSlug || !repoSlug) {
+                    Logger.debug(`Skipping builds for PR ${pr.id} - invalid repository: ${fullName}`);
+                    continue;
+                }
+
+                const bbApi = await clientForSite({
+                    details: site,
+                    ownerSlug,
+                    repoSlug,
+                });
+
+                const builds = await bbApi.pullrequests.getBuildStatuses({
+                    site: { details: site, ownerSlug, repoSlug },
+                    data: pr,
+                    workspaceRepo: undefined,
+                });
+
+                allBuilds.push(...builds);
+            } catch (e) {
+                Logger.debug(`Could not fetch builds for PR ${pr.id}`, e);
+            }
+        }
+
+        return allBuilds;
+    }
+
+    public handleContextMenuCommand?({ data }: ContextMenuCommandData): void {
+        this.postMessage({ type: 'copyImage', data });
     }
 }

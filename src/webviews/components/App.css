@@ -932,6 +932,9 @@ div[role='dialog'],
     background: var(--vscode-button-background) !important;
     border-radius: 2px !important;
 }
+.ac-button-spinner {
+    --ds-icon-subtle: var(--vscode-button-foreground) !important;
+}
 
 .ac-button span {
     color: var(--vscode-button-foreground) !important;

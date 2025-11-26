@@ -24,19 +24,8 @@ interface EntitlementResponse {
     type: RovoDevEntitlementType | RovoDevEntitlementErrorType;
 }
 
-const CREDENTIAL_ERROR_MESSAGE =
-    'It looks like you are not signed in to the Atlassian extension using an API Token. Please add an API token to unlock new features.';
-
-const entitlementTypeToReadableString: Record<RovoDevEntitlementType, string> = {
-    [RovoDevEntitlementType.ROVO_DEV_EVERYWHERE]: 'Rovo Dev Everywhere',
-    [RovoDevEntitlementType.ROVO_DEV_STANDARD]: 'Rovo Dev Standard',
-    [RovoDevEntitlementType.ROVO_DEV_STANDARD_TRIAL]: 'Rovo Dev Standard Trial',
-    [RovoDevEntitlementType.ROVO_DEV_BETA]: 'Rovo Dev Beta',
-};
-
-const ENTITLED_MESSAGE = (type: RovoDevEntitlementType) =>
-    `Your Jira site now has access to ${entitlementTypeToReadableString[type]}.  
-        Atlassian's AI agent designed for software teams, using your team's knowledge to streamline  dev work from idea to deployment.`;
+const CREDENTIAL_ERROR_MESSAGE = `Work with Atlassian Rovo Dev in VS Code. It's AI for software teams, bringing your team's knowledge to help you ship better code, faster. Just add an API token to get started.`;
+const ENTITLED_MESSAGE = `Work with Atlassian Rovo Dev in VS Code. It's AI for software teams, bringing your team's knowledge from Jira and Confluence to help you ship better code, faster.`;
 
 export class RovoDevEntitlementChecker extends Disposable {
     private readonly _endpoint = `/gateway/api/rovodev/v3/sites/type`;
@@ -157,7 +146,7 @@ export class RovoDevEntitlementChecker extends Disposable {
                 });
 
                 window
-                    .showWarningMessage(CREDENTIAL_ERROR_MESSAGE, 'Add API token', dontShowAgain)
+                    .showInformationMessage(CREDENTIAL_ERROR_MESSAGE, 'Add API token', dontShowAgain)
                     .then((selection) => {
                         let buttonType = 'dismiss';
                         if (selection === 'Add API token') {
@@ -182,8 +171,6 @@ export class RovoDevEntitlementChecker extends Disposable {
             return;
         }
 
-        const entitlementType = type as RovoDevEntitlementType;
-
         notificationChangeEvent(
             NotificationSource.RovoDevEntitlementCheckEntitled,
             undefined,
@@ -194,16 +181,16 @@ export class RovoDevEntitlementChecker extends Disposable {
         });
 
         window
-            .showInformationMessage(ENTITLED_MESSAGE(entitlementType), 'Open Rovo Dev', 'Learn more', dontShowAgain)
+            .showInformationMessage(ENTITLED_MESSAGE, 'Try Rovo Dev', 'Read documentation', dontShowAgain)
             .then((selection) => {
                 let buttonType = 'dismiss';
-                if (selection === 'Open Rovo Dev') {
+                if (selection === 'Try Rovo Dev') {
                     buttonType = 'openRovoDev';
                     commands.executeCommand(RovodevCommands.FocusRovoDevWindow).then(() => {
                         this._disable();
                     });
-                } else if (selection === 'Learn more') {
-                    buttonType = 'learnMore';
+                } else if (selection === 'Read documentation') {
+                    buttonType = 'openInfoLink';
                     this.openInfoLink();
                 } else if (selection === dontShowAgain) {
                     buttonType = 'dontShowAgain';
