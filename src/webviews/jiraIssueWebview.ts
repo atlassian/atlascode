@@ -31,6 +31,7 @@ import {
     EditChildIssueAction,
     EditIssueAction,
     isAddAttachmentsAction,
+    isCheckRovoDevEntitlement,
     isCloneIssue,
     isCreateIssue,
     isCreateIssueLink,
@@ -1759,6 +1760,34 @@ export class JiraIssueWebview
                     if (isHandleEditorFocus(msg)) {
                         handled = true;
                         Container.setIsEditorFocused(msg.isFocused);
+                    }
+                    break;
+                }
+                case 'checkRovoDevEntitlement': {
+                    if (isCheckRovoDevEntitlement(msg)) {
+                        handled = true;
+                        try {
+                            const entitlementResponse = await Container.rovoDevEntitlementChecker.checkEntitlement();
+                            const isDismissed = Container.context.globalState.get<boolean>(
+                                'rovoDevPromoBannerDismissed',
+                                false,
+                            );
+                            Logger.debug(
+                                `Rovo Dev entitlement: ${entitlementResponse.isEntitled} (${entitlementResponse.type}), dismissed: ${isDismissed}`,
+                            );
+                            this.postMessage({
+                                type: 'rovoDevEntitlementUpdate',
+                                isEntitled: entitlementResponse.isEntitled && !isDismissed,
+                                entitlementType: entitlementResponse.type,
+                            });
+                        } catch (e) {
+                            Logger.error(e, 'Error checking Rovo Dev entitlement');
+                            this.postMessage({
+                                type: 'rovoDevEntitlementUpdate',
+                                isEntitled: false,
+                                entitlementType: 'UNKOWN_ERROR',
+                            });
+                        }
                     }
                     break;
                 }
