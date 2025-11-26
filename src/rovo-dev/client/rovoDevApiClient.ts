@@ -33,9 +33,9 @@ export class RovoDevApiClient {
      * @param {string} hostnameOrIp The hostname or IP address for the Rovo Dev service.
      * @param {number} port The http port for the Rovo Dev service.
      */
-    constructor(hostnameOrIp: string, port: number, _sessionToken: string) {
+    constructor(hostnameOrIp: string, port: number, sessionToken: string) {
         this._baseApiUrl = `http://${hostnameOrIp}:${port}`;
-        this._authBearerHeader = _sessionToken ? 'Bearer ' + _sessionToken : undefined;
+        this._authBearerHeader = sessionToken ? 'Bearer ' + sessionToken : undefined;
     }
 
     private async fetchApi(restApi: string, method: 'GET'): Promise<Response>;
