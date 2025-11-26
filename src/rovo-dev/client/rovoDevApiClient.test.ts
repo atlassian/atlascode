@@ -17,7 +17,7 @@ describe('RovoDevApiClient', () => {
     const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
 
     beforeEach(() => {
-        client = new RovoDevApiClient('localhost', 8080);
+        client = new RovoDevApiClient('localhost', 8080, 'sessionToken');
         mockFetch.mockClear();
     });
 
@@ -27,12 +27,12 @@ describe('RovoDevApiClient', () => {
 
     describe('constructor', () => {
         it('should create instance with correct base URL', () => {
-            const testClient = new RovoDevApiClient('example.com', 3000);
+            const testClient = new RovoDevApiClient('example.com', 3000, 'sessionToken');
             expect(testClient.baseApiUrl).toBe('http://example.com:3000');
         });
 
         it('should handle IP address and port', () => {
-            const testClient = new RovoDevApiClient('192.168.1.1', 9000);
+            const testClient = new RovoDevApiClient('192.168.1.1', 9000, 'sessionToken');
             expect(testClient.baseApiUrl).toBe('http://192.168.1.1:9000');
         });
     });
@@ -60,6 +60,7 @@ describe('RovoDevApiClient', () => {
                 headers: {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
                 },
                 body: undefined,
             });
@@ -83,6 +84,7 @@ describe('RovoDevApiClient', () => {
                 headers: {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
                 },
                 body,
             });
@@ -136,6 +138,7 @@ describe('RovoDevApiClient', () => {
                 headers: {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
                 },
                 body: undefined,
             });
@@ -187,6 +190,7 @@ describe('RovoDevApiClient', () => {
                 method: 'POST',
                 headers: {
                     accept: 'text/event-stream',
+                    Authorization: 'Bearer sessionToken',
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ message, context: [] }),
@@ -201,6 +205,7 @@ describe('RovoDevApiClient', () => {
                     headers: {
                         accept: 'text/event-stream',
                         'Content-Type': 'application/json',
+                        Authorization: 'Bearer sessionToken',
                     },
                 },
             );
@@ -222,6 +227,7 @@ describe('RovoDevApiClient', () => {
                 headers: {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
                 },
                 body: JSON.stringify({ message, context: [] }),
             });
@@ -235,6 +241,7 @@ describe('RovoDevApiClient', () => {
                     headers: {
                         accept: 'text/event-stream',
                         'Content-Type': 'application/json',
+                        Authorization: 'Bearer sessionToken',
                     },
                 },
             );
@@ -260,6 +267,7 @@ describe('RovoDevApiClient', () => {
                 headers: {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
                 },
                 body: JSON.stringify({ message, enable_deep_plan: true, context: [] }),
             });
@@ -273,6 +281,7 @@ describe('RovoDevApiClient', () => {
                     headers: {
                         accept: 'text/event-stream',
                         'Content-Type': 'application/json',
+                        Authorization: 'Bearer sessionToken',
                     },
                 },
             );
@@ -293,6 +302,7 @@ describe('RovoDevApiClient', () => {
                 headers: {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
                 },
                 body: JSON.stringify({ message: '', context: [] }),
             });
@@ -306,6 +316,7 @@ describe('RovoDevApiClient', () => {
                     headers: {
                         accept: 'text/event-stream',
                         'Content-Type': 'application/json',
+                        Authorization: 'Bearer sessionToken',
                     },
                 },
             );
@@ -327,6 +338,7 @@ describe('RovoDevApiClient', () => {
                 headers: {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
                 },
                 body: JSON.stringify({ message, context: [] }),
             });
@@ -340,6 +352,7 @@ describe('RovoDevApiClient', () => {
                     headers: {
                         accept: 'text/event-stream',
                         'Content-Type': 'application/json',
+                        Authorization: 'Bearer sessionToken',
                     },
                 },
             );
@@ -362,6 +375,7 @@ describe('RovoDevApiClient', () => {
                 headers: {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
                 },
                 body: undefined,
             });
@@ -401,6 +415,7 @@ describe('RovoDevApiClient', () => {
                     headers: {
                         accept: 'text/event-stream',
                         'Content-Type': 'application/json',
+                        Authorization: 'Bearer sessionToken',
                     },
                     body: undefined,
                 },
@@ -427,6 +442,7 @@ describe('RovoDevApiClient', () => {
                     headers: {
                         accept: 'text/event-stream',
                         'Content-Type': 'application/json',
+                        Authorization: 'Bearer sessionToken',
                     },
                     body: undefined,
                 },
@@ -466,6 +482,7 @@ describe('RovoDevApiClient', () => {
                 headers: {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
                 },
                 body: undefined,
             });
@@ -520,6 +537,7 @@ describe('RovoDevApiClient', () => {
                 headers: {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
                 },
                 body: undefined,
             });
@@ -610,6 +628,7 @@ describe('RovoDevApiClient', () => {
                 headers: {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
                 },
                 body: JSON.stringify({ servers: [], accept_all: 'true' }),
             });
@@ -630,6 +649,7 @@ describe('RovoDevApiClient', () => {
                 headers: {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
                 },
                 body: JSON.stringify({
                     servers: [{ server_name: 'server1', decision: 'accept' }],
@@ -653,6 +673,7 @@ describe('RovoDevApiClient', () => {
                 headers: {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
                 },
                 body: JSON.stringify({ servers: [{ server_name: 'server2', decision: 'deny' }], accept_all: 'false' }),
             });
@@ -689,6 +710,7 @@ describe('RovoDevApiClient', () => {
                 headers: {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
                 },
                 body: undefined,
             });
@@ -734,6 +756,7 @@ describe('RovoDevApiClient', () => {
                 headers: {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
                 },
                 body: JSON.stringify({
                     decisions: [
@@ -765,6 +788,7 @@ describe('RovoDevApiClient', () => {
                 headers: {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
                 },
                 body: JSON.stringify({
                     decisions: [
@@ -796,6 +820,7 @@ describe('RovoDevApiClient', () => {
                 headers: {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
                 },
                 body: JSON.stringify({
                     decisions: [
@@ -829,6 +854,7 @@ describe('RovoDevApiClient', () => {
                 headers: {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
                 },
                 body: JSON.stringify({
                     decisions: [
@@ -866,6 +892,7 @@ describe('RovoDevApiClient', () => {
                 headers: {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
                 },
                 body: JSON.stringify({
                     decisions: [],
@@ -893,6 +920,7 @@ describe('RovoDevApiClient', () => {
                 headers: {
                     accept: 'text/event-stream',
                     'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
                 },
                 body: JSON.stringify({
                     decisions: [
