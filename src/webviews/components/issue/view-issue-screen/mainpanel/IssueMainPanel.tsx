@@ -5,6 +5,7 @@ import { IssueType, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-comm
 import { FieldUI, FieldUIs, FieldValues, IssueLinkTypeSelectOption } from '@atlassianlabs/jira-pi-meta-models';
 import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+import { AdfAwareContent } from 'src/webviews/components/AdfAwareContent';
 
 import { RenderedContent } from '../../../RenderedContent';
 import { AttachmentList } from '../../AttachmentList';
@@ -278,7 +279,7 @@ const IssueMainPanel: React.FC<Props> = ({
                             className="ac-inline-input-view-p"
                         >
                             {isAtlaskitEditorEnabled ? (
-                                <RenderedContent html={renderedDescription} fetchImage={fetchImage} />
+                                <AdfAwareContent content={defaultDescription} mentionProvider={mentionProvider} />
                             ) : renderedDescription ? (
                                 <RenderedContent html={renderedDescription} fetchImage={fetchImage} />
                             ) : (

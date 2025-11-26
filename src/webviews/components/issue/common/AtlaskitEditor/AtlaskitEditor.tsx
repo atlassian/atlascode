@@ -12,7 +12,6 @@ import { mediaPlugin } from '@atlaskit/editor-plugin-media';
 import { mentionsPlugin } from '@atlaskit/editor-plugin-mentions';
 import { textColorPlugin } from '@atlaskit/editor-plugin-text-color';
 import { toolbarListsIndentationPlugin } from '@atlaskit/editor-plugin-toolbar-lists-indentation';
-import { WikiMarkupTransformer } from '@atlaskit/editor-wikimarkup-transformer';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 import React from 'react';
 
@@ -75,6 +74,8 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                         provider: Promise.resolve({
                             viewMediaClientConfig: {
                                 authProvider: () =>
+                                    // TODO: Provide token and clientId from request to Jira token endpoint
+                                    // For testing purposes you can get a token and clientId on Jira Fronted by intercepting network requests
                                     Promise.resolve({
                                         token: '',
                                         clientId: '',
@@ -95,21 +96,15 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
             }
 
             return new Promise((resolve) => {
-                editorApi.core.actions.requestDocument(
-                    (document) => {
-                        if (!document) {
-                            resolve(null);
-                            return;
-                        }
-                        // document is in wiki markup format because of transformer passed below
-                        resolve(JSON.stringify(document));
-                    },
-                    // {
-                    //     transformer: editorApi.core.actions.createTransformer(
-                    //         (scheme) => new WikiMarkupTransformer(scheme),
-                    //     ),
-                    // },
-                );
+                editorApi.core.actions.requestDocument((document) => {
+                    if (!document) {
+                        resolve(null);
+                        return;
+                    }
+
+                    // TODO: fix type to be ADF format on upper levels when we migrate to rest v3
+                    resolve(document);
+                });
             });
         } catch (error) {
             console.error(error);
@@ -153,20 +148,13 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                 throw new Error('editorApi is not available');
             }
 
-            editorApi.core.actions.requestDocument(
-                (document) => {
-                    if (!document) {
-                        throw new Error('document is not available');
-                    }
-                    // document is in  wiki markup format because of transformer passed below
-                    onSave?.(document);
-                },
-                {
-                    transformer: editorApi.core.actions.createTransformer(
-                        (scheme) => new WikiMarkupTransformer(scheme),
-                    ),
-                },
-            );
+            editorApi.core.actions.requestDocument((document) => {
+                if (!document) {
+                    throw new Error('document is not available');
+                }
+                // TODO: fix type to be ADF format on upper levels when we migrated to rest v3
+                onSave?.(document);
+            });
         } catch (error) {
             console.error(error);
         }
@@ -192,10 +180,6 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                 assistiveLabel="Rich text editor for comments"
                 preset={preset}
                 defaultValue={defaultValue}
-                // contentTransformerProvider={(schema) => {
-                //     // here we transforms ADF <-> wiki markup
-                //     return new WikiMarkupTransformer(schema);
-                // }}
                 mentionProvider={mentionProvider}
             />
             {(onSave || onCancel) && (
