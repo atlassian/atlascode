@@ -534,18 +534,13 @@ export class RovoDevChatProvider {
                 });
                 break;
 
-            case 'replay_end':
-                // signals that the replay has ended, and the API is now streaming live data
-                // NOTE: this event is handled somewhere else
-                break;
-
             case 'close':
                 // response terminated
                 break;
 
             case 'replay_end':
                 // signals that the replay has ended, and the API is now streaming live data
-                // NOTE: ignore for now
+                // NOTE: this event is handled somewhere else
                 break;
 
             default:
