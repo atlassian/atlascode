@@ -221,9 +221,16 @@ export class SiteManager extends Disposable {
         // We had saved just the hostname originally, but started including the port for server
         // customers so it's now technically a host. Since this is persisted there will be some
         // saved instances that still refer to it as hostname so we apply this correction here.
+        if (site.host.includes('atlassian.net')) {
+            site.isAtlassian = true;
+        }
         if (!site.host && site.hostname) {
             site.host = site.hostname;
         }
+        if (site.host === 'localhost')
+            return undefined;
+        }
+
         delete site.hostname;
         return site;
     }
