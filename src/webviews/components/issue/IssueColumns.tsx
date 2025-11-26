@@ -79,9 +79,19 @@ export const AssigneeColumn = (data: ItemData) => {
         const avatar = assignee.avatarUrls && assignee.avatarUrls['24x24'] ? assignee.avatarUrls['24x24'] : '';
 
         return (
-            <div className="ac-flex" style={{ alignItems: 'center' }}>
-                <Avatar size="small" src={avatar} />
-                <span style={{ marginLeft: '4px' }}>{label}</span>
+            <div className="ac-flex" style={{ alignItems: 'flex-start', gap: '4px', maxWidth: '180px' }}>
+                <Avatar size="small" src={avatar} style={{ flexShrink: 0 }} />
+                <span
+                    style={{
+                        wordBreak: 'break-word',
+                        overflowWrap: 'break-word',
+                        whiteSpace: 'normal',
+                        lineHeight: '1.2',
+                        fontSize: '12px',
+                    }}
+                >
+                    {label}
+                </span>
             </div>
         );
     }
@@ -91,7 +101,7 @@ export const AssigneeColumn = (data: ItemData) => {
     const avatar = assignee?.avatarUrls && assignee.avatarUrls['24x24'] ? assignee.avatarUrls['24x24'] : '';
 
     return (
-        <div style={{ width: '150px', minWidth: '140px' }}>
+        <div style={{ width: '180px', minWidth: '140px' }}>
             <DropdownMenu
                 isOpen={isOpen}
                 onOpenChange={(attrs) => setIsOpen(attrs.isOpen)}
@@ -103,14 +113,26 @@ export const AssigneeColumn = (data: ItemData) => {
                         style={{
                             padding: '4px 6px',
                             minHeight: '32px',
+                            height: 'auto',
                             width: '100%',
                             justifyContent: 'flex-start',
                         }}
                         iconAfter={<ChevronDownIcon label="" size="small" />}
                     >
-                        <div className="ac-flex" style={{ alignItems: 'center' }}>
-                            {assignee && <Avatar size="xsmall" src={avatar} />}
-                            <span style={{ marginLeft: assignee ? '4px' : '0', fontSize: '12px' }}>{label}</span>
+                        <div className="ac-flex" style={{ alignItems: 'center', gap: '3px', flex: 1 }}>
+                            {assignee && <Avatar size="xsmall" src={avatar} style={{ flexShrink: 0 }} />}
+                            <span
+                                style={{
+                                    fontSize: '12px',
+                                    wordBreak: 'break-word',
+                                    overflowWrap: 'break-word',
+                                    whiteSpace: 'normal',
+                                    lineHeight: '1.2',
+                                    textAlign: 'left',
+                                }}
+                            >
+                                {label}
+                            </span>
                         </div>
                     </Button>
                 )}
