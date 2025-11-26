@@ -70,6 +70,7 @@ describe('InlineRenderedTextEditor', () => {
     const defaultProps = {
         rawContent: 'Raw content text',
         htmlContent: '<p>HTML content text</p>',
+        handleEditorFocus: jest.fn(),
     };
 
     const mockMentionsProvider = {
@@ -221,7 +222,7 @@ describe('InlineRenderedTextEditor', () => {
         });
 
         it('handles empty content gracefully', () => {
-            render(<InlineRenderedTextEditor rawContent="" htmlContent="" />);
+            render(<InlineRenderedTextEditor rawContent="" htmlContent="" handleEditorFocus={jest.fn()} />);
 
             const typography = screen.getByTestId('typography');
             const htmlElement = typography.querySelector('span');
@@ -232,7 +233,11 @@ describe('InlineRenderedTextEditor', () => {
             const specialContent = '<p>&lt;script&gt;alert("test")&lt;/script&gt;</p>';
 
             render(
-                <InlineRenderedTextEditor rawContent="<script>alert('test')</script>" htmlContent={specialContent} />,
+                <InlineRenderedTextEditor
+                    rawContent="<script>alert('test')</script>"
+                    htmlContent={specialContent}
+                    handleEditorFocus={jest.fn()}
+                />,
             );
 
             const typography = screen.getByTestId('typography');

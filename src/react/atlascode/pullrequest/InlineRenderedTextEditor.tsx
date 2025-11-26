@@ -68,6 +68,8 @@ const InlineRenderedTextEditor: React.FC<InlineTextEditorProps> = (props: Inline
                 onCancel={exitEditMode}
                 mentionProvider={props.mentionsProvider ? Promise.resolve(props.mentionsProvider) : undefined}
                 isBitbucket={true}
+                onFocus={() => props.handleEditorFocus(true)}
+                onBlur={() => props.handleEditorFocus(false)}
             />
         </div>
     ) : (

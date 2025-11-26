@@ -85,6 +85,7 @@ describe('NestedCommentList', () => {
         fetchUsers: jest.fn(),
         onDelete: jest.fn(),
         pullRequestState: 'OPEN' as PullRequestState,
+        handleEditorFocus: jest.fn(),
     };
 
     const mockMentionsProvider = {

@@ -70,6 +70,7 @@ describe('CommentForm', () => {
         currentUser: mockUser,
         onSave: jest.fn(),
         mentionsProvider: undefined,
+        handleEditorFocus: jest.fn(),
     };
 
     beforeEach(() => {
