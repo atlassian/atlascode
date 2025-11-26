@@ -111,6 +111,7 @@ export interface CreateSelectOptionAction extends Action {
 export interface CreateIssueAction extends Action {
     site: DetailedSiteInfo;
     issueData: any;
+    onCreateAction?: 'createAndView' | 'createAndStartWork' | 'createAndGenerateCode';
 }
 
 export interface CreateIssueLinkAction extends Action {
