@@ -2,15 +2,21 @@ import { MinimalIssue, readSearchResults } from '@atlassianlabs/jira-pi-common-m
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { Container } from 'src/container';
 
-import { QuickPickUser } from './QuickPickUtils';
+import { QuickPickUser } from './assignee/QuickPickUtils';
+import { QuickPickProject } from './project/QuickPickUtils';
+
+export interface IssueFilterParams {
+    users?: readonly QuickPickUser[];
+    hasCurrentUser?: boolean;
+    projects?: readonly QuickPickProject[];
+}
 
 export class JiraIssueService {
-    static async getAssignedIssuesFromAllSites(
-        users: readonly QuickPickUser[],
+    static async getIssuesFromAllSites(
         sites: DetailedSiteInfo[],
-        hasCurrentUser: boolean,
+        filterParams: IssueFilterParams,
     ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
-        const issuesPromises = sites.map((site) => this.fetchIssues(users, site, hasCurrentUser));
+        const issuesPromises = sites.map((site) => this.fetchIssues(site, filterParams));
         const issues = await Promise.all(issuesPromises);
         return this.getUniqueIssues(issues.flat());
     }
@@ -26,22 +32,21 @@ export class JiraIssueService {
     }
 
     private static async fetchIssues(
-        users: readonly QuickPickUser[],
         site: DetailedSiteInfo,
-        hasCurrentUser: boolean,
+        filterParams: IssueFilterParams,
     ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
         try {
-            return await this.getAssignedIssuesFromSite(users, site, hasCurrentUser);
+            return await this.getIssuesFromSite(site, filterParams);
         } catch (err) {
             console.error(`Failed to fetch issues from ${site.host}:`, err);
             return [];
         }
     }
 
-    private static buildJQLConditions(users: readonly QuickPickUser[], hasCurrentUser: boolean): string[] {
+    private static buildAssigneeJQLConditions(users?: readonly QuickPickUser[], hasCurrentUser?: boolean): string[] {
         const conditions: string[] = [];
 
-        if (users.length > 0) {
+        if (users && users.length > 0) {
             const userAccountIds = users.map((u) => u.user?.accountId).filter((id): id is string => id !== null);
             if (userAccountIds.length > 0) {
                 conditions.push(`assignee in (${userAccountIds.map((id) => `"${id}"`).join(', ')})`);
@@ -55,19 +60,42 @@ export class JiraIssueService {
         return conditions;
     }
 
-    static async getAssignedIssuesFromSite(
-        users: readonly QuickPickUser[],
+    private static buildProjectJQLCondition(projects?: readonly QuickPickProject[]): string {
+        if (!projects || projects.length === 0) {
+            return '';
+        }
+
+        const projectKeys = projects.map((p) => p.project?.key).filter((key): key is string => key !== null);
+        if (projectKeys.length === 0) {
+            return '';
+        }
+
+        return `project in (${projectKeys.map((key) => `"${key}"`).join(', ')})`;
+    }
+
+    static async getIssuesFromSite(
         site: DetailedSiteInfo,
-        hasCurrentUser: boolean,
+        filterParams: IssueFilterParams,
     ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
         try {
-            const jqlConditions = this.buildJQLConditions(users, hasCurrentUser);
+            const assigneeConditions = this.buildAssigneeJQLConditions(filterParams.users, filterParams.hasCurrentUser);
+            const projectCondition = this.buildProjectJQLCondition(filterParams.projects);
 
-            if (jqlConditions.length === 0) {
+            if (assigneeConditions.length === 0 && !projectCondition) {
                 return [];
             }
 
-            const jql = `(${jqlConditions.join(' OR ')}) AND StatusCategory != Done ORDER BY updated DESC`;
+            const allConditions: string[] = [];
+
+            if (assigneeConditions.length > 0) {
+                allConditions.push(`(${assigneeConditions.join(' OR ')})`);
+            }
+
+            if (projectCondition) {
+                allConditions.push(projectCondition);
+            }
+
+            const jql = `${allConditions.join(' AND ')} AND StatusCategory != Done ORDER BY updated DESC`;
 
             const client = await Container.clientManager.jiraClient(site);
             const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
