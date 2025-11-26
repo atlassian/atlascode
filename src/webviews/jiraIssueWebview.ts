@@ -38,6 +38,7 @@ import {
     isCreateWorklog,
     isDeleteByIDAction,
     isDeleteWorklog,
+    isDismissRovoDevPromoBanner,
     isGetImage,
     isHandleEditorFocus,
     isIssueComment,
@@ -64,6 +65,7 @@ import { fetchEditIssueUI, fetchMinimalIssue } from '../jira/fetchIssue';
 import { fetchMultipleIssuesWithTransitions } from '../jira/fetchIssueWithTransitions';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
+import { CommonMessageType } from '../lib/ipc/toUI/common';
 import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
 import { RovoDevContextItem } from '../rovo-dev/rovoDevTypes';
@@ -1770,24 +1772,36 @@ export class JiraIssueWebview
                             const entitlementResponse = await Container.rovoDevEntitlementChecker.checkEntitlement();
                             const isDismissed = Container.context.globalState.get<boolean>(
                                 'rovoDevPromoBannerDismissed',
-                                false,
+                                true,
                             );
                             Logger.debug(
-                                `Rovo Dev entitlement: ${entitlementResponse.isEntitled} (${entitlementResponse.type}), dismissed: ${isDismissed}`,
+                                `Rovo Dev entitlement check: isEntitled=${entitlementResponse.isEntitled} (${entitlementResponse.type}), isDismissed=${isDismissed}`,
                             );
                             this.postMessage({
-                                type: 'rovoDevEntitlementUpdate',
-                                isEntitled: entitlementResponse.isEntitled && !isDismissed,
+                                type: CommonMessageType.RovoDevEntitlementBanner,
+                                enabled: entitlementResponse.isEntitled && !isDismissed,
                                 entitlementType: entitlementResponse.type,
                             });
                         } catch (e) {
                             Logger.error(e, 'Error checking Rovo Dev entitlement');
                             this.postMessage({
-                                type: 'rovoDevEntitlementUpdate',
-                                isEntitled: false,
+                                type: CommonMessageType.RovoDevEntitlementBanner,
+                                enabled: false,
                                 entitlementType: 'UNKOWN_ERROR',
                             });
                         }
+                    }
+                    break;
+                }
+                case 'dismissRovoDevPromoBanner': {
+                    if (isDismissRovoDevPromoBanner(msg)) {
+                        handled = true;
+                        await Container.context.globalState.update('rovoDevPromoBannerDismissed', true);
+                        const updatedValue = Container.context.globalState.get<boolean>(
+                            'rovoDevPromoBannerDismissed',
+                            true,
+                        );
+                        Logger.debug(`Updated rovoDevPromoBannerDismissed to: ${updatedValue} in global state`);
                     }
                     break;
                 }
