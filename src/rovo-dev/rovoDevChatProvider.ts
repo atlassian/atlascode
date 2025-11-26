@@ -356,7 +356,7 @@ export class RovoDevChatProvider {
 
                 default:
                     await flush();
-                    this.processRovoDevResponse('replay', response);
+                    await this.processRovoDevResponse('replay', response);
                     break;
             }
         }
