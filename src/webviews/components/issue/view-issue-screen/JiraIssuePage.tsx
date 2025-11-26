@@ -27,7 +27,7 @@ import { AtlLoader } from '../../AtlLoader';
 import ErrorBanner from '../../ErrorBanner';
 import Offline from '../../Offline';
 import PMFBBanner from '../../pmfBanner';
-import RovoDevPromoBanner from '../../rovoDevPromoBanner';
+import RovoDevPromoBanner from '../../RovoDevPromoBanner';
 import {
     AbstractIssueEditorPage,
     CommonEditorPageAccept,
@@ -605,15 +605,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
         return (
             <div>
-                {this.state.showPMF && (
-                    <PMFBBanner
-                        onPMFOpen={() => this.onPMFOpen()}
-                        onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })}
-                        onPMFLater={() => this.onPMFLater()}
-                        onPMFNever={() => this.onPMFNever()}
-                        onPMFSubmit={(data: LegacyPMFData) => this.onPMFSubmit(data)}
-                    />
-                )}
                 {this.state.showRovoDevPromoBanner && this.state.rovoDevEntitlementType && (
                     <RovoDevPromoBanner
                         entitlementType={this.state.rovoDevEntitlementType}
@@ -622,6 +613,15 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             this.onDismissRovoDevPromoBanner();
                             this.setState({ showRovoDevPromoBanner: false });
                         }}
+                    />
+                )}
+                {this.state.showPMF && (
+                    <PMFBBanner
+                        onPMFOpen={() => this.onPMFOpen()}
+                        onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })}
+                        onPMFLater={() => this.onPMFLater()}
+                        onPMFNever={() => this.onPMFNever()}
+                        onPMFSubmit={(data: LegacyPMFData) => this.onPMFSubmit(data)}
                     />
                 )}
                 <div className="ac-page-header">

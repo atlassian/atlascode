@@ -1,7 +1,8 @@
-import Button from '@atlaskit/button';
+import { LoadingButton } from '@atlaskit/button';
 import * as React from 'react';
 
 import { RovoDevEntitlementType } from '../../util/rovo-dev-entitlement/rovoDevEntitlementChecker';
+import { RovoDevPromoBannerIcon } from './RovoDevPromoBannerIcon';
 
 interface RovoDevPromoBannerProps {
     entitlementType: RovoDevEntitlementType;
@@ -14,120 +15,41 @@ const RovoDevPromoBanner = ({ entitlementType, onOpen, onDismiss }: RovoDevPromo
         <div
             style={{
                 display: 'flex',
+                width: '100%',
                 alignItems: 'center',
-                padding: '16px',
-                backgroundColor: '#2C2C2C',
-                borderRadius: '4px',
+                padding: '14px 24px',
                 marginBottom: '16px',
                 gap: '16px',
+                background: 'var(--Base-Base-19, #252526)',
             }}
         >
-            {/* Overlapping Icons */}
-            <div style={{ display: 'flex', alignItems: 'center', position: 'relative', flexShrink: 0 }}>
-                {/* Left icon - lime green with black shape */}
-                <div
-                    style={{
-                        position: 'relative',
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '4px',
-                        backgroundColor: '#A4E635',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 2,
-                        marginRight: '-8px',
-                    }}
-                >
-                    <div
-                        style={{
-                            width: '18px',
-                            height: '18px',
-                            backgroundColor: '#000000',
-                            clipPath: 'polygon(50% 0%, 0% 50%, 50% 100%, 100% 50%)',
-                        }}
-                    />
-                </div>
-                {/* Right icon - blue with white chevrons */}
-                <div
-                    style={{
-                        position: 'relative',
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '4px',
-                        backgroundColor: '#0052CC',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 1,
-                    }}
-                >
-                    <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
-                        <div
-                            style={{
-                                width: 0,
-                                height: 0,
-                                borderLeft: '5px solid white',
-                                borderTop: '4px solid transparent',
-                                borderBottom: '4px solid transparent',
-                            }}
-                        />
-                        <div
-                            style={{
-                                width: 0,
-                                height: 0,
-                                borderLeft: '5px solid white',
-                                borderTop: '4px solid transparent',
-                                borderBottom: '4px solid transparent',
-                            }}
-                        />
-                        <div
-                            style={{
-                                width: 0,
-                                height: 0,
-                                borderLeft: '5px solid white',
-                                borderTop: '4px solid transparent',
-                                borderBottom: '4px solid transparent',
-                            }}
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* Text Content */}
-            <div
-                style={{
-                    flex: 1,
-                    color: '#FFFFFF',
-                    fontSize: '14px',
-                    lineHeight: '20px',
-                }}
-            >
+            <RovoDevPromoBannerIcon />
+            <div>
                 Your Jira site now has access to {entitlementType}, Atlassian's AI agent for software teams that uses
                 your team's knowledge to streamline development from idea to deployment.
             </div>
-
             <div
                 style={{
                     display: 'flex',
-                    gap: '8px',
-                    flexShrink: 0,
+                    gap: '12px',
                 }}
             >
-                <Button
-                    className="ac-button"
-                    appearance="subtle"
+                <LoadingButton
+                    className="ac-button-secondary"
+                    testId="rov-dev-promo-dismiss-button"
                     onClick={onDismiss}
-                    style={{
-                        backgroundColor: '#2C2C2C',
-                        color: '#FFFFFF',
-                    }}
+                    isLoading={false}
                 >
                     Dismiss
-                </Button>
-                <Button className="ac-button" appearance="primary" onClick={onOpen}>
+                </LoadingButton>
+                <LoadingButton
+                    className="ac-button"
+                    testId="rov-dev-promo-open-button"
+                    onClick={onOpen}
+                    isLoading={false}
+                >
                     Open Rovo Dev
-                </Button>
+                </LoadingButton>
             </div>
         </div>
     );
