@@ -451,10 +451,14 @@ export class Container {
 
     private static getAnalyticsEnabled(): boolean {
         if (process.env.DISABLE_ANALYTICS === '1') {
+            Logger.debug('[Analytics] Analytics disabled via DISABLE_ANALYTICS env var');
             return false;
         }
 
-        return env.isTelemetryEnabled;
+        const telementryEnabled = env.isTelemetryEnabled || this.isBoysenberryMode;
+        Logger.debug(`[Analytics] VS Code telemetry enabled: ${telementryEnabled}`);
+
+        return telementryEnabled;
     }
 
     static initializeBitbucket(bbCtx: BitbucketContext) {
