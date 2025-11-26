@@ -7,6 +7,7 @@ import { Box, Tab, Tabs } from '@mui/material';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import * as React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+import { RovoDevEntitlementType } from 'src/util/rovo-dev-entitlement/rovoDevEntitlementChecker';
 import { v4 } from 'uuid';
 
 import { AnalyticsView } from '../../../../analyticsTypes';
@@ -26,6 +27,7 @@ import { AtlLoader } from '../../AtlLoader';
 import ErrorBanner from '../../ErrorBanner';
 import Offline from '../../Offline';
 import PMFBBanner from '../../pmfBanner';
+import RovoDevPromoBanner from '../../rovoDevPromoBanner';
 import {
     AbstractIssueEditorPage,
     CommonEditorPageAccept,
@@ -61,6 +63,8 @@ export interface ViewState extends CommonEditorViewState, EditIssueData {
     historyLoading: boolean;
     imageToCopy: HTMLImageElement | null;
     vsCodeContext: string;
+    showRovoDevPromoBanner: boolean;
+    rovoDevEntitlementType?: RovoDevEntitlementType;
 }
 
 const emptyState: ViewState = {
@@ -77,6 +81,8 @@ const emptyState: ViewState = {
     historyLoading: false,
     imageToCopy: null,
     vsCodeContext: '',
+    showRovoDevPromoBanner: false,
+    rovoDevEntitlementType: undefined,
 };
 
 export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
@@ -166,6 +172,15 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 }
                 case 'copyImage': {
                     this.handleImageCopy();
+                    break;
+                }
+                case 'rovoDevEntitlementUpdate': {
+                    this.setState({
+                        showRovoDevPromoBanner: e.isEntitled || false,
+                        rovoDevEntitlementType: e.isEntitled
+                            ? (e.entitlementType as RovoDevEntitlementType)
+                            : undefined,
+                    });
                     break;
                 }
             }
@@ -608,6 +623,13 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         onPMFSubmit={(data: LegacyPMFData) => this.onPMFSubmit(data)}
                     />
                 )}
+                {this.state.showRovoDevPromoBanner && this.state.rovoDevEntitlementType && (
+                    <RovoDevPromoBanner
+                        entitlementType={this.state.rovoDevEntitlementType}
+                        onOpen={this.handleOpenRovoDev}
+                        onDismiss={() => this.setState({ showRovoDevPromoBanner: false })}
+                    />
+                )}
                 <div className="ac-page-header">
                     <div className="ac-breadcrumbs">
                         {this.state.hierarchy && this.state.hierarchy.length > 0 && (
@@ -931,6 +953,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
     override componentDidMount() {
         this.postMessage({ action: 'getFeatureFlags' });
+        this.postMessage({ action: 'checkRovoDevEntitlement' });
     }
     override shouldComponentUpdate(_nextProps: Readonly<{}>, nextState: Readonly<ViewState>): boolean {
         const prevIssueKey = this.state.key;
