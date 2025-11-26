@@ -109,6 +109,8 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                         provider: Promise.resolve({
                             viewMediaClientConfig: {
                                 authProvider: () =>
+                                    // TODO: Provide token and clientId from request to Jira token endpoint
+                                    // For testing purposes you can get a token and clientId on Jira Fronted by intercepting network requests
                                     Promise.resolve({
                                         token: '',
                                         clientId: '',
@@ -129,24 +131,15 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
             }
 
             return new Promise((resolve) => {
-                editorApi.core.actions.requestDocument(
-                    (document) => {
-                        if (!document) {
-                            resolve(null);
-                            return;
-                        }
-                        // For v3 API: Return ADF object directly, not stringified
-                        resolve(document);
-                    },
-                    {
-                        transformer: editorApi.core.actions.createTransformer((scheme) => new JSONTransformer(scheme)),
-                    },
-                    // {
-                    //     transformer: editorApi.core.actions.createTransformer(
-                    //         (scheme) => new WikiMarkupTransformer(scheme),
-                    //     ),
-                    // },
-                );
+                editorApi.core.actions.requestDocument((document) => {
+                    if (!document) {
+                        resolve(null);
+                        return;
+                    }
+
+                    // TODO: fix type to be ADF format on upper levels when we migrate to rest v3
+                    resolve(document);
+                });
             });
         } catch (error) {
             console.error(error);
@@ -196,19 +189,13 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                 throw new Error('editorApi is not available');
             }
 
-            editorApi.core.actions.requestDocument(
-                (document) => {
-                    if (!document) {
-                        throw new Error('document is not available');
-                    }
-                    // For v3 API: Send ADF object directly, not stringified
-                    // The v3 API expects an object, not a JSON string
-                    onSave?.(document);
-                },
-                {
-                    transformer: editorApi.core.actions.createTransformer((scheme) => new JSONTransformer(scheme)),
-                },
-            );
+            editorApi.core.actions.requestDocument((document) => {
+                if (!document) {
+                    throw new Error('document is not available');
+                }
+                // TODO: fix type to be ADF format on upper levels when we migrated to rest v3
+                onSave?.(document);
+            });
         } catch (error) {
             console.error(error);
         }
@@ -234,10 +221,6 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                 assistiveLabel="Rich text editor for comments"
                 preset={preset}
                 defaultValue={defaultValue}
-                // contentTransformerProvider={(schema) => {
-                //     // here we transforms ADF <-> wiki markup
-                //     return new WikiMarkupTransformer(schema);
-                // }}
                 mentionProvider={mentionProvider}
             />
             {(onSave || onCancel) && (

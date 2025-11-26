@@ -234,6 +234,7 @@ export class ClientManager implements Disposable {
 
         // Success - clear any previous failure status
         this._failedSites.delete(siteKey);
+        // TODO: Temporary set api version to 3 to get ADF value instead of string(WikiMarkup). At the time we have access to token endpoint v3 should be default for cloud.
         (newClient as any).apiVersion = '3';
         return newClient;
     }
