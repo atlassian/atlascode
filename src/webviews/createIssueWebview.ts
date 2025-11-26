@@ -460,27 +460,44 @@ export class CreateIssueWebview
                 fetchCreateIssueUI(this._siteDetails, this._currentProject.key),
             ]);
 
-            const projectsWithCreateIssuesPermission = (
+            const initialProjects = (
                 paginatedProjectsResult as { projects: Project[]; total: number; hasMore: boolean }
             ).projects;
-            const currentProjectHasCreatePermission = projectsWithCreateIssuesPermission.find(
-                (project: Project) => project.id === this._currentProject?.id,
-            );
 
-            // if the selected or current project does not have create issues permission, we will select the first project with permission
+            // Check if current project is in the first page and has create permission
+            const isCurrentProjectInList = initialProjects.some((p) => p.id === this._currentProject?.id);
+            const currentProjectHasCreatePermission =
+                isCurrentProjectInList ||
+                !!(this._currentProject && (await this.selectedProjectHasCreatePermission(this._currentProject)));
+
+            // If the selected or current project does not have create issues permission, we will select the first project with permission
             const shouldOverrideProject = fieldValues?.['project']
                 ? !(await this.selectedProjectHasCreatePermission(fieldValues['project']))
                 : !currentProjectHasCreatePermission;
 
             if (shouldOverrideProject) {
-                this._currentProject =
-                    projectsWithCreateIssuesPermission.length > 0
-                        ? projectsWithCreateIssuesPermission[0]
-                        : emptyProject;
+                this._currentProject = initialProjects[0] ?? emptyProject;
             }
+
+            // Final projects list: if previously selected project has permission but it is not in the first page, add it to the beginning so it appears in the dropdown
+            const projectsWithCreateIssuesPermission =
+                !shouldOverrideProject &&
+                !isCurrentProjectInList &&
+                currentProjectHasCreatePermission &&
+                this._currentProject
+                    ? [this._currentProject, ...initialProjects]
+                    : initialProjects;
             this._selectedIssueTypeId = '';
             this._screenData = screenData;
             this._selectedIssueTypeId = this._screenData.selectedIssueType.id;
+
+            if (this._currentProject) {
+                const savedIssueTypeId = configuration.getLastIssueTypeForProject(this._currentProject.key);
+                // Check if the saved issue type exists in the available issue types for this project
+                if (savedIssueTypeId && this._screenData.issueTypeUIs[savedIssueTypeId]) {
+                    this._selectedIssueTypeId = savedIssueTypeId;
+                }
+            }
 
             if (fieldValues) {
                 const overrides = this.getValuesForExisitngKeys(
@@ -798,6 +815,14 @@ export class CreateIssueWebview
                                 siteId: this._siteDetails.id,
                                 projectKey: this._currentProject!.key,
                             });
+
+                            if (this._selectedIssueTypeId && this._currentProject) {
+                                await configuration.setLastIssueTypeForProject(
+                                    this._currentProject.key,
+                                    this._selectedIssueTypeId,
+                                );
+                            }
+
                             const [payload, worklog, issuelinks, attachments] = this.formatCreatePayload(msg);
 
                             // Handle parent payload
