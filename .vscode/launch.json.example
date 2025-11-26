@@ -33,7 +33,7 @@
             "env": {
                 "ROVODEV_PORT": "8899",
                 "ROVODEV_ENABLED": "true",
-                "ROVODEV_BBY": "true",
+                "BBY_USERID": "test_user",
                 "ROVODEV_SANDBOX_ID": "bby_sandbox"
             },
             "preLaunchTask": "Start RovoDev Server"
