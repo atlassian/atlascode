@@ -455,7 +455,7 @@ export class Container {
             return false;
         }
 
-        const telementryEnabled = env.isTelemetryEnabled || this.isBoysenberryMode;
+        const telemetryEnabled = env.isTelemetryEnabled || this.isBoysenberryMode;
         Logger.debug(`[Analytics] VS Code telemetry enabled: ${telementryEnabled}`);
 
         return telementryEnabled;
