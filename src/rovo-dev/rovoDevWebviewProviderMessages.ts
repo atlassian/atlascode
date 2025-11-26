@@ -1,7 +1,5 @@
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
-
 import { ReducerAction } from '../ipc/messaging';
-import { DetailedSiteInfo } from './api/extensionApi';
+import { DetailedSiteInfo, MinimalIssue } from './api/extensionApi';
 import {
     EntitlementCheckRovoDevHealthcheckResponse,
     RovoDevRetryPromptResponse,
