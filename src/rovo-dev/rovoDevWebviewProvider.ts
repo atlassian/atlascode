@@ -1071,7 +1071,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     // timeout defaulted to 1 minute.
     // yes, 1 minute is huge, but Rovo Dev has been acting weird with extremely delayed start-ups recently.
-    private async initializeWithHealthcheck(timeout = 10000) {
+    private async initializeWithHealthcheck(timeout = 60000) {
         const healthcheckResult = await safeWaitFor({
             check: () => this.executeHealthcheckInfo(),
             condition: (response) =>
