@@ -28,7 +28,7 @@ import {
 import { GitErrorCodes } from '../typings/git';
 import { RovodevCommandContext } from './api/componentApi';
 import { DetailedSiteInfo, ExtensionApi } from './api/extensionApi';
-import { RovoDevApiClient, RovoDevHealthcheckResponse } from './client';
+import { RovoDevApiClient, RovoDevApiError, RovoDevHealthcheckResponse } from './client';
 import { buildErrorDetails } from './errorDetailsBuilder';
 import { RovoDevChatContextProvider } from './rovoDevChatContextProvider';
 import { RovoDevChatProvider } from './rovoDevChatProvider';
@@ -625,24 +625,30 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }, false);
     }
 
-    private async executeHealthcheckInfo(): Promise<RovoDevHealthcheckResponse | undefined> {
-        let info: RovoDevHealthcheckResponse | undefined = undefined;
+    private async executeHealthcheckInfo(): Promise<{ httpStatus: number; data?: RovoDevHealthcheckResponse }> {
+        let data: RovoDevHealthcheckResponse | undefined = undefined;
+        let httpStatus = 0;
         try {
-            info = await this.rovoDevApiClient?.healthcheck();
-        } catch {}
-
-        this._debugPanelMcpContext = {};
-
-        if (info && info.mcp_servers) {
-            for (const mcpServer in info.mcp_servers) {
-                this._debugPanelMcpContext[mcpServer] = info.mcp_servers[mcpServer];
+            data = await this.rovoDevApiClient?.healthcheck();
+            httpStatus = 200;
+        } catch (e) {
+            if (e instanceof RovoDevApiError) {
+                httpStatus = e.httpStatus;
             }
         }
 
-        this._debugPanelContext['RovoDevHealthcheck'] = info?.status || '???';
+        this._debugPanelMcpContext = {};
+
+        if (data && data.mcp_servers) {
+            for (const mcpServer in data.mcp_servers) {
+                this._debugPanelMcpContext[mcpServer] = data.mcp_servers[mcpServer];
+            }
+        }
+
+        this._debugPanelContext['RovoDevHealthcheck'] = data?.status || (httpStatus ? `HTTP ${httpStatus}` : '???');
         this.refreshDebugPanel();
 
-        return info;
+        return { httpStatus, data };
     }
 
     private makeRelativePathAbsolute(filePath: string): string {
@@ -1020,7 +1026,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 break;
 
             case 'Started':
-                await this.signalProcessStarted(newState.hostname, newState.httpPort);
+                await this.signalProcessStarted(newState.hostname, newState.httpPort, newState.sessionToken);
                 break;
 
             case 'Terminated':
@@ -1036,7 +1042,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     this.handleProcessStateChanged({ state: 'Disabled', subState: 'Other' });
                     throw new Error('Rovo Dev port not set');
                 } else {
-                    this.signalProcessStarted(newState.hostname, newState.httpPort);
+                    this.signalProcessStarted(newState.hostname, newState.httpPort, newState.sessionToken);
                 }
                 break;
 
@@ -1047,9 +1053,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
-    private signalProcessStarted(hostname: string, rovoDevPort: number) {
+    private signalProcessStarted(hostname: string, rovoDevPort: number, sessionToken: string) {
         // initialize the API client
-        this._rovoDevApiClient = new RovoDevApiClient(hostname, rovoDevPort);
+        this._rovoDevApiClient = new RovoDevApiClient(hostname, rovoDevPort, sessionToken);
 
         this._debugPanelContext['RovoDevAddress'] = `http://${hostname}:${rovoDevPort}`;
         this.refreshDebugPanel();
@@ -1065,10 +1071,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     // timeout defaulted to 1 minute.
     // yes, 1 minute is huge, but Rovo Dev has been acting weird with extremely delayed start-ups recently.
-    private async initializeWithHealthcheck(timeout = 60000) {
-        const result = await safeWaitFor({
-            condition: (info) => !!info && info.status !== 'unknown',
+    private async initializeWithHealthcheck(timeout = 10000) {
+        const healthcheckResult = await safeWaitFor({
             check: () => this.executeHealthcheckInfo(),
+            condition: (response) =>
+                !!response?.httpStatus &&
+                (Math.floor(response.httpStatus / 100) === 2 || Math.floor(response.httpStatus / 100) === 4) &&
+                !!response.data &&
+                response.data.status !== 'unknown',
             timeout,
             interval: 500,
             abortIf: () => !this.rovoDevApiClient,
@@ -1085,10 +1095,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             return;
         }
 
+        const result = healthcheckResult?.data;
+
         // if result is undefined, it means we didn't manage to contact Rovo Dev within the allotted time
         // TODO - this scenario needs a better handling
         if (!result || result.status === 'unknown') {
-            const msg = result ? 'Rovo Dev service is unhealthy/unknown.' : 'Rovo Dev service is unreachable.';
+            let msg = result ? 'Rovo Dev service is unhealthy/unknown.' : 'Rovo Dev service is unreachable.';
+            if (healthcheckResult?.httpStatus) {
+                msg += ` HTTP status code ${healthcheckResult?.httpStatus}.`;
+            }
+
             RovoDevLogger.error(new Error(msg));
 
             if (this.isBoysenberry) {

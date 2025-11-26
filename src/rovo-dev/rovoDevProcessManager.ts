@@ -8,6 +8,7 @@ import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import { downloadAndUnzip } from 'src/rovo-dev/util/downloadFile';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { waitFor } from 'src/rovo-dev/util/waitFor';
+import { v4 } from 'uuid';
 import { Disposable, Event, EventEmitter, ExtensionContext, Terminal, Uri, window, workspace } from 'vscode';
 
 import { ExtensionApi, ValidBasicAuthSiteData } from './api/extensionApi';
@@ -86,10 +87,10 @@ function isPortAvailable(port: number): Promise<boolean> {
 
 // don't rely on the RovoDevWebviewProvider for shutting Rovo Dev down, as it may
 // already have set itself as Terminated and lost the reference to the API client
-async function shutdownRovoDev(port: number) {
+async function shutdownRovoDev(port: number, sessionToken: string) {
     if (port) {
         try {
-            await new RovoDevApiClient('127.0.0.1', port).shutdown();
+            await new RovoDevApiClient('127.0.0.1', port, sessionToken).shutdown();
         } catch {}
     }
 }
@@ -161,6 +162,7 @@ export interface RovoDevProcessStartedState {
     jiraSiteUserInfo: UserInfo;
     hostname: string;
     httpPort: number;
+    sessionToken: string;
     timeStarted: number;
 }
 
@@ -190,6 +192,7 @@ export interface RovoDevProcessBoysenberryState {
     state: 'Boysenberry';
     hostname: string;
     httpPort: number;
+    sessionToken: string;
 }
 
 export type RovoDevProcessState =
@@ -226,7 +229,8 @@ export abstract class RovoDevProcessManager {
     public static get state(): RovoDevProcessState {
         if (this.extensionApi.metadata.isBoysenberry()) {
             const httpPort = parseInt(process.env[RovoDevInfo.envVars.port] || '0');
-            return { state: 'Boysenberry', hostname: RovoDevInfo.hostname, httpPort };
+            const sessionToken = process.env.ROVODEV_SERVE_SESSION_TOKEN || '';
+            return { state: 'Boysenberry', hostname: RovoDevInfo.hostname, httpPort, sessionToken };
         } else {
             return this._state;
         }
@@ -455,6 +459,7 @@ class RovoDevTerminalInstance extends Disposable {
     private rovoDevTerminal: Terminal | undefined;
     private started = false;
     private httpPort: number = 0;
+    private sessionToken: string = '';
     private disposables: Disposable[] = [];
     private extensionApi = new ExtensionApi();
 
@@ -480,6 +485,7 @@ class RovoDevTerminalInstance extends Disposable {
         this.started = true;
 
         const port = await getOrAssignPortForWorkspace();
+        const sessionToken = v4();
 
         return new Promise<void>((resolve, reject) => {
             access(this.rovoDevBinPath, constants.X_OK, async (err) => {
@@ -516,6 +522,7 @@ class RovoDevTerminalInstance extends Disposable {
                             USER: process.env.USER || process.env.USERNAME,
                             USER_EMAIL: credentials.authInfo.username,
                             ROVODEV_SANDBOX_ID: this.extensionApi.metadata.appInstanceId(),
+                            ROVODEV_SERVE_SESSION_TOKEN: sessionToken,
                             ...(credentials.authInfo.password ? { USER_API_TOKEN: credentials.authInfo.password } : {}),
                         },
                     });
@@ -529,6 +536,7 @@ class RovoDevTerminalInstance extends Disposable {
                     );
 
                     this.httpPort = port;
+                    this.sessionToken = sessionToken;
 
                     const onDidCloseTerminal = window.onDidCloseTerminal((event) => {
                         if (event === this.rovoDevTerminal) {
@@ -555,6 +563,7 @@ class RovoDevTerminalInstance extends Disposable {
                         jiraSiteUserInfo: credentials.authInfo.user,
                         hostname: RovoDevInfo.hostname,
                         httpPort: port,
+                        sessionToken,
                         timeStarted: timeStarted.getTime(),
                     });
 
@@ -570,18 +579,20 @@ class RovoDevTerminalInstance extends Disposable {
     public async stop(): Promise<void> {
         // save these values before `finalizeStop` erases them
         const rovoDevPort = this.httpPort;
+        const sessionToken = this.sessionToken;
         const isTerminalAlive = !!this.rovoDevTerminal;
 
         // call this regardless
         this.finalizeStop();
 
         if (isTerminalAlive) {
-            await shutdownRovoDev(rovoDevPort);
+            await shutdownRovoDev(rovoDevPort, sessionToken);
         }
     }
 
     private finalizeStop() {
         this.httpPort = 0;
+        this.sessionToken = '';
         this.rovoDevTerminal?.dispose();
         this.rovoDevTerminal = undefined;
         this.disposables.forEach((x) => x.dispose());
