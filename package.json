@@ -1843,6 +1843,9 @@
         },
         "jest-runtime": {
             "glob": "^11.1.0"
+        },
+        "express": {
+            "body-parser": "^2.2.1"
         }
     }
 }
