@@ -107,7 +107,6 @@ const RovoDevPromoBanner = ({ entitlementType, onOpen, onDismiss }: RovoDevPromo
                 your team's knowledge to streamline development from idea to deployment.
             </div>
 
-            {/* Buttons */}
             <div
                 style={{
                     display: 'flex',
