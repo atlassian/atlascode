@@ -228,7 +228,9 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
             );
 
             this._availableIssueTypes = this.toFieldMap(issueTypes);
-            this._selectedIssueType = selectedIssueType;
+
+            // Load the previously saved issue type for this project
+            this._selectedIssueType = this.selectIssueTypeForProject(selectedIssueType);
 
             const requiredFields = this.getRequiredFieldsForIssueType(issueTypeUIs[this._selectedIssueType.id]);
 
@@ -325,8 +327,8 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
                 this._selectedProject.key,
             );
 
-            this._selectedIssueType = selectedIssueType;
             this._availableIssueTypes = this.toFieldMap(issueTypes);
+            this._selectedIssueType = this.selectIssueTypeForProject(selectedIssueType);
 
             const requiredFields = this.getRequiredFieldsForIssueType(issueTypeUIs[this._selectedIssueType.id]);
 
@@ -390,7 +392,7 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
             );
 
             this._availableIssueTypes = this.toFieldMap(issueTypes);
-            this._selectedIssueType = selectedIssueType;
+            this._selectedIssueType = this.selectIssueTypeForProject(selectedIssueType);
 
             const requiredFields = this.getRequiredFieldsForIssueType(issueTypeUIs[this._selectedIssueType.id]);
 
@@ -428,6 +430,10 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
             }
 
             this._selectedIssueType = selectedIssueType;
+
+            if (this._selectedProject) {
+                await configuration.setLastIssueTypeForProject(this._selectedProject.key, issueTypeId);
+            }
         } catch (err) {
             console.error('Error updating selected issue type in Create Work Item webview:', err);
         } finally {
@@ -455,6 +461,12 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
                         siteId: this._selectedSite!.id,
                         projectKey: this._selectedProject!.key,
                     });
+
+                    await configuration.setLastIssueTypeForProject(
+                        this._selectedProject!.key,
+                        this._selectedIssueType!.id,
+                    );
+
                     const payload = {
                         summary: message.payload.summary,
                         project: this._selectedProject!,
@@ -502,7 +514,7 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
     private async getProjectsForSite(
         site: DetailedSiteInfo,
     ): Promise<{ selectedProject: Project; projects: Project[]; hasMore: boolean }> {
-        const projects = await Container.jiraProjectManager.getProjectsPaginated(
+        const paginatedProjects = await Container.jiraProjectManager.getProjectsPaginated(
             site,
             undefined,
             undefined,
@@ -512,14 +524,30 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
         );
 
         const lastCreateSiteAndProject = Container.config.jira.lastCreateSiteAndProject;
-        const selectedProject =
-            projects.projects.find((p) => p.key === lastCreateSiteAndProject.projectKey) || projects.projects[0];
+        const savedProjectKey = lastCreateSiteAndProject.projectKey;
+        const isSameSite = lastCreateSiteAndProject.siteId === site.id;
+
+        let projectsList = paginatedProjects.projects;
+        let selectedProject: Project | undefined;
+
+        if (isSameSite && savedProjectKey) {
+            selectedProject = projectsList.find((project) => project.key === savedProjectKey);
+            if (!selectedProject) {
+                const savedProject = await Container.jiraProjectManager.getProjectForKey(site, savedProjectKey);
+                if (savedProject) {
+                    projectsList = [savedProject, ...projectsList];
+                    selectedProject = savedProject;
+                }
+            }
+        }
+
+        selectedProject = selectedProject ?? projectsList[0];
 
         if (!selectedProject) {
             throw Error('No projects found for selected site');
         }
 
-        return { selectedProject, projects: projects.projects, hasMore: projects.hasMore };
+        return { selectedProject, projects: projectsList, hasMore: paginatedProjects.hasMore };
     }
 
     private async getIssueTypesForProject(
@@ -573,5 +601,15 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
             acc[key] = item;
             return acc;
         }, {});
+    }
+
+    // Restore the previously saved issue type for the current project
+    private selectIssueTypeForProject(defaultIssueType: IssueType): IssueType {
+        if (!this._selectedProject) {
+            return defaultIssueType;
+        }
+        const savedIssueTypeId = configuration.getLastIssueTypeForProject(this._selectedProject.key);
+        const savedIssueType = savedIssueTypeId ? this._availableIssueTypes[savedIssueTypeId] : undefined;
+        return savedIssueType || defaultIssueType;
     }
 }

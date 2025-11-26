@@ -11,7 +11,7 @@ import {
     workspace,
 } from 'vscode';
 
-import { ConfigNamespace, JiraCreateSiteAndProjectKey } from '../constants';
+import { ConfigNamespace, JiraCreateSiteAndProjectKey, JiraLastIssueTypePerProjectKey } from '../constants';
 import { SiteIdAndProjectKey } from './model';
 
 /*
@@ -110,6 +110,31 @@ export class Configuration extends Disposable {
 
     async setLastCreateSiteAndProject(siteAndProject?: SiteIdAndProjectKey) {
         await this.updateEffective(JiraCreateSiteAndProjectKey, siteAndProject, null, true);
+    }
+
+    async setLastIssueTypeForProject(projectKey: string, issueTypeId: string) {
+        if (!projectKey || !issueTypeId) {
+            return;
+        }
+        const currentMapping = this.get<Record<string, string>>('jira.lastIssueTypePerProject', null, {});
+        const mapping =
+            currentMapping && typeof currentMapping === 'object' && !Array.isArray(currentMapping)
+                ? currentMapping
+                : {};
+        const updatedMapping = { ...mapping, [projectKey]: issueTypeId };
+        await this.updateEffective(JiraLastIssueTypePerProjectKey, updatedMapping, null, true);
+    }
+
+    getLastIssueTypeForProject(projectKey: string): string | undefined {
+        if (!projectKey) {
+            return undefined;
+        }
+        const mapping = this.get<Record<string, string>>('jira.lastIssueTypePerProject', null, {});
+        if (!mapping || typeof mapping !== 'object' || Array.isArray(mapping)) {
+            return undefined;
+        }
+        const value = mapping[projectKey];
+        return typeof value === 'string' ? value : undefined;
     }
 
     // this tries to figure out where the current value is set and update it there

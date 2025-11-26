@@ -53,6 +53,7 @@ export interface RovoDevConfig {
 export interface JiraConfig {
     enabled: boolean;
     lastCreateSiteAndProject: SiteIdAndProjectKey;
+    lastIssueTypePerProject: Record<string, string>;
     explorer: JiraExplorer;
     issueMonitor: JiraIssueMonitor;
     statusbar: JiraStatusBar;
@@ -208,6 +209,7 @@ const emptyStartWorkBranchTemplate: StartWorkBranchTemplate = {
 const emptyJiraConfig: JiraConfig = {
     enabled: true,
     lastCreateSiteAndProject: { siteId: '', projectKey: '' },
+    lastIssueTypePerProject: {},
     explorer: emptyJiraExplorer,
     issueMonitor: emtpyIssueMonitor,
     statusbar: emptyJiraStatusBar,

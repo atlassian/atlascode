@@ -1344,6 +1344,15 @@
                         }
                     }
                 },
+                "atlascode.jira.lastIssueTypePerProject": {
+                    "type": "object",
+                    "description": "Stores the last used issue type id for each project key",
+                    "scope": "window",
+                    "default": {},
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
                 "atlascode.jira.jqlList": {
                     "type": "array",
                     "default": [],
