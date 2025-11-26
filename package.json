@@ -596,12 +596,6 @@
                     "id": "atlascode.views.helpTreeView",
                     "name": "Help and Feedback",
                     "when": "!atlascode:bbyEnvironmentActive && config.atlascode.helpExplorerEnabled"
-                },
-                {
-                    "id": "atlascode.views.jira.createWorkItemWebview",
-                    "name": "Create Jira Work Item",
-                    "type": "webview",
-                    "when": "!atlascode:bbyEnvironmentActive && config.atlascode.jira.enabled && atlascode:showCreateWorkItemWebview"
                 }
             ],
             "atlascode-rovo-dev": [
@@ -610,6 +604,14 @@
                     "name": "Rovo Dev",
                     "type": "webview",
                     "when": "atlascode:rovoDevEnabled"
+                }
+            ],
+            "atlascode-jira-work-item": [
+                {
+                    "id": "atlascode.views.jira.createWorkItemWebview",
+                    "name": "Create Jira Work Item",
+                    "type": "webview",
+                    "when": "!atlascode:bbyEnvironmentActive && config.atlascode.jira.enabled && atlascode:showCreateWorkItemWebview"
                 }
             ]
         },
@@ -1082,6 +1084,14 @@
                 },
                 {
                     "command": "atlascode.jira.filter",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.createIssue.startWork",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.createIssue.generateCode",
                     "when": "false"
                 }
             ],
@@ -1829,6 +1839,9 @@
         },
         "jest-runtime": {
             "glob": "^11.1.0"
+        },
+        "express": {
+            "body-parser": "^2.2.1"
         }
     }
 }
