@@ -6,6 +6,7 @@ import { createDefaultPreset } from '@atlaskit/editor-core/preset-default';
 import { usePreset } from '@atlaskit/editor-core/use-preset';
 import { JSONTransformer } from '@atlaskit/editor-json-transformer';
 import { contentInsertionPlugin } from '@atlaskit/editor-plugin-content-insertion';
+import { editorDisabledPlugin } from '@atlaskit/editor-plugin-editor-disabled';
 import { gridPlugin } from '@atlaskit/editor-plugin-grid';
 import { insertBlockPlugin } from '@atlaskit/editor-plugin-insert-block';
 import { listPlugin } from '@atlaskit/editor-plugin-list';
@@ -101,6 +102,7 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                 .add(tasksAndDecisionsPlugin)
                 .add(contentInsertionPlugin)
                 .add(gridPlugin)
+                .add(editorDisabledPlugin)
                 .add([
                     mediaPlugin,
                     {
