@@ -485,7 +485,9 @@ class RovoDevTerminalInstance extends Disposable {
         this.started = true;
 
         const port = await getOrAssignPortForWorkspace();
-        const sessionToken = v4();
+
+        // reading from this env variable first to allow for an easier debugging
+        const sessionToken = process.env.ROVODEV_SERVE_SESSION_TOKEN || v4();
 
         return new Promise<void>((resolve, reject) => {
             access(this.rovoDevBinPath, constants.X_OK, async (err) => {
