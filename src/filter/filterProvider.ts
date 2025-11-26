@@ -1,6 +1,7 @@
 import { QuickPick, QuickPickItem, window } from 'vscode';
 
 import { AssigneeFilterProvider } from './assignee/assigneeFilterProvider';
+import { ProjectFilterProvider } from './project/projectFilterProvider';
 
 interface FilterQuickPickItem extends QuickPickItem {
     filterId: string;
@@ -32,6 +33,11 @@ export class FilterProvider {
                 detail: 'Show issues assigned to specific people',
                 filterId: 'filter:assignee',
             },
+            {
+                label: 'Filter by Project',
+                detail: 'Show issues from specific projects',
+                filterId: 'filter:project',
+            },
         ];
     }
 
@@ -47,6 +53,9 @@ export class FilterProvider {
         switch (filterId) {
             case 'filter:assignee':
                 AssigneeFilterProvider.create();
+                break;
+            case 'filter:project':
+                ProjectFilterProvider.create();
                 break;
             default:
                 console.warn(`Unknown filter type: ${filterId}`);
