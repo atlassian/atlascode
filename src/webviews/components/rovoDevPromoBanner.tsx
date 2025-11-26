@@ -23,7 +23,7 @@ const RovoDevPromoBanner = ({ entitlementType, onOpen, onDismiss }: RovoDevPromo
                 background: 'var(--Base-Base-19, #252526)',
             }}
         >
-            <RovoDevPromoBannerIcon />
+            <RovoDevPromoBannerIcon width={70} height={50} />
             <div>
                 Your Jira site now has access to {entitlementType}, Atlassian's AI agent for software teams that uses
                 your team's knowledge to streamline development from idea to deployment.

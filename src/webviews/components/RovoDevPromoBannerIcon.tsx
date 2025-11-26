@@ -1,8 +1,11 @@
 import * as React from 'react';
 
-export const RovoDevPromoBannerIcon: React.FC = () => {
+export const RovoDevPromoBannerIcon: React.FC<{ width?: string | number; height?: string | number }> = ({
+    width = '51',
+    height = '33',
+}) => {
     return (
-        <svg width="51" height="33" viewBox="0 0 51 33" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg width={width} height={height} viewBox="0 0 51 33" fill="none" xmlns="http://www.w3.org/2000/svg">
             <g clipPath="url(#clip0_2226_20765)">
                 <path
                     d="M28.7923 3.54214C29.9218 1.58587 32.4233 0.915604 34.3795 2.04506L47.1313 9.40727C49.0875 10.5367 49.7578 13.0382 48.6284 14.9945L41.2661 27.7462C40.1367 29.7025 37.6352 30.3727 35.6789 29.2433L22.9272 21.8811C20.9709 20.7516 20.3007 18.2501 21.4301 16.2939L28.7923 3.54214Z"
