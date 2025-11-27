@@ -134,11 +134,11 @@ export function usageJsonResponseToMarkdown(response: RovoDevUsageResponse): {
         buffer += '\n';
 
         if (data.view_usage_message) {
-            const view_usage_message_link = data.view_usage_message.message;
+            const view_usage_message = data.view_usage_message.message;
             if (data.view_usage_message.ctaLink) {
-                buffer += view_usage_message_link.replace('{ctaLink}', data.view_usage_message.ctaLink.link);
+                buffer += view_usage_message.replace('{ctaLink}', data.view_usage_message.ctaLink.link);
             } else {
-                buffer += view_usage_message_link;
+                buffer += view_usage_message;
             }
         }
 
