@@ -46,7 +46,7 @@
     ],
     "main": "./build/extension/extension",
     "rovoDev": {
-        "version": "0.12.16"
+        "version": "0.13.6"
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
@@ -202,13 +202,17 @@
             },
             {
                 "command": "atlascode.jira.createIssue.startWork",
-                "title": "Create and start work",
+                "title": "Create and create branch",
                 "category": "Jira"
             },
             {
                 "command": "atlascode.jira.createIssue.generateCode",
                 "title": "Create and send to Rovo Dev",
                 "category": "Jira"
+            },
+            {
+                "command": "atlascode.jira.copyImageElement",
+                "title": "Copy Image"
             },
             {
                 "command": "atlascode.jira.searchIssues",
@@ -317,6 +321,12 @@
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
                 },
+                "category": "Jira"
+            },
+            {
+                "command": "atlascode.jira.filter",
+                "title": "Filter issues",
+                "icon": "$(filter)",
                 "category": "Jira"
             },
             {
@@ -564,7 +574,7 @@
             "atlascode-drawer": [
                 {
                     "id": "atlascode.views.jira.assignedWorkItemsTreeView",
-                    "name": "Assigned Jira Work Items",
+                    "name": "Jira Work Items",
                     "when": "!atlascode:bbyEnvironmentActive && atlascode:assignedIssueExplorerEnabled && config.atlascode.jira.enabled"
                 },
                 {
@@ -586,12 +596,6 @@
                     "id": "atlascode.views.helpTreeView",
                     "name": "Help and Feedback",
                     "when": "!atlascode:bbyEnvironmentActive && config.atlascode.helpExplorerEnabled"
-                },
-                {
-                    "id": "atlascode.views.jira.createWorkItemWebview",
-                    "name": "Create Jira Work Item",
-                    "type": "webview",
-                    "when": "!atlascode:bbyEnvironmentActive && config.atlascode.jira.enabled && atlascode:showCreateWorkItemWebview"
                 }
             ],
             "atlascode-rovo-dev": [
@@ -600,6 +604,14 @@
                     "name": "Rovo Dev",
                     "type": "webview",
                     "when": "atlascode:rovoDevEnabled"
+                }
+            ],
+            "atlascode-jira-work-item": [
+                {
+                    "id": "atlascode.views.jira.createWorkItemWebview",
+                    "name": "Create Jira Work Item",
+                    "type": "webview",
+                    "when": "!atlascode:bbyEnvironmentActive && config.atlascode.jira.enabled && atlascode:showCreateWorkItemWebview"
                 }
             ]
         },
@@ -710,6 +722,11 @@
                     "command": "atlascode.jira.refreshAssignedWorkItemsExplorer",
                     "when": "view == atlascode.views.jira.assignedWorkItemsTreeView && atlascode:isJiraAuthenticated",
                     "group": "navigation@2"
+                },
+                {
+                    "command": "atlascode.jira.filter",
+                    "when": "view == atlascode.views.jira.assignedWorkItemsTreeView && atlascode:isJiraAuthenticated",
+                    "group": "navigation@3"
                 },
                 {
                     "command": "atlascode.jira.refreshCustomJqlExplorer",
@@ -1064,16 +1081,36 @@
                 {
                     "command": "atlascode.jira.refreshCustomJqlExplorer",
                     "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
+                },
+                {
+                    "command": "atlascode.jira.filter",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.createIssue.startWork",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.createIssue.generateCode",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.expandCreateWorkItem",
+                    "when": "false"
                 }
             ],
             "webview/context": [
                 {
                     "command": "atlascode.jira.createIssue.startWork",
-                    "when": "webviewId == 'atlascode.views.jira.createWorkItemWebview' && webviewSection == 'createButton'"
+                    "when": "webviewSection == 'createButton'"
                 },
                 {
                     "command": "atlascode.jira.createIssue.generateCode",
-                    "when": "atlascode:rovoDevEnabled && webviewId == 'atlascode.views.jira.createWorkItemWebview' && webviewSection == 'createButton'"
+                    "when": "atlascode:rovoDevEnabled && webviewSection == 'createButton'"
+                },
+                {
+                    "command": "atlascode.jira.copyImageElement",
+                    "when": "webviewSection == 'jiraImageElement'"
                 }
             ]
         },
@@ -1119,6 +1156,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enable Rovo Dev thinking block.\nThis collapses intermediate thinking steps into a single block.",
+                    "scope": "window"
+                },
+                "atlascode.rovodev.showEntitlementNotifications": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show notifications about Rovo Dev entitlement status changes",
                     "scope": "window"
                 },
                 "atlascode.issueSuggestion.enabled": {
@@ -1800,6 +1843,9 @@
         },
         "jest-runtime": {
             "glob": "^11.1.0"
+        },
+        "express": {
+            "body-parser": "^2.2.1"
         }
     }
 }

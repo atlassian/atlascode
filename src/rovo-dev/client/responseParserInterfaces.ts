@@ -79,6 +79,10 @@ export interface RovoDevCloseResponse {
     event_kind: 'close';
 }
 
+export interface RovoDevReplayEndResponse {
+    event_kind: 'replay_end';
+}
+
 export interface RovoDevStatusResponse {
     event_kind: 'status';
     data: {
@@ -108,7 +112,8 @@ export type RovoDevResponse =
     | RovoDevPruneResponse
     | RovoDevOnCallToolStartResponse
     | RovoDevStatusResponse
-    | RovoDevCloseResponse;
+    | RovoDevCloseResponse
+    | RovoDevReplayEndResponse;
 
 export type RovoDevToolName =
     | 'create_file'

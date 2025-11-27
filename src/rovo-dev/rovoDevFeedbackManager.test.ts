@@ -1,17 +1,14 @@
-jest.mock('src/jira/jira-client/providers');
 jest.mock('./util/rovoDevLogger');
 jest.mock('vscode');
 
 const mockExtensionApiInstance = {
-    auth: {
-        getPrimaryAuthInfo: jest.fn(),
-    },
     metadata: {
         version: jest.fn(),
     },
 };
 
 jest.mock('./api/extensionApi', () => ({
+    getAxiosInstance: jest.fn(),
     ExtensionApi: jest.fn().mockImplementation(() => mockExtensionApiInstance),
 }));
 
@@ -20,9 +17,10 @@ jest.mock('lodash', () => ({
     truncate: jest.fn((str, options) => str),
 }));
 
-import { getAxiosInstance } from 'src/jira/jira-client/providers';
+import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import * as vscode from 'vscode';
 
+import { getAxiosInstance } from './api/extensionApi';
 import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
 import { RovoDevLogger } from './util/rovoDevLogger';
 
@@ -36,7 +34,6 @@ describe('RovoDevFeedbackManager', () => {
         mockTransport.mockResolvedValue({});
 
         // Default return values
-        mockExtensionApiInstance.auth.getPrimaryAuthInfo.mockResolvedValue(undefined);
         mockExtensionApiInstance.metadata.version.mockReturnValue('1.0.0');
     });
 
@@ -70,7 +67,6 @@ describe('RovoDevFeedbackManager', () => {
                 email: 'user@example.com',
                 displayName: 'Test User',
             };
-            mockExtensionApiInstance.auth.getPrimaryAuthInfo.mockResolvedValue({ user: mockUser });
 
             const feedback = {
                 feedbackType: 'bug' as const,
@@ -78,7 +74,7 @@ describe('RovoDevFeedbackManager', () => {
                 canContact: true,
             };
 
-            await RovoDevFeedbackManager.submitFeedback(feedback);
+            await RovoDevFeedbackManager.submitFeedback(feedback, mockUser as UserInfo);
 
             expect(mockTransport).toHaveBeenCalledWith(
                 expect.any(String),
@@ -183,7 +179,7 @@ describe('RovoDevFeedbackManager', () => {
                 canContact: false,
             };
 
-            await RovoDevFeedbackManager.submitFeedback(feedback, true);
+            await RovoDevFeedbackManager.submitFeedback(feedback, undefined, true);
 
             expect(mockTransport).toHaveBeenCalledWith(
                 expect.any(String),
@@ -225,9 +221,6 @@ describe('RovoDevFeedbackManager', () => {
         });
 
         it('should handle missing primary site gracefully', async () => {
-            // When getPrimaryAuthInfo returns undefined, it means no primary site
-            mockExtensionApiInstance.auth.getPrimaryAuthInfo.mockResolvedValue(undefined);
-
             const feedback = {
                 feedbackType: 'general' as const,
                 feedbackMessage: 'Test feedback',

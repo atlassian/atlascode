@@ -1,6 +1,6 @@
 import { RovoDevContextItem, RovoDevPrompt, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 
-import { ReducerAction } from '../../ipc/messaging';
+import { ReducerAction } from '../messaging';
 import { FeedbackType } from './feedback-form/FeedbackForm';
 
 export const enum RovoDevViewResponseType {
@@ -35,6 +35,7 @@ export const enum RovoDevViewResponseType {
     YoloModeToggled = 'yoloModeToggled',
     FilterModifiedFilesByContent = 'filterModifiedFilesByContent',
     OpenExternalLink = 'openExternalLink',
+    OpenRovoDevLogFile = 'openRovoDevLogFile',
 }
 
 export type FileOperationType = 'modify' | 'create' | 'delete';
@@ -83,4 +84,5 @@ export type RovoDevViewResponse =
       >
     | ReducerAction<RovoDevViewResponseType.YoloModeToggled, { value: boolean }>
     | ReducerAction<RovoDevViewResponseType.FilterModifiedFilesByContent, { files: ModifiedFile[] }>
-    | ReducerAction<RovoDevViewResponseType.OpenExternalLink, { href: string }>;
+    | ReducerAction<RovoDevViewResponseType.OpenExternalLink, { href: string }>
+    | ReducerAction<RovoDevViewResponseType.OpenRovoDevLogFile>;

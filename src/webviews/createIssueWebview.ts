@@ -3,10 +3,11 @@ import { CreateMetaTransformerResult, FieldValues, IssueTypeUI, ValueType } from
 import { decode } from 'base64-arraybuffer-es6';
 import { format } from 'date-fns';
 import FormData from 'form-data';
+import { startWorkOnIssue } from 'src/commands/jira/startWorkOnIssue';
 import timer from 'src/util/perf';
-import { commands, ConfigurationTarget, Position, Uri, ViewColumn, window } from 'vscode';
+import { commands, ConfigurationTarget, Disposable, Position, Uri, ViewColumn } from 'vscode';
 
-import { issueCreatedEvent } from '../analytics';
+import { issueCreatedEvent, issueOpenRovoDevEvent } from '../analytics';
 import { performanceEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { buildSuggestionSettings, IssueSuggestionManager } from '../commands/jira/issueSuggestionManager';
@@ -85,6 +86,7 @@ export class CreateIssueWebview
     private _issueSuggestionSettings: IssueSuggestionSettings | undefined;
     private _todoData: SimplifiedTodoIssueData | undefined;
     private _generatingSuggestions: boolean = false;
+    private _disposables: Disposable[] = [];
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -116,6 +118,8 @@ export class CreateIssueWebview
     private reset() {
         this._screenData = emptyCreateMetaResult;
         this._siteDetails = emptySiteInfo;
+        this._disposables.forEach((d) => d.dispose());
+        this._disposables = [];
     }
 
     override async createOrShow(
@@ -177,6 +181,17 @@ export class CreateIssueWebview
         });
     }
 
+    async initializeActions() {
+        this._disposables.push(
+            commands.registerCommand('atlascode.jira.createIssue.startWork', async () => {
+                await this.postMessage({ type: 'createIssueWithAction', action: 'createAndStartWork' });
+            }),
+            commands.registerCommand('atlascode.jira.createIssue.generateCode', async () => {
+                await this.postMessage({ type: 'createIssueWithAction', action: 'createAndGenerateCode' });
+            }),
+        );
+    }
+
     async initialize(data?: PartialIssue) {
         this._partialIssue = data;
 
@@ -189,6 +204,8 @@ export class CreateIssueWebview
         }
 
         await this.invalidate();
+
+        await this.initializeActions();
 
         await this.updateSuggestionData({
             suggestions: this._issueSuggestionSettings,
@@ -665,6 +682,11 @@ export class CreateIssueWebview
             delete rawAny['worklog'];
         }
 
+        if (rawAny['customfield_10001']) {
+            // special case for handling the team field from the system
+            rawAny['customfield_10001'] = rawAny['customfield_10001'].value;
+        }
+
         // Filter out fields that are not present on the current screen and drop empty values
         const allowedFieldKeys = this._selectedIssueTypeId
             ? Object.keys(this._screenData.issueTypeUIs[this._selectedIssueTypeId].fields)
@@ -827,13 +849,25 @@ export class CreateIssueWebview
 
                             this.fireCallback(resp.key, payload.summary);
 
-                            window
-                                .showInformationMessage(`Issue ${resp.key} has been created`, 'Open Issue')
-                                .then((selection) => {
-                                    if (selection === 'Open Issue') {
-                                        showIssue({ key: resp.key, siteDetails: msg.site });
-                                    }
+                            if (msg.onCreateAction === 'createAndStartWork') {
+                                await startWorkOnIssue({ key: resp.key, siteDetails: msg.site });
+                            } else if (msg.onCreateAction === 'createAndGenerateCode' && Container.isRovoDevEnabled) {
+                                const issueUrl = `${msg.site.baseLinkUrl}/browse/${resp.key}`;
+                                await Container.rovodevWebviewProvider.setPromptTextWithFocus(
+                                    'Work on the attached Jira work item',
+                                    {
+                                        contextType: 'jiraWorkItem',
+                                        name: resp.key,
+                                        url: issueUrl,
+                                    },
+                                );
+
+                                issueOpenRovoDevEvent(msg.site, this.id).then((e) => {
+                                    Container.analyticsClient.sendTrackEvent(e);
                                 });
+                            } else {
+                                await showIssue({ key: resp.key, siteDetails: msg.site });
+                            }
                         } catch (e) {
                             Logger.error(e, 'Error creating issue');
                             this.postMessage({

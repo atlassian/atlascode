@@ -4,13 +4,14 @@ import fs from 'fs';
 import net from 'net';
 import packageJson from 'package.json';
 import path from 'path';
-import { ValidBasicAuthSiteData } from 'src/atlclients/clientManager';
+import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import { downloadAndUnzip } from 'src/rovo-dev/util/downloadFile';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { waitFor } from 'src/rovo-dev/util/waitFor';
+import { v4 } from 'uuid';
 import { Disposable, Event, EventEmitter, ExtensionContext, Terminal, Uri, window, workspace } from 'vscode';
 
-import { DetailedSiteInfo, ExtensionApi } from './api/extensionApi';
+import { ExtensionApi, ValidBasicAuthSiteData } from './api/extensionApi';
 import { RovoDevApiClient } from './client';
 import { RovoDevDisabledReason, RovoDevEntitlementCheckFailedDetail } from './rovoDevWebviewProviderMessages';
 import { RovoDevLogger } from './util/rovoDevLogger';
@@ -86,19 +87,33 @@ function isPortAvailable(port: number): Promise<boolean> {
 
 // don't rely on the RovoDevWebviewProvider for shutting Rovo Dev down, as it may
 // already have set itself as Terminated and lost the reference to the API client
-async function shutdownRovoDev(port: number) {
+async function shutdownRovoDev(port: number, sessionToken: string) {
     if (port) {
         try {
-            await new RovoDevApiClient('127.0.0.1', port).shutdown();
+            await new RovoDevApiClient('127.0.0.1', port, sessionToken).shutdown();
         } catch {}
     }
+}
+
+function getRandomInt(min: number, max: number): number {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min)) + min;
 }
 
 async function getOrAssignPortForWorkspace(): Promise<number> {
     const portStart = RovoDevInfo.portRange.start;
     const portEnd = RovoDevInfo.portRange.end;
 
-    for (let port = portStart; port <= portEnd; ++port) {
+    const len = portEnd - portStart + 1;
+    const a = getRandomInt(3, len);
+    const b = getRandomInt(3, len);
+
+    // use a bijective function to "randomize" the next port without picking the same port twice
+    const pickPort = (x: number) => ((a * x + b) % len) + portStart;
+
+    for (let i = 0; i < len; ++i) {
+        const port = pickPort(i);
         if (await isPortAvailable(port)) {
             return port;
         }
@@ -129,21 +144,25 @@ export interface RovoDevProcessNotStartedState {
 
 export interface RovoDevProcessDownloadingState {
     state: 'Downloading';
-    jiraSiteHostname: DetailedSiteInfo | string;
+    jiraSiteHostname: string;
+    jiraSiteUserInfo: UserInfo;
     totalBytes: number;
     downloadedBytes: number;
 }
 
 export interface RovoDevProcessStartingState {
     state: 'Starting';
-    jiraSiteHostname: DetailedSiteInfo | string;
+    jiraSiteHostname: string;
+    jiraSiteUserInfo: UserInfo;
 }
 
 export interface RovoDevProcessStartedState {
     state: 'Started';
-    jiraSiteHostname: DetailedSiteInfo | string;
+    jiraSiteHostname: string;
+    jiraSiteUserInfo: UserInfo;
     hostname: string;
     httpPort: number;
+    sessionToken: string;
     timeStarted: number;
 }
 
@@ -173,6 +192,7 @@ export interface RovoDevProcessBoysenberryState {
     state: 'Boysenberry';
     hostname: string;
     httpPort: number;
+    sessionToken: string;
 }
 
 export type RovoDevProcessState =
@@ -209,7 +229,8 @@ export abstract class RovoDevProcessManager {
     public static get state(): RovoDevProcessState {
         if (this.extensionApi.metadata.isBoysenberry()) {
             const httpPort = parseInt(process.env[RovoDevInfo.envVars.port] || '0');
-            return { state: 'Boysenberry', hostname: RovoDevInfo.hostname, httpPort };
+            const sessionToken = process.env.ROVODEV_SERVE_SESSION_TOKEN || '';
+            return { state: 'Boysenberry', hostname: RovoDevInfo.hostname, httpPort, sessionToken };
         } else {
             return this._state;
         }
@@ -229,7 +250,7 @@ export abstract class RovoDevProcessManager {
         this.stopRovoDevInstance();
     }
 
-    private static async downloadBinaryThenInitialize(credentialsHost: string, rovoDevURIs: RovoDevURIs) {
+    private static async downloadBinaryThenInitialize(credentials: ValidBasicAuthSiteData, rovoDevURIs: RovoDevURIs) {
         const baseDir = rovoDevURIs.RovoDevBaseDir;
         const versionDir = rovoDevURIs.RovoDevVersionDir;
         const zipUrl = rovoDevURIs.RovoDevZipUrl;
@@ -246,7 +267,8 @@ export abstract class RovoDevProcessManager {
         // and we want to show 0% downloaded
         this.setState({
             state: 'Downloading',
-            jiraSiteHostname: credentialsHost,
+            jiraSiteHostname: credentials.host,
+            jiraSiteUserInfo: credentials.authInfo.user,
             totalBytes: 1,
             downloadedBytes: 0,
         });
@@ -259,7 +281,8 @@ export abstract class RovoDevProcessManager {
             if (totalBytes) {
                 this.setState({
                     state: 'Downloading',
-                    jiraSiteHostname: credentialsHost,
+                    jiraSiteHostname: credentials.host,
+                    jiraSiteUserInfo: credentials.authInfo.user,
                     totalBytes,
                     downloadedBytes,
                 });
@@ -272,7 +295,8 @@ export abstract class RovoDevProcessManager {
 
         this.setState({
             state: 'Starting',
-            jiraSiteHostname: credentialsHost,
+            jiraSiteHostname: credentials.host,
+            jiraSiteUserInfo: credentials.authInfo.user,
         });
     }
 
@@ -314,6 +338,7 @@ export abstract class RovoDevProcessManager {
         this.setState({
             state: 'Starting',
             jiraSiteHostname: credentials.host,
+            jiraSiteUserInfo: credentials.authInfo.user,
         });
 
         let rovoDevURIs: ReturnType<typeof GetRovoDevURIs>;
@@ -322,7 +347,7 @@ export abstract class RovoDevProcessManager {
             rovoDevURIs = GetRovoDevURIs(context);
 
             if (!fs.existsSync(rovoDevURIs.RovoDevBinPath)) {
-                await this.downloadBinaryThenInitialize(credentials.host, rovoDevURIs);
+                await this.downloadBinaryThenInitialize(credentials, rovoDevURIs);
             }
         } catch (error) {
             RovoDevLogger.error(error, 'Error downloading Rovo Dev');
@@ -357,7 +382,7 @@ export abstract class RovoDevProcessManager {
                 this.failIfRovoDevInstanceIsRunning();
             }
 
-            const credentials = await this.extensionApi.auth.getCloudPrimaryAuthInfo();
+            const credentials = await this.extensionApi.auth.getCloudPrimaryAuthSite();
             await this.internalInitializeRovoDev(context, credentials, forceNewInstance);
         } finally {
             this.asyncLocked = false;
@@ -373,7 +398,7 @@ export abstract class RovoDevProcessManager {
             this.asyncLocked = true;
 
             try {
-                const credentials = await this.extensionApi.auth.getCloudPrimaryAuthInfo();
+                const credentials = await this.extensionApi.auth.getCloudPrimaryAuthSite();
                 if (areCredentialsEqual(credentials, this.currentCredentials)) {
                     return;
                 }
@@ -434,6 +459,7 @@ class RovoDevTerminalInstance extends Disposable {
     private rovoDevTerminal: Terminal | undefined;
     private started = false;
     private httpPort: number = 0;
+    private sessionToken: string = '';
     private disposables: Disposable[] = [];
     private extensionApi = new ExtensionApi();
 
@@ -459,6 +485,9 @@ class RovoDevTerminalInstance extends Disposable {
         this.started = true;
 
         const port = await getOrAssignPortForWorkspace();
+
+        // reading from this env variable first to allow for an easier debugging
+        const sessionToken = process.env.ROVODEV_SERVE_SESSION_TOKEN || v4();
 
         return new Promise<void>((resolve, reject) => {
             access(this.rovoDevBinPath, constants.X_OK, async (err) => {
@@ -495,6 +524,7 @@ class RovoDevTerminalInstance extends Disposable {
                             USER: process.env.USER || process.env.USERNAME,
                             USER_EMAIL: credentials.authInfo.username,
                             ROVODEV_SANDBOX_ID: this.extensionApi.metadata.appInstanceId(),
+                            ROVODEV_SERVE_SESSION_TOKEN: sessionToken,
                             ...(credentials.authInfo.password ? { USER_API_TOKEN: credentials.authInfo.password } : {}),
                         },
                     });
@@ -508,6 +538,7 @@ class RovoDevTerminalInstance extends Disposable {
                     );
 
                     this.httpPort = port;
+                    this.sessionToken = sessionToken;
 
                     const onDidCloseTerminal = window.onDidCloseTerminal((event) => {
                         if (event === this.rovoDevTerminal) {
@@ -531,8 +562,10 @@ class RovoDevTerminalInstance extends Disposable {
                     setState({
                         state: 'Started',
                         jiraSiteHostname: credentials.host,
+                        jiraSiteUserInfo: credentials.authInfo.user,
                         hostname: RovoDevInfo.hostname,
                         httpPort: port,
+                        sessionToken,
                         timeStarted: timeStarted.getTime(),
                     });
 
@@ -548,18 +581,20 @@ class RovoDevTerminalInstance extends Disposable {
     public async stop(): Promise<void> {
         // save these values before `finalizeStop` erases them
         const rovoDevPort = this.httpPort;
+        const sessionToken = this.sessionToken;
         const isTerminalAlive = !!this.rovoDevTerminal;
 
         // call this regardless
         this.finalizeStop();
 
         if (isTerminalAlive) {
-            await shutdownRovoDev(rovoDevPort);
+            await shutdownRovoDev(rovoDevPort, sessionToken);
         }
     }
 
     private finalizeStop() {
         this.httpPort = 0;
+        this.sessionToken = '';
         this.rovoDevTerminal?.dispose();
         this.rovoDevTerminal = undefined;
         this.disposables.forEach((x) => x.dispose());

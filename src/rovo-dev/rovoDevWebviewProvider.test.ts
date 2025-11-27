@@ -37,6 +37,7 @@ jest.mock('./api/extensionApi', () => ({
         config: {
             isDebugPanelEnabled: jest.fn(() => false),
             isThinkingBlockEnabled: jest.fn(() => false),
+            onDidChange: jest.fn(),
         },
         analytics: {
             sendTrackEvent: jest.fn(),
@@ -74,12 +75,6 @@ jest.mock('./util/rovoDevLogger', () => ({
     },
 }));
 
-jest.mock('../../src/config/configuration', () => ({
-    configuration: {
-        onDidChange: jest.fn(),
-    },
-}));
-
 jest.mock('../../src/rovo-dev/rovoDevProcessManager', () => ({
     RovoDevProcessManager: {
         setRovoDevWebviewProvider: jest.fn(),
@@ -96,6 +91,16 @@ jest.mock('../../src/rovo-dev/rovoDevTelemetryProvider', () => ({
         startNewSession: jest.fn(),
         shutdown: jest.fn(),
     })),
+}));
+
+jest.mock('./rovoDevUtils', () => ({
+    readLastNLogLines: jest.fn(() => ['mock log line 1', 'mock log line 2']),
+    openRovoDevConfigFile: jest.fn(),
+}));
+
+jest.mock('./errorDetailsBuilder', () => ({
+    buildErrorDetails: jest.fn((error: Error) => `Stack trace for: ${error.message}`),
+    buildExceptionDetails: jest.fn(),
 }));
 
 jest.mock('../../src/rovo-dev/rovoDevChatProvider', () => ({
