@@ -1,8 +1,10 @@
 import { User } from '@atlassianlabs/jira-pi-common-models';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
 import { AssigneeColumn } from './IssueColumns';
+
+const USER_SEARCH_DEBOUNCE_MS = 300;
 
 describe('AssigneeColumn', () => {
     const mockOnAssigneeChange = jest.fn();
@@ -194,9 +196,11 @@ describe('AssigneeColumn', () => {
             });
 
             const searchInput = screen.getByPlaceholderText('Search users...');
-            fireEvent.change(searchInput, { target: { value: 'Jane' } });
 
-            jest.advanceTimersByTime(300);
+            await act(async () => {
+                fireEvent.change(searchInput, { target: { value: 'Jane' } });
+                jest.advanceTimersByTime(USER_SEARCH_DEBOUNCE_MS);
+            });
 
             await waitFor(() => {
                 expect(mockFetchUsers).toHaveBeenCalledWith('Jane');
@@ -223,9 +227,11 @@ describe('AssigneeColumn', () => {
             });
 
             const searchInput = screen.getByPlaceholderText('Search users...');
-            fireEvent.change(searchInput, { target: { value: 'Jane' } });
 
-            jest.advanceTimersByTime(300);
+            await act(async () => {
+                fireEvent.change(searchInput, { target: { value: 'Jane' } });
+                jest.advanceTimersByTime(USER_SEARCH_DEBOUNCE_MS);
+            });
 
             await waitFor(() => {
                 expect(screen.getByText('Jane Smith')).toBeTruthy();
@@ -253,9 +259,11 @@ describe('AssigneeColumn', () => {
             });
 
             const searchInput = screen.getByPlaceholderText('Search users...');
-            fireEvent.change(searchInput, { target: { value: 'Jane' } });
 
-            jest.advanceTimersByTime(300);
+            await act(async () => {
+                fireEvent.change(searchInput, { target: { value: 'Jane' } });
+                jest.advanceTimersByTime(USER_SEARCH_DEBOUNCE_MS);
+            });
 
             await waitFor(() => {
                 expect(screen.getByText('Jane Smith')).toBeTruthy();
@@ -328,9 +336,11 @@ describe('AssigneeColumn', () => {
             });
 
             const searchInput = screen.getByPlaceholderText('Search users...');
-            fireEvent.change(searchInput, { target: { value: 'NonExistentUser' } });
 
-            jest.advanceTimersByTime(300);
+            await act(async () => {
+                fireEvent.change(searchInput, { target: { value: 'NonExistentUser' } });
+                jest.advanceTimersByTime(USER_SEARCH_DEBOUNCE_MS);
+            });
 
             await waitFor(() => {
                 expect(mockFetchUsers).toHaveBeenCalledWith('NonExistentUser');
@@ -359,9 +369,11 @@ describe('AssigneeColumn', () => {
             });
 
             const searchInput = screen.getByPlaceholderText('Search users...');
-            fireEvent.change(searchInput, { target: { value: 'J' } });
 
-            jest.advanceTimersByTime(300);
+            await act(async () => {
+                fireEvent.change(searchInput, { target: { value: 'J' } });
+                jest.advanceTimersByTime(USER_SEARCH_DEBOUNCE_MS);
+            });
 
             await waitFor(() => {
                 expect(screen.getByText('Type at least 2 characters')).toBeTruthy();
@@ -388,9 +400,11 @@ describe('AssigneeColumn', () => {
             });
 
             const searchInput = screen.getByPlaceholderText('Search users...');
-            fireEvent.change(searchInput, { target: { value: 'J' } });
 
-            jest.advanceTimersByTime(300);
+            await act(async () => {
+                fireEvent.change(searchInput, { target: { value: 'J' } });
+                jest.advanceTimersByTime(USER_SEARCH_DEBOUNCE_MS);
+            });
 
             expect(mockFetchUsers).not.toHaveBeenCalled();
         });
@@ -419,9 +433,11 @@ describe('AssigneeColumn', () => {
             });
 
             const searchInput = screen.getByPlaceholderText('Search users...');
-            fireEvent.change(searchInput, { target: { value: 'Jane' } });
 
-            jest.advanceTimersByTime(300);
+            await act(async () => {
+                fireEvent.change(searchInput, { target: { value: 'Jane' } });
+                jest.advanceTimersByTime(USER_SEARCH_DEBOUNCE_MS);
+            });
 
             await waitFor(() => {
                 expect(mockFetchUsers).toHaveBeenCalled();
@@ -429,15 +445,17 @@ describe('AssigneeColumn', () => {
 
             expect(mockFetchUsers).toHaveBeenCalledWith('Jane');
 
-            resolveUsers!(mockUsers);
+            await act(async () => {
+                resolveUsers!(mockUsers);
+            });
 
             await waitFor(() => {
                 expect(screen.getByText('Jane Smith')).toBeTruthy();
             });
         });
 
-        it('handles fetch errors gracefully', async () => {
-            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+        it('handles fetch errors gracefully and shows error message', async () => {
+            const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
             mockFetchUsers.mockRejectedValue(new Error('Network error'));
 
             const data = {
@@ -457,19 +475,25 @@ describe('AssigneeColumn', () => {
             });
 
             const searchInput = screen.getByPlaceholderText('Search users...');
-            fireEvent.change(searchInput, { target: { value: 'Jane' } });
 
-            jest.advanceTimersByTime(300);
+            await act(async () => {
+                fireEvent.change(searchInput, { target: { value: 'Jane' } });
+                jest.advanceTimersByTime(USER_SEARCH_DEBOUNCE_MS);
+            });
 
             await waitFor(() => {
                 expect(mockFetchUsers).toHaveBeenCalled();
             });
 
             await waitFor(() => {
-                expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to fetch users:', expect.any(Error));
+                expect(consoleWarnSpy).toHaveBeenCalledWith('Failed to fetch users:', expect.any(Error));
             });
 
-            consoleErrorSpy.mockRestore();
+            await waitFor(() => {
+                expect(screen.getByText('Failed to load users')).toBeTruthy();
+            });
+
+            consoleWarnSpy.mockRestore();
         });
     });
 });

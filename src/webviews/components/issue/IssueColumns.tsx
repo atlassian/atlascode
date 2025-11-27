@@ -7,8 +7,11 @@ import Spinner from '@atlaskit/spinner';
 import Textfield from '@atlaskit/textfield';
 import Tooltip from '@atlaskit/tooltip';
 import { IssueLinkIssue, MinimalIssueOrKeyAndSite, User } from '@atlassianlabs/jira-pi-common-models';
+import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import * as React from 'react';
+import { useAsyncAbortable } from 'react-async-hook';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+import useConstant from 'use-constant';
 
 import { colorToLozengeAppearanceMap } from '../colors';
 
@@ -27,40 +30,39 @@ export const AssigneeColumn = (data: ItemData) => {
     const { fetchUsers } = data;
     const [isOpen, setIsOpen] = React.useState(false);
     const [searchText, setSearchText] = React.useState('');
-    const [users, setUsers] = React.useState<User[]>([]);
-    const [isLoading, setIsLoading] = React.useState(false);
 
-    const searchUsers = React.useCallback(
-        async (query: string) => {
-            if (!fetchUsers || query.length < 2) {
-                setUsers([]);
-                return;
-            }
-            setIsLoading(true);
-            try {
-                const results = await fetchUsers(query);
-                setUsers(results);
-            } catch (error) {
-                console.error('Failed to fetch users:', error);
-                setUsers([]);
-            } finally {
-                setIsLoading(false);
-            }
-        },
-        [fetchUsers],
+    const debouncedUserFetcher = useConstant(() =>
+        AwesomeDebouncePromise(
+            async (query: string, abortSignal?: AbortSignal): Promise<User[]> => {
+                if (!fetchUsers || query.length < 2) {
+                    return [];
+                }
+                return await fetchUsers(query);
+            },
+            USER_SEARCH_DEBOUNCE_MS,
+            { leading: false },
+        ),
     );
 
-    React.useEffect(() => {
-        if (searchText) {
-            const timeoutId = setTimeout(() => {
-                searchUsers(searchText);
-            }, USER_SEARCH_DEBOUNCE_MS);
-            return () => clearTimeout(timeoutId);
-        } else {
-            setUsers([]);
-        }
-        return undefined;
-    }, [searchText, searchUsers]);
+    const fetchUsersResult = useAsyncAbortable(
+        async (abortSignal) => {
+            if (searchText.length >= 2) {
+                try {
+                    const results = await debouncedUserFetcher(searchText, abortSignal);
+                    return results || [];
+                } catch (error) {
+                    console.warn('Failed to fetch users:', error);
+                    throw error; // Re-throw to let useAsyncAbortable handle error state
+                }
+            }
+            return [];
+        },
+        [searchText],
+    );
+
+    const users = fetchUsersResult.result || [];
+    const isLoading = fetchUsersResult.loading;
+    const hasError = fetchUsersResult.error !== undefined;
 
     const handleAssigneeSelect = (user: User | null) => {
         if (data.onAssigneeChange) {
@@ -68,7 +70,6 @@ export const AssigneeColumn = (data: ItemData) => {
         }
         setIsOpen(false);
         setSearchText('');
-        setUsers([]);
     };
 
     if (!data.onAssigneeChange || !data.fetchUsers) {
@@ -160,6 +161,7 @@ export const AssigneeColumn = (data: ItemData) => {
                         </div>
                     )}
                     {!isLoading &&
+                        !hasError &&
                         users.map((user, index) => {
                             const userAvatar =
                                 user.avatarUrls && user.avatarUrls['24x24'] ? user.avatarUrls['24x24'] : '';
@@ -175,7 +177,7 @@ export const AssigneeColumn = (data: ItemData) => {
                                 </DropdownItem>
                             );
                         })}
-                    {!isLoading && searchText.length >= 2 && users.length === 0 && (
+                    {!isLoading && !hasError && searchText.length >= 2 && users.length === 0 && (
                         <div
                             style={{
                                 padding: '8px',
@@ -195,6 +197,17 @@ export const AssigneeColumn = (data: ItemData) => {
                             }}
                         >
                             Type at least 2 characters
+                        </div>
+                    )}
+                    {!isLoading && hasError && searchText.length >= 2 && (
+                        <div
+                            style={{
+                                padding: '8px',
+                                textAlign: 'center',
+                                color: 'var(--vscode-errorForeground)',
+                            }}
+                        >
+                            Failed to load users
                         </div>
                     )}
                 </DropdownItemGroup>
