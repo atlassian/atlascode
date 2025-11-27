@@ -2,7 +2,7 @@ import Button from '@atlaskit/button';
 import AddIcon from '@atlaskit/icon/core/add';
 import InlineDialog from '@atlaskit/inline-dialog';
 import Tooltip from '@atlaskit/tooltip';
-import { IssueType, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
+import { IssueType, MinimalIssueOrKeyAndSite, User } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, FieldUIs, FieldValues, IssueLinkTypeSelectOption } from '@atlassianlabs/jira-pi-meta-models';
 import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
@@ -139,7 +139,7 @@ const IssueMainPanel: React.FC<Props> = ({
         }
     };
 
-    const handleAssigneeChange = (issueKey: string, assignee: any) => {
+    const handleAssigneeChange = (issueKey: string, assignee: User | null) => {
         if (onIssueUpdate) {
             onIssueUpdate(issueKey, 'assignee', assignee);
         }

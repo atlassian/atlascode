@@ -12,6 +12,8 @@ import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
 import { colorToLozengeAppearanceMap } from '../colors';
 
+const USER_SEARCH_DEBOUNCE_MS = 300;
+
 type ItemData = {
     issue: IssueLinkIssue<DetailedSiteInfo>;
     onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => void;
@@ -52,7 +54,7 @@ export const AssigneeColumn = (data: ItemData) => {
         if (searchText) {
             const timeoutId = setTimeout(() => {
                 searchUsers(searchText);
-            }, 300);
+            }, USER_SEARCH_DEBOUNCE_MS);
             return () => clearTimeout(timeoutId);
         } else {
             setUsers([]);
