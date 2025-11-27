@@ -78,6 +78,7 @@ const StartWorkPageV3: React.FunctionComponent = () => {
                                 </Box>
                             )}
                             <Button
+                                data-testid="start-work.start-button"
                                 variant="contained"
                                 color="primary"
                                 disabled={submitState === 'submitting'}

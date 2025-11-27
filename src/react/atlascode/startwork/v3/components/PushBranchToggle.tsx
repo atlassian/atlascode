@@ -12,7 +12,7 @@ export const PushBranchToggle: React.FC<PushBranchToggleProps> = ({ pushBranchEn
     }, [pushBranchEnabled, onPushBranchChange]);
 
     return (
-        <Grid item>
+        <Grid item data-testid="start-work.push-branch-checkbox">
             <FormControlLabel
                 control={<Checkbox checked={pushBranchEnabled} onChange={togglePushBranchEnabled} />}
                 label="Push the new branch to remote"
