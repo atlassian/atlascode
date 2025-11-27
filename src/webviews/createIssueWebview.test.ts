@@ -60,6 +60,8 @@ jest.mock('../config/configuration', () => ({
     ...jest.requireActual('../config/configuration'),
     configuration: {
         setLastCreateSiteAndProject: jest.fn().mockResolvedValue(undefined),
+        getLastIssueTypeForProject: jest.fn().mockReturnValue(undefined),
+        setLastIssueTypeForProject: jest.fn().mockResolvedValue(undefined),
     },
 }));
 

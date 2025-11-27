@@ -587,6 +587,10 @@ export class CreateIssueWebview
         this._screenData.issueTypeUIs[issueType.id].fieldValues['issuetype'] = issueType;
         this._selectedIssueTypeId = issueType.id;
 
+        if (this._currentProject) {
+            configuration.setLastIssueTypeForProject(this._currentProject.key, issueType.id);
+        }
+
         const createData: CreateIssueData = this._screenData.issueTypeUIs[this._selectedIssueTypeId] as CreateIssueData;
         createData.type = 'update';
         createData.transformerProblems = Container.config.jira.showCreateIssueProblems ? this._screenData.problems : {};
