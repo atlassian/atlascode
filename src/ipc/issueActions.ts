@@ -111,6 +111,7 @@ export interface CreateSelectOptionAction extends Action {
 export interface CreateIssueAction extends Action {
     site: DetailedSiteInfo;
     issueData: any;
+    onCreateAction?: 'createAndView' | 'createAndStartWork' | 'createAndGenerateCode';
 }
 
 export interface CreateIssueLinkAction extends Action {
@@ -133,6 +134,11 @@ export interface StartWorkAction extends Action {
 
 export interface OpenStartWorkPageAction extends Action {
     action: 'openStartWorkPage';
+    issue: MinimalIssue<DetailedSiteInfo>;
+}
+
+export interface OpenRovoDevWithIssueAction extends Action {
+    action: 'openRovoDevWithIssue';
     issue: MinimalIssue<DetailedSiteInfo>;
 }
 
@@ -359,6 +365,10 @@ export function isStartWork(a: Action): a is StartWorkAction {
 
 export function isOpenStartWorkPageAction(a: Action): a is OpenStartWorkPageAction {
     return (<OpenStartWorkPageAction>a).issue !== undefined;
+}
+
+export function isOpenRovoDevWithIssueAction(a: Action): a is OpenRovoDevWithIssueAction {
+    return a && a.action === 'openRovoDevWithIssue' && (<OpenRovoDevWithIssueAction>a).issue !== undefined;
 }
 
 export function isCloneIssue(a: Action): a is CloneIssueAction {

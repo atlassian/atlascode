@@ -18,6 +18,8 @@ describe('RovoDevEntitlementChecker', () => {
     let checker: RovoDevEntitlementChecker;
     let mockAnalyticsClient: jest.Mocked<AnalyticsClient>;
     let mockClientManager: any;
+    let mockConfig: any;
+    let mockFeatureGateClient: any;
 
     beforeEach(() => {
         mockAnalyticsClient = {
@@ -28,8 +30,19 @@ describe('RovoDevEntitlementChecker', () => {
             getCloudPrimarySite: jest.fn(),
         };
 
-        (Container as any).clientManager = mockClientManager;
+        mockConfig = {
+            rovodev: {
+                showEntitlementNotifications: true,
+            },
+        };
 
+        mockFeatureGateClient = {
+            checkGate: jest.fn().mockResolvedValue(true),
+        };
+
+        (Container as any).clientManager = mockClientManager;
+        (Container as any).config = mockConfig;
+        (Container as any).featureFlagClient = mockFeatureGateClient;
         (Logger.debug as jest.Mock).mockImplementation(() => {});
         (Logger.error as jest.Mock).mockImplementation(() => {});
         (rovoDevEntitlementCheckEvent as jest.Mock).mockResolvedValue({});
@@ -58,7 +71,7 @@ describe('RovoDevEntitlementChecker', () => {
 
             const result = await checker.checkEntitlement();
 
-            expect(result).toBe(true);
+            expect(result).toStrictEqual({ isEntitled: true, type: 'ROVO_DEV_EVERYWHERE' });
             expect(fetch).toHaveBeenCalledWith(
                 'https://test.atlassian.net/gateway/api/rovodev/v3/sites/type',
                 expect.objectContaining({
@@ -86,7 +99,7 @@ describe('RovoDevEntitlementChecker', () => {
 
             const result = await checker.checkEntitlement();
 
-            expect(result).toBe(false);
+            expect(result).toStrictEqual({ isEntitled: false, type: 'NO_ACTIVE_PRODUCT' });
         });
 
         it('should return false when no valid credentials found', async () => {
@@ -94,7 +107,7 @@ describe('RovoDevEntitlementChecker', () => {
 
             const result = await checker.checkEntitlement();
 
-            expect(result).toBe(false);
+            expect(result).toStrictEqual({ isEntitled: false, type: 'CREDENTIAL_ERROR' });
             expect(Logger.error).toHaveBeenCalledWith(expect.any(Error), 'Unable to check Rovo Dev entitlement');
         });
 
@@ -113,7 +126,7 @@ describe('RovoDevEntitlementChecker', () => {
 
             const result = await checker.checkEntitlement();
 
-            expect(result).toBe(false);
+            expect(result).toStrictEqual({ isEntitled: false, type: 'FETCH_FAILED' });
             expect(Logger.error).toHaveBeenCalledWith(expect.any(Error), 'Unable to check Rovo Dev entitlement');
         });
 
@@ -129,7 +142,7 @@ describe('RovoDevEntitlementChecker', () => {
 
             const result = await checker.checkEntitlement();
 
-            expect(result).toBe(false);
+            expect(result).toStrictEqual({ isEntitled: false, type: 'FETCH_FAILED' });
         });
     });
 });

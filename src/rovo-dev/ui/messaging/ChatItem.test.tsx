@@ -47,6 +47,7 @@ describe('ChatItem', () => {
             checkFileExists: jest.fn(),
             isRetryAfterErrorButtonEnabled: jest.fn(),
             retryPromptAfterError: jest.fn(),
+            onOpenLogFile: jest.fn(),
         },
         currentState: { state: 'WaitingForPrompt' } as State,
         drawerOpen: false,

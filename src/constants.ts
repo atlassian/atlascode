@@ -46,6 +46,7 @@ export const enum Commands {
     EditThisFile = 'atlascode.bb.editThisFile',
     CreateIssue = 'atlascode.jira.createIssue',
     RefreshAssignedWorkItemsExplorer = 'atlascode.jira.refreshAssignedWorkItemsExplorer',
+    JiraFilter = 'atlascode.jira.filter',
     RefreshCustomJqlExplorer = 'atlascode.jira.refreshCustomJqlExplorer',
     AddJiraSite = 'atlascode.jira.addJiraSite',
     ShowJiraIssueSettings = 'atlascode.jira.showJiraIssueSettings',
@@ -91,6 +92,7 @@ export const enum Commands {
     JiraLogin = 'atlascode.jira.login',
     JiraAPITokenLogin = 'atlascode.jira.apiTokenLogin',
     ExpandCreateWorkItemWebview = 'atlascode.jira.expandCreateWorkItem',
+    CopyImageElement = 'atlascode.jira.copyImageElement',
 
     // Debug mode-only commands
     DebugQuickCommand = 'atlascode.debug.quickCommand',
@@ -99,6 +101,7 @@ export const enum Commands {
 
     // Extension management commands
     AddRecommendedExtension = 'atlascode.addRecommendedExtension',
+    OpenRovoDevLogFile = 'OpenRovoDevLogFile',
 }
 
 // Jira projects field pagination

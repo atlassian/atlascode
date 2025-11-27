@@ -14,7 +14,6 @@ const mockSiteManager = {
 // Mock Container
 jest.mock('src/container', () => ({
     Container: {
-        analyticsClient: { sendTrackEvent: jest.fn() },
         isDebugging: false,
         isBoysenberryMode: false,
         isRovoDevEnabled: true,
@@ -57,15 +56,6 @@ describe('ExtensionApi', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         api = new ExtensionApi();
-    });
-
-    describe('analytics', () => {
-        it('should send track event through Container', async () => {
-            const mockEvent = { type: 'test', data: 'value' };
-            await api.analytics.sendTrackEvent(mockEvent);
-
-            expect(Container.analyticsClient.sendTrackEvent).toHaveBeenCalledWith(mockEvent);
-        });
     });
 
     describe('metadata', () => {
@@ -112,7 +102,7 @@ describe('ExtensionApi', () => {
                 };
                 (Container.clientManager.getCloudPrimarySite as jest.Mock).mockResolvedValue(mockAuthData);
 
-                const result = await api.auth.getCloudPrimaryAuthInfo();
+                const result = await api.auth.getCloudPrimaryAuthSite();
 
                 expect(Container.clientManager.getCloudPrimarySite).toHaveBeenCalled();
                 expect(result).toBe(mockAuthData);
@@ -121,7 +111,7 @@ describe('ExtensionApi', () => {
             it('should return undefined when no cloud primary site exists', async () => {
                 (Container.clientManager.getCloudPrimarySite as jest.Mock).mockResolvedValue(undefined);
 
-                const result = await api.auth.getCloudPrimaryAuthInfo();
+                const result = await api.auth.getCloudPrimaryAuthSite();
 
                 expect(result).toBeUndefined();
             });

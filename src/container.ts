@@ -229,15 +229,15 @@ export class Container {
             (this._rovoDevEntitlementChecker = new RovoDevEntitlementChecker(this._analyticsClient)),
         );
 
-        // Check Rovo Dev entitlement on startup
-        await this._rovoDevEntitlementChecker.checkEntitlement();
-
         // in Boysenberry we don't need to listen to Jira auth updates
         if (!process.env.ROVODEV_BBY) {
+            // Check Rovo Dev entitlement on startup
+            await this._rovoDevEntitlementChecker.triggerEntitlementNotification();
             // refresh Rovo Dev when auth sites change
             this._siteManager.onDidSitesAvailableChange(async () => {
                 await this.updateFeatureFlagTenantId();
                 await this.refreshRovoDev(context);
+                await this._rovoDevEntitlementChecker.triggerEntitlementNotification();
             });
 
             // refresh Rovo Dev when Jira gets enabled or disabled
@@ -245,6 +245,7 @@ export class Container {
                 configuration.onDidChange(async (e) => {
                     if (configuration.changed(e, 'jira.enabled') || configuration.changed(e, 'rovodev.enabled')) {
                         await this.refreshRovoDev(context);
+                        await this._rovoDevEntitlementChecker.triggerEntitlementNotification();
                     }
                 }, this),
             );
@@ -259,10 +260,14 @@ export class Container {
         context.subscriptions.push(new CustomJQLViewProvider());
         context.subscriptions.push((this._assignedWorkItemsView = new AssignedWorkItemsViewProvider()));
 
-        context.subscriptions.push(
-            (this._createWorkItemWebviewProvider = new CreateWorkItemWebviewProvider(context, context.extensionPath)),
-        );
-
+        if (this.featureFlagClient.checkGate(Features.CreateWorkItemWebviewV2)) {
+            context.subscriptions.push(
+                (this._createWorkItemWebviewProvider = new CreateWorkItemWebviewProvider(
+                    context,
+                    context.extensionPath,
+                )),
+            );
+        }
         this._onboardingProvider = new OnboardingProvider();
 
         this.refreshRovoDev(context);
@@ -432,6 +437,10 @@ export class Container {
         this._assignedWorkItemsView.focus();
     }
 
+    static get assignedWorkItemsView() {
+        return this._assignedWorkItemsView;
+    }
+
     static setIsEditorFocused(isFocused: boolean) {
         setCommandContext(CommandContext.IsEditorFocused, isFocused);
     }
@@ -442,10 +451,14 @@ export class Container {
 
     private static getAnalyticsEnabled(): boolean {
         if (process.env.DISABLE_ANALYTICS === '1') {
+            Logger.debug('[Analytics] Analytics disabled via DISABLE_ANALYTICS env var');
             return false;
         }
 
-        return env.isTelemetryEnabled;
+        const telemetryEnabled = env.isTelemetryEnabled || this.isBoysenberryMode;
+        Logger.debug(`[Analytics] VS Code telemetry enabled: ${telemetryEnabled}`);
+
+        return telemetryEnabled;
     }
 
     static initializeBitbucket(bbCtx: BitbucketContext) {

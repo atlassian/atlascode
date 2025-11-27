@@ -360,7 +360,7 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
     return (
         <Box
             data-testid="issue.comments-section"
-            style={{ display: 'flex', flexDirection: 'column', paddingTop: '8px' }}
+            style={{ display: 'flex', flexDirection: 'column', paddingTop: '8px', gap: '16px' }}
         >
             <AddCommentComponent
                 fetchUsers={fetchUsers}
