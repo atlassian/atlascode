@@ -1,11 +1,26 @@
 import { WikiMarkupTransformer } from '@atlaskit/editor-wikimarkup-transformer';
 
+// ADF (Atlassian Document Format) node structure
+interface AdfNode {
+    type: string;
+    text?: string;
+    content?: AdfNode[];
+    marks?: AdfMark[];
+    attrs?: Record<string, any>;
+    version?: number;
+}
+
+interface AdfMark {
+    type: string;
+    attrs?: Record<string, any>;
+}
+
 /**
  * Extracts plain text from ADF as a fallback when WikiMarkup conversion fails
  */
-function extractPlainTextFromAdf(adf: any): string {
+function extractPlainTextFromAdf(adf: AdfNode): string {
     try {
-        const extractText = (node: any): string => {
+        const extractText = (node: AdfNode): string => {
             if (!node) {
                 return '';
             }
@@ -51,7 +66,7 @@ function extractPlainTextFromAdf(adf: any): string {
  * Converts ADF (Atlassian Document Format) to WikiMarkup
  * Used for backward compatibility with the legacy editor
  */
-export function convertAdfToWikimarkup(adf: any): string {
+export function convertAdfToWikimarkup(adf: AdfNode | string | null | undefined): string {
     // Early return for null/undefined
     if (adf === null || adf === undefined) {
         return '';
@@ -95,12 +110,12 @@ export function convertAdfToWikimarkup(adf: any): string {
  * Sanitizes ADF by removing invalid attributes that Jira API doesn't accept
  * Removes null localId values - Jira API v3 requires either a valid UUID or no localId at all
  */
-function sanitizeAdf(node: any): any {
+function sanitizeAdf(node: AdfNode): AdfNode {
     if (!node || typeof node !== 'object') {
         return node;
     }
 
-    const sanitized: any = { ...node };
+    const sanitized: AdfNode = { ...node };
 
     // Remove null or undefined localId attributes - Jira API doesn't accept them
     if (sanitized.attrs) {
@@ -116,13 +131,13 @@ function sanitizeAdf(node: any): any {
     }
 
     // Recursively sanitize content array
-    if (Array.isArray(sanitized.content)) {
+    if (sanitized.content && Array.isArray(sanitized.content)) {
         sanitized.content = sanitized.content.map(sanitizeAdf);
     }
 
     // Recursively sanitize marks array
-    if (Array.isArray(sanitized.marks)) {
-        sanitized.marks = sanitized.marks.map(sanitizeAdf);
+    if (sanitized.marks && Array.isArray(sanitized.marks)) {
+        sanitized.marks = sanitized.marks.map((mark) => sanitizeAdf(mark as AdfNode)) as AdfMark[];
     }
 
     return sanitized;
@@ -132,7 +147,7 @@ function sanitizeAdf(node: any): any {
  * Converts WikiMarkup to ADF
  * Used when saving content from the legacy editor
  */
-export function convertWikimarkupToAdf(wikimarkup: string): any {
+export function convertWikimarkupToAdf(wikimarkup: string): AdfNode {
     try {
         // Handle empty or whitespace-only input
         if (!wikimarkup || wikimarkup.trim() === '') {
@@ -178,9 +193,10 @@ export function convertWikimarkupToAdf(wikimarkup: string): any {
 /**
  * Checks if content is in ADF format
  */
-export function isAdfFormat(content: any): boolean {
+export function isAdfFormat(content: unknown): content is AdfNode {
     if (typeof content === 'object' && content !== null) {
-        return content.type === 'doc' && content.version === 1;
+        const obj = content as Record<string, any>;
+        return obj.type === 'doc' && obj.version === 1;
     }
 
     if (typeof content === 'string') {

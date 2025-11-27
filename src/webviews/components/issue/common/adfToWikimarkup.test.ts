@@ -108,7 +108,8 @@ describe('adfToWikimarkup', () => {
             const result = convertWikimarkupToAdf(wikimarkup);
             expect(result.version).toBe(1);
             expect(result.type).toBe('doc');
-            expect(result.content.length).toBeGreaterThan(0);
+            expect(result.content).toBeDefined();
+            expect(result.content!.length).toBeGreaterThan(0);
         });
 
         it('should sanitize localId attributes', () => {
@@ -187,7 +188,7 @@ describe('adfToWikimarkup', () => {
                 version: 1,
                 type: 'doc',
                 content: 'not-an-array',
-            };
+            } as any; // Intentionally invalid for testing error handling
             const result = convertAdfToWikimarkup(invalidAdf);
             expect(typeof result).toBe('string');
         });
