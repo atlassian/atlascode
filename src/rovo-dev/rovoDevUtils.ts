@@ -120,7 +120,7 @@ export function usageJsonResponseToMarkdown(response: RovoDevUsageResponse): {
             buffer += `**${data.model_usage_data.title}**\n`;
 
             for (const key in modelData) {
-                buffer += `- ${key}: ${numberFormatter.format(modelData[key])}`;
+                buffer += `- ${key}: ${numberFormatter.format(modelData[key])}\n`;
             }
         }
 
@@ -167,6 +167,10 @@ function formatElapsedTime(seconds: number) {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     const s = Math.floor((seconds % 3600) % 60);
+
+    if (h === 0 && m === 0 && s === 0) {
+        return '0s';
+    }
 
     const hDisplay = h > 0 ? h + 'h ' : '';
     const mDisplay = m > 0 ? m + 'm ' : '';
