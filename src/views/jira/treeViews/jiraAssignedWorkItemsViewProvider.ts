@@ -155,6 +155,18 @@ export class AssignedWorkItemsViewProvider
         this._onDidChangeTreeData.fire();
     }
 
+    public hasActiveAssigneeFilter(): boolean {
+        return this._selectedUsersCount > 0;
+    }
+
+    public hasActiveProjectFilter(): boolean {
+        if (this._filteredIssues === null || this._filteredIssues.length === 0) {
+            return false;
+        }
+
+        return this._filteredIssues.some((issue) => issue.source?.id === 'filtered-project');
+    }
+
     public override dispose(): void {
         this._disposable.dispose();
     }
@@ -267,7 +279,14 @@ export class AssignedWorkItemsViewProvider
             return [];
         }
 
-        return this._selectedUsersCount > 1
+        const uniqueAssignees = new Set<string>();
+        for (const issue of issues) {
+            const assignee = (issue as any).assignee;
+            const assigneeKey = assignee?.accountId;
+            uniqueAssignees.add(assigneeKey);
+        }
+
+        return uniqueAssignees.size > 1
             ? this.buildGroupedTreeItems(issues)
             : issues.map((issue) => new JiraIssueNode(JiraIssueNode.NodeType.JiraAssignedIssuesNode, issue));
     }

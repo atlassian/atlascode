@@ -1,4 +1,3 @@
-import { User } from '@atlassianlabs/jira-pi-common-models';
 import { commands, QuickPick, window } from 'vscode';
 
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
@@ -6,17 +5,17 @@ import { currentUserJira } from '../../commands/jira/currentUser';
 import { Commands } from '../../constants';
 import { Container } from '../../container';
 import { TreeViewIssue } from '../../views/jira/treeViews/utils';
+import { AssigneeFilterProvider } from '../assignee/assigneeFilterProvider';
+import { QuickPickUser, QuickPickUtils as AssigneeQuickPickUtils } from '../assignee/QuickPickUtils';
 import { JiraIssueService } from '../JiraIssueService';
-import { ProjectFilterProvider } from '../project/projectFilterProvider';
-import { JiraUserService } from './JiraUserService';
-import { QuickPickUser, QuickPickUtils } from './QuickPickUtils';
+import { JiraProjectService } from './JiraProjectService';
+import { QuickPickProject, QuickPickUtils } from './QuickPickUtils';
 
-export class AssigneeFilterProvider {
+export class ProjectFilterProvider {
     static currentToken = 0;
     static fetchTimeout: NodeJS.Timeout | undefined;
-    static persistentSelectedItems: QuickPickUser[] = [];
-    static previousSelectedItems: QuickPickUser[] = [];
-    static currentUser: User | null = null;
+    static persistentSelectedItems: QuickPickProject[] = [];
+    static previousSelectedItems: QuickPickProject[] = [];
 
     public static async create(): Promise<void> {
         const sites = this.getAvailableSites();
@@ -24,20 +23,13 @@ export class AssigneeFilterProvider {
             return;
         }
 
-        try {
-            this.currentUser = await currentUserJira(sites[0]);
-        } catch (error) {
-            console.error('Failed to fetch current user:', error);
-            this.currentUser = null;
-        }
-
-        const quickPick = window.createQuickPick<QuickPickUser>();
-        quickPick.title = 'Filter by Assignee - Select Users';
-        quickPick.placeholder = 'Search for assignees';
+        const quickPick = window.createQuickPick<QuickPickProject>();
+        quickPick.title = 'Filter by Project - Select Projects';
+        quickPick.placeholder = 'Search for projects';
         quickPick.matchOnDescription = true;
         quickPick.matchOnDetail = true;
         quickPick.canSelectMany = true;
-        const defaultOptions = QuickPickUtils.getDefaultAssigneeOptions(this.previousSelectedItems, this.currentUser);
+        const defaultOptions = QuickPickUtils.getDefaultProjectOptions(this.previousSelectedItems);
         quickPick.items = QuickPickUtils.mergeItemsWithPersistent(this.persistentSelectedItems, defaultOptions);
         quickPick.selectedItems = this.persistentSelectedItems;
 
@@ -51,17 +43,12 @@ export class AssigneeFilterProvider {
             quickPick.dispose();
         });
 
-        quickPick.onDidChangeValue((value) => this.handleSearchInput(value, quickPick, sites, this.currentUser));
-        quickPick.onDidAccept(() => this.handleUserAccept(quickPick));
+        quickPick.onDidChangeValue((value) => this.handleSearchInput(value, quickPick, sites));
+        quickPick.onDidAccept(() => this.handleProjectAccept(quickPick));
         quickPick.onDidChangeSelection((selected) => this.handleSelectionChange(selected));
     }
 
-    static handleSearchInput(
-        value: string,
-        quickPick: QuickPick<QuickPickUser>,
-        sites: DetailedSiteInfo[],
-        currentUser: User | null,
-    ) {
+    static handleSearchInput(value: string, quickPick: QuickPick<QuickPickProject>, sites: DetailedSiteInfo[]) {
         if (this.fetchTimeout) {
             clearTimeout(this.fetchTimeout);
         }
@@ -71,11 +58,11 @@ export class AssigneeFilterProvider {
         if (!value.trim()) {
             this.currentToken++;
 
-            const defaultOptions = QuickPickUtils.getDefaultAssigneeOptions(this.previousSelectedItems, currentUser);
+            const defaultOptions = QuickPickUtils.getDefaultProjectOptions(this.previousSelectedItems);
             const mergedItems = QuickPickUtils.mergeItemsWithPersistent(persistentItems, defaultOptions);
 
-            quickPick.title = 'Filter by Assignee - Select Users';
-            quickPick.placeholder = 'Search for assignees';
+            quickPick.title = 'Filter by Project - Select Projects';
+            quickPick.placeholder = 'Search for projects';
             quickPick.busy = false;
             quickPick.items = mergedItems;
             quickPick.selectedItems = persistentItems;
@@ -84,51 +71,49 @@ export class AssigneeFilterProvider {
         }
 
         this.fetchTimeout = setTimeout(() => {
-            this.searchUsers(value, quickPick, sites);
+            this.searchProjects(value, quickPick, sites);
         }, 300);
     }
 
-    static async handleUserAccept(quickPick: QuickPick<QuickPickUser>) {
+    static async handleProjectAccept(quickPick: QuickPick<QuickPickProject>) {
         const selected = this.persistentSelectedItems;
 
-        if (selected.length > 0) {
-            quickPick.hide();
+        quickPick.hide();
 
-            await this.fetchAssignedIssues(selected);
+        await this.fetchProjectIssues(selected);
 
-            this.previousSelectedItems = [...selected];
-        }
+        this.previousSelectedItems = [...selected];
     }
 
-    static handleSelectionChange(selected: readonly QuickPickUser[]) {
+    static handleSelectionChange(selected: readonly QuickPickProject[]) {
         this.persistentSelectedItems = [...selected];
     }
 
-    static async searchUsers(query: string, quickPick: QuickPick<QuickPickUser>, sites: DetailedSiteInfo[]) {
+    static async searchProjects(query: string, quickPick: QuickPick<QuickPickProject>, sites: DetailedSiteInfo[]) {
         quickPick.busy = true;
         quickPick.placeholder = `Searching for "${query}"...`;
 
         const token = ++this.currentToken;
 
         try {
-            const users = await JiraUserService.searchUsersFromAllSites(query, sites);
+            const projects = await JiraProjectService.searchProjectsFromAllSites(query, sites);
 
             if (token !== this.currentToken) {
                 return;
             }
 
-            const quickPickItems: QuickPickUser[] = QuickPickUtils.mapUsersToQuickPickItems(users);
+            const quickPickItems: QuickPickProject[] = QuickPickUtils.mapProjectsToQuickPickItems(projects);
             const persistentItems = this.persistentSelectedItems;
 
             if (quickPickItems.length > 0) {
                 const mergedItems = QuickPickUtils.mergeItemsWithPersistent(persistentItems, quickPickItems);
-                quickPick.title = `Filter by Assignee - Search Results (${quickPickItems.length})`;
+                quickPick.title = `Filter by Project - Search Results (${quickPickItems.length})`;
                 quickPick.placeholder = `Search results for "${query}"`;
                 quickPick.items = mergedItems;
                 quickPick.selectedItems = persistentItems;
             } else {
-                quickPick.title = 'Filter by Assignee - No Results Found';
-                quickPick.placeholder = `No users found for "${query}"`;
+                quickPick.title = 'Filter by Project - No Results Found';
+                quickPick.placeholder = `No projects found for "${query}"`;
                 quickPick.items = persistentItems;
                 quickPick.selectedItems = persistentItems;
             }
@@ -137,41 +122,59 @@ export class AssigneeFilterProvider {
         }
     }
 
-    static async fetchAssignedIssues(selectedUsers: readonly QuickPickUser[]): Promise<void> {
-        const filterParams = QuickPickUtils.extractFilterParameters(selectedUsers, this.currentUser);
-        if (!QuickPickUtils.isValidFilter(filterParams)) {
-            return;
-        }
+    static async fetchProjectIssues(selectedProjects: readonly QuickPickProject[]): Promise<void> {
+        const filterParams = QuickPickUtils.extractFilterParameters(selectedProjects);
 
         const sites = this.getAvailableSites();
         if (!sites.length) {
             return;
         }
 
-        const hasActiveProjectFilter = ProjectFilterProvider.previousSelectedItems.length > 0;
+        let currentUser = AssigneeFilterProvider.currentUser;
+        if (!currentUser && sites.length > 0) {
+            try {
+                currentUser = await currentUserJira(sites[0]);
+                AssigneeFilterProvider.currentUser = currentUser;
+            } catch (error) {
+                console.error('Failed to fetch current user:', error);
+                currentUser = null;
+            }
+        }
 
-        const selectedUsersCount = filterParams.regularUsers.length + (filterParams.hasCurrentUser ? 1 : 0);
+        const hasActiveAssigneeFilter = AssigneeFilterProvider.previousSelectedItems.length > 0;
 
-        const displayCount = selectedUsersCount;
+        let assigneeFilterParams: { regularUsers: QuickPickUser[]; hasCurrentUser: boolean } = {
+            regularUsers: [],
+            hasCurrentUser: !hasActiveAssigneeFilter && currentUser !== null,
+        };
+        if (hasActiveAssigneeFilter) {
+            assigneeFilterParams = AssigneeQuickPickUtils.extractFilterParameters(
+                AssigneeFilterProvider.previousSelectedItems,
+                currentUser || null,
+            );
+        }
 
-        Container.assignedWorkItemsView.setFilteredIssues([], displayCount);
+        const selectedUsersCount =
+            assigneeFilterParams.regularUsers.length + (assigneeFilterParams.hasCurrentUser ? 1 : 0);
+
+        Container.assignedWorkItemsView.setFilteredIssues([], selectedUsersCount);
         commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
         Container.assignedWorkItemsView.focus();
 
         try {
             const issues = await JiraIssueService.getIssuesFromAllSites(sites, {
-                users: filterParams.regularUsers,
-                hasCurrentUser: filterParams.hasCurrentUser,
-                projects: hasActiveProjectFilter ? ProjectFilterProvider.previousSelectedItems : undefined,
+                projects: filterParams.projects.length > 0 ? filterParams.projects : undefined,
+                users: assigneeFilterParams.regularUsers.length > 0 ? assigneeFilterParams.regularUsers : undefined,
+                hasCurrentUser: assigneeFilterParams.hasCurrentUser,
             });
 
             const treeViewIssues: TreeViewIssue[] = issues.map((issue) => ({
                 ...issue,
-                source: { id: 'filtered-assignee' },
+                source: { id: 'filtered-project' },
                 children: [],
             }));
 
-            Container.assignedWorkItemsView.setFilteredIssues(treeViewIssues, displayCount);
+            Container.assignedWorkItemsView.setFilteredIssues(treeViewIssues, selectedUsersCount);
             commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
         } catch (error) {
             Container.assignedWorkItemsView.setFilteredIssues(null);

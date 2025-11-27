@@ -9,7 +9,7 @@ function statusIsSuccessful(status: number | undefined) {
     return !!status && Math.floor(status / 100) === 2;
 }
 
-class RovoDevApiError extends Error {
+export class RovoDevApiError extends Error {
     constructor(
         message: string,
         public httpStatus: number,
@@ -21,6 +21,8 @@ class RovoDevApiError extends Error {
 
 /** Implements the http client for the RovoDev CLI server */
 export class RovoDevApiClient {
+    private readonly _authBearerHeader: string | undefined;
+
     private readonly _baseApiUrl: string;
     /** Base API's URL for the RovoDev service */
     public get baseApiUrl() {
@@ -31,21 +33,28 @@ export class RovoDevApiClient {
      * @param {string} hostnameOrIp The hostname or IP address for the Rovo Dev service.
      * @param {number} port The http port for the Rovo Dev service.
      */
-    constructor(hostnameOrIp: string, port: number) {
+    constructor(hostnameOrIp: string, port: number, sessionToken: string) {
         this._baseApiUrl = `http://${hostnameOrIp}:${port}`;
+        this._authBearerHeader = sessionToken ? 'Bearer ' + sessionToken : undefined;
     }
 
     private async fetchApi(restApi: string, method: 'GET'): Promise<Response>;
     private async fetchApi(restApi: string, method: 'POST', body?: BodyInit | null): Promise<Response>;
     private async fetchApi(restApi: string, method: 'GET' | 'POST', body?: BodyInit | null): Promise<Response> {
+        const headers: Record<string, string> = {
+            accept: 'text/event-stream',
+            'Content-Type': 'application/json',
+        };
+
+        if (this._authBearerHeader) {
+            headers['Authorization'] = this._authBearerHeader;
+        }
+
         let response: Response;
         try {
             response = await fetch(this._baseApiUrl + restApi, {
                 method,
-                headers: {
-                    accept: 'text/event-stream',
-                    'Content-Type': 'application/json',
-                },
+                headers,
                 body,
             });
         } catch (error) {
