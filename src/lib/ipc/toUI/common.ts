@@ -41,5 +41,5 @@ export interface AdditionalSettings {
 
 export interface RovoDevEntitlementBannerMessage {
     enabled: boolean;
-    entitlementType?: RovoDevEntitlementType | string;
+    entitlementType?: RovoDevEntitlementType;
 }
