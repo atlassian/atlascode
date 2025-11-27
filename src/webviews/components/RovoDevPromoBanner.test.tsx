@@ -4,6 +4,30 @@ import React from 'react';
 import { RovoDevEntitlementType } from '../../util/rovo-dev-entitlement/rovoDevEntitlementChecker';
 import RovoDevPromoBanner from './RovoDevPromoBanner';
 
+jest.mock('@atlaskit/css', () => ({
+    cssMap: (styles: any) => {
+        const result: any = {};
+        for (const key in styles) {
+            result[key] = styles[key];
+        }
+        return result;
+    },
+}));
+
+jest.mock('@atlaskit/feature-gate-js-client', () => ({
+    Client: jest.fn().mockImplementation(() => ({
+        checkGate: jest.fn().mockReturnValue(false),
+        assertInitialized: jest.fn(),
+    })),
+    FeatureGates: {
+        checkGate: jest.fn().mockReturnValue(false),
+    },
+}));
+
+jest.mock('@atlaskit/platform-feature-flags', () => ({
+    fg: jest.fn().mockReturnValue(false),
+}));
+
 // Mock the entitlement checker
 jest.mock('../../util/rovo-dev-entitlement/rovoDevEntitlementChecker', () => ({
     RovoDevEntitlementType: {
@@ -26,8 +50,8 @@ describe('RovoDevPromoBanner', () => {
         const entitlementType = RovoDevEntitlementType.ROVO_DEV_STANDARD;
         render(<RovoDevPromoBanner entitlementType={entitlementType} onOpen={mockOnOpen} onDismiss={mockOnDismiss} />);
 
-        expect(screen.getByText((content) => content.includes('Your Jira site now has access to'))).toBeTruthy();
-        expect(screen.getByText((content) => content.includes(entitlementType))).toBeTruthy();
+        const fullText = `Your Jira site now has access to ${entitlementType}, Atlassian's AI agent for software teams that uses your team's knowledge to streamline development from idea to deployment.`;
+        expect(screen.getByText(fullText)).toBeTruthy();
     });
 
     it('should call onDismiss when dismiss button is clicked', () => {
