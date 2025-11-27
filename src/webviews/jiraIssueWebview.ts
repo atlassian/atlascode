@@ -14,6 +14,7 @@ import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
 import timer from 'src/util/perf';
+import { RovoDevEntitlementErrorType } from 'src/util/rovo-dev-entitlement/rovoDevEntitlementError';
 import * as vscode from 'vscode';
 import { commands, env, window } from 'vscode';
 
@@ -1787,7 +1788,7 @@ export class JiraIssueWebview
                             this.postMessage({
                                 type: CommonMessageType.RovoDevEntitlementBanner,
                                 enabled: false,
-                                entitlementType: 'UNKOWN_ERROR',
+                                entitlementType: RovoDevEntitlementErrorType.UNKOWN_ERROR,
                             });
                         }
                     }
