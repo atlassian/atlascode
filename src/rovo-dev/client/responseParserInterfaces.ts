@@ -121,11 +121,11 @@ export interface RovoDevUsageResponse {
             credit_total: number;
             retry_after_seconds: number;
             /** Beta site only */
-            upgrade_message?: any;
+            upgrade_message?: string;
             /** Beta site only */
             model_usage_data?: { title: string; data: Record<string, number> };
-            view_usage_message: RovoDevMessageWithCtaLink;
-            exceeded_message: RovoDevMessageWithCtaLink;
+            view_usage_message?: RovoDevMessageWithCtaLink;
+            exceeded_message?: RovoDevMessageWithCtaLink;
         };
     };
 }
