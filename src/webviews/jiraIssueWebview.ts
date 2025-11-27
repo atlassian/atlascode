@@ -26,6 +26,7 @@ import { PullRequestData } from '../bitbucket/model';
 import { postComment } from '../commands/jira/postComment';
 import { showIssue } from '../commands/jira/showIssue';
 import { startWorkOnIssue } from '../commands/jira/startWorkOnIssue';
+import { configuration } from '../config/configuration';
 import { Commands } from '../constants';
 import { Container } from '../container';
 import {
@@ -1771,16 +1772,13 @@ export class JiraIssueWebview
                         handled = true;
                         try {
                             const entitlementResponse = await Container.rovoDevEntitlementChecker.checkEntitlement();
-                            const isDismissed = Container.context.globalState.get<boolean>(
-                                'rovoDevPromoBannerDismissed',
-                                true,
-                            );
+                            const showEntitlementPromoBanner = Container.config.rovodev.showEntitlementNotifications;
                             Logger.debug(
-                                `Rovo Dev entitlement check: isEntitled=${entitlementResponse.isEntitled} (${entitlementResponse.type}), isDismissed=${isDismissed}`,
+                                `Rovo Dev entitlement check: isEntitled=${entitlementResponse.isEntitled} (${entitlementResponse.type}), showEntitlementPromoBanner=${showEntitlementPromoBanner}`,
                             );
                             this.postMessage({
                                 type: CommonMessageType.RovoDevEntitlementBanner,
-                                enabled: entitlementResponse.isEntitled && !isDismissed,
+                                enabled: entitlementResponse.isEntitled && showEntitlementPromoBanner,
                                 entitlementType: entitlementResponse.type,
                             });
                         } catch (e) {
@@ -1797,12 +1795,8 @@ export class JiraIssueWebview
                 case 'dismissRovoDevPromoBanner': {
                     if (isDismissRovoDevPromoBanner(msg)) {
                         handled = true;
-                        await Container.context.globalState.update('rovoDevPromoBannerDismissed', true);
-                        const updatedValue = Container.context.globalState.get<boolean>(
-                            'rovoDevPromoBannerDismissed',
-                            true,
-                        );
-                        Logger.debug(`Updated rovoDevPromoBannerDismissed to: ${updatedValue} in global state`);
+                        await configuration.updateEffective('rovodev.showEntitlementNotifications', false, null, true);
+                        Logger.debug(`Updated rovodev.showEntitlementNotifications to false in configuration`);
                     }
                     break;
                 }
