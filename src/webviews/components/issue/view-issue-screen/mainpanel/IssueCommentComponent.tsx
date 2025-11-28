@@ -11,8 +11,8 @@ import { Box } from '@mui/material';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+import { AdfAwareContent } from 'src/webviews/components/AdfAwareContent';
 
-import { AdfAwareContent } from '../../../AdfAwareContent';
 import { RenderedContent } from '../../../RenderedContent';
 import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
 import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
@@ -288,11 +288,11 @@ const AddCommentComponent: React.FC<{
                         <AtlaskitEditor
                             defaultValue={commentText}
                             onSave={(content) => {
-                                if (content && content.trim() !== '') {
-                                    onCreate(content, undefined);
-                                    setCommentText('');
-                                    closeEditorHandler();
-                                }
+                                // if (content && content.trim() !== '') {
+                                onCreate(content, undefined);
+                                setCommentText('');
+                                closeEditorHandler();
+                                // }
                             }}
                             onCancel={() => {
                                 setCommentText('');
