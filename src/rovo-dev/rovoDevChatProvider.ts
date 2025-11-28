@@ -21,7 +21,12 @@ import {
     RovoDevPrompt,
     TechnicalPlan,
 } from './rovoDevTypes';
-import { parseCustomCliTagsForMarkdown, readLastNLogLines, statusJsonResponseToMarkdown } from './rovoDevUtils';
+import {
+    parseCustomCliTagsForMarkdown,
+    readLastNLogLines,
+    statusJsonResponseToMarkdown,
+    usageJsonResponseToMarkdown,
+} from './rovoDevUtils';
 import { TypedWebview } from './rovoDevWebviewProvider';
 import {
     RovoDevProviderMessage,
@@ -532,6 +537,32 @@ export class RovoDevChatProvider {
                         event_kind: '_RovoDevDialog',
                     },
                 });
+                break;
+
+            case 'usage':
+                const { usage_response, alert_message } = usageJsonResponseToMarkdown(response);
+                await webview.postMessage({
+                    type: RovoDevProviderMessageType.ShowDialog,
+                    message: {
+                        type: 'info',
+                        title: 'Usage response',
+                        text: usage_response,
+                        event_kind: '_RovoDevDialog',
+                        statusCode: `Status code: ${response.data.content.status}`,
+                    },
+                });
+                if (alert_message) {
+                    await webview.postMessage({
+                        type: RovoDevProviderMessageType.ShowDialog,
+                        message: {
+                            type: 'warning',
+                            title: "You've reached your Rovo Dev credit limit",
+                            text: alert_message.message.replace('{ctaLink}', ''),
+                            event_kind: '_RovoDevDialog',
+                            ctaLink: alert_message.ctaLink,
+                        },
+                    });
+                }
                 break;
 
             case 'close':
