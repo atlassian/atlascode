@@ -18,7 +18,6 @@ jest.mock('lodash', () => ({
 }));
 
 import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
-import { expansionCastTo } from 'testsutil/miscFunctions';
 import * as vscode from 'vscode';
 
 import { getAxiosInstance } from './api/extensionApi';
@@ -75,7 +74,7 @@ describe('RovoDevFeedbackManager', () => {
                 canContact: true,
             };
 
-            await RovoDevFeedbackManager.submitFeedback(feedback, expansionCastTo<UserInfo>(mockUser));
+            await RovoDevFeedbackManager.submitFeedback(feedback, mockUser as UserInfo);
 
             expect(mockTransport).toHaveBeenCalledWith(
                 expect.any(String),
