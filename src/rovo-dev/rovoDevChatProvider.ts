@@ -168,11 +168,14 @@ export class RovoDevChatProvider {
             // Boysenberry is always in YOLO mode
             const response = await client.chat(requestPayload, !this._isBoysenberry);
 
-            this._telemetryProvider.fireTelemetryEvent(
-                'rovoDevPromptSentEvent',
-                this._currentPromptId,
-                !!requestPayload.enable_deep_plan,
-            );
+            this._telemetryProvider.fireTelemetryEvent({
+                action: 'rovoDevPromptSent',
+                subject: 'atlascode',
+                attributes: {
+                    promptId: this._currentPromptId,
+                    deepPlanEnabled: !!requestPayload.enable_deep_plan,
+                },
+            });
 
             return this.processResponse('chat', response);
         };
@@ -239,11 +242,14 @@ export class RovoDevChatProvider {
         // don't instrument the cancellation if it's coming from a 'New session' action
         // also, don't instrument the cancellation if it's done before initialization
         if (!fromNewSession && this._rovoDevApiClient) {
-            this._telemetryProvider.fireTelemetryEvent(
-                'rovoDevStopActionEvent',
-                this.currentPromptId,
-                success ? undefined : true,
-            );
+            this._telemetryProvider.fireTelemetryEvent({
+                action: 'rovoDevStopAction',
+                subject: 'atlascode',
+                attributes: {
+                    promptId: this._currentPromptId,
+                    failed: success ? undefined : true,
+                },
+            });
         }
 
         return success;
@@ -384,13 +390,16 @@ export class RovoDevChatProvider {
                 0,
             );
 
-            this._telemetryProvider.fireTelemetryEvent(
-                'rovoDevTechnicalPlanningShownEvent',
-                this._currentPromptId,
-                stepsCount,
-                filesCount,
-                questionsCount,
-            );
+            this._telemetryProvider.fireTelemetryEvent({
+                action: 'rovoDevTechnicalPlanningShown',
+                subject: 'atlascode',
+                attributes: {
+                    promptId: this._currentPromptId,
+                    stepsCount,
+                    filesCount,
+                    questionsCount,
+                },
+            });
         }
 
         switch (response.event_kind) {
