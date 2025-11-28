@@ -106,8 +106,9 @@ export function usageJsonResponseToMarkdown(response: RovoDevUsageResponse): {
 
     const numberFormatter = new Intl.NumberFormat();
 
+    let buffer = '';
+
     if (data.isBetaSite) {
-        let buffer = '';
         buffer += `**${data.title}**\n`;
         buffer += `- Used: ${numberFormatter.format(data.credit_used)}\n`;
         buffer += `- Remaining: ${numberFormatter.format(data.credit_remaining)}\n`;
@@ -123,27 +124,24 @@ export function usageJsonResponseToMarkdown(response: RovoDevUsageResponse): {
                 buffer += `- ${key}: ${numberFormatter.format(modelData[key])}\n`;
             }
         }
-
-        return { usage_response: buffer };
     } else {
-        let buffer = '';
         buffer += `**${data.title}**\n`;
         buffer += `- Used: ${numberFormatter.format(data.credit_used)}\n`;
         buffer += `- Remaining: ${numberFormatter.format(data.credit_remaining)}\n`;
         buffer += `- Total: ${numberFormatter.format(data.credit_total)}\n`;
         buffer += '\n';
-
-        if (data.view_usage_message) {
-            const view_usage_message = data.view_usage_message.message;
-            if (data.view_usage_message.ctaLink) {
-                buffer += view_usage_message.replace('{ctaLink}', data.view_usage_message.ctaLink.link);
-            } else {
-                buffer += view_usage_message;
-            }
-        }
-
-        return { usage_response: buffer, alert_message: data.exceeded_message };
     }
+
+    if (data.view_usage_message) {
+        const view_usage_message = data.view_usage_message.message;
+        if (data.view_usage_message.ctaLink) {
+            buffer += view_usage_message.replace('{ctaLink}', data.view_usage_message.ctaLink.link);
+        } else {
+            buffer += view_usage_message;
+        }
+    }
+
+    return { usage_response: buffer, alert_message: data.exceeded_message };
 }
 
 function formatText(text: string, cliTags: string[], links: { text: string; link: string }[]) {
