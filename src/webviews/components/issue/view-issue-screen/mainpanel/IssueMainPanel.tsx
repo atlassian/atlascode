@@ -1,7 +1,7 @@
 import Button from '@atlaskit/button';
 import AddIcon from '@atlaskit/icon/core/add';
 import Tooltip from '@atlaskit/tooltip';
-import { IssueType, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
+import { IssueType, MinimalIssueOrKeyAndSite, User } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, FieldUIs, FieldValues, IssueLinkTypeSelectOption } from '@atlassianlabs/jira-pi-meta-models';
 import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
@@ -139,6 +139,12 @@ const IssueMainPanel: React.FC<Props> = ({
     const handleStatusChange = (issueKey: string, statusName: string) => {
         if (onIssueUpdate) {
             onIssueUpdate(issueKey, 'status', statusName);
+        }
+    };
+
+    const handleAssigneeChange = (issueKey: string, assignee: User | null) => {
+        if (onIssueUpdate) {
+            onIssueUpdate(issueKey, 'assignee', assignee);
         }
     };
 
@@ -347,6 +353,8 @@ const IssueMainPanel: React.FC<Props> = ({
                         onDelete={onDelete}
                         enableLinkedIssues={{ enable: enableLinkedIssues, setEnableLinkedIssues }}
                         onStatusChange={handleStatusChange}
+                        onAssigneeChange={handleAssigneeChange}
+                        fetchUsers={fetchUsers}
                     />
                 </div>
             )}
