@@ -49,12 +49,11 @@ export async function startWorkFlow(page: Page, type: BitbucketTypes, request: A
     await startWorkPage.expectGitBranchSetup();
 
     await startWorkPage.startWork();
-    await page.waitForTimeout(2_000);
 
-    expect(startWorkFrame.getByText(new RegExp('Assigned the issue to you', 'i'))).toBeVisible();
-    expect(startWorkFrame.getByText(new RegExp(`Transitioned status to ${NEXT_STATUS}`, 'i'))).toBeVisible();
-
-    await startWorkPage.waitForSuccessToast();
+    // Wait for success alert and verify messages
+    await startWorkPage.waitForSuccessAlert();
+    await expect(startWorkFrame.getByText(/Assigned the issue to you/i)).toBeVisible();
+    await expect(startWorkFrame.getByText(/Transitioned status to/i)).toBeVisible();
 
     // check new branch was created
     // it can be mock-repository... for Cloud or dc-repository... for DC

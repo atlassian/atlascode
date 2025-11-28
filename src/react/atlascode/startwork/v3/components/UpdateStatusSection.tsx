@@ -64,6 +64,7 @@ export const UpdateStatusSection: React.FC<UpdateStatusSectionProps> = ({
             marginBottom={2}
         >
             <FormControlLabel
+                data-testid="start-work.transition-issue-checkbox"
                 control={<Checkbox checked={transitionIssueEnabled} onChange={toggleTransitionIssueEnabled} />}
                 label={
                     <Typography variant="h5" style={{ fontWeight: 700 }}>

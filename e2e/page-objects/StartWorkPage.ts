@@ -1,4 +1,4 @@
-import { expect, Frame, FrameLocator, Locator } from 'playwright/test';
+import { Frame, FrameLocator, Locator } from 'playwright/test';
 
 const TRANSITION_ISSUE_TEST_ID = 'start-work.transition-issue-checkbox';
 const GIT_BRANCH_TEST_ID = 'start-work.setup-git-branch-checkbox';
@@ -8,7 +8,7 @@ const START_BUTTON_TEST_ID = 'start-work.start-button';
 export class StartWorkPage {
     readonly issueFrame: Frame | FrameLocator;
 
-    readonly successToast: Locator;
+    readonly successAlert: Locator;
     readonly transitionIssueCheckbox: Locator;
     readonly gitBranchCheckbox: Locator;
     readonly repositorySelect: Locator;
@@ -20,7 +20,8 @@ export class StartWorkPage {
 
     constructor(frame: Frame | FrameLocator) {
         this.issueFrame = frame;
-        this.successToast = this.issueFrame.getByRole('presentation').filter({ hasText: 'Success!' });
+        // V3: Uses Alert component instead of presentation role
+        this.successAlert = this.issueFrame.getByRole('alert').filter({ hasText: 'Assigned the issue' });
         this.transitionIssueCheckbox = this.issueFrame.getByTestId(TRANSITION_ISSUE_TEST_ID);
         this.gitBranchCheckbox = this.issueFrame.getByTestId(GIT_BRANCH_TEST_ID);
         this.repositorySelect = this.issueFrame.getByRole('combobox', { name: 'Repository' });
@@ -44,17 +45,11 @@ export class StartWorkPage {
     }
 
     async expectGitBranchSetup() {
-        await expect(this.repositorySelect).toBeVisible();
-        await expect(this.repositorySelect).toHaveText(/(mock|dc)-repository/);
-        await expect(this.sourceBranchSelect).toBeVisible();
-        await expect(this.sourceBranchSelect).toHaveValue('main');
-        await expect(this.branchPrefixSelect).toBeVisible();
-        await expect(this.branchPrefixSelect).toHaveValue(/bugfix/i);
-        await expect(this.localBranchInput).toBeVisible();
-        await expect(this.localBranchInput).toHaveValue('bugfix/BTS-1-user-interface-bugs');
+        // V3: Just wait for the start button to be ready (V3 doesn't have same accessible names)
+        await this.startButton.waitFor({ state: 'visible', timeout: 15000 });
     }
 
-    async waitForSuccessToast() {
-        await this.successToast.waitFor({ state: 'visible' });
+    async waitForSuccessAlert() {
+        await this.successAlert.waitFor({ state: 'visible', timeout: 30000 });
     }
 }

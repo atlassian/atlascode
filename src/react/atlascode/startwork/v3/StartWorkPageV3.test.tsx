@@ -19,7 +19,7 @@ jest.mock('../../common/errorController', () => ({
 
 jest.mock('src/analyticsTypes', () => ({
     AnalyticsView: {
-        StartWorkPageV3: 'StartWorkPageV3',
+        StartWorkPage: 'StartWorkPage',
     },
 }));
 
