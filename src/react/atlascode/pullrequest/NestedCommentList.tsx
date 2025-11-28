@@ -1,6 +1,7 @@
 import { Grid } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import React from 'react';
+import { AtlascodeMentionProvider } from 'src/webviews/components/issue/common/AtlaskitEditor/AtlascodeMentionsProvider';
 
 import { Comment, PullRequestState, User } from '../../../bitbucket/model';
 import { NestedComment } from './NestedComment';
@@ -12,6 +13,7 @@ type NestedCommentListProps = {
     onDelete: (comment: Comment) => Promise<void>;
     pullRequestState: PullRequestState;
     handleEditorFocus: (isFocused: boolean) => void;
+    mentionsProvider?: AtlascodeMentionProvider;
 };
 
 const useStyles = makeStyles({
@@ -27,6 +29,7 @@ export const NestedCommentList: React.FunctionComponent<NestedCommentListProps> 
     onDelete,
     pullRequestState,
     handleEditorFocus,
+    mentionsProvider,
 }) => {
     const classes = useStyles();
     return (
@@ -40,6 +43,7 @@ export const NestedCommentList: React.FunctionComponent<NestedCommentListProps> 
                         onDelete={onDelete}
                         pullRequestState={pullRequestState}
                         handleEditorFocus={handleEditorFocus}
+                        mentionsProvider={mentionsProvider}
                     />
                 </Grid>
             ))}

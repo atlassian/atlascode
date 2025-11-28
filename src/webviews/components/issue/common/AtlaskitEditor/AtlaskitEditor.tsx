@@ -1,16 +1,19 @@
 import './AtlaskitEditor.css';
 
+import { BitbucketTransformer } from '@atlaskit/editor-bitbucket-transformer';
 import { ComposableEditor, EditorNextProps } from '@atlaskit/editor-core/composable-editor';
 import { createDefaultPreset } from '@atlaskit/editor-core/preset-default';
 import { usePreset } from '@atlaskit/editor-core/use-preset';
+import { contentInsertionPlugin } from '@atlaskit/editor-plugin-content-insertion';
 import { insertBlockPlugin } from '@atlaskit/editor-plugin-insert-block';
 import { listPlugin } from '@atlaskit/editor-plugin-list';
 import { mentionsPlugin } from '@atlaskit/editor-plugin-mentions';
+import { tablePlugin } from '@atlaskit/editor-plugin-table';
 import { textColorPlugin } from '@atlaskit/editor-plugin-text-color';
 import { toolbarListsIndentationPlugin } from '@atlaskit/editor-plugin-toolbar-lists-indentation';
 import { WikiMarkupTransformer } from '@atlaskit/editor-wikimarkup-transformer';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 interface AtlaskitEditorProps extends Omit<Partial<EditorNextProps>, 'onChange' | 'onSave'> {
     onSave?: (content: string) => void;
@@ -21,6 +24,7 @@ interface AtlaskitEditorProps extends Omit<Partial<EditorNextProps>, 'onChange' 
     onFocus: () => void;
     onBlur: () => void;
     isSaveOnBlur?: boolean;
+    isBitbucket?: boolean;
 }
 
 const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProps) => {
@@ -35,8 +39,9 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
         onContentChange,
         mentionProvider,
         isSaveOnBlur,
+        isBitbucket = false,
     } = props;
-
+    const TextTransformer = useMemo(() => (isBitbucket ? BitbucketTransformer : WikiMarkupTransformer), [isBitbucket]);
     const { preset, editorApi } = usePreset(() => {
         return (
             createDefaultPreset({
@@ -49,6 +54,10 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                     linkPicker: {},
                     platform: 'web',
                 },
+                textFormatting: {
+                    disableUnderline: isBitbucket,
+                    disableSuperscriptAndSubscript: isBitbucket,
+                },
             })
                 // You can extend this with other plugins if you need them
                 .add(listPlugin)
@@ -56,12 +65,19 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                     toolbarListsIndentationPlugin,
                     { showIndentationButtons: false, allowHeadingAndParagraphIndentation: false },
                 ])
-                .add(textColorPlugin)
+                .maybeAdd(textColorPlugin, (plugin, builder) => {
+                    if (!isBitbucket) {
+                        return builder.add(plugin);
+                    }
+                    return builder;
+                })
                 .add([
                     insertBlockPlugin,
                     { toolbarShowPlusInsertOnly: true, appearance: appearance, allowExpand: true },
                 ])
                 .add(mentionsPlugin)
+                .add(contentInsertionPlugin)
+                .add(tablePlugin)
         );
     }, []);
     // Helper function to get current document content
@@ -82,9 +98,7 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                         resolve(document);
                     },
                     {
-                        transformer: editorApi.core.actions.createTransformer(
-                            (scheme) => new WikiMarkupTransformer(scheme),
-                        ),
+                        transformer: editorApi.core.actions.createTransformer((scheme) => new TextTransformer(scheme)),
                     },
                 );
             });
@@ -92,7 +106,7 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
             console.error(error);
             return null;
         }
-    }, [editorApi]);
+    }, [editorApi, TextTransformer]);
 
     // Track previous content for change detection
     const previousContentRef = React.useRef<string>('');
@@ -135,19 +149,17 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                     if (!document) {
                         throw new Error('document is not available');
                     }
-                    // document is in  wiki markup format because of transformer passed below
+                    // document is in correct (wiki/bitbucket html) format because of transformer passed below
                     onSave?.(document);
                 },
                 {
-                    transformer: editorApi.core.actions.createTransformer(
-                        (scheme) => new WikiMarkupTransformer(scheme),
-                    ),
+                    transformer: editorApi.core.actions.createTransformer((scheme) => new TextTransformer(scheme)),
                 },
             );
         } catch (error) {
             console.error(error);
         }
-    }, [editorApi, onSave]);
+    }, [editorApi, onSave, TextTransformer]);
 
     React.useEffect(() => {
         return editorApi?.focus.sharedState.onChange(({ nextSharedState }) => {
@@ -165,13 +177,13 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
     return (
         <div ref={editorContainerRef}>
             <ComposableEditor
-                useStickyToolbar={true}
+                useStickyToolbar={!isBitbucket}
                 assistiveLabel="Rich text editor for comments"
                 preset={preset}
                 defaultValue={defaultValue}
                 contentTransformerProvider={(schema) => {
-                    // here we transforms ADF <-> wiki markup
-                    return new WikiMarkupTransformer(schema);
+                    // here we transforms ADF <-> wiki/bitbucket html markup
+                    return new TextTransformer(schema);
                 }}
                 mentionProvider={mentionProvider}
             />

@@ -2,9 +2,10 @@ import EditIcon from '@mui/icons-material/Edit';
 import { Box, darken, Grid, lighten, Theme, Tooltip, Typography } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import React, { useCallback, useState } from 'react';
+import { AtlascodeMentionProvider } from 'src/webviews/components/issue/common/AtlaskitEditor/AtlascodeMentionsProvider';
+import AtlaskitEditor from 'src/webviews/components/issue/common/AtlaskitEditor/AtlaskitEditor';
 
 import { User } from '../../../bitbucket/model';
-import { MarkdownEditor } from '../common/editor/MarkdownEditor';
 
 const useStyles = makeStyles(
     (theme: Theme) =>
@@ -37,6 +38,7 @@ type InlineTextEditorProps = {
     onSave?: (value: string) => void;
     fetchUsers?: (input: string) => Promise<User[]>;
     handleEditorFocus: (isFocused: boolean) => void;
+    mentionsProvider?: AtlascodeMentionProvider;
 };
 
 const InlineRenderedTextEditor: React.FC<InlineTextEditorProps> = (props: InlineTextEditorProps) => {
@@ -59,14 +61,17 @@ const InlineRenderedTextEditor: React.FC<InlineTextEditorProps> = (props: Inline
     );
 
     return editMode ? (
-        <MarkdownEditor
-            initialContent={props.rawContent}
-            onSave={handleSave}
-            onCancel={exitEditMode}
-            fetchUsers={props.fetchUsers}
-            onFocus={() => props.handleEditorFocus(true)}
-            onBlur={() => props.handleEditorFocus(false)}
-        />
+        <div suppressContentEditableWarning={true}>
+            <AtlaskitEditor
+                defaultValue={props.htmlContent}
+                onSave={handleSave}
+                onCancel={exitEditMode}
+                mentionProvider={props.mentionsProvider ? Promise.resolve(props.mentionsProvider) : undefined}
+                isBitbucket={true}
+                onFocus={() => props.handleEditorFocus(true)}
+                onBlur={() => props.handleEditorFocus(false)}
+            />
+        </div>
     ) : (
         <Grid
             container
