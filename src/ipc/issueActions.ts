@@ -238,6 +238,14 @@ export interface HandleEditorFocusAction extends Action {
     isFocused: boolean;
 }
 
+export interface CheckRovoDevEntitlementAction extends Action {
+    action: 'checkRovoDevEntitlement';
+}
+
+export interface DismissRovoDevPromoBannerAction extends Action {
+    action: 'dismissRovoDevPromoBanner';
+}
+
 export function isGetImage(a: Action): a is GetImageAction {
     return (<GetImageAction>a).action === 'getImage';
 }
@@ -399,4 +407,12 @@ export function isAiSuggestionFeedback(a: Action): a is AiSuggeestionFeedbackAct
 
 export function isHandleEditorFocus(a: Action): a is HandleEditorFocusAction {
     return a && a.action === 'handleEditorFocus';
+}
+
+export function isCheckRovoDevEntitlement(a: Action): a is CheckRovoDevEntitlementAction {
+    return a && a.action === 'checkRovoDevEntitlement';
+}
+
+export function isDismissRovoDevPromoBanner(a: Action): a is DismissRovoDevPromoBannerAction {
+    return a && a.action === 'dismissRovoDevPromoBanner';
 }

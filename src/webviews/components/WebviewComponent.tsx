@@ -107,6 +107,9 @@ export abstract class WebviewComponent<A extends Action, R, P, S> extends React.
     protected onPMFOpen() {
         this._api.postMessage({ action: 'pmfOpen' });
     }
+    protected onDismissRovoDevPromoBanner() {
+        this._api.postMessage({ action: 'dismissRovoDevPromoBanner' });
+    }
 
     private onMessageEvent(e: MessageEvent) {
         const msg = e.data as R;

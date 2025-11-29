@@ -14,6 +14,7 @@ import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
 import timer from 'src/util/perf';
+import { RovoDevEntitlementErrorType } from 'src/util/rovo-dev-entitlement/rovoDevEntitlementError';
 import * as vscode from 'vscode';
 import { commands, env, window } from 'vscode';
 
@@ -25,18 +26,21 @@ import { PullRequestData } from '../bitbucket/model';
 import { postComment } from '../commands/jira/postComment';
 import { showIssue } from '../commands/jira/showIssue';
 import { startWorkOnIssue } from '../commands/jira/startWorkOnIssue';
+import { configuration } from '../config/configuration';
 import { Commands } from '../constants';
 import { Container } from '../container';
 import {
     EditChildIssueAction,
     EditIssueAction,
     isAddAttachmentsAction,
+    isCheckRovoDevEntitlement,
     isCloneIssue,
     isCreateIssue,
     isCreateIssueLink,
     isCreateWorklog,
     isDeleteByIDAction,
     isDeleteWorklog,
+    isDismissRovoDevPromoBanner,
     isGetImage,
     isHandleEditorFocus,
     isIssueComment,
@@ -63,6 +67,7 @@ import { fetchEditIssueUI, fetchMinimalIssue } from '../jira/fetchIssue';
 import { fetchMultipleIssuesWithTransitions } from '../jira/fetchIssueWithTransitions';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
+import { CommonMessageType } from '../lib/ipc/toUI/common';
 import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
 import { RovoDevContextItem } from '../rovo-dev/rovoDevTypes';
@@ -1759,6 +1764,39 @@ export class JiraIssueWebview
                     if (isHandleEditorFocus(msg)) {
                         handled = true;
                         Container.setIsEditorFocused(msg.isFocused);
+                    }
+                    break;
+                }
+                case 'checkRovoDevEntitlement': {
+                    if (isCheckRovoDevEntitlement(msg)) {
+                        handled = true;
+                        try {
+                            const entitlementResponse = await Container.rovoDevEntitlementChecker.checkEntitlement();
+                            const showEntitlementPromoBanner = Container.config.rovodev.showEntitlementNotifications;
+                            Logger.debug(
+                                `Rovo Dev entitlement check: isEntitled=${entitlementResponse.isEntitled} (${entitlementResponse.type}), showEntitlementPromoBanner=${showEntitlementPromoBanner}`,
+                            );
+                            this.postMessage({
+                                type: CommonMessageType.RovoDevEntitlementBanner,
+                                enabled: entitlementResponse.isEntitled && showEntitlementPromoBanner,
+                                entitlementType: entitlementResponse.type,
+                            });
+                        } catch (e) {
+                            Logger.error(e, 'Error checking Rovo Dev entitlement');
+                            this.postMessage({
+                                type: CommonMessageType.RovoDevEntitlementBanner,
+                                enabled: false,
+                                entitlementType: RovoDevEntitlementErrorType.UNKOWN_ERROR,
+                            });
+                        }
+                    }
+                    break;
+                }
+                case 'dismissRovoDevPromoBanner': {
+                    if (isDismissRovoDevPromoBanner(msg)) {
+                        handled = true;
+                        await configuration.updateEffective('rovodev.showEntitlementNotifications', false, null, true);
+                        Logger.debug(`Updated rovodev.showEntitlementNotifications to false in configuration`);
                     }
                     break;
                 }

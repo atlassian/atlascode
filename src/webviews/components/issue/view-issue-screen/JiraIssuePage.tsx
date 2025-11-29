@@ -7,6 +7,7 @@ import { Box, Tab, Tabs } from '@mui/material';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import * as React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+import { RovoDevEntitlementType } from 'src/util/rovo-dev-entitlement/rovoDevEntitlementChecker';
 import { v4 } from 'uuid';
 
 import { AnalyticsView } from '../../../../analyticsTypes';
@@ -26,6 +27,7 @@ import { AtlLoader } from '../../AtlLoader';
 import ErrorBanner from '../../ErrorBanner';
 import Offline from '../../Offline';
 import PMFBBanner from '../../pmfBanner';
+import RovoDevPromoBanner from '../../RovoDevPromoBanner';
 import {
     AbstractIssueEditorPage,
     CommonEditorPageAccept,
@@ -61,6 +63,8 @@ export interface ViewState extends CommonEditorViewState, EditIssueData {
     historyLoading: boolean;
     imageToCopy: HTMLImageElement | null;
     vsCodeContext: string;
+    showRovoDevPromoBanner: boolean;
+    rovoDevEntitlementType?: RovoDevEntitlementType;
 }
 
 const emptyState: ViewState = {
@@ -77,6 +81,8 @@ const emptyState: ViewState = {
     historyLoading: false,
     imageToCopy: null,
     vsCodeContext: '',
+    showRovoDevPromoBanner: false,
+    rovoDevEntitlementType: undefined,
 };
 
 export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
@@ -599,6 +605,16 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
         return (
             <div>
+                {this.state.showRovoDevPromoBanner && this.state.rovoDevEntitlementType && (
+                    <RovoDevPromoBanner
+                        entitlementType={this.state.rovoDevEntitlementType}
+                        onOpen={this.handleOpenRovoDev}
+                        onDismiss={() => {
+                            this.onDismissRovoDevPromoBanner();
+                            this.setState({ showRovoDevPromoBanner: false });
+                        }}
+                    />
+                )}
                 {this.state.showPMF && (
                     <PMFBBanner
                         onPMFOpen={() => this.onPMFOpen()}
@@ -931,6 +947,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
     override componentDidMount() {
         this.postMessage({ action: 'getFeatureFlags' });
+        this.postMessage({ action: 'checkRovoDevEntitlement' });
     }
     override shouldComponentUpdate(_nextProps: Readonly<{}>, nextState: Readonly<ViewState>): boolean {
         const prevIssueKey = this.state.key;
