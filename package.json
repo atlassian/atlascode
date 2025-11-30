@@ -439,10 +439,10 @@
             {
                 "command": "atlascode.bb.createPullRequest",
                 "title": "Create Bitbucket Pull Request",
-                 "icon": {
+                "icon": {
                     "dark": "resources/dark/pullrequests.svg",
                     "light": "resources/light/pullrequests.svg"
-                 },
+                },
                 "category": "Bitbucket"
             },
             {
@@ -678,11 +678,11 @@
                 }
             ],
             "scm/title": [
-				{
-					"command": "atlascode.bb.createPullRequest",
-                    "when": "config.atlascode.bitbucket.contextMenus.enabled && config.atlascode.bitbucket.enabled",
-					"group": "navigation"
-				}
+                {
+                    "command": "atlascode.bb.createPullRequest",
+                    "when": "config.atlascode.bitbucket.enabled",
+                    "group": "navigation"
+                }
 			],
             "view/title": [
                 {
