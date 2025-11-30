@@ -438,11 +438,11 @@
             },
             {
                 "command": "atlascode.bb.createPullRequest",
-                "title": "Create Pull Request",
-                "icon": {
-                    "dark": "resources/dark/add.svg",
-                    "light": "resources/light/add.svg"
-                },
+                "title": "Create Bitbucket Pull Request",
+                 "icon": {
+                    "dark": "resources/dark/pullrequests.svg",
+                    "light": "resources/light/pullrequests.svg"
+                 },
                 "category": "Bitbucket"
             },
             {
@@ -677,6 +677,13 @@
                     "when": "resourceScheme == atlascode.bbpr && config.atlascode.bitbucket.enabled"
                 }
             ],
+            "scm/title": [
+				{
+					"command": "atlascode.bb.createPullRequest",
+                    "when": "config.atlascode.bitbucket.contextMenus.enabled && config.atlascode.bitbucket.enabled",
+					"group": "navigation"
+				}
+			],
             "view/title": [
                 {
                     "command": "atlascode.rovodev.newChatSession",
