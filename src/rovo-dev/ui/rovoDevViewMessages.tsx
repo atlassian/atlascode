@@ -1,6 +1,6 @@
 import { RovoDevContextItem, RovoDevPrompt, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 
-import { ReducerAction } from '../../ipc/messaging';
+import { ReducerAction } from '../messaging';
 import { FeedbackType } from './feedback-form/FeedbackForm';
 
 export const enum RovoDevViewResponseType {

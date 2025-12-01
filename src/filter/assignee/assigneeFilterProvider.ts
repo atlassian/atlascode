@@ -6,7 +6,8 @@ import { currentUserJira } from '../../commands/jira/currentUser';
 import { Commands } from '../../constants';
 import { Container } from '../../container';
 import { TreeViewIssue } from '../../views/jira/treeViews/utils';
-import { JiraIssueService } from './JiraIssueService';
+import { JiraIssueService } from '../JiraIssueService';
+import { ProjectFilterProvider } from '../project/projectFilterProvider';
 import { JiraUserService } from './JiraUserService';
 import { QuickPickUser, QuickPickUtils } from './QuickPickUtils';
 
@@ -147,18 +148,22 @@ export class AssigneeFilterProvider {
             return;
         }
 
+        const hasActiveProjectFilter = ProjectFilterProvider.previousSelectedItems.length > 0;
+
         const selectedUsersCount = filterParams.regularUsers.length + (filterParams.hasCurrentUser ? 1 : 0);
 
-        Container.assignedWorkItemsView.setFilteredIssues([], selectedUsersCount);
+        const displayCount = selectedUsersCount;
+
+        Container.assignedWorkItemsView.setFilteredIssues([], displayCount);
         commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
         Container.assignedWorkItemsView.focus();
 
         try {
-            const issues = await JiraIssueService.getAssignedIssuesFromAllSites(
-                filterParams.regularUsers,
-                sites,
-                filterParams.hasCurrentUser,
-            );
+            const issues = await JiraIssueService.getIssuesFromAllSites(sites, {
+                users: filterParams.regularUsers,
+                hasCurrentUser: filterParams.hasCurrentUser,
+                projects: hasActiveProjectFilter ? ProjectFilterProvider.previousSelectedItems : undefined,
+            });
 
             const treeViewIssues: TreeViewIssue[] = issues.map((issue) => ({
                 ...issue,
@@ -166,7 +171,7 @@ export class AssigneeFilterProvider {
                 children: [],
             }));
 
-            Container.assignedWorkItemsView.setFilteredIssues(treeViewIssues, selectedUsersCount);
+            Container.assignedWorkItemsView.setFilteredIssues(treeViewIssues, displayCount);
             commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
         } catch (error) {
             Container.assignedWorkItemsView.setFilteredIssues(null);

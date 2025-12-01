@@ -56,6 +56,7 @@ import { chain } from '../fieldValidators';
 import * as SelectFieldHelper from '../selectFieldHelper';
 import { WebviewComponent } from '../WebviewComponent';
 import { AttachmentForm } from './AttachmentForm';
+import { convertAdfToWikimarkup } from './common/adfToWikimarkup';
 import { AtlascodeMentionProvider } from './common/AtlaskitEditor/AtlascodeMentionsProvider';
 import AtlaskitEditor from './common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from './common/JiraIssueTextArea';
@@ -247,6 +248,16 @@ export abstract class AbstractIssueEditorPage<
         }
         if (t === 'number' || t === 'boolean') {
             return String(value);
+        }
+        // Check if it's an ADF object
+        if (t === 'object' && value.type === 'doc' && value.version === 1) {
+            // For new Atlaskit editor, convert to JSON string
+            if (this.state.isAtlaskitEditorEnabled) {
+                return JSON.stringify(value);
+            }
+            // For legacy editor, convert ADF to WikiMarkup
+            // Note: This will gracefully fall back to plain text if conversion fails
+            return convertAdfToWikimarkup(value);
         }
         // For any other type (objects, symbols, functions), render empty string
         return '';
