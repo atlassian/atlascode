@@ -1,6 +1,7 @@
 import { MinimalIssue, readSearchResults } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { Container } from 'src/container';
+import { attachAssigneesToIssues, collectAssigneesFromResponse } from 'src/jira/issueAssigneeUtils';
 
 import { QuickPickUser } from './assignee/QuickPickUtils';
 import { QuickPickProject } from './project/QuickPickUtils';
@@ -111,7 +112,7 @@ export class JiraIssueService {
                 const response = await client.searchForIssuesUsingJqlGet(jql, fields, MAX_RESULTS, startAt);
                 const searchResults = await readSearchResults(response, site, epicFieldInfo);
 
-                this.collectAssigneesFromResponse(response, assigneeMap);
+                collectAssigneesFromResponse(response, assigneeMap);
                 allIssues.push(...searchResults.issues);
 
                 const issuesCount = searchResults.issues.length;
@@ -120,35 +121,10 @@ export class JiraIssueService {
                 isLast = (response as any)?.isLast ?? (issuesCount === 0 || issuesCount < MAX_RESULTS);
             } while (!isLast);
 
-            return this.attachAssigneesToIssues(allIssues, assigneeMap);
+            return attachAssigneesToIssues(allIssues, assigneeMap);
         } catch (siteError) {
             console.error(`Error fetching issues from site ${site.name}: ${siteError}`);
             return [];
         }
-    }
-
-    private static collectAssigneesFromResponse(response: any, assigneeMap: Map<string, any>): void {
-        if (!response?.issues) {
-            return;
-        }
-        for (const issue of response.issues) {
-            const assignee = issue.fields?.assignee;
-            if (issue.key && assignee) {
-                assigneeMap.set(issue.key, issue.fields.assignee);
-            }
-        }
-    }
-
-    private static attachAssigneesToIssues(
-        issues: MinimalIssue<DetailedSiteInfo>[],
-        assigneeMap: Map<string, any>,
-    ): MinimalIssue<DetailedSiteInfo>[] {
-        return issues.map((issue) => {
-            const assignee = assigneeMap.get(issue.key);
-            if (assignee) {
-                (issue as any).assignee = assignee;
-            }
-            return issue;
-        });
     }
 }
