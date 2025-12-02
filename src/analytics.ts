@@ -305,6 +305,18 @@ export async function issueOpenRovoDevEvent(site: DetailedSiteInfo, source?: str
     });
 }
 
+export async function rovoDevPromoBannerDismissedEvent(site: DetailedSiteInfo, source?: string): Promise<TrackEvent> {
+    return instanceTrackEvent(site, 'dismissed', 'rovoDevPromoBanner', {
+        attributes: { source: source || '' },
+    });
+}
+
+export async function rovoDevPromoBannerOpenedEvent(site: DetailedSiteInfo, source?: string): Promise<TrackEvent> {
+    return instanceTrackEvent(site, 'opened', 'rovoDevPromoBanner', {
+        attributes: { source: source || '' },
+    });
+}
+
 export async function notificationChangeEvent(
     source: NotificationSource,
     uri: Uri | undefined,

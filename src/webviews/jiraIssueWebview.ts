@@ -19,7 +19,14 @@ import { RovoDevEntitlementErrorType } from 'src/util/rovo-dev-entitlement/rovoD
 import * as vscode from 'vscode';
 import { commands, env, window } from 'vscode';
 
-import { issueCreatedEvent, issueOpenRovoDevEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../analytics';
+import {
+    issueCreatedEvent,
+    issueOpenRovoDevEvent,
+    issueUpdatedEvent,
+    issueUrlCopiedEvent,
+    rovoDevPromoBannerDismissedEvent,
+    rovoDevPromoBannerOpenedEvent,
+} from '../analytics';
 import { performanceEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { clientForSite } from '../bitbucket/bbUtils';
@@ -1798,6 +1805,10 @@ export class JiraIssueWebview
                     if (isOpenRovoDevWithPromoBanner(msg)) {
                         handled = true;
 
+                        rovoDevPromoBannerOpenedEvent(this._issue.siteDetails, this.id).then((e) => {
+                            Container.analyticsClient.sendTrackEvent(e);
+                        });
+
                         // Dismiss the promo banner
                         await configuration.updateEffective('rovodev.showEntitlementNotifications', false, null, true);
 
@@ -1815,6 +1826,11 @@ export class JiraIssueWebview
                 case 'dismissRovoDevPromoBanner': {
                     if (isDismissRovoDevPromoBanner(msg)) {
                         handled = true;
+
+                        rovoDevPromoBannerDismissedEvent(this._issue.siteDetails, this.id).then((e) => {
+                            Container.analyticsClient.sendTrackEvent(e);
+                        });
+
                         // Dismiss the promo banner
                         await configuration.updateEffective('rovodev.showEntitlementNotifications', false, null, true);
                         Logger.debug(`Updated rovodev.showEntitlementNotifications to false in configuration`);
