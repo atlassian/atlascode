@@ -18,7 +18,7 @@ export const ChatMessageItem: React.FC<{
     onFeedback?: (isPositive: boolean) => void;
     openFile: OpenFileFunc;
     openJira: OpenJiraFunc;
-    onLinkClick?: (href: string) => void;
+    onLinkClick: (href: string) => void;
 }> = ({ msg, icon, enableActions, onCopy, onFeedback, openFile, openJira, onLinkClick }) => {
     const [isCopied, setIsCopied] = useState(false);
     const messageTypeStyles = msg.event_kind === '_RovoDevUserPrompt' ? 'user-message' : 'agent-message';

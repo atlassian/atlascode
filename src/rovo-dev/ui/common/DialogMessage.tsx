@@ -28,6 +28,7 @@ export const DialogMessageItem: React.FC<{
     onToolPermissionChoice?: (toolCallId: string, choice: ToolPermissionChoice) => void;
     customButton?: { text: string; onClick: () => void };
     onOpenLogFile?: () => void;
+    onLinkClick: (href: string) => void;
 }> = ({
     msg,
     isRetryAfterErrorButtonEnabled,
@@ -35,6 +36,7 @@ export const DialogMessageItem: React.FC<{
     onToolPermissionChoice,
     customButton,
     onOpenLogFile,
+    onLinkClick,
 }) => {
     const [isDetailsExpanded, setIsDetailsExpanded] = React.useState(false);
     const [isStackTraceExpanded, setIsStackTraceExpanded] = React.useState(false);
@@ -108,7 +110,7 @@ export const DialogMessageItem: React.FC<{
                     {msg.text && (
                         <div style={messageContentStyles}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <MarkedDown value={msg.text} />
+                                <MarkedDown value={msg.text} onLinkClick={onLinkClick} />
                             </div>
                         </div>
                     )}
