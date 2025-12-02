@@ -219,12 +219,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         this.postMessage({
             action: 'openRovoDevWithPromoBanner',
         });
-        this.setState({ showRovoDevPromoBanner: false });
     };
 
     handleDismissRovoDevPromoBanner = () => {
         this.postMessage({ action: 'dismissRovoDevPromoBanner' });
-        this.setState({ showRovoDevPromoBanner: false });
     };
 
     handleCloneIssue = (cloneData: any) => {

@@ -1803,6 +1803,12 @@ export class JiraIssueWebview
 
                         // Open rovo dev
                         commands.executeCommand(RovodevCommands.FocusRovoDevWindow);
+
+                        // Update UI to reflect banner dismissal
+                        this.postMessage({
+                            type: CommonMessageType.RovoDevEntitlementBanner,
+                            enabled: false,
+                        });
                     }
                     break;
                 }
@@ -1812,6 +1818,12 @@ export class JiraIssueWebview
                         // Dismiss the promo banner
                         await configuration.updateEffective('rovodev.showEntitlementNotifications', false, null, true);
                         Logger.debug(`Updated rovodev.showEntitlementNotifications to false in configuration`);
+
+                        // Update UI to reflect banner dismissal
+                        this.postMessage({
+                            type: CommonMessageType.RovoDevEntitlementBanner,
+                            enabled: false,
+                        });
                     }
                     break;
                 }
