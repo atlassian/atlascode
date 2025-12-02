@@ -7,7 +7,6 @@ import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import { BitbucketBranchingModel } from '../../../../bitbucket/model';
 import { Commands } from '../../../../constants';
 import { Container } from '../../../../container';
-import { Features } from '../../../../util/featureFlags';
 import { Experiments } from '../../../../util/featureFlags';
 import { OnJiraEditedRefreshDelay } from '../../../../util/time';
 import { AnalyticsApi } from '../../../analyticsApi';
@@ -29,8 +28,6 @@ import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster, WebviewController } from '../webviewController';
 import { StartWorkActionApi } from './startWorkActionApi';
-
-const customBranchType: BranchType = { kind: 'Custom', prefix: '' };
 
 export class StartWorkWebviewController implements WebviewController<StartWorkIssueMessage> {
     public readonly requiredFeatureFlags = [];
@@ -87,8 +84,6 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                                     return a.kind.localeCompare(b.kind);
                                 },
                             ),
-                            // Only add customBranchType for old version (not V3)
-                            ...(Container.featureFlagClient.checkGate(Features.StartWorkV3) ? [] : [customBranchType]),
                         ];
                         const developmentBranch = repoDetails.developmentBranch;
                         const href = repoDetails.url;

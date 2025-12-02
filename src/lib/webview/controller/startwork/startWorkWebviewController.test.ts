@@ -31,9 +31,6 @@ jest.mock('../../../../util/featureFlags', () => ({
     FeatureFlagClient: {
         checkGate: jest.fn(),
     },
-    Features: {
-        StartWorkV3: 'startWorkV3',
-    },
     Experiments: {
         AtlascodeNewSettingsExperiment: 'atlascode_new_settings_experiment',
     },
@@ -98,7 +95,6 @@ describe('StartWorkWebviewController', () => {
         branchTypes: [
             { kind: 'feature', prefix: 'feature/' },
             { kind: 'bugfix', prefix: 'bugfix/' },
-            { kind: 'Custom', prefix: '' },
         ],
         developmentBranch: 'develop',
         isCloud: true,
@@ -505,43 +501,7 @@ describe('StartWorkWebviewController', () => {
                 });
             });
 
-            it('should refresh and post init message with repo data (old version - includes customBranchType)', async () => {
-                // Mock FeatureFlagClient to return false (old version)
-                (Container.featureFlagClient.checkGate as jest.Mock).mockReturnValue(false);
-
-                await controller.onMessageReceived({ type: CommonActionType.Refresh });
-
-                expect(mockApi.getWorkspaceRepos).toHaveBeenCalled();
-                expect(mockApi.getRepoDetails).toHaveBeenCalledWith(mockWorkspaceRepo);
-                expect(mockApi.getRepoScmState).toHaveBeenCalledWith(mockWorkspaceRepo);
-                expect(mockMessagePoster).toHaveBeenCalledWith({
-                    type: StartWorkMessageType.Init,
-                    issue: mockIssue,
-                    repoData: expect.arrayContaining([
-                        expect.objectContaining({
-                            workspaceRepo: mockWorkspaceRepo,
-                            href: 'https://test.atlassian.net/projects/test/repos/repo',
-                            branchTypes: expect.arrayContaining([
-                                { kind: 'bugfix', prefix: 'bugfix/' },
-                                { kind: 'feature', prefix: 'feature/' },
-                                { kind: 'Custom', prefix: '' },
-                            ]),
-                            developmentBranch: 'develop',
-                            isCloud: true,
-                            userName: 'testuser',
-                            userEmail: 'test@example.com',
-                            hasSubmodules: false,
-                        }),
-                    ]),
-                    customTemplate: '{issueKey}',
-                    customPrefixes: ['feature/', 'bugfix/'],
-                });
-            });
-
-            it('should refresh and post init message with repo data (new version - excludes customBranchType)', async () => {
-                // Mock FeatureFlagClient to return true (new version)
-                (Container.featureFlagClient.checkGate as jest.Mock).mockReturnValue(true);
-
+            it('should refresh and post init message with repo data', async () => {
                 await controller.onMessageReceived({ type: CommonActionType.Refresh });
 
                 expect(mockApi.getWorkspaceRepos).toHaveBeenCalled();
@@ -690,7 +650,7 @@ describe('StartWorkWebviewController', () => {
                 issue: mockIssue,
                 repoData: expect.arrayContaining([
                     expect.objectContaining({
-                        branchTypes: [{ kind: 'Custom', prefix: '' }],
+                        branchTypes: [],
                     }),
                 ]),
                 customTemplate: '{issueKey}',
@@ -742,6 +702,7 @@ describe('StartWorkWebviewController', () => {
                 repoData: expect.arrayContaining([
                     expect.objectContaining({
                         isCloud: false,
+                        branchTypes: [],
                     }),
                 ]),
                 customTemplate: '{issueKey}',
