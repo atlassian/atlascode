@@ -680,7 +680,7 @@
             "scm/title": [
                 {
                     "command": "atlascode.bb.createPullRequest",
-                    "when": "config.atlascode.bitbucket.enabled",
+                    "when": "atlascode:isBitbucketCloudRepo && config.atlascode.bitbucket.enabled",
                     "group": "navigation"
                 }
 			],
