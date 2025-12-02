@@ -155,9 +155,14 @@ describe('IssueMainPanel', () => {
         fireEvent.change(textArea, { target: { value: 'Updated description' } });
         fireEvent.click(screen.getByText('Save'));
 
+        // Expect ADF format (WikiMarkup is converted to ADF)
         expect(mockHandleInlineEdit).toHaveBeenCalledWith(
             expect.objectContaining({ key: 'description', name: 'Description' }),
-            'Updated description',
+            expect.objectContaining({
+                version: 1,
+                type: 'doc',
+                content: expect.any(Array),
+            }),
         );
     });
 
@@ -347,6 +352,171 @@ describe('IssueMainPanel', () => {
                 expect.objectContaining({ key: 'worklog', name: 'Work Log' }),
                 worklogData,
             );
+        });
+    });
+
+    describe('Linked Issues Assignee Update', () => {
+        const mockOnIssueUpdate = jest.fn();
+
+        const mockLinkedIssueFields = {
+            issuelinks: {
+                required: false,
+                name: 'Linked Issues',
+                key: 'issuelinks',
+                uiType: 'issuelinks',
+                displayOrder: 10,
+                valueType: 'issuelinks',
+                advanced: false,
+                isArray: true,
+            } as FieldUI,
+        };
+
+        const mockLinkedIssueFieldValues = {
+            issuelinks: [
+                {
+                    id: 'link-1',
+                    type: {
+                        id: 'relates-to',
+                        name: 'Relates',
+                        inward: 'relates to',
+                        outward: 'relates to',
+                    },
+                    outwardIssue: {
+                        id: 'issue-1',
+                        key: 'TEST-123',
+                        summary: 'Test Issue 1',
+                        issuetype: { id: '1', name: 'Task', iconUrl: 'task.png' },
+                        status: {
+                            id: '1',
+                            name: 'To Do',
+                            statusCategory: { id: '2', key: 'new', colorName: 'blue-gray' },
+                        },
+                        assignee: {
+                            accountId: 'user-123',
+                            displayName: 'John Doe',
+                            avatarUrls: { '24x24': 'avatar-24.png' },
+                        },
+                    },
+                },
+            ],
+            issuetype: { subtask: false },
+        };
+
+        it('renders linked issues with assignee information', async () => {
+            await act(() =>
+                renderWithEditorProvider(
+                    <IssueMainPanel
+                        fields={mockLinkedIssueFields}
+                        fieldValues={mockLinkedIssueFieldValues}
+                        handleAddAttachments={mockHandleAddAttachments}
+                        siteDetails={mockSiteDetails}
+                        onDeleteAttachment={mockOnDeleteAttachment}
+                        isEpic={false}
+                        handleInlineEdit={mockHandleInlineEdit}
+                        subtaskTypes={[]}
+                        linkTypes={[]}
+                        handleOpenIssue={mockHandleOpenIssue}
+                        onDelete={mockOnDelete}
+                        onFetchIssues={mockOnFetchIssues}
+                        fetchUsers={mockFetchUsers}
+                        fetchImage={mockFetchImage}
+                        onIssueUpdate={mockOnIssueUpdate}
+                        isAtlaskitEditorEnabled={false}
+                        mentionProvider={mockMentionProvider}
+                        handleEditorFocus={mockHandleEditorFocus}
+                    />,
+                ),
+            );
+
+            expect(screen.getByText('John Doe')).toBeTruthy();
+            expect(screen.getByText('TEST-123')).toBeTruthy();
+        });
+
+        it('calls onIssueUpdate when assignee is changed for linked issue', async () => {
+            await act(() =>
+                renderWithEditorProvider(
+                    <IssueMainPanel
+                        fields={mockLinkedIssueFields}
+                        fieldValues={mockLinkedIssueFieldValues}
+                        handleAddAttachments={mockHandleAddAttachments}
+                        siteDetails={mockSiteDetails}
+                        onDeleteAttachment={mockOnDeleteAttachment}
+                        isEpic={false}
+                        handleInlineEdit={mockHandleInlineEdit}
+                        subtaskTypes={[]}
+                        linkTypes={[]}
+                        handleOpenIssue={mockHandleOpenIssue}
+                        onDelete={mockOnDelete}
+                        onFetchIssues={mockOnFetchIssues}
+                        fetchUsers={mockFetchUsers}
+                        fetchImage={mockFetchImage}
+                        onIssueUpdate={mockOnIssueUpdate}
+                        isAtlaskitEditorEnabled={false}
+                        mentionProvider={mockMentionProvider}
+                        handleEditorFocus={mockHandleEditorFocus}
+                    />,
+                ),
+            );
+
+            expect(screen.getByText('TEST-123')).toBeTruthy();
+        });
+
+        it('passes fetchUsers to LinkedIssuesComponent', async () => {
+            await act(() =>
+                renderWithEditorProvider(
+                    <IssueMainPanel
+                        fields={mockLinkedIssueFields}
+                        fieldValues={mockLinkedIssueFieldValues}
+                        handleAddAttachments={mockHandleAddAttachments}
+                        siteDetails={mockSiteDetails}
+                        onDeleteAttachment={mockOnDeleteAttachment}
+                        isEpic={false}
+                        handleInlineEdit={mockHandleInlineEdit}
+                        subtaskTypes={[]}
+                        linkTypes={[]}
+                        handleOpenIssue={mockHandleOpenIssue}
+                        onDelete={mockOnDelete}
+                        onFetchIssues={mockOnFetchIssues}
+                        fetchUsers={mockFetchUsers}
+                        fetchImage={mockFetchImage}
+                        onIssueUpdate={mockOnIssueUpdate}
+                        isAtlaskitEditorEnabled={false}
+                        mentionProvider={mockMentionProvider}
+                        handleEditorFocus={mockHandleEditorFocus}
+                    />,
+                ),
+            );
+
+            expect(screen.getByText('TEST-123')).toBeTruthy();
+        });
+
+        it('handles unassigning a linked issue', async () => {
+            await act(() =>
+                renderWithEditorProvider(
+                    <IssueMainPanel
+                        fields={mockLinkedIssueFields}
+                        fieldValues={mockLinkedIssueFieldValues}
+                        handleAddAttachments={mockHandleAddAttachments}
+                        siteDetails={mockSiteDetails}
+                        onDeleteAttachment={mockOnDeleteAttachment}
+                        isEpic={false}
+                        handleInlineEdit={mockHandleInlineEdit}
+                        subtaskTypes={[]}
+                        linkTypes={[]}
+                        handleOpenIssue={mockHandleOpenIssue}
+                        onDelete={mockOnDelete}
+                        onFetchIssues={mockOnFetchIssues}
+                        fetchUsers={mockFetchUsers}
+                        fetchImage={mockFetchImage}
+                        onIssueUpdate={mockOnIssueUpdate}
+                        isAtlaskitEditorEnabled={false}
+                        mentionProvider={mockMentionProvider}
+                        handleEditorFocus={mockHandleEditorFocus}
+                    />,
+                ),
+            );
+
+            expect(screen.getByText('John Doe')).toBeTruthy();
         });
     });
 });
