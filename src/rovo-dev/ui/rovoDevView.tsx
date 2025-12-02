@@ -429,7 +429,7 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.RestoreState:
-                    if (event.state.history?.length > 0) {
+                    if (Array.isArray(event.state.history)) {
                         setHistory(event.state.history);
                     }
                     if (event.state.isDeepPlanCreated !== undefined) {
