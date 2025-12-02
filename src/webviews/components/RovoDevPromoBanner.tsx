@@ -23,7 +23,7 @@ const RovoDevPromoBanner = ({ entitlementType, onOpen, onDismiss }: RovoDevPromo
             <div css={styles.buttonGroup}>
                 <LoadingButton
                     className="ac-button-secondary"
-                    testId="rov-dev-promo-dismiss-button"
+                    testId="rovo-dev-promo-dismiss-button"
                     onClick={onDismiss}
                     isLoading={false}
                 >

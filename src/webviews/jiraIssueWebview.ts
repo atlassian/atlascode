@@ -1788,7 +1788,7 @@ export class JiraIssueWebview
                             this.postMessage({
                                 type: CommonMessageType.RovoDevEntitlementBanner,
                                 enabled: false,
-                                entitlementType: RovoDevEntitlementErrorType.UNKOWN_ERROR,
+                                entitlementType: RovoDevEntitlementErrorType.UNKNOWN_ERROR,
                             });
                         }
                     }

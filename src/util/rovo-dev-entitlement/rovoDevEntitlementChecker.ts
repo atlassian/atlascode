@@ -103,7 +103,7 @@ export class RovoDevEntitlementChecker extends Disposable {
         } catch (err) {
             Logger.error(err, 'Unable to check Rovo Dev entitlement');
             const errType: string =
-                err instanceof RovoDevEntitlementError ? err.errorType : RovoDevEntitlementErrorType.UNKOWN_ERROR;
+                err instanceof RovoDevEntitlementError ? err.errorType : RovoDevEntitlementErrorType.UNKNOWN_ERROR;
             let errTypeFinal = errType;
             if (errType === RovoDevEntitlementErrorType.FETCH_FAILED && err.statusCode) {
                 errTypeFinal = `${errType}_${err.statusCode}`;
