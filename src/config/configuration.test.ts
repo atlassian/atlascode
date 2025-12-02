@@ -1,8 +1,8 @@
 import { ConfigurationChangeEvent, ExtensionContext, workspace } from 'vscode';
 
-import { ConfigNamespace, JiraCreateSiteAndProjectKey } from '../constants';
+import { ConfigNamespace, JiraPreSelectedCreateKey } from '../constants';
 import { Configuration, configuration } from './configuration';
-import { SiteIdAndProjectKey } from './model';
+import { LastCreatePreSelectedValues } from './model';
 
 // Mock vscode module
 jest.mock('vscode', () => ({
@@ -156,22 +156,21 @@ describe('Configuration', () => {
         });
 
         it('should call updateEffective with correct parameters', async () => {
-            const siteAndProject: SiteIdAndProjectKey = { siteId: 'site1', projectKey: 'PROJ' };
+            const siteAndProject: LastCreatePreSelectedValues = {
+                siteId: 'site1',
+                projectKey: 'PROJ',
+                issueTypeId: '',
+            };
 
             await config.setLastCreateSiteAndProject(siteAndProject);
 
-            expect(config.updateEffective).toHaveBeenCalledWith(
-                JiraCreateSiteAndProjectKey,
-                siteAndProject,
-                null,
-                true,
-            );
+            expect(config.updateEffective).toHaveBeenCalledWith(JiraPreSelectedCreateKey, siteAndProject, null, true);
         });
 
         it('should handle undefined siteAndProject', async () => {
             await config.setLastCreateSiteAndProject(undefined);
 
-            expect(config.updateEffective).toHaveBeenCalledWith(JiraCreateSiteAndProjectKey, undefined, null, true);
+            expect(config.updateEffective).toHaveBeenCalledWith(JiraPreSelectedCreateKey, undefined, null, true);
         });
     });
 });

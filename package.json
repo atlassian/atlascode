@@ -1329,9 +1329,9 @@
                     "description": "Shows active Jira issue key in the status bar",
                     "scope": "window"
                 },
-                "atlascode.jira.lastCreateSiteAndProject": {
+                "atlascode.jira.lastCreatePreSelectedValues": {
                     "type": "object",
-                    "description": "the last used site id and project key for create issue",
+                    "description": "the last used site id, project key, and issue type id for create issue",
                     "scope": "window",
                     "properties": {
                         "siteId": {
@@ -1339,6 +1339,10 @@
                             "default": ""
                         },
                         "projectKey": {
+                            "type": "string",
+                            "default": ""
+                        },
+                        "issueTypeId": {
                             "type": "string",
                             "default": ""
                         }

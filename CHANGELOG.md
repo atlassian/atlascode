@@ -5,6 +5,7 @@
 ### Improvements
 
 - Added support for Rovo Dev /usage command
+- Add saving of last chosen issue type
 
 ### Bug Fixes
 

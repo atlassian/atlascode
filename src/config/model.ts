@@ -52,7 +52,7 @@ export interface RovoDevConfig {
 
 export interface JiraConfig {
     enabled: boolean;
-    lastCreateSiteAndProject: SiteIdAndProjectKey;
+    lastCreatePreSelectedValues: LastCreatePreSelectedValues;
     explorer: JiraExplorer;
     issueMonitor: JiraIssueMonitor;
     statusbar: JiraStatusBar;
@@ -63,9 +63,10 @@ export interface JiraConfig {
     showCreateIssueProblems: boolean;
 }
 
-export type SiteIdAndProjectKey = {
+export type LastCreatePreSelectedValues = {
     siteId: string;
     projectKey: string;
+    issueTypeId: string;
 };
 
 export interface JiraStatusBar {
@@ -207,7 +208,7 @@ const emptyStartWorkBranchTemplate: StartWorkBranchTemplate = {
 
 const emptyJiraConfig: JiraConfig = {
     enabled: true,
-    lastCreateSiteAndProject: { siteId: '', projectKey: '' },
+    lastCreatePreSelectedValues: { siteId: '', projectKey: '', issueTypeId: '' },
     explorer: emptyJiraExplorer,
     issueMonitor: emtpyIssueMonitor,
     statusbar: emptyJiraStatusBar,
