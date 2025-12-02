@@ -49,6 +49,10 @@ jest.mock('../container', () => ({
             createOrShow: jest.fn(),
         },
         machineId: 'test-machine-id',
+        rovodevWebviewProvider: {
+            setPromptTextWithFocus: jest.fn(),
+        },
+        isRovoDevEnabled: true,
     },
 }));
 
@@ -82,6 +86,11 @@ jest.mock('form-data', () => ({
 jest.mock('../commands/jira/showIssue', () => ({
     showIssue: jest.fn(),
 }));
+
+jest.mock('../commands/jira/startWorkOnIssue', () => ({
+    startWorkOnIssue: jest.fn(),
+}));
+
 // Added feature flag mock as with jiraIssueWebview.test.ts
 jest.mock('src/util/featureFlags', () => ({
     FeatureFlagClient: {
@@ -965,6 +974,7 @@ describe('CreateIssueWebview', () => {
 
     describe('onMessageReceived', () => {
         const mockShowIssue = require('../commands/jira/showIssue').showIssue;
+        const mockStartWorkOnIssue = require('../commands/jira/startWorkOnIssue').startWorkOnIssue;
 
         const mockMessage = {
             action: 'createIssue',
@@ -991,24 +1001,39 @@ describe('CreateIssueWebview', () => {
             });
         });
 
-        it('should show VS Code notification on successful issue creation', async () => {
+        it('should show Jira Issue on successful issue creation', async () => {
             await (webview as any).onMessageReceived(mockMessage);
-
-            expect(mockWindow.showInformationMessage).toHaveBeenCalledWith(
-                'Issue TEST-123 has been created',
-                'Open Issue',
-            );
-        });
-
-        it('should call showIssue when user clicks Open Issue button', async () => {
-            mockWindow.showInformationMessage = jest.fn().mockResolvedValue('Open Issue');
-            await (webview as any).onMessageReceived(mockMessage);
-            await new Promise((resolve) => setTimeout(resolve, 0));
 
             expect(mockShowIssue).toHaveBeenCalledWith({
                 key: 'TEST-123',
                 siteDetails: mockSiteDetails,
             });
+        });
+
+        it('should call startWorkOnIssue when user clicks Create and create branch button', async () => {
+            const message = { ...mockMessage, onCreateAction: 'createAndStartWork' as const };
+            await (webview as any).onMessageReceived(message);
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            expect(mockStartWorkOnIssue).toHaveBeenCalledWith({
+                key: 'TEST-123',
+                siteDetails: mockSiteDetails,
+            });
+        });
+
+        it('should call Rovo Dev webview provider when user clicks Create and generate code button', async () => {
+            const message = { ...mockMessage, onCreateAction: 'createAndGenerateCode' as const };
+            const issueUrl = `${mockSiteDetails.baseLinkUrl}/browse/TEST-123`;
+            await (webview as any).onMessageReceived(message);
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            expect(Container.rovodevWebviewProvider.setPromptTextWithFocus).toHaveBeenCalledWith(
+                'Work on the attached Jira work item',
+                {
+                    contextType: 'jiraWorkItem',
+                    name: 'TEST-123',
+                    url: issueUrl,
+                },
+            );
         });
 
         it('should handle refresh action', async () => {

@@ -1,8 +1,3 @@
-import { ExtensionContext } from 'vscode';
-
-import { RovoDevWebviewProvider } from './rovoDevWebviewProvider';
-
-// Mock vscode modules
 jest.mock('vscode', () => ({
     window: {
         registerWebviewViewProvider: jest.fn(),
@@ -27,27 +22,56 @@ jest.mock('vscode', () => ({
     Position: jest.fn(),
     Disposable: jest.fn(),
     EventEmitter: jest.fn(),
+    version: '1.0.0',
 }));
 
-// Mock other dependencies
-jest.mock('../../src/container', () => ({
-    Container: {
-        config: { rovodev: { debugPanelEnabled: false } },
-        appInstanceId: 'test-app-id',
-        isDebugging: false,
-        isRovoDevEnabled: true,
-    },
+jest.mock('./api/extensionApi', () => ({
+    ExtensionApi: jest.fn().mockImplementation(() => ({
+        metadata: {
+            isDebugging: jest.fn(() => false),
+            isBoysenberry: jest.fn(() => false),
+            isRovoDevEnabled: jest.fn(() => true),
+            version: jest.fn(() => '1.0.0'),
+            appInstanceId: jest.fn(() => 'test-app-id'),
+        },
+        config: {
+            isDebugPanelEnabled: jest.fn(() => false),
+            isThinkingBlockEnabled: jest.fn(() => false),
+            onDidChange: jest.fn(),
+        },
+        analytics: {
+            sendTrackEvent: jest.fn(),
+        },
+        auth: {
+            getCloudPrimaryAuthInfo: jest.fn(),
+            getPrimaryAuthInfo: jest.fn(),
+            validateJiraCredentials: jest.fn(),
+        },
+        jira: {
+            getSites: jest.fn(() => []),
+            fetchWorkItems: jest.fn(() => Promise.resolve([])),
+        },
+        commands: {
+            openFolder: jest.fn(),
+            focusRovodevView: jest.fn(),
+            showUserAuthentication: jest.fn(),
+            showDiff: jest.fn(),
+            setCommandContext: jest.fn(),
+        },
+    })),
 }));
+
+jest.mock('../../src/commands/jira/showIssue', () => ({
+    showIssueForURL: jest.fn(),
+}));
+
+import { ExtensionContext } from 'vscode';
+
+import { RovoDevWebviewProvider } from './rovoDevWebviewProvider';
 
 jest.mock('./util/rovoDevLogger', () => ({
     RovoDevLogger: {
         error: jest.fn(),
-    },
-}));
-
-jest.mock('../../src/config/configuration', () => ({
-    configuration: {
-        onDidChange: jest.fn(),
     },
 }));
 
@@ -67,6 +91,16 @@ jest.mock('../../src/rovo-dev/rovoDevTelemetryProvider', () => ({
         startNewSession: jest.fn(),
         shutdown: jest.fn(),
     })),
+}));
+
+jest.mock('./rovoDevUtils', () => ({
+    readLastNLogLines: jest.fn(() => ['mock log line 1', 'mock log line 2']),
+    openRovoDevConfigFile: jest.fn(),
+}));
+
+jest.mock('./errorDetailsBuilder', () => ({
+    buildErrorDetails: jest.fn((error: Error) => `Stack trace for: ${error.message}`),
+    buildExceptionDetails: jest.fn(),
 }));
 
 jest.mock('../../src/rovo-dev/rovoDevChatProvider', () => ({
@@ -141,13 +175,6 @@ jest.mock('./util/fsPromises', () => ({
 
 jest.mock('./util/waitFor', () => ({
     safeWaitFor: jest.fn(),
-}));
-
-jest.mock('../../src/commandContext', () => ({
-    setCommandContext: jest.fn(),
-    CommandContext: {
-        RovoDevTerminalEnabled: 'rovoDevTerminalEnabled',
-    },
 }));
 
 describe('RovoDevWebviewProvider - Real Implementation Tests', () => {

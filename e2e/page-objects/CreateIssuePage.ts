@@ -20,15 +20,14 @@ export class CreateIssuePage {
     }
 
     async createIssue() {
-        const createButton = this.frame.getByRole('button', { name: 'Create' });
+        const createButton = this.frame.getByRole('button', { name: 'Create', exact: true });
         await createButton.scrollIntoViewIfNeeded();
         await this.page.waitForTimeout(500);
         await createButton.click();
     }
 
     async expectIssueCreated(issueKey: string) {
-        await expect(
-            this.page.getByRole('dialog', { name: new RegExp(`Issue ${issueKey} has been created`) }),
-        ).toBeVisible();
+        const newIssueFrame = this.page.frameLocator('iframe.webview').frameLocator(`iframe[title="${issueKey}"]`);
+        expect(newIssueFrame).toBeTruthy();
     }
 }

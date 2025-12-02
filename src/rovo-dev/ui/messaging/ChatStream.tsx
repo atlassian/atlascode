@@ -3,13 +3,13 @@ import * as React from 'react';
 import { State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
-import { DetailedSiteInfo } from '../../../atlclients/authInfo';
-import { useMessagingApi } from '../../../react/atlascode/messagingApi';
+import { DetailedSiteInfo } from '../../api/extensionApiTypes';
 import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
 import { PullRequestForm } from '../create-pr/PullRequestForm';
 import { FeedbackForm, FeedbackType } from '../feedback-form/FeedbackForm';
 import { RovoDevLanding } from '../landing-page/RovoDevLanding';
+import { useMessagingApi } from '../messagingApi';
 import { McpConsentChoice, RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import { CodePlanButton } from '../technical-plan/CodePlanButton';
 import { ToolCallItem } from '../tools/ToolCallItem';
@@ -28,6 +28,7 @@ interface ChatStreamProps {
         checkFileExists: CheckFileExistsFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
+        onOpenLogFile: () => void;
     };
     messagingApi: ReturnType<
         typeof useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>
@@ -48,6 +49,7 @@ interface ChatStreamProps {
     jiraWorkItems: MinimalIssue<DetailedSiteInfo>[] | undefined;
     onJiraItemClick: (issue: MinimalIssue<DetailedSiteInfo>) => void;
     onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionDialogChoice | 'enableYolo') => void;
+    onLinkClick: (href: string) => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -71,6 +73,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     jiraWorkItems,
     onJiraItemClick,
     onToolPermissionChoice,
+    onLinkClick,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -88,13 +91,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         );
         setHasChangesInGit(response.hasChanges);
     }, [messagingApi]);
-
-    const onLinkClick = React.useCallback(
-        (href: string) => {
-            messagingApi.postMessage({ type: RovoDevViewResponseType.OpenExternalLink, href });
-        },
-        [messagingApi],
-    );
     const [autoScrollEnabled, setAutoScrollEnabled] = React.useState(true);
 
     // Helper to perform auto-scroll when enabled
@@ -281,6 +277,8 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
                             retryAfterError={renderProps.retryPromptAfterError}
                             onToolPermissionChoice={onToolPermissionChoice}
+                            onOpenLogFile={renderProps.onOpenLogFile}
+                            onLinkClick={onLinkClick}
                         />
                     ))}
                     {modalDialogs.length > 1 && modalDialogs.every((d) => d.type === 'toolPermissionRequest') && (

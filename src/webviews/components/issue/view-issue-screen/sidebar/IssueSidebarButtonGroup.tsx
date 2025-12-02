@@ -18,7 +18,7 @@ import React from 'react';
 import CloneForm from '../../CloneForm';
 import VotesForm from '../../VotesForm';
 import WatchesForm from '../../WatchesForm';
-import WorklogForm from '../../WorklogForm';
+import { WorklogFormDialog } from '../../WorklogFormDialog';
 import { StatusTransitionMenu } from './StatusTransitionMenu';
 
 type Props = {
@@ -36,6 +36,8 @@ type Props = {
     handleStatusChange: (t: Transition) => void;
     handleStartWork: () => void;
     handleCloneIssue: (cloneData: any) => void;
+    handleOpenRovoDev?: () => void;
+    isRovoDevEnabled?: boolean;
     transitions: Transition[];
 };
 
@@ -54,6 +56,8 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
     handleStatusChange,
     handleStartWork,
     handleCloneIssue,
+    handleOpenRovoDev,
+    isRovoDevEnabled,
     transitions,
 }) => {
     const originalEstimate: string = fieldValues['timetracking'] ? fieldValues['timetracking'].originalEstimate : '';
@@ -68,6 +72,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
     const [votesDialogOpen, setVotesDialogOpen] = React.useState(false);
     const [watchesDialogOpen, setWatchesDialogOpen] = React.useState(false);
     const [cloneDialogOpen, setCloneDialogOpen] = React.useState(false);
+    const worklogDialogTriggerRef = React.useRef(null);
 
     return (
         <Box
@@ -94,6 +99,18 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                         Start work
                     </LoadingButton>
                 </Tooltip>
+                {isRovoDevEnabled && handleOpenRovoDev && (
+                    <Tooltip content="Open Rovo Dev with this issue context">
+                        <LoadingButton
+                            className="ac-button-secondary"
+                            testId="issue.open-rovodev-button"
+                            onClick={handleOpenRovoDev}
+                            isLoading={false}
+                        >
+                            Generate code
+                        </LoadingButton>
+                    </Tooltip>
+                )}
                 {fields['status'] && (
                     <Box
                         data-testid="issue.status-transition-menu"
@@ -128,31 +145,27 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                     />
                 </Tooltip>
                 {fields['worklog'] && (
-                    <div className={`ac-inline-dialog ${worklogDialogOpen ? 'active' : ''}`}>
-                        <InlineDialog
-                            content={
-                                <WorklogForm
-                                    onSave={(val: any) => {
-                                        handleInlineEdit(fields['worklog'], val);
-                                    }}
-                                    onCancel={() => setWorklogDialogOpen(false)}
-                                    originalEstimate={originalEstimate}
-                                />
-                            }
-                            isOpen={worklogDialogOpen}
-                            onClose={() => setWorklogDialogOpen(false)}
-                            placement="bottom-end"
-                        >
-                            <Tooltip content="Log work">
-                                <IconButton
-                                    label="Log Work"
-                                    onClick={() => setWorklogDialogOpen(true)}
-                                    icon={() => <ClockIcon label="Log Work" />}
-                                    isLoading={loadingField === 'worklog'}
-                                    spacing="compact"
-                                />
-                            </Tooltip>
-                        </InlineDialog>
+                    <div>
+                        <Tooltip content="Log work">
+                            <IconButton
+                                label="Log Work"
+                                onClick={() => setWorklogDialogOpen(true)}
+                                icon={() => <ClockIcon label="Log Work" />}
+                                isLoading={loadingField === 'worklog'}
+                                spacing="compact"
+                            />
+                        </Tooltip>
+                        {worklogDialogOpen && (
+                            <WorklogFormDialog
+                                onClose={() => setWorklogDialogOpen(false)}
+                                onSave={(val: any) => {
+                                    handleInlineEdit(fields['worklog'], val);
+                                }}
+                                onCancel={() => setWorklogDialogOpen(false)}
+                                originalEstimate={originalEstimate}
+                                triggerRef={worklogDialogTriggerRef}
+                            />
+                        )}
                     </div>
                 )}
                 {fields['watches'] && (

@@ -7,20 +7,21 @@ export const DebugPanel: React.FC<{
     currentState: State;
     debugContext: Record<string, string>;
     debugMcpContext: Record<string, string>;
-}> = ({ currentState, debugContext, debugMcpContext }) => {
+    onLinkClick: (href: string) => void;
+}> = ({ currentState, debugContext, debugMcpContext, onLinkClick }) => {
     return (
         <div style={{ width: '100%', border: '1px solid var(--vscode-inputValidation-errorBorder)', padding: '4px' }}>
             <DebugStatePanel currentState={currentState} />
             {Object.keys(debugContext).length > 0 && (
                 <>
                     <hr />
-                    <DebugContextPanel title="Process state" debugContext={debugContext} />
+                    <DebugContextPanel title="Process state" debugContext={debugContext} onLinkClick={onLinkClick} />
                 </>
             )}
             {Object.keys(debugMcpContext).length > 0 && (
                 <>
                     <hr />
-                    <DebugContextPanel title="MCP servers" debugContext={debugMcpContext} />
+                    <DebugContextPanel title="MCP servers" debugContext={debugMcpContext} onLinkClick={onLinkClick} />
                 </>
             )}
         </div>
@@ -63,7 +64,8 @@ const DebugStatePanel: React.FC<{
 const DebugContextPanel: React.FC<{
     title: string;
     debugContext: Record<string, string>;
-}> = ({ title, debugContext }) => {
+    onLinkClick: (href: string) => void;
+}> = ({ title, debugContext, onLinkClick }) => {
     const props = React.useMemo(() => {
         const p: [string, string][] = [];
         for (const key in debugContext) {
@@ -81,7 +83,7 @@ const DebugContextPanel: React.FC<{
                         <td>{key}</td>
                         {key === 'RovoDevAddress' && (
                             <td>
-                                <MarkedDown value={value + '/docs'} />
+                                <MarkedDown value={value + '/docs'} onLinkClick={onLinkClick} />
                             </td>
                         )}
                         {key !== 'RovoDevAddress' && <td>{value}</td>}

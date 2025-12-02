@@ -1,7 +1,6 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 
-import { DetailedSiteInfo } from '../atlclients/authInfo';
-import { ReducerAction } from '../ipc/messaging';
+import { DetailedSiteInfo } from './api/extensionApi';
 import {
     EntitlementCheckRovoDevHealthcheckResponse,
     RovoDevRetryPromptResponse,
@@ -9,6 +8,7 @@ import {
     RovoDevToolCallResponse,
     RovoDevToolReturnResponse,
 } from './client';
+import { ReducerAction } from './messaging';
 import { DisabledState, RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 import { ModifiedFile } from './ui/rovoDevViewMessages';
 import { DialogMessage } from './ui/utils';

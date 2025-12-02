@@ -1,5 +1,13 @@
 // abstracted responses' interfaces
 
+export interface RovoDevMessageWithCtaLink {
+    message: string;
+    ctaLink?: {
+        link: string;
+        text: string;
+    };
+}
+
 export interface RovoDevParsingError {
     event_kind: '_parsing_error';
     error: Error;
@@ -79,6 +87,10 @@ export interface RovoDevCloseResponse {
     event_kind: 'close';
 }
 
+export interface RovoDevReplayEndResponse {
+    event_kind: 'replay_end';
+}
+
 export interface RovoDevStatusResponse {
     event_kind: 'status';
     data: {
@@ -95,6 +107,29 @@ export interface RovoDevStatusResponse {
     };
 }
 
+export interface RovoDevUsageResponse {
+    event_kind: 'usage';
+    data: {
+        content: {
+            isBetaSite: boolean;
+            title: string;
+            status: string;
+            credit_type: string;
+            credit_used: number;
+            credit_remaining: number;
+            /** Non-beta site only */
+            credit_total: number;
+            retry_after_seconds: number;
+            /** Beta site only */
+            upgrade_message?: string;
+            /** Beta site only */
+            model_usage_data?: { title: string; data: Record<string, number> };
+            view_usage_message?: RovoDevMessageWithCtaLink;
+            exceeded_message?: RovoDevMessageWithCtaLink;
+        };
+    };
+}
+
 export type RovoDevResponse =
     | RovoDevParsingError
     | RovoDevUserPromptResponse
@@ -108,7 +143,9 @@ export type RovoDevResponse =
     | RovoDevPruneResponse
     | RovoDevOnCallToolStartResponse
     | RovoDevStatusResponse
-    | RovoDevCloseResponse;
+    | RovoDevUsageResponse
+    | RovoDevCloseResponse
+    | RovoDevReplayEndResponse;
 
 export type RovoDevToolName =
     | 'create_file'

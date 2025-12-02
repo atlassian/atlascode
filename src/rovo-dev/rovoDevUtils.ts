@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import path from 'path';
 import { window, workspace } from 'vscode';
 
-import { RovoDevStatusResponse } from './client';
+import { RovoDevMessageWithCtaLink, RovoDevStatusResponse, RovoDevUsageResponse } from './client';
 
 export type SupportedConfigFiles = 'config.yml' | 'mcp.json' | '.agent.md' | 'rovodev.log';
 
@@ -42,6 +42,29 @@ export async function openRovoDevConfigFile(configFile: SupportedConfigFiles) {
     }
 }
 
+function getRovoDevLogFilePath(): string | undefined {
+    const home = process.env.HOME || process.env.USERPROFILE;
+    if (!home) {
+        return undefined;
+    }
+    return path.join(home, '.rovodev', 'rovodev.log');
+}
+
+export function readLastNLogLines(n: number = 10): string[] {
+    const logFilePath = getRovoDevLogFilePath();
+    if (!logFilePath || !fs.existsSync(logFilePath)) {
+        return ['rovo dev log file could not be found'];
+    }
+
+    try {
+        const content = fs.readFileSync(logFilePath, 'utf-8');
+        const lines = content.split('\n').filter((line) => line.trim() !== '');
+        return lines.slice(-n);
+    } catch (err) {
+        return [`error reading rovo dev log file: ${err}`];
+    }
+}
+
 export function statusJsonResponseToMarkdown(response: RovoDevStatusResponse): string {
     const data = response.data;
 
@@ -75,6 +98,52 @@ export function statusJsonResponseToMarkdown(response: RovoDevStatusResponse): s
     return buffer;
 }
 
+export function usageJsonResponseToMarkdown(response: RovoDevUsageResponse): {
+    usage_response: string;
+    alert_message?: RovoDevMessageWithCtaLink;
+} {
+    const data = response.data.content;
+
+    const numberFormatter = new Intl.NumberFormat();
+
+    let buffer = '';
+
+    if (data.isBetaSite) {
+        buffer += `**${data.title}**\n`;
+        buffer += `- Used: ${numberFormatter.format(data.credit_used)}\n`;
+        buffer += `- Remaining: ${numberFormatter.format(data.credit_remaining)}\n`;
+        buffer += `- Resets in: ${formatElapsedTime(data.retry_after_seconds)}\n`;
+        buffer += '\n';
+
+        if (data.model_usage_data && Object.keys(data.model_usage_data.data).length > 0) {
+            const modelData = data.model_usage_data.data;
+
+            buffer += `**${data.model_usage_data.title}**\n`;
+
+            for (const key in modelData) {
+                buffer += `- ${key}: ${numberFormatter.format(modelData[key])}\n`;
+            }
+        }
+    } else {
+        buffer += `**${data.title}**\n`;
+        buffer += `- Used: ${numberFormatter.format(data.credit_used)}\n`;
+        buffer += `- Remaining: ${numberFormatter.format(data.credit_remaining)}\n`;
+        buffer += `- Total: ${numberFormatter.format(data.credit_total)}\n`;
+        buffer += '\n';
+    }
+
+    if (data.view_usage_message) {
+        const view_usage_message = data.view_usage_message.message;
+        if (data.view_usage_message.ctaLink) {
+            buffer += view_usage_message.replace('{ctaLink}', data.view_usage_message.ctaLink.link);
+        } else {
+            buffer += view_usage_message;
+        }
+    }
+
+    return { usage_response: buffer, alert_message: data.exceeded_message };
+}
+
 function formatText(text: string, cliTags: string[], links: { text: string; link: string }[]) {
     if (cliTags.includes('italic')) {
         text = `*${text}*`;
@@ -90,6 +159,26 @@ function formatText(text: string, cliTags: string[], links: { text: string; link
         text = '{link' + links.length + '}';
     }
     return text;
+}
+
+function formatElapsedTime(seconds: number) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor((seconds % 3600) % 60);
+
+    if (h === 0 && m === 0 && s === 0) {
+        return '0s';
+    }
+
+    const hDisplay = h > 0 ? h + 'h ' : '';
+    const mDisplay = m > 0 ? m + 'm ' : '';
+
+    if (hDisplay) {
+        return (hDisplay + mDisplay).trim();
+    } else {
+        const sDisplay = s > 0 ? s + 's' : '';
+        return (mDisplay + sDisplay).trim();
+    }
 }
 
 // this function doesn't work well with nested identical tags - hopefully we don't need that

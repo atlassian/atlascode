@@ -14,6 +14,7 @@ import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
 import { AdfAwareContent } from '../../../AdfAwareContent';
 import { RenderedContent } from '../../../RenderedContent';
+import { convertAdfToWikimarkup, convertWikimarkupToAdf } from '../../common/adfToWikimarkup';
 import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
 import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
@@ -79,23 +80,39 @@ const CommentComponent: React.FC<{
     const [isSaving, setIsSaving] = React.useState(false);
     const bodyText = comment.renderedBody ? comment.renderedBody : comment.body;
 
-    const [commentText, setCommentText] = React.useState(comment.body);
+    // Convert comment body to appropriate format for editor
+    const getCommentTextForEditor = React.useCallback(
+        (body: any) => {
+            if (typeof body === 'object' && body.version === 1 && body.type === 'doc') {
+                // For new Atlaskit editor: convert ADF to JSON string
+                if (isAtlaskitEditorEnabled) {
+                    return JSON.stringify(body);
+                }
+                // For legacy editor: convert ADF to WikiMarkup
+                return convertAdfToWikimarkup(body);
+            }
+            return body || '';
+        },
+        [isAtlaskitEditorEnabled],
+    );
+
+    const [commentText, setCommentText] = React.useState(() => getCommentTextForEditor(comment.body));
     // Update commentText when comment.body changes (after save)
     React.useEffect(() => {
         if (!isEditing) {
-            setCommentText(comment.body);
+            setCommentText(getCommentTextForEditor(comment.body));
         }
-    }, [comment.body, isEditing]);
+    }, [comment.body, isEditing, getCommentTextForEditor]);
 
     // Listen for forced editor close events
     useEditorForceClose(
         editorId,
         React.useCallback(() => {
             // Reset comment editor state when it's forcibly closed
-            setCommentText(comment.body);
+            setCommentText(getCommentTextForEditor(comment.body));
             setIsSaving(false);
             closeEditorHandler();
-        }, [comment.body, closeEditorHandler]),
+        }, [comment.body, closeEditorHandler, getCommentTextForEditor]),
         isAtlaskitEditorEnabled,
     );
 
@@ -164,17 +181,21 @@ const CommentComponent: React.FC<{
                                 onSave={() => {
                                     setIsSaving(true);
                                     closeEditorHandler();
-                                    onSave(commentText, comment.id, undefined);
+                                    // Convert WikiMarkup to ADF before saving (API v3 requires ADF)
+                                    const adfContent = convertWikimarkupToAdf(commentText);
+                                    onSave(adfContent, comment.id, undefined);
                                 }}
                                 onCancel={() => {
                                     setIsSaving(false);
                                     closeEditorHandler();
-                                    setCommentText(comment.body);
+                                    setCommentText(getCommentTextForEditor(comment.body));
                                 }}
                                 onInternalCommentSave={() => {
                                     setIsSaving(false);
                                     closeEditorHandler();
-                                    onSave(commentText, comment.id, JsdInternalCommentVisibility);
+                                    // Convert WikiMarkup to ADF before saving (API v3 requires ADF)
+                                    const adfContent = convertWikimarkupToAdf(commentText);
+                                    onSave(adfContent, comment.id, JsdInternalCommentVisibility);
                                 }}
                                 fetchUsers={fetchUsers}
                                 isServiceDeskProject={isServiceDeskProject}
@@ -325,13 +346,17 @@ const AddCommentComponent: React.FC<{
                         onChange={(e: string) => setCommentText(e)}
                         onSave={(i: string) => {
                             if (i !== '') {
-                                onCreate(i, undefined);
+                                // Convert WikiMarkup to ADF before saving (API v3 requires ADF)
+                                const adfContent = convertWikimarkupToAdf(i);
+                                onCreate(adfContent, undefined);
                                 setCommentText('');
                                 closeEditorHandler();
                             }
                         }}
                         onInternalCommentSave={() => {
-                            onCreate(commentText, JsdInternalCommentVisibility);
+                            // Convert WikiMarkup to ADF before saving (API v3 requires ADF)
+                            const adfContent = convertWikimarkupToAdf(commentText);
+                            onCreate(adfContent, JsdInternalCommentVisibility);
                             setCommentText('');
                             closeEditorHandler();
                         }}
@@ -373,7 +398,7 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
     return (
         <Box
             data-testid="issue.comments-section"
-            style={{ display: 'flex', flexDirection: 'column', paddingTop: '8px' }}
+            style={{ display: 'flex', flexDirection: 'column', paddingTop: '8px', gap: '16px' }}
         >
             <AddCommentComponent
                 fetchUsers={fetchUsers}

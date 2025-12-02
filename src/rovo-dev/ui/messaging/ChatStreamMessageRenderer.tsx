@@ -17,6 +17,7 @@ interface ChatStreamMessageRendererProps {
         checkFileExists: CheckFileExistsFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
+        onOpenLogFile: () => void;
     };
     onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionChoice) => void;
     onCollapsiblePanelExpanded: () => void;

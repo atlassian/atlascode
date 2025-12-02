@@ -5,6 +5,7 @@ import { TechnicalPlanLogicalChange } from 'src/rovo-dev/rovoDevTypes';
 import { LogicalChange } from './LogicalChange';
 
 const mockOpenFile = jest.fn();
+const mockOnLinkClick = jest.fn();
 const mockCheckFileExists = jest.fn().mockReturnValue(true);
 
 const mockChange: TechnicalPlanLogicalChange = {
@@ -43,18 +44,39 @@ describe('LogicalChange', () => {
     });
 
     it('renders the change summary', () => {
-        render(<LogicalChange change={mockChange} openFile={mockOpenFile} checkFileExists={mockCheckFileExists} />);
+        render(
+            <LogicalChange
+                change={mockChange}
+                openFile={mockOpenFile}
+                onLinkClick={mockOnLinkClick}
+                checkFileExists={mockCheckFileExists}
+            />,
+        );
         expect(screen.getByText('Test logical change')).toBeTruthy();
     });
 
     it('starts in collapsed state', () => {
-        render(<LogicalChange change={mockChange} openFile={mockOpenFile} checkFileExists={mockCheckFileExists} />);
+        render(
+            <LogicalChange
+                change={mockChange}
+                openFile={mockOpenFile}
+                onLinkClick={mockOnLinkClick}
+                checkFileExists={mockCheckFileExists}
+            />,
+        );
         expect(screen.queryByText('Update function signature')).not.toBeTruthy();
         expect(screen.getByLabelText('Expand')).toBeTruthy();
     });
 
     it('expands when chevron button is clicked', () => {
-        render(<LogicalChange change={mockChange} openFile={mockOpenFile} checkFileExists={mockCheckFileExists} />);
+        render(
+            <LogicalChange
+                change={mockChange}
+                openFile={mockOpenFile}
+                onLinkClick={mockOnLinkClick}
+                checkFileExists={mockCheckFileExists}
+            />,
+        );
 
         fireEvent.click(screen.getByRole('button'));
 
@@ -64,7 +86,14 @@ describe('LogicalChange', () => {
     });
 
     it('collapses when chevron button is clicked again', () => {
-        render(<LogicalChange change={mockChange} openFile={mockOpenFile} checkFileExists={mockCheckFileExists} />);
+        render(
+            <LogicalChange
+                change={mockChange}
+                openFile={mockOpenFile}
+                onLinkClick={mockOnLinkClick}
+                checkFileExists={mockCheckFileExists}
+            />,
+        );
 
         fireEvent.click(screen.getByRole('button'));
         fireEvent.click(screen.getByRole('button'));
@@ -80,7 +109,12 @@ describe('LogicalChange', () => {
         };
 
         render(
-            <LogicalChange change={singleFileChange} openFile={mockOpenFile} checkFileExists={mockCheckFileExists} />,
+            <LogicalChange
+                change={singleFileChange}
+                openFile={mockOpenFile}
+                onLinkClick={mockOnLinkClick}
+                checkFileExists={mockCheckFileExists}
+            />,
         );
         fireEvent.click(screen.getByRole('button'));
 
@@ -89,7 +123,14 @@ describe('LogicalChange', () => {
     });
 
     it('renders multiple files in ordered list', () => {
-        render(<LogicalChange change={mockChange} openFile={mockOpenFile} checkFileExists={mockCheckFileExists} />);
+        render(
+            <LogicalChange
+                change={mockChange}
+                openFile={mockOpenFile}
+                onLinkClick={mockOnLinkClick}
+                checkFileExists={mockCheckFileExists}
+            />,
+        );
         fireEvent.click(screen.getByRole('button'));
 
         expect(screen.getByRole('list')).toBeTruthy();
@@ -102,7 +143,14 @@ describe('LogicalChange', () => {
             filesToChange: [],
         };
 
-        render(<LogicalChange change={noFilesChange} openFile={mockOpenFile} checkFileExists={mockCheckFileExists} />);
+        render(
+            <LogicalChange
+                change={noFilesChange}
+                openFile={mockOpenFile}
+                onLinkClick={mockOnLinkClick}
+                checkFileExists={mockCheckFileExists}
+            />,
+        );
         fireEvent.click(screen.getByRole('button'));
 
         expect(screen.queryByText('Update function signature')).not.toBeTruthy();
@@ -110,7 +158,14 @@ describe('LogicalChange', () => {
     });
 
     it('passes openFile prop to FileToChangeComponent', () => {
-        render(<LogicalChange change={mockChange} openFile={mockOpenFile} checkFileExists={mockCheckFileExists} />);
+        render(
+            <LogicalChange
+                change={mockChange}
+                openFile={mockOpenFile}
+                onLinkClick={mockOnLinkClick}
+                checkFileExists={mockCheckFileExists}
+            />,
+        );
         fireEvent.click(screen.getByRole('button'));
 
         // This test assumes FileToChangeComponent renders clickable elements

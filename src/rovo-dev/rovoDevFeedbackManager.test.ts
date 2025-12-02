@@ -1,36 +1,40 @@
-import { Container } from 'src/container';
-import { getAxiosInstance } from 'src/jira/jira-client/providers';
-import * as vscode from 'vscode';
-
-import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
-import { RovoDevLogger } from './util/rovoDevLogger';
-
-jest.mock('src/container');
-jest.mock('src/jira/jira-client/providers');
 jest.mock('./util/rovoDevLogger');
 jest.mock('vscode');
+
+const mockExtensionApiInstance = {
+    metadata: {
+        version: jest.fn(),
+    },
+};
+
+jest.mock('./api/extensionApi', () => ({
+    getAxiosInstance: jest.fn(),
+    ExtensionApi: jest.fn().mockImplementation(() => mockExtensionApiInstance),
+}));
+
 jest.mock('lodash', () => ({
     ...jest.requireActual('lodash'),
     truncate: jest.fn((str, options) => str),
 }));
 
+import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
+import * as vscode from 'vscode';
+
+import { getAxiosInstance } from './api/extensionApi';
+import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
+import { RovoDevLogger } from './util/rovoDevLogger';
+
 describe('RovoDevFeedbackManager', () => {
     const mockTransport = jest.fn();
-    const mockSiteManager = {
-        primarySite: { id: 'test-site' },
-    };
-    const mockCredentialManager = {
-        getAuthInfo: jest.fn(),
-    };
 
     beforeEach(() => {
         jest.clearAllMocks();
         (getAxiosInstance as jest.Mock).mockReturnValue(mockTransport);
-        (Container as any).siteManager = mockSiteManager;
-        (Container as any).credentialManager = mockCredentialManager;
-        (Container as any).version = '1.0.0';
         (vscode as any).version = '1.60.0';
         mockTransport.mockResolvedValue({});
+
+        // Default return values
+        mockExtensionApiInstance.metadata.version.mockReturnValue('1.0.0');
     });
 
     describe('submitFeedback', () => {
@@ -63,7 +67,6 @@ describe('RovoDevFeedbackManager', () => {
                 email: 'user@example.com',
                 displayName: 'Test User',
             };
-            mockCredentialManager.getAuthInfo.mockResolvedValue({ user: mockUser });
 
             const feedback = {
                 feedbackType: 'bug' as const,
@@ -71,7 +74,7 @@ describe('RovoDevFeedbackManager', () => {
                 canContact: true,
             };
 
-            await RovoDevFeedbackManager.submitFeedback(feedback);
+            await RovoDevFeedbackManager.submitFeedback(feedback, mockUser as UserInfo);
 
             expect(mockTransport).toHaveBeenCalledWith(
                 expect.any(String),
@@ -176,7 +179,7 @@ describe('RovoDevFeedbackManager', () => {
                 canContact: false,
             };
 
-            await RovoDevFeedbackManager.submitFeedback(feedback, true);
+            await RovoDevFeedbackManager.submitFeedback(feedback, undefined, true);
 
             expect(mockTransport).toHaveBeenCalledWith(
                 expect.any(String),
@@ -218,8 +221,6 @@ describe('RovoDevFeedbackManager', () => {
         });
 
         it('should handle missing primary site gracefully', async () => {
-            (Container as any).siteManager.primarySite = null;
-
             const feedback = {
                 feedbackType: 'general' as const,
                 feedbackMessage: 'Test feedback',

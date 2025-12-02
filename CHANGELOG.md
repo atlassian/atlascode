@@ -5,11 +5,35 @@
 
 - Add more logging for Rovo Dev failures. Provided more env vars for linux users. 
 
+## What's new in 4.0.12
+
+### Improvements
+
+- Added support for Rovo Dev /usage command
+
+## What's new in 4.0.10
+
+### Features
+
+- Added development field support
+- Added Branch creation and Rovo Dev actions in Create Issue Page
+- Added filter by project support
+
+## What's new in 4.0.9
+
+### Features
+
+- Added filter by assignee support
+
 ## What's new in 4.0.8
 
 ### Features
 
 - Added activity history support
+
+### Bug Fixes
+
+- Fixed issue with project loading in Jira Cloud Create Issue Screen
 
 ## What's new in 4.0.7
 

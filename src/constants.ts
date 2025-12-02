@@ -46,6 +46,7 @@ export const enum Commands {
     EditThisFile = 'atlascode.bb.editThisFile',
     CreateIssue = 'atlascode.jira.createIssue',
     RefreshAssignedWorkItemsExplorer = 'atlascode.jira.refreshAssignedWorkItemsExplorer',
+    JiraFilter = 'atlascode.jira.filter',
     RefreshCustomJqlExplorer = 'atlascode.jira.refreshCustomJqlExplorer',
     AddJiraSite = 'atlascode.jira.addJiraSite',
     ShowJiraIssueSettings = 'atlascode.jira.showJiraIssueSettings',
@@ -83,23 +84,15 @@ export const enum Commands {
     DisableHelpExplorer = 'atlascode.disableHelpExplorer',
     CreateNewJql = 'atlascode.jira.createNewJql',
     ToDoIssue = 'atlascode.jira.todoIssue',
-    RovodevAsk = 'atlascode.rovodev.askRovoDev',
-    RovodevAskInteractive = 'atlascode.rovodev.askInteractive',
-    RovodevAddToContext = 'atlascode.rovodev.addToContext',
-    RovodevNewSession = 'atlascode.rovodev.newChatSession',
-    RovodevShowTerminal = 'atlascode.rovodev.showTerminal',
-    RovodevShareFeedback = 'atlascode.rovodev.shareFeedback',
     InProgressIssue = 'atlascode.jira.inProgressIssue',
     DoneIssue = 'atlascode.jira.doneIssue',
     ShowOnboardingFlow = 'atlascode.showOnboardingFlow',
-    OpenRovoDevConfig = 'atlascode.openRovoDevConfig',
-    OpenRovoDevMcpJson = 'atlascode.openRovoDevMcpJson',
-    OpenRovoDevGlobalMemory = 'atlascode.openRovoDevGlobalMemory',
-    OpenRovoDevLogFile = 'atlascode.openRovoDevLogFile',
     OpenNativeSettings = 'atlascode.openNativeSettings',
     QuickAuth = 'atlascode.rovodev.quickAuth',
     JiraLogin = 'atlascode.jira.login',
     JiraAPITokenLogin = 'atlascode.jira.apiTokenLogin',
+    ExpandCreateWorkItemWebview = 'atlascode.jira.expandCreateWorkItem',
+    CopyImageElement = 'atlascode.jira.copyImageElement',
 
     // Debug mode-only commands
     DebugQuickCommand = 'atlascode.debug.quickCommand',
@@ -108,6 +101,7 @@ export const enum Commands {
 
     // Extension management commands
     AddRecommendedExtension = 'atlascode.addRecommendedExtension',
+    OpenRovoDevLogFile = 'OpenRovoDevLogFile',
 }
 
 // Jira projects field pagination

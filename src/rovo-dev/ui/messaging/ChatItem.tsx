@@ -23,6 +23,7 @@ interface ChatItemProps {
         checkFileExists: CheckFileExistsFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
+        onOpenLogFile: () => void;
     };
     drawerOpen: boolean;
     onLinkClick: (href: string) => void;
@@ -74,11 +75,12 @@ export const ChatItem = React.memo<ChatItemProps>(
                         <TechnicalPlanComponent
                             content={message.technicalPlan}
                             openFile={renderProps.openFile}
+                            onLinkClick={onLinkClick}
                             checkFileExists={renderProps.checkFileExists}
                         />
                     );
                 }
-                return <ToolReturnParsedItem msg={message} openFile={renderProps.openFile} />;
+                return <ToolReturnParsedItem msg={message} openFile={renderProps.openFile} onLinkClick={onLinkClick} />;
             });
         } else if (block.event_kind === '_RovoDevDialog') {
             let customButton: { text: string; onClick: () => void } | undefined = undefined;
@@ -97,6 +99,8 @@ export const ChatItem = React.memo<ChatItemProps>(
                     retryAfterError={renderProps.retryPromptAfterError}
                     onToolPermissionChoice={onToolPermissionChoice}
                     customButton={customButton}
+                    onOpenLogFile={renderProps.onOpenLogFile}
+                    onLinkClick={onLinkClick}
                 />
             );
         } else if (block.event_kind === '_RovoDevPullRequest') {
@@ -108,6 +112,7 @@ export const ChatItem = React.memo<ChatItemProps>(
                     msg={{ event_kind: 'text', content: block.content, index: -1 }}
                     openFile={renderProps.openFile}
                     openJira={renderProps.openJira}
+                    onLinkClick={onLinkClick}
                 />
             );
         } else {

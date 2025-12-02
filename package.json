@@ -46,7 +46,7 @@
     ],
     "main": "./build/extension/extension",
     "rovoDev": {
-        "version": "0.12.16"
+        "version": "0.13.6"
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
@@ -78,7 +78,8 @@
         "watch": "concurrently -r \"npm:watch:*\"",
         "watch:extension": "WATCH=true webpack --mode development --config webpack.react.dev.js --progress --watch",
         "watch:react": "WATCH=true webpack --mode development --config webpack.extension.dev.js --progress --watch",
-        "dev": "concurrently -r npm:watch:extension npm:watch:react"
+        "dev": "concurrently -r npm:watch:extension npm:watch:react",
+        "audit-ci": "audit-ci --config .audit-ci.json"
     },
     "contributes": {
         "keybindings": [
@@ -200,6 +201,20 @@
                 "category": "Jira"
             },
             {
+                "command": "atlascode.jira.createIssue.startWork",
+                "title": "Create and create branch",
+                "category": "Jira"
+            },
+            {
+                "command": "atlascode.jira.createIssue.generateCode",
+                "title": "Create and send to Rovo Dev",
+                "category": "Jira"
+            },
+            {
+                "command": "atlascode.jira.copyImageElement",
+                "title": "Copy Image"
+            },
+            {
                 "command": "atlascode.jira.searchIssues",
                 "title": "Search Jira Issue Results",
                 "icon": {
@@ -309,6 +324,12 @@
                 "category": "Jira"
             },
             {
+                "command": "atlascode.jira.filter",
+                "title": "Filter issues",
+                "icon": "$(filter)",
+                "category": "Jira"
+            },
+            {
                 "command": "atlascode.jira.refreshCustomJqlExplorer",
                 "title": "Refresh Custom JQL Filters",
                 "icon": {
@@ -345,6 +366,12 @@
             {
                 "command": "atlascode.jira.startWorkOnIssue",
                 "title": "Start work on Jira issue",
+                "category": "Jira"
+            },
+            {
+                "command": "atlascode.jira.expandCreateWorkItem",
+                "title": "Expand create work item webview",
+                "icon": "$(screen-full)",
                 "category": "Jira"
             },
             {
@@ -535,6 +562,11 @@
                     "id": "atlascode-rovo-dev",
                     "title": "Rovo Dev",
                     "icon": "resources/rovodev-sidebar-icon.svg"
+                },
+                {
+                    "id": "atlascode-jira-work-item",
+                    "title": "Jira Work Item",
+                    "icon": "resources/issues.svg"
                 }
             ]
         },
@@ -542,7 +574,7 @@
             "atlascode-drawer": [
                 {
                     "id": "atlascode.views.jira.assignedWorkItemsTreeView",
-                    "name": "Assigned Jira Work Items",
+                    "name": "Jira Work Items",
                     "when": "!atlascode:bbyEnvironmentActive && atlascode:assignedIssueExplorerEnabled && config.atlascode.jira.enabled"
                 },
                 {
@@ -572,6 +604,14 @@
                     "name": "Rovo Dev",
                     "type": "webview",
                     "when": "atlascode:rovoDevEnabled"
+                }
+            ],
+            "atlascode-jira-work-item": [
+                {
+                    "id": "atlascode.views.jira.createWorkItemWebview",
+                    "name": "Create Jira Work Item",
+                    "type": "webview",
+                    "when": "!atlascode:bbyEnvironmentActive && config.atlascode.jira.enabled && atlascode:showCreateWorkItemWebview"
                 }
             ]
         },
@@ -669,6 +709,11 @@
                     "group": "rovoDevContextMenu2@1"
                 },
                 {
+                    "command": "atlascode.jira.expandCreateWorkItem",
+                    "when": "view == atlascode.views.jira.createWorkItemWebview && atlascode:isJiraAuthenticated",
+                    "group": "navigation@1"
+                },
+                {
                     "command": "atlascode.jira.createIssue",
                     "when": "view =~ /(atlascode.views.jira.assignedWorkItemsTreeView)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation@1"
@@ -677,6 +722,11 @@
                     "command": "atlascode.jira.refreshAssignedWorkItemsExplorer",
                     "when": "view == atlascode.views.jira.assignedWorkItemsTreeView && atlascode:isJiraAuthenticated",
                     "group": "navigation@2"
+                },
+                {
+                    "command": "atlascode.jira.filter",
+                    "when": "view == atlascode.views.jira.assignedWorkItemsTreeView && atlascode:isJiraAuthenticated",
+                    "group": "navigation@3"
                 },
                 {
                     "command": "atlascode.jira.refreshCustomJqlExplorer",
@@ -1031,6 +1081,36 @@
                 {
                     "command": "atlascode.jira.refreshCustomJqlExplorer",
                     "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
+                },
+                {
+                    "command": "atlascode.jira.filter",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.createIssue.startWork",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.createIssue.generateCode",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.expandCreateWorkItem",
+                    "when": "false"
+                }
+            ],
+            "webview/context": [
+                {
+                    "command": "atlascode.jira.createIssue.startWork",
+                    "when": "webviewSection == 'createButton'"
+                },
+                {
+                    "command": "atlascode.jira.createIssue.generateCode",
+                    "when": "atlascode:rovoDevEnabled && webviewSection == 'createButton'"
+                },
+                {
+                    "command": "atlascode.jira.copyImageElement",
+                    "when": "webviewSection == 'jiraImageElement'"
                 }
             ]
         },
@@ -1076,6 +1156,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enable Rovo Dev thinking block.\nThis collapses intermediate thinking steps into a single block.",
+                    "scope": "window"
+                },
+                "atlascode.rovodev.showEntitlementNotifications": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show notifications about Rovo Dev entitlement status changes",
                     "scope": "window"
                 },
                 "atlascode.issueSuggestion.enabled": {
@@ -1555,7 +1641,7 @@
         "@atlassianlabs/guipi-jira-components": "^3.2.0",
         "@atlassianlabs/jira-metaui-client": "^2.0.0",
         "@atlassianlabs/jira-metaui-transformer": "^2.0.0",
-        "@atlassianlabs/jira-pi-client": "^2.0.1",
+        "@atlassianlabs/jira-pi-client": "2.0.1",
         "@atlassianlabs/jira-pi-common-models": "^2.0.0",
         "@atlassianlabs/jira-pi-meta-models": "^2.0.0",
         "@atlassianlabs/pi-client-common": "^2.0.0",
@@ -1661,7 +1747,7 @@
         "@types/vscode": ">=1.77.0 <=1.96.0",
         "@types/websocket": "^1.0.0",
         "@types/ws": "^8.18.1",
-        "@vscode/vsce": "^3.6.0",
+        "@vscode/vsce": "^3.7.0",
         "ajv": "^8.17.1",
         "ajv-formats": "^3.0.1",
         "audit-ci": "^7.1.0",
@@ -1745,6 +1831,22 @@
         "transition-hook@1.5.2": {
             "react-dom": "^18.3.1",
             "react": "^18.3.1"
+        },
+        "js-yaml": "^4.1.1",
+        "@jest/core": {
+            "glob": "^11.1.0"
+        },
+        "@jest/reporters": {
+            "glob": "^11.1.0"
+        },
+        "jest-config": {
+            "glob": "^11.1.0"
+        },
+        "jest-runtime": {
+            "glob": "^11.1.0"
+        },
+        "express": {
+            "body-parser": "^2.2.1"
         }
     }
 }

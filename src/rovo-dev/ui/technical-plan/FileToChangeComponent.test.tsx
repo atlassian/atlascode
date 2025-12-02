@@ -15,10 +15,12 @@ jest.mock('../common/common', () => ({
 
 describe('FileToChangeComponent', () => {
     const mockOpenFile = jest.fn();
+    const mockOnLinkClick = jest.fn();
     const mockCheckFileExists = jest.fn().mockReturnValue(true);
     const defaultProps = {
         filePath: 'src/components/Example.tsx',
         openFile: mockOpenFile,
+        onLinkClick: mockOnLinkClick,
         checkFileExists: mockCheckFileExists,
     };
 

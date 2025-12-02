@@ -1,9 +1,8 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import * as fs from 'fs';
 import path from 'path';
-import { CommandContext, setCommandContext } from 'src/commandContext';
-import { showIssueForURL } from 'src/commands/jira/showIssue';
-import { configuration } from 'src/config/configuration';
+import { Commands } from 'src/constants';
+import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { safeWaitFor } from 'src/rovo-dev/util/waitFor';
 import { v4 } from 'uuid';
@@ -26,12 +25,11 @@ import {
     workspace,
 } from 'vscode';
 
-import { Container } from '../../src/container';
-import { DetailedSiteInfo } from '../atlclients/authInfo';
-import { Commands } from '../constants';
 import { GitErrorCodes } from '../typings/git';
-import { getHtmlForView } from '../webview/common/getHtmlForView';
-import { RovoDevApiClient, RovoDevHealthcheckResponse } from './client';
+import { RovodevCommandContext } from './api/componentApi';
+import { DetailedSiteInfo, ExtensionApi } from './api/extensionApi';
+import { RovoDevApiClient, RovoDevApiError, RovoDevHealthcheckResponse } from './client';
+import { buildErrorDetails } from './errorDetailsBuilder';
 import { RovoDevChatContextProvider } from './rovoDevChatContextProvider';
 import { RovoDevChatProvider } from './rovoDevChatProvider';
 import { RovoDevContentTracker } from './rovoDevContentTracker';
@@ -42,6 +40,7 @@ import { RovoDevProcessManager, RovoDevProcessState } from './rovoDevProcessMana
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import { RovoDevContextItem } from './rovoDevTypes';
+import { readLastNLogLines } from './rovoDevUtils';
 import {
     RovoDevDisabledReason,
     RovoDevEntitlementCheckFailedDetail,
@@ -70,8 +69,10 @@ const RovoDevDisabledPriority: Record<RovoDevDisabledReason | 'none', number> = 
 };
 
 export class RovoDevWebviewProvider extends Disposable implements WebviewViewProvider {
+    private readonly extensionApi = new ExtensionApi();
+
     private readonly viewType = 'atlascodeRovoDev';
-    private readonly isBoysenberry = Container.isBoysenberryMode;
+    private readonly isBoysenberry = this.extensionApi.metadata.isBoysenberry();
     private readonly appInstanceId: string;
 
     private readonly _prHandler: RovoDevPullRequestHandler | undefined;
@@ -89,6 +90,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _debugPanelEnabled = false;
     private _debugPanelContext: Record<string, string> = {};
     private _debugPanelMcpContext: Record<string, string> = {};
+
+    private _userInfo: UserInfo | undefined;
 
     // we keep the data in this collection so we can attach some metadata to the next
     // prompt informing Rovo Dev that those files has been reverted
@@ -156,14 +159,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._extensionPath = extensionPath;
         this._extensionUri = Uri.file(this._extensionPath);
         this._context = context;
-        this._debugPanelEnabled = Container.config.rovodev.debugPanelEnabled;
+        this._debugPanelEnabled = this.extensionApi.config.isDebugPanelEnabled();
 
         // Register the webview view provider
         this._disposables.push(
             window.registerWebviewViewProvider('atlascode.views.rovoDev.webView', this, {
                 webviewOptions: { retainContextWhenHidden: true },
             }),
-            configuration.onDidChange(this.onConfigurationChanged, this),
+            this.extensionApi.config.onDidChange(this.onConfigurationChanged, this),
         );
 
         // Register editor listeners
@@ -173,10 +176,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             this._prHandler = new RovoDevPullRequestHandler();
             this.appInstanceId = process.env.ROVODEV_SANDBOX_ID as string;
         } else {
-            this.appInstanceId = Container.appInstanceId;
+            this.appInstanceId = this.extensionApi.metadata.appInstanceId();
         }
 
-        const onTelemetryError = Container.isDebugging
+        const onTelemetryError = this.extensionApi.metadata.isDebugging()
             ? (error: Error) => this.processError(error)
             : (error: Error) => RovoDevLogger.error(error);
 
@@ -200,11 +203,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private onConfigurationChanged(e: ConfigurationChangeEvent): void {
-        if (configuration.changed(e, 'rovodev.debugPanelEnabled')) {
-            this._debugPanelEnabled = Container.config.rovodev.debugPanelEnabled;
+        if (this.extensionApi.config.changed(e, 'rovodev.debugPanelEnabled')) {
+            this._debugPanelEnabled = this.extensionApi.config.isDebugPanelEnabled();
             this.refreshDebugPanel(true);
         }
-        if (configuration.changed(e, 'rovodev.thinkingBlockEnabled')) {
+        if (this.extensionApi.config.changed(e, 'rovodev.thinkingBlockEnabled')) {
             this.refreshThinkingBlock();
         }
     }
@@ -227,7 +230,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async refreshThinkingBlock() {
-        const thinkingBlockEnabled = Container.config.rovodev.thinkingBlockEnabled;
+        const thinkingBlockEnabled = this.extensionApi.config.isThinkingBlockEnabled();
 
         await this._webView?.postMessage({
             type: RovoDevProviderMessageType.SetThinkingBlockEnabled,
@@ -262,13 +265,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             Uri.joinPath(this._extensionUri, 'node_modules', '@vscode', 'codicons', 'dist', 'codicon.css'),
         );
 
-        webview.html = getHtmlForView(
-            this._extensionPath,
-            webview.asWebviewUri(this._extensionUri),
-            webview.cspSource,
-            this.viewType,
-            codiconsUri,
-        );
+        webview.html = this.extensionApi.getHtmlForView({
+            extensionPath: this._extensionPath,
+            cspSource: webview.cspSource,
+            viewId: this.viewType,
+            baseUri: webview.asWebviewUri(this._extensionUri),
+            stylesUri: codiconsUri,
+        });
 
         webview.onDidReceiveMessage(async (e) => {
             try {
@@ -390,9 +393,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                         if (!this.isBoysenberry) {
                             // listen to change of process state by the process manager
-                            RovoDevProcessManager.onStateChanged((newState) =>
-                                this.handleProcessStateChanged(newState),
-                            );
+                            RovoDevProcessManager.onStateChanged(async (newState) => {
+                                try {
+                                    await this.handleProcessStateChanged(newState);
+                                } catch (error) {
+                                    await this.processError(error);
+                                }
+                            });
 
                             if (!workspace.workspaceFolders?.length) {
                                 await this.signalRovoDevDisabled('NoWorkspaceOpen');
@@ -409,7 +416,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         }
 
                         // initialize (or refresh) the provider based on the current process state
-                        this.handleProcessStateChanged(RovoDevProcessManager.state);
+                        await this.handleProcessStateChanged(RovoDevProcessManager.state);
                         break;
 
                     case RovoDevViewResponseType.GetAgentMemory:
@@ -429,24 +436,23 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                                 lastTenMessages: e.lastTenMessages,
                                 rovoDevSessionId: process.env.SANDBOX_SESSION_ID,
                             },
+                            this._userInfo,
                             !!this.isBoysenberry,
                         );
                         break;
 
                     case RovoDevViewResponseType.LaunchJiraAuth:
-                        if (e.openApiTokenLogin) {
-                            await commands.executeCommand(Commands.JiraAPITokenLogin);
-                        } else {
-                            await commands.executeCommand(Commands.ShowJiraAuth);
-                        }
+                        await this.extensionApi.commands.showUserAuthentication({
+                            openApiTokenLogin: !!e.openApiTokenLogin,
+                        });
                         break;
 
                     case RovoDevViewResponseType.OpenFolder:
-                        await commands.executeCommand(Commands.WorkbenchOpenFolder);
+                        await this.extensionApi.commands.openFolder();
                         break;
 
                     case RovoDevViewResponseType.OpenJira:
-                        await showIssueForURL(e.url);
+                        await this.extensionApi.jira.showIssue(e.url);
                         break;
 
                     case RovoDevViewResponseType.McpConsentChoiceSubmit:
@@ -478,6 +484,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await env.openExternal(Uri.parse(e.href));
                         break;
 
+                    case RovoDevViewResponseType.OpenRovoDevLogFile:
+                        await commands.executeCommand(Commands.OpenRovoDevLogFile);
+                        break;
+
                     default:
                         // @ts-expect-error ts(2339) - e here should be 'never'
                         this.processError(new Error(`Unknown message type: ${e.type}`));
@@ -498,7 +508,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // Listen for active editor changes
         this._disposables.push(
             window.onDidChangeActiveTextEditor((editor) => {
-                if (!Container.isRovoDevEnabled) {
+                if (!this.extensionApi.metadata.isRovoDevEnabled()) {
                     return;
                 }
                 this._chatContextprovider.forceUserFocusUpdate(editor);
@@ -507,7 +517,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // Listen for selection changes
         this._disposables.push(
             window.onDidChangeTextEditorSelection((event) => {
-                if (!Container.isRovoDevEnabled) {
+                if (!this.extensionApi.metadata.isRovoDevEnabled()) {
                     return;
                 }
                 this._chatContextprovider.forceUserFocusUpdate(event.textEditor);
@@ -544,6 +554,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 isRetriable,
                 isProcessTerminated,
                 uid: v4(),
+                stackTrace: buildErrorDetails(error),
+                rovoDevLogs: readLastNLogLines(),
             },
         });
     }
@@ -617,24 +629,30 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }, false);
     }
 
-    private async executeHealthcheckInfo(): Promise<RovoDevHealthcheckResponse | undefined> {
-        let info: RovoDevHealthcheckResponse | undefined = undefined;
+    private async executeHealthcheckInfo(): Promise<{ httpStatus: number; data?: RovoDevHealthcheckResponse }> {
+        let data: RovoDevHealthcheckResponse | undefined = undefined;
+        let httpStatus = 0;
         try {
-            info = await this.rovoDevApiClient?.healthcheck();
-        } catch {}
-
-        this._debugPanelMcpContext = {};
-
-        if (info && info.mcp_servers) {
-            for (const mcpServer in info.mcp_servers) {
-                this._debugPanelMcpContext[mcpServer] = info.mcp_servers[mcpServer];
+            data = await this.rovoDevApiClient?.healthcheck();
+            httpStatus = 200;
+        } catch (e) {
+            if (e instanceof RovoDevApiError) {
+                httpStatus = e.httpStatus;
             }
         }
 
-        this._debugPanelContext['RovoDevHealthcheck'] = info?.status || '???';
+        this._debugPanelMcpContext = {};
+
+        if (data && data.mcp_servers) {
+            for (const mcpServer in data.mcp_servers) {
+                this._debugPanelMcpContext[mcpServer] = data.mcp_servers[mcpServer];
+            }
+        }
+
+        this._debugPanelContext['RovoDevHealthcheck'] = data?.status || (httpStatus ? `HTTP ${httpStatus}` : '???');
         this.refreshDebugPanel();
 
-        return info;
+        return { httpStatus, data };
     }
 
     private makeRelativePathAbsolute(filePath: string): string {
@@ -692,12 +710,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         const resolvedPath = this.makeRelativePathAbsolute(filePath);
 
         if (cachedFilePath && fs.existsSync(cachedFilePath)) {
-            commands.executeCommand(
-                'vscode.diff',
-                Uri.file(cachedFilePath),
-                Uri.file(resolvedPath),
-                `${filePath} (Rovo Dev)`,
-            );
+            await this.extensionApi.commands.showDiff({
+                left: Uri.file(cachedFilePath),
+                right: Uri.file(resolvedPath),
+                title: `${filePath} (Rovo Dev)`,
+            });
             this._dwellTracker?.startDwellTimer();
         } else {
             let range: Range | undefined;
@@ -888,7 +905,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     public async invokeRovoDevAskCommand(prompt: string, context?: RovoDevContextItem[]): Promise<void> {
         // Always focus on the specific vscode view, even if disabled (so user can see the login prompt)
-        commands.executeCommand('atlascode.views.rovoDev.webView.focus');
+        await this.extensionApi.commands.focusRovodevView();
 
         // Wait for the webview to initialize, up to 5 seconds
         const initialized = await safeWaitFor({
@@ -932,7 +949,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
      */
     public async setPromptTextWithFocus(text: string, contextItem?: RovoDevContextItem): Promise<void> {
         // Focus and wait for webview to be ready to receive messages
-        await commands.executeCommand('atlascode.views.rovoDev.webView.focus');
+        await this.extensionApi.commands.focusRovodevView();
 
         const webview = await safeWaitFor({
             condition: (value) => !!value,
@@ -979,6 +996,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private async handleProcessStateChanged(newState: RovoDevProcessState) {
         if (newState.state === 'Downloading' || newState.state === 'Starting' || newState.state === 'Started') {
+            this._userInfo = newState.jiraSiteUserInfo;
             this._jiraItemsProvider.setJiraSite(newState.jiraSiteHostname);
         }
 
@@ -1004,50 +1022,53 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 break;
 
             case 'DownloadingFailed':
-                this.signalProcessFailedToInitialize('Unable to update Rovo Dev.');
+                await this.signalProcessFailedToInitialize('Unable to update Rovo Dev.');
                 break;
 
             case 'StartingFailed':
-                this.signalProcessFailedToInitialize('Unable to start Rovo Dev.');
+                await this.signalProcessFailedToInitialize('Unable to start Rovo Dev.');
                 break;
 
             case 'Started':
-                await this.signalProcessStarted(newState.hostname, newState.httpPort);
+                await this.signalProcessStarted(newState.hostname, newState.httpPort, newState.sessionToken);
                 break;
 
             case 'Terminated':
-                this.signalProcessTerminated(newState.exitCode);
+                await this.signalProcessTerminated(newState.exitCode);
                 break;
 
             case 'Disabled':
-                this.signalRovoDevDisabled(newState.subState, newState.entitlementDetail);
+                await this.signalRovoDevDisabled(newState.subState, newState.entitlementDetail);
                 break;
 
             case 'Boysenberry':
                 if (!newState.httpPort) {
-                    this.handleProcessStateChanged({ state: 'Disabled', subState: 'Other' });
+                    await this.handleProcessStateChanged({ state: 'Disabled', subState: 'Other' });
                     throw new Error('Rovo Dev port not set');
                 } else {
-                    this.signalProcessStarted(newState.hostname, newState.httpPort);
+                    await this.signalProcessStarted(newState.hostname, newState.httpPort, newState.sessionToken);
                 }
                 break;
 
             default:
                 // @ts-expect-error ts(2339) - newState here should be 'never'
-                this.processError(`Unknown process state: ${newState.state}`);
+                await this.processError(`Unknown process state: ${newState.state}`);
                 break;
         }
     }
 
-    private signalProcessStarted(hostname: string, rovoDevPort: number) {
+    private signalProcessStarted(hostname: string, rovoDevPort: number, sessionToken: string) {
         // initialize the API client
-        this._rovoDevApiClient = new RovoDevApiClient(hostname, rovoDevPort);
+        this._rovoDevApiClient = new RovoDevApiClient(hostname, rovoDevPort, sessionToken);
 
         this._debugPanelContext['RovoDevAddress'] = `http://${hostname}:${rovoDevPort}`;
         this.refreshDebugPanel();
 
         // enable the 'show terminal' button only when in debugging
-        setCommandContext(CommandContext.RovoDevTerminalEnabled, !this.isBoysenberry && Container.isDebugging);
+        this.extensionApi.commands.setCommandContext(
+            RovodevCommandContext.RovoDevTerminalEnabled,
+            !this.isBoysenberry && this.extensionApi.metadata.isDebugging(),
+        );
 
         return this.initializeWithHealthcheck();
     }
@@ -1055,9 +1076,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     // timeout defaulted to 1 minute.
     // yes, 1 minute is huge, but Rovo Dev has been acting weird with extremely delayed start-ups recently.
     private async initializeWithHealthcheck(timeout = 60000) {
-        const result = await safeWaitFor({
-            condition: (info) => !!info && info.status !== 'unknown',
+        const healthcheckResult = await safeWaitFor({
             check: () => this.executeHealthcheckInfo(),
+            condition: (response) =>
+                !!response?.httpStatus &&
+                (Math.floor(response.httpStatus / 100) === 2 || Math.floor(response.httpStatus / 100) === 4) &&
+                !!response.data &&
+                response.data.status !== 'unknown',
             timeout,
             interval: 500,
             abortIf: () => !this.rovoDevApiClient,
@@ -1074,10 +1099,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             return;
         }
 
+        const result = healthcheckResult?.data;
+
         // if result is undefined, it means we didn't manage to contact Rovo Dev within the allotted time
         // TODO - this scenario needs a better handling
         if (!result || result.status === 'unknown') {
-            const msg = result ? 'Rovo Dev service is unhealthy/unknown.' : 'Rovo Dev service is unreachable.';
+            let msg = result ? 'Rovo Dev service is unhealthy/unknown.' : 'Rovo Dev service is unreachable.';
+            if (healthcheckResult?.httpStatus) {
+                msg += ` HTTP status code ${healthcheckResult?.httpStatus}.`;
+            }
+
             RovoDevLogger.error(new Error(msg));
 
             if (this.isBoysenberry) {

@@ -1,38 +1,41 @@
-import { performanceEvent } from '../analytics';
-import { Container } from '../container';
 import Perf from '../util/perf';
+import { RovodevAnalyticsApi } from './analytics/rovodevAnalyticsApi';
+import { ExtensionApi } from './api/extensionApi';
 import { PerformanceLogger } from './performanceLogger';
 import { RovoDevLogger } from './util/rovoDevLogger';
 
 // Mock dependencies
-jest.mock('../analytics');
-jest.mock('../container');
 jest.mock('./util/rovoDevLogger');
 jest.mock('../util/perf');
+jest.mock('./api/extensionApi', () => {
+    return {
+        ExtensionApi: jest.fn(),
+    };
+});
 
-const mockPerformanceEvent = performanceEvent as jest.MockedFunction<typeof performanceEvent>;
-const mockContainer = Container as jest.Mocked<typeof Container>;
+const mockPerformanceEvent = jest.fn();
 const mockLogger = RovoDevLogger as jest.Mocked<typeof RovoDevLogger>;
 const mockPerf = Perf as jest.Mocked<typeof Perf>;
 
 describe('PerformanceLogger', () => {
     let performanceLogger: PerformanceLogger;
-    let mockAnalyticsClient: { sendTrackEvent: jest.Mock };
+    let mockAnalyticsClient: jest.Mocked<RovodevAnalyticsApi>;
 
     beforeEach(() => {
         jest.clearAllMocks();
-        performanceLogger = new PerformanceLogger('IDE', 'test-instance-id');
 
         // Setup mock analytics client
         mockAnalyticsClient = {
             sendTrackEvent: jest.fn().mockResolvedValue(undefined),
+            performanceEvent: mockPerformanceEvent,
         };
 
-        // Mock Container.analyticsClient as a getter
-        Object.defineProperty(mockContainer, 'analyticsClient', {
-            get: jest.fn(() => mockAnalyticsClient),
-            configurable: true,
-        });
+        // Mock ExtensionApi constructor to return an instance with analytics
+        (ExtensionApi as jest.Mock).mockImplementation(() => ({
+            analytics: mockAnalyticsClient,
+        }));
+
+        performanceLogger = new PerformanceLogger('IDE', 'test-instance-id');
 
         // Setup default mock returns
         mockPerf.measure.mockReturnValue(100);

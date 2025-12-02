@@ -14,6 +14,7 @@ import {
     RovoDevToolName,
     RovoDevToolPemissionScenario,
     RovoDevToolReturnResponse,
+    RovoDevUsageResponse,
     RovoDevUserPromptResponse,
     RovoDevWarningResponse,
 } from './responseParserInterfaces';
@@ -142,9 +143,17 @@ interface RovoDevOnCallToolStartChunk {
 // doc missing
 type RovoDevStatusChunk = RovoDevStatusResponse;
 
+// doc missing
+type RovoDevUsageChunk = RovoDevUsageResponse;
+
 // https://bitbucket.org/atlassian/acra-python/src/9ce5910e61d00e91f70c7978e067bde2690a1c97/packages/cli-rovodev/docs/serve/streaming-events.md?at=RDA-307-emit-warning-events-related-to-rate-limits-and-other-api-request-problems#:~:text=Server%20Error%20Warnings
 interface RovoDevCloseChunk {
     event_kind: 'close';
+}
+
+// doc missing
+interface RovoDevReplayEndChunk {
+    event_kind: 'replay_end';
 }
 
 type RovoDevSingleResponseRaw =
@@ -171,7 +180,9 @@ type RovoDevSingleChunk =
     | RovoDevPruneChunk
     | RovoDevOnCallToolStartChunk
     | RovoDevStatusChunk
-    | RovoDevCloseChunk;
+    | RovoDevUsageChunk
+    | RovoDevCloseChunk
+    | RovoDevReplayEndChunk;
 
 // https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.PartStartEvent
 interface RovoDevPartStartResponseRaw {
@@ -513,10 +524,17 @@ export class RovoDevResponseParser {
                     ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
                     : chunk;
 
-            case 'close':
+            case 'usage':
                 return buffer
                     ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
-                    : { event_kind: 'close' };
+                    : chunk;
+
+            // events with no payload
+            case 'close':
+            case 'replay_end':
+                return buffer
+                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
+                    : { event_kind: chunk.event_kind };
 
             default:
                 // @ts-expect-error ts(2339) - chunk here should be 'never'

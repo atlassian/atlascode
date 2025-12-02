@@ -2,7 +2,12 @@ import { IconButton } from '@atlaskit/button/new';
 import AddIcon from '@atlaskit/icon/core/add';
 import { GlyphProps } from '@atlaskit/icon/types';
 import Select, { AsyncSelect } from '@atlaskit/select';
-import { IssuePickerIssue, MinimalIssueLink, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
+import {
+    IssuePickerIssue,
+    MinimalIssueLink,
+    MinimalIssueOrKeyAndSite,
+    User,
+} from '@atlassianlabs/jira-pi-common-models';
 import { IssueLinkTypeSelectOption, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { Box } from '@mui/material';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
@@ -27,6 +32,8 @@ type Props = {
     onDelete: (issueLink: any) => void;
     enableLinkedIssues: { enable: boolean; setEnableLinkedIssues: (enable: boolean) => void };
     onStatusChange?: (issueKey: string, statusName: string) => void;
+    onAssigneeChange?: (issueKey: string, assignee: User | null) => void;
+    fetchUsers?: (input: string) => Promise<User[]>;
 };
 
 const SmallAddIcon = (iconProps: GlyphProps) => <AddIcon {...iconProps} size="small" />;
@@ -42,6 +49,8 @@ export const LinkedIssuesComponent: React.FC<Props> = ({
     onDelete,
     enableLinkedIssues,
     onStatusChange,
+    onAssigneeChange,
+    fetchUsers,
 }) => {
     const [isEditing, setIsEditing] = React.useState(false);
     const [selectedIssue, setSelectedIssue] = React.useState<IssuePickerIssue | undefined>(undefined);
@@ -145,6 +154,8 @@ export const LinkedIssuesComponent: React.FC<Props> = ({
                 issuelinks={issuelinks}
                 onDelete={onDelete}
                 onStatusChange={onStatusChange}
+                onAssigneeChange={onAssigneeChange}
+                fetchUsers={fetchUsers}
             />
         </Box>
     );

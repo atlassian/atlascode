@@ -15,7 +15,9 @@ describe('ChatMessageItem', () => {
             index: 0,
         };
 
-        render(<ChatMessageItem msg={promptMessage} openFile={jest.fn()} openJira={jest.fn()} />);
+        render(
+            <ChatMessageItem msg={promptMessage} openFile={jest.fn()} openJira={jest.fn()} onLinkClick={jest.fn()} />,
+        );
 
         expect(screen.getByText('Test message')).toBeTruthy();
     });
@@ -27,7 +29,9 @@ describe('ChatMessageItem', () => {
             index: 0,
         };
 
-        render(<ChatMessageItem msg={rovoDevMessage} openFile={jest.fn()} openJira={jest.fn()} />);
+        render(
+            <ChatMessageItem msg={rovoDevMessage} openFile={jest.fn()} openJira={jest.fn()} onLinkClick={jest.fn()} />,
+        );
 
         expect(screen.getByText('Test message')).toBeTruthy();
     });
@@ -39,7 +43,9 @@ describe('ChatMessageItem', () => {
             index: 0,
         };
 
-        render(<ChatMessageItem msg={rovoDevMessage} openFile={jest.fn()} openJira={jest.fn()} />);
+        render(
+            <ChatMessageItem msg={rovoDevMessage} openFile={jest.fn()} openJira={jest.fn()} onLinkClick={jest.fn()} />,
+        );
         expect(screen.getByText('Bold text')).toBeTruthy();
     });
 });

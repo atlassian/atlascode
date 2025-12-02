@@ -77,6 +77,7 @@ export const DisabledMessage: React.FC<{
                         uid: '',
                     }}
                     customButton={customButton}
+                    onLinkClick={onLinkClick}
                 />
             </div>
         );
@@ -93,6 +94,7 @@ export const DisabledMessage: React.FC<{
                         text: `Sorry, Rovo Dev is not supported for the following architecture: ${process.platform}/${process.arch}.`,
                         uid: '',
                     }}
+                    onLinkClick={onLinkClick}
                 />
             </div>
         );

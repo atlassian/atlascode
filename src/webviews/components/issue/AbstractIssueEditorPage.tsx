@@ -56,6 +56,7 @@ import { chain } from '../fieldValidators';
 import * as SelectFieldHelper from '../selectFieldHelper';
 import { WebviewComponent } from '../WebviewComponent';
 import { AttachmentForm } from './AttachmentForm';
+import { convertAdfToWikimarkup } from './common/adfToWikimarkup';
 import { AtlascodeMentionProvider } from './common/AtlaskitEditor/AtlascodeMentionsProvider';
 import AtlaskitEditor from './common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from './common/JiraIssueTextArea';
@@ -247,6 +248,16 @@ export abstract class AbstractIssueEditorPage<
         if (t === 'number' || t === 'boolean') {
             return String(value);
         }
+        // Check if it's an ADF object
+        if (t === 'object' && value.type === 'doc' && value.version === 1) {
+            // For new Atlaskit editor, convert to JSON string
+            if (this.state.isAtlaskitEditorEnabled) {
+                return JSON.stringify(value);
+            }
+            // For legacy editor, convert ADF to WikiMarkup
+            // Note: This will gracefully fall back to plain text if conversion fails
+            return convertAdfToWikimarkup(value);
+        }
         // For any other type (objects, symbols, functions), render empty string
         return '';
     }
@@ -417,13 +428,23 @@ export abstract class AbstractIssueEditorPage<
         });
     };
 
-    /**
-     * AXON-49 This is a workaround for the suggested autocomplete URL
-     * (.../user/recommend/...) not being accessible
-     */
-    protected fixAutocompleteUrl(url: string): string {
+    protected fixAutocompleteUrl(field: SelectFieldUI): string {
+        let url = field.autoCompleteUrl;
+
+        /**
+         * AXON-49 This is a workaround for the suggested autocomplete URL
+         * (.../user/recommend/...) not being accessible
+         */
         if (url.includes('user/recommend')) {
             url = url.replace('user/recommend', 'user/search') + '&query=';
+        }
+
+        /**
+         * AXON-75 This is a workaround for the epic link field autocomplete URL
+         * for a case when epic field is renamed
+         */
+        if (field.schema.endsWith('epic-link')) {
+            url = url.split('?')[0] + '?fieldName=Epic Link&fieldValue=';
         }
 
         return url;
@@ -440,7 +461,7 @@ export abstract class AbstractIssueEditorPage<
             return this.loadSelectOptions(input, userSearchUrl);
         }
 
-        return this.loadSelectOptions(input, this.fixAutocompleteUrl(field.autoCompleteUrl), field);
+        return this.loadSelectOptions(input, this.fixAutocompleteUrl(field), field);
     };
 
     protected loadSelectOptions = (input: string, url: string, field?: SelectFieldUI): Promise<any[]> => {

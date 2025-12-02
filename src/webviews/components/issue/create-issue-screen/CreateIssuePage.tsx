@@ -1,5 +1,4 @@
 import Button from '@atlaskit/button';
-import LoadingButton from '@atlaskit/button/loading-button';
 import Form, { ErrorMessage, Field, FormFooter, FormHeader, RequiredAsterisk } from '@atlaskit/form';
 import Page from '@atlaskit/page';
 import Select, { components } from '@atlaskit/select';
@@ -27,6 +26,8 @@ import {
     CommonEditorViewState,
     emptyCommonEditorState,
 } from '../AbstractIssueEditorPage';
+import { convertWikimarkupToAdf } from '../common/adfToWikimarkup';
+import { CreateIssueButton } from './actions/CreateIssueButton';
 import { Panel } from './Panel';
 
 type Emit = CommonEditorPageEmit;
@@ -34,6 +35,7 @@ type Accept = CommonEditorPageAccept | CreateIssueData;
 interface ViewState extends CommonEditorViewState, CreateIssueData {
     createdIssue: IssueKeyAndSite<DetailedSiteInfo>;
     formKey: string;
+    onCreateAction: 'createAndView' | 'createAndStartWork' | 'createAndGenerateCode';
 }
 
 const emptyState: ViewState = {
@@ -41,6 +43,7 @@ const emptyState: ViewState = {
     ...emptyCreateIssueData,
     createdIssue: { key: '', siteDetails: emptySiteInfo },
     formKey: v4(),
+    onCreateAction: 'createAndView',
 };
 
 const fallbackTimerDuration = 5000; // 5 seconds
@@ -108,6 +111,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     private attachingInProgress = false;
     private initialFieldValues: FieldValues = {};
     private suggestionFallbackTimer: NodeJS.Timeout | null = null;
+    private formRef = React.createRef<HTMLFormElement>();
 
     getProjectKey(): string {
         return this.state.fieldValues['project'].key;
@@ -236,6 +240,15 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                     });
                     break;
                 }
+                case 'createIssueWithAction': {
+                    handled = true;
+
+                    this.setState({ onCreateAction: e.action }, () => {
+                        this.formRef.current?.requestSubmit();
+                        this.setState({ onCreateAction: 'createAndView' });
+                    });
+                    break;
+                }
             }
         }
 
@@ -296,10 +309,25 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
             isSomethingLoading: true,
             loadingField: 'submitButton',
         });
+
+        // Convert WikiMarkup fields to ADF if using legacy editor
+        const issueData = { ...this.state.fieldValues };
+        if (!this.state.isAtlaskitEditorEnabled) {
+            // Convert description if it's a string (WikiMarkup)
+            if (issueData.description && typeof issueData.description === 'string') {
+                issueData.description = convertWikimarkupToAdf(issueData.description);
+            }
+            // Convert comment if it's a string (WikiMarkup)
+            if (issueData.comment && typeof issueData.comment === 'string') {
+                issueData.comment = convertWikimarkupToAdf(issueData.comment);
+            }
+        }
+
         this.postMessage({
             action: 'createIssue',
             site: this.state.siteDetails,
-            issueData: this.state.fieldValues,
+            issueData: issueData,
+            onCreateAction: this.state.onCreateAction,
         });
 
         return undefined;
@@ -506,7 +534,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                 <Form name="create-issue" key={this.state.formKey} onSubmit={this.handleSubmit}>
                                     {(frmArgs: any) => {
                                         return (
-                                            <form {...frmArgs.formProps}>
+                                            <form {...frmArgs.formProps} ref={this.formRef}>
                                                 <FormHeader title={this.formHeader()}>
                                                     <p>
                                                         Required fields are marked with an asterisk <RequiredAsterisk />
@@ -544,15 +572,18 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                                     </Panel>
                                                 )}
                                                 <FormFooter actions={{}}>
-                                                    <LoadingButton
+                                                    <CreateIssueButton
                                                         type="submit"
-                                                        spacing="compact"
+                                                        name="Create"
                                                         className="ac-button"
-                                                        isDisabled={this.state.isSomethingLoading}
-                                                        isLoading={this.state.loadingField === 'submitButton'}
+                                                        disabled={this.state.isSomethingLoading}
+                                                        isLoading={
+                                                            this.state.isSomethingLoading &&
+                                                            this.state.loadingField === 'submitButton'
+                                                        }
                                                     >
                                                         Create
-                                                    </LoadingButton>
+                                                    </CreateIssueButton>
                                                 </FormFooter>
                                             </form>
                                         );
