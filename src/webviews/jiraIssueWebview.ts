@@ -13,6 +13,7 @@ import {
 import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
+import { RovodevCommands } from 'src/rovo-dev/api/componentApi';
 import timer from 'src/util/perf';
 import { RovoDevEntitlementErrorType } from 'src/util/rovo-dev-entitlement/rovoDevEntitlementError';
 import * as vscode from 'vscode';
@@ -46,6 +47,7 @@ import {
     isIssueComment,
     isIssueDeleteComment,
     isOpenRovoDevWithIssueAction,
+    isOpenRovoDevWithPromoBanner,
     isOpenStartWorkPageAction,
     isTransitionIssue,
     isUpdateVoteAction,
@@ -1792,9 +1794,22 @@ export class JiraIssueWebview
                     }
                     break;
                 }
+                case 'openRovoDevWithPromoBanner': {
+                    if (isOpenRovoDevWithPromoBanner(msg)) {
+                        handled = true;
+
+                        // Dismiss the promo banner
+                        await configuration.updateEffective('rovodev.showEntitlementNotifications', false, null, true);
+
+                        // Open rovo dev
+                        commands.executeCommand(RovodevCommands.FocusRovoDevWindow);
+                    }
+                    break;
+                }
                 case 'dismissRovoDevPromoBanner': {
                     if (isDismissRovoDevPromoBanner(msg)) {
                         handled = true;
+                        // Dismiss the promo banner
                         await configuration.updateEffective('rovodev.showEntitlementNotifications', false, null, true);
                         Logger.debug(`Updated rovodev.showEntitlementNotifications to false in configuration`);
                     }

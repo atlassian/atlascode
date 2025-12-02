@@ -215,6 +215,18 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
     };
 
+    handleOpenRovoDevWithPromoBanner = () => {
+        this.postMessage({
+            action: 'openRovoDevWithPromoBanner',
+        });
+        this.setState({ showRovoDevPromoBanner: false });
+    };
+
+    handleDismissRovoDevPromoBanner = () => {
+        this.postMessage({ action: 'dismissRovoDevPromoBanner' });
+        this.setState({ showRovoDevPromoBanner: false });
+    };
+
     handleCloneIssue = (cloneData: any) => {
         this.setState({ isSomethingLoading: true, loadingField: 'clone' });
         this.postMessage({
@@ -608,11 +620,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 {this.state.showRovoDevPromoBanner && this.state.rovoDevEntitlementType && (
                     <RovoDevPromoBanner
                         entitlementType={this.state.rovoDevEntitlementType}
-                        onOpen={this.handleOpenRovoDev}
-                        onDismiss={() => {
-                            this.onDismissRovoDevPromoBanner();
-                            this.setState({ showRovoDevPromoBanner: false });
-                        }}
+                        onOpen={this.handleOpenRovoDevWithPromoBanner}
+                        onDismiss={this.handleDismissRovoDevPromoBanner}
                     />
                 )}
                 {this.state.showPMF && (
