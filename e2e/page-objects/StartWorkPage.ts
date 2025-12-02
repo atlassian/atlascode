@@ -23,7 +23,6 @@ export class StartWorkPage {
         this.successToast = this.issueFrame.getByRole('presentation').filter({ hasText: 'Success!' });
         this.transitionIssueCheckbox = this.issueFrame.getByTestId(TRANSITION_ISSUE_TEST_ID);
         this.gitBranchCheckbox = this.issueFrame.getByTestId(GIT_BRANCH_TEST_ID);
-        // Repository selector only renders when there are multiple repositories
         this.repositorySelect = this.issueFrame.locator('p:has-text("Repository")').locator('..').getByRole('combobox');
         this.sourceBranchSelect = this.issueFrame
             .locator('p:has-text("Source branch")')
