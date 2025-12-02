@@ -365,7 +365,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     loadingField: field.key,
                     fieldValues: { ...this.state.fieldValues, ...{ [field.key]: typedVal } },
                 });
-                if (typedVal === undefined) {
+                if (typedVal === undefined || typedVal === '') {
                     typedVal = null;
                 }
                 await this.handleEditIssue(field.key, typedVal, teamId);
