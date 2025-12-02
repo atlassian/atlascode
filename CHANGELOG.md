@@ -1,6 +1,6 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
-## What's new in 4.0.11
+## What's new in 4.0.12
 
 ### Improvements
 
