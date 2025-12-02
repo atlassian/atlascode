@@ -82,6 +82,7 @@ const StartWorkPageV3: React.FunctionComponent = () => {
                                 color="primary"
                                 disabled={submitState === 'submitting'}
                                 onClick={handleCreateBranch}
+                                data-testid="start-work.start-button"
                                 endIcon={
                                     submitState === 'submitting' ? <CircularProgress color="inherit" size={20} /> : null
                                 }
