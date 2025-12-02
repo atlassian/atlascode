@@ -26,6 +26,7 @@ import {
     CommonEditorViewState,
     emptyCommonEditorState,
 } from '../AbstractIssueEditorPage';
+import { convertWikimarkupToAdf } from '../common/adfToWikimarkup';
 import { CreateIssueButton } from './actions/CreateIssueButton';
 import { Panel } from './Panel';
 
@@ -308,10 +309,24 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
             isSomethingLoading: true,
             loadingField: 'submitButton',
         });
+
+        // Convert WikiMarkup fields to ADF if using legacy editor
+        const issueData = { ...this.state.fieldValues };
+        if (!this.state.isAtlaskitEditorEnabled) {
+            // Convert description if it's a string (WikiMarkup)
+            if (issueData.description && typeof issueData.description === 'string') {
+                issueData.description = convertWikimarkupToAdf(issueData.description);
+            }
+            // Convert comment if it's a string (WikiMarkup)
+            if (issueData.comment && typeof issueData.comment === 'string') {
+                issueData.comment = convertWikimarkupToAdf(issueData.comment);
+            }
+        }
+
         this.postMessage({
             action: 'createIssue',
             site: this.state.siteDetails,
-            issueData: this.state.fieldValues,
+            issueData: issueData,
             onCreateAction: this.state.onCreateAction,
         });
 
