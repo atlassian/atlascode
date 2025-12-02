@@ -8,11 +8,16 @@ import { LogicalChange } from './LogicalChange';
 interface TechnicalPlanProps {
     content: TechnicalPlan;
     openFile: OpenFileFunc;
+    onLinkClick: (href: string) => void;
     checkFileExists: CheckFileExistsFunc;
-    onMount?: () => void;
 }
 
-export const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, openFile, checkFileExists }) => {
+export const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({
+    content,
+    openFile,
+    onLinkClick,
+    checkFileExists,
+}) => {
     const clarifyingQuestions = content.logicalChanges.flatMap((change) => {
         return change.filesToChange
             .map((file) => {
@@ -39,6 +44,7 @@ export const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, 
                                     key={index}
                                     change={change}
                                     openFile={openFile}
+                                    onLinkClick={onLinkClick}
                                     checkFileExists={checkFileExists}
                                 />
                             </div>
@@ -67,7 +73,7 @@ export const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, 
                             />
                             <div style={{ display: 'flex', flexDirection: 'row', gap: '4px' }}>
                                 <div>{idx + 1}. </div>
-                                <MarkedDown value={question} />
+                                <MarkedDown value={question} onLinkClick={onLinkClick} />
                             </div>
                         </div>
                     );

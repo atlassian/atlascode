@@ -5,6 +5,7 @@ import { TechnicalPlan } from 'src/rovo-dev/rovoDevTypes';
 import { TechnicalPlanComponent } from './TechnicalPlanComponent';
 
 const mockOpenFile = jest.fn();
+const mockOnLinkClick = jest.fn();
 const mockCheckFileExists = jest.fn().mockReturnValue(true);
 
 const mockTechnicalPlan: TechnicalPlan = {
@@ -56,6 +57,7 @@ describe('TechnicalPlanComponent', () => {
             <TechnicalPlanComponent
                 content={mockTechnicalPlan}
                 openFile={mockOpenFile}
+                onLinkClick={mockOnLinkClick}
                 checkFileExists={mockCheckFileExists}
             />,
         );
@@ -67,6 +69,7 @@ describe('TechnicalPlanComponent', () => {
             <TechnicalPlanComponent
                 content={mockTechnicalPlan}
                 openFile={mockOpenFile}
+                onLinkClick={mockOnLinkClick}
                 checkFileExists={mockCheckFileExists}
             />,
         );
@@ -79,6 +82,7 @@ describe('TechnicalPlanComponent', () => {
             <TechnicalPlanComponent
                 content={mockTechnicalPlan}
                 openFile={mockOpenFile}
+                onLinkClick={mockOnLinkClick}
                 checkFileExists={mockCheckFileExists}
             />,
         );
@@ -113,6 +117,7 @@ describe('TechnicalPlanComponent', () => {
             <TechnicalPlanComponent
                 content={planWithoutQuestions}
                 openFile={mockOpenFile}
+                onLinkClick={mockOnLinkClick}
                 checkFileExists={mockCheckFileExists}
             />,
         );
@@ -125,6 +130,7 @@ describe('TechnicalPlanComponent', () => {
             <TechnicalPlanComponent
                 content={emptyPlan}
                 openFile={mockOpenFile}
+                onLinkClick={mockOnLinkClick}
                 checkFileExists={mockCheckFileExists}
             />,
         );
@@ -137,6 +143,7 @@ describe('TechnicalPlanComponent', () => {
             <TechnicalPlanComponent
                 content={mockTechnicalPlan}
                 openFile={mockOpenFile}
+                onLinkClick={mockOnLinkClick}
                 checkFileExists={mockCheckFileExists}
             />,
         );
