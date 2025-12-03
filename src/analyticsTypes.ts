@@ -35,10 +35,7 @@ export enum AnalyticsView {
 
     PipelineSummaryPage = 'page:v2:bitbucket:pipeline',
 
-    StartWorkPage = 'page:v2:jira:startWork',
-
-    // v3
-    StartWorkPageV3 = 'page:v3:jira:startWork',
+    StartWorkPage = 'page:v3:jira:startWork',
 
     // Reserved for future use
 

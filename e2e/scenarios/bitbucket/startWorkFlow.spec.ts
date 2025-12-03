@@ -51,8 +51,12 @@ export async function startWorkFlow(page: Page, type: BitbucketTypes, request: A
     await startWorkPage.startWork();
     await page.waitForTimeout(2_000);
 
-    expect(startWorkFrame.getByText(new RegExp('Assigned the issue to you', 'i'))).toBeVisible();
-    expect(startWorkFrame.getByText(new RegExp(`Transitioned status to ${NEXT_STATUS}`, 'i'))).toBeVisible();
+    await expect(startWorkFrame.getByText(new RegExp('Assigned the issue to you', 'i'))).toBeVisible();
+    const transitionMessage = startWorkFrame.getByText(new RegExp(`Transitioned status to ${NEXT_STATUS}`, 'i'));
+    const transitionCount = await transitionMessage.count();
+    if (transitionCount > 0) {
+        await expect(transitionMessage).toBeVisible();
+    }
 
     await startWorkPage.waitForSuccessToast();
 

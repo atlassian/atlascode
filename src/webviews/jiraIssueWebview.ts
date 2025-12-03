@@ -74,6 +74,7 @@ import { Action } from '../ipc/messaging';
 import { isOpenExternalUrl, isOpenPullRequest } from '../ipc/prActions';
 import { fetchEditIssueUI, fetchMinimalIssue } from '../jira/fetchIssue';
 import { fetchMultipleIssuesWithTransitions } from '../jira/fetchIssueWithTransitions';
+import { attachAssigneesToIssues, collectAssigneesFromResponse } from '../jira/issueAssigneeUtils';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
 import { CommonMessageType } from '../lib/ipc/toUI/common';
@@ -320,7 +321,12 @@ export class JiraIssueWebview
             }
             const res = await client.searchForIssuesUsingJqlGet(jqlQuery, fields);
             const searchResults = await readSearchResults(res, site, epicInfo);
-            this.postMessage({ type: 'epicChildrenUpdate', epicChildren: searchResults.issues });
+
+            const assigneeMap = new Map<string, User>();
+            collectAssigneesFromResponse(res, assigneeMap);
+            const issuesWithAssignees = attachAssigneesToIssues(searchResults.issues, assigneeMap);
+
+            this.postMessage({ type: 'epicChildrenUpdate', epicChildren: issuesWithAssignees });
         }
     }
 

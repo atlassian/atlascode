@@ -84,6 +84,7 @@ export const CreateBranchSection: React.FC<CreateBranchSectionProps> = ({
             marginBottom={2}
         >
             <FormControlLabel
+                data-testid="start-work.setup-git-branch-checkbox"
                 control={
                     <Checkbox
                         checked={branchSetupEnabled}

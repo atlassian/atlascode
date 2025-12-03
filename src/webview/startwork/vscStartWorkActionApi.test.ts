@@ -19,9 +19,6 @@ jest.mock('../../util/featureFlags', () => ({
         checkGate: jest.fn(),
         checkExperimentValue: jest.fn(),
     },
-    Features: {
-        StartWorkV3: 'startWorkV3',
-    },
     Experiments: {
         AtlascodeNewSettingsExperiment: 'atlascode_new_settings_experiment',
     },

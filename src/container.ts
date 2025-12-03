@@ -67,7 +67,6 @@ import { VSCPullRequestDetailsActionApi } from './webview/pullrequest/vscPullReq
 import { VSCPullRequestDetailsWebviewControllerFactory } from './webview/pullrequest/vscPullRequestDetailsWebviewControllerFactory';
 import { SingleWebview } from './webview/singleViewFactory';
 import { VSCStartWorkActionApi } from './webview/startwork/vscStartWorkActionApi';
-import { VSCStartWorkV3WebviewControllerFactory } from './webview/startwork/vscStartWorkV3WebviewControllerFactory';
 import { VSCStartWorkWebviewControllerFactory } from './webview/startwork/vscStartWorkWebviewControllerFactory';
 import { CreateIssueProblemsWebview } from './webviews/createIssueProblemsWebview';
 import { CreateIssueWebview } from './webviews/createIssueWebview';
@@ -159,19 +158,9 @@ export class Container {
             this._analyticsApi,
         );
 
-        const startWorkV2ViewFactory = new SingleWebview<StartWorkIssueMessage, StartWorkAction>(
+        const startWorkViewFactory = new SingleWebview<StartWorkIssueMessage, StartWorkAction>(
             context.extensionPath,
             new VSCStartWorkWebviewControllerFactory(
-                new VSCStartWorkActionApi(),
-                this._commonMessageHandler,
-                this._analyticsApi,
-            ),
-            this._analyticsApi,
-        );
-
-        const startWorkV3ViewFactory = new SingleWebview<StartWorkIssueMessage, StartWorkAction>(
-            context.extensionPath,
-            new VSCStartWorkV3WebviewControllerFactory(
                 new VSCStartWorkActionApi(),
                 this._commonMessageHandler,
                 this._analyticsApi,
@@ -189,8 +178,7 @@ export class Container {
             this._analyticsApi,
         );
 
-        context.subscriptions.push((this._startWorkWebviewFactory = startWorkV2ViewFactory));
-        context.subscriptions.push((this._startWorkV3WebviewFactory = startWorkV3ViewFactory));
+        context.subscriptions.push((this._startWorkWebviewFactory = startWorkViewFactory));
         context.subscriptions.push((this._createPullRequestWebviewFactory = createPullRequestV2ViewFactory));
 
         const pipelinesV2Webview = new MultiWebview<Pipeline, PipelineSummaryAction>(
@@ -422,7 +410,6 @@ export class Container {
         const factories = [
             this.settingsWebviewFactory,
             this.startWorkWebviewFactory,
-            this.startWorkV3WebviewFactory,
             this.createPullRequestWebviewFactory,
         ];
 
@@ -601,11 +588,6 @@ export class Container {
     private static _startWorkWebviewFactory: SingleWebview<StartWorkIssueMessage, StartWorkAction>;
     public static get startWorkWebviewFactory() {
         return this._startWorkWebviewFactory;
-    }
-
-    private static _startWorkV3WebviewFactory: SingleWebview<StartWorkIssueMessage, StartWorkAction>;
-    public static get startWorkV3WebviewFactory() {
-        return this._startWorkV3WebviewFactory;
     }
 
     private static _createPullRequestWebviewFactory: SingleWebview<WorkspaceRepo, StartWorkAction>;
