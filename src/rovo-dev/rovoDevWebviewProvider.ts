@@ -1062,6 +1062,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._rovoDevApiClient = new RovoDevApiClient(hostname, rovoDevPort, sessionToken);
 
         this._debugPanelContext['RovoDevAddress'] = `http://${hostname}:${rovoDevPort}`;
+        this._debugPanelContext['SessionToken'] = sessionToken;
         this.refreshDebugPanel();
 
         // enable the 'show terminal' button only when in debugging
@@ -1094,6 +1095,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // if the client becomes undefined, it means the process terminated while we were polling the healtcheck
         if (!rovoDevClient) {
             delete this._debugPanelContext['RovoDevAddress'];
+            delete this._debugPanelContext['SessionToken'];
             delete this._debugPanelContext['RovoDevHealthcheck'];
             this.refreshDebugPanel();
             return;
