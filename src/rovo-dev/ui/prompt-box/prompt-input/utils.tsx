@@ -109,11 +109,21 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     {
         label: '/status',
         insertText: '/status',
-        description: 'Show Rovo Dev CLI status including version, account details and model',
+        description: 'Show Rovo Dev status including version, account details and model',
         command: {
             title: 'Status',
             id: 'rovo-dev.triggerStatus',
-            tooltip: 'Show Rovo Dev CLI status including version, account details and model',
+            tooltip: 'Show Rovo Dev status including version, account details and model',
+        },
+    },
+    {
+        label: '/usage',
+        insertText: '/usage',
+        description: 'Show Rovo Dev credit usage',
+        command: {
+            title: 'Usage',
+            id: 'rovo-dev.triggerUsage',
+            tooltip: 'Show Rovo Dev credit usage',
         },
     },
     {
@@ -214,6 +224,12 @@ export function setupMonacoCommands(
 
     monaco.editor.registerCommand('rovo-dev.triggerStatus', () => {
         if (onSend('/status')) {
+            editor.setValue('');
+        }
+    });
+
+    monaco.editor.registerCommand('rovo-dev.triggerUsage', () => {
+        if (onSend('/usage')) {
             editor.setValue('');
         }
     });
