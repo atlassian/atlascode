@@ -62,7 +62,6 @@ export interface ViewState extends CommonEditorViewState, EditIssueData {
     historyLoading: boolean;
     imageToCopy: HTMLImageElement | null;
     vsCodeContext: string;
-    showRovoDevPromoBanner: boolean;
 }
 
 const emptyState: ViewState = {
@@ -79,7 +78,6 @@ const emptyState: ViewState = {
     historyLoading: false,
     imageToCopy: null,
     vsCodeContext: '',
-    showRovoDevPromoBanner: false,
 };
 
 export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
