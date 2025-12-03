@@ -29,7 +29,7 @@ import { BitbucketAuthenticator } from './bitbucketAuthenticator';
 import { JiraAuthentictor as JiraAuthenticator } from './jiraAuthenticator';
 import { OAuthDancer } from './oauthDancer';
 
-const CLOUD_TLD = '.atlassian.net';
+const CLOUD_TLDS = ['.atlassian.net', '.jira.com'];
 
 export class LoginManager {
     private _dancer: OAuthDancer = OAuthDancer.Instance;
@@ -313,7 +313,7 @@ export class LoginManager {
             pfxPassphrase: site.pfxPassphrase,
         };
 
-        if (site.host.endsWith(CLOUD_TLD)) {
+        if (CLOUD_TLDS.some((tld) => site.host.endsWith(tld))) {
             // Special case to accomodate for API key login to cloud instances
             siteDetails.isCloud = true;
             siteDetails.userId = json.accountId;
