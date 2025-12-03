@@ -1,4 +1,11 @@
-import { createEmptyMinimalIssue, emptyUser, MinimalIssue, User } from '@atlassianlabs/jira-pi-common-models';
+import {
+    createEmptyMinimalIssue,
+    emptyUser,
+    MinimalIssue,
+    readSearchResults,
+    User,
+} from '@atlassianlabs/jira-pi-common-models';
+import { attachAssigneesToIssues, collectAssigneesFromResponse } from 'src/jira/issueAssigneeUtils';
 import { expansionCastTo } from 'testsutil/miscFunctions';
 import { commands, env, WebviewPanel } from 'vscode';
 
@@ -81,6 +88,13 @@ jest.mock('form-data', () => ({
     default: jest.fn(() => ({ append: jest.fn() })),
 }));
 jest.mock('base64-arraybuffer-es6');
+jest.mock('../jira/issueAssigneeUtils', () => {
+    const actual = jest.requireActual('../jira/issueAssigneeUtils');
+    return {
+        collectAssigneesFromResponse: jest.fn(actual.collectAssigneesFromResponse),
+        attachAssigneesToIssues: jest.fn(actual.attachAssigneesToIssues),
+    };
+});
 jest.mock('../resources', () => ({
     Resources: {
         icons: {
@@ -439,6 +453,78 @@ describe('JiraIssueWebview', () => {
             expect(postMessageSpy).toHaveBeenCalledWith({
                 type: 'epicChildrenUpdate',
                 epicChildren: mockSearchResults.issues,
+            });
+        });
+
+        test('updateEpicChildren - should collect and attach assignees to epic children', async () => {
+            const epicIssue = {
+                ...mockIssue,
+                isEpic: true,
+                issuetype: { ...mockIssue.issuetype, name: 'Epic' },
+            };
+            jiraIssueWebview['_issue'] = epicIssue;
+
+            const epicInfo = { epicLink: { id: 'epic-link-field' } };
+            const mockChildIssues = [
+                { key: 'TEST-124', summary: 'Epic child 1', siteDetails: mockSiteDetails },
+                { key: 'TEST-125', summary: 'Epic child 2', siteDetails: mockSiteDetails },
+            ];
+            const mockSearchResults = { issues: mockChildIssues };
+
+            const mockUsers = [
+                {
+                    accountId: 'user-1',
+                    displayName: 'John Doe',
+                    emailAddress: 'john@example.com',
+                },
+                {
+                    accountId: 'user-2',
+                    displayName: 'Jane Smith',
+                    emailAddress: 'jane@example.com',
+                },
+            ];
+
+            const mockResponseWithAssignees = {
+                issues: mockChildIssues.map((issue, index) => ({
+                    key: issue.key,
+                    fields: { assignee: mockUsers[index] },
+                })),
+            };
+
+            const issuesWithAssignees = mockChildIssues.map((issue, index) => ({
+                ...issue,
+                assignee: mockUsers[index],
+            }));
+
+            (Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite as jest.Mock).mockReturnValue([
+                'summary',
+                'status',
+            ]);
+            (Container.jiraSettingsManager.getEpicFieldsForSite as jest.Mock).mockResolvedValue(epicInfo);
+            mockJiraClient.searchForIssuesUsingJqlGet.mockResolvedValue(mockResponseWithAssignees);
+            (readSearchResults as jest.Mock).mockResolvedValue(mockSearchResults);
+            (attachAssigneesToIssues as jest.Mock).mockReturnValue(issuesWithAssignees);
+
+            const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+
+            await jiraIssueWebview.updateEpicChildren();
+
+            expect(collectAssigneesFromResponse).toHaveBeenCalledWith(mockResponseWithAssignees, expect.any(Map));
+            const assigneeMapFromCollect = (collectAssigneesFromResponse as jest.Mock).mock.calls[0][1] as Map<
+                string,
+                User
+            >;
+            expect(assigneeMapFromCollect.get('TEST-124')).toEqual(mockUsers[0]);
+            expect(assigneeMapFromCollect.get('TEST-125')).toEqual(mockUsers[1]);
+
+            expect(attachAssigneesToIssues).toHaveBeenCalledWith(mockChildIssues, expect.any(Map));
+            const assigneeMapFromAttach = (attachAssigneesToIssues as jest.Mock).mock.calls[0][1] as Map<string, User>;
+            expect(assigneeMapFromAttach.get('TEST-124')).toEqual(mockUsers[0]);
+            expect(assigneeMapFromAttach.get('TEST-125')).toEqual(mockUsers[1]);
+
+            expect(postMessageSpy).toHaveBeenCalledWith({
+                type: 'epicChildrenUpdate',
+                epicChildren: issuesWithAssignees,
             });
         });
 

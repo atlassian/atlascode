@@ -1,8 +1,17 @@
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue, User } from '@atlassianlabs/jira-pi-common-models';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 
-export function collectAssigneesFromResponse(response: any, assigneeMap: Map<string, any>): void {
+interface JiraIssueResponse {
+    issues: {
+        key: string;
+        fields: {
+            assignee: User;
+        };
+    }[];
+}
+
+export function collectAssigneesFromResponse(response: JiraIssueResponse, assigneeMap: Map<string, User>): void {
     if (!response?.issues) {
         return;
     }
@@ -16,12 +25,12 @@ export function collectAssigneesFromResponse(response: any, assigneeMap: Map<str
 
 export function attachAssigneesToIssues(
     issues: MinimalIssue<DetailedSiteInfo>[],
-    assigneeMap: Map<string, any>,
+    assigneeMap: Map<string, User>,
 ): MinimalIssue<DetailedSiteInfo>[] {
     return issues.map((issue) => {
         const assignee = assigneeMap.get(issue.key);
         if (assignee) {
-            (issue as any).assignee = assignee;
+            (issue as MinimalIssue<DetailedSiteInfo> & { assignee: User }).assignee = assignee;
         }
         return issue;
     });

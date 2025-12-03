@@ -308,7 +308,7 @@ export class JiraIssueWebview
             const res = await client.searchForIssuesUsingJqlGet(jqlQuery, fields);
             const searchResults = await readSearchResults(res, site, epicInfo);
 
-            const assigneeMap = new Map<string, any>();
+            const assigneeMap = new Map<string, User>();
             collectAssigneesFromResponse(res, assigneeMap);
             const issuesWithAssignees = attachAssigneesToIssues(searchResults.issues, assigneeMap);
 
