@@ -96,6 +96,8 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         return {
             customTemplate: Container.config.jira.startWorkBranchTemplate.customTemplate,
             customPrefixes: Container.config.jira.startWorkBranchTemplate.customPrefixes,
+            enableIssueTransition: Container.config.jira.startWorkBranchTemplate.enableIssueTransition,
+            defaultTransitionName: Container.config.jira.startWorkBranchTemplate.defaultTransitionName,
         };
     }
 
