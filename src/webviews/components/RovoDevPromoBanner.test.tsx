@@ -48,20 +48,14 @@ describe('RovoDevPromoBanner', () => {
 
     it('should render the banner with correct entitlement type', () => {
         const entitlementType = RovoDevEntitlementType.ROVO_DEV_STANDARD;
-        render(<RovoDevPromoBanner entitlementType={entitlementType} onOpen={mockOnOpen} onDismiss={mockOnDismiss} />);
+        render(<RovoDevPromoBanner onOpen={mockOnOpen} onDismiss={mockOnDismiss} />);
 
         const fullText = `Your Jira site now has access to ${entitlementType}, Atlassian's AI agent for software teams that uses your team's knowledge to streamline development from idea to deployment.`;
         expect(screen.getByText(fullText)).toBeTruthy();
     });
 
     it('should call onDismiss when dismiss button is clicked', () => {
-        render(
-            <RovoDevPromoBanner
-                entitlementType={RovoDevEntitlementType.ROVO_DEV_EVERYWHERE}
-                onOpen={mockOnOpen}
-                onDismiss={mockOnDismiss}
-            />,
-        );
+        render(<RovoDevPromoBanner onOpen={mockOnOpen} onDismiss={mockOnDismiss} />);
 
         const dismissButton = screen.getByText('Dismiss');
         fireEvent.click(dismissButton);
@@ -71,13 +65,7 @@ describe('RovoDevPromoBanner', () => {
     });
 
     it('should call onOpen when Open Rovo Dev button is clicked', () => {
-        render(
-            <RovoDevPromoBanner
-                entitlementType={RovoDevEntitlementType.ROVO_DEV_BETA}
-                onOpen={mockOnOpen}
-                onDismiss={mockOnDismiss}
-            />,
-        );
+        render(<RovoDevPromoBanner onOpen={mockOnOpen} onDismiss={mockOnDismiss} />);
 
         const openButton = screen.getByText('Open Rovo Dev');
         fireEvent.click(openButton);

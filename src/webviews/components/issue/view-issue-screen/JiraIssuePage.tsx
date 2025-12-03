@@ -7,7 +7,6 @@ import { Box, Tab, Tabs } from '@mui/material';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import * as React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
-import { RovoDevEntitlementType } from 'src/util/rovo-dev-entitlement/rovoDevEntitlementChecker';
 import { v4 } from 'uuid';
 
 import { AnalyticsView } from '../../../../analyticsTypes';
@@ -64,7 +63,6 @@ export interface ViewState extends CommonEditorViewState, EditIssueData {
     imageToCopy: HTMLImageElement | null;
     vsCodeContext: string;
     showRovoDevPromoBanner: boolean;
-    rovoDevEntitlementType?: RovoDevEntitlementType;
 }
 
 const emptyState: ViewState = {
@@ -82,7 +80,6 @@ const emptyState: ViewState = {
     imageToCopy: null,
     vsCodeContext: '',
     showRovoDevPromoBanner: false,
-    rovoDevEntitlementType: undefined,
 };
 
 export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
@@ -615,9 +612,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
         return (
             <div>
-                {this.state.showRovoDevPromoBanner && this.state.rovoDevEntitlementType && (
+                {this.state.showRovoDevPromoBanner && (
                     <RovoDevPromoBanner
-                        entitlementType={this.state.rovoDevEntitlementType}
                         onOpen={this.handleOpenRovoDevWithPromoBanner}
                         onDismiss={this.handleDismissRovoDevPromoBanner}
                     />

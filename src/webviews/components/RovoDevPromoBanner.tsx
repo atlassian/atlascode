@@ -3,22 +3,23 @@ import { cssMap } from '@atlaskit/css';
 import { token } from '@atlaskit/tokens';
 import * as React from 'react';
 
-import { RovoDevEntitlementType } from '../../util/rovo-dev-entitlement/rovoDevEntitlementChecker';
 import { RovoDevPromoBannerIcon } from './RovoDevPromoBannerIcon';
 
 interface RovoDevPromoBannerProps {
-    entitlementType: RovoDevEntitlementType;
     onOpen: () => void;
     onDismiss: () => void;
 }
 
-const RovoDevPromoBanner = ({ entitlementType, onOpen, onDismiss }: RovoDevPromoBannerProps) => {
+const RovoDevPromoBanner = ({ onOpen, onDismiss }: RovoDevPromoBannerProps) => {
     return (
         <div css={styles.banner}>
             <RovoDevPromoBannerIcon width={70} height={50} />
             <div css={styles.content}>
-                Your Jira site now has access to {entitlementType}, Atlassian's AI agent for software teams that uses
-                your team's knowledge to streamline development from idea to deployment.
+                <div css={styles.titleLine}>Your Jira site now has access to Rovo Dev</div>
+                <div css={styles.descriptionLine}>
+                    Atlassian's AI agent for software teams that uses your team's knowledge to streamline development
+                    from idea to deployment.
+                </div>
             </div>
             <div css={styles.buttonGroup}>
                 <LoadingButton
@@ -56,6 +57,21 @@ const styles = cssMap({
     },
     content: {
         flex: 1,
+    },
+    titleLine: {
+        color: 'var(--vscode-foreground) !important' as any,
+        fontFamily: 'var(--vscode-font-family)' as any,
+        fontSize: 'var(--vscode-font-size)' as any,
+        fontWeight: 'bold' as any,
+        lineHeight: '16px' as any,
+        paddingBottom: '9px' as any,
+    },
+    descriptionLine: {
+        color: 'var(--vscode-descriptionForeground) !important' as any,
+        fontFamily: 'var(--vscode-font-family)' as any,
+        fontSize: 'var(--vscode-font-size)' as any,
+        fontWeight: '400' as any,
+        lineHeight: '16px' as any,
     },
     buttonGroup: {
         display: 'flex',
