@@ -175,6 +175,28 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         });
     }, [currentState, editor, disabled]);
 
+    // Focus the editor when it becomes visible in the viewport - helps with opening Rovo Dev panel already focused
+    React.useEffect(() => {
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (
+                    entry.isIntersecting &&
+                    !!editor &&
+                    entry.target === document.getElementById('prompt-editor-container')
+                ) {
+                    const lineNumber = editor.getModel()!.getLineCount();
+                    const column = editor.getModel()!.getLineLength(lineNumber) + 1;
+                    editor.focus();
+                    editor.setPosition({ lineNumber, column }); // move cursor to end
+                }
+            });
+        });
+
+        io.observe(document.getElementById('prompt-editor-container')!);
+
+        return () => io.disconnect();
+    }, [editor]);
+
     const isWaitingForPrompt = React.useMemo(
         () =>
             currentState.state === 'WaitingForPrompt' ||

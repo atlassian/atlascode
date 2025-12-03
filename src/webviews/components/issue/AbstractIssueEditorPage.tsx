@@ -1583,6 +1583,7 @@ export abstract class AbstractIssueEditorPage<
                     this.handleInlineEdit(field, newSelectedValues);
                 };
 
+                const isRequired = currentSelectedValues.length === 0 && field.required;
                 checkField.allowedValues.forEach((value) => {
                     const isChecked = selectedIds.includes(value.id);
 
@@ -1592,7 +1593,7 @@ export abstract class AbstractIssueEditorPage<
                             name={`${field.key}-${value.id}`}
                             id={`${field.key}-${value.id}`}
                             value={value.id}
-                            isRequired={field.required}
+                            isRequired={isRequired}
                         >
                             {(fieldArgs: any) => (
                                 <Checkbox
