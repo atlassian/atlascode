@@ -351,7 +351,7 @@ export class SiteManager extends Disposable {
                     });
                 }
 
-                if (deletedSite.id === Container.config.jira.lastCreateSiteAndProject.siteId) {
+                if (deletedSite.id === Container.config.jira.lastCreatePreSelectedValues.siteId) {
                     configuration.setLastCreateSiteAndProject(undefined);
                 }
 
