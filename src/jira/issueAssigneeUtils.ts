@@ -6,7 +6,7 @@ interface JiraIssueResponse {
     issues: {
         key: string;
         fields: {
-            assignee: User;
+            assignee?: User;
         };
     }[];
 }
@@ -18,7 +18,7 @@ export function collectAssigneesFromResponse(response: JiraIssueResponse, assign
     for (const issue of response.issues) {
         const assignee = issue.fields?.assignee;
         if (issue.key && assignee) {
-            assigneeMap.set(issue.key, issue.fields.assignee);
+            assigneeMap.set(issue.key, assignee);
         }
     }
 }

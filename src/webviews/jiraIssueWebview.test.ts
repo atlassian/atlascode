@@ -510,17 +510,11 @@ describe('JiraIssueWebview', () => {
             await jiraIssueWebview.updateEpicChildren();
 
             expect(collectAssigneesFromResponse).toHaveBeenCalledWith(mockResponseWithAssignees, expect.any(Map));
-            const assigneeMapFromCollect = (collectAssigneesFromResponse as jest.Mock).mock.calls[0][1] as Map<
-                string,
-                User
-            >;
-            expect(assigneeMapFromCollect.get('TEST-124')).toEqual(mockUsers[0]);
-            expect(assigneeMapFromCollect.get('TEST-125')).toEqual(mockUsers[1]);
-
             expect(attachAssigneesToIssues).toHaveBeenCalledWith(mockChildIssues, expect.any(Map));
-            const assigneeMapFromAttach = (attachAssigneesToIssues as jest.Mock).mock.calls[0][1] as Map<string, User>;
-            expect(assigneeMapFromAttach.get('TEST-124')).toEqual(mockUsers[0]);
-            expect(assigneeMapFromAttach.get('TEST-125')).toEqual(mockUsers[1]);
+
+            const assigneeMap = (collectAssigneesFromResponse as jest.Mock).mock.calls[0][1] as Map<string, User>;
+            expect(assigneeMap.get('TEST-124')).toEqual(mockUsers[0]);
+            expect(assigneeMap.get('TEST-125')).toEqual(mockUsers[1]);
 
             expect(postMessageSpy).toHaveBeenCalledWith({
                 type: 'epicChildrenUpdate',
