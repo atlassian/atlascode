@@ -13,11 +13,20 @@ import {
 import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
+import { RovodevCommands } from 'src/rovo-dev/api/componentApi';
 import timer from 'src/util/perf';
+import { RovoDevEntitlementErrorType } from 'src/util/rovo-dev-entitlement/rovoDevEntitlementError';
 import * as vscode from 'vscode';
 import { commands, env, window } from 'vscode';
 
-import { issueCreatedEvent, issueOpenRovoDevEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../analytics';
+import {
+    issueCreatedEvent,
+    issueOpenRovoDevEvent,
+    issueUpdatedEvent,
+    issueUrlCopiedEvent,
+    rovoDevPromoBannerDismissedEvent,
+    rovoDevPromoBannerOpenedEvent,
+} from '../analytics';
 import { performanceEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { clientForSite } from '../bitbucket/bbUtils';
@@ -25,23 +34,27 @@ import { PullRequestData } from '../bitbucket/model';
 import { postComment } from '../commands/jira/postComment';
 import { showIssue } from '../commands/jira/showIssue';
 import { startWorkOnIssue } from '../commands/jira/startWorkOnIssue';
+import { configuration } from '../config/configuration';
 import { Commands } from '../constants';
 import { Container } from '../container';
 import {
     EditChildIssueAction,
     EditIssueAction,
     isAddAttachmentsAction,
+    isCheckRovoDevEntitlement,
     isCloneIssue,
     isCreateIssue,
     isCreateIssueLink,
     isCreateWorklog,
     isDeleteByIDAction,
     isDeleteWorklog,
+    isDismissRovoDevPromoBanner,
     isGetImage,
     isHandleEditorFocus,
     isIssueComment,
     isIssueDeleteComment,
     isOpenRovoDevWithIssueAction,
+    isOpenRovoDevWithPromoBanner,
     isOpenStartWorkPageAction,
     isTransitionIssue,
     isUpdateVoteAction,
@@ -64,6 +77,7 @@ import { fetchMultipleIssuesWithTransitions } from '../jira/fetchIssueWithTransi
 import { attachAssigneesToIssues, collectAssigneesFromResponse } from '../jira/issueAssigneeUtils';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
+import { CommonMessageType } from '../lib/ipc/toUI/common';
 import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
 import { RovoDevContextItem } from '../rovo-dev/rovoDevTypes';
@@ -1765,6 +1779,73 @@ export class JiraIssueWebview
                     if (isHandleEditorFocus(msg)) {
                         handled = true;
                         Container.setIsEditorFocused(msg.isFocused);
+                    }
+                    break;
+                }
+                case 'checkRovoDevEntitlement': {
+                    if (isCheckRovoDevEntitlement(msg)) {
+                        handled = true;
+                        try {
+                            const entitlementResponse = await Container.rovoDevEntitlementChecker.checkEntitlement();
+                            const showEntitlementPromoBanner = Container.config.rovodev.showEntitlementNotifications;
+                            Logger.debug(
+                                `Rovo Dev entitlement check: isEntitled=${entitlementResponse.isEntitled} (${entitlementResponse.type}), showEntitlementPromoBanner=${showEntitlementPromoBanner}`,
+                            );
+                            this.postMessage({
+                                type: CommonMessageType.RovoDevEntitlementBanner,
+                                enabled: entitlementResponse.isEntitled && showEntitlementPromoBanner,
+                                entitlementType: entitlementResponse.type,
+                            });
+                        } catch (e) {
+                            Logger.error(e, 'Error checking Rovo Dev entitlement');
+                            this.postMessage({
+                                type: CommonMessageType.RovoDevEntitlementBanner,
+                                enabled: false,
+                                entitlementType: RovoDevEntitlementErrorType.UNKNOWN_ERROR,
+                            });
+                        }
+                    }
+                    break;
+                }
+                case 'openRovoDevWithPromoBanner': {
+                    if (isOpenRovoDevWithPromoBanner(msg)) {
+                        handled = true;
+
+                        rovoDevPromoBannerOpenedEvent(this._issue.siteDetails, this.id).then((e) => {
+                            Container.analyticsClient.sendTrackEvent(e);
+                        });
+
+                        // Dismiss the promo banner
+                        await configuration.updateEffective('rovodev.showEntitlementNotifications', false, null, true);
+
+                        // Open rovo dev
+                        commands.executeCommand(RovodevCommands.FocusRovoDevWindow);
+
+                        // Update UI to reflect banner dismissal
+                        this.postMessage({
+                            type: CommonMessageType.RovoDevEntitlementBanner,
+                            enabled: false,
+                        });
+                    }
+                    break;
+                }
+                case 'dismissRovoDevPromoBanner': {
+                    if (isDismissRovoDevPromoBanner(msg)) {
+                        handled = true;
+
+                        rovoDevPromoBannerDismissedEvent(this._issue.siteDetails, this.id).then((e) => {
+                            Container.analyticsClient.sendTrackEvent(e);
+                        });
+
+                        // Dismiss the promo banner
+                        await configuration.updateEffective('rovodev.showEntitlementNotifications', false, null, true);
+                        Logger.debug(`Updated rovodev.showEntitlementNotifications to false in configuration`);
+
+                        // Update UI to reflect banner dismissal
+                        this.postMessage({
+                            type: CommonMessageType.RovoDevEntitlementBanner,
+                            enabled: false,
+                        });
                     }
                     break;
                 }
