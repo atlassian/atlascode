@@ -74,6 +74,30 @@ jest.mock('../../../../react/atlascode/common/ErrorBoundary', () => ({
     AtlascodeErrorBoundary: ({ children }: any) => <div>{children}</div>,
 }));
 
+jest.mock('@atlaskit/css', () => ({
+    cssMap: (styles: any) => {
+        const result: any = {};
+        for (const key in styles) {
+            result[key] = styles[key];
+        }
+        return result;
+    },
+}));
+
+jest.mock('@atlaskit/feature-gate-js-client', () => ({
+    Client: jest.fn().mockImplementation(() => ({
+        checkGate: jest.fn().mockReturnValue(false),
+        assertInitialized: jest.fn(),
+    })),
+    FeatureGates: {
+        checkGate: jest.fn().mockReturnValue(false),
+    },
+}));
+
+jest.mock('@atlaskit/platform-feature-flags', () => ({
+    fg: jest.fn().mockReturnValue(false),
+}));
+
 const mockSiteDetails: DetailedSiteInfo = {
     userId: 'user-123',
     id: 'site-1',
