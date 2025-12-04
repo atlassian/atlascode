@@ -20,8 +20,12 @@ describe('RovoDevEntitlementChecker', () => {
     let mockClientManager: any;
     let mockConfig: any;
     let mockFeatureGateClient: any;
-
+    let mockSiteManager: any;
     beforeEach(() => {
+        mockSiteManager = {
+            onDidSitesAvailableChange: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+        };
+        (Container as any).siteManager = mockSiteManager;
         mockAnalyticsClient = {
             sendTrackEvent: jest.fn(),
         } as any;
@@ -43,6 +47,7 @@ describe('RovoDevEntitlementChecker', () => {
         (Container as any).clientManager = mockClientManager;
         (Container as any).config = mockConfig;
         (Container as any).featureFlagClient = mockFeatureGateClient;
+        (Container as any).siteManager = mockSiteManager;
         (Logger.debug as jest.Mock).mockImplementation(() => {});
         (Logger.error as jest.Mock).mockImplementation(() => {});
         (rovoDevEntitlementCheckEvent as jest.Mock).mockResolvedValue({});
