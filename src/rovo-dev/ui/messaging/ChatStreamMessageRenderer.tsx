@@ -43,20 +43,17 @@ export const ChatStreamMessageRenderer = React.memo<ChatStreamMessageRendererPro
             if (currentState.state === 'WaitingForPrompt') {
                 return -1;
             }
-            // Find the last user prompt to identify the current generation
-            const lastUserPromptIdx = chatHistory.findLastIndex(
-                (msg) => !Array.isArray(msg) && msg?.event_kind === '_RovoDevUserPrompt',
+
+            const msgIdx = chatHistory.findLastIndex(
+                (msg) => Array.isArray(msg) || msg?.event_kind === '_RovoDevUserPrompt',
             );
 
-            // Only consider drawer that come after the last user prompt
-            const lastArrayIdx = chatHistory.findLastIndex((msg, idx) => {
-                if (!Array.isArray(msg)) {
-                    return false;
-                }
+            const msg = chatHistory[msgIdx];
+            if (msgIdx === -1 || (!Array.isArray(msg) && msg?.event_kind === '_RovoDevUserPrompt')) {
+                return -1;
+            }
 
-                return lastUserPromptIdx === -1 || idx > lastUserPromptIdx;
-            });
-            return lastArrayIdx;
+            return msgIdx;
         }, [chatHistory, currentState.state]);
 
         return chatHistory.map((block, idx) => {
