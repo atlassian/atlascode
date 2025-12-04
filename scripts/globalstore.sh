@@ -66,9 +66,9 @@ then
 	echo "Previous contents of global store $OLDSTATE"
 
 	NEWSTATE=`echo $OLDSTATE | jq -c ".$2 = $3"`
-	sqlite3 ${CODEPATH}/User/globalStorage/state.vscdb "UPDATE ItemTable SET value = '$NEWSTATE' WHERE key = \"atlassian.atlascode\";"
+	sqlite3 "${CODEPATH}/User/globalStorage/state.vscdb" "UPDATE ItemTable SET value = '$NEWSTATE' WHERE key = \"atlassian.atlascode\";"
 
-	ACTUALNEWSTATE=`sqlite3 ${CODEPATH}/User/globalStorage/state.vscdb 'select value from ItemTable where key = "atlassian.atlascode";' | jq '.'`
+	ACTUALNEWSTATE=`sqlite3 "${CODEPATH}/User/globalStorage/state.vscdb" 'select value from ItemTable where key = "atlassian.atlascode";' | jq '.'`
 
 	echo "New contents of global store $ACTUALNEWSTATE"
 fi
