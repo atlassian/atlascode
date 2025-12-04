@@ -7,6 +7,7 @@ import { DetailedSiteInfo } from '../../api/extensionApiTypes';
 import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
 import { PullRequestForm } from '../create-pr/PullRequestForm';
+import { FeedbackConfirmationForm } from '../feedback-form/FeedbackConfirmationForm';
 import { FeedbackForm, FeedbackType } from '../feedback-form/FeedbackForm';
 import { RovoDevLanding } from '../landing-page/RovoDevLanding';
 import { useMessagingApi } from '../messagingApi';
@@ -41,6 +42,8 @@ interface ChatStreamProps {
     onCollapsiblePanelExpanded: () => void;
     feedbackVisible: boolean;
     setFeedbackVisible: (visible: boolean) => void;
+    feedbackConfirmationVisible: boolean;
+    setFeedbackConfirmationVisible: (visible: boolean) => void;
     sendFeedback: (feedbackType: FeedbackType, feedack: string, canContact: boolean, lastTenMessages: boolean) => void;
     onLoginClick: (openApiTokenLogin: boolean) => void;
     onOpenFolder: () => void;
@@ -64,7 +67,9 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     onChangesGitPushed,
     onCollapsiblePanelExpanded,
     feedbackVisible = false,
+    feedbackConfirmationVisible = false,
     setFeedbackVisible,
+    setFeedbackConfirmationVisible,
     sendFeedback,
     onLoginClick,
     onOpenFolder,
@@ -185,6 +190,12 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         };
     }, [autoScrollEnabled, chatHistory]);
 
+    const confirmFeedback = () => {
+        setFeedbackConfirmationVisible(true);
+        setTimeout(() => {
+            setFeedbackConfirmationVisible(false);
+        }, 2000);
+    };
     // Auto-scroll when content changes or when re-enabled
     React.useEffect(performAutoScroll, [
         chatHistory,
@@ -337,12 +348,16 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             onSubmit={(feedbackType, feedback, canContact, includeTenMessages) => {
                                 setFeedbackType(undefined);
                                 sendFeedback(feedbackType, feedback, canContact, includeTenMessages);
+                                confirmFeedback();
                             }}
                             onCancel={() => {
                                 setFeedbackType(undefined);
                                 setFeedbackVisible(false);
                             }}
                         />
+                    )}
+                    {feedbackConfirmationVisible && (
+                        <FeedbackConfirmationForm onClose={() => setFeedbackConfirmationVisible(false)} />
                     )}
                 </FollowUpActionFooter>
             )}
