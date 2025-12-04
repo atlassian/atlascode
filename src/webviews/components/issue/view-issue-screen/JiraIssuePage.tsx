@@ -693,7 +693,11 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     </div>
                 </div>
                 {this.state.isErrorBannerOpen && (
-                    <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
+                    <ErrorBanner
+                        onRetry={this.handleRetryLastAction}
+                        onSignIn={this.handleSignIn}
+                        errorDetails={this.state.errorDetails}
+                    />
                 )}
             </div>
         );

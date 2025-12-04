@@ -92,7 +92,7 @@ export interface CommonEditorViewState extends Message {
     isOnline: boolean;
     isErrorBannerOpen: boolean;
     showPMF: boolean;
-    errorDetails: any;
+    errorDetails: string | { message?: string; title?: string } | undefined;
     commentInputValue: string;
     isRovoDevEnabled: boolean;
     isGeneratingSuggestions?: boolean;
@@ -101,6 +101,7 @@ export interface CommonEditorViewState extends Message {
     showRovoDevPromoBanner: boolean;
     rovoDevEntitlementType?: RovoDevEntitlementType;
     rovoDevPromoBannerDismissed: boolean;
+    lastFailedAction?: CommonEditorPageEmit;
     projectPagination?: {
         total: number;
         loaded: number;
@@ -385,7 +386,18 @@ export abstract class AbstractIssueEditorPage<
     }
 
     protected handleDismissError = () => {
-        this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
+        this.setState({ isErrorBannerOpen: false, errorDetails: undefined, lastFailedAction: undefined });
+    };
+
+    protected handleRetryLastAction = () => {
+        if (this.state.lastFailedAction) {
+            this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
+            this.postMessage(this.state.lastFailedAction);
+        }
+    };
+
+    protected handleSignIn = () => {
+        this.postMessage({ action: 'openJiraAuth' });
     };
 
     protected handleOpenIssue = (issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => {

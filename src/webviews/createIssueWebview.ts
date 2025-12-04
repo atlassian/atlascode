@@ -912,6 +912,11 @@ export class CreateIssueWebview
                     );
                     break;
                 }
+                case 'openJiraAuth': {
+                    handled = true;
+                    await commands.executeCommand(Commands.ShowJiraAuth);
+                    break;
+                }
                 // AI-assisted issue creation
                 case 'updateAiSettings': {
                     handled = true;

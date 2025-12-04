@@ -12,7 +12,7 @@ type Accept = IssueProblemsData | HostErrorMessage;
 
 interface ViewState {
     isErrorBannerOpen: boolean;
-    errorDetails: any;
+    errorDetails: string | { message?: string; title?: string } | undefined;
     problems: CreateMetaTransformerProblems;
     project: Project;
 }
@@ -71,7 +71,7 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
                 <tr className="issuetype-row">
                     <td>
                         <div className="ac-icon-with-text">
-                            <img src={problem.issueType.iconUrl} />
+                            <img src={problem.issueType.iconUrl} alt={problem.issueType.name} />
                             <h3 style={{ marginLeft: '10px' }}>{problem.issueType.name}</h3>
                         </div>
                     </td>
