@@ -70,7 +70,7 @@ export const normalizeLinks = (messageText: string) => {
     return processed;
 };
 
-export const MarkedDown: React.FC<{ value: string; onLinkClick?: (href: string) => void }> = ({
+export const MarkedDown: React.FC<{ value: string; onLinkClick: (href: string) => void }> = ({
     value,
     onLinkClick,
 }) => {
@@ -149,11 +149,12 @@ export const renderChatHistory = (
                         <TechnicalPlanComponent
                             content={message.technicalPlan}
                             openFile={openFile}
+                            onLinkClick={onLinkClick}
                             checkFileExists={checkFileExists}
                         />
                     );
                 }
-                return <ToolReturnParsedItem msg={message} openFile={openFile} />;
+                return <ToolReturnParsedItem msg={message} openFile={openFile} onLinkClick={onLinkClick} />;
             });
         case '_RovoDevDialog':
             let customButton: { text: string; onClick: () => void } | undefined = undefined;
@@ -174,11 +175,12 @@ export const renderChatHistory = (
                         () => {} /* this codepath is not supposed to have tool permissions requests */
                     }
                     customButton={customButton}
+                    onLinkClick={onLinkClick}
                 />
             );
         case 'text':
         case '_RovoDevUserPrompt':
-            return <ChatMessageItem msg={msg} openFile={openFile} openJira={openJira} />;
+            return <ChatMessageItem msg={msg} openFile={openFile} openJira={openJira} onLinkClick={onLinkClick} />;
         case 'retry-prompt':
             return (
                 <ChatMessageItem
@@ -186,6 +188,7 @@ export const renderChatHistory = (
                     msg={{ event_kind: 'text', content: msg.content, index: -1 }}
                     openFile={openFile}
                     openJira={openJira}
+                    onLinkClick={onLinkClick}
                 />
             );
         default:

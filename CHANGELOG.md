@@ -1,5 +1,16 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.12
+
+### Improvements
+
+- Added support for Rovo Dev /usage command
+- Add saving of last chosen issue type
+
+### Bug Fixes
+
+- Fixed validation for required checkbox fields on issue creation
+
 ## What's new in 4.0.10
 
 ### Features

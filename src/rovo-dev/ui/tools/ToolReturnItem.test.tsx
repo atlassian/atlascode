@@ -6,6 +6,7 @@ import { ToolReturnParsedItem } from './ToolReturnItem';
 
 describe('ToolReturnParsedItem', () => {
     const mockOpenFile = jest.fn();
+    const mockOnLinkClick = jest.fn();
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -18,7 +19,9 @@ describe('ToolReturnParsedItem', () => {
             filePath: '/path/to/file.ts',
         };
 
-        const { getByText } = render(<ToolReturnParsedItem msg={msg} openFile={mockOpenFile} />);
+        const { getByText } = render(
+            <ToolReturnParsedItem msg={msg} openFile={mockOpenFile} onLinkClick={mockOnLinkClick} />,
+        );
 
         expect(getByText('Test content')).toBeTruthy();
     });
@@ -31,7 +34,9 @@ describe('ToolReturnParsedItem', () => {
             filePath: '/path/to/file.ts',
         };
 
-        const { getByText } = render(<ToolReturnParsedItem msg={msg} openFile={mockOpenFile} />);
+        const { getByText } = render(
+            <ToolReturnParsedItem msg={msg} openFile={mockOpenFile} onLinkClick={mockOnLinkClick} />,
+        );
 
         expect(getByText('Test Title')).toBeTruthy();
     });
@@ -44,7 +49,9 @@ describe('ToolReturnParsedItem', () => {
             filePath,
         };
 
-        const { getByText } = render(<ToolReturnParsedItem msg={msg} openFile={mockOpenFile} />);
+        const { getByText } = render(
+            <ToolReturnParsedItem msg={msg} openFile={mockOpenFile} onLinkClick={mockOnLinkClick} />,
+        );
 
         fireEvent.click(getByText('Test content'));
         expect(mockOpenFile).toHaveBeenCalledWith(filePath);
@@ -56,7 +63,9 @@ describe('ToolReturnParsedItem', () => {
             type: 'delete',
         };
 
-        const { getByText } = render(<ToolReturnParsedItem msg={msg} openFile={mockOpenFile} />);
+        const { getByText } = render(
+            <ToolReturnParsedItem msg={msg} openFile={mockOpenFile} onLinkClick={mockOnLinkClick} />,
+        );
 
         fireEvent.click(getByText('Test content'));
         expect(mockOpenFile).not.toHaveBeenCalled();
@@ -69,7 +78,9 @@ describe('ToolReturnParsedItem', () => {
             filePath: '/path/to/file.ts',
         };
 
-        const { container } = render(<ToolReturnParsedItem msg={msg} openFile={mockOpenFile} />);
+        const { container } = render(
+            <ToolReturnParsedItem msg={msg} openFile={mockOpenFile} onLinkClick={mockOnLinkClick} />,
+        );
 
         // Check if the CodeIcon is rendered
         const svg = container.querySelector('svg');
@@ -82,7 +93,9 @@ describe('ToolReturnParsedItem', () => {
             filePath: '/path/to/file.ts',
         };
 
-        const { container } = render(<ToolReturnParsedItem msg={msg} openFile={mockOpenFile} />);
+        const { container } = render(
+            <ToolReturnParsedItem msg={msg} openFile={mockOpenFile} onLinkClick={mockOnLinkClick} />,
+        );
 
         // No icon should be rendered
         expect(container.querySelector('svg')).toBeNull();

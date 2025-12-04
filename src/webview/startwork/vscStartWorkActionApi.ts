@@ -9,7 +9,6 @@ import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } 
 import { StartWorkActionApi } from '../../lib/webview/controller/startwork/startWorkActionApi';
 import { Logger } from '../../logger';
 import { Branch, RefType } from '../../typings/git';
-import { Features } from '../../util/featureFlags';
 import { Experiments } from '../../util/featureFlags';
 
 export class VSCStartWorkActionApi implements StartWorkActionApi {
@@ -118,10 +117,7 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
     }
 
     closePage() {
-        const factory = Container.featureFlagClient.checkGate(Features.StartWorkV3)
-            ? Container.startWorkV3WebviewFactory
-            : Container.startWorkWebviewFactory;
-        factory.hide();
+        Container.startWorkWebviewFactory.hide();
     }
 
     async getRovoDevPreference(): Promise<boolean> {

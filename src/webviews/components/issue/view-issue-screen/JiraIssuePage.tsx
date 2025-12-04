@@ -26,6 +26,7 @@ import { AtlLoader } from '../../AtlLoader';
 import ErrorBanner from '../../ErrorBanner';
 import Offline from '../../Offline';
 import PMFBBanner from '../../pmfBanner';
+import RovoDevPromoBanner from '../../RovoDevPromoBanner';
 import {
     AbstractIssueEditorPage,
     CommonEditorPageAccept,
@@ -207,6 +208,16 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             action: 'openRovoDevWithIssue',
             issue: { key: this.state.key, siteDetails: this.state.siteDetails },
         });
+    };
+
+    handleOpenRovoDevWithPromoBanner = () => {
+        this.postMessage({
+            action: 'openRovoDevWithPromoBanner',
+        });
+    };
+
+    handleDismissRovoDevPromoBanner = () => {
+        this.postMessage({ action: 'dismissRovoDevPromoBanner' });
     };
 
     handleCloneIssue = (cloneData: any) => {
@@ -599,6 +610,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
         return (
             <div>
+                {this.state.showRovoDevPromoBanner && (
+                    <RovoDevPromoBanner
+                        onOpen={this.handleOpenRovoDevWithPromoBanner}
+                        onDismiss={this.handleDismissRovoDevPromoBanner}
+                    />
+                )}
                 {this.state.showPMF && (
                     <PMFBBanner
                         onPMFOpen={() => this.onPMFOpen()}
@@ -935,6 +952,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
     override componentDidMount() {
         this.postMessage({ action: 'getFeatureFlags' });
+        this.postMessage({ action: 'checkRovoDevEntitlement' });
     }
     override shouldComponentUpdate(_nextProps: Readonly<{}>, nextState: Readonly<ViewState>): boolean {
         const prevIssueKey = this.state.key;

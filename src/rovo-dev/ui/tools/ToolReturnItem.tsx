@@ -10,7 +10,8 @@ import { ToolReturnParseResult } from '../utils';
 export const ToolReturnParsedItem: React.FC<{
     msg: ToolReturnParseResult;
     openFile: OpenFileFunc;
-}> = ({ msg, openFile }) => {
+    onLinkClick: (href: string) => void;
+}> = ({ msg, openFile, onLinkClick }) => {
     const toolIcon = React.useMemo(() => (msg.type ? iconMap[msg.type] : undefined), [msg.type]);
 
     const filePathClass = msg.filePath && msg.type !== 'delete' ? 'tool-return-file-path' : '';
@@ -30,7 +31,7 @@ export const ToolReturnParsedItem: React.FC<{
             {toolIcon}
             <div className="tool-return-item-base" style={{ flexWrap: 'wrap' }}>
                 <div className="tool-return-content">
-                    <MarkedDown value={msg.content} />
+                    <MarkedDown value={msg.content} onLinkClick={onLinkClick} />
                 </div>
                 {renderTitle(msg)}
             </div>

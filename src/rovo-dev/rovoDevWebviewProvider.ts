@@ -393,9 +393,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                         if (!this.isBoysenberry) {
                             // listen to change of process state by the process manager
-                            RovoDevProcessManager.onStateChanged((newState) =>
-                                this.handleProcessStateChanged(newState),
-                            );
+                            RovoDevProcessManager.onStateChanged(async (newState) => {
+                                try {
+                                    await this.handleProcessStateChanged(newState);
+                                } catch (error) {
+                                    await this.processError(error);
+                                }
+                            });
 
                             if (!workspace.workspaceFolders?.length) {
                                 await this.signalRovoDevDisabled('NoWorkspaceOpen');
@@ -412,7 +416,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         }
 
                         // initialize (or refresh) the provider based on the current process state
-                        this.handleProcessStateChanged(RovoDevProcessManager.state);
+                        await this.handleProcessStateChanged(RovoDevProcessManager.state);
                         break;
 
                     case RovoDevViewResponseType.GetAgentMemory:
@@ -1018,11 +1022,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 break;
 
             case 'DownloadingFailed':
-                this.signalProcessFailedToInitialize('Unable to update Rovo Dev.');
+                await this.signalProcessFailedToInitialize('Unable to update Rovo Dev.');
                 break;
 
             case 'StartingFailed':
-                this.signalProcessFailedToInitialize('Unable to start Rovo Dev.');
+                await this.signalProcessFailedToInitialize('Unable to start Rovo Dev.');
                 break;
 
             case 'Started':
@@ -1030,25 +1034,25 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 break;
 
             case 'Terminated':
-                this.signalProcessTerminated(newState.exitCode);
+                await this.signalProcessTerminated(newState.exitCode);
                 break;
 
             case 'Disabled':
-                this.signalRovoDevDisabled(newState.subState, newState.entitlementDetail);
+                await this.signalRovoDevDisabled(newState.subState, newState.entitlementDetail);
                 break;
 
             case 'Boysenberry':
                 if (!newState.httpPort) {
-                    this.handleProcessStateChanged({ state: 'Disabled', subState: 'Other' });
+                    await this.handleProcessStateChanged({ state: 'Disabled', subState: 'Other' });
                     throw new Error('Rovo Dev port not set');
                 } else {
-                    this.signalProcessStarted(newState.hostname, newState.httpPort, newState.sessionToken);
+                    await this.signalProcessStarted(newState.hostname, newState.httpPort, newState.sessionToken);
                 }
                 break;
 
             default:
                 // @ts-expect-error ts(2339) - newState here should be 'never'
-                this.processError(`Unknown process state: ${newState.state}`);
+                await this.processError(`Unknown process state: ${newState.state}`);
                 break;
         }
     }
@@ -1058,6 +1062,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._rovoDevApiClient = new RovoDevApiClient(hostname, rovoDevPort, sessionToken);
 
         this._debugPanelContext['RovoDevAddress'] = `http://${hostname}:${rovoDevPort}`;
+        this._debugPanelContext['SessionToken'] = sessionToken;
         this.refreshDebugPanel();
 
         // enable the 'show terminal' button only when in debugging
@@ -1090,6 +1095,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // if the client becomes undefined, it means the process terminated while we were polling the healtcheck
         if (!rovoDevClient) {
             delete this._debugPanelContext['RovoDevAddress'];
+            delete this._debugPanelContext['SessionToken'];
             delete this._debugPanelContext['RovoDevHealthcheck'];
             this.refreshDebugPanel();
             return;

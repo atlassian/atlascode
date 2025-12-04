@@ -35,7 +35,7 @@ const StartWorkPageV3: React.FunctionComponent = () => {
     return (
         <StartWorkControllerContext.Provider value={controller}>
             <AtlascodeErrorBoundary
-                context={{ view: AnalyticsView.StartWorkPageV3 }}
+                context={{ view: AnalyticsView.StartWorkPage }}
                 postMessageFunc={controller.postMessage}
             >
                 <Box marginTop={7} maxWidth="654px" padding={3} marginX="auto">
@@ -82,6 +82,7 @@ const StartWorkPageV3: React.FunctionComponent = () => {
                                 color="primary"
                                 disabled={submitState === 'submitting'}
                                 onClick={handleCreateBranch}
+                                data-testid="start-work.start-button"
                                 endIcon={
                                     submitState === 'submitting' ? <CircularProgress color="inherit" size={20} /> : null
                                 }

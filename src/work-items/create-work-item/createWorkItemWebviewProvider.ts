@@ -203,7 +203,7 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
 
             this._availableSites = this.toFieldMap(allSites);
 
-            const selectedSiteAndProject = Container.config.jira.lastCreateSiteAndProject;
+            const selectedSiteAndProject = Container.config.jira.lastCreatePreSelectedValues;
 
             const selectedSite =
                 this._availableSites[selectedSiteAndProject.siteId] ||
@@ -454,6 +454,7 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
                     await configuration.setLastCreateSiteAndProject({
                         siteId: this._selectedSite!.id,
                         projectKey: this._selectedProject!.key,
+                        issueTypeId: this._selectedIssueType?.id || '',
                     });
                     const payload = {
                         summary: message.payload.summary,
@@ -511,7 +512,7 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
             'create',
         );
 
-        const lastCreateSiteAndProject = Container.config.jira.lastCreateSiteAndProject;
+        const lastCreateSiteAndProject = Container.config.jira.lastCreatePreSelectedValues;
         const selectedProject =
             projects.projects.find((p) => p.key === lastCreateSiteAndProject.projectKey) || projects.projects[0];
 

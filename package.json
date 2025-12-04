@@ -46,7 +46,7 @@
     ],
     "main": "./build/extension/extension",
     "rovoDev": {
-        "version": "0.13.6"
+        "version": "0.13.11"
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
@@ -438,10 +438,10 @@
             },
             {
                 "command": "atlascode.bb.createPullRequest",
-                "title": "Create Pull Request",
+                "title": "Create Bitbucket Pull Request",
                 "icon": {
-                    "dark": "resources/dark/add.svg",
-                    "light": "resources/light/add.svg"
+                    "dark": "resources/dark/pullrequests.svg",
+                    "light": "resources/light/pullrequests.svg"
                 },
                 "category": "Bitbucket"
             },
@@ -677,6 +677,13 @@
                     "when": "resourceScheme == atlascode.bbpr && config.atlascode.bitbucket.enabled"
                 }
             ],
+            "scm/title": [
+                {
+                    "command": "atlascode.bb.createPullRequest",
+                    "when": "atlascode:isBitbucketCloudRepo && config.atlascode.bitbucket.enabled",
+                    "group": "navigation"
+                }
+			],
             "view/title": [
                 {
                     "command": "atlascode.rovodev.newChatSession",
@@ -1329,9 +1336,9 @@
                     "description": "Shows active Jira issue key in the status bar",
                     "scope": "window"
                 },
-                "atlascode.jira.lastCreateSiteAndProject": {
+                "atlascode.jira.lastCreatePreSelectedValues": {
                     "type": "object",
-                    "description": "the last used site id and project key for create issue",
+                    "description": "the last used site id, project key, and issue type id for create issue",
                     "scope": "window",
                     "properties": {
                         "siteId": {
@@ -1339,6 +1346,10 @@
                             "default": ""
                         },
                         "projectKey": {
+                            "type": "string",
+                            "default": ""
+                        },
+                        "issueTypeId": {
                             "type": "string",
                             "default": ""
                         }

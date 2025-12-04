@@ -278,6 +278,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             retryAfterError={renderProps.retryPromptAfterError}
                             onToolPermissionChoice={onToolPermissionChoice}
                             onOpenLogFile={renderProps.onOpenLogFile}
+                            onLinkClick={onLinkClick}
                         />
                     ))}
                     {modalDialogs.length > 1 && modalDialogs.every((d) => d.type === 'toolPermissionRequest') && (

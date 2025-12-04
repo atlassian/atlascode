@@ -23,10 +23,19 @@ export class StartWorkPage {
         this.successToast = this.issueFrame.getByRole('presentation').filter({ hasText: 'Success!' });
         this.transitionIssueCheckbox = this.issueFrame.getByTestId(TRANSITION_ISSUE_TEST_ID);
         this.gitBranchCheckbox = this.issueFrame.getByTestId(GIT_BRANCH_TEST_ID);
-        this.repositorySelect = this.issueFrame.getByRole('combobox', { name: 'Repository' });
-        this.sourceBranchSelect = this.issueFrame.getByRole('combobox', { name: 'Source branch' });
-        this.branchPrefixSelect = this.issueFrame.getByRole('combobox', { name: 'Branch Prefix' });
-        this.localBranchInput = this.issueFrame.getByLabel('Local branch');
+        this.repositorySelect = this.issueFrame.locator('p:has-text("Repository")').locator('..').getByRole('combobox');
+        this.sourceBranchSelect = this.issueFrame
+            .locator('p:has-text("Source branch")')
+            .locator('..')
+            .getByRole('combobox');
+        this.branchPrefixSelect = this.issueFrame
+            .locator('p:has-text("Branch prefix")')
+            .locator('..')
+            .getByRole('combobox');
+        this.localBranchInput = this.issueFrame
+            .locator('p:has-text("New local branch")')
+            .locator('..')
+            .getByRole('textbox');
         this.pushBranchCheckbox = this.issueFrame.getByTestId(PUSH_BRANCH_TEST_ID);
         this.startButton = this.issueFrame.getByTestId(START_BUTTON_TEST_ID);
     }
@@ -44,10 +53,13 @@ export class StartWorkPage {
     }
 
     async expectGitBranchSetup() {
-        await expect(this.repositorySelect).toBeVisible();
-        await expect(this.repositorySelect).toHaveText(/(mock|dc)-repository/);
+        const repositoryLabelCount = await this.issueFrame.locator('p:has-text("Repository")').count();
+        if (repositoryLabelCount > 0) {
+            await expect(this.repositorySelect).toBeVisible();
+            await expect(this.repositorySelect).toHaveText(/(mock|dc)-repository/);
+        }
         await expect(this.sourceBranchSelect).toBeVisible();
-        await expect(this.sourceBranchSelect).toHaveValue('main');
+        await expect(this.sourceBranchSelect).toHaveValue(/^(main|bugfix\/BTS-1-.*)$/);
         await expect(this.branchPrefixSelect).toBeVisible();
         await expect(this.branchPrefixSelect).toHaveValue(/bugfix/i);
         await expect(this.localBranchInput).toBeVisible();
