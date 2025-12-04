@@ -54,6 +54,7 @@ export class RovoDevEntitlementChecker extends Disposable {
     private onDidChangeConfiguration(e: ConfigurationChangeEvent) {
         if (configuration.changed(e, 'rovodev.showEntitlementNotifications')) {
             this._enabled = Container.config.rovodev.showEntitlementNotifications;
+            this._cachedEntitlement = null;
         }
     }
 
