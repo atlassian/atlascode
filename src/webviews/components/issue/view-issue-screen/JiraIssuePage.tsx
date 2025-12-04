@@ -128,8 +128,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         ] as const;
 
         for (const method of guardedMethods) {
-            // Dynamic method wrapping requires type assertion
             const self = this as unknown as Record<string, (...args: unknown[]) => unknown>;
+
             self[method] = this.withEditGuard(self[method].bind(this));
         }
     }

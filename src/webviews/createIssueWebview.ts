@@ -135,7 +135,6 @@ export class CreateIssueWebview
     }
 
     override async onAuthChange() {
-        // Check if user has logged out from the site
         super.onAuthChange();
 
         const originallyAvailable = this._issueSuggestionSettings?.isAvailable;

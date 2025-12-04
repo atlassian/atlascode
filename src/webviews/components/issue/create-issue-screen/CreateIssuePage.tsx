@@ -271,7 +271,6 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     }
 
     handleSubmit = async (e: any) => {
-        // Prevent submitting if user has logged out
         if (this.state.isLoggedOut) {
             return { _form: 'You have been logged out. Please close this tab and log in again.' };
         }
