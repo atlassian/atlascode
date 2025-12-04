@@ -60,6 +60,7 @@ const RovoDevView: React.FC = () => {
     const [history, setHistory] = useState<Response[]>([]);
     const [modalDialogs, setModalDialogs] = useState<DialogMessage[]>([]);
     const [isFeedbackFormVisible, setIsFeedbackFormVisible] = React.useState(false);
+    const [isFeedbackConfirmationFormVisible, setIsFeedbackConfirmationFormVisible] = React.useState(false);
     const [outgoingMessage, dispatch] = useState<RovoDevViewResponse | undefined>(undefined);
     const [promptContextCollection, setPromptContextCollection] = useState<RovoDevContextItem[]>([]);
     const [debugPanelEnabled, setDebugPanelEnabled] = useState(false);
@@ -890,7 +891,9 @@ const RovoDevView: React.FC = () => {
                     onChangesGitPushed={onChangesGitPushed}
                     onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
                     feedbackVisible={isFeedbackFormVisible}
+                    feedbackConfirmationVisible={isFeedbackConfirmationFormVisible}
                     setFeedbackVisible={setIsFeedbackFormVisible}
+                    setFeedbackConfirmationVisible={setIsFeedbackConfirmationFormVisible}
                     sendFeedback={executeSendFeedback}
                     onLoginClick={onLoginClick}
                     onOpenFolder={onOpenFolder}
