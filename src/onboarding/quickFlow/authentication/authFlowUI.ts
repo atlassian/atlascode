@@ -213,20 +213,22 @@ export class AuthFlowUI {
             valueSelection: state.site ? [0, state.site.length] : undefined,
         };
 
+        const isValidCloud = /^[a-z0-9]+([-.][a-z0-9]+)*\.(atlassian\.net|jira\.com)$/;
+
         if (state.authenticationType !== AuthenticationType.Server) {
             // We expect an `atlassian.net` hostname
             defaults.value = defaults.value || 'your-site.atlassian.net';
             defaults.valueSelection = [0, defaults.value.indexOf('.atlassian.net')];
             defaults.validateInput = (value) => {
-                const isValid = /^[a-z0-9]+([-.][a-z0-9]+)*\.atlassian\.net$/.test(value);
+                const isValid = isValidCloud.test(value);
                 return isValid
                     ? null
-                    : 'Cloud sites typically look like `your-site.atlassian.net`. Do you have a Jira Server instance?';
+                    : 'Cloud sites typically look like `your-site.atlassian.net` or `your-site.jira.com`. Do you have a Jira Server instance?';
             };
         } else {
             // Not an .atlassian.net domain
             defaults.validateInput = (value) => {
-                const isCloud = /^[a-z0-9]+([-.][a-z0-9]+)*\.atlassian\.net$/.test(value);
+                const isCloud = isValidCloud.test(value);
                 return !isCloud ? null : 'This looks like a cloud site. Do you have a Jira Cloud instance?';
             };
         }

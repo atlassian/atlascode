@@ -16,6 +16,7 @@ export enum CommandContext {
     UseNewAuthFlow = 'atlascode:useNewAuthFlow',
     IsEditorFocused = 'atlascode:isEditorFocused',
     ShowCreateWorkItemWebview = 'atlascode:showCreateWorkItemWebview',
+    IsBitbucketCloudRepo = 'atlascode:isBitbucketCloudRepo',
 }
 
 export function setCommandContext(key: CommandContext | string, value: any) {

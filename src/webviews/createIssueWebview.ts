@@ -259,7 +259,7 @@ export class CreateIssueWebview
         if (inputSite) {
             this._siteDetails = inputSite;
         } else {
-            let siteId = Container.config.jira.lastCreateSiteAndProject.siteId;
+            let siteId = Container.config.jira.lastCreatePreSelectedValues.siteId;
             if (!siteId) {
                 siteId = '';
             }
@@ -281,7 +281,7 @@ export class CreateIssueWebview
         } else if (inputProject) {
             this._currentProject = inputProject;
         } else {
-            let projectKey = Container.config.jira.lastCreateSiteAndProject.projectKey;
+            let projectKey = Container.config.jira.lastCreatePreSelectedValues.projectKey;
             if (!projectKey) {
                 projectKey = '';
             }
@@ -304,6 +304,7 @@ export class CreateIssueWebview
         await configuration.setLastCreateSiteAndProject({
             siteId: this._siteDetails.id,
             projectKey: this._currentProject!.key,
+            issueTypeId: this._selectedIssueTypeId || '',
         });
 
         if (this._todoData) {
@@ -482,6 +483,13 @@ export class CreateIssueWebview
             this._screenData = screenData;
             this._selectedIssueTypeId = this._screenData.selectedIssueType.id;
 
+            if (this._currentProject) {
+                const savedIssueTypeId = Container.config.jira.lastCreatePreSelectedValues.issueTypeId;
+                if (savedIssueTypeId && this._screenData.issueTypeUIs[savedIssueTypeId]) {
+                    this._selectedIssueTypeId = savedIssueTypeId;
+                }
+            }
+
             if (fieldValues) {
                 const overrides = this.getValuesForExisitngKeys(
                     this._screenData.issueTypeUIs[this._selectedIssueTypeId],
@@ -569,6 +577,14 @@ export class CreateIssueWebview
 
         this._screenData.issueTypeUIs[issueType.id].fieldValues['issuetype'] = issueType;
         this._selectedIssueTypeId = issueType.id;
+
+        if (this._currentProject) {
+            configuration.setLastCreateSiteAndProject({
+                siteId: this._siteDetails.id,
+                projectKey: this._currentProject.key,
+                issueTypeId: issueType.id,
+            });
+        }
 
         const createData: CreateIssueData = this._screenData.issueTypeUIs[this._selectedIssueTypeId] as CreateIssueData;
         createData.type = 'update';
@@ -794,11 +810,12 @@ export class CreateIssueWebview
                     handled = true;
                     if (isCreateIssue(msg)) {
                         try {
+                            const [payload, worklog, issuelinks, attachments] = this.formatCreatePayload(msg);
                             await configuration.setLastCreateSiteAndProject({
                                 siteId: this._siteDetails.id,
                                 projectKey: this._currentProject!.key,
+                                issueTypeId: payload.issuetype?.id || this._selectedIssueTypeId,
                             });
-                            const [payload, worklog, issuelinks, attachments] = this.formatCreatePayload(msg);
 
                             // Handle parent payload
                             if (this._siteDetails.isCloud && payload.parent) {

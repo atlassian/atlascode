@@ -35,9 +35,10 @@ jest.mock('../container', () => ({
         },
         config: {
             jira: {
-                lastCreateSiteAndProject: {
+                lastCreatePreSelectedValues: {
                     siteId: '',
                     projectKey: '',
+                    issueTypeId: '',
                 },
                 showCreateIssueProblems: false,
             },
@@ -1095,11 +1096,12 @@ describe('CreateIssueWebview', () => {
         });
     });
 
-    describe('Should correctly set site and project (updateSiteAndProject)', () => {
+    describe('Should correctly set site, project and issueTypeId (updateSiteAndProject)', () => {
         beforeEach(() => {
-            Container.config.jira.lastCreateSiteAndProject = {
+            Container.config.jira.lastCreatePreSelectedValues = {
                 siteId: '',
                 projectKey: '',
+                issueTypeId: '',
             };
             jest.spyOn(SearchJiraHelper, 'getAssignedIssuesPerSite').mockReturnValue([]);
         });
@@ -1108,9 +1110,10 @@ describe('CreateIssueWebview', () => {
             const lastUsedSiteId = 'last-used-site';
             const lastUsedProjectKey = 'last-used-project';
 
-            Container.config.jira.lastCreateSiteAndProject = {
+            Container.config.jira.lastCreatePreSelectedValues = {
                 siteId: lastUsedSiteId,
                 projectKey: lastUsedProjectKey,
+                issueTypeId: '',
             };
 
             Container.siteManager.getSiteForId = jest.fn().mockReturnValue({
@@ -1126,6 +1129,7 @@ describe('CreateIssueWebview', () => {
             expect(configuration.setLastCreateSiteAndProject).toHaveBeenCalledWith({
                 siteId: lastUsedSiteId,
                 projectKey: lastUsedProjectKey,
+                issueTypeId: '',
             });
         });
 
@@ -1158,6 +1162,7 @@ describe('CreateIssueWebview', () => {
             expect(configuration.setLastCreateSiteAndProject).toHaveBeenCalledWith({
                 siteId: maxIssuesSite.id,
                 projectKey: maxIssuesProject.key,
+                issueTypeId: '',
             });
         });
 
@@ -1174,6 +1179,7 @@ describe('CreateIssueWebview', () => {
             expect(configuration.setLastCreateSiteAndProject).toHaveBeenCalledWith({
                 siteId: 'first-site',
                 projectKey: 'first-project',
+                issueTypeId: '',
             });
         });
 
@@ -1195,6 +1201,7 @@ describe('CreateIssueWebview', () => {
             expect(configuration.setLastCreateSiteAndProject).toHaveBeenLastCalledWith({
                 projectKey: inputProject.key,
                 siteId: 'site-1',
+                issueTypeId: 'issueType-1',
             });
         });
 
@@ -1216,6 +1223,7 @@ describe('CreateIssueWebview', () => {
             expect(configuration.setLastCreateSiteAndProject).toHaveBeenLastCalledWith({
                 siteId: inputSite.id,
                 projectKey: 'TEST',
+                issueTypeId: 'issueType-1',
             });
         });
     });
