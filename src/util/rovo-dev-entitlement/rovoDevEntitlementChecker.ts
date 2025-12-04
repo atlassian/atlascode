@@ -34,14 +34,21 @@ export class RovoDevEntitlementChecker extends Disposable {
 
     private _enabled: boolean;
 
+    private _cachedEntitlement: EntitlementResponse | null;
+
     private disposable: Disposable;
 
     constructor(analyticsClient: AnalyticsClient) {
         super(() => this._dispose());
         this._analyticsClient = analyticsClient;
         this._enabled = Container.config.rovodev.showEntitlementNotifications;
-
-        this.disposable = Disposable.from(configuration.onDidChange(this.onDidChangeConfiguration, this));
+        this._cachedEntitlement = null;
+        this.disposable = Disposable.from(
+            configuration.onDidChange(this.onDidChangeConfiguration, this),
+            Container.siteManager.onDidSitesAvailableChange(() => {
+                this._cachedEntitlement = null;
+            }, this),
+        );
     }
 
     private onDidChangeConfiguration(e: ConfigurationChangeEvent) {
@@ -52,6 +59,10 @@ export class RovoDevEntitlementChecker extends Disposable {
 
     public async checkEntitlement(): Promise<EntitlementResponse> {
         try {
+            if (this._cachedEntitlement) {
+                Logger.debug(`Cached entitlement response: ${this._cachedEntitlement.type}`);
+                return this._cachedEntitlement;
+            }
             const credentials = await Container.clientManager.getCloudPrimarySite();
 
             if (!credentials) {
@@ -96,10 +107,11 @@ export class RovoDevEntitlementChecker extends Disposable {
                 this._analyticsClient.sendTrackEvent(e);
             });
 
-            return {
+            this._cachedEntitlement = {
                 isEntitled: true,
                 type: value.trim() as RovoDevEntitlementType,
             };
+            return this._cachedEntitlement;
         } catch (err) {
             Logger.error(err, 'Unable to check Rovo Dev entitlement');
             const errType: string =
