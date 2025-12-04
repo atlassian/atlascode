@@ -45,7 +45,7 @@ export class RovoDevEntitlementChecker extends Disposable {
         this._cachedEntitlement = null;
         this.disposable = Disposable.from(
             configuration.onDidChange(this.onDidChangeConfiguration, this),
-            Container.siteManager.onDidSitesAvailableChange(async () => {
+            Container.siteManager.onDidSitesAvailableChange(() => {
                 this._cachedEntitlement = null;
             }, this),
         );
