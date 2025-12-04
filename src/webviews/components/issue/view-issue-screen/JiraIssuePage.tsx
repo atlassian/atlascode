@@ -90,6 +90,48 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         super(props);
         this.state = emptyState;
         this.mentionProvider = this.getMentionProvider();
+        this.applyEditGuards();
+    }
+
+    /** Wraps a method to block execution when user is logged out */
+    private withEditGuard<TArgs extends unknown[], TReturn>(
+        fn: (...args: TArgs) => TReturn,
+    ): (...args: TArgs) => TReturn | void {
+        return (...args: TArgs) => {
+            if (this.state.isLoggedOut) {
+                return;
+            }
+            return fn.apply(this, args);
+        };
+    }
+
+    /** Apply edit guards to all methods that modify issue data */
+    private applyEditGuards() {
+        const guardedMethods = [
+            'handleStartWorkOnIssue',
+            'handleOpenRovoDev',
+            'handleCloneIssue',
+            'handleInlineEdit',
+            'handleEditIssue',
+            'handleChildIssueUpdate',
+            'handleCreateComment',
+            'handleUpdateComment',
+            'handleDeleteComment',
+            'handleStatusChange',
+            'handleAddWatcher',
+            'handleRemoveWatcher',
+            'handleAddVote',
+            'handleRemoveVote',
+            'handleAddAttachments',
+            'handleDeleteAttachment',
+            'handleDeleteIssuelink',
+        ] as const;
+
+        for (const method of guardedMethods) {
+            // Dynamic method wrapping requires type assertion
+            const self = this as unknown as Record<string, (...args: unknown[]) => unknown>;
+            self[method] = this.withEditGuard(self[method].bind(this));
+        }
     }
 
     // TODO: proper error handling in webviews :'(
@@ -199,11 +241,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     handleStartWorkOnIssue = () => {
-        // Prevent starting work if user has logged out
-        if (this.state.isLoggedOut) {
-            return;
-        }
-
         this.postMessage({
             action: 'openStartWorkPage',
             issue: { key: this.state.key, siteDetails: this.state.siteDetails },
@@ -228,11 +265,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     handleCloneIssue = (cloneData: any) => {
-        // Prevent cloning if user has logged out
-        if (this.state.isLoggedOut) {
-            return;
-        }
-
         this.setState({ isSomethingLoading: true, loadingField: 'clone' });
         this.postMessage({
             action: 'cloneIssue',
@@ -252,11 +284,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
 
     protected override handleInlineEdit = async (field: FieldUI, newValue: any) => {
-        // Prevent editing if user has logged out
-        if (this.state.isLoggedOut) {
-            return;
-        }
-
         switch (field.uiType) {
             case UIType.Subtasks: {
                 this.setState({ isSomethingLoading: true, loadingField: field.key });
@@ -403,11 +430,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     handleEditIssue = async (fieldKey: string, newValue: any, teamId?: string) => {
-        // Prevent editing issue if user has logged out
-        if (this.state.isLoggedOut) {
-            return;
-        }
-
         this.setState({ isSomethingLoading: true, loadingField: fieldKey });
         const nonce = v4();
         await this.postMessageWithEventPromise(
@@ -426,11 +448,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     handleChildIssueUpdate = async (issueKey: string, fieldKey: string, newValue: any) => {
-        // Prevent updating child issue if user has logged out
-        if (this.state.isLoggedOut) {
-            return;
-        }
-
         const nonce = v4();
 
         const payload =
@@ -454,11 +471,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     protected override handleCreateComment = (commentBody: string, restriction?: CommentVisibility) => {
-        // Prevent commenting if user has logged out
-        if (this.state.isLoggedOut) {
-            return;
-        }
-
         this.setState({ isSomethingLoading: true, loadingField: 'comment', commentText: '', isEditingComment: false });
         const commentAction: IssueCommentAction = {
             action: 'comment',
@@ -479,11 +491,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     protected handleUpdateComment = (commentBody: string, commentId: string, restriction?: CommentVisibility) => {
-        // Prevent updating comment if user has logged out
-        if (this.state.isLoggedOut) {
-            return;
-        }
-
         const commentAction: IssueCommentAction = {
             action: 'comment',
             issue: { key: this.state.key, siteDetails: this.state.siteDetails },
@@ -496,11 +503,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     handleDeleteComment = (commentId: string) => {
-        // Prevent deleting comment if user has logged out
-        if (this.state.isLoggedOut) {
-            return;
-        }
-
         this.postMessage({
             action: 'deleteComment',
             issue: { key: this.state.key, siteDetails: this.state.siteDetails },
@@ -520,11 +522,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     handleStatusChange = (transition: Transition) => {
-        // Prevent status change if user has logged out
-        if (this.state.isLoggedOut) {
-            return;
-        }
-
         this.setState({ isSomethingLoading: true, loadingField: 'status' });
         this.postMessage({
             action: 'transitionIssue',
@@ -579,11 +576,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     handleAddWatcher = (user: any) => {
-        // Prevent adding watcher if user has logged out
-        if (this.state.isLoggedOut) {
-            return;
-        }
-
         this.setState({ currentInlineDialog: '', isSomethingLoading: true, loadingField: 'watches' });
         this.postMessage({
             action: 'addWatcher',
@@ -594,11 +586,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     handleRemoveWatcher = (user: any) => {
-        // Prevent removing watcher if user has logged out
-        if (this.state.isLoggedOut) {
-            return;
-        }
-
         this.setState({ currentInlineDialog: '', isSomethingLoading: true, loadingField: 'watches' });
         this.postMessage({
             action: 'removeWatcher',
@@ -609,31 +596,16 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     handleAddVote = (user: any) => {
-        // Prevent voting if user has logged out
-        if (this.state.isLoggedOut) {
-            return;
-        }
-
         this.setState({ currentInlineDialog: '', isSomethingLoading: true, loadingField: 'votes' });
         this.postMessage({ action: 'addVote', site: this.state.siteDetails, issueKey: this.state.key, voter: user });
     };
 
     handleRemoveVote = (user: any) => {
-        // Prevent removing vote if user has logged out
-        if (this.state.isLoggedOut) {
-            return;
-        }
-
         this.setState({ currentInlineDialog: '', isSomethingLoading: true, loadingField: 'votes' });
         this.postMessage({ action: 'removeVote', site: this.state.siteDetails, issueKey: this.state.key, voter: user });
     };
 
     handleAddAttachments = (files: File[]) => {
-        // Prevent adding attachments if user has logged out
-        if (this.state.isLoggedOut) {
-            return;
-        }
-
         if (this.attachingInProgress) {
             return;
         }
@@ -664,11 +636,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     handleDeleteAttachment = (file: any) => {
-        // Prevent deleting attachment if user has logged out
-        if (this.state.isLoggedOut) {
-            return;
-        }
-
         this.setState({ isSomethingLoading: true, loadingField: 'attachment' });
         this.postMessage({ action: 'deleteAttachment', site: this.state.siteDetails, objectWithId: file });
     };
@@ -678,11 +645,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     handleDeleteIssuelink = (issuelink: any) => {
-        // Prevent deleting issue link if user has logged out
-        if (this.state.isLoggedOut) {
-            return;
-        }
-
         this.setState({ isSomethingLoading: true, loadingField: 'issuelinks' });
         this.postMessage({ action: 'deleteIssuelink', site: this.state.siteDetails, objectWithId: issuelink });
     };
