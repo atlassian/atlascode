@@ -83,11 +83,11 @@ describe('ChatStreamMessageRenderer', () => {
         expect(chatItems[0].attributes.getNamedItem('data-drawer-open')?.value).toBe('false');
     });
 
-    it('sets drawerOpen correctly for last array block', () => {
+    it('keeps drawer open for thinking box even when text responses are added after it', () => {
         const mockChatHistory = [
-            { event_kind: 'text', content: 'Hello', index: 0 },
+            { event_kind: '_RovoDevUserPrompt', content: 'First question' },
             ['thinking'],
-            { event_kind: 'text', content: 'Hi', index: 2 },
+            { event_kind: 'text', content: 'Response text', index: 0 },
         ];
 
         render(<ChatStreamMessageRenderer {...defaultProps} chatHistory={mockChatHistory as any} />);
@@ -96,6 +96,35 @@ describe('ChatStreamMessageRenderer', () => {
         expect(chatItems[0].attributes.getNamedItem('data-drawer-open')?.value).toBe('false');
         expect(chatItems[1].attributes.getNamedItem('data-drawer-open')?.value).toBe('true');
         expect(chatItems[2].attributes.getNamedItem('data-drawer-open')?.value).toBe('false');
+    });
+
+    it('opens drawer for thinking box that comes after the last user prompt', () => {
+        const mockChatHistory = [{ event_kind: '_RovoDevUserPrompt', content: 'First question' }, ['thinking']];
+
+        render(<ChatStreamMessageRenderer {...defaultProps} chatHistory={mockChatHistory as any} />);
+
+        const chatItems = screen.getAllByTestId('chat-item');
+        expect(chatItems[0].attributes.getNamedItem('data-drawer-open')?.value).toBe('false');
+        expect(chatItems[1].attributes.getNamedItem('data-drawer-open')?.value).toBe('true');
+    });
+
+    it('does not open drawer for old thinking box from previous question', () => {
+        const mockChatHistory = [
+            { event_kind: '_RovoDevUserPrompt', content: 'First question' },
+            ['old-thinking'],
+            { event_kind: 'text', content: 'First response', index: 0 },
+            { event_kind: '_RovoDevUserPrompt', content: 'Second question' },
+            ['new-thinking'],
+        ];
+
+        render(<ChatStreamMessageRenderer {...defaultProps} chatHistory={mockChatHistory as any} />);
+
+        const chatItems = screen.getAllByTestId('chat-item');
+        expect(chatItems[0].attributes.getNamedItem('data-drawer-open')?.value).toBe('false');
+        expect(chatItems[1].attributes.getNamedItem('data-drawer-open')?.value).toBe('false');
+        expect(chatItems[2].attributes.getNamedItem('data-drawer-open')?.value).toBe('false');
+        expect(chatItems[3].attributes.getNamedItem('data-drawer-open')?.value).toBe('false');
+        expect(chatItems[4].attributes.getNamedItem('data-drawer-open')?.value).toBe('true');
     });
 
     it('skips null blocks in chatHistory', () => {
