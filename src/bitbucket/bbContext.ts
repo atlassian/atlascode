@@ -1,6 +1,7 @@
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 
 import { DetailedSiteInfo, ProductBitbucket } from '../atlclients/authInfo';
+import { CommandContext, setCommandContext } from '../commandContext';
 import { bbAPIConnectivityError } from '../constants';
 import { Container } from '../container';
 import { Logger } from '../logger';
@@ -119,6 +120,9 @@ export class BitbucketContext extends Disposable {
             }
         }
 
+        const isBitbucketCloudRepo = this.getBitbucketCloudRepositories().length > 0;
+        this.setIsBitbucketCloudRepo(isBitbucketCloudRepo);
+
         this._onDidChangeBitbucketContext.fire();
     }
 
@@ -176,6 +180,10 @@ export class BitbucketContext extends Disposable {
     override dispose() {
         this.disposeForNow();
         this._disposable.dispose();
+    }
+
+    private setIsBitbucketCloudRepo(isBitbucketCloudRepo: boolean) {
+        setCommandContext(CommandContext.IsBitbucketCloudRepo, isBitbucketCloudRepo);
     }
 
     disposeForNow() {
