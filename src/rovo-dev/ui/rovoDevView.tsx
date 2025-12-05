@@ -71,6 +71,21 @@ const RovoDevView: React.FC = () => {
     const [pendingFilesForFiltering, setPendingFilesForFiltering] = useState<ModifiedFile[] | null>(null);
     const [thinkingBlockEnabled, setThinkingBlockEnabled] = useState(true);
 
+    // NEW: Tracking first/last chunk rendering
+    const [firstChunkMetadata, setFirstChunkMetadata] = useState<{
+        promptId: string;
+        providerReceivedAt: number;
+        providerSentAt: number;
+        reactReceivedAt: number;
+    } | null>(null);
+
+    const [lastChunkPending, setLastChunkPending] = useState<{
+        promptId: string;
+        providerReceivedAt: number;
+        providerSentAt: number;
+        reactReceivedAt: number;
+    } | null>(null);
+
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
         const initializeTheme = () => {
@@ -260,6 +275,20 @@ const RovoDevView: React.FC = () => {
 
                     const messages = Array.isArray(event.message) ? event.message : [event.message];
 
+                    // NEW: Capture timing metadata
+                    const reactReceivedAt = performance.now();
+                    const metadata = event.metadata;
+
+                    // NEW: Track first message chunk
+                    if (metadata?.isFirstMessage && !firstChunkMetadata) {
+                        setFirstChunkMetadata({
+                            promptId: metadata.promptId,
+                            providerReceivedAt: metadata.providerReceivedAt,
+                            providerSentAt: metadata.providerSentAt,
+                            reactReceivedAt,
+                        });
+                    }
+
                     const last = messages.at(-1);
                     if (last?.event_kind === 'tool-call') {
                         setPendingToolCallMessage(parseToolCallMessage(last.tool_name));
@@ -272,6 +301,16 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.CompleteMessage:
+                    // NEW: Track last message chunk
+                    if (event.metadata && currentState.state === 'GeneratingResponse') {
+                        setLastChunkPending({
+                            promptId: event.metadata.promptId,
+                            providerReceivedAt: performance.now(), // Use current time as proxy
+                            providerSentAt: event.metadata.providerSentAt,
+                            reactReceivedAt: performance.now(),
+                        });
+                    }
+
                     if (
                         currentState.state === 'GeneratingResponse' ||
                         currentState.state === 'ExecutingPlan' ||
@@ -441,7 +480,7 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [handleAppendResponse, currentState.state, setSummaryMessageInHistory, clearChatHistory],
+        [handleAppendResponse, currentState.state, setSummaryMessageInHistory, clearChatHistory, firstChunkMetadata],
     );
 
     const { postMessage, postMessagePromise } = useMessagingApi<
@@ -470,6 +509,52 @@ const RovoDevView: React.FC = () => {
             setPendingFilesForFiltering(null);
         }
     }, [pendingFilesForFiltering, postMessage]);
+
+    // NEW: Track when first chunk is rendered
+    React.useEffect(() => {
+        if (firstChunkMetadata && history.length > 0) {
+            // Wait for next paint to ensure DOM is updated
+            requestAnimationFrame(() => {
+                const reactRenderedAt = performance.now();
+
+                // Send analytics event
+                postMessage({
+                    type: RovoDevViewResponseType.ReportFirstChunkRendered,
+                    promptId: firstChunkMetadata.promptId,
+                    providerReceivedAt: firstChunkMetadata.providerReceivedAt,
+                    providerSentAt: firstChunkMetadata.providerSentAt,
+                    reactReceivedAt: firstChunkMetadata.reactReceivedAt,
+                    reactRenderedAt,
+                });
+
+                // Clear tracking state
+                setFirstChunkMetadata(null);
+            });
+        }
+    }, [firstChunkMetadata, history, postMessage]);
+
+    // NEW: Track when last chunk is rendered
+    React.useEffect(() => {
+        if (lastChunkPending && currentState.state === 'WaitingForPrompt') {
+            // Wait for next paint to ensure DOM is updated
+            requestAnimationFrame(() => {
+                const reactRenderedAt = performance.now();
+
+                // Send analytics event
+                postMessage({
+                    type: RovoDevViewResponseType.ReportLastChunkRendered,
+                    promptId: lastChunkPending.promptId,
+                    providerReceivedAt: lastChunkPending.providerReceivedAt,
+                    providerSentAt: lastChunkPending.providerSentAt,
+                    reactReceivedAt: lastChunkPending.reactReceivedAt,
+                    reactRenderedAt,
+                });
+
+                // Clear tracking state
+                setLastChunkPending(null);
+            });
+        }
+    }, [lastChunkPending, currentState.state, postMessage]);
 
     const sendPrompt = useCallback(
         (text: string): boolean => {

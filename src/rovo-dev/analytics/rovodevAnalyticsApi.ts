@@ -159,3 +159,49 @@ export function rovoDevAiResultViewedEvent(
         },
     });
 }
+
+export function rovoDevFirstChunkRenderedEvent(
+    rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
+    sessionId: string,
+    promptId: string,
+    metrics: {
+        providerToReactDriftMs: number;
+        reactRenderTimeMs: number;
+        totalDriftMs: number;
+        timeToFirstVisibleMs: number;
+    },
+) {
+    return trackEvent('rovoDevFirstChunkRendered', 'atlascode', {
+        attributes: {
+            rovoDevEnv,
+            appInstanceId,
+            sessionId,
+            promptId,
+            ...metrics,
+        },
+    });
+}
+
+export function rovoDevLastChunkRenderedEvent(
+    rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
+    sessionId: string,
+    promptId: string,
+    metrics: {
+        providerToReactDriftMs: number;
+        reactRenderTimeMs: number;
+        totalDriftMs: number;
+        timeToLastVisibleMs: number;
+    },
+) {
+    return trackEvent('rovoDevLastChunkRendered', 'atlascode', {
+        attributes: {
+            rovoDevEnv,
+            appInstanceId,
+            sessionId,
+            promptId,
+            ...metrics,
+        },
+    });
+}

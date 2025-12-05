@@ -74,6 +74,8 @@ export class RovoDevChatProvider {
         return this._currentPromptId;
     }
 
+    private _isFirstMessageForPrompt = false;
+
     private _pendingCancellation = false;
     public get pendingCancellation() {
         return this._pendingCancellation;
@@ -257,6 +259,7 @@ export class RovoDevChatProvider {
     private beginNewPrompt(overrideId?: string): void {
         this._currentPromptId = overrideId || v4();
         this._telemetryProvider.startNewPrompt(this._currentPromptId);
+        this._isFirstMessageForPrompt = true;
     }
 
     private async processResponse(sourceApi: StreamingApi, fetchOp: Promise<Response> | Response) {
@@ -373,6 +376,9 @@ export class RovoDevChatProvider {
         const fireTelemetry = sourceApi === 'chat';
         const webview = this._webView!;
 
+        // NEW: Attach provider timestamp
+        const providerReceivedTimestamp = performance.now();
+
         if (
             fireTelemetry &&
             response.event_kind === 'tool-return' &&
@@ -405,7 +411,19 @@ export class RovoDevChatProvider {
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.RovoDevResponseMessage,
                     message: response,
+                    // NEW: Add metadata for drift tracking
+                    metadata: {
+                        providerReceivedAt: providerReceivedTimestamp,
+                        providerSentAt: performance.now(),
+                        promptId: this._currentPromptId,
+                        isFirstMessage: this._isFirstMessageForPrompt,
+                    },
                 });
+
+                // NEW: Track first message flag
+                if (this._isFirstMessageForPrompt) {
+                    this._isFirstMessageForPrompt = false;
+                }
                 break;
 
             case 'retry-prompt':
@@ -634,6 +652,10 @@ export class RovoDevChatProvider {
         // that the generation of the response has finished
         await webview.postMessage({
             type: RovoDevProviderMessageType.CompleteMessage,
+            metadata: {
+                promptId: this._currentPromptId,
+                providerSentAt: performance.now(),
+            },
         });
     }
 

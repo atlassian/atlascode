@@ -488,6 +488,24 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await commands.executeCommand(Commands.OpenRovoDevLogFile);
                         break;
 
+                    case RovoDevViewResponseType.ReportFirstChunkRendered:
+                        this._telemetryProvider.fireTelemetryEvent('rovoDevFirstChunkRenderedEvent', e.promptId, {
+                            providerToReactDriftMs: e.reactReceivedAt - e.providerSentAt,
+                            reactRenderTimeMs: e.reactRenderedAt - e.reactReceivedAt,
+                            totalDriftMs: e.reactRenderedAt - e.providerReceivedAt,
+                            timeToFirstVisibleMs: e.reactRenderedAt,
+                        });
+                        break;
+
+                    case RovoDevViewResponseType.ReportLastChunkRendered:
+                        this._telemetryProvider.fireTelemetryEvent('rovoDevLastChunkRenderedEvent', e.promptId, {
+                            providerToReactDriftMs: e.reactReceivedAt - e.providerSentAt,
+                            reactRenderTimeMs: e.reactRenderedAt - e.reactReceivedAt,
+                            totalDriftMs: e.reactRenderedAt - e.providerReceivedAt,
+                            timeToLastVisibleMs: e.reactRenderedAt,
+                        });
+                        break;
+
                     default:
                         // @ts-expect-error ts(2339) - e here should be 'never'
                         this.processError(new Error(`Unknown message type: ${e.type}`));

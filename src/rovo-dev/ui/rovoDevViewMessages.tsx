@@ -36,6 +36,9 @@ export const enum RovoDevViewResponseType {
     FilterModifiedFilesByContent = 'filterModifiedFilesByContent',
     OpenExternalLink = 'openExternalLink',
     OpenRovoDevLogFile = 'openRovoDevLogFile',
+    // NEW: Analytics events
+    ReportFirstChunkRendered = 'reportFirstChunkRendered',
+    ReportLastChunkRendered = 'reportLastChunkRendered',
 }
 
 export type FileOperationType = 'modify' | 'create' | 'delete';
@@ -85,4 +88,25 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.YoloModeToggled, { value: boolean }>
     | ReducerAction<RovoDevViewResponseType.FilterModifiedFilesByContent, { files: ModifiedFile[] }>
     | ReducerAction<RovoDevViewResponseType.OpenExternalLink, { href: string }>
-    | ReducerAction<RovoDevViewResponseType.OpenRovoDevLogFile>;
+    | ReducerAction<RovoDevViewResponseType.OpenRovoDevLogFile>
+    // NEW: Analytics events
+    | ReducerAction<
+          RovoDevViewResponseType.ReportFirstChunkRendered,
+          {
+              promptId: string;
+              providerReceivedAt: number;
+              providerSentAt: number;
+              reactReceivedAt: number;
+              reactRenderedAt: number;
+          }
+      >
+    | ReducerAction<
+          RovoDevViewResponseType.ReportLastChunkRendered,
+          {
+              promptId: string;
+              providerReceivedAt: number;
+              providerSentAt: number;
+              reactReceivedAt: number;
+              reactRenderedAt: number;
+          }
+      >;

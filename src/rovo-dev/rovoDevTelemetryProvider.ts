@@ -4,7 +4,9 @@ import {
     rovoDevDetailsExpandedEvent,
     rovoDevFileChangedActionEvent,
     rovoDevFilesSummaryShownEvent,
+    rovoDevFirstChunkRenderedEvent,
     rovoDevGitPushActionEvent,
+    rovoDevLastChunkRenderedEvent,
     rovoDevNewSessionActionEvent,
     rovoDevPromptSentEvent,
     rovoDevStopActionEvent,
@@ -25,6 +27,8 @@ const rovoDevTelemetryEvents = {
     rovoDevDetailsExpandedEvent,
     rovoDevAiResultViewedEvent,
     rovoDevCreatePrButtonClickedEvent,
+    rovoDevFirstChunkRenderedEvent,
+    rovoDevLastChunkRenderedEvent,
 };
 
 type ParametersSkip3<T extends (...args: any) => any> =
@@ -96,6 +100,8 @@ export class RovoDevTelemetryProvider {
         // the following events can be fired multiple times during the same prompt
         delete this._firedTelemetryForCurrentPrompt['rovoDevFileChangedActionEvent'];
         delete this._firedTelemetryForCurrentPrompt['rovoDevCreatePrButtonClickedEvent'];
+        delete this._firedTelemetryForCurrentPrompt['rovoDevFirstChunkRenderedEvent'];
+        delete this._firedTelemetryForCurrentPrompt['rovoDevLastChunkRenderedEvent'];
 
         if (!this._firedTelemetryForCurrentPrompt[funcName]) {
             this._firedTelemetryForCurrentPrompt[funcName] = true;

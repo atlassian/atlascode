@@ -50,6 +50,14 @@ export type RovoDevResponseMessageType =
     | RovoDevToolReturnResponse
     | RovoDevRetryPromptResponse;
 
+// NEW: Metadata interface for drift tracking
+export interface RovoDevMessageMetadata {
+    providerReceivedAt: number; // performance.now() when provider got message from API
+    providerSentAt: number; // performance.now() when provider sent to React
+    promptId: string;
+    isFirstMessage?: boolean;
+}
+
 export type RovoDevProviderMessage =
     | ReducerAction<
           RovoDevProviderMessageType.RovoDevDisabled,
@@ -58,9 +66,12 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.SignalPromptSent, RovoDevPrompt & { echoMessage: boolean }>
     | ReducerAction<
           RovoDevProviderMessageType.RovoDevResponseMessage,
-          { message: RovoDevResponseMessageType | RovoDevResponseMessageType[] }
+          { message: RovoDevResponseMessageType | RovoDevResponseMessageType[]; metadata?: RovoDevMessageMetadata }
       >
-    | ReducerAction<RovoDevProviderMessageType.CompleteMessage>
+    | ReducerAction<
+          RovoDevProviderMessageType.CompleteMessage,
+          { metadata?: { promptId: string; providerSentAt: number } }
+      >
     | ReducerAction<RovoDevProviderMessageType.ShowDialog, { message: DialogMessage }>
     | ReducerAction<RovoDevProviderMessageType.ClearChat>
     | ReducerAction<
