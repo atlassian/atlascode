@@ -650,6 +650,12 @@ const RovoDevView: React.FC = () => {
         setPromptText(undefined);
     }, []);
 
+    const handlePromptTextInput = useCallback(() => {
+        postMessage({
+            type: RovoDevViewResponseType.ReportPromptTextInput,
+        });
+    }, [postMessage]);
+
     const executeSendFeedback = useCallback(
         (feedbackType: FeedbackType, feedack: string, canContact: boolean, includeTenMessages: boolean) => {
             let lastTenMessages: string[] | undefined = undefined;
@@ -937,6 +943,7 @@ const RovoDevView: React.FC = () => {
                                     handleTriggerFeedbackCommand={handleShowFeedbackForm}
                                     promptText={promptText}
                                     onPromptTextSet={handlePromptTextSet}
+                                    onPromptTextInput={handlePromptTextInput}
                                 />
                             </div>
                         </div>

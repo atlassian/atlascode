@@ -159,3 +159,14 @@ export function rovoDevAiResultViewedEvent(
         },
     });
 }
+
+export function rovoDevPromptTextInputEvent(
+    rovoDevEnv: RovoDevEnv,
+    appInstanceId: string,
+    sessionId: string,
+    promptId: string,
+) {
+    return trackEvent('rovoDevPromptTextInput', 'atlascode', {
+        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId },
+    });
+}

@@ -7,6 +7,7 @@ import {
     rovoDevGitPushActionEvent,
     rovoDevNewSessionActionEvent,
     rovoDevPromptSentEvent,
+    rovoDevPromptTextInputEvent,
     rovoDevStopActionEvent,
     rovoDevTechnicalPlanningShownEvent,
 } from './analytics/rovodevAnalyticsApi';
@@ -20,6 +21,7 @@ const rovoDevTelemetryEvents = {
     rovoDevGitPushActionEvent,
     rovoDevNewSessionActionEvent,
     rovoDevPromptSentEvent,
+    rovoDevPromptTextInputEvent,
     rovoDevStopActionEvent,
     rovoDevTechnicalPlanningShownEvent,
     rovoDevDetailsExpandedEvent,
