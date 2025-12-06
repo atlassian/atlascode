@@ -1,5 +1,5 @@
-import AddIcon from '@atlaskit/icon/core/add';
 import AiGenerativeTextSummaryIcon from '@atlaskit/icon/core/ai-generative-text-summary';
+import AngleBracketsIcon from '@atlaskit/icon/core/angle-brackets';
 import SendIcon from '@atlaskit/icon/core/arrow-up';
 import CrossIcon from '@atlaskit/icon/core/cross';
 import LockUnlockedIcon from '@atlaskit/icon/core/lock-unlocked';
@@ -11,6 +11,7 @@ import React from 'react';
 import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
 
 import { rovoDevTextareaStyles } from '../../rovoDevViewStyles';
+import PromptContextPopup from '../prompt-context-popup/PromptContextPopup';
 import PromptSettingsPopup from '../prompt-settings-popup/PromptSettingsPopup';
 import {
     createMonacoPromptEditor,
@@ -226,14 +227,15 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             >
                 <div style={{ display: 'flex', flexDirection: 'row', alignContent: 'center', gap: 4 }}>
                     <Tooltip content="Add context">
-                        <button
-                            className="prompt-button-secondary"
-                            onClick={() => onAddContext()}
-                            aria-label="Add context"
-                            disabled={disabled}
-                        >
-                            <AddIcon label="Add context" />
-                        </button>
+                        <PromptContextPopup
+                            items={[
+                                {
+                                    icon: <AngleBracketsIcon label="Add context icon" />,
+                                    label: 'Reference file from repository',
+                                    action: onAddContext,
+                                },
+                            ]}
+                        />
                     </Tooltip>
                     <Tooltip content="Preferences">
                         <PromptSettingsPopup
