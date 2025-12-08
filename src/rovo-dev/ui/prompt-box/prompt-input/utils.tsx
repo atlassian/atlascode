@@ -106,7 +106,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         description: 'Show saved prompts',
         command: {
             title: 'Prompts',
-            id: 'rovo-dev.triggerPromts',
+            id: 'rovo-dev.triggerPrompts',
             tooltip: 'Show saved prompts',
         },
     },
