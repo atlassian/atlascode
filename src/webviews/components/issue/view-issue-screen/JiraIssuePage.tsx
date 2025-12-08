@@ -166,7 +166,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     this.setState({
                         ...issueData,
                         ...{
-                            isErrorBannerOpen: shouldKeepErrorBanner ? true : false,
+                            isErrorBannerOpen: shouldKeepErrorBanner,
                             errorDetails: shouldKeepErrorBanner ? this.state.errorDetails : undefined,
                             isSomethingLoading: false,
                             loadingField: '',
