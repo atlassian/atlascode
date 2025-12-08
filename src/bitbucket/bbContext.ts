@@ -126,7 +126,9 @@ export class BitbucketContext extends Disposable {
 
             this._onDidChangeBitbucketContext.fire();
         } catch (err) {
-            err.subject_url = undefined; // remove potentially sensitive info
+            if (err?.subject_url !== undefined) {
+                err.subject_url = undefined; // remove potentially sensitive info
+            }
             Logger.error(err, 'Error refreshing Bitbucket repositories');
         }
     }
