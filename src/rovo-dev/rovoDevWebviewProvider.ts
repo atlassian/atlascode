@@ -1,4 +1,3 @@
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import * as fs from 'fs';
 import path from 'path';
 import { Commands } from 'src/constants';
@@ -27,7 +26,7 @@ import {
 
 import { GitErrorCodes } from '../typings/git';
 import { RovodevCommandContext } from './api/componentApi';
-import { DetailedSiteInfo, ExtensionApi } from './api/extensionApi';
+import { DetailedSiteInfo, ExtensionApi, MinimalIssue } from './api/extensionApi';
 import { RovoDevApiClient, RovoDevApiError, RovoDevHealthcheckResponse } from './client';
 import { buildErrorDetails } from './errorDetailsBuilder';
 import { RovoDevChatContextProvider } from './rovoDevChatContextProvider';
