@@ -5,6 +5,19 @@ import { RepoData } from '../../../../../lib/ipc/toUI/startWork';
 import { Branch } from '../../../../../typings/git';
 import { getAllBranches } from '../utils/branchUtils';
 
+const filterOptions = (options: Branch[], state: { inputValue: string }) => {
+    if (!state.inputValue) {
+        return options;
+    }
+    const lowerInput = state.inputValue.toLowerCase();
+    return options.filter((option) => option.name?.toLowerCase().includes(lowerInput));
+};
+
+const getOptionLabel = (option: Branch) => option.name || '';
+const getOptionKey = (option: Branch) => `${option.type}-${option.remote || 'local'}-${option.name}`;
+const isOptionEqualToValue = (option: Branch, value: Branch) =>
+    option.name === value.name && option.type === value.type;
+
 interface SourceBranchSelectorProps {
     selectedRepository: RepoData | undefined;
     sourceBranch: Branch;
@@ -29,8 +42,11 @@ export const SourceBranchSelector: React.FC<SourceBranchSelectorProps> = ({
             <Typography variant="body2">Source branch</Typography>
             <Autocomplete
                 options={allBranches}
-                getOptionLabel={(option) => option.name || ''}
+                getOptionLabel={getOptionLabel}
+                getOptionKey={getOptionKey}
+                isOptionEqualToValue={isOptionEqualToValue}
                 value={sourceBranch}
+                filterOptions={filterOptions}
                 onChange={handleSourceBranchChange}
                 renderInput={(params) => <TextField {...params} size="small" variant="outlined" />}
                 size="small"
