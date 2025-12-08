@@ -100,7 +100,7 @@ export class RovoDevTelemetryProvider {
     async fireTelemetryEvent(event: TelemetryEvent): Promise<void> {
         const eventId = `${event.subject}_${event.action}`;
 
-        if (!this.hasValidMetadata(event, this.metadata) && !this.canFire(eventId)) {
+        if (!this.hasValidMetadata(event, this.metadata) || !this.canFire(eventId)) {
             return;
         }
 
