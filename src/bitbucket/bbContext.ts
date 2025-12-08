@@ -93,37 +93,44 @@ export class BitbucketContext extends Disposable {
         this._pullRequestCache.clear();
         this._repoMap.clear();
 
-        await Promise.all(
-            Container.siteManager.getSitesAvailable(ProductBitbucket).map(async (site) => {
-                try {
-                    const bbApi = await Container.clientManager.bbClient(site);
-                    const mirrorHosts = await bbApi.repositories.getMirrorHosts();
-                    this._mirrorsCache.setItem(site.host, mirrorHosts);
-                } catch {
-                    // log and ignore error
-                    Logger.debug('Failed to fetch mirror sites');
+        try {
+            await Promise.all(
+                Container.siteManager.getSitesAvailable(ProductBitbucket).map(async (site) => {
+                    try {
+                        const bbApi = await Container.clientManager.bbClient(site);
+                        const mirrorHosts = await bbApi.repositories.getMirrorHosts();
+                        this._mirrorsCache.setItem(site.host, mirrorHosts);
+                    } catch {
+                        // log and ignore error
+                        Logger.debug('Failed to fetch mirror sites');
+                    }
+                }),
+            );
+
+            const repos = this.getAllRepositoriesRaw();
+            for (let i = 0; i < repos.length; i++) {
+                const repo: Repository = repos[i];
+                if (!repo.state.HEAD) {
+                    Logger.debug(`JS-1324 Forcing updateModelState on ${repo.rootUri}`);
+                    await repo.status();
                 }
-            }),
-        );
+                if (repo.state.remotes.length > 0) {
+                    this._repoMap.set(repo.rootUri.toString(), workspaceRepoFor(repo));
+                } else {
+                    Logger.warn(`JS-1324 no remotes found for ${repo.rootUri}`);
+                }
+            }
 
-        const repos = this.getAllRepositoriesRaw();
-        for (let i = 0; i < repos.length; i++) {
-            const repo: Repository = repos[i];
-            if (!repo.state.HEAD) {
-                Logger.debug(`JS-1324 Forcing updateModelState on ${repo.rootUri}`);
-                await repo.status();
+            const isBitbucketCloudRepo = this.getBitbucketCloudRepositories().length > 0;
+            this.setIsBitbucketCloudRepo(isBitbucketCloudRepo);
+
+            this._onDidChangeBitbucketContext.fire();
+        } catch (err) {
+            if (err?.subject_url !== undefined) {
+                err.subject_url = undefined; // remove potentially sensitive info
             }
-            if (repo.state.remotes.length > 0) {
-                this._repoMap.set(repo.rootUri.toString(), workspaceRepoFor(repo));
-            } else {
-                Logger.warn(`JS-1324 no remotes found for ${repo.rootUri}`);
-            }
+            Logger.error(err, 'Error refreshing Bitbucket repositories');
         }
-
-        const isBitbucketCloudRepo = this.getBitbucketCloudRepositories().length > 0;
-        this.setIsBitbucketCloudRepo(isBitbucketCloudRepo);
-
-        this._onDidChangeBitbucketContext.fire();
     }
 
     private updateUsers(sites: DetailedSiteInfo[]) {

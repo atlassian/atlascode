@@ -2,3 +2,4 @@
 // This file is kept separate to use in `tsx` files
 export { AuthInfo, UserInfo, DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 export { ValidBasicAuthSiteData } from 'src/atlclients/clientManager';
+export { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
