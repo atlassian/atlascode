@@ -4,7 +4,7 @@
 
 ### Improvements
 
-- Added support for Rovo Dev /usage command
+- Added support for Rovo Dev /usage and /prompts commands
 - Add saving of last chosen issue type
 
 ### Bug Fixes
