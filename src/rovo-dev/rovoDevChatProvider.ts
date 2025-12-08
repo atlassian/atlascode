@@ -70,6 +70,8 @@ export class RovoDevChatProvider {
         }
     }
 
+    public fullContextMode = false;
+
     private _currentPromptId: string = '';
     public get currentPromptId() {
         return this._currentPromptId;
@@ -706,8 +708,10 @@ export class RovoDevChatProvider {
                 content: x.url,
             }));
 
+        const promptText = this.fullContextMode ? `use fullcontext: ${prompt.text}` : prompt.text;
+
         return {
-            message: prompt.text,
+            message: promptText,
             enable_deep_plan: prompt.enable_deep_plan,
             context: Array<RovoDevChatRequestContext>().concat(fileContext).concat(jiraContext),
         };

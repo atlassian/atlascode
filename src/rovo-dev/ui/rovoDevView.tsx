@@ -54,6 +54,7 @@ const RovoDevView: React.FC = () => {
     const [isDeepPlanCreated, setIsDeepPlanCreated] = useState(false);
     const [isDeepPlanToggled, setIsDeepPlanToggled] = useState(false);
     const [isYoloModeToggled, setIsYoloModeToggled] = useState(IsBoysenberry);
+    const [isFullContextModeToggled, setIsFullContextModeToggled] = useState(false);
     const [workspacePath, setWorkspacePath] = useState<string>('');
     const [homeDir, setHomeDir] = useState<string>('');
     const [history, setHistory] = useState<Response[]>([]);
@@ -69,6 +70,7 @@ const RovoDevView: React.FC = () => {
     const [jiraWorkItems, setJiraWorkItems] = useState<MinimalIssue<DetailedSiteInfo>[] | undefined>(undefined);
     const [pendingFilesForFiltering, setPendingFilesForFiltering] = useState<ModifiedFile[] | null>(null);
     const [thinkingBlockEnabled, setThinkingBlockEnabled] = useState(true);
+    const [isAtlassianUser, setIsAtlassianUser] = useState(false);
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -306,10 +308,10 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.ProviderReady:
                     setWorkspacePath(event.workspacePath || '');
                     setHomeDir(event.homeDir || '');
-                    if (event.yoloMode !== undefined) {
+                    if (!IsBoysenberry && event.yoloMode !== undefined) {
                         setIsYoloModeToggled(event.yoloMode);
                     }
-                    setCurrentState({ state: 'WaitingForPrompt' });
+                    setIsAtlassianUser(event.isAtlassianUser);
                     break;
 
                 case RovoDevProviderMessageType.SetDebugPanel:
@@ -440,6 +442,12 @@ const RovoDevView: React.FC = () => {
                     if (event.state.isYoloModeToggled !== undefined) {
                         setIsYoloModeToggled(event.state.isYoloModeToggled);
                     }
+                    if (event.state.isFullContextModeToggled !== undefined) {
+                        setIsFullContextModeToggled(event.state.isFullContextModeToggled);
+                    }
+                    if (event.state.isAtlassianUser !== undefined) {
+                        setIsAtlassianUser(event.state.isAtlassianUser);
+                    }
                     if (event.state.promptContextCollection) {
                         setPromptContextCollection(event.state.promptContextCollection);
                     }
@@ -495,9 +503,20 @@ const RovoDevView: React.FC = () => {
             isDeepPlanCreated,
             isDeepPlanToggled,
             isYoloModeToggled,
+            isFullContextModeToggled,
+            isAtlassianUser,
             promptContextCollection,
         });
-    }, [history, isDeepPlanCreated, isDeepPlanToggled, isYoloModeToggled, promptContextCollection, setState]);
+    }, [
+        history,
+        isDeepPlanCreated,
+        isDeepPlanToggled,
+        isYoloModeToggled,
+        isFullContextModeToggled,
+        isAtlassianUser,
+        promptContextCollection,
+        setState,
+    ]);
 
     const sendPrompt = useCallback(
         (text: string): boolean => {
@@ -833,12 +852,18 @@ const RovoDevView: React.FC = () => {
 
     const onYoloModeToggled = useCallback(() => setIsYoloModeToggled((prev) => !prev), [setIsYoloModeToggled]);
 
+    const onFullContextModeToggled = useCallback(
+        () => setIsFullContextModeToggled((prev) => !prev),
+        [setIsFullContextModeToggled],
+    );
+
     const onLinkClick = React.useCallback(
         (href: string) => {
             postMessage({ type: RovoDevViewResponseType.OpenExternalLink, href });
         },
         [postMessage],
     );
+
     React.useEffect(() => {
         // the event below (YoloModeToggled) with value true automatically approves any pending confirmation
         if (isYoloModeToggled) {
@@ -850,6 +875,13 @@ const RovoDevView: React.FC = () => {
             value: isYoloModeToggled,
         });
     }, [postMessage, isYoloModeToggled]);
+
+    React.useEffect(() => {
+        postMessage({
+            type: RovoDevViewResponseType.FullContextModeToggled,
+            value: isFullContextModeToggled,
+        });
+    }, [postMessage, isFullContextModeToggled]);
 
     const hidePromptBox =
         currentState.state === 'Disabled' ||
@@ -956,8 +988,12 @@ const RovoDevView: React.FC = () => {
                                     currentState={currentState}
                                     isDeepPlanEnabled={isDeepPlanToggled}
                                     isYoloModeEnabled={isYoloModeToggled}
+                                    isFullContextEnabled={isFullContextModeToggled}
                                     onDeepPlanToggled={() => setIsDeepPlanToggled((prev) => !prev)}
                                     onYoloModeToggled={IsBoysenberry ? undefined : () => onYoloModeToggled()}
+                                    onFullContextToggled={
+                                        isAtlassianUser ? () => onFullContextModeToggled() : undefined
+                                    }
                                     onSend={sendPrompt}
                                     onCancel={cancelResponse}
                                     onAddContext={onAddContext}

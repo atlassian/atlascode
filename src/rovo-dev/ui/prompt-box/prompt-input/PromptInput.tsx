@@ -4,6 +4,7 @@ import SendIcon from '@atlaskit/icon/core/arrow-up';
 import CrossIcon from '@atlaskit/icon/core/cross';
 import LockUnlockedIcon from '@atlaskit/icon/core/lock-unlocked';
 import VideoStopOverlayIcon from '@atlaskit/icon/core/video-stop-overlay';
+import TelescopeIcon from '@atlaskit/icon-lab/core/telescope';
 import { token } from '@atlaskit/tokens';
 import Tooltip from '@atlaskit/tooltip';
 import * as monaco from 'monaco-editor';
@@ -32,8 +33,10 @@ interface PromptInputBoxProps {
     currentState: NonDisabledState;
     isDeepPlanEnabled: boolean;
     isYoloModeEnabled: boolean;
+    isFullContextEnabled: boolean;
     onDeepPlanToggled?: () => void;
     onYoloModeToggled?: () => void;
+    onFullContextToggled?: () => void;
     onSend: (text: string) => boolean;
     onCancel: () => void;
     onAddContext: () => void;
@@ -103,8 +106,10 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     currentState,
     isDeepPlanEnabled,
     isYoloModeEnabled,
+    isFullContextEnabled,
     onDeepPlanToggled,
     onYoloModeToggled,
+    onFullContextToggled,
     onSend,
     onCancel,
     onAddContext,
@@ -239,8 +244,10 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         <PromptSettingsPopup
                             onDeepPlanToggled={onDeepPlanToggled}
                             onYoloModeToggled={onYoloModeToggled}
+                            onFullContextToggled={onFullContextToggled}
                             isDeepPlanEnabled={isDeepPlanEnabled}
                             isYoloModeEnabled={isYoloModeEnabled}
+                            isFullContextEnabled={isFullContextEnabled}
                             onClose={() => {}}
                         />
                     </Tooltip>
@@ -252,6 +259,14 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                             </div>
                         </Tooltip>
                     )}
+                    {isFullContextEnabled && onFullContextToggled && (
+                        <Tooltip content="Disable Full-Context mode">
+                            <div className="deep-plan-indicator" onClick={() => onFullContextToggled()}>
+                                <TelescopeIcon label="full-context mode icon" />
+                                <CrossIcon size="small" label="disable full-context mode" />
+                            </div>
+                        </Tooltip>
+                    )}{' '}
                     {isYoloModeEnabled && onYoloModeToggled && (
                         <Tooltip content="Disable YOLO mode">
                             <div className="deep-plan-indicator" onClick={() => onYoloModeToggled()}>

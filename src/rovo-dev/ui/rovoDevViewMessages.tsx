@@ -33,6 +33,7 @@ export const enum RovoDevViewResponseType {
     CheckFileExists = 'checkFileExists',
     ToolPermissionChoiceSubmit = 'toolPermissionChoiceSubmit',
     YoloModeToggled = 'yoloModeToggled',
+    FullContextModeToggled = 'fullContextModeToggled',
     FilterModifiedFilesByContent = 'filterModifiedFilesByContent',
     OpenExternalLink = 'openExternalLink',
     OpenRovoDevLogFile = 'openRovoDevLogFile',
@@ -83,6 +84,7 @@ export type RovoDevViewResponse =
           { choice: ToolPermissionDialogChoice; toolCallId: string }
       >
     | ReducerAction<RovoDevViewResponseType.YoloModeToggled, { value: boolean }>
+    | ReducerAction<RovoDevViewResponseType.FullContextModeToggled, { value: boolean }>
     | ReducerAction<RovoDevViewResponseType.FilterModifiedFilesByContent, { files: ModifiedFile[] }>
     | ReducerAction<RovoDevViewResponseType.OpenExternalLink, { href: string }>
     | ReducerAction<RovoDevViewResponseType.OpenRovoDevLogFile>;
