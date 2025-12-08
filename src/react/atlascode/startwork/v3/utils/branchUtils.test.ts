@@ -7,6 +7,7 @@ jest.mock('mustache', () => ({
 
 const mockMustacheRender = require('mustache').default.render;
 
+import { RepoData } from '../../../../../lib/ipc/toUI/startWork';
 import { generateBranchName, getAllBranches, getBranchTypeForRepo, getDefaultSourceBranch } from './branchUtils';
 
 describe('branchUtils', () => {
@@ -21,7 +22,7 @@ describe('branchUtils', () => {
             { name: 'origin/develop', type: 1, remote: 'origin' },
         ],
         developmentBranch: 'develop',
-    } as any;
+    } as RepoData;
 
     describe('getAllBranches', () => {
         it('should return empty array when no repoData', () => {
@@ -39,6 +40,24 @@ describe('branchUtils', () => {
                 'origin/main',
                 'origin/develop',
             ]);
+        });
+
+        it('should deduplicate branches with same type, remote, name, and commit', () => {
+            const repoDataWithDuplicates = {
+                localBranches: [
+                    { name: 'main', type: 0, commit: 'abc123' },
+                    { name: 'origin/main', type: 1, remote: 'origin', commit: 'abc123' },
+                    { name: 'develop', type: 0, commit: 'def456' },
+                ],
+                remoteBranches: [
+                    { name: 'main', type: 0, commit: 'abc123' },
+                    { name: 'origin/main', type: 1, remote: 'origin', commit: 'abc123' },
+                ],
+            } as RepoData;
+
+            const result = getAllBranches(repoDataWithDuplicates);
+            expect(result).toHaveLength(3);
+            expect(result.map((b) => b.name)).toEqual(['main', 'develop', 'origin/main']);
         });
     });
 
