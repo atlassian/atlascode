@@ -130,6 +130,17 @@ export interface RovoDevUsageResponse {
     };
 }
 
+export interface RovoDevPromptsResponse {
+    event_kind: 'prompts';
+    data: {
+        prompts: {
+            name: string;
+            description: string;
+            content_file: string;
+        }[];
+    };
+}
+
 export type RovoDevResponse =
     | RovoDevParsingError
     | RovoDevUserPromptResponse
@@ -144,6 +155,7 @@ export type RovoDevResponse =
     | RovoDevOnCallToolStartResponse
     | RovoDevStatusResponse
     | RovoDevUsageResponse
+    | RovoDevPromptsResponse
     | RovoDevCloseResponse
     | RovoDevReplayEndResponse;
 

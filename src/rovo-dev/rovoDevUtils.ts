@@ -2,7 +2,12 @@ import * as fs from 'fs';
 import path from 'path';
 import { window, workspace } from 'vscode';
 
-import { RovoDevMessageWithCtaLink, RovoDevStatusResponse, RovoDevUsageResponse } from './client';
+import {
+    RovoDevMessageWithCtaLink,
+    RovoDevPromptsResponse,
+    RovoDevStatusResponse,
+    RovoDevUsageResponse,
+} from './client';
 
 export type SupportedConfigFiles = 'config.yml' | 'mcp.json' | '.agent.md' | 'rovodev.log';
 
@@ -142,6 +147,22 @@ export function usageJsonResponseToMarkdown(response: RovoDevUsageResponse): {
     }
 
     return { usage_response: buffer, alert_message: data.exceeded_message };
+}
+
+export function promptsJsonResponseToMarkdown(response: RovoDevPromptsResponse): string {
+    const data = response.data.prompts;
+
+    if (!Array.isArray(data) || data.length === 0) {
+        return '';
+    }
+
+    let buffer = '';
+
+    for (const prompt of data) {
+        buffer += `**${prompt.name}**\n- ${prompt.description}\n- ${prompt.content_file}\n\n`;
+    }
+
+    return buffer;
 }
 
 function formatText(text: string, cliTags: string[], links: { text: string; link: string }[]) {
