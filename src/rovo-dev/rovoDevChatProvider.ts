@@ -23,6 +23,7 @@ import {
 } from './rovoDevTypes';
 import {
     parseCustomCliTagsForMarkdown,
+    promptsJsonResponseToMarkdown,
     readLastNLogLines,
     statusJsonResponseToMarkdown,
     usageJsonResponseToMarkdown,
@@ -563,6 +564,18 @@ export class RovoDevChatProvider {
                         },
                     });
                 }
+                break;
+
+            case 'prompts':
+                await webview.postMessage({
+                    type: RovoDevProviderMessageType.ShowDialog,
+                    message: {
+                        type: 'info',
+                        title: 'Prompts response',
+                        text: promptsJsonResponseToMarkdown(response),
+                        event_kind: '_RovoDevDialog',
+                    },
+                });
                 break;
 
             case 'close':

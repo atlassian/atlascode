@@ -83,16 +83,16 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         command: { title: 'Clear', id: 'rovo-dev.clearChat', tooltip: 'Clear the chat' },
     },
     {
-        label: '/prune',
-        insertText: '/prune',
-        description: 'Prune the chat',
-        command: { title: 'Prune', id: 'rovo-dev.pruneChat', tooltip: 'Prune the chat' },
-    },
-    {
         label: '/copy',
         insertText: '/copy',
         description: 'Copy the last response to clipboard',
         command: { title: 'Copy', id: 'rovo-dev.copyResponse', tooltip: 'Copy the last response to clipboard' },
+    },
+    {
+        label: '/feedback',
+        insertText: '/feedback',
+        description: 'Provide feedback on Rovo Dev',
+        command: { title: 'Feedback', id: 'rovo-dev.triggerFeedback', tooltip: 'Provide feedback on Rovo Dev' },
     },
     {
         label: '/memory',
@@ -101,10 +101,20 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         command: { title: 'Agent Memory', id: 'rovo-dev.agentMemory', tooltip: 'Show agent memory' },
     },
     {
-        label: '/yolo',
-        insertText: '/yolo',
-        description: 'Toggle tool confirmations',
-        command: { title: 'Yolo Mode', id: 'rovo-dev.toggleYoloMode', tooltip: 'Toggle tool confirmations' },
+        label: '/prompts',
+        insertText: '/prompts',
+        description: 'Show saved prompts',
+        command: {
+            title: 'Prompts',
+            id: 'rovo-dev.triggerPromts',
+            tooltip: 'Show saved prompts',
+        },
+    },
+    {
+        label: '/prune',
+        insertText: '/prune',
+        description: 'Prune the chat',
+        command: { title: 'Prune', id: 'rovo-dev.pruneChat', tooltip: 'Prune the chat' },
     },
     {
         label: '/status',
@@ -127,10 +137,10 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         },
     },
     {
-        label: '/feedback',
-        insertText: '/feedback',
-        description: 'Provide feedback on Rovo Dev',
-        command: { title: 'Feedback', id: 'rovo-dev.triggerFeedback', tooltip: 'Provide feedback on Rovo Dev' },
+        label: '/yolo',
+        insertText: '/yolo',
+        description: 'Toggle tool confirmations',
+        command: { title: 'Yolo Mode', id: 'rovo-dev.toggleYoloMode', tooltip: 'Toggle tool confirmations' },
     },
 ];
 
@@ -220,6 +230,12 @@ export function setupMonacoCommands(
     monaco.editor.registerCommand('rovo-dev.agentMemory', () => {
         handleMemoryCommand();
         editor.setValue('');
+    });
+
+    monaco.editor.registerCommand('rovo-dev.triggerPrompts', () => {
+        if (onSend('/prompts')) {
+            editor.setValue('');
+        }
     });
 
     monaco.editor.registerCommand('rovo-dev.triggerStatus', () => {
