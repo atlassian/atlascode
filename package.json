@@ -725,7 +725,7 @@
                     "when": "atlascode:isBitbucketCloudRepo && config.atlascode.bitbucket.enabled",
                     "group": "navigation"
                 }
-			],
+            ],
             "view/title": [
                 {
                     "command": "atlascode.rovodev.sessionHistory",
@@ -1719,7 +1719,7 @@
         "@atlassianlabs/guipi-jira-components": "^3.2.0",
         "@atlassianlabs/jira-metaui-client": "^2.0.0",
         "@atlassianlabs/jira-metaui-transformer": "^2.0.0",
-        "@atlassianlabs/jira-pi-client": "2.0.1",
+        "@atlassianlabs/jira-pi-client": "^2.0.2",
         "@atlassianlabs/jira-pi-common-models": "^2.0.0",
         "@atlassianlabs/jira-pi-meta-models": "^2.0.0",
         "@atlassianlabs/pi-client-common": "^2.0.0",
@@ -1901,7 +1901,7 @@
         },
         "@atlaskit/teams-client": {
             "@sentry/browser": "^7.119.2"
-        },        
+        },
         "@atlaskit/editor-common": {
             "@sentry/browser": "^7.119.2",
             "markdown-it": "^14.1.1"
