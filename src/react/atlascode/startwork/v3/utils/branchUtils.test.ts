@@ -57,7 +57,7 @@ describe('branchUtils', () => {
 
             const result = getAllBranches(repoDataWithDuplicates);
             expect(result).toHaveLength(3);
-            expect(result.map((b) => b.name)).toEqual(['main', 'develop', 'origin/main']);
+            expect(result.map((b) => b.name)).toEqual(['main', 'origin/main', 'develop']);
         });
     });
 
