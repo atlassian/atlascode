@@ -14,7 +14,7 @@ const filterOptions = (options: Branch[], state: { inputValue: string }) => {
 };
 
 const getOptionLabel = (option: Branch) => option.name || '';
-const getOptionKey = (option: Branch) => `${option.type}-${option.name}`;
+const getOptionKey = (option: Branch) => `${option.type}-${option.remote || 'local'}-${option.name}`;
 const isOptionEqualToValue = (option: Branch, value: Branch) =>
     option.name === value.name && option.type === value.type;
 
