@@ -983,17 +983,23 @@ const RovoDevView: React.FC = () => {
                 {!hidePromptBox && (
                     <div className="input-section-container">
                         {isFeedbackFormVisible && (
-                            <FeedbackForm
-                                type={feedbackType}
-                                onSubmit={(feedbackType, feedback, canContact, includeTenMessages) => {
-                                    setFeedbackType(undefined);
-                                    executeSendFeedback(feedbackType, feedback, canContact, includeTenMessages);
+                            <div
+                                style={{
+                                    padding: '8px 16px',
                                 }}
-                                onCancel={() => {
-                                    setFeedbackType(undefined);
-                                    setIsFeedbackFormVisible(false);
-                                }}
-                            />
+                            >
+                                <FeedbackForm
+                                    type={feedbackType}
+                                    onSubmit={(feedbackType, feedback, canContact, includeTenMessages) => {
+                                        setFeedbackType(undefined);
+                                        executeSendFeedback(feedbackType, feedback, canContact, includeTenMessages);
+                                    }}
+                                    onCancel={() => {
+                                        setFeedbackType(undefined);
+                                        setIsFeedbackFormVisible(false);
+                                    }}
+                                />
+                            </div>
                         )}
                         <div className="input-section-container">
                             <UpdatedFilesComponent
