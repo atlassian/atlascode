@@ -100,7 +100,6 @@ export default class WatchesForm extends React.Component<MyProps, MyState> {
 
         const watcherList = this.props.watches.watchers.map((watcher, index) => {
             const avatar = watcher.avatarUrls && watcher.avatarUrls['48x48'] ? watcher.avatarUrls['48x48'] : '';
-            console.debug('Rendering watcher:', watcher);
             return (
                 <div key={index} className="ac-inline-watcher ac-inline-watcher-hover">
                     <Avatar size="small" src={avatar} />

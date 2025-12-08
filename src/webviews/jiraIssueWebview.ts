@@ -1212,10 +1212,10 @@ export class JiraIssueWebview
                             if (foundIndex > -1) {
                                 this._editUIData.fieldValues['watches'].watchers.splice(foundIndex, 1);
                             }
-                            const isCurentUserWatcher = isCloud
+                            const isCurrentUserWatcher = isCloud
                                 ? msgWatcherAccountId === this._currentUser.accountId
                                 : msgWatcherKey === this._currentUser.key;
-                            if (isCurentUserWatcher) {
+                            if (isCurrentUserWatcher) {
                                 this._editUIData.fieldValues['watches'].isWatching = false;
                             }
 
