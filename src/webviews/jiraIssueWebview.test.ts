@@ -1241,7 +1241,40 @@ describe('JiraIssueWebview', () => {
 
             await jiraIssueWebview['onMessageReceived'](msg);
 
-            expect(mockJiraClient.removeWatcher).toHaveBeenCalledWith(mockIssue.key, watcher.accountId);
+            expect(mockJiraClient.removeWatcher).toHaveBeenCalledWith(mockIssue.key, { accountId: watcher.accountId });
+            expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchers).not.toContain(watcher);
+            expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchCount).toBe(0);
+            expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].isWatching).toBe(false);
+            expect(postMessageSpy).toHaveBeenCalled();
+        });
+
+        test('should handle removeWatcher action(Jira DC)', async () => {
+            const watcher = {
+                key: 'testUserKey',
+                accountId: 'user-1',
+                displayName: 'Test User',
+            };
+            const siteDetailsDC = { ...mockSiteDetails, isCloud: false };
+            const msg = {
+                action: 'removeWatcher',
+                site: siteDetailsDC,
+                issueKey: mockIssue.key,
+                watcher,
+                nonce: 'nonce-123',
+            };
+
+            jiraIssueWebview['_editUIData'].fieldValues['watches'] = {
+                watchCount: 1,
+                watchers: [watcher],
+                isWatching: true,
+            };
+            jiraIssueWebview['_currentUser'] = { key: 'testUserKey' } as any;
+
+            const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+
+            await jiraIssueWebview['onMessageReceived'](msg);
+
+            expect(mockJiraClient.removeWatcher).toHaveBeenCalledWith(mockIssue.key, { username: watcher.key });
             expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchers).not.toContain(watcher);
             expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchCount).toBe(0);
             expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].isWatching).toBe(false);
