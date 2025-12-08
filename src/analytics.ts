@@ -300,8 +300,9 @@ export async function searchIssuesEvent(product: Product): Promise<TrackEvent> {
 }
 
 export async function issueOpenRovoDevEvent(site: DetailedSiteInfo, source?: string): Promise<TrackEvent> {
+    const isEntitled = (await Container.rovoDevEntitlementChecker.checkEntitlement()).isEntitled;
     return instanceTrackEvent(site, 'openRovoDev', 'issue', {
-        attributes: { issueSource: source || '' },
+        attributes: { issueSource: source || '', isEntitled: isEntitled },
     });
 }
 
