@@ -2,6 +2,7 @@ import AiGenerativeTextSummaryIcon from '@atlaskit/icon/core/ai-generative-text-
 import CrossIcon from '@atlaskit/icon/core/cross';
 import CustomizeIcon from '@atlaskit/icon/core/customize';
 import LockUnlockedIcon from '@atlaskit/icon/core/lock-unlocked';
+import TelescopeIcon from '@atlaskit/icon-lab/core/telescope';
 import Popup, { PopupComponentProps } from '@atlaskit/popup';
 import Toggle from '@atlaskit/toggle';
 import React from 'react';
@@ -92,7 +93,7 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                     )}
                     {onFullContextToggled && (
                         <PromptSettingsItem
-                            icon={<LockUnlockedIcon label="Full-Context mode" />}
+                            icon={<TelescopeIcon label="Full-Context mode" />}
                             label="Full-Context mode"
                             description="Toggle Full-Context mode to enable the agent to research documents and historical data, helping it better understand the problem to solve."
                             action={onFullContextToggled}

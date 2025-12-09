@@ -149,6 +149,10 @@ export class RovoDevChatProvider {
         const requestPayload = this.preparePayloadForChatRequest(this._currentPrompt);
 
         if (!isCommand) {
+            if (this.fullContextMode) {
+                requestPayload.message = `use fullcontext: ${requestPayload.message}`;
+            }
+
             this.addUndoContextToPrompt(requestPayload, revertedFiles);
         }
 
@@ -708,10 +712,8 @@ export class RovoDevChatProvider {
                 content: x.url,
             }));
 
-        const promptText = this.fullContextMode ? `use fullcontext: ${prompt.text}` : prompt.text;
-
         return {
-            message: promptText,
+            message: prompt.text,
             enable_deep_plan: prompt.enable_deep_plan,
             context: Array<RovoDevChatRequestContext>().concat(fileContext).concat(jiraContext),
         };
