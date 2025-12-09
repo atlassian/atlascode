@@ -336,10 +336,8 @@ export class RovoDevChatProvider {
         // last response of the stream -> fire performance telemetry event
         telemetryProvider?.perfLogger.promptLastMessageReceived(this._currentPromptId);
 
-        // Store timestamp for render time measurement (only for non-replay)
-        if (sourceApi === 'chat') {
-            this._lastMessageSentTime = performance.now();
-        }
+        // Store timestamp for render time measurement (for both chat and replay)
+        this._lastMessageSentTime = performance.now();
 
         for (const msg of parser.flush()) {
             await this.processRovoDevResponse(sourceApi, msg);
