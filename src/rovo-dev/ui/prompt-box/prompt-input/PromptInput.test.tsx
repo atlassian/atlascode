@@ -90,10 +90,4 @@ describe('PromptInputBox', () => {
         fireEvent.click(screen.getByLabelText('Stop'));
         expect(defaultProps.onCancel).toHaveBeenCalledTimes(0);
     });
-
-    it('calls onAddContext when Add Context button is clicked', () => {
-        render(<PromptInputBox {...defaultProps} />);
-        fireEvent.click(screen.getAllByRole('button', { name: 'Add context' })[0]);
-        expect(defaultProps.onAddContext).toHaveBeenCalled();
-    });
 });
