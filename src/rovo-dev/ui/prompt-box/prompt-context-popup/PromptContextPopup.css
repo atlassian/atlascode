@@ -30,8 +30,11 @@
 }
 
 .popup-item-container {
-    background-color: var(--vscode-dropdown-background);
+    background-color: var(--vscode-editor-background);
     border: 1px solid var(--vscode-editorWidget-border);
+    border-radius: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
 }
 
 .popup-item-container > button {

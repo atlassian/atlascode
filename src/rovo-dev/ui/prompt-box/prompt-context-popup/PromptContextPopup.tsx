@@ -22,7 +22,8 @@ const PromptContextPopup: React.FC<PromptContextPopupProps> = ({ items }) => {
     return (
         <DropdownMenu
             isOpen={isOpen}
-            css={{ border: '1px solid var(--vscode-editorWidget-border)' }}
+            shouldRenderToParent={true}
+            spacing="compact"
             trigger={({ triggerRef, isSelected, testId, ...providedProps }) => (
                 <>
                     {isOpen ? (

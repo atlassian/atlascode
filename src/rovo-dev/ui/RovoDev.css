@@ -55,6 +55,10 @@ body {
     height: 100vh;
     margin: auto;
     max-width: 800px;
+
+
+    /* atlaskit overrides */
+    --ds-surface-overlay: transparent;
 }
 
 #rovoDevLogo > path:first-child {

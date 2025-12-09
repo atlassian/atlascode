@@ -226,7 +226,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                 }}
             >
                 <div style={{ display: 'flex', flexDirection: 'row', alignContent: 'center', gap: 4 }}>
-                    <Tooltip content="Add context">
+                    <Tooltip content="Add">
                         <PromptContextPopup
                             items={[
                                 {
