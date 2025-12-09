@@ -347,9 +347,7 @@ export abstract class AbstractIssueEditorPage<
                     isErrorBannerOpen: true,
                     errorDetails: {
                         title: 'Session Expired',
-                        errorMessages: [
-                            `You have been logged out. Please close this tab and log in again to continue editing`,
-                        ],
+                        message: 'You have been logged out. Please close this tab and log in again to continue editing',
                     },
                 });
                 break;
