@@ -128,6 +128,14 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         await Container.context.globalState.update('startWorkWithRovoDev', enabled);
     }
 
+    async getPushBranchPreference(): Promise<boolean> {
+        return Container.context.globalState.get<boolean>('startWorkPushBranchToRemote', true);
+    }
+
+    async updatePushBranchPreference(enabled: boolean): Promise<void> {
+        await Container.context.globalState.update('startWorkPushBranchToRemote', enabled);
+    }
+
     async openRovoDev(issue: MinimalIssue<DetailedSiteInfo>): Promise<void> {
         const issueUrl = `${issue.siteDetails.baseLinkUrl}/browse/${issue.key}`;
         await Container.rovodevWebviewProvider.setPromptTextWithFocus('Work on the attached Jira work item', {

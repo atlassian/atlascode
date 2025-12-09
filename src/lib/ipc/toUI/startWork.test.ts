@@ -5,6 +5,10 @@ describe('StartWork ToUI Types', () => {
         expect(StartWorkMessageType.RovoDevPreferenceResponse).toBe('rovoDevPreferenceResponse');
     });
 
+    it('should have PushBranchPreferenceResponse message type', () => {
+        expect(StartWorkMessageType.PushBranchPreferenceResponse).toBe('pushBranchPreferenceResponse');
+    });
+
     it('should have emptyStartWorkInitMessage with isRovoDevEnabled field', () => {
         expect(emptyStartWorkInitMessage).toHaveProperty('isRovoDevEnabled');
         expect(emptyStartWorkInitMessage.isRovoDevEnabled).toBe(false);
@@ -26,5 +30,7 @@ describe('StartWork ToUI Types', () => {
     it('should handle StartWorkMessageType enum values', () => {
         expect(typeof StartWorkMessageType.RovoDevPreferenceResponse).toBe('string');
         expect(StartWorkMessageType.RovoDevPreferenceResponse).toBeTruthy();
+        expect(typeof StartWorkMessageType.PushBranchPreferenceResponse).toBe('string');
+        expect(StartWorkMessageType.PushBranchPreferenceResponse).toBeTruthy();
     });
 });
