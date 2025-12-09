@@ -43,7 +43,17 @@ export const ChatStreamMessageRenderer = React.memo<ChatStreamMessageRendererPro
             if (currentState.state === 'WaitingForPrompt') {
                 return -1;
             }
-            return chatHistory.findLastIndex((msg) => Array.isArray(msg));
+
+            const msgIdx = chatHistory.findLastIndex(
+                (msg) => Array.isArray(msg) || msg?.event_kind === '_RovoDevUserPrompt',
+            );
+
+            const msg = chatHistory[msgIdx];
+            if (msgIdx === -1 || (!Array.isArray(msg) && msg?.event_kind === '_RovoDevUserPrompt')) {
+                return -1;
+            }
+
+            return msgIdx;
         }, [chatHistory, currentState.state]);
 
         return chatHistory.map((block, idx) => {
