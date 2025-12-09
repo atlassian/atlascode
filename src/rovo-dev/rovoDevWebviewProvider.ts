@@ -504,6 +504,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await commands.executeCommand(Commands.OpenRovoDevLogFile);
                         break;
 
+                    case RovoDevViewResponseType.MessageRendered:
+                        this._chatProvider.signalMessageRendered(e.promptId);
+                        break;
+
                     default:
                         // @ts-expect-error ts(2339) - e here should be 'never'
                         this.processError(new Error(`Unknown message type: ${e.type}`));

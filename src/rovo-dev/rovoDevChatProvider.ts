@@ -50,6 +50,7 @@ export class RovoDevChatProvider {
     private _webView: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse> | undefined;
 
     private _replayInProgress = false;
+    private _lastMessageSentTime: number | undefined;
 
     private get isDebugPanelEnabled() {
         return this.extensionApi.config.isDebugPanelEnabled();
@@ -106,6 +107,7 @@ export class RovoDevChatProvider {
     public shutdown() {
         this._rovoDevApiClient = undefined;
         this._pendingPrompt = undefined;
+        this._lastMessageSentTime = undefined;
     }
 
     public executeChat(prompt: RovoDevPrompt, revertedFiles: string[]) {
@@ -239,8 +241,12 @@ export class RovoDevChatProvider {
             // send a fake 'CompleteMessage' to tell the view the prompt isn't pending anymore
             await webview.postMessage({
                 type: RovoDevProviderMessageType.CompleteMessage,
+                promptId: this._currentPromptId,
             });
         }
+
+        // Clear the render time tracking on cancellation
+        this._lastMessageSentTime = undefined;
 
         // don't instrument the cancellation if it's coming from a 'New session' action
         // also, don't instrument the cancellation if it's done before initialization
@@ -329,6 +335,11 @@ export class RovoDevChatProvider {
 
         // last response of the stream -> fire performance telemetry event
         telemetryProvider?.perfLogger.promptLastMessageReceived(this._currentPromptId);
+
+        // Store timestamp for render time measurement (only for non-replay)
+        if (sourceApi === 'chat') {
+            this._lastMessageSentTime = performance.now();
+        }
 
         for (const msg of parser.flush()) {
             await this.processRovoDevResponse(sourceApi, msg);
@@ -626,6 +637,14 @@ export class RovoDevChatProvider {
         }
     }
 
+    public signalMessageRendered(promptId: string) {
+        if (this._lastMessageSentTime !== undefined && promptId === this._currentPromptId) {
+            const renderTime = performance.now() - this._lastMessageSentTime;
+            this._telemetryProvider.perfLogger.promptLastMessageRendered(promptId, renderTime);
+            this._lastMessageSentTime = undefined;
+        }
+    }
+
     private async executeStreamingApiWithErrorHandling(
         sourceApi: StreamingApi,
         func: (client: RovoDevApiClient) => Promise<any>,
@@ -647,6 +666,7 @@ export class RovoDevChatProvider {
         // that the generation of the response has finished
         await webview.postMessage({
             type: RovoDevProviderMessageType.CompleteMessage,
+            promptId: this._currentPromptId,
         });
     }
 
