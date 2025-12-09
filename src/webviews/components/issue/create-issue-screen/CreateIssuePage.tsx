@@ -305,11 +305,6 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
             return errs;
         }
 
-        this.setState({
-            isSomethingLoading: true,
-            loadingField: 'submitButton',
-        });
-
         // Convert WikiMarkup fields to ADF if using legacy editor
         const issueData = { ...this.state.fieldValues };
         if (!this.state.isAtlaskitEditorEnabled) {
@@ -323,22 +318,38 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
             }
         }
 
-        this.postMessage({
+        const createAction = {
             action: 'createIssue',
             site: this.state.siteDetails,
             issueData: issueData,
             onCreateAction: this.state.onCreateAction,
+        };
+
+        this.setState({
+            isSomethingLoading: true,
+            loadingField: 'submitButton',
+            lastFailedAction: createAction,
         });
+
+        this.postMessage(createAction);
 
         return undefined;
     };
 
     handleSiteChange = (site: DetailedSiteInfo) => {
-        this.setState({ siteDetails: site, loadingField: 'site', isSomethingLoading: true });
-        this.postMessage({
+        const action = {
             action: 'getScreensForSite',
             site: site,
+        };
+
+        this.setState({
+            siteDetails: site,
+            loadingField: 'site',
+            isSomethingLoading: true,
+            lastFailedAction: action,
         });
+
+        this.postMessage(action);
     };
 
     protected handleInlineAttachments = async (fieldkey: string, newValue: any) => {
@@ -404,19 +415,29 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         this.setState({ fieldValues: { ...this.state.fieldValues, ...{ [fieldkey]: typedVal } } });
 
         if (field.valueType === ValueType.Project) {
-            this.setState({ loadingField: field.key, isSomethingLoading: true });
-            this.postMessage({
+            const action = {
                 action: 'getScreensForProject',
                 project: newValue,
                 fieldValues: this.state.fieldValues,
+            };
+            this.setState({
+                loadingField: field.key,
+                isSomethingLoading: true,
+                lastFailedAction: action,
             });
+            this.postMessage(action);
         } else if (field.valueType === ValueType.IssueType) {
-            this.setState({ loadingField: field.key, isSomethingLoading: true });
-            this.postMessage({
+            const action = {
                 action: 'setIssueType',
                 issueType: newValue,
                 fieldValues: this.state.fieldValues,
+            };
+            this.setState({
+                loadingField: field.key,
+                isSomethingLoading: true,
+                lastFailedAction: action,
             });
+            this.postMessage(action);
         } else {
             this.setState({ isSomethingLoading: false, loadingField: '' });
         }
@@ -497,6 +518,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
             this.postMessage({ action: 'refresh' });
             return <AtlLoader />;
         }
+
         return (
             <Page>
                 <AtlascodeErrorBoundary
@@ -527,7 +549,8 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                 )}
                                 {this.state.isErrorBannerOpen && (
                                     <ErrorBanner
-                                        onDismissError={this.handleDismissError}
+                                        onRetry={this.handleRetryLastAction}
+                                        onSignIn={this.handleSignIn}
                                         errorDetails={this.state.errorDetails}
                                     />
                                 )}
