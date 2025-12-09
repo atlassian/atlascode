@@ -23,6 +23,7 @@ export const enum RovoDevViewResponseType {
     ReportChangesGitPushed = 'reportChangesGitPushed',
     ReportThinkingDrawerExpanded = 'reportThinkingDrawerExpanded',
     ReportCreatePrButtonClicked = 'reportCreatePrButtonClicked',
+    ReportPromptTextInput = 'reportPromptTextInput',
     CheckGitChanges = 'checkGitChanges',
     WebviewReady = 'webviewReady',
     GetAgentMemory = 'getAgentMemory',
@@ -68,6 +69,7 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.ReportChangesGitPushed, { pullRequestCreated: boolean }>
     | ReducerAction<RovoDevViewResponseType.ReportThinkingDrawerExpanded>
     | ReducerAction<RovoDevViewResponseType.ReportCreatePrButtonClicked>
+    | ReducerAction<RovoDevViewResponseType.ReportPromptTextInput>
     | ReducerAction<RovoDevViewResponseType.CheckGitChanges>
     | ReducerAction<RovoDevViewResponseType.WebviewReady>
     | ReducerAction<RovoDevViewResponseType.GetAgentMemory>

@@ -46,6 +46,7 @@ interface PromptInputBoxProps {
     handleTriggerFeedbackCommand: () => void;
     promptText?: string;
     onPromptTextSet?: () => void;
+    onPromptTextInput?: () => void;
 }
 
 const TextAreaMessages: Record<NonDisabledState['state'], string> = {
@@ -80,7 +81,7 @@ function initMonaco(isBBY: boolean) {
     }
 }
 
-function createEditor(setIsEmpty: (isEmpty: boolean) => void) {
+function createEditor(setIsEmpty: (isEmpty: boolean) => void, onTextInput?: () => void) {
     const container = document.getElementById('prompt-editor-container');
     if (!container) {
         return undefined;
@@ -90,11 +91,19 @@ function createEditor(setIsEmpty: (isEmpty: boolean) => void) {
 
     const editor = createMonacoPromptEditor(container);
 
+    let hasTrackedFirstInput = false;
+
     editor.onDidChangeModelContent(() => {
-        if (editor.getValue().trim().length === 0) {
+        const isEmpty = editor.getValue().trim().length === 0;
+        if (isEmpty) {
             setIsEmpty(true);
         } else {
             setIsEmpty(false);
+            // Track when user first inputs text
+            if (!hasTrackedFirstInput && onTextInput) {
+                hasTrackedFirstInput = true;
+                onTextInput();
+            }
         }
     });
 
@@ -119,12 +128,13 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     handleTriggerFeedbackCommand,
     promptText,
     onPromptTextSet,
+    onPromptTextInput,
 }) => {
     const [editor, setEditor] = React.useState<ReturnType<typeof createEditor>>(undefined);
     const [isEmpty, setIsEmpty] = React.useState(true);
 
     // create the editor only once - use onAddContext hook to retry
-    React.useEffect(() => setEditor((prev) => prev ?? createEditor(setIsEmpty)), [onAddContext]);
+    React.useEffect(() => setEditor((prev) => prev ?? createEditor(setIsEmpty, onPromptTextInput)), [onAddContext, onPromptTextInput]);
 
     React.useEffect(() => {
         // Remove Monaco's color stylesheet
