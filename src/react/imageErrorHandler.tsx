@@ -2,7 +2,13 @@ export const attachImageErrorHandler = () => {
     window.addEventListener(
         'error',
         (ee: ErrorEvent) => {
-            const targetEL = ee.target as HTMLElement;
+            const targetEL = ee.target;
+
+            if (!(targetEL instanceof HTMLElement)) {
+                // The target can be something other than an HTMLElement (e.g., Window)
+                // We only care about HTMLElements here
+                return;
+            }
 
             // Prevent re-processing the same image and avoid loops if the fallback fails
             if (targetEL.getAttribute('src') === 'images/no-image.svg') {
