@@ -64,4 +64,17 @@ export interface RovoDevCancelResponse {
     cancelled: boolean;
 }
 
+export interface RovoDevStatusAPIResponse {
+    cliVersion: { version: string; sessionId: string };
+    workingDirectory: string;
+    account: {
+        email: string;
+        accountId: string;
+        orgId: string;
+        isServerAvailable: boolean;
+    };
+    memory: { memoryPaths: string[]; hasMemoryFiles: boolean; errorMessage: string | null };
+    model: { modelName: string; humanReadableName: string; errorMessage: string | null };
+}
+
 export type ToolPermissionChoice = 'allow' | 'deny';

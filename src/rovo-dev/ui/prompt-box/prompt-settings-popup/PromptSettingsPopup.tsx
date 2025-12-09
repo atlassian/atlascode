@@ -2,6 +2,7 @@ import AiGenerativeTextSummaryIcon from '@atlaskit/icon/core/ai-generative-text-
 import CrossIcon from '@atlaskit/icon/core/cross';
 import CustomizeIcon from '@atlaskit/icon/core/customize';
 import LockUnlockedIcon from '@atlaskit/icon/core/lock-unlocked';
+import TelescopeIcon from '@atlaskit/icon-lab/core/telescope';
 import Popup, { PopupComponentProps } from '@atlaskit/popup';
 import Toggle from '@atlaskit/toggle';
 import React from 'react';
@@ -9,8 +10,10 @@ import React from 'react';
 interface PromptSettingsPopupProps {
     onDeepPlanToggled?: () => void;
     onYoloModeToggled?: () => void;
+    onFullContextToggled?: () => void;
     isDeepPlanEnabled: boolean;
     isYoloModeEnabled: boolean;
+    isFullContextEnabled: boolean;
     onClose: () => void;
 }
 
@@ -37,8 +40,10 @@ const PopupContainer = React.forwardRef<HTMLDivElement, PopupComponentProps>(
 const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
     onDeepPlanToggled,
     onYoloModeToggled,
+    onFullContextToggled,
     isDeepPlanEnabled,
     isYoloModeEnabled,
+    isFullContextEnabled,
     onClose,
 }) => {
     const [isOpen, setIsOpen] = React.useState(false);
@@ -86,6 +91,17 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                             toggled={isDeepPlanEnabled}
                         />
                     )}
+                    {onFullContextToggled && (
+                        <PromptSettingsItem
+                            icon={<TelescopeIcon label="Full-Context mode" />}
+                            label="Full-Context mode"
+                            description="Toggle Full-Context mode to enable the agent to research documents and historical data, helping it better understand the problem to solve."
+                            action={onFullContextToggled}
+                            actionType="toggle"
+                            toggled={isFullContextEnabled}
+                            isInternalOnly={true}
+                        />
+                    )}
                     {onYoloModeToggled && (
                         <PromptSettingsItem
                             icon={<LockUnlockedIcon label="YOLO mode" />}
@@ -115,12 +131,20 @@ const PromptSettingsItem: React.FC<{
     action?: () => void;
     actionType?: 'toggle' | 'button';
     toggled?: boolean;
-}> = ({ icon, label, description, action, actionType, toggled }) => {
+    isInternalOnly?: boolean;
+}> = ({ icon, label, description, action, actionType, toggled, isInternalOnly }) => {
     return (
         <div className="prompt-settings-item">
             <div className="prompt-settings-logo">{icon}</div>
             <div id="prompt-settings-context">
-                <p style={{ fontWeight: 'bold' }}>{label}</p>
+                <p style={{ fontWeight: 'bold' }}>
+                    {label}
+                    {isInternalOnly && (
+                        <span style={{ backgroundColor: 'var(--vscode-badge-background)', marginLeft: '8px' }}>
+                            Internal only
+                        </span>
+                    )}
+                </p>
                 <p style={{ fontSize: '11px' }}>{description}</p>
             </div>
             {action && (

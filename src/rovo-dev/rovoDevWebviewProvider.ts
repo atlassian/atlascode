@@ -94,6 +94,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _debugPanelMcpContext: Record<string, string> = {};
 
     private _userInfo: UserInfo | undefined;
+    private _userEmail: string | undefined;
 
     // we keep the data in this collection so we can attach some metadata to the next
     // prompt informing Rovo Dev that those files has been reverted
@@ -420,16 +421,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             if (!workspace.workspaceFolders?.length) {
                                 await this.signalRovoDevDisabled('NoWorkspaceOpen');
                                 break;
-                            } else {
-                                const yoloMode = await this.loadYoloModeFromStorage();
-                                await webview.postMessage({
-                                    type: RovoDevProviderMessageType.ProviderReady,
-                                    workspacePath: workspace.workspaceFolders?.[0]?.uri.fsPath,
-                                    homeDir: process.env.HOME || process.env.USERPROFILE,
-                                    yoloMode: yoloMode,
-                                });
                             }
                         }
+
+                        // ack the Webview Ready event, and provide host information
+                        await this.sendProviderReadyEvent(this._userInfo?.email || this._userEmail);
 
                         // initialize (or refresh) the provider based on the current process state
                         await this.handleProcessStateChanged(RovoDevProcessManager.state);
@@ -496,6 +492,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         this.saveYoloModeToStorage(e.value);
                         break;
 
+                    case RovoDevViewResponseType.FullContextModeToggled:
+                        this._chatProvider.fullContextMode = e.value;
+                        break;
+
                     case RovoDevViewResponseType.OpenExternalLink:
                         await env.openExternal(Uri.parse(e.href));
                         break;
@@ -512,6 +512,17 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             } catch (error) {
                 await this.processError(error);
             }
+        });
+    }
+
+    private async sendProviderReadyEvent(userEmail: string | undefined) {
+        const yoloMode = await this.loadYoloModeFromStorage();
+        await this._webView!.postMessage({
+            type: RovoDevProviderMessageType.ProviderReady,
+            isAtlassianUser: !!userEmail?.endsWith('@atlassian.com'),
+            workspacePath: workspace.workspaceFolders?.[0]?.uri.fsPath,
+            homeDir: process.env.HOME || process.env.USERPROFILE,
+            yoloMode,
         });
     }
 
@@ -1014,6 +1025,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         if (newState.state === 'Downloading' || newState.state === 'Starting' || newState.state === 'Started') {
             this._userInfo = newState.jiraSiteUserInfo;
             this._jiraItemsProvider.setJiraSite(newState.jiraSiteHostname);
+
+            if (this._webviewReady) {
+                // refresh the isAtlassianUser flag
+                await this.sendProviderReadyEvent(newState.jiraSiteUserInfo.email);
+            }
         }
 
         const webview = this._webView!;
@@ -1222,6 +1238,18 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await this._chatProvider.setReady(rovoDevClient);
 
         if (this.isBoysenberry) {
+            // update the isAtlassianUser flag based on Rovo Dev status response
+            // this is intentionally not awaiting because the API is pretty slow
+            this.rovoDevApiClient
+                ?.status()
+                .then((response) => {
+                    this._userEmail = response.account.email;
+                    if (this._webviewReady) {
+                        this.sendProviderReadyEvent(response.account.email);
+                    }
+                })
+                .catch((error) => this.processError(error));
+
             // Initialize global dwell tracker now that API client exists
             this._dwellTracker?.dispose();
             this._dwellTracker = new RovoDevDwellTracker(
@@ -1229,6 +1257,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 () => this._chatProvider.currentPromptId,
                 this._rovoDevApiClient,
             );
+
             await this._chatProvider.executeReplay();
         }
 

@@ -54,6 +54,8 @@ export interface RovoDevWebviewState {
     isDeepPlanCreated: boolean;
     isDeepPlanToggled: boolean;
     isYoloModeToggled: boolean;
+    isFullContextModeToggled: boolean;
+    isAtlassianUser: boolean;
     promptContextCollection: RovoDevContextItem[];
 }
 
@@ -72,7 +74,7 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.ClearChat>
     | ReducerAction<
           RovoDevProviderMessageType.ProviderReady,
-          { workspacePath?: string; homeDir?: string; yoloMode?: boolean }
+          { isAtlassianUser: boolean; workspacePath?: string; homeDir?: string; yoloMode?: boolean }
       >
     | ReducerAction<RovoDevProviderMessageType.SetInitializing, { isPromptPending: boolean }>
     | ReducerAction<
