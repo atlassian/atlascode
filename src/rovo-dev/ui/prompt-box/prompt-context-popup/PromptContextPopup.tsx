@@ -32,7 +32,6 @@ const PromptContextPopup: React.FC<PromptContextPopupProps> = ({ items }) => {
                             ref={triggerRef}
                             className="prompt-button-secondary-open"
                             aria-label="Prompt context (open)"
-                            onClick={() => setIsOpen((prev) => !prev)}
                         >
                             <CrossIcon label="Close" />
                         </button>
@@ -42,7 +41,6 @@ const PromptContextPopup: React.FC<PromptContextPopupProps> = ({ items }) => {
                             ref={triggerRef}
                             className="prompt-button-secondary"
                             aria-label="Prompt context"
-                            onClick={() => setIsOpen((prev) => !prev)}
                         >
                             <AddIcon label="Open prompt context" />
                         </button>
