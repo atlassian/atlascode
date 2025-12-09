@@ -19,12 +19,7 @@ export class RovoDevApiError extends Error {
     }
 }
 
-const fakeResponseBody = `
-event: user-prompt
-data: {"content": "what is in readme bruh\n\n<context>\nWhen relevant, use the context below to better respond to the message above:\n\n<file path=\"/Users/sdzhumaev/work/acra-python/packages/cli-rovodev/src/rovodev/common/config.py\">\nI currently have
- this file open in my IDE\n</file>\n</context>", "timestamp": "2025-12-09T20:25:01.204703+00:00", "part_kind": "user-prompt"}
-
-event: part_start
+const fakeResponseBody = `event: part_start
 data: {"index": 0, "part": {"content": "Let", "id": null, "provider_details": null, "part_kind": "text"}, "previous_part_kind": null, "event_kind": "part_start"}
 
 event: part_delta
