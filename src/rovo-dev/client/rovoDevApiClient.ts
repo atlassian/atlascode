@@ -19,6 +19,67 @@ export class RovoDevApiError extends Error {
     }
 }
 
+const fakeResponseBody = `
+event: user-prompt
+data: {"content": "what is in readme bruh\n\n<context>\nWhen relevant, use the context below to better respond to the message above:\n\n<file path=\"/Users/sdzhumaev/work/acra-python/packages/cli-rovodev/src/rovodev/common/config.py\">\nI currently have
+ this file open in my IDE\n</file>\n</context>", "timestamp": "2025-12-09T20:25:01.204703+00:00", "part_kind": "user-prompt"}
+
+event: part_start
+data: {"index": 0, "part": {"content": "Let", "id": null, "provider_details": null, "part_kind": "text"}, "previous_part_kind": null, "event_kind": "part_start"}
+
+event: part_delta
+data: {"index": 0, "delta": {"content_delta": " me check", "provider_details": null, "part_delta_kind": "text"}, "event_kind": "part_delta"}
+
+event: part_delta
+data: {"index": 0, "delta": {"content_delta": " the README", "provider_details": null, "part_delta_kind": "text"}, "event_kind": "part_delta"}
+
+event: part_delta
+data: {"index": 0, "delta": {"content_delta": " files", "provider_details": null, "part_delta_kind": "text"}, "event_kind": "part_delta"}
+
+event: part_delta
+data: {"index": 0, "delta": {"content_delta": " in", "provider_details": null, "part_delta_kind": "text"}, "event_kind": "part_delta"}
+
+event: part_delta
+data: {"index": 0, "delta": {"content_delta": " the workspace", "provider_details": null, "part_delta_kind": "text"}, "event_kind": "part_delta"}
+
+event: part_delta
+data: {"index": 0, "delta": {"content_delta": " for", "provider_details": null, "part_delta_kind": "text"}, "event_kind": "part_delta"}
+
+event: part_delta
+data: {"index": 0, "delta": {"content_delta": " you", "provider_details": null, "part_delta_kind": "text"}, "event_kind": "part_delta"}
+
+event: part_delta
+data: {"index": 0, "delta": {"content_delta": ".", "provider_details": null, "part_delta_kind": "text"}, "event_kind": "part_delta"}
+
+event: part_start
+data: {"index": 1, "part": {"tool_name": "open_files", "args": null, "tool_call_id": "toolu_vrtx_01P2aBwudBRRfM8qbtjLfVdh", "id": null, "provider_details": null, "part_kind": "tool-call"}, "previous_part_kind": "text", "event_kind": "part_start"}
+
+event: part_delta
+data: {"index": 1, "delta": {"tool_name_delta": null, "args_delta": "", "tool_call_id": "toolu_vrtx_01P2aBwudBRRfM8qbtjLfVdh", "provider_details": null, "part_delta_kind": "tool_call"}, "event_kind": "part_delta"}
+
+event: part_delta
+data: {"index": 1, "delta": {"tool_name_delta": null, "args_delta": "{\"file_pa", "tool_call_id": "toolu_vrtx_01P2aBwudBRRfM8qbtjLfVdh", "provider_details": null, "part_delta_kind": "tool_call"}, "event_kind": "part_delta"}
+
+event: part_delta
+data: {"index": 1, "delta": {"tool_name_delta": null, "args_delta": "ths\": [", "tool_call_id": "toolu_vrtx_01P2aBwudBRRfM8qbtjLfVdh", "provider_details": null, "part_delta_kind": "tool_call"}, "event_kind": "part_delta"}
+
+event: part_delta
+data: {"index": 1, "delta": {"tool_name_delta": null, "args_delta": "\"REA", "tool_call_id": "toolu_vrtx_01P2aBwudBRRfM8qbtjLfVdh", "provider_details": null, "part_delta_kind": "tool_call"}, "event_kind": "part_delta"}
+
+event: part_delta
+data: {"index": 1, "delta": {"tool_name_delta": null, "args_delta": "DME.md\"]}", "tool_call_id": "toolu_vrtx_01P2aBwudBRRfM8qbtjLfVdh", "provider_details": null, "part_delta_kind": "tool_call"}, "event_kind": "part_delta"}
+
+event: on_call_tools_start
+data: {"parts": [{"tool_name": "open_files", "args": "{\"file_paths\": [\"README.md\"]}", "tool_call_id": "toolu_vrtx_01P2aBwudBRRfM8qbtjLfVdh", "id": null, "provider_details": null, "part_kind": "tool-call"}], "permission_required": false, "permissions
+": {"toolu_vrtx_01P2aBwudBRRfM8qbtjLfVdh": "ALLOWED"}}
+
+event: tool-return
+data: {"tool_name": "open_files", "content": ["FGAGDNSLKFDJLSAKDHFOIASUGHFCLAKJSBNDFKIJAUSGHDXKLJAHSBD"], "tool_call_id": "toolu_vrtx_01P2aBwudBRRfM8qbtjLfVdh", "metadata": null, "timestamp": "2025-12-09T20:25:04.244029+00:00", "part_kind": "tool-return"}
+
+event: replay_end
+data:
+`;
+
 /** Implements the http client for the RovoDev CLI server */
 export class RovoDevApiClient {
     private readonly _authBearerHeader: string | undefined;
@@ -102,17 +163,42 @@ export class RovoDevApiClient {
      */
     public chat(message: RovoDevChatRequest, pause_on_call_tools_start?: boolean): Promise<Response>;
     public async chat(message: string | RovoDevChatRequest, pause_on_call_tools_start?: boolean): Promise<Response> {
-        if (typeof message === 'string') {
-            message = {
-                message: message,
-                context: [],
-            };
-        }
+        return new Response(
+            new ReadableStream({
+                start(controller) {
+                    const encoder = new TextEncoder();
+                    let position = 0;
 
-        await this.fetchApi('/v3/set_chat_message', 'POST', JSON.stringify(message));
+                    function pushChunk() {
+                        const nextNewline = fakeResponseBody.indexOf('\n\n', position);
+                        if (nextNewline === -1) {
+                            controller.close();
+                            return;
+                        }
 
-        const qs = `pause_on_call_tools_start=${pause_on_call_tools_start ? 'true' : 'false'}`;
-        return await this.fetchApi(`/v3/stream_chat?${qs}`, 'GET');
+                        const chunk = fakeResponseBody.slice(position, nextNewline + 1);
+                        position = nextNewline + 1;
+                        controller.enqueue(encoder.encode(chunk));
+
+                        // Simulate network delay
+                        setTimeout(pushChunk, 100);
+                    }
+
+                    pushChunk();
+                },
+            }),
+        );
+        // if (typeof message === 'string') {
+        //     message = {
+        //         message: message,
+        //         context: [],
+        //     };
+        // }
+
+        // await this.fetchApi('/v3/set_chat_message', 'POST', JSON.stringify(message));
+
+        // const qs = `pause_on_call_tools_start=${pause_on_call_tools_start ? 'true' : 'false'}`;
+        // return await this.fetchApi(`/v3/stream_chat?${qs}`, 'GET');
     }
 
     /** Invokes the POST `/v3/resume_tool_calls` API.

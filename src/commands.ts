@@ -433,6 +433,20 @@ export function registerDebugCommands(vscodeContext: ExtensionContext): Disposab
             window.showInformationMessage('[DEBUG] Atlascode: Quick command');
 
             // Add your logic here
+
+            const bruh = await Container.rovodevWebviewProvider._rovoDevApiClient?.replay();
+            // dump body into ~/dump/bruh.txt
+            const text = await bruh?.text();
+            const fs = require('fs');
+            const os = require('os');
+            const path = require('path');
+            const dumpDir = path.join(os.homedir(), 'dump');
+            if (!fs.existsSync(dumpDir)) {
+                fs.mkdirSync(dumpDir);
+            }
+            const dumpPath = path.join(dumpDir, 'bruh.txt');
+            fs.writeFileSync(dumpPath, text || '');
+            window.showInformationMessage(`[DEBUG] Dumped response to ${dumpPath}`);
         }),
 
         // Login to a cloud site with API token

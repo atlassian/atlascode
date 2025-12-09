@@ -83,7 +83,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private _webView?: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse>;
     private _webviewView?: WebviewView;
-    private _rovoDevApiClient?: RovoDevApiClient;
+    public _rovoDevApiClient?: RovoDevApiClient;
     private _isProviderDisabled = false;
     private _disabledReason: RovoDevDisabledReason | 'none' = 'none';
     private _webviewReady = false;

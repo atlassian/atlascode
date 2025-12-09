@@ -74,6 +74,18 @@ export const MarkedDown: React.FC<{ value: string; onLinkClick: (href: string) =
     value,
     onLinkClick,
 }) => {
+    // // Randomly induce the error (1 in 5 messages)
+    // if (Math.random() < 0.2) {
+    //     // Induce the error that happens when the value is not a string on some of the messages
+    //     value = [{}] as any;
+    // }
+
+    // // Suppress output if the value is not a string
+    // if (typeof value !== 'string') {
+    //     console.warn('MarkedDown received a non-string value:', value);
+    //     value = '';
+    // }
+
     const spanRef = React.useRef<HTMLSpanElement>(null);
     const html = React.useMemo(() => mdParser.render(normalizeLinks(value)), [value]);
 
