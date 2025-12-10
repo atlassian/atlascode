@@ -135,6 +135,8 @@ export class CreateIssueWebview
     }
 
     override async onAuthChange() {
+        super.onAuthChange();
+
         const originallyAvailable = this._issueSuggestionSettings?.isAvailable;
         const originallyEnabled = this._issueSuggestionSettings?.isEnabled;
 
@@ -910,6 +912,11 @@ export class CreateIssueWebview
                         this._siteDetails,
                         this._currentProject,
                     );
+                    break;
+                }
+                case 'openJiraAuth': {
+                    handled = true;
+                    await commands.executeCommand(Commands.ShowJiraAuth);
                     break;
                 }
                 // AI-assisted issue creation

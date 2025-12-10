@@ -588,5 +588,117 @@ describe('RovoDevResponseParser', () => {
             });
             expect(allResults[1].event_kind).toBe('tool-return');
         });
+
+        it('should properly flush and yield generic events (non-part_start/part_delta)', () => {
+            const allResults: RovoDevResponse[] = [];
+
+            // Parse a generic event (not part_start or part_delta)
+            // This should now be stored in previousChunk, flushed, and then yielded
+            const input = 'event: user-prompt\ndata: {"content": "Hello", "timestamp": "2025-07-02T12:00:00Z"}\n\n';
+            allResults.push(...Array.from(parser.parse(input)));
+
+            expect(allResults).toHaveLength(1);
+            expect(allResults[0]).toEqual({
+                event_kind: 'user-prompt',
+                content: 'Hello',
+                timestamp: '2025-07-02T12:00:00Z',
+            });
+        });
+
+        it('should flush previous chunk when encountering a new generic event', () => {
+            const allResults: RovoDevResponse[] = [];
+
+            // First generic event (tool-call)
+            let input =
+                'event: tool-call\ndata: {"tool_name": "search", "args": "{\\"q\\": \\"test\\"}", "tool_call_id": "call_123"}\n\n';
+            allResults.push(...Array.from(parser.parse(input)));
+
+            // Second generic event (warning) - should flush the previous tool-call
+            input = 'event: warning\ndata: {"message": "Rate limit warning"}\n\n';
+            allResults.push(...Array.from(parser.parse(input)));
+
+            expect(allResults).toHaveLength(2);
+            expect(allResults[0].event_kind).toBe('tool-call');
+            expect(allResults[1].event_kind).toBe('warning');
+        });
+
+        it('should handle consecutive generic events correctly', () => {
+            const allResults: RovoDevResponse[] = [];
+
+            // Multiple consecutive generic events
+            let input = 'event: exception\ndata: {"message": "An error occurred", "type": "api_error"}\n\n';
+            allResults.push(...Array.from(parser.parse(input)));
+
+            input = 'event: clear\ndata: {"message": "Clearing state"}\n\n';
+            allResults.push(...Array.from(parser.parse(input)));
+
+            input = 'event: warning\ndata: {"message": "A warning"}\n\n';
+            allResults.push(...Array.from(parser.parse(input)));
+
+            expect(allResults).toHaveLength(3);
+            expect(allResults[0].event_kind).toBe('exception');
+            expect(allResults[1].event_kind).toBe('clear');
+            expect(allResults[2].event_kind).toBe('warning');
+        });
+
+        it('should transition from part_start/part_delta to generic event', () => {
+            const allResults: RovoDevResponse[] = [];
+
+            // Start with part_start for user-prompt
+            let input =
+                'event: part_start\ndata: {"part": {"part_kind": "user-prompt", "content": "Hello", "timestamp": "2025-07-02T12:00:00Z"}}\n\n';
+            allResults.push(...Array.from(parser.parse(input)));
+
+            // Transition to a generic event - should flush the previous part_start
+            input = 'event: warning\ndata: {"message": "Proceeding with caution"}\n\n';
+            allResults.push(...Array.from(parser.parse(input)));
+
+            expect(allResults).toHaveLength(2);
+            expect(allResults[0].event_kind).toBe('user-prompt');
+            expect(allResults[1].event_kind).toBe('warning');
+        });
+
+        it('should handle generic events after a generic event (double flush)', () => {
+            const allResults: RovoDevResponse[] = [];
+
+            // First generic event
+            let input = 'event: prune\ndata: {"message": "Pruning context"}\n\n';
+            allResults.push(...Array.from(parser.parse(input)));
+
+            // Another generic event - the first should be flushed and yielded, then the second stored and yielded
+            input = 'event: status\ndata: {}\n\n';
+            allResults.push(...Array.from(parser.parse(input)));
+
+            expect(allResults).toHaveLength(2);
+            expect(allResults[0].event_kind).toBe('prune');
+            expect(allResults[1].event_kind).toBe('status');
+        });
+
+        it('should properly track tool calls across generic events', () => {
+            const allResults: RovoDevResponse[] = [];
+
+            // Generic tool-call event
+            let input =
+                'event: tool-call\ndata: {"tool_name": "get_weather", "args": "{\\"location\\": \\"NY\\"}", "tool_call_id": "call_456"}\n\n';
+            allResults.push(...Array.from(parser.parse(input)));
+
+            // Another generic event that will flush the tool-call
+            input = 'event: warning\ndata: {"message": "Processing"}\n\n';
+            allResults.push(...Array.from(parser.parse(input)));
+
+            // Tool-return should have access to the previously stored tool-call
+            input =
+                'event: tool-return\ndata: {"tool_name": "get_weather", "content": "Sunny", "tool_call_id": "call_456", "timestamp": "2025-07-02T12:02:00Z"}\n\n';
+            allResults.push(...Array.from(parser.parse(input)));
+
+            expect(allResults).toHaveLength(3);
+            expect(allResults[0].event_kind).toBe('tool-call');
+            expect(allResults[1].event_kind).toBe('warning');
+            expect(allResults[2].event_kind).toBe('tool-return');
+            // Verify the tool-return has the toolCallMessage attached
+            const toolReturnEvent = allResults[2] as any;
+            expect(toolReturnEvent.toolCallMessage).toBeDefined();
+            expect(toolReturnEvent.toolCallMessage.tool_name).toBe('get_weather');
+        });
     });
 });

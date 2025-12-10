@@ -1457,6 +1457,11 @@ export class JiraIssueWebview
                     }
                     break;
                 }
+                case 'openJiraAuth': {
+                    handled = true;
+                    await commands.executeCommand(Commands.ShowJiraAuth);
+                    break;
+                }
                 case 'refreshIssue': {
                     handled = true;
                     try {

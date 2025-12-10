@@ -25,6 +25,29 @@ import { AbstractReactWebview } from './abstractWebview';
 export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
     abstract handleSelectOptionCreated(fieldKey: string, newValue: any, nonce?: string): Promise<void>;
 
+    /**
+     * Called when auth state changes (login/logout).
+     * Checks if the current site is still authenticated and notifies the webview if not.
+     */
+    protected override onAuthChange(): void {
+        const currentSite = this.siteOrUndefined;
+        if (!currentSite || !currentSite.id) {
+            return;
+        }
+
+        const productSites = Container.siteManager.getSitesAvailable(currentSite.product);
+        const siteStillAuthenticated = productSites.some(
+            (site) => site.id === currentSite.id && site.userId === currentSite.userId,
+        );
+
+        if (!siteStillAuthenticated) {
+            this.postMessage({
+                type: 'loggedOut',
+                siteName: currentSite.name,
+            });
+        }
+    }
+
     protected formatSelectOptions(msg: FetchQueryAction, result: any, valueType?: ValueType): any[] {
         let suggestions: any[] = [];
 

@@ -6,6 +6,7 @@ import PromptSettingsPopup from './PromptSettingsPopup';
 describe('PromptSettingsPopup', () => {
     const mockOnDeepPlanToggled = jest.fn();
     const mockOnYoloModeToggled = jest.fn();
+    const mockOnFullContextToggled = jest.fn();
     const mockOnClose = jest.fn();
 
     beforeEach(() => {
@@ -17,8 +18,10 @@ describe('PromptSettingsPopup', () => {
             <PromptSettingsPopup
                 onDeepPlanToggled={mockOnDeepPlanToggled}
                 onYoloModeToggled={mockOnYoloModeToggled}
+                onFullContextToggled={mockOnFullContextToggled}
                 isDeepPlanEnabled={false}
                 isYoloModeEnabled={false}
+                isFullContextEnabled={false}
                 onClose={mockOnClose}
             />,
         );
@@ -32,8 +35,10 @@ describe('PromptSettingsPopup', () => {
             <PromptSettingsPopup
                 onDeepPlanToggled={mockOnDeepPlanToggled}
                 onYoloModeToggled={mockOnYoloModeToggled}
+                onFullContextToggled={mockOnFullContextToggled}
                 isDeepPlanEnabled={false}
                 isYoloModeEnabled={false}
+                isFullContextEnabled={false}
                 onClose={mockOnClose}
             />,
         );
@@ -52,8 +57,10 @@ describe('PromptSettingsPopup', () => {
             <PromptSettingsPopup
                 onDeepPlanToggled={mockOnDeepPlanToggled}
                 onYoloModeToggled={mockOnYoloModeToggled}
+                onFullContextToggled={mockOnFullContextToggled}
                 isDeepPlanEnabled={false}
                 isYoloModeEnabled={false}
+                isFullContextEnabled={false}
                 onClose={mockOnClose}
             />,
         );
@@ -72,8 +79,10 @@ describe('PromptSettingsPopup', () => {
             <PromptSettingsPopup
                 onDeepPlanToggled={mockOnDeepPlanToggled}
                 onYoloModeToggled={mockOnYoloModeToggled}
+                onFullContextToggled={mockOnFullContextToggled}
                 isDeepPlanEnabled={false}
                 isYoloModeEnabled={false}
+                isFullContextEnabled={false}
                 onClose={mockOnClose}
             />,
         );

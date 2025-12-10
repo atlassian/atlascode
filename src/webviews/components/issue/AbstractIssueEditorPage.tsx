@@ -92,7 +92,7 @@ export interface CommonEditorViewState extends Message {
     isOnline: boolean;
     isErrorBannerOpen: boolean;
     showPMF: boolean;
-    errorDetails: any;
+    errorDetails: string | { message?: string; title?: string } | undefined;
     commentInputValue: string;
     isRovoDevEnabled: boolean;
     isGeneratingSuggestions?: boolean;
@@ -101,12 +101,15 @@ export interface CommonEditorViewState extends Message {
     showRovoDevPromoBanner: boolean;
     rovoDevEntitlementType?: RovoDevEntitlementType;
     rovoDevPromoBannerDismissed: boolean;
+    lastFailedAction?: CommonEditorPageEmit;
     projectPagination?: {
         total: number;
         loaded: number;
         hasMore: boolean;
         isLoadingMore: boolean;
     };
+    isLoggedOut: boolean;
+    loggedOutSiteName?: string;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -128,6 +131,8 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     showRovoDevPromoBanner: false,
     rovoDevEntitlementType: undefined,
     rovoDevPromoBannerDismissed: false,
+    isLoggedOut: false,
+    loggedOutSiteName: undefined,
 };
 
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
@@ -332,6 +337,21 @@ export abstract class AbstractIssueEditorPage<
                 });
                 break;
             }
+            case 'loggedOut': {
+                handled = true;
+                this.setState({
+                    isLoggedOut: true,
+                    loggedOutSiteName: e.siteName,
+                    isSomethingLoading: false,
+                    loadingField: '',
+                    isErrorBannerOpen: true,
+                    errorDetails: {
+                        title: 'Session Expired',
+                        message: 'You have been logged out. Please close this tab and log in again to continue editing',
+                    },
+                });
+                break;
+            }
         }
 
         return handled;
@@ -385,7 +405,18 @@ export abstract class AbstractIssueEditorPage<
     }
 
     protected handleDismissError = () => {
-        this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
+        this.setState({ isErrorBannerOpen: false, errorDetails: undefined, lastFailedAction: undefined });
+    };
+
+    protected handleRetryLastAction = () => {
+        if (this.state.lastFailedAction) {
+            this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
+            this.postMessage(this.state.lastFailedAction);
+        }
+    };
+
+    protected handleSignIn = () => {
+        this.postMessage({ action: 'openJiraAuth' });
     };
 
     protected handleOpenIssue = (issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => {

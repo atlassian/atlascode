@@ -1,0 +1,45 @@
+.prompt-context-popup-item {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 8px;
+    color: var(--vscode-editor-foreground);
+}
+
+.prompt-context-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.prompt-context-content {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+}
+
+.prompt-context-label {
+    font-size: var(--vscode-font-size);
+    font-weight: 500;
+}
+
+.prompt-context-description {
+    font-size: calc(var(--vscode-font-size) - 2px);
+    color: var(--vscode-editor-foreground);
+    opacity: 0.8;
+}
+
+.popup-item-container {
+    background-color: var(--vscode-editor-background);
+    border: 1px solid var(--vscode-editorWidget-border);
+    border-radius: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+.popup-item-container > button {
+    background-color: var(--vscode-editor-background);
+}
+.popup-item-container > button:hover {
+    background-color: var(--vscode-list-hoverBackground);
+}

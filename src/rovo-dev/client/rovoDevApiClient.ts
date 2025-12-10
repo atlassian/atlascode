@@ -2,6 +2,7 @@ import {
     RovoDevCancelResponse,
     RovoDevChatRequest,
     RovoDevHealthcheckResponse,
+    RovoDevStatusAPIResponse,
     ToolPermissionChoice,
 } from './rovoDevApiClientInterfaces';
 
@@ -150,6 +151,12 @@ export class RovoDevApiClient {
         const response = await this.fetchApi(`/v3/cache-file-path?${qs}`, 'GET');
         const data = await response.json();
         return data.cached_file_path;
+    }
+
+    /** Invokes the GET `/v3/status` API. */
+    public async status(): Promise<RovoDevStatusAPIResponse> {
+        const response = await this.fetchApi('/v3/status', 'GET');
+        return await response.json();
     }
 
     /** Invokes the GET `/healthcheck` API.
