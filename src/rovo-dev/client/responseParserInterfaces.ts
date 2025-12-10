@@ -1,5 +1,7 @@
 // abstracted responses' interfaces
 
+import { RovoDevStatusAPIResponse } from './rovoDevApiClientInterfaces';
+
 export interface RovoDevMessageWithCtaLink {
     message: string;
     ctaLink?: {
@@ -93,18 +95,7 @@ export interface RovoDevReplayEndResponse {
 
 export interface RovoDevStatusResponse {
     event_kind: 'status';
-    data: {
-        cliVersion: { version: string; sessionId: string };
-        workingDirectory: string;
-        account: {
-            email: string;
-            accountId: string;
-            orgId: string;
-            isServerAvailable: boolean;
-        };
-        memory: { memoryPaths: string[]; hasMemoryFiles: boolean; errorMessage: string | null };
-        model: { modelName: string; humanReadableName: string; errorMessage: string | null };
-    };
+    data: RovoDevStatusAPIResponse;
 }
 
 export interface RovoDevUsageResponse {

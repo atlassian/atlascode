@@ -71,6 +71,8 @@ export class RovoDevChatProvider {
         }
     }
 
+    public fullContextMode = false;
+
     private _currentPromptId: string = '';
     public get currentPromptId() {
         return this._currentPromptId;
@@ -149,6 +151,10 @@ export class RovoDevChatProvider {
         const requestPayload = this.preparePayloadForChatRequest(this._currentPrompt);
 
         if (!isCommand) {
+            if (this.fullContextMode) {
+                requestPayload.message = `use fullcontext: ${requestPayload.message}`;
+            }
+
             this.addUndoContextToPrompt(requestPayload, revertedFiles);
         }
 
