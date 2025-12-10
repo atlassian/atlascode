@@ -77,7 +77,7 @@ const RovoDevView: React.FC = () => {
         const initializeTheme = () => {
             const body = document.body;
             const isDark: boolean =
-                body.getAttribute('class') === 'vscode-dark' ||
+                body.classList.contains('vscode-dark') ||
                 (body.classList.contains('vscode-high-contrast') &&
                     !body.classList.contains('vscode-high-contrast-light'));
 
