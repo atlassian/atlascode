@@ -108,6 +108,8 @@ export interface CommonEditorViewState extends Message {
         hasMore: boolean;
         isLoadingMore: boolean;
     };
+    isLoggedOut: boolean;
+    loggedOutSiteName?: string;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -129,6 +131,8 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     showRovoDevPromoBanner: false,
     rovoDevEntitlementType: undefined,
     rovoDevPromoBannerDismissed: false,
+    isLoggedOut: false,
+    loggedOutSiteName: undefined,
 };
 
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
@@ -330,6 +334,21 @@ export abstract class AbstractIssueEditorPage<
                 this.setState({
                     showRovoDevPromoBanner: e.enabled || false,
                     rovoDevEntitlementType: e.enabled ? (e.entitlementType as RovoDevEntitlementType) : undefined,
+                });
+                break;
+            }
+            case 'loggedOut': {
+                handled = true;
+                this.setState({
+                    isLoggedOut: true,
+                    loggedOutSiteName: e.siteName,
+                    isSomethingLoading: false,
+                    loadingField: '',
+                    isErrorBannerOpen: true,
+                    errorDetails: {
+                        title: 'Session Expired',
+                        message: 'You have been logged out. Please close this tab and log in again to continue editing',
+                    },
                 });
                 break;
             }

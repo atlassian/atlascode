@@ -271,6 +271,10 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     }
 
     handleSubmit = async (e: any) => {
+        if (this.state.isLoggedOut) {
+            return { _form: 'You have been logged out. Please close this tab and log in again.' };
+        }
+
         const requiredFields = Object.values(this.state.fields).filter((field) => field.required);
 
         const errs: Record<string, string> = {};
@@ -599,7 +603,9 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                                         type="submit"
                                                         name="Create"
                                                         className="ac-button"
-                                                        disabled={this.state.isSomethingLoading}
+                                                        disabled={
+                                                            this.state.isSomethingLoading || this.state.isLoggedOut
+                                                        }
                                                         isLoading={
                                                             this.state.isSomethingLoading &&
                                                             this.state.loadingField === 'submitButton'

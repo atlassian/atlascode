@@ -309,4 +309,176 @@ describe('JiraIssuePage', () => {
             expect(getByTestId('atl-loader')).toBeTruthy();
         });
     });
+
+    describe('edit guards when logged out', () => {
+        const issuePageRef = React.createRef<JiraIssuePage>();
+
+        const setupComponent = async (isLoggedOut: boolean) => {
+            const { container } = render(<JiraIssuePage ref={issuePageRef} />);
+
+            const updateEvent = new MessageEvent('message', {
+                data: {
+                    type: 'update',
+                    fields: mockFields,
+                    fieldValues: {
+                        ...mockFieldValues,
+                        comment: { comments: [] },
+                    },
+                    key: 'TEST-123',
+                    siteDetails: mockSiteDetails,
+                    apiVersion: 3,
+                    isOnline: true,
+                    isLoggedOut,
+                    selectFieldOptions: { transitions: [] },
+                },
+            });
+            window.dispatchEvent(updateEvent);
+
+            await waitFor(() => {
+                expect(container.querySelector('[data-testid="issue-main-panel"]')).toBeTruthy();
+            });
+
+            return { container, instance: issuePageRef.current! };
+        };
+
+        it('handleAddVote does not call postMessage when logged out', async () => {
+            const { instance } = await setupComponent(true);
+            mockVscode.postMessage.mockClear();
+
+            instance.handleAddVote({ accountId: 'user-1' });
+
+            expect(mockVscode.postMessage).not.toHaveBeenCalledWith(expect.objectContaining({ action: 'addVote' }));
+        });
+
+        it('handleAddVote calls postMessage when logged in', async () => {
+            const { instance } = await setupComponent(false);
+            mockVscode.postMessage.mockClear();
+
+            instance.handleAddVote({ accountId: 'user-1' });
+
+            expect(mockVscode.postMessage).toHaveBeenCalledWith(expect.objectContaining({ action: 'addVote' }));
+        });
+
+        it('handleRemoveVote does not call postMessage when logged out', async () => {
+            const { instance } = await setupComponent(true);
+            mockVscode.postMessage.mockClear();
+
+            instance.handleRemoveVote({ accountId: 'user-1' });
+
+            expect(mockVscode.postMessage).not.toHaveBeenCalledWith(expect.objectContaining({ action: 'removeVote' }));
+        });
+
+        it('handleRemoveVote calls postMessage when logged in', async () => {
+            const { instance } = await setupComponent(false);
+            mockVscode.postMessage.mockClear();
+
+            instance.handleRemoveVote({ accountId: 'user-1' });
+
+            expect(mockVscode.postMessage).toHaveBeenCalledWith(expect.objectContaining({ action: 'removeVote' }));
+        });
+
+        it('handleDeleteComment does not call postMessage when logged out', async () => {
+            const { instance } = await setupComponent(true);
+            mockVscode.postMessage.mockClear();
+
+            instance.handleDeleteComment('comment-123');
+
+            expect(mockVscode.postMessage).not.toHaveBeenCalledWith(
+                expect.objectContaining({ action: 'deleteComment' }),
+            );
+        });
+
+        it('handleDeleteComment calls postMessage when logged in', async () => {
+            const { instance } = await setupComponent(false);
+            mockVscode.postMessage.mockClear();
+
+            instance.handleDeleteComment('comment-123');
+
+            expect(mockVscode.postMessage).toHaveBeenCalledWith(expect.objectContaining({ action: 'deleteComment' }));
+        });
+
+        it('handleStatusChange does not call postMessage when logged out', async () => {
+            const { instance } = await setupComponent(true);
+            mockVscode.postMessage.mockClear();
+
+            const mockTransition = { id: '1', name: 'Done', to: { id: '2', name: 'Done' } } as any;
+            instance.handleStatusChange(mockTransition);
+
+            expect(mockVscode.postMessage).not.toHaveBeenCalledWith(
+                expect.objectContaining({ action: 'transitionIssue' }),
+            );
+        });
+
+        it('handleStatusChange calls postMessage when logged in', async () => {
+            const { instance } = await setupComponent(false);
+            mockVscode.postMessage.mockClear();
+
+            const mockTransition = { id: '1', name: 'Done', to: { id: '2', name: 'Done' } } as any;
+            instance.handleStatusChange(mockTransition);
+
+            expect(mockVscode.postMessage).toHaveBeenCalledWith(expect.objectContaining({ action: 'transitionIssue' }));
+        });
+
+        it('handleDeleteAttachment does not call postMessage when logged out', async () => {
+            const { instance } = await setupComponent(true);
+            mockVscode.postMessage.mockClear();
+
+            instance.handleDeleteAttachment({ id: 'attachment-1' });
+
+            expect(mockVscode.postMessage).not.toHaveBeenCalledWith(
+                expect.objectContaining({ action: 'deleteAttachment' }),
+            );
+        });
+
+        it('handleDeleteAttachment calls postMessage when logged in', async () => {
+            const { instance } = await setupComponent(false);
+            mockVscode.postMessage.mockClear();
+
+            instance.handleDeleteAttachment({ id: 'attachment-1' });
+
+            expect(mockVscode.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({ action: 'deleteAttachment' }),
+            );
+        });
+
+        it('handleDeleteIssuelink does not call postMessage when logged out', async () => {
+            const { instance } = await setupComponent(true);
+            mockVscode.postMessage.mockClear();
+
+            instance.handleDeleteIssuelink({ id: 'link-1' });
+
+            expect(mockVscode.postMessage).not.toHaveBeenCalledWith(
+                expect.objectContaining({ action: 'deleteIssuelink' }),
+            );
+        });
+
+        it('handleDeleteIssuelink calls postMessage when logged in', async () => {
+            const { instance } = await setupComponent(false);
+            mockVscode.postMessage.mockClear();
+
+            instance.handleDeleteIssuelink({ id: 'link-1' });
+
+            expect(mockVscode.postMessage).toHaveBeenCalledWith(expect.objectContaining({ action: 'deleteIssuelink' }));
+        });
+
+        it('does not update state when guarded method is called while logged out', async () => {
+            const { instance } = await setupComponent(true);
+            const initialLoadingState = instance.state.isSomethingLoading;
+
+            instance.handleAddVote({ accountId: 'user-1' });
+
+            expect(instance.state.isSomethingLoading).toBe(initialLoadingState);
+        });
+
+        it('updates state when method is called while logged in', async () => {
+            const { instance } = await setupComponent(false);
+
+            instance.handleAddVote({ accountId: 'user-1' });
+
+            await waitFor(() => {
+                expect(instance.state.isSomethingLoading).toBe(true);
+                expect(instance.state.loadingField).toBe('votes');
+            });
+        });
+    });
 });

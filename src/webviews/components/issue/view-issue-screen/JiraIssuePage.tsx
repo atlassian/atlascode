@@ -90,6 +90,48 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         super(props);
         this.state = emptyState;
         this.mentionProvider = this.getMentionProvider();
+        this.applyEditGuards();
+    }
+
+    /** Wraps a method to block execution when user is logged out */
+    private withEditGuard<TArgs extends unknown[], TReturn>(
+        fn: (...args: TArgs) => TReturn,
+    ): (...args: TArgs) => TReturn | void {
+        return (...args: TArgs) => {
+            if (this.state.isLoggedOut) {
+                return;
+            }
+            return fn.apply(this, args);
+        };
+    }
+
+    /** Apply edit guards to all methods that modify issue data */
+    private applyEditGuards() {
+        const guardedMethods = [
+            'handleStartWorkOnIssue',
+            'handleOpenRovoDev',
+            'handleCloneIssue',
+            'handleInlineEdit',
+            'handleEditIssue',
+            'handleChildIssueUpdate',
+            'handleCreateComment',
+            'handleUpdateComment',
+            'handleDeleteComment',
+            'handleStatusChange',
+            'handleAddWatcher',
+            'handleRemoveWatcher',
+            'handleAddVote',
+            'handleRemoveVote',
+            'handleAddAttachments',
+            'handleDeleteAttachment',
+            'handleDeleteIssuelink',
+        ] as const;
+
+        for (const method of guardedMethods) {
+            const self = this as unknown as Record<string, (...args: unknown[]) => unknown>;
+
+            self[method] = this.withEditGuard(self[method].bind(this));
+        }
     }
 
     // TODO: proper error handling in webviews :'(
@@ -119,11 +161,13 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 case 'update': {
                     const issueData = e as EditIssueData;
                     this.updateInternals(issueData);
+                    // Don't reset error banner if user has logged out
+                    const shouldKeepErrorBanner = this.state.isLoggedOut;
                     this.setState({
                         ...issueData,
                         ...{
-                            isErrorBannerOpen: false,
-                            errorDetails: undefined,
+                            isErrorBannerOpen: shouldKeepErrorBanner,
+                            errorDetails: shouldKeepErrorBanner ? this.state.errorDetails : undefined,
                             isSomethingLoading: false,
                             loadingField: '',
                         },

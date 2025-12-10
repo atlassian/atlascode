@@ -135,6 +135,8 @@ export class CreateIssueWebview
     }
 
     override async onAuthChange() {
+        super.onAuthChange();
+
         const originallyAvailable = this._issueSuggestionSettings?.isAvailable;
         const originallyEnabled = this._issueSuggestionSettings?.isEnabled;
 
