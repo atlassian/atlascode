@@ -327,7 +327,6 @@ export class ClientManager implements Disposable {
         const credentials = await Container.credentialManager.getAuthInfo(site, false);
 
         if (credentials?.state === AuthInfoState.Invalid) {
-            Logger.error(new Error('Error creating client: credentials state is Invalid'));
             if (!this.hasWarnedOfFailure) {
                 window
                     .showErrorMessage(
