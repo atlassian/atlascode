@@ -1,5 +1,5 @@
 import Perf from '../util/perf';
-import { RovoDevEnv } from './analytics/rovodevAnalyticsTypes';
+import { RovoDevEnv, RovodevPerformanceTag } from './analytics/events';
 import { ExtensionApi } from './api/extensionApi';
 import { RovoDevLogger } from './util/rovoDevLogger';
 
@@ -24,73 +24,40 @@ export class PerformanceLogger {
         Perf.mark(promptId);
     }
 
-    public async promptFirstByteReceived(promptId: string) {
-        const measure = Perf.measure(promptId);
-        const evt = await this.extensionApi.analytics.performanceEvent(
-            'api.rovodev.chat.response.timeToFirstByte',
-            measure,
-            {
+    private async fireEvent(tag: RovodevPerformanceTag, measure: number, promptId: string): Promise<void> {
+        await this.extensionApi.analytics.sendTrackEvent({
+            action: 'performanceEvent',
+            subject: 'atlascode',
+            attributes: {
+                tag,
+                measure,
                 rovoDevEnv: this.rovoDevEnv,
                 appInstanceId: this.appInstanceId,
                 rovoDevSessionId: this.currentSessionId,
                 rovoDevPromptId: promptId,
             },
-        );
+        });
+        RovoDevLogger.debug(`Event fired: ${tag} ${measure} ms`);
+    }
 
-        RovoDevLogger.debug(`Event fired: rovodev.response.timeToFirstByte ${measure} ms`);
-        await this.extensionApi.analytics.sendTrackEvent(evt);
+    public async promptFirstByteReceived(promptId: string) {
+        const measure = Perf.measure(promptId);
+        await this.fireEvent('api.rovodev.chat.response.timeToFirstByte', measure, promptId);
     }
 
     public async promptFirstMessageReceived(promptId: string) {
         const measure = Perf.measure(promptId);
-        const evt = await this.extensionApi.analytics.performanceEvent(
-            'api.rovodev.chat.response.timeToFirstMessage',
-            measure,
-            {
-                rovoDevEnv: this.rovoDevEnv,
-                appInstanceId: this.appInstanceId,
-                rovoDevSessionId: this.currentSessionId,
-                rovoDevPromptId: promptId,
-            },
-        );
-
-        RovoDevLogger.debug(`Event fired: rovodev.response.timeToFirstMessage ${measure} ms`);
-        await this.extensionApi.analytics.sendTrackEvent(evt);
+        await this.fireEvent('api.rovodev.chat.response.timeToFirstMessage', measure, promptId);
     }
 
     public async promptTechnicalPlanReceived(promptId: string) {
         const measure = Perf.measure(promptId);
-        const evt = await this.extensionApi.analytics.performanceEvent(
-            'api.rovodev.chat.response.timeToTechPlan',
-            measure,
-            {
-                rovoDevEnv: this.rovoDevEnv,
-                appInstanceId: this.appInstanceId,
-                rovoDevSessionId: this.currentSessionId,
-                rovoDevPromptId: promptId,
-            },
-        );
-
-        RovoDevLogger.debug(`Event fired: rovodev.response.timeToTechPlan ${measure} ms`);
-        await this.extensionApi.analytics.sendTrackEvent(evt);
+        await this.fireEvent('api.rovodev.chat.response.timeToTechPlan', measure, promptId);
     }
 
     public async promptLastMessageReceived(promptId: string) {
         const measure = Perf.measure(promptId);
-        const evt = await this.extensionApi.analytics.performanceEvent(
-            'api.rovodev.chat.response.timeToLastMessage',
-            measure,
-            {
-                rovoDevEnv: this.rovoDevEnv,
-                appInstanceId: this.appInstanceId,
-                rovoDevSessionId: this.currentSessionId,
-                rovoDevPromptId: promptId,
-            },
-        );
-
         Perf.clear(promptId);
-
-        RovoDevLogger.debug(`Event fired: rovodev.response.timeToLastMessage ${measure} ms`);
-        await this.extensionApi.analytics.sendTrackEvent(evt);
+        await this.fireEvent('api.rovodev.chat.response.timeToLastMessage', measure, promptId);
     }
 }
