@@ -444,7 +444,11 @@ export class RovoDevResponseParser {
                     yield tmpChunkToFlush;
                 }
 
-                yield this.parseGenericReponse(chunk);
+                this.previousChunk = this.parseGenericReponse(chunk);
+                tmpChunkToFlush = this.flushPreviousChunk();
+                if (tmpChunkToFlush) {
+                    yield tmpChunkToFlush;
+                }
             }
         }
     }
