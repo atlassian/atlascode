@@ -74,6 +74,11 @@ export const MarkedDown: React.FC<{ value: string; onLinkClick: (href: string) =
     value,
     onLinkClick,
 }) => {
+    if (typeof value !== 'string') {
+        // Silently recover from invalid types
+        value = '';
+    }
+
     const spanRef = React.useRef<HTMLSpanElement>(null);
     const html = React.useMemo(() => mdParser.render(normalizeLinks(value)), [value]);
 
