@@ -5,7 +5,7 @@ export const RovoDevPerfEvents = {
     timeToFirstMessage: 'api.rovodev.chat.response.timeToFirstMessage',
     timeToTechPlan: 'api.rovodev.chat.response.timeToTechPlan',
     timeToLastMessage: 'api.rovodev.chat.response.timeToLastMessage',
-    timeToRender: 'api.rovodev.chat.response.timeToRender',
+    timeToRender: 'ui.rovodev.chat.response.timeToRender',
 } as const;
 
 export type RovoDevPerfEvent = (typeof RovoDevPerfEvents)[keyof typeof RovoDevPerfEvents];
