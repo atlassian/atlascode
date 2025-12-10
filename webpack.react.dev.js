@@ -1,7 +1,6 @@
 const path = require('path');
 const fs = require('fs');
 const webpack = require('webpack');
-const dotenv = require('dotenv');
 const ForkTsCheckerNotifierWebpackPlugin = require('fork-ts-checker-notifier-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
@@ -9,11 +8,10 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 const autoprefixer = require('autoprefixer');
 const { CompiledExtractPlugin } = require('@compiled/webpack-loader');
+const { createEnvPlugin } = require('./webpack.env.config');
 
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
-
-dotenv.config();
 
 module.exports = {
     mode: 'development',
@@ -101,16 +99,7 @@ module.exports = {
                 configFile: resolveApp('tsconfig.json'),
             },
         }),
-        new webpack.DefinePlugin({
-            'process.env.ATLASCODE_FX3_API_KEY': JSON.stringify(process.env.ATLASCODE_FX3_API_KEY),
-            'process.env.ATLASCODE_FX3_ENVIRONMENT': JSON.stringify(process.env.ATLASCODE_FX3_ENVIRONMENT),
-            'process.env.ATLASCODE_FX3_TARGET_APP': JSON.stringify(process.env.ATLASCODE_FX3_TARGET_APP),
-            'process.env.ATLASCODE_FX3_TIMEOUT': JSON.stringify(process.env.ATLASCODE_FX3_TIMEOUT),
-            'process.env.ATLASCODE_FF_OVERRIDES': JSON.stringify(process.env.ATLASCODE_FF_OVERRIDES),
-            'process.env.ATLASCODE_EXP_OVERRIDES_BOOL': JSON.stringify(process.env.ATLASCODE_EXP_OVERRIDES_BOOL),
-            'process.env.ATLASCODE_EXP_OVERRIDES_STRING': JSON.stringify(process.env.ATLASCODE_EXP_OVERRIDES_STRING),
-            'process.env.ROVODEV_BBY': JSON.stringify(process.env.ROVODEV_BBY)
-        }),
+        createEnvPlugin({ nodeEnv: 'development', isBrowser: true }),
         new webpack.ProvidePlugin({
             process: 'process/browser',
         }),
