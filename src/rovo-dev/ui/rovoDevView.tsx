@@ -69,6 +69,7 @@ const RovoDevView: React.FC = () => {
     const [jiraWorkItems, setJiraWorkItems] = useState<MinimalIssue<DetailedSiteInfo>[] | undefined>(undefined);
     const [pendingFilesForFiltering, setPendingFilesForFiltering] = useState<ModifiedFile[] | null>(null);
     const [thinkingBlockEnabled, setThinkingBlockEnabled] = useState(true);
+    const [lastCompletedPromptId, setLastCompletedPromptId] = useState<string | undefined>(undefined);
     const [isAtlassianUser, setIsAtlassianUser] = useState(false);
 
     // Initialize atlaskit theme for proper token support
@@ -278,6 +279,8 @@ const RovoDevView: React.FC = () => {
                         currentState.state === 'CancellingResponse'
                     ) {
                         setCurrentState({ state: 'WaitingForPrompt' });
+                        // Signal that we need to send render acknowledgement after this render completes
+                        setLastCompletedPromptId(event.promptId);
                     }
                     setSummaryMessageInHistory();
                     setPendingToolCallMessage('');
@@ -567,6 +570,17 @@ const RovoDevView: React.FC = () => {
             type: RovoDevViewResponseType.ForceUserFocusUpdate,
         });
     }, [postMessage]);
+
+    // Send render acknowledgement after completing a prompt
+    React.useEffect(() => {
+        if (lastCompletedPromptId && currentState.state === 'WaitingForPrompt') {
+            postMessage({
+                type: RovoDevViewResponseType.MessageRendered,
+                promptId: lastCompletedPromptId,
+            });
+            setLastCompletedPromptId(undefined);
+        }
+    }, [lastCompletedPromptId, currentState.state, postMessage]);
 
     const executeCodePlan = useCallback(() => {
         if (currentState.state !== 'WaitingForPrompt') {

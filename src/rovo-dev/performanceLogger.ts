@@ -1,5 +1,5 @@
 import Perf from '../util/perf';
-import { RovoDevEnv } from './analytics/rovodevAnalyticsTypes';
+import { RovoDevEnv, RovoDevPerfEvents } from './analytics/rovodevAnalyticsTypes';
 import { ExtensionApi } from './api/extensionApi';
 import { RovoDevLogger } from './util/rovoDevLogger';
 
@@ -91,6 +91,18 @@ export class PerformanceLogger {
         Perf.clear(promptId);
 
         RovoDevLogger.debug(`Event fired: rovodev.response.timeToLastMessage ${measure} ms`);
+        await this.extensionApi.analytics.sendTrackEvent(evt);
+    }
+
+    public async promptLastMessageRendered(promptId: string, renderTime: number) {
+        const evt = await this.extensionApi.analytics.performanceEvent(RovoDevPerfEvents.timeToRender, renderTime, {
+            rovoDevEnv: this.rovoDevEnv,
+            appInstanceId: this.appInstanceId,
+            rovoDevSessionId: this.currentSessionId,
+            rovoDevPromptId: promptId,
+        });
+
+        RovoDevLogger.debug(`Event fired: rovodev.response.timeToRender ${renderTime} ms`);
         await this.extensionApi.analytics.sendTrackEvent(evt);
     }
 }

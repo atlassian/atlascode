@@ -37,6 +37,7 @@ export const enum RovoDevViewResponseType {
     FilterModifiedFilesByContent = 'filterModifiedFilesByContent',
     OpenExternalLink = 'openExternalLink',
     OpenRovoDevLogFile = 'openRovoDevLogFile',
+    MessageRendered = 'messageRendered',
 }
 
 export type FileOperationType = 'modify' | 'create' | 'delete';
@@ -87,4 +88,5 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.FullContextModeToggled, { value: boolean }>
     | ReducerAction<RovoDevViewResponseType.FilterModifiedFilesByContent, { files: ModifiedFile[] }>
     | ReducerAction<RovoDevViewResponseType.OpenExternalLink, { href: string }>
-    | ReducerAction<RovoDevViewResponseType.OpenRovoDevLogFile>;
+    | ReducerAction<RovoDevViewResponseType.OpenRovoDevLogFile>
+    | ReducerAction<RovoDevViewResponseType.MessageRendered, { promptId: string }>;
