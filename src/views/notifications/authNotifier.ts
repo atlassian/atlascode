@@ -1,3 +1,4 @@
+import { RovodevStaticConfig } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { ConfigurationChangeEvent, Disposable, Uri } from 'vscode';
 
 import { Product, ProductJira } from '../../atlclients/authInfo';
@@ -40,7 +41,7 @@ export class AuthNotifier extends Disposable implements NotificationNotifier {
     }
 
     public fetchNotifications(): void {
-        if (process.env.ROVODEV_BBY) {
+        if (RovodevStaticConfig.isBBY) {
             return;
         }
         this.checkJiraAuth();

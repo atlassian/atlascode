@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { RovodevStaticConfig } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
@@ -15,8 +16,6 @@ import { ToolCallItem } from '../tools/ToolCallItem';
 import { ConnectionTimeout, DialogMessage, PullRequestMessage, Response, scrollToEnd } from '../utils';
 import { ChatStreamMessageRenderer } from './ChatStreamMessageRenderer';
 import { DropdownButton } from './dropdown-button/DropdownButton';
-
-const IsBoysenberry = process.env.ROVODEV_BBY === 'true';
 
 interface ChatStreamProps {
     chatHistory: Response[];
@@ -195,7 +194,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     ]);
 
     // Other state management effect
-    if (IsBoysenberry) {
+    if (RovodevStaticConfig.isBBY) {
         React.useEffect(() => {
             if (currentState.state === 'WaitingForPrompt') {
                 const canCreatePR = chatHistory.length > 0;
@@ -236,7 +235,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
-            {!IsBoysenberry && (
+            {!RovodevStaticConfig.isBBY && (
                 <RovoDevLanding
                     currentState={currentState}
                     isHistoryEmpty={chatHistory.length === 0}

@@ -9,6 +9,7 @@ import { token } from '@atlaskit/tokens';
 import Tooltip from '@atlaskit/tooltip';
 import * as monaco from 'monaco-editor';
 import React from 'react';
+import { RovodevStaticConfig } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
 
 import { rovoDevTextareaStyles } from '../../rovoDevViewStyles';
@@ -23,8 +24,6 @@ import {
     setupPromptKeyBindings,
     SLASH_COMMANDS,
 } from './utils';
-
-const IsBoysenberry = process.env.ROVODEV_BBY === 'true';
 
 type NonDisabledState = Exclude<State, DisabledState>;
 
@@ -86,7 +85,7 @@ function createEditor(setIsEmpty: (isEmpty: boolean) => void) {
         return undefined;
     }
 
-    initMonaco(IsBoysenberry);
+    initMonaco(RovodevStaticConfig.isBBY);
 
     const editor = createMonacoPromptEditor(container);
 
