@@ -1,12 +1,12 @@
 import { ClientOptions, FeatureGateEnvironment, Identifiers } from '@atlaskit/feature-gate-js-client';
 import { FetcherOptions } from '@atlaskit/feature-gate-js-client/dist/types/client/fetcher';
 import { NewFeatureGateOptions } from '@atlaskit/feature-gate-js-client/dist/types/client/types';
-import { FX3Config, isFX3ConfigValid } from 'src/util/staticConfig';
+import { FeatureFlagOverrides, FX3Config, isFX3ConfigValid } from 'src/util/staticConfig';
 import { env } from 'vscode';
 
 import { ClientInitializedErrorType } from '../../analytics';
 import { Logger } from '../../logger';
-import { ExperimentGates, ExperimentGateValues, Experiments, FeatureGateValues, Features } from '../features';
+import { ExperimentGates, Experiments, Features } from '../features';
 import { FeatureGateClient } from './utils';
 
 type NewFetcherOptions = FetcherOptions &
@@ -37,8 +37,6 @@ export class FeatureFlagClient {
         return this.singleton;
     }
 
-    private readonly featureGateOverrides: FeatureGateValues;
-    private readonly experimentValueOverride: ExperimentGateValues;
     private readonly isExperimentationDisabled: boolean;
 
     /* We keep two clients:
@@ -63,10 +61,6 @@ export class FeatureFlagClient {
 
     private constructor() {
         this.isExperimentationDisabled = !!process.env.ATLASCODE_NO_EXP || !env.isTelemetryEnabled;
-
-        this.featureGateOverrides = {} as FeatureGateValues;
-        this.experimentValueOverride = {} as ExperimentGateValues;
-        this.initializeOverrides();
     }
 
     /**
@@ -181,74 +175,15 @@ export class FeatureFlagClient {
         this.clientWithTenant = await this.initializeWithRetry(this.clientOptions, identifiers);
     }
 
-    private initializeOverrides(): void {
-        if (process.env.ATLASCODE_FF_OVERRIDES) {
-            const ffSplit = (process.env.ATLASCODE_FF_OVERRIDES || '')
-                .split(',')
-                .map(this.parseBoolOverride<Features>)
-                .filter((x) => !!x);
-
-            for (const { key, value } of ffSplit) {
-                this.featureGateOverrides[key] = value;
-            }
-        }
-
-        if (process.env.ATLASCODE_EXP_OVERRIDES_BOOL) {
-            const boolExpSplit = (process.env.ATLASCODE_EXP_OVERRIDES_BOOL || '')
-                .split(',')
-                .map(this.parseBoolOverride<Experiments>)
-                .filter((x) => !!x);
-
-            for (const { key, value } of boolExpSplit) {
-                this.experimentValueOverride[key] = value;
-            }
-        }
-
-        if (process.env.ATLASCODE_EXP_OVERRIDES_STRING) {
-            const strExpSplit = (process.env.ATLASCODE_EXP_OVERRIDES_STRING || '')
-                .split(',')
-                .map(this.parseStringOverride)
-                .filter((x) => !!x);
-
-            for (const { key, value } of strExpSplit) {
-                this.experimentValueOverride[key] = value;
-            }
-        }
-    }
-
-    private parseBoolOverride<T>(setting: string): { key: T; value: boolean } | undefined {
-        const [key, valueRaw] = setting
-            .trim()
-            .split('=', 2)
-            .map((x) => x.trim());
-
-        if (key) {
-            const value = valueRaw.toLowerCase() === 'true';
-            return { key: key as T, value };
-        } else {
-            return undefined;
-        }
-    }
-
-    private parseStringOverride(setting: string): { key: Experiments; value: string } | undefined {
-        const [key, value] = setting
-            .trim()
-            .split('=', 2)
-            .map((x) => x.trim());
-        if (key) {
-            return { key: key as Experiments, value };
-        } else {
-            return undefined;
-        }
-    }
-
     private isInitialized(): boolean {
         return !!this.client?.initializeCompleted();
     }
 
     public checkGate(gate: Features): boolean {
-        if (this.featureGateOverrides.hasOwnProperty(gate)) {
-            return this.featureGateOverrides[gate];
+        if (FeatureFlagOverrides.gates.hasOwnProperty(gate)) {
+            const overrideValue = FeatureFlagOverrides.gates[gate];
+            Logger.debug(`FeatureGates ${gate} -> ${overrideValue} (overridden)`);
+            return overrideValue!;
         }
 
         let gateValue = false;
@@ -267,8 +202,10 @@ export class FeatureFlagClient {
             return undefined;
         }
 
-        if (this.experimentValueOverride.hasOwnProperty(experiment)) {
-            return this.experimentValueOverride[experiment];
+        if (FeatureFlagOverrides.experiments.hasOwnProperty(experiment)) {
+            const overrideValue = FeatureFlagOverrides.experiments[experiment];
+            Logger.debug(`Experiment ${experiment} -> ${overrideValue} (overridden)`);
+            return overrideValue;
         }
 
         const experimentGate = ExperimentGates[experiment];
