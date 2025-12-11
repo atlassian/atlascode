@@ -93,6 +93,7 @@ export const enum Commands {
     JiraAPITokenLogin = 'atlascode.jira.apiTokenLogin',
     ExpandCreateWorkItemWebview = 'atlascode.jira.expandCreateWorkItem',
     CopyImageElement = 'atlascode.jira.copyImageElement',
+    AuthenticateWithBitbucketToken = 'atlascode.authenticateWithBitbucketToken',
 
     // Debug mode-only commands
     DebugQuickCommand = 'atlascode.debug.quickCommand',
