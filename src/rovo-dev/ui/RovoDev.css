@@ -849,6 +849,7 @@ body {
     display: flex;
     flex-direction: row;
     align-items: flex-start;
+    justify-content: space-between;
     gap: 8px;
     background-color: var(--vscode-sideBar-background);
     border-radius: 8px;
@@ -857,6 +858,9 @@ body {
 
 .prompt-settings-action {
     --ds-icon-inverse: var(--vscode-sideBar-background);
+    margin-left: auto;
+    flex-shrink: 0;
+    align-self: flex-start;
 }
 
 .prompt-settings-logo {

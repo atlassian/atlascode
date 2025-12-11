@@ -135,17 +135,19 @@ const PromptSettingsItem: React.FC<{
 }> = ({ icon, label, description, action, actionType, toggled, isInternalOnly }) => {
     return (
         <div className="prompt-settings-item">
-            <div className="prompt-settings-logo">{icon}</div>
-            <div id="prompt-settings-context">
-                <p style={{ fontWeight: 'bold' }}>
-                    {label}
-                    {isInternalOnly && (
-                        <span style={{ backgroundColor: 'var(--vscode-badge-background)', marginLeft: '8px' }}>
-                            Internal only
-                        </span>
-                    )}
-                </p>
-                <p style={{ fontSize: '11px' }}>{description}</p>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', flex: '1' }}>
+                <div className="prompt-settings-logo">{icon}</div>
+                <div id="prompt-settings-context" style={{ flex: '1' }}>
+                    <p style={{ fontWeight: 'bold' }}>
+                        {label}
+                        {isInternalOnly && (
+                            <span style={{ backgroundColor: 'var(--vscode-badge-background)', marginLeft: '8px' }}>
+                                Internal only
+                            </span>
+                        )}
+                    </p>
+                    <p style={{ fontSize: '11px' }}>{description}</p>
+                </div>
             </div>
             {action && (
                 <div className="prompt-settings-action">
