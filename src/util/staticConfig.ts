@@ -21,10 +21,5 @@ export const FX3Config = {
 } as const;
 
 export const isFX3ConfigValid = () => {
-    return (
-        FX3Config.apiKey !== '' &&
-        FX3Config.targetApp !== '' &&
-        validEnvironments.includes(FX3Config.environment) &&
-        FX3Config.timeout > 0
-    );
+    return FX3Config.apiKey !== '' && FX3Config.targetApp !== '' && FX3Config.timeout > 0;
 };
