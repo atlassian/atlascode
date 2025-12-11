@@ -176,8 +176,14 @@ export class LoginManager {
                 });
 
                 this.fireExplicitSiteChangeEvent([siteDetails]);
-            } catch (err) {
+            } catch (err: any) {
                 Logger.error(err, `Error authenticating with ${site.product.name}`);
+                // User-friendly message for server auth credential errors
+                if (err?.response?.status) {
+                    return Promise.reject(
+                        `Error authenticating with ${site.product.name}: invalid credentials on Server Authentication`,
+                    );
+                }
                 return Promise.reject(`Error authenticating with ${site.product.name}: ${err}`);
             }
         }
@@ -192,8 +198,14 @@ export class LoginManager {
                 });
 
                 this.fireExplicitSiteChangeEvent([siteDetails]);
-            } catch (err) {
+            } catch (err: any) {
                 Logger.error(err, `Error authenticating with ${site.product.name}`);
+                // User-friendly message for server auth credential errors
+                if (err?.response?.status) {
+                    return Promise.reject(
+                        `Error authenticating with ${site.product.name}: invalid credentials on Server Authentication`,
+                    );
+                }
                 return Promise.reject(`Error authenticating with ${site.product.name}: ${err}`);
             }
         }
