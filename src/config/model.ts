@@ -40,6 +40,7 @@ export interface IConfig {
     enableCurlLogging: boolean;
     enableHttpsTunnel: boolean;
     helpExplorerEnabled: boolean;
+    disableOnboarding: boolean;
     rovodev: RovoDevConfig;
 }
 
@@ -294,5 +295,6 @@ export const emptyConfig: IConfig = {
     enableCurlLogging: false,
     enableHttpsTunnel: false,
     helpExplorerEnabled: true,
+    disableOnboarding: false,
     rovodev: emptyRovoDevConfig,
 };

@@ -35,16 +35,6 @@ jest.mock('../analytics', () => ({
     editedEvent: () => Promise.resolve(forceCastTo<TrackEvent>({})),
 }));
 
-jest.mock('./oauthDancer', () => ({
-    OAuthDancer: {
-        Instance: {
-            doDance: () => {},
-            doInitRemoteDance: () => {},
-            doFinishRemoteDance: () => {},
-        },
-    },
-}));
-
 jest.mock('../container', () => ({
     Container: {
         clientManager: {
@@ -56,8 +46,20 @@ jest.mock('../container', () => ({
             removeSite: jest.fn(),
             addOrUpdateSite: jest.fn(),
         },
+        config: {
+            enableCurlLogging: false,
+        },
     },
 }));
+
+jest.mock('./strategyCrypto', () => {
+    return {
+        createVerifier: jest.fn(() => 'verifier'),
+        base64URLEncode: jest.fn(() => 'base64URLEncode'),
+        sha256: jest.fn(() => 'sha256'),
+        basicAuth: jest.fn(() => 'basicAuth'),
+    };
+});
 
 const mockedAxiosInstance = forceCastTo<AxiosInstance>(() =>
     Promise.resolve({
@@ -72,6 +74,17 @@ const mockedAxiosInstance = forceCastTo<AxiosInstance>(() =>
         },
     }),
 );
+
+jest.mock('./oauthDancer', () => ({
+    OAuthDancer: {
+        Instance: {
+            doDance: () => {},
+            doInitRemoteDance: () => {},
+            doFinishRemoteDance: () => {},
+            getAxiosInstance: () => mockedAxiosInstance,
+        },
+    },
+}));
 
 describe('LoginManager', () => {
     let loginManager: LoginManager;

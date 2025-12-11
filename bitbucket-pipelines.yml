@@ -1,0 +1,140 @@
+image: node:20
+
+definitions:
+  caches:
+    npm: ~/.npm
+  
+  steps:
+    - step: &build-test
+        name: Build and Test
+        caches:
+          - npm
+        size: 4x
+        script:
+          - apt-get update && apt-get install -y quilt
+          - npm install
+          - npm run lint
+          - npm run test
+        
+    - step: &build-e2e-test
+        name: Build and E2E Test
+        caches:
+          - npm
+        size: 4x
+        services:
+          - docker
+        script:
+          - apt-get update && apt-get install -y quilt
+          - npm install
+          - npm run lint
+          - npm run test
+          - docker pull ghcr.io/atlassian/atlascode-e2e:latest || true
+          - docker tag ghcr.io/atlassian/atlascode-e2e:latest atlascode-e2e || true
+          - npm run test:e2e:docker
+        
+    - step: &build-extension
+        name: Build Extension
+        caches:
+          - npm
+        size: 2x
+        script:
+          - apt-get update && apt-get install -y quilt
+          - npm install
+          - npm run extension:package
+        artifacts:
+          - "atlascode-*.vsix"
+
+    - step: &publish-extension-statlas
+        name: Publish Extension Statlas
+        caches:
+          - npm
+        size: 2x
+        script:
+          - apt-get update && apt-get install -y quilt
+          - npm install
+          - curl -fsSLO https://statlas.prod.atl-paas.net/atlas-cli/install.sh
+          - /bin/bash -s <install.sh
+          - ./atlas --version
+          - ./atlas upgrade
+          - ./atlas plugin install -n statlas
+          - mv atlascode-*.vsix atlascode.vsix
+          - |
+            if [ "$BITBUCKET_BRANCH" = "fork" ]; then
+              ./atlas statlas put --file "atlascode.vsix" -n atlascode-prod --auth-group "atlassian-frontend-dl-admin"
+              VERSION_TAG=$(./scripts/generate-version-tag.sh)
+              ./atlas statlas put --file "versions.json" -n atlascode-prod --auth-group "atlassian-frontend-dl-admin"
+            else
+              ./atlas statlas put --file "atlascode.vsix" -n atlascode-dev --auth-group "developers"
+            fi
+    
+    - step: &build-prerelease-extension
+        name: Build Pre-release Extension
+        caches:
+          - npm
+        size: 4x
+        script:
+          - apt-get update && apt-get install -y quilt
+          - npm install
+          - npm run extension:package:prerelease
+        artifacts:
+          - "atlascode-*.vsix"
+
+    - step: &publish-extension
+        name: Publish Extension
+        caches:
+          - npm
+        size: 2x
+        script:
+          - apt-get update && apt-get install -y quilt
+          - PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          - echo "Using version ${PACKAGE_VERSION}"
+          - npx vsce publish -p $VSCE_MARKETPLACE_TOKEN --baseContentUrl https://bitbucket.org/atlassian/atlascode/raw/main/ --packagePath atlascode-${PACKAGE_VERSION}.vsix
+          - npx ovsx publish -p $OPENVSX_KEY "atlascode-${PACKAGE_VERSION}.vsix"
+        
+    - step: &publish-prerelease-extension
+        name: Publish Pre-release Extension
+        caches:
+          - npm
+        size: 2x
+        script:
+          - apt-get update && apt-get install -y quilt
+          - PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          - echo "Using version ${PACKAGE_VERSION}"
+          - npx vsce publish --pre-release -p $VSCE_MARKETPLACE_TOKEN --baseContentUrl https://bitbucket.org/atlassian/atlascode/raw/main/ --packagePath atlascode-${PACKAGE_VERSION}.vsix
+          - npx ovsx publish --pre-release -p $OPENVSX_KEY "atlascode-${PACKAGE_VERSION}.vsix"
+
+pipelines:
+  default:
+    - step: *build-prerelease-extension
+    
+  branches:
+    fork:
+      # First run tests are run
+      # - step: *build-e2e-test  -- enable after OOM issues are fixed
+      
+      # Prepare and release a nightly version first
+      # to prevent users on pre-releases from being downgraded
+      # - step:
+      #     name: Set Nightly Version
+      #     script:
+      #       - PACKAGE_VERSION=$(./scripts/version/get-next-nightly.sh)
+      #       - ./scripts/version/assert-nightly.sh $PACKAGE_VERSION
+      #       - echo "Using version ${PACKAGE_VERSION}"
+      #       - npm -no-git-tag-version --allow-same-version -f version $PACKAGE_VERSION
+      #     artifacts:
+      #       - package.json
+      - step: *build-prerelease-extension
+      - step: *publish-extension-statlas
+  
+  custom:
+    build-e2e-image:
+      - step:
+          name: Build E2E Docker image
+          services:
+            - docker
+          script:
+            - docker build --platform linux/amd64 --tag atlassian/atlascode-e2e:$BITBUCKET_COMMIT --tag atlassian/atlascode-e2e:latest - <e2e/Dockerfile
+            - pipe: atlassian/docker-push-pipe:2.0.0
+              variables:
+                IMAGE_NAME: 'atlassian/atlascode-e2e'
+                TAGS: '$BITBUCKET_COMMIT latest' 

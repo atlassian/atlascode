@@ -1,3 +1,4 @@
+import { Mutex } from 'async-mutex';
 import crypto from 'crypto';
 import PQueue from 'p-queue';
 import { Disposable, Event, EventEmitter, ExtensionContext, version, window } from 'vscode';
@@ -49,6 +50,7 @@ export class CredentialManager implements Disposable {
     private _refresher = new OAuthRefesher();
     private negotiator: Negotiator;
     private _refreshInFlight = new Map<string, Promise<void>>();
+    private mutex = new Mutex();
 
     constructor(
         context: ExtensionContext,
@@ -218,6 +220,29 @@ export class CredentialManager implements Disposable {
             Logger.debug('Failed to parse JWT token for expiration', error);
             return null;
         }
+    }
+
+    /**
+     * Saves the auth info to both the in-memory store and the secretstorage for Bitbucket API key login
+     */
+    public async saveAuthInfoBBToken(site: DetailedSiteInfo, info: AuthInfo, id: number): Promise<void> {
+        Logger.debug(
+            `[id=${id}] Saving auth info for site: ${site.baseApiUrl} credentialID: ${site.credentialId} using BB token`,
+        );
+        const productAuths = this._memStore.get(site.product.key);
+        Logger.debug(`[id=${id}] productAuths: ${productAuths}`);
+        if (!productAuths) {
+            this._memStore.set(site.product.key, new Map<string, AuthInfo>().set(site.credentialId, info));
+            Logger.debug(`[id=${id}] productAuths is empty so setting it to the new auth info in memstore`);
+        } else {
+            productAuths.set(site.credentialId, info);
+            this._memStore.set(site.product.key, productAuths);
+            Logger.debug(
+                `[id=${id}] productAuths is not empty so setting it to productAuth: ${productAuths}in memstore`,
+            );
+        }
+        Logger.debug(`[id=${id}] Calling saveAuthInfo for site: ${site.baseApiUrl} credentialID: ${site.credentialId}`);
+        await this.saveAuthInfo(site, info);
     }
 
     private async getAuthInfoForProductAndCredentialId(
@@ -473,7 +498,7 @@ export class CredentialManager implements Disposable {
 
         const provider: OAuthProvider | undefined = oauthProviderForSite(site);
 
-        if (provider && credentials) {
+        if (provider && credentials && credentials.refresh) {
             const tokenResponse = await this._refresher.getNewTokens(provider, credentials.refresh);
             if (tokenResponse.tokens) {
                 const newTokens = tokenResponse.tokens;
@@ -498,6 +523,15 @@ export class CredentialManager implements Disposable {
      * Removes an auth item from both the in-memory store and the secretstorage.
      */
     public async removeAuthInfo(site: DetailedSiteInfo): Promise<boolean> {
+        return this.mutex.runExclusive(() => {
+            return this.removeAuthInfoForProductAndCredentialId(site);
+        });
+    }
+
+    /**
+     * Removes an auth item from both the in-memory store and the secretstorage (internal implementation).
+     */
+    private async removeAuthInfoForProductAndCredentialId(site: DetailedSiteInfo): Promise<boolean> {
         const productAuths = this._memStore.get(site.product.key);
         let wasKeyDeleted = false;
         let wasMemDeleted = false;

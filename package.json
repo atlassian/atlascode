@@ -180,6 +180,10 @@
                 "enablement": "atlascode:rovoDevEnabled"
             },
             {
+                "command": "atlascode.authenticateWithBitbucketToken",
+                "title": "Atlasian: Authenticate with Bitbucket Token"
+            },
+            {
                 "command": "atlascode.jira.todoIssue",
                 "title": "TO DO"
             },
@@ -1592,6 +1596,12 @@
                     "default": true,
                     "description": "Shows the help explorer treeview",
                     "scope": "window"
+                },
+                "atlascode.disableOnboarding": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Hide initial onboarding and help screens",
+                    "scope": "window"
                 }
             }
         }
@@ -1668,6 +1678,7 @@
         "@vscode/codicons": "^0.0.40",
         "@vscode/webview-ui-toolkit": "^1.4.0",
         "adm-zip": "^0.5.16",
+        "async-mutex": "^0.5.0",
         "awesome-debounce-promise": "^2.1.0",
         "axios": "^1.12.0",
         "axios-curlirize": "^2.0.0",

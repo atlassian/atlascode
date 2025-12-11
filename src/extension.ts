@@ -85,7 +85,7 @@ export async function activate(context: ExtensionContext) {
         Container.clientManager.requestSite(site);
     });
 
-    if (!RovodevStaticConfig.isBBY) {
+    if (!RovodevStaticConfig.isBBY && !Container.config.disableOnboarding) {
         if (previousVersion === undefined) {
             commands.executeCommand(Commands.ShowOnboardingFlow);
         } else {
