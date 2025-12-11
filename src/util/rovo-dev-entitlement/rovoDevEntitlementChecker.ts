@@ -18,6 +18,7 @@ export enum RovoDevEntitlementType {
     ROVO_DEV_STANDARD = 'ROVO_DEV_STANDARD',
     ROVO_DEV_STANDARD_TRIAL = 'ROVO_DEV_STANDARD_TRIAL',
     ROVO_DEV_BETA = 'ROVO_DEV_BETA',
+    UNKNOWN = 'UNKNOWN',
 }
 interface EntitlementResponse {
     isEntitled: boolean;
@@ -63,13 +64,26 @@ export class RovoDevEntitlementChecker extends Disposable {
                 Logger.debug(`Cached entitlement response: ${this._cachedEntitlement.type}`);
                 return this._cachedEntitlement;
             }
+
             const credentials = await Container.clientManager.getCloudPrimarySite();
 
             if (!credentials) {
-                throw new RovoDevEntitlementError(
-                    RovoDevEntitlementErrorType.CREDENTIAL_ERROR,
-                    'No valid Rovo Dev credentials found',
-                );
+                // Check entitlement for Oauth
+                const fgEntitlement = Container.featureFlagClient.checkGate(Features.RovoDevSiteEntitled);
+                if (!fgEntitlement) {
+                    throw new RovoDevEntitlementError(
+                        RovoDevEntitlementErrorType.NO_ACTIVE_PRODUCT,
+                        'No active Rovo Dev product found',
+                    );
+                }
+                const type = RovoDevEntitlementType.UNKNOWN;
+                rovoDevEntitlementCheckEvent(true, type).then((e) => {
+                    this._analyticsClient.sendTrackEvent(e);
+                });
+                return {
+                    isEntitled: true,
+                    type: type as RovoDevEntitlementType,
+                };
             }
 
             const options = {
