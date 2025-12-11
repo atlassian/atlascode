@@ -180,10 +180,12 @@ export class FeatureFlagClient {
     }
 
     public checkGate(gate: Features): boolean {
-        if (FeatureFlagOverrides.gates.hasOwnProperty(gate)) {
+        if (gate in FeatureFlagOverrides.gates) {
             const overrideValue = FeatureFlagOverrides.gates[gate];
             Logger.debug(`FeatureGates ${gate} -> ${overrideValue} (overridden)`);
-            return overrideValue!;
+            if (overrideValue !== undefined) {
+                return overrideValue;
+            }
         }
 
         let gateValue = false;
@@ -198,11 +200,11 @@ export class FeatureFlagClient {
 
     public checkExperimentValue(experiment: Experiments): any {
         // unknown experiment name
-        if (!ExperimentGates.hasOwnProperty(experiment)) {
+        if (!(experiment in ExperimentGates)) {
             return undefined;
         }
 
-        if (FeatureFlagOverrides.experiments.hasOwnProperty(experiment)) {
+        if (experiment in FeatureFlagOverrides.experiments) {
             const overrideValue = FeatureFlagOverrides.experiments[experiment];
             Logger.debug(`Experiment ${experiment} -> ${overrideValue} (overridden)`);
             return overrideValue;
