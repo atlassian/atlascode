@@ -176,15 +176,8 @@ export class LoginManager {
                 });
 
                 this.fireExplicitSiteChangeEvent([siteDetails]);
-            } catch (err: any) {
-                Logger.error(err, `Error authenticating with ${site.product.name}`);
-                // User-friendly message for server auth credential errors
-                if (err?.response?.status) {
-                    return Promise.reject(
-                        `Error authenticating with ${site.product.name}: invalid credentials on Server Authentication`,
-                    );
-                }
-                return Promise.reject(`Error authenticating with ${site.product.name}: ${err}`);
+            } catch (err: unknown) {
+                return Promise.reject(this.formatServerAuthError(err, site.product.name));
             }
         }
     }
@@ -198,17 +191,22 @@ export class LoginManager {
                 });
 
                 this.fireExplicitSiteChangeEvent([siteDetails]);
-            } catch (err: any) {
-                Logger.error(err, `Error authenticating with ${site.product.name}`);
-                // User-friendly message for server auth credential errors
-                if (err?.response?.status) {
-                    return Promise.reject(
-                        `Error authenticating with ${site.product.name}: invalid credentials on Server Authentication`,
-                    );
-                }
-                return Promise.reject(`Error authenticating with ${site.product.name}: ${err}`);
+            } catch (err: unknown) {
+                return Promise.reject(this.formatServerAuthError(err, site.product.name));
             }
         }
+    }
+
+    private formatServerAuthError(err: unknown, productName: string): string {
+        const error = err instanceof Error ? err : new Error(String(err));
+        Logger.error(error, `Error authenticating with ${productName}`);
+
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        if (status === 404) {
+            return `Error authenticating with ${productName}: invalid credentials on Server Authentication`;
+        }
+
+        return `Error authenticating with ${productName}: ${error.message}`;
     }
 
     private isSiteAddedViaToken(site: DetailedSiteInfo): boolean {
