@@ -43,8 +43,19 @@ jest.mock('vscode', () => {
     };
 });
 
+jest.mock('src/util/staticConfig', () => ({
+    FX3Config: {
+        apiKey: 'some-api-key',
+        environment: 'development' as const,
+        targetApp: 'some-target-app',
+        timeout: 1000,
+    },
+    isFX3ConfigValid: jest.fn(() => true),
+}));
+
 import { Identifiers } from '@atlaskit/feature-gate-js-client';
 import { it } from '@jest/globals';
+import { isFX3ConfigValid } from 'src/util/staticConfig';
 import { forceCastTo } from 'testsutil';
 
 import { ClientInitializedErrorType } from '../../analytics';
@@ -63,14 +74,13 @@ describe('FeatureFlagClient', () => {
         };
         process.env = {
             ...originalEnv,
-            ATLASCODE_FX3_TARGET_APP: 'some-app',
-            ATLASCODE_FX3_API_KEY: 'some-key',
-            ATLASCODE_FX3_ENVIRONMENT: 'Production',
-            ATLASCODE_FX3_TIMEOUT: '2000',
             ATLASCODE_FF_OVERRIDES: undefined,
             ATLASCODE_EXP_OVERRIDES_BOOL: undefined,
             ATLASCODE_EXP_OVERRIDES_STRING: undefined,
         };
+
+        // Reset the mock to return true by default
+        (isFX3ConfigValid as jest.Mock).mockReturnValue(true);
 
         FeatureFlagClient['singleton'] = undefined;
         featureFlagClient = FeatureFlagClient.getInstance();
@@ -106,7 +116,7 @@ describe('FeatureFlagClient', () => {
 
         it("should catch an error when the feature flag client doesn't have the FX3 data", async () => {
             jest.spyOn(mockClient, 'initialize');
-            process.env.ATLASCODE_FX3_API_KEY = '';
+            (isFX3ConfigValid as jest.Mock).mockReturnValue(false);
 
             let error: FeatureFlagClientInitError = undefined!;
 

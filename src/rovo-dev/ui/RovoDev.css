@@ -403,7 +403,7 @@ body {
 }
 
 .user-message {
-    background-color: var(--vscode-editor-selectionBackground);
+    background-color: var(--ds-background-accent-blue-bolder);
     align-self: flex-end;
     border-bottom-right-radius: 0px;
     padding: 8px 12px;
@@ -416,6 +416,10 @@ body {
     word-break: break-word;
     color: var(--vscode-editor-foreground);
     max-width: 100%;
+}
+
+.user-message .message-content {
+    color: var(--ds-text-inverse);
 }
 
 /* Pull Request button styles */
@@ -892,6 +896,10 @@ body {
     border: 1px solid var(--vscode-contrastBorder);
     background-color: var(--vscode-editor-background);
     color: var(--vscode-editor-foreground);
+}
+
+.vscode-high-contrast .user-message .message-content {
+    color: inherit;
 }
 
 .vscode-high-contrast code {

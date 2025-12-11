@@ -1,6 +1,7 @@
 import { ClientOptions, FeatureGateEnvironment, Identifiers } from '@atlaskit/feature-gate-js-client';
 import { FetcherOptions } from '@atlaskit/feature-gate-js-client/dist/types/client/fetcher';
 import { NewFeatureGateOptions } from '@atlaskit/feature-gate-js-client/dist/types/client/types';
+import { FX3Config, isFX3ConfigValid } from 'src/util/staticConfig';
 import { env } from 'vscode';
 
 import { ClientInitializedErrorType } from '../../analytics';
@@ -116,24 +117,21 @@ export class FeatureFlagClient {
             throw new FeatureFlagClientInitError(ClientInitializedErrorType.IdMissing, 'analyticsAnonymousId not set');
         }
 
-        const targetApp = process.env.ATLASCODE_FX3_TARGET_APP;
-        const environment = process.env.ATLASCODE_FX3_ENVIRONMENT as FeatureGateEnvironment;
-        const apiKey = process.env.ATLASCODE_FX3_API_KEY;
-        const timeout = process.env.ATLASCODE_FX3_TIMEOUT;
-
-        if (!targetApp || !environment || !apiKey || !timeout) {
-            throw new FeatureFlagClientInitError(ClientInitializedErrorType.Skipped, 'env data not set');
+        if (!isFX3ConfigValid()) {
+            throw new FeatureFlagClientInitError(ClientInitializedErrorType.Skipped, 'FX3 config not set');
         }
 
         if (this.isExperimentationDisabled) {
             return;
         }
 
+        const { apiKey, environment, targetApp, timeout } = FX3Config;
+
         this.clientOptions = {
             apiKey,
-            environment,
+            environment: environment as FeatureGateEnvironment,
             targetApp,
-            fetchTimeoutMs: Number.parseInt(timeout),
+            fetchTimeoutMs: timeout,
             loggingEnabled: 'always',
             perimeter: PerimeterType.COMMERCIAL,
             ignoreWindowUndefined: true,
