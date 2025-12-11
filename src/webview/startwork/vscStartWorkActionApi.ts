@@ -11,6 +11,8 @@ import { Logger } from '../../logger';
 import { Branch, RefType } from '../../typings/git';
 import { Experiments } from '../../util/featureFlags';
 
+const startWorkPushBranchToRemote = 'startWorkPushBranchToRemote';
+
 export class VSCStartWorkActionApi implements StartWorkActionApi {
     getWorkspaceRepos(): WorkspaceRepo[] {
         return Container.bitbucketContext?.getAllRepositories() || [];
@@ -129,11 +131,11 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
     }
 
     async getPushBranchPreference(): Promise<boolean> {
-        return Container.context.globalState.get<boolean>('startWorkPushBranchToRemote', true);
+        return Container.context.globalState.get<boolean>(startWorkPushBranchToRemote, true);
     }
 
     async updatePushBranchPreference(enabled: boolean): Promise<void> {
-        await Container.context.globalState.update('startWorkPushBranchToRemote', enabled);
+        await Container.context.globalState.update(startWorkPushBranchToRemote, enabled);
     }
 
     async openRovoDev(issue: MinimalIssue<DetailedSiteInfo>): Promise<void> {

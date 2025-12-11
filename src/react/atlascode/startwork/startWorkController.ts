@@ -58,7 +58,7 @@ export const StartWorkControllerContext = React.createContext(emptyApi);
 export interface StartWorkState extends StartWorkInitMessage {
     isSomethingLoading: boolean;
     rovoDevPreference?: boolean;
-    pushBranchPreference?: boolean;
+    pushBranchPreference: boolean;
 }
 
 const emptyState: StartWorkState = {

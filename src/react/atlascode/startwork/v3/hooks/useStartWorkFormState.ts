@@ -15,7 +15,7 @@ export function useStartWorkFormState(
 ) {
     const errorController = useContext(ErrorControllerContext);
 
-    const [pushBranchEnabled, setPushBranchEnabled] = useState(state.pushBranchPreference ?? true);
+    const [pushBranchEnabled, setPushBranchEnabled] = useState(state.pushBranchPreference);
     const [localBranch, setLocalBranch] = useState('');
     const [sourceBranch, setSourceBranch] = useState<Branch>({ type: 0, name: '' });
     const [selectedRepository, setSelectedRepository] = useState<RepoData | undefined>(state.repoData[0]);
