@@ -8,6 +8,7 @@ import { ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { expansionCastTo } from 'testsutil/miscFunctions';
 
 import { DetailedSiteInfo, emptySiteInfo, ProductJira } from '../atlclients/authInfo';
+import { CheckedScopes } from '../atlclients/authStore';
 import { Container } from '../container';
 import { FetchQueryAction } from '../ipc/issueActions';
 import { Logger } from '../logger';
@@ -19,6 +20,7 @@ jest.mock('../container', () => ({
         clientManager: {
             jiraClient: jest.fn(),
         },
+        setIsEditorFocused: jest.fn(),
     },
 }));
 
@@ -712,6 +714,221 @@ describe('AbstractIssueEditorWebview', () => {
 
             expect(handled).toBe(true);
             expect(webview.postMessage).not.toHaveBeenCalled();
+        });
+
+        it('should handle handleEditorFocus action', async () => {
+            const mockMessage = {
+                action: 'handleEditorFocus',
+                isFocused: true,
+            };
+
+            const setIsEditorFocusedSpy = jest.spyOn(Container, 'setIsEditorFocused');
+
+            const handled = await webview.testOnMessageReceived(mockMessage);
+
+            expect(handled).toBe(true);
+            expect(setIsEditorFocusedSpy).toHaveBeenCalledWith(true);
+
+            setIsEditorFocusedSpy.mockRestore();
+        });
+
+        it('should handle handleEditorFocus action with false value', async () => {
+            const mockMessage = {
+                action: 'handleEditorFocus',
+                isFocused: false,
+            };
+
+            const setIsEditorFocusedSpy = jest.spyOn(Container, 'setIsEditorFocused');
+
+            const handled = await webview.testOnMessageReceived(mockMessage);
+
+            expect(handled).toBe(true);
+            expect(setIsEditorFocusedSpy).toHaveBeenCalledWith(false);
+
+            setIsEditorFocusedSpy.mockRestore();
+        });
+
+        it('should handle fetchMediaToken action when feature flag is enabled and site is available', async () => {
+            const mockMessage = {
+                action: 'fetchMediaToken',
+            };
+
+            const mockCheckScopesResult: CheckedScopes = {
+                checkedScopes: {
+                    'read:media-credentials:jira': true,
+                    'write:media-credentials:jira': true,
+                },
+                isApiToken: false,
+            };
+
+            const mockFeatureFlagClient = {
+                checkGate: jest.fn().mockReturnValue(true),
+            };
+
+            const mockCredentialManager = {
+                checkScopes: jest.fn().mockResolvedValue(mockCheckScopesResult),
+            };
+
+            // Mock Container dependencies
+            Object.defineProperty(Container, 'featureFlagClient', {
+                get: () => mockFeatureFlagClient,
+                configurable: true,
+            });
+            Object.defineProperty(Container, 'credentialManager', {
+                get: () => mockCredentialManager,
+                configurable: true,
+            });
+
+            // Create a webview instance with siteOrUndefined defined
+            const webviewWithSite = new TestIssueEditorWebview();
+            Object.defineProperty(webviewWithSite, 'siteOrUndefined', {
+                get: () => mockSiteInfo,
+            });
+
+            const handled = await webviewWithSite.testOnMessageReceived(mockMessage);
+
+            expect(handled).toBe(false);
+            expect(mockFeatureFlagClient.checkGate).toHaveBeenCalledWith('atlascode-use-new-atlaskit-editor');
+            expect(mockCredentialManager.checkScopes).toHaveBeenCalledWith(mockSiteInfo, [
+                'read:media-credentials:jira',
+                'write:media-credentials:jira',
+            ]);
+            expect(webviewWithSite.postMessage).toHaveBeenCalledWith({
+                type: 'scopeCheckResult',
+                checkedScopes: {
+                    mediaRead: true,
+                    mediaWrite: true,
+                },
+                isApiToken: false,
+            });
+        });
+
+        it('should handle fetchMediaToken action with missing scopes', async () => {
+            const mockMessage = {
+                action: 'fetchMediaToken',
+            };
+
+            const mockCheckScopesResult: CheckedScopes = {
+                checkedScopes: {
+                    'read:media-credentials:jira': false,
+                },
+                isApiToken: false,
+            };
+
+            const mockFeatureFlagClient = {
+                checkGate: jest.fn().mockReturnValue(true),
+            };
+
+            const mockCredentialManager = {
+                checkScopes: jest.fn().mockResolvedValue(mockCheckScopesResult),
+            };
+
+            Object.defineProperty(Container, 'featureFlagClient', {
+                get: () => mockFeatureFlagClient,
+                configurable: true,
+            });
+            Object.defineProperty(Container, 'credentialManager', {
+                get: () => mockCredentialManager,
+                configurable: true,
+            });
+
+            const webviewWithSite = new TestIssueEditorWebview();
+            Object.defineProperty(webviewWithSite, 'siteOrUndefined', {
+                get: () => mockSiteInfo,
+            });
+
+            const handled = await webviewWithSite.testOnMessageReceived(mockMessage);
+
+            expect(handled).toBe(false);
+            expect(webviewWithSite.postMessage).toHaveBeenCalledWith({
+                type: 'scopeCheckResult',
+                checkedScopes: {
+                    mediaRead: false,
+                    mediaWrite: false,
+                },
+                isApiToken: false,
+            });
+        });
+
+        it('should handle fetchMediaToken action when feature flag is disabled', async () => {
+            const mockMessage = {
+                action: 'fetchMediaToken',
+            };
+
+            const mockFeatureFlagClient = {
+                checkGate: jest.fn().mockReturnValue(false),
+            };
+
+            Object.defineProperty(Container, 'featureFlagClient', {
+                get: () => mockFeatureFlagClient,
+                configurable: true,
+            });
+
+            const webviewWithSite = new TestIssueEditorWebview();
+            Object.defineProperty(webviewWithSite, 'siteOrUndefined', {
+                get: () => mockSiteInfo,
+            });
+
+            const handled = await webviewWithSite.testOnMessageReceived(mockMessage);
+
+            expect(handled).toBe(false);
+            expect(mockFeatureFlagClient.checkGate).toHaveBeenCalledWith('atlascode-use-new-atlaskit-editor');
+            expect(webviewWithSite.postMessage).not.toHaveBeenCalled();
+        });
+
+        it('should handle fetchMediaToken action when site is undefined', async () => {
+            const mockMessage = {
+                action: 'fetchMediaToken',
+            };
+
+            const mockFeatureFlagClient = {
+                checkGate: jest.fn().mockReturnValue(true),
+            };
+
+            Object.defineProperty(Container, 'featureFlagClient', {
+                get: () => mockFeatureFlagClient,
+                configurable: true,
+            });
+
+            const handled = await webview.testOnMessageReceived(mockMessage);
+
+            expect(handled).toBe(false);
+            expect(mockFeatureFlagClient.checkGate).toHaveBeenCalledWith('atlascode-use-new-atlaskit-editor');
+            expect(webview.postMessage).not.toHaveBeenCalled();
+        });
+
+        it('should handle fetchMediaToken action when checkScopes fails', async () => {
+            const mockMessage = {
+                action: 'fetchMediaToken',
+            };
+
+            const mockFeatureFlagClient = {
+                checkGate: jest.fn().mockReturnValue(true),
+            };
+
+            const mockCredentialManager = {
+                checkScopes: jest.fn().mockResolvedValue(undefined),
+            };
+
+            Object.defineProperty(Container, 'featureFlagClient', {
+                get: () => mockFeatureFlagClient,
+                configurable: true,
+            });
+            Object.defineProperty(Container, 'credentialManager', {
+                get: () => mockCredentialManager,
+                configurable: true,
+            });
+
+            const webviewWithSite = new TestIssueEditorWebview();
+            Object.defineProperty(webviewWithSite, 'siteOrUndefined', {
+                get: () => mockSiteInfo,
+            });
+
+            const handled = await webviewWithSite.testOnMessageReceived(mockMessage);
+
+            expect(handled).toBe(false);
+            expect(Logger.error).toHaveBeenCalledWith(expect.any(Error), 'Error checking scopes for media token fetch');
+            expect(webviewWithSite.postMessage).not.toHaveBeenCalled();
         });
     });
 
