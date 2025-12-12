@@ -253,7 +253,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                     isApiToken: checkScopesResult.isApiToken,
                                 };
                                 this.postMessage(message);
-                                // TODO: fetch and post message with media token
+                                // Fetch and post message with media token here
                             }
                         }
                         break;
