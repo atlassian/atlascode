@@ -66,7 +66,7 @@ export class RovoDevEntitlementChecker extends Disposable {
             const credentials = await Container.clientManager.getCloudPrimarySite();
 
             if (!credentials || !credentials.isValid) {
-                // Check entitlement for Oauth
+                // Check entitlement for OAuth
                 const fgEntitlement = Container.featureFlagClient.checkGate(Features.RovoDevSiteEntitled);
                 if (!fgEntitlement) {
                     throw new RovoDevEntitlementError(
@@ -78,10 +78,11 @@ export class RovoDevEntitlementChecker extends Disposable {
                 rovoDevEntitlementCheckEvent(true, type).then((e) => {
                     this._analyticsClient.sendTrackEvent(e);
                 });
-                return {
+                this._cachedEntitlement = {
                     isEntitled: true,
-                    type: type as RovoDevEntitlementType,
+                    type: type,
                 };
+                return this._cachedEntitlement;
             }
 
             const options = {
