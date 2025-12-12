@@ -49,6 +49,7 @@ export interface OAuthResponse {
     receivedAt: number;
     user: UserInfo;
     accessibleResources: Array<AccessibleResource>;
+    scopes?: Array<string>;
 }
 
 export enum AuthInfoState {
@@ -59,6 +60,11 @@ export enum AuthInfoState {
 export interface AuthInfo {
     user: UserInfo;
     state: AuthInfoState;
+    access?: string;
+    expirationDate?: number;
+    recievedAt?: number;
+    refresh?: string;
+    scopes?: Array<string>;
 }
 
 export interface OAuthInfo extends AuthInfo {
@@ -67,6 +73,7 @@ export interface OAuthInfo extends AuthInfo {
     expirationDate?: number;
     iat?: number;
     recievedAt: number;
+    scopes?: Array<string>;
 }
 
 export interface PATAuthInfo extends AuthInfo {

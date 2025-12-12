@@ -94,6 +94,7 @@ export class LoginManager {
                 recievedAt: resp.receivedAt,
                 user: resp.user,
                 state: AuthInfoState.Valid,
+                scopes: resp.scopes,
             };
 
             const siteDetails = await this.getOAuthSiteDetails(

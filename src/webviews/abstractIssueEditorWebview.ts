@@ -8,6 +8,7 @@ import {
     IssuePickerResult,
 } from '@atlassianlabs/jira-pi-common-models';
 import { ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { Features } from 'src/util/features';
 
 import { showIssue } from '../commands/jira/showIssue';
 import { Container } from '../container';
@@ -16,6 +17,7 @@ import {
     isCreateSelectOption,
     isFetchQueryAndSite,
     isHandleEditorFocus,
+    isMediaTokenFetchAction,
     isOpenJiraIssue,
 } from '../ipc/issueActions';
 import { isAction } from '../ipc/messaging';
@@ -210,6 +212,49 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                         if (isHandleEditorFocus(msg)) {
                             handled = true;
                             Container.setIsEditorFocused(msg.isFocused);
+                        }
+                        break;
+                    }
+                    case 'fetchMediaToken': {
+                        if (isMediaTokenFetchAction(msg)) {
+                            const AtlaskitEditorEnabled = Container.featureFlagClient.checkGate(
+                                Features.AtlaskitEditor,
+                            );
+                            if (AtlaskitEditorEnabled && this.siteOrUndefined) {
+                                const readTokenName = 'read:media-credentials:jira';
+                                const writeTokenName = 'write:media-credentials:jira';
+
+                                const checkScopesResult = await Container.credentialManager.checkScopes(
+                                    this.siteOrUndefined,
+                                    [readTokenName, writeTokenName],
+                                );
+
+                                if (!checkScopesResult) {
+                                    Logger.error(
+                                        new Error('Failed to check scopes for media token fetch'),
+                                        'Error checking scopes for media token fetch',
+                                    );
+                                    break;
+                                }
+                                const mediaRead =
+                                    readTokenName in checkScopesResult.checkedScopes
+                                        ? checkScopesResult.checkedScopes[readTokenName]
+                                        : false;
+                                const mediaWrite =
+                                    writeTokenName in checkScopesResult.checkedScopes
+                                        ? checkScopesResult.checkedScopes[writeTokenName]
+                                        : false;
+                                const message = {
+                                    type: 'scopeCheckResult',
+                                    checkedScopes: {
+                                        mediaRead,
+                                        mediaWrite,
+                                    },
+                                    isApiToken: checkScopesResult.isApiToken,
+                                };
+                                this.postMessage(message);
+                                // TODO: fetch and post message with media token
+                            }
                         }
                         break;
                     }

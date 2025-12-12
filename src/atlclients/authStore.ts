@@ -43,6 +43,11 @@ function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export type CheckedScopes = {
+    isApiToken?: boolean;
+    checkedScopes: { [key: string]: boolean };
+};
+
 export class CredentialManager implements Disposable {
     private _memStore: Map<string, Map<string, AuthInfo>> = new Map<string, Map<string, AuthInfo>>();
     private _queue = new PQueue({ concurrency: 1 });
@@ -76,6 +81,39 @@ export class CredentialManager implements Disposable {
     public async getAuthInfo(site: DetailedSiteInfo, allowCache = true): Promise<AuthInfo | undefined> {
         const authInfo = await this.getAuthInfoForProductAndCredentialId(site, allowCache);
         return this.softRefreshOAuth(site, authInfo);
+    }
+
+    public async checkScopes(site: DetailedSiteInfo, scopes: string[]): Promise<CheckedScopes | undefined> {
+        const authInfo = await this.getAuthInfo(site, true);
+
+        // Scopes are only applicable to cloud sites
+        if (!site.host.endsWith('.atlassian.net')) {
+            return undefined;
+        }
+
+        if (isOAuthInfo(authInfo)) {
+            const allowedScopes = authInfo.scopes || [];
+            const checkedScopes = scopes.reduce(
+                (acc, scope) => {
+                    acc[scope] = allowedScopes.includes(scope);
+                    return acc;
+                },
+                {} as CheckedScopes['checkedScopes'],
+            );
+
+            return {
+                isApiToken: allowedScopes.length === 0,
+                checkedScopes,
+            };
+        }
+        // Basic auth for cloud site means API token
+        if (isBasicAuthInfo(authInfo)) {
+            return {
+                isApiToken: true,
+                checkedScopes: {},
+            };
+        }
+        return undefined;
     }
 
     async getApiTokenIfExists(site: DetailedSiteInfo): Promise<BasicAuthInfo | undefined> {

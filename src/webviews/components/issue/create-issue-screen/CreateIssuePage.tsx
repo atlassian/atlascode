@@ -27,6 +27,7 @@ import {
     emptyCommonEditorState,
 } from '../AbstractIssueEditorPage';
 import { convertWikimarkupToAdf } from '../common/adfToWikimarkup';
+import { MissingScopeBanner } from '../common/missing-scope-banner/MissingScopeBanner';
 import { CreateIssueButton } from './actions/CreateIssueButton';
 import { Panel } from './Panel';
 
@@ -311,7 +312,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
 
         // Convert WikiMarkup fields to ADF if using legacy editor
         const issueData = { ...this.state.fieldValues };
-        if (!this.state.isAtlaskitEditorEnabled) {
+        if (!this.state.showAtlaskitEditor) {
             // Convert description if it's a string (WikiMarkup)
             if (issueData.description && typeof issueData.description === 'string') {
                 issueData.description = convertWikimarkupToAdf(issueData.description);
@@ -354,6 +355,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         });
 
         this.postMessage(action);
+        this.postMessage({ action: 'fetchMediaToken' });
     };
 
     protected handleInlineAttachments = async (fieldkey: string, newValue: any) => {
@@ -515,6 +517,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
 
     override componentDidMount() {
         this.postMessage({ action: 'getFeatureFlags' });
+        this.postMessage({ action: 'fetchMediaToken' });
     }
 
     public override render() {
@@ -558,6 +561,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                         errorDetails={this.state.errorDetails}
                                     />
                                 )}
+                                {this.state.showEditorMissedScopeBanner && <MissingScopeBanner />}
                                 <Form name="create-issue" key={this.state.formKey} onSubmit={this.handleSubmit}>
                                     {(frmArgs: any) => {
                                         return (
