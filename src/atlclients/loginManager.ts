@@ -203,7 +203,7 @@ export class LoginManager {
 
         const status = (err as { response?: { status?: number } })?.response?.status;
         if (status === 404) {
-            return `Error authenticating with ${productName}: invalid credentials on Server Authentication`;
+            return `Error authenticating with ${productName}: invalid credentials`;
         }
 
         return `Error authenticating with ${productName}: ${error.message}`;
