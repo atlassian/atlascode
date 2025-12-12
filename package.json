@@ -181,7 +181,7 @@
             },
             {
                 "command": "atlascode.authenticateWithBitbucketToken",
-                "title": "Atlasian: Authenticate with Bitbucket Token"
+                "title": "Atlassian: Authenticate with Bitbucket Token"
             },
             {
                 "command": "atlascode.jira.todoIssue",
