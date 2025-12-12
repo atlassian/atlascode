@@ -80,6 +80,7 @@ describe('useStartWorkFormState', () => {
             },
         } as any,
         rovoDevPreference: false,
+        pushBranchPreference: true,
         isSomethingLoading: false,
         isRovoDevEnabled: false,
     } as any;

@@ -13,8 +13,22 @@ describe('StartWork IPC Types', () => {
         expect(StartWorkActionType.OpenRovoDev).toBe('openRovoDev');
     });
 
+    it('should have GetPushBranchPreference action type', () => {
+        expect(StartWorkActionType.GetPushBranchPreference).toBe('getPushBranchPreference');
+    });
+
+    it('should have UpdatePushBranchPreference action type', () => {
+        expect(StartWorkActionType.UpdatePushBranchPreference).toBe('updatePushBranchPreference');
+    });
+
     it('should have all required action types defined', () => {
-        const requiredActions = ['GetRovoDevPreference', 'UpdateRovoDevPreference', 'OpenRovoDev'];
+        const requiredActions = [
+            'GetRovoDevPreference',
+            'UpdateRovoDevPreference',
+            'OpenRovoDev',
+            'GetPushBranchPreference',
+            'UpdatePushBranchPreference',
+        ];
 
         requiredActions.forEach((action) => {
             expect(StartWorkActionType).toHaveProperty(action);
