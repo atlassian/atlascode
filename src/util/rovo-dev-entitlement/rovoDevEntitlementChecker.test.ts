@@ -107,13 +107,23 @@ describe('RovoDevEntitlementChecker', () => {
             expect(result).toStrictEqual({ isEntitled: false, type: 'NO_ACTIVE_PRODUCT' });
         });
 
-        it('should return false when no valid credentials found', async () => {
+        it('should check FG trait if no valid API token credentials', async () => {
             mockClientManager.getCloudPrimarySite.mockResolvedValue(undefined);
 
             const result = await checker.checkEntitlement();
 
-            expect(result).toStrictEqual({ isEntitled: false, type: 'CREDENTIAL_ERROR' });
-            expect(Logger.error).toHaveBeenCalledWith(expect.any(Error), 'Unable to check Rovo Dev entitlement');
+            expect(mockFeatureGateClient.checkGate).toHaveBeenCalledWith('atlascode-rovodev-entitled');
+            expect(result).toStrictEqual({ isEntitled: true, type: 'UNKNOWN' });
+        });
+
+        it('should thow RovoDevEntitlementError for no active product FG trait', async () => {
+            mockClientManager.getCloudPrimarySite.mockResolvedValue(undefined);
+            mockFeatureGateClient.checkGate.mockReturnValue(false);
+
+            const result = await checker.checkEntitlement();
+
+            expect(mockFeatureGateClient.checkGate).toHaveBeenCalledWith('atlascode-rovodev-entitled');
+            expect(result).toStrictEqual({ isEntitled: false, type: 'NO_ACTIVE_PRODUCT' });
         });
 
         it('should return false when API call fails', async () => {
