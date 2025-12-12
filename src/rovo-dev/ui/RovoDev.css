@@ -855,6 +855,10 @@ body {
     padding: 8px;
 }
 
+#prompt-settings-context {
+    flex: 1;
+}
+
 .prompt-settings-action {
     --ds-icon-inverse: var(--vscode-sideBar-background);
 }
