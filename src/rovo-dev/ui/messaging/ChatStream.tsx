@@ -176,7 +176,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
             container.removeEventListener('wheel', handleWheel);
         };
     }, [autoScrollEnabled, chatHistory]);
-
     // Auto-scroll when content changes or when re-enabled
     React.useEffect(performAutoScroll, [
         chatHistory,

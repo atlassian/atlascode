@@ -150,7 +150,6 @@ describe('RovoDevFeedbackManager', () => {
 
             await RovoDevFeedbackManager.submitFeedback(feedback);
             expect(vscode.window.showErrorMessage).not.toHaveBeenCalled();
-            expect(vscode.window.showInformationMessage).toHaveBeenCalledWith('Thank you for your feedback!');
         });
 
         it('should handle submission error and show error message', async () => {

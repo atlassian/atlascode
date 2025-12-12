@@ -14,6 +14,7 @@ import { v4 } from 'uuid';
 import { DetailedSiteInfo, MinimalIssue } from '../api/extensionApiTypes';
 import { RovodevStaticConfig } from '../api/rovodevStaticConfig';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../rovoDevWebviewProviderMessages';
+import { FeedbackConfirmationForm } from './feedback-form/FeedbackConfirmationForm';
 import { FeedbackForm, FeedbackType } from './feedback-form/FeedbackForm';
 import { ChatStream } from './messaging/ChatStream';
 import { useMessagingApi } from './messagingApi';
@@ -59,6 +60,7 @@ const RovoDevView: React.FC = () => {
     const [history, setHistory] = useState<Response[]>([]);
     const [modalDialogs, setModalDialogs] = useState<DialogMessage[]>([]);
     const [isFeedbackFormVisible, setIsFeedbackFormVisible] = React.useState(false);
+    const [isFeedbackConfirmationFormVisible, setIsFeedbackConfirmationFormVisible] = React.useState(false);
     const [outgoingMessage, dispatch] = useState<RovoDevViewResponse | undefined>(undefined);
     const [promptContextCollection, setPromptContextCollection] = useState<RovoDevContextItem[]>([]);
     const [debugPanelEnabled, setDebugPanelEnabled] = useState(false);
@@ -877,6 +879,13 @@ const RovoDevView: React.FC = () => {
         },
         [setIsFeedbackFormVisible],
     );
+
+    const confirmFeedback = () => {
+        setIsFeedbackConfirmationFormVisible(true);
+        setTimeout(() => {
+            setIsFeedbackConfirmationFormVisible(false);
+        }, 2000);
+    };
     const onLinkClick = React.useCallback(
         (href: string) => {
             postMessage({ type: RovoDevViewResponseType.OpenExternalLink, href });
@@ -993,6 +1002,7 @@ const RovoDevView: React.FC = () => {
                                     onSubmit={(feedbackType, feedback, canContact, includeTenMessages) => {
                                         setFeedbackType(undefined);
                                         executeSendFeedback(feedbackType, feedback, canContact, includeTenMessages);
+                                        confirmFeedback();
                                     }}
                                     onCancel={() => {
                                         setFeedbackType(undefined);
@@ -1000,7 +1010,16 @@ const RovoDevView: React.FC = () => {
                                     }}
                                 />
                             </div>
-                        )}
+                        )}{' '}
+                        <div
+                            style={{
+                                padding: '8px 16px',
+                            }}
+                        >
+                            {isFeedbackConfirmationFormVisible && (
+                                <FeedbackConfirmationForm onClose={() => setIsFeedbackConfirmationFormVisible(false)} />
+                            )}
+                        </div>
                         <div className="input-section-container">
                             <UpdatedFilesComponent
                                 modifiedFiles={totalModifiedFiles}
