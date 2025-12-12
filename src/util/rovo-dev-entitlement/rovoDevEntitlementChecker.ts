@@ -2,7 +2,6 @@ import { notificationBannerClickedEvent, notificationChangeEvent, rovoDevEntitle
 import { AnalyticsClient } from 'src/analytics-node-client/src/client.min';
 import { ValidBasicAuthSiteData } from 'src/atlclients/clientManager';
 import { configuration } from 'src/config/configuration';
-import { Commands } from 'src/constants';
 import { Container } from 'src/container';
 import { Logger } from 'src/logger';
 import { RovodevCommands } from 'src/rovo-dev/api/componentApi';
@@ -25,7 +24,6 @@ interface EntitlementResponse {
     type: RovoDevEntitlementType | RovoDevEntitlementErrorType;
 }
 
-const CREDENTIAL_ERROR_MESSAGE = `Work with Atlassian Rovo Dev in VS Code. It's AI for software teams, bringing your team's knowledge to help you ship better code, faster. Just add an API token to get started.`;
 const ENTITLED_MESSAGE = `Work with Atlassian Rovo Dev in VS Code. It's AI for software teams, bringing your team's knowledge from Jira and Confluence to help you ship better code, faster.`;
 
 export class RovoDevEntitlementChecker extends Disposable {
@@ -67,7 +65,7 @@ export class RovoDevEntitlementChecker extends Disposable {
 
             const credentials = await Container.clientManager.getCloudPrimarySite();
 
-            if (!credentials) {
+            if (!credentials || !credentials.isValid) {
                 // Check entitlement for Oauth
                 const fgEntitlement = Container.featureFlagClient.checkGate(Features.RovoDevSiteEntitled);
                 if (!fgEntitlement) {
@@ -158,38 +156,7 @@ export class RovoDevEntitlementChecker extends Disposable {
             return;
         }
 
-        const dontShowAgain = "Don't show again";
-
         if (!isEntitled) {
-            if (type === RovoDevEntitlementErrorType.CREDENTIAL_ERROR) {
-                notificationChangeEvent(
-                    NotificationSource.RovoDevEntitlementCheckCredentialError,
-                    undefined,
-                    NotificationSurface.Banner,
-                    1,
-                ).then((event) => {
-                    this._analyticsClient.sendTrackEvent(event);
-                });
-
-                window
-                    .showInformationMessage(CREDENTIAL_ERROR_MESSAGE, 'Add API token', dontShowAgain)
-                    .then((selection) => {
-                        let buttonType = 'dismiss';
-                        if (selection === 'Add API token') {
-                            buttonType = 'addApiToken';
-                            commands.executeCommand(Commands.JiraAPITokenLogin);
-                        } else if (selection === dontShowAgain) {
-                            buttonType = 'dontShowAgain';
-                            this._disable();
-                        }
-                        notificationBannerClickedEvent(
-                            NotificationSource.RovoDevEntitlementCheckCredentialError,
-                            buttonType,
-                        ).then((event) => {
-                            this._analyticsClient.sendUIEvent(event);
-                        });
-                    });
-            }
             return;
         }
 
@@ -205,6 +172,8 @@ export class RovoDevEntitlementChecker extends Disposable {
         ).then((event) => {
             this._analyticsClient.sendTrackEvent(event);
         });
+
+        const dontShowAgain = "Don't show again";
 
         window
             .showInformationMessage(ENTITLED_MESSAGE, 'Try Rovo Dev', 'Read documentation', dontShowAgain)
