@@ -85,7 +85,11 @@ export class BannerDelegate implements NotificationDelegate {
         this.timer = undefined;
     }
 
-    private showNotification(notification: AtlasCodeNotification, yesText: string, yesAction: () => void) {
+    private async showNotification(notification: AtlasCodeNotification, yesText: string, yesAction: () => void) {
+        // Mark this notification as banner-shown to prevent duplicate banners after VS Code restart
+        // We await this to ensure the state is persisted before showing the notification
+        await NotificationManagerImpl.getInstance().markBannerShown(notification.id, notification.timestamp);
+
         const displayedNotification = window.showInformationMessage(notification.message, yesText);
         this.analyticsBannerShown(notification.uri, 1);
 

@@ -28,6 +28,7 @@ jest.mock('./notificationManager', () => ({
     NotificationManagerImpl: {
         getInstance: jest.fn(() => ({
             registerDelegate: jest.fn(),
+            markBannerShown: jest.fn().mockResolvedValue(undefined),
         })),
     },
     NotificationSurface: {
@@ -61,7 +62,7 @@ describe('BannerDelegate', () => {
         expect(bannerDelegate.getSurface()).toBe(NotificationSurface.Banner);
     });
 
-    it('should add notifications to the pile and update the timer on notification change and post notifications after a short time', () => {
+    it('should add notifications to the pile and update the timer on notification change and post notifications after a short time', async () => {
         jest.useFakeTimers();
         const event: NotificationChangeEvent = {
             action: NotificationAction.Added,
@@ -90,13 +91,15 @@ describe('BannerDelegate', () => {
 
         // Verify that after a short time, the timer will trigger the display of the notification
         jest.advanceTimersByTime(SHORT_TIMEOUT); // Simulate the passage of time
+        // Flush promises to allow async showNotification to complete
+        await Promise.resolve();
         expect(window.showInformationMessage).toHaveBeenCalledTimes(1);
         expect((bannerDelegate as any).timer).toBeUndefined();
         expect((bannerDelegate as any).pile.size).toBe(0); // Pile should be cleared after showing the notification
         jest.useRealTimers();
     });
 
-    it('should delay the display of notifications if multiple events are added within a short time', () => {
+    it('should delay the display of notifications if multiple events are added within a short time', async () => {
         jest.useFakeTimers();
         const event1: NotificationChangeEvent = {
             action: NotificationAction.Added,
@@ -149,6 +152,9 @@ describe('BannerDelegate', () => {
 
         // Advance the timer to trigger the display of notifications
         jest.advanceTimersByTime(SHORT_TIMEOUT / 2 + 1); // Simulate the passage of time
+        // Flush promises to allow async showNotification calls to complete
+        await Promise.resolve();
+        await Promise.resolve();
 
         // Verify that the notifications are displayed
         expect(window.showInformationMessage).toHaveBeenCalledTimes(2);
