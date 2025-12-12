@@ -84,12 +84,12 @@ export class CredentialManager implements Disposable {
     }
 
     public async checkScopes(site: DetailedSiteInfo, scopes: string[]): Promise<CheckedScopes | undefined> {
-        const authInfo = await this.getAuthInfo(site, true);
-
         // Scopes are only applicable to cloud sites
         if (!site.host.endsWith('.atlassian.net')) {
             return undefined;
         }
+
+        const authInfo = await this.getAuthInfo(site, true);
 
         if (isOAuthInfo(authInfo)) {
             const allowedScopes = authInfo.scopes || [];
