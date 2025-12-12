@@ -29,10 +29,7 @@ mdParser.renderer.rules.link_open = function (tokens, idx, options, env, self) {
 
             token.attrs!.splice(hrefIndex, 1);
             token.attrSet('data-href', hrefValue);
-            token.attrSet(
-                'style',
-                'cursor: pointer; color: var(--vscode-textLink-foreground); text-decoration: underline;',
-            );
+            token.attrSet('class', 'rovodev-markdown-link');
         }
     }
     return self.renderToken(tokens, idx, options);
