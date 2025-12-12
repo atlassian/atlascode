@@ -251,7 +251,6 @@ export class LoginManager {
 
             if (!token) {
                 Logger.warn('No hardcoded Bitbucket auth token found');
-                vscode.window.showErrorMessage('No hardcoded Bitbucket auth token found');
                 return false;
             }
             Logger.debug('Authenticating with Bitbucket using auth token');
