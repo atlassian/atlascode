@@ -464,6 +464,7 @@ export class Container {
             )),
         );
         this._context.subscriptions.push((this._jiraActiveIssueStatusBar = new JiraActiveIssueStatusBar(bbCtx)));
+        // Authenticate with Bitbucket when the extension opens; safely no-ops if no token is found
         Container.authenticateWithBitbucketToken();
 
         this._context.subscriptions.push(new BitbucketCloudPullRequestLinkProvider());
