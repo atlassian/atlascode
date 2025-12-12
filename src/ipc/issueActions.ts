@@ -250,6 +250,10 @@ export interface DismissRovoDevPromoBannerAction extends Action {
     action: 'dismissRovoDevPromoBanner';
 }
 
+export interface MediaTokenFetchAction extends Action {
+    action: 'fetchMediaToken';
+}
+
 export function isGetImage(a: Action): a is GetImageAction {
     return (<GetImageAction>a).action === 'getImage';
 }
@@ -423,4 +427,8 @@ export function isOpenRovoDevWithPromoBanner(a: Action): a is OpenRovoDevWithPro
 
 export function isDismissRovoDevPromoBanner(a: Action): a is DismissRovoDevPromoBannerAction {
     return a && a.action === 'dismissRovoDevPromoBanner';
+}
+
+export function isMediaTokenFetchAction(a: Action): a is MediaTokenFetchAction {
+    return (<MediaTokenFetchAction>a).action === 'fetchMediaToken';
 }
