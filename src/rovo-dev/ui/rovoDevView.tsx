@@ -884,7 +884,7 @@ const RovoDevView: React.FC = () => {
         setIsFeedbackConfirmationFormVisible(true);
         setTimeout(() => {
             setIsFeedbackConfirmationFormVisible(false);
-        }, 60000);
+        }, 2000);
     };
     const onLinkClick = React.useCallback(
         (href: string) => {
