@@ -110,6 +110,8 @@ export interface CommonEditorViewState extends Message {
     };
     isLoggedOut: boolean;
     loggedOutSiteName?: string;
+    showEditorMissedScopeBanner: boolean;
+    showAtlaskitEditor: boolean;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -133,6 +135,8 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     rovoDevPromoBannerDismissed: false,
     isLoggedOut: false,
     loggedOutSiteName: undefined,
+    showEditorMissedScopeBanner: false,
+    showAtlaskitEditor: false,
 };
 
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
@@ -264,7 +268,7 @@ export abstract class AbstractIssueEditorPage<
         // Check if it's an ADF object
         if (t === 'object' && value.type === 'doc' && value.version === 1) {
             // For new Atlaskit editor, convert to JSON string
-            if (this.state.isAtlaskitEditorEnabled) {
+            if (this.state.showAtlaskitEditor) {
                 return JSON.stringify(value);
             }
             // For legacy editor, convert ADF to WikiMarkup
@@ -350,6 +354,22 @@ export abstract class AbstractIssueEditorPage<
                         message: 'You have been logged out. Please close this tab and log in again to continue editing',
                     },
                 });
+                break;
+            }
+            case 'scopeCheckResult': {
+                if (e.checkedScopes?.mediaRead !== undefined && e.checkedScopes?.mediaWrite !== undefined) {
+                    const showEditorMissedScopeBanner =
+                        this.state.isAtlaskitEditorEnabled &&
+                        !e.isApiToken &&
+                        !e.checkedScopes.mediaRead &&
+                        !e.checkedScopes.mediaWrite;
+                    const showAtlaskitEditor =
+                        this.state.isAtlaskitEditorEnabled && !e.isApiToken && e.checkedScopes.mediaRead;
+                    this.setState({
+                        showEditorMissedScopeBanner,
+                        showAtlaskitEditor,
+                    });
+                }
                 break;
             }
         }
@@ -688,7 +708,7 @@ export abstract class AbstractIssueEditorPage<
                                     />
                                 );
                                 if ((field as InputFieldUI).isMultiline) {
-                                    markup = this.state.isAtlaskitEditorEnabled ? (
+                                    markup = this.state.showAtlaskitEditor ? (
                                         <AtlaskitEditor
                                             defaultValue={this.state.fieldValues[field.key] || ''}
                                             isSaveOnBlur={true}

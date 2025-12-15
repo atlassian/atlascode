@@ -15,6 +15,8 @@ export enum StartWorkActionType {
     GetRovoDevPreference = 'getRovoDevPreference',
     UpdateRovoDevPreference = 'updateRovoDevPreference',
     OpenRovoDev = 'openRovoDev',
+    GetPushBranchPreference = 'getPushBranchPreference',
+    UpdatePushBranchPreference = 'updatePushBranchPreference',
 }
 
 export type StartWorkAction =
@@ -23,6 +25,8 @@ export type StartWorkAction =
     | ReducerAction<StartWorkActionType.OpenSettings, OpenSettingsAction>
     | ReducerAction<StartWorkActionType.GetImage, GetImageAction>
     | ReducerAction<StartWorkActionType.RefreshTreeViews, {}>
+    | ReducerAction<StartWorkActionType.GetPushBranchPreference, {}>
+    | ReducerAction<StartWorkActionType.UpdatePushBranchPreference, { enabled: boolean }>
     | ReducerAction<StartWorkActionType.GetRovoDevPreference, {}>
     | ReducerAction<StartWorkActionType.UpdateRovoDevPreference, { enabled: boolean }>
     | ReducerAction<StartWorkActionType.OpenRovoDev, {}>

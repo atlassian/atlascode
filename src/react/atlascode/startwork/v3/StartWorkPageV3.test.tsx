@@ -75,6 +75,7 @@ const mockState = {
     isSomethingLoading: false,
     isRovoDevEnabled: true,
     rovoDevPreference: false,
+    pushBranchPreference: true,
 };
 
 describe('StartWorkPageV3', () => {

@@ -38,6 +38,12 @@ export class OAuthRefesher implements Disposable {
         Logger.debug(`Starting token refresh`);
         const product = provider.startsWith('jira') ? ProductJira : ProductBitbucket;
 
+        if (!refreshToken) {
+            const error = new Error('Refresh token is missing or empty');
+            Logger.error(error, 'Error while refreshing tokens: refresh token is missing');
+            return { tokens: undefined, shouldInvalidate: true };
+        }
+
         const strategy = strategyForProvider(provider);
 
         const response: TokenResponse = { tokens: undefined, shouldInvalidate: false };

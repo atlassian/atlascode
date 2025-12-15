@@ -56,7 +56,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({ onSubmit, onCancel, 
     };
 
     return (
-        <div className="form-container">
+        <div className="form-container" style={{ zIndex: 2000 }}>
             <form onSubmit={handleSubmit} className="form-body">
                 <div className="form-header">
                     <FeedbackIcon label="feedback-icon" spacing="none" />

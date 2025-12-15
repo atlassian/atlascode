@@ -6,6 +6,7 @@ export declare interface Tokens {
     expiration?: number;
     iat?: number;
     receivedAt: number;
+    scopes?: string[];
 }
 
 export function tokensFromResponseData(data: any): Tokens {
