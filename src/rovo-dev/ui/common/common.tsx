@@ -61,9 +61,9 @@ const strictEncodeUrl = (url: string) => {
 // Keep validateLink to allow only http/https.
 export const normalizeLinks = (messageText: string) => {
     if (typeof messageText !== 'string') {
-        console.warn('normalizeLinks called with non-string messageText', messageText);
+        console.warn('normalizeLinks called with non-string messageText', messageText, 'typeof:', typeof messageText);
         // Silently recover from invalid types
-        messageText = '';
+        return '';
     }
 
     let processed = messageText.replace(
