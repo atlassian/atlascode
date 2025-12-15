@@ -9,11 +9,13 @@ export enum StartWorkMessageType {
     Init = 'init',
     StartWorkResponse = 'startWorkResponse',
     RovoDevPreferenceResponse = 'rovoDevPreferenceResponse',
+    PushBranchPreferenceResponse = 'pushBranchPreferenceResponse',
 }
 
 export type StartWorkMessage =
     | ReducerAction<StartWorkMessageType.Init, StartWorkInitMessage>
-    | ReducerAction<StartWorkMessageType.RovoDevPreferenceResponse, { enabled: boolean }>;
+    | ReducerAction<StartWorkMessageType.RovoDevPreferenceResponse, { enabled: boolean }>
+    | ReducerAction<StartWorkMessageType.PushBranchPreferenceResponse, { enabled: boolean }>;
 export type StartWorkResponse = ReducerAction<StartWorkMessageType.StartWorkResponse, StartWorkResponseMessage>;
 
 export interface StartWorkIssueMessage {

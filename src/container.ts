@@ -35,6 +35,7 @@ import OnboardingProvider from './onboarding/onboardingProvider';
 import { registerQuickAuthCommand } from './onboarding/quickFlow';
 import { Pipeline } from './pipelines/model';
 import { RovodevCommandContext } from './rovo-dev/api/componentApi';
+import { RovodevStaticConfig } from './rovo-dev/api/rovodevStaticConfig';
 import { RovoDevCodeActionProvider } from './rovo-dev/rovoDevCodeActionProvider';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
@@ -218,7 +219,7 @@ export class Container {
         );
 
         // in Boysenberry we don't need to listen to Jira auth updates
-        if (!process.env.ROVODEV_BBY) {
+        if (!RovodevStaticConfig.isBBY) {
             // Check Rovo Dev entitlement on startup
             await this._rovoDevEntitlementChecker.triggerEntitlementNotification();
             // refresh Rovo Dev when auth sites change
@@ -498,7 +499,7 @@ export class Container {
     }
 
     public static get isBoysenberryMode() {
-        return !!process.env.ROVODEV_BBY;
+        return !!RovodevStaticConfig.isBBY;
     }
 
     public static get configTarget(): ConfigTarget {

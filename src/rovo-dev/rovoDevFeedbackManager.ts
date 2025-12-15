@@ -96,8 +96,6 @@ export class RovoDevFeedbackManager {
             vscode.window.showErrorMessage('There was an error submitting your feedback. Please try again later.');
             return;
         }
-
-        vscode.window.showInformationMessage('Thank you for your feedback!');
     }
 
     private static getContext(isBBY: boolean = false, rovoDevSessionId?: string): any {

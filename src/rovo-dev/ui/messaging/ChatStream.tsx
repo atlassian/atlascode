@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { RovodevStaticConfig } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
@@ -6,7 +7,6 @@ import { DetailedSiteInfo, MinimalIssue } from '../../api/extensionApiTypes';
 import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
 import { PullRequestForm } from '../create-pr/PullRequestForm';
-import { FeedbackForm, FeedbackType } from '../feedback-form/FeedbackForm';
 import { RovoDevLanding } from '../landing-page/RovoDevLanding';
 import { useMessagingApi } from '../messagingApi';
 import { McpConsentChoice, RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
@@ -15,8 +15,6 @@ import { ToolCallItem } from '../tools/ToolCallItem';
 import { ConnectionTimeout, DialogMessage, PullRequestMessage, Response, scrollToEnd } from '../utils';
 import { ChatStreamMessageRenderer } from './ChatStreamMessageRenderer';
 import { DropdownButton } from './dropdown-button/DropdownButton';
-
-const IsBoysenberry = process.env.ROVODEV_BBY === 'true';
 
 interface ChatStreamProps {
     chatHistory: Response[];
@@ -38,9 +36,7 @@ interface ChatStreamProps {
     currentState: State;
     onChangesGitPushed: (msg: PullRequestMessage, pullRequestCreated: boolean) => void;
     onCollapsiblePanelExpanded: () => void;
-    feedbackVisible: boolean;
-    setFeedbackVisible: (visible: boolean) => void;
-    sendFeedback: (feedbackType: FeedbackType, feedack: string, canContact: boolean, lastTenMessages: boolean) => void;
+    handleFeedbackTrigger: (isPositive: boolean) => void;
     onLoginClick: (openApiTokenLogin: boolean) => void;
     onOpenFolder: () => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
@@ -62,9 +58,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     messagingApi,
     onChangesGitPushed,
     onCollapsiblePanelExpanded,
-    feedbackVisible = false,
-    setFeedbackVisible,
-    sendFeedback,
+    handleFeedbackTrigger,
     onLoginClick,
     onOpenFolder,
     onMcpChoice,
@@ -80,7 +74,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     const [canCreatePR, setCanCreatePR] = React.useState(false);
     const [hasChangesInGit, setHasChangesInGit] = React.useState(false);
     const [isFormVisible, setIsFormVisible] = React.useState(false);
-    const [feedbackType, setFeedbackType] = React.useState<'like' | 'dislike' | undefined>(undefined);
 
     const checkGitChanges = React.useCallback(async () => {
         const response = await messagingApi.postMessagePromise(
@@ -183,7 +176,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
             container.removeEventListener('wheel', handleWheel);
         };
     }, [autoScrollEnabled, chatHistory]);
-
     // Auto-scroll when content changes or when re-enabled
     React.useEffect(performAutoScroll, [
         chatHistory,
@@ -195,7 +187,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     ]);
 
     // Other state management effect
-    if (IsBoysenberry) {
+    if (RovodevStaticConfig.isBBY) {
         React.useEffect(() => {
             if (currentState.state === 'WaitingForPrompt') {
                 const canCreatePR = chatHistory.length > 0;
@@ -216,14 +208,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         navigator.clipboard.writeText(text);
     }, []);
 
-    const handleFeedbackTrigger = React.useCallback(
-        (isPositive: boolean) => {
-            setFeedbackType(isPositive ? 'like' : 'dislike');
-            setFeedbackVisible(true);
-        },
-        [setFeedbackVisible],
-    );
-
     const isChatHistoryDisabled =
         (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance') ||
         (currentState.state === 'Disabled' && currentState.subState !== 'Other');
@@ -236,7 +220,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
-            {!IsBoysenberry && (
+            {!RovodevStaticConfig.isBBY && (
                 <RovoDevLanding
                     currentState={currentState}
                     isHistoryEmpty={chatHistory.length === 0}
@@ -303,8 +287,8 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
             {!isChatHistoryDisabled && currentState.state === 'WaitingForPrompt' && (
                 <FollowUpActionFooter>
-                    {deepPlanCreated && !feedbackVisible && <CodePlanButton execute={executeCodePlan} />}
-                    {canCreatePR && !deepPlanCreated && !feedbackVisible && hasChangesInGit && (
+                    {deepPlanCreated && <CodePlanButton execute={executeCodePlan} />}
+                    {canCreatePR && !deepPlanCreated && hasChangesInGit && (
                         <PullRequestForm
                             onCancel={() => {
                                 setCanCreatePR(false);
@@ -328,19 +312,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             }}
                             isFormVisible={isFormVisible}
                             setFormVisible={setIsFormVisible}
-                        />
-                    )}
-                    {feedbackVisible && (
-                        <FeedbackForm
-                            type={feedbackType}
-                            onSubmit={(feedbackType, feedback, canContact, includeTenMessages) => {
-                                setFeedbackType(undefined);
-                                sendFeedback(feedbackType, feedback, canContact, includeTenMessages);
-                            }}
-                            onCancel={() => {
-                                setFeedbackType(undefined);
-                                setFeedbackVisible(false);
-                            }}
                         />
                     )}
                 </FollowUpActionFooter>

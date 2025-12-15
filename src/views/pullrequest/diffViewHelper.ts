@@ -103,7 +103,10 @@ export async function getArgsForDiffView(
         if (pr.workspaceRepo && pr.data.source.repo.url === pr.data.destination.repo.url) {
             const scm = Container.bitbucketContext.getRepositoryScm(pr.workspaceRepo.rootUri);
             if (scm) {
-                mergeBase = await scm.getMergeBase(destination, source);
+                const mergeBaseCandidate = await scm.getMergeBase(destination, source);
+                if (mergeBaseCandidate) {
+                    mergeBase = mergeBaseCandidate;
+                }
             }
         }
     } catch (e) {

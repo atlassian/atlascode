@@ -259,6 +259,34 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                 }
                 break;
             }
+            case StartWorkActionType.GetPushBranchPreference: {
+                try {
+                    const enabled = await this.api.getPushBranchPreference();
+                    this.postMessage({
+                        type: StartWorkMessageType.PushBranchPreferenceResponse,
+                        enabled,
+                    });
+                } catch (e) {
+                    this.logger.error(e, 'Error getting push branch preference');
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error getting push branch preference'),
+                    });
+                }
+                break;
+            }
+            case StartWorkActionType.UpdatePushBranchPreference: {
+                try {
+                    await this.api.updatePushBranchPreference(msg.enabled);
+                } catch (e) {
+                    this.logger.error(e, 'Error updating push branch preference');
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error updating push branch preference'),
+                    });
+                }
+                break;
+            }
             case StartWorkActionType.RefreshTreeViews: {
                 // Pass delay to allow Jira's indexes to update before refreshing
                 await vscode.commands.executeCommand(

@@ -12,8 +12,10 @@ import { RovoDevContextItem, State, ToolPermissionDialogChoice } from 'src/rovo-
 import { v4 } from 'uuid';
 
 import { DetailedSiteInfo, MinimalIssue } from '../api/extensionApiTypes';
+import { RovodevStaticConfig } from '../api/rovodevStaticConfig';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../rovoDevWebviewProviderMessages';
-import { FeedbackType } from './feedback-form/FeedbackForm';
+import { FeedbackConfirmationForm } from './feedback-form/FeedbackConfirmationForm';
+import { FeedbackForm, FeedbackType } from './feedback-form/FeedbackForm';
 import { ChatStream } from './messaging/ChatStream';
 import { useMessagingApi } from './messagingApi';
 import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
@@ -44,8 +46,6 @@ import {
 
 const DEFAULT_LOADING_MESSAGE: string = 'Rovo dev is working';
 
-const IsBoysenberry = process.env.ROVODEV_BBY === 'true';
-
 const RovoDevView: React.FC = () => {
     const [currentState, setCurrentState] = useState<State>({ state: 'WaitingForPrompt' });
     const [pendingToolCallMessage, setPendingToolCallMessage] = useState('');
@@ -53,13 +53,14 @@ const RovoDevView: React.FC = () => {
     const [totalModifiedFiles, setTotalModifiedFiles] = useState<ToolReturnParseResult[]>([]);
     const [isDeepPlanCreated, setIsDeepPlanCreated] = useState(false);
     const [isDeepPlanToggled, setIsDeepPlanToggled] = useState(false);
-    const [isYoloModeToggled, setIsYoloModeToggled] = useState(IsBoysenberry);
+    const [isYoloModeToggled, setIsYoloModeToggled] = useState(RovodevStaticConfig.isBBY); // Yolo mode is default in Boysenberry
     const [isFullContextModeToggled, setIsFullContextModeToggled] = useState(false);
     const [workspacePath, setWorkspacePath] = useState<string>('');
     const [homeDir, setHomeDir] = useState<string>('');
     const [history, setHistory] = useState<Response[]>([]);
     const [modalDialogs, setModalDialogs] = useState<DialogMessage[]>([]);
     const [isFeedbackFormVisible, setIsFeedbackFormVisible] = React.useState(false);
+    const [isFeedbackConfirmationFormVisible, setIsFeedbackConfirmationFormVisible] = React.useState(false);
     const [outgoingMessage, dispatch] = useState<RovoDevViewResponse | undefined>(undefined);
     const [promptContextCollection, setPromptContextCollection] = useState<RovoDevContextItem[]>([]);
     const [debugPanelEnabled, setDebugPanelEnabled] = useState(false);
@@ -70,14 +71,15 @@ const RovoDevView: React.FC = () => {
     const [jiraWorkItems, setJiraWorkItems] = useState<MinimalIssue<DetailedSiteInfo>[] | undefined>(undefined);
     const [pendingFilesForFiltering, setPendingFilesForFiltering] = useState<ModifiedFile[] | null>(null);
     const [thinkingBlockEnabled, setThinkingBlockEnabled] = useState(true);
+    const [lastCompletedPromptId, setLastCompletedPromptId] = useState<string | undefined>(undefined);
     const [isAtlassianUser, setIsAtlassianUser] = useState(false);
-
+    const [feedbackType, setFeedbackType] = React.useState<'like' | 'dislike' | undefined>(undefined);
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
         const initializeTheme = () => {
             const body = document.body;
             const isDark: boolean =
-                body.getAttribute('class') === 'vscode-dark' ||
+                body.classList.contains('vscode-dark') ||
                 (body.classList.contains('vscode-high-contrast') &&
                     !body.classList.contains('vscode-high-contrast-light'));
 
@@ -279,6 +281,8 @@ const RovoDevView: React.FC = () => {
                         currentState.state === 'CancellingResponse'
                     ) {
                         setCurrentState({ state: 'WaitingForPrompt' });
+                        // Signal that we need to send render acknowledgement after this render completes
+                        setLastCompletedPromptId(event.promptId);
                     }
                     setSummaryMessageInHistory();
                     setPendingToolCallMessage('');
@@ -308,7 +312,7 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.ProviderReady:
                     setWorkspacePath(event.workspacePath || '');
                     setHomeDir(event.homeDir || '');
-                    if (!IsBoysenberry && event.yoloMode !== undefined) {
+                    if (!RovodevStaticConfig.isBBY && event.yoloMode !== undefined) {
                         setIsYoloModeToggled(event.yoloMode);
                     }
                     setIsAtlassianUser(event.isAtlassianUser);
@@ -568,6 +572,17 @@ const RovoDevView: React.FC = () => {
             type: RovoDevViewResponseType.ForceUserFocusUpdate,
         });
     }, [postMessage]);
+
+    // Send render acknowledgement after completing a prompt
+    React.useEffect(() => {
+        if (lastCompletedPromptId && currentState.state === 'WaitingForPrompt') {
+            postMessage({
+                type: RovoDevViewResponseType.MessageRendered,
+                promptId: lastCompletedPromptId,
+            });
+            setLastCompletedPromptId(undefined);
+        }
+    }, [lastCompletedPromptId, currentState.state, postMessage]);
 
     const executeCodePlan = useCallback(() => {
         if (currentState.state !== 'WaitingForPrompt') {
@@ -857,6 +872,20 @@ const RovoDevView: React.FC = () => {
         [setIsFullContextModeToggled],
     );
 
+    const handleFeedbackTrigger = useCallback(
+        (isPositive: boolean) => {
+            setFeedbackType(isPositive ? 'like' : 'dislike');
+            setIsFeedbackFormVisible(true);
+        },
+        [setIsFeedbackFormVisible],
+    );
+
+    const confirmFeedback = () => {
+        setIsFeedbackConfirmationFormVisible(true);
+        setTimeout(() => {
+            setIsFeedbackConfirmationFormVisible(false);
+        }, 2000);
+    };
     const onLinkClick = React.useCallback(
         (href: string) => {
             postMessage({ type: RovoDevViewResponseType.OpenExternalLink, href });
@@ -950,9 +979,7 @@ const RovoDevView: React.FC = () => {
                     currentState={currentState}
                     onChangesGitPushed={onChangesGitPushed}
                     onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
-                    feedbackVisible={isFeedbackFormVisible}
-                    setFeedbackVisible={setIsFeedbackFormVisible}
-                    sendFeedback={executeSendFeedback}
+                    handleFeedbackTrigger={handleFeedbackTrigger}
                     onLoginClick={onLoginClick}
                     onOpenFolder={onOpenFolder}
                     onMcpChoice={onMcpChoice}
@@ -964,50 +991,83 @@ const RovoDevView: React.FC = () => {
                 />
                 {!hidePromptBox && (
                     <div className="input-section-container">
-                        <UpdatedFilesComponent
-                            modifiedFiles={totalModifiedFiles}
-                            onUndo={undoFiles}
-                            onKeep={keepFiles}
-                            openDiff={openFile}
-                            actionsEnabled={currentState.state === 'WaitingForPrompt'}
-                            workspacePath={workspacePath}
-                            homeDir={homeDir}
-                        />
-                        <div className="prompt-container-container">
-                            <div className="prompt-container">
-                                <PromptContextCollection
-                                    content={promptContextCollection}
-                                    readonly={false}
-                                    onRemoveContext={onRemoveContext}
-                                    onToggleActiveItem={onToggleContextFocus}
-                                    openFile={openFile}
-                                    openJira={openJira}
-                                />
-                                <PromptInputBox
-                                    disabled={currentState.state === 'ProcessTerminated'}
-                                    currentState={currentState}
-                                    isDeepPlanEnabled={isDeepPlanToggled}
-                                    isYoloModeEnabled={isYoloModeToggled}
-                                    isFullContextEnabled={isFullContextModeToggled}
-                                    onDeepPlanToggled={() => setIsDeepPlanToggled((prev) => !prev)}
-                                    onYoloModeToggled={IsBoysenberry ? undefined : () => onYoloModeToggled()}
-                                    onFullContextToggled={
-                                        isAtlassianUser ? () => onFullContextModeToggled() : undefined
-                                    }
-                                    onSend={sendPrompt}
-                                    onCancel={cancelResponse}
-                                    onAddContext={onAddContext}
-                                    onCopy={handleCopyResponse}
-                                    handleMemoryCommand={executeGetAgentMemory}
-                                    handleTriggerFeedbackCommand={handleShowFeedbackForm}
-                                    promptText={promptText}
-                                    onPromptTextSet={handlePromptTextSet}
+                        {isFeedbackFormVisible && (
+                            <div
+                                style={{
+                                    padding: '8px 16px',
+                                }}
+                            >
+                                <FeedbackForm
+                                    type={feedbackType}
+                                    onSubmit={(feedbackType, feedback, canContact, includeTenMessages) => {
+                                        setFeedbackType(undefined);
+                                        executeSendFeedback(feedbackType, feedback, canContact, includeTenMessages);
+                                        confirmFeedback();
+                                    }}
+                                    onCancel={() => {
+                                        setFeedbackType(undefined);
+                                        setIsFeedbackFormVisible(false);
+                                    }}
                                 />
                             </div>
+                        )}{' '}
+                        <div
+                            style={{
+                                padding: '8px 16px',
+                            }}
+                        >
+                            {isFeedbackConfirmationFormVisible && (
+                                <FeedbackConfirmationForm onClose={() => setIsFeedbackConfirmationFormVisible(false)} />
+                            )}
                         </div>
-                        <div className="ai-disclaimer">
-                            <InformationCircleIcon label="Disclaimer logo" size="small" />
-                            Uses AI. Verify results.
+                        <div className="input-section-container">
+                            <UpdatedFilesComponent
+                                modifiedFiles={totalModifiedFiles}
+                                onUndo={undoFiles}
+                                onKeep={keepFiles}
+                                openDiff={openFile}
+                                actionsEnabled={currentState.state === 'WaitingForPrompt'}
+                                workspacePath={workspacePath}
+                                homeDir={homeDir}
+                            />
+                            <div className="prompt-container-container">
+                                <div className="prompt-container">
+                                    <PromptContextCollection
+                                        content={promptContextCollection}
+                                        readonly={false}
+                                        onRemoveContext={onRemoveContext}
+                                        onToggleActiveItem={onToggleContextFocus}
+                                        openFile={openFile}
+                                        openJira={openJira}
+                                    />
+                                    <PromptInputBox
+                                        disabled={currentState.state === 'ProcessTerminated'}
+                                        currentState={currentState}
+                                        isDeepPlanEnabled={isDeepPlanToggled}
+                                        isYoloModeEnabled={isYoloModeToggled}
+                                        isFullContextEnabled={isFullContextModeToggled}
+                                        onDeepPlanToggled={() => setIsDeepPlanToggled((prev) => !prev)}
+                                        onYoloModeToggled={
+                                            RovodevStaticConfig.isBBY ? undefined : () => onYoloModeToggled()
+                                        }
+                                        onFullContextToggled={
+                                            isAtlassianUser ? () => onFullContextModeToggled() : undefined
+                                        }
+                                        onSend={sendPrompt}
+                                        onCancel={cancelResponse}
+                                        onAddContext={onAddContext}
+                                        onCopy={handleCopyResponse}
+                                        handleMemoryCommand={executeGetAgentMemory}
+                                        handleTriggerFeedbackCommand={handleShowFeedbackForm}
+                                        promptText={promptText}
+                                        onPromptTextSet={handlePromptTextSet}
+                                    />
+                                </div>
+                            </div>
+                            <div className="ai-disclaimer">
+                                <InformationCircleIcon label="Disclaimer logo" size="small" />
+                                Uses AI. Verify results.
+                            </div>
                         </div>
                     </div>
                 )}

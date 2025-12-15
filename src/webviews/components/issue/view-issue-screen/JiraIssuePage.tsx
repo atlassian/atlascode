@@ -36,6 +36,7 @@ import {
     MentionInfo,
 } from '../AbstractIssueEditorPage';
 import { AtlascodeMentionProvider } from '../common/AtlaskitEditor/AtlascodeMentionsProvider';
+import { MissingScopeBanner } from '../common/missing-scope-banner/MissingScopeBanner';
 import { Development } from '../Development';
 import NavItem from '../NavItem';
 import PullRequests from '../PullRequests';
@@ -669,6 +670,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         onPMFSubmit={(data: LegacyPMFData) => this.onPMFSubmit(data)}
                     />
                 )}
+
+                {this.state.showEditorMissedScopeBanner && <MissingScopeBanner />}
                 <div className="ac-page-header">
                     <div className="ac-breadcrumbs">
                         {this.state.hierarchy && this.state.hierarchy.length > 0 && (
@@ -776,7 +779,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     onDelete={this.handleDeleteIssuelink}
                     fetchUsers={this.fetchAndTransformUsers}
                     fetchImage={(img) => this.fetchImage(img)}
-                    isAtlaskitEditorEnabled={this.state.isAtlaskitEditorEnabled}
+                    isAtlaskitEditorEnabled={this.state.showAtlaskitEditor}
                     onIssueUpdate={this.handleChildIssueUpdate}
                     mentionProvider={this.mentionProvider}
                     handleEditorFocus={this.handleEditorFocus}
@@ -822,7 +825,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                         this.state.fieldValues['project'] &&
                                         this.state.fieldValues['project'].projectTypeKey === 'service_desk'
                                     }
-                                    isAtlaskitEditorEnabled={this.state.isAtlaskitEditorEnabled}
+                                    isAtlaskitEditorEnabled={this.state.showAtlaskitEditor}
                                     commentText={this.state.commentText}
                                     onCommentTextChange={this.handleCommentTextChange}
                                     isEditingComment={this.state.isEditingComment}
@@ -997,6 +1000,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     override componentDidMount() {
         this.postMessage({ action: 'getFeatureFlags' });
         this.postMessage({ action: 'checkRovoDevEntitlement' });
+        this.postMessage({ action: 'fetchMediaToken' });
     }
     override shouldComponentUpdate(_nextProps: Readonly<{}>, nextState: Readonly<ViewState>): boolean {
         const prevIssueKey = this.state.key;
@@ -1050,7 +1054,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
         return (
             <Page>
-                <EditorStateProvider isAtlaskitEditorEnabled={this.state.isAtlaskitEditorEnabled}>
+                <EditorStateProvider isAtlaskitEditorEnabled={this.state.showAtlaskitEditor}>
                     <AtlascodeErrorBoundary
                         context={{ view: AnalyticsView.JiraIssuePage }}
                         postMessageFunc={(e) => {

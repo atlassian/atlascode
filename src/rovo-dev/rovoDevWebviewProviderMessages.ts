@@ -69,7 +69,7 @@ export type RovoDevProviderMessage =
           RovoDevProviderMessageType.RovoDevResponseMessage,
           { message: RovoDevResponseMessageType | RovoDevResponseMessageType[] }
       >
-    | ReducerAction<RovoDevProviderMessageType.CompleteMessage>
+    | ReducerAction<RovoDevProviderMessageType.CompleteMessage, { promptId: string }>
     | ReducerAction<RovoDevProviderMessageType.ShowDialog, { message: DialogMessage }>
     | ReducerAction<RovoDevProviderMessageType.ClearChat>
     | ReducerAction<
