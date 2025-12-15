@@ -206,12 +206,13 @@ export function parseToolReturnMessage(msg: RovoDevToolReturnResponse): ToolRetu
             break;
 
         case 'create_technical_plan':
-            if (msg.parsedContent) {
-                resp.push({
-                    content: '',
-                    technicalPlan: msg.parsedContent as TechnicalPlan,
-                });
-            }
+            // Use parsedContent if available (it's the parsed object), otherwise parse msg.content (string)
+            const planData: TechnicalPlan = msg.parsedContent ?? (msg.content ? JSON.parse(msg.content) : null);
+
+            resp.push({
+                content: '',
+                technicalPlan: planData,
+            });
             break;
 
         case 'mcp__atlassian__invoke_tool':
