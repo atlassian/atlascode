@@ -60,6 +60,12 @@ const strictEncodeUrl = (url: string) => {
 // linkify from truncating at closing parentheses.
 // Keep validateLink to allow only http/https.
 export const normalizeLinks = (messageText: string) => {
+    if (typeof messageText !== 'string') {
+        console.warn('normalizeLinks called with non-string messageText', messageText);
+        // Silently recover from invalid types
+        messageText = '';
+    }
+
     let processed = messageText.replace(
         /(https?:\/\/[^\s]+\/issues\/\?jql=)(.*?)(?=$|\n|\r)/gi,
         (_match, prefix: string, jqlTail: string) => prefix + encodeURIComponent(decodeUriComponentSafely(jqlTail)),
@@ -74,11 +80,6 @@ export const MarkedDown: React.FC<{ value: string; onLinkClick: (href: string) =
     value,
     onLinkClick,
 }) => {
-    if (typeof value !== 'string') {
-        // Silently recover from invalid types
-        value = '';
-    }
-
     const spanRef = React.useRef<HTMLSpanElement>(null);
     const html = React.useMemo(() => mdParser.render(normalizeLinks(value)), [value]);
 
