@@ -522,6 +522,7 @@ class RovoDevSubprocessInstance extends Disposable {
                                 return;
                             }
 
+                            this.rovoDevProcess = undefined;
                             this.stop();
 
                             // we don't want to pass the 0 code as a number, as it's not an error
