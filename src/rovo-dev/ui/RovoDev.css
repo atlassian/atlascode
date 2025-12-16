@@ -422,6 +422,12 @@ body {
     color: var(--ds-text-inverse);
 }
 
+.rovodev-markdown-link {
+    cursor: pointer;
+    color: var(--ds-text-inverse);
+    text-decoration: underline;
+}
+
 /* Pull Request button styles */
 .pull-request-button {
     display: flex;
@@ -970,4 +976,8 @@ body {
 }
 .vscode-high-contrast .deep-plan-indicator:hover {
     border: 2px solid var(--vscode-focusBorder);
+}
+
+.vscode-high-contrast .rovodev-markdown-link {
+    color: inherit;
 }
