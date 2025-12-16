@@ -326,6 +326,7 @@ export enum SelectComponentType {
     Creatable = 'creatable',
     Async = 'async',
     AsyncCreatable = 'asynccreatable',
+    Cascading = 'cascading',
 }
 
 export function selectComponentType(field: SelectFieldUI): SelectComponentType {
@@ -337,8 +338,12 @@ export function selectComponentType(field: SelectFieldUI): SelectComponentType {
         return SelectComponentType.Creatable;
     }
 
-    if (field.autoCompleteUrl.trim() !== '') {
+    if (field.autoCompleteUrl && field.autoCompleteUrl.trim() !== '') {
         return SelectComponentType.Async;
+    }
+
+    if (field.isCascading) {
+        return SelectComponentType.Cascading;
     }
 
     return SelectComponentType.Select;

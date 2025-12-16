@@ -264,7 +264,7 @@ export class JiraIssueWebview
             this._editUIData.recentPullRequests = [];
 
             const msg = this._editUIData;
-
+            console.debug('Posting edit issue data to webview:', msg);
             msg.type = 'update';
 
             this.postMessage(msg); // Issue has rendered

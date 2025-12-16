@@ -1171,6 +1171,7 @@ export abstract class AbstractIssueEditorPage<
                     </div>
                 );
             }
+            case UIType.Cascading:
             case UIType.Select: {
                 const selectField = field as SelectFieldUI;
 
@@ -1594,6 +1595,35 @@ export abstract class AbstractIssueEditorPage<
                                 }}
                             </Field>
                         );
+                    }
+
+                    case SelectFieldHelper.SelectComponentType.Cascading: {
+                        if (editmode) {
+                            const defValCopy = { ...defVal };
+                            if (defValCopy?.child && defValCopy.child.value) {
+                                defValCopy.value = defVal.value + ' - ' + defValCopy.child.value;
+                            }
+                            commonProps.value = defValCopy;
+                            return (
+                                <Select
+                                    {...commonProps}
+                                    className="ac-select-container"
+                                    classNamePrefix="ac-select"
+                                    isClearable={this.isClearableSelect(selectField)}
+                                    options={this.state.selectFieldOptions[field.key]}
+                                    isDisabled={this.state.isSomethingLoading}
+                                    onChange={(selected: any) => {
+                                        this.handleSelectChange(selectField, selected);
+                                    }}
+                                    onMenuClose={() => {
+                                        if (this.state.loadingField === field.key) {
+                                            this.setState({ isSomethingLoading: false, loadingField: '' });
+                                        }
+                                    }}
+                                />
+                            );
+                        }
+                        return null;
                     }
                 }
             }
