@@ -71,16 +71,22 @@ export class BannerDelegate implements NotificationDelegate {
         }
     }
 
-    private aggregateAndShowNotifications() {
+    private async aggregateAndShowNotifications() {
         // for now, this simply shows all notifications in the pile with no aggregation. In the future, this should group notifications by notification type.
+        const notificationPromises: Promise<void>[] = [];
+
         this.pile.forEach((event) => {
             if (event.action === NotificationAction.Added) {
                 event.notifications.forEach((notification) => {
                     const { text, action } = this.makeAction(notification);
-                    this.showNotification(notification, text, action);
+                    notificationPromises.push(this.showNotification(notification, text, action));
                 });
             }
         });
+
+        // Wait for all notifications to be marked as banner-shown before clearing the pile
+        await Promise.all(notificationPromises);
+
         this.pile.clear();
         this.timer = undefined;
     }

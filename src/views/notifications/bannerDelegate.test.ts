@@ -91,7 +91,12 @@ describe('BannerDelegate', () => {
 
         // Verify that after a short time, the timer will trigger the display of the notification
         jest.advanceTimersByTime(SHORT_TIMEOUT); // Simulate the passage of time
-        // Flush promises to allow async showNotification to complete
+        // Flush promises to allow async aggregateAndShowNotifications and showNotification to complete
+        // Need multiple ticks: setTimeout callback -> aggregateAndShowNotifications -> Promise.all -> showNotification -> markBannerShown
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
         await Promise.resolve();
         expect(window.showInformationMessage).toHaveBeenCalledTimes(1);
         expect((bannerDelegate as any).timer).toBeUndefined();
@@ -152,7 +157,11 @@ describe('BannerDelegate', () => {
 
         // Advance the timer to trigger the display of notifications
         jest.advanceTimersByTime(SHORT_TIMEOUT / 2 + 1); // Simulate the passage of time
-        // Flush promises to allow async showNotification calls to complete
+        // Flush promises to allow async aggregateAndShowNotifications and showNotification calls to complete
+        // Need multiple ticks for the full async chain to resolve
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
         await Promise.resolve();
         await Promise.resolve();
 
