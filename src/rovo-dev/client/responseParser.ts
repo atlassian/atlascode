@@ -160,7 +160,7 @@ interface RovoDevReplayEndChunk {
     event_kind: 'replay_end';
 }
 
-interface RovoDevRquestUsageChunk {
+interface RovoDevRequestUsageChunk {
     event_kind: 'request-usage';
 }
 
@@ -192,7 +192,7 @@ type RovoDevSingleChunk =
     | RovoDevPromptsChunk
     | RovoDevCloseChunk
     | RovoDevReplayEndChunk
-    | RovoDevRquestUsageChunk;
+    | RovoDevRequestUsageChunk;
 
 // https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.PartStartEvent
 interface RovoDevPartStartResponseRaw {
