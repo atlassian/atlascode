@@ -98,6 +98,11 @@ export interface RovoDevStatusResponse {
     data: RovoDevStatusAPIResponse;
 }
 
+// special response for events we want to ignore
+export interface RovoDevIgnoredResponse {
+    event_kind: '_ignored';
+}
+
 export interface RovoDevUsageResponse {
     event_kind: 'usage';
     data: {
@@ -148,7 +153,8 @@ export type RovoDevResponse =
     | RovoDevUsageResponse
     | RovoDevPromptsResponse
     | RovoDevCloseResponse
-    | RovoDevReplayEndResponse;
+    | RovoDevReplayEndResponse
+    | RovoDevIgnoredResponse;
 
 export type RovoDevToolName =
     | 'create_file'

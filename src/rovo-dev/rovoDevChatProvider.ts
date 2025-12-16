@@ -602,6 +602,10 @@ export class RovoDevChatProvider {
                 // NOTE: this event is handled somewhere else
                 break;
 
+            // special event for messages we want to ignore
+            case '_ignored':
+                break;
+
             default:
                 // this should really never happen, as unknown messages are caugh and wrapped into the
                 // message `_parsing_error`
