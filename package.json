@@ -138,14 +138,6 @@
                 "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
             },
             {
-                "command": "atlascode.rovodev.showTerminal",
-                "title": "Show in terminal",
-                "icon": "$(terminal)",
-                "category": "Rovo Dev",
-                "description": "Shows the Rovo Dev process in a terminal window.",
-                "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
-            },
-            {
                 "command": "atlascode.openRovoDevConfig",
                 "title": "Open Settings File",
                 "category": "Rovo Dev",
@@ -691,11 +683,6 @@
                     "group": "navigation@1"
                 },
                 {
-                    "command": "atlascode.rovodev.showTerminal",
-                    "when": "atlascode:rovoDevTerminalEnabled && view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
-                    "group": "navigation@2"
-                },
-                {
                     "command": "atlascode.openRovoDevConfig",
                     "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
                     "group": "rovoDevContextMenu1@1"
@@ -920,10 +907,6 @@
                 {
                     "command": "atlascode.rovodev.newChatSession",
                     "when": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
-                },
-                {
-                    "command": "atlascode.rovodev.showTerminal",
-                    "when": "atlascode:rovoDevEnabled"
                 },
                 {
                     "command": "atlascode.openRovoDevConfig",

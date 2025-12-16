@@ -1066,7 +1066,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 break;
 
             case 'Started':
-                await this.signalProcessStarted(newState.hostname, newState.httpPort, newState.sessionToken);
+                await this.signalProcessStarted(
+                    newState.hostname,
+                    newState.httpPort,
+                    newState.sessionToken,
+                    newState.pid,
+                );
                 break;
 
             case 'Terminated':
@@ -1093,9 +1098,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
-    private signalProcessStarted(hostname: string, rovoDevPort: number, sessionToken: string) {
+    private signalProcessStarted(hostname: string, rovoDevPort: number, sessionToken: string, pid?: number) {
         // initialize the API client
         this._rovoDevApiClient = new RovoDevApiClient(hostname, rovoDevPort, sessionToken);
+
+        if (pid) {
+            this._debugPanelContext['PID'] = `${pid}`;
+        }
 
         this._debugPanelContext['RovoDevAddress'] = `http://${hostname}:${rovoDevPort}`;
         this._debugPanelContext['SessionToken'] = sessionToken;

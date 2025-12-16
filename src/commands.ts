@@ -29,7 +29,6 @@ import { Logger } from './logger';
 import { runQuickAuth } from './onboarding/quickFlow';
 import { AuthenticationType } from './onboarding/quickFlow/authentication/types';
 import { RovodevCommands } from './rovo-dev/api/componentApi';
-import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevContextItem } from './rovo-dev/rovoDevTypes';
 import { openRovoDevConfigFile } from './rovo-dev/rovoDevUtils';
 import { Experiments, Features } from './util/featureFlags';
@@ -383,7 +382,6 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(RovodevCommands.RovodevNewSession, () => {
             Container.rovodevWebviewProvider.executeNewSession();
         }),
-        commands.registerCommand(RovodevCommands.RovodevShowTerminal, () => RovoDevProcessManager.showTerminal()),
         commands.registerCommand(RovodevCommands.RovodevShareFeedback, () =>
             Container.rovodevWebviewProvider.executeTriggerFeedback(),
         ),
