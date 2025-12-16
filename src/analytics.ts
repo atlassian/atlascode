@@ -14,6 +14,7 @@ import { IssueSuggestionSettings } from './config/configuration';
 import { BitbucketIssuesTreeViewId, PullRequestTreeViewId } from './constants';
 import { Container } from './container';
 import { QuickFlowAnalyticsEvent } from './onboarding/quickFlow/types';
+import { RovoDevCommonParams, RovoDevPerfEvent } from './rovo-dev/analytics/rovodevAnalyticsTypes';
 import { NotificationSurface, NotificationType } from './views/notifications/notificationManager';
 import { NotificationSource } from './views/notifications/notificationSources';
 
@@ -145,6 +146,7 @@ function sanitazeErrorMessage(message?: string): string | undefined {
 function sanitizeStackTrace(stack?: string): string | undefined {
     if (stack) {
         stack = stack.replace(/\/Users\/[^/]+\//gi, '/Users/<user>/'); // *nix Users folder
+        stack = stack.replace(/\/home\/[^/]+\//gi, '/home/<user>/'); // *nix home folder
         stack = stack.replace(/\\Users\\[^\\]+\\/gi, '\\Users\\<user>\\'); // windows Users folder
     }
     return stack || undefined;
@@ -208,12 +210,6 @@ export async function featureFlagClientInitializedEvent(
 // perf events name are constructed in the format:
 // <ui|core|api> . <product> . <action> . <subAction> . <perf-marker>
 
-type RovoDevPerfEvents =
-    | 'api.rovodev.chat.response.timeToFirstByte'
-    | 'api.rovodev.chat.response.timeToFirstMessage'
-    | 'api.rovodev.chat.response.timeToTechPlan'
-    | 'api.rovodev.chat.response.timeToLastMessage';
-
 type JiraPerfEvents =
     | 'ui.jira.jqlFetch.render.lcp'
     | 'ui.jira.jqlFetch.update.lcp'
@@ -221,18 +217,12 @@ type JiraPerfEvents =
     | 'ui.jira.editJiraIssue.render.lcp'
     | 'ui.jira.editJiraIssue.update.lcp';
 
-interface RovoDevCommonParams {
-    rovoDevEnv: RovoDevEnv;
-    appInstanceId: string;
-    rovoDevSessionId: string;
-    rovoDevPromptId: string;
-}
 interface JiraIssueTypeParams {
     isEpic: boolean;
 }
 
 export function performanceEvent(
-    tag: RovoDevPerfEvents,
+    tag: RovoDevPerfEvent,
     measure: number,
     params: RovoDevCommonParams,
 ): Promise<TrackEvent>;
@@ -249,137 +239,9 @@ export function performanceEvent(tag: string, measure: number, params?: Record<s
 
 // Rovo Dev events
 
-export type RovoDevEnv = 'IDE' | 'Boysenberry';
-
-export function rovoDevNewSessionActionEvent(
-    rovoDevEnv: RovoDevEnv,
-    appInstanceId: string,
-    sessionId: string,
-    isManuallyCreated: boolean,
-) {
-    return trackEvent('rovoDevNewSessionAction', 'atlascode', {
-        attributes: { rovoDevEnv, appInstanceId, sessionId, isManuallyCreated },
-    });
-}
-
-export function rovoDevPromptSentEvent(
-    rovoDevEnv: RovoDevEnv,
-    appInstanceId: string,
-    sessionId: string,
-    promptId: string,
-    deepPlanEnabled: boolean,
-) {
-    return trackEvent('rovoDevPromptSent', 'atlascode', {
-        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId, deepPlanEnabled },
-    });
-}
-
-export function rovoDevTechnicalPlanningShownEvent(
-    rovoDevEnv: RovoDevEnv,
-    appInstanceId: string,
-    sessionId: string,
-    promptId: string,
-    stepsCount: number,
-    filesCount: number,
-    questionsCount: number,
-) {
-    return trackEvent('rovoDevTechnicalPlanningShown', 'atlascode', {
-        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId, stepsCount, filesCount, questionsCount },
-    });
-}
-
-export function rovoDevFilesSummaryShownEvent(
-    rovoDevEnv: RovoDevEnv,
-    appInstanceId: string,
-    sessionId: string,
-    promptId: string,
-    filesCount: number,
-) {
-    return trackEvent('rovoDevFilesSummaryShown', 'atlascode', {
-        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId, filesCount },
-    });
-}
-
-export function rovoDevFileChangedActionEvent(
-    rovoDevEnv: RovoDevEnv,
-    appInstanceId: string,
-    sessionId: string,
-    promptId: string,
-    action: 'undo' | 'keep',
-    filesCount: number,
-) {
-    return trackEvent('rovoDevFileChangedAction', 'atlascode', {
-        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId, action, filesCount },
-    });
-}
-
-export function rovoDevStopActionEvent(
-    rovoDevEnv: RovoDevEnv,
-    appInstanceId: string,
-    sessionId: string,
-    promptId: string,
-    failed?: boolean,
-) {
-    return trackEvent('rovoDevStopAction', 'atlascode', {
-        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId, failed },
-    });
-}
-
-export function rovoDevGitPushActionEvent(
-    rovoDevEnv: RovoDevEnv,
-    appInstanceId: string,
-    sessionId: string,
-    promptId: string,
-    prCreated: boolean,
-) {
-    return trackEvent('rovoDevGitPushAction', 'atlascode', {
-        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId, prCreated },
-    });
-}
-
-export function rovoDevDetailsExpandedEvent(
-    rovoDevEnv: RovoDevEnv,
-    appInstanceId: string,
-    sessionId: string,
-    promptId: string,
-) {
-    return trackEvent('rovoDevDetailsExpanded', 'atlascode', {
-        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId },
-    });
-}
-
-export function rovoDevCreatePrButtonClickedEvent(
-    rovoDevEnv: RovoDevEnv,
-    appInstanceId: string,
-    sessionId: string,
-    promptId: string,
-) {
-    return trackEvent('clicked', 'rovoDevCreatePrButton', {
-        attributes: { rovoDevEnv, appInstanceId, sessionId, promptId },
-    });
-}
-
-export function rovoDevAiResultViewedEvent(
-    rovoDevEnv: RovoDevEnv,
-    appInstanceId: string,
-    sessionId: string,
-    promptId: string,
-    dwellMs: number,
-) {
-    return trackEvent('viewed', 'aiResult', {
-        attributes: {
-            rovoDevEnv,
-            appInstanceId,
-            sessionId,
-            promptId,
-            dwellMs,
-            xid: 'rovodev-sessions',
-            singleInstrumentationID: promptId,
-            aiFeatureName: 'rovodevSessions',
-            proactiveGeneratedAI: 0,
-            userGeneratedAI: 1,
-            isAIFeature: 1,
-        },
+export function rovoDevEntitlementCheckEvent(isEntitled: boolean, type: string, source?: string) {
+    return trackEvent('rovoDevEntitlement', 'atlascode', {
+        attributes: { source, isEntitled, type },
     });
 }
 
@@ -435,6 +297,25 @@ export async function startIssueCreationEvent(source: string, product: Product):
 
 export async function searchIssuesEvent(product: Product): Promise<TrackEvent> {
     return trackEvent('searchIssues', 'issue', { attributes: { hostProduct: product.name } });
+}
+
+export async function issueOpenRovoDevEvent(site: DetailedSiteInfo, source?: string): Promise<TrackEvent> {
+    const isEntitled = (await Container.rovoDevEntitlementChecker.checkEntitlement()).isEntitled;
+    return instanceTrackEvent(site, 'openRovoDev', 'issue', {
+        attributes: { issueSource: source || '', isEntitled: isEntitled },
+    });
+}
+
+export async function rovoDevPromoBannerDismissedEvent(site: DetailedSiteInfo, source?: string): Promise<TrackEvent> {
+    return instanceTrackEvent(site, 'dismissed', 'rovoDevPromoBanner', {
+        attributes: { source: source || '' },
+    });
+}
+
+export async function rovoDevPromoBannerOpenedEvent(site: DetailedSiteInfo, source?: string): Promise<TrackEvent> {
+    return instanceTrackEvent(site, 'opened', 'rovoDevPromoBanner', {
+        attributes: { source: source || '' },
+    });
 }
 
 export async function notificationChangeEvent(
@@ -519,6 +400,12 @@ export async function pmfSnoozed(): Promise<TrackEvent> {
 
 export async function pmfClosed(): Promise<TrackEvent> {
     return trackEvent('closed', 'atlascodePmf');
+}
+
+export async function addRecommendedExtensionTriggeredEvent(source: string): Promise<TrackEvent> {
+    return trackEvent('triggered', 'addRecommendedExtension', {
+        attributes: { source: source },
+    });
 }
 
 export type DeepLinkEventErrorType = 'Success' | 'NotFound' | 'Exception';
@@ -1005,7 +892,7 @@ async function instanceTrackEvent(
     return event;
 }
 
-async function trackEvent(action: string, actionSubject: string, eventProps: any = {}): Promise<TrackEvent> {
+export async function trackEvent(action: string, actionSubject: string, eventProps: any = {}): Promise<TrackEvent> {
     const e = {
         tenantIdType: null,
         trackEvent: event(action, actionSubject, eventProps),

@@ -835,6 +835,10 @@ section button span {
     background-color: var(--vscode-editor-background--darken-05);
 }
 
+.ac-worklog-inline-dialog > div {
+    background: transparent !important;
+}
+
 .ac-inline-items-container {
     width: 100%;
 }
@@ -927,6 +931,9 @@ div[role='dialog'],
 .ac-button {
     background: var(--vscode-button-background) !important;
     border-radius: 2px !important;
+}
+.ac-button-spinner {
+    --ds-icon-subtle: var(--vscode-button-foreground) !important;
 }
 
 .ac-button span {

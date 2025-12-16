@@ -53,6 +53,6 @@ export class VSCStartWorkWebviewControllerFactory implements VSCWebviewControlle
     }
 
     public webviewHtml(extensionPath: string, baseUri: Uri, cspSource: string): string {
-        return getHtmlForView(extensionPath, baseUri, cspSource, 'startWorkPageV2');
+        return getHtmlForView(extensionPath, baseUri, cspSource, 'startWorkPageV3');
     }
 }

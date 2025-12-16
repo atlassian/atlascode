@@ -20,6 +20,25 @@
             "envFile": "${workspaceFolder}/.env"
         },
         {
+            "name": "Extension (RovoDev BBY)",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/build/**/*.js"
+            ],
+            "env": {
+                "ROVODEV_PORT": "8899",
+                "ROVODEV_ENABLED": "true",
+                "ROVODEV_BBY": "true",
+                "ROVODEV_SANDBOX_ID": "bby_sandbox"
+            },
+            "preLaunchTask": "Start RovoDev Server"
+        },
+        {
             // This configuration requires npm run dev to be running externally
             // It will pick up the re-compiled extension code but not hot-swap it 
             "name": "Extension (watch/external)",

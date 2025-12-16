@@ -26,13 +26,12 @@ import {
     BB_PIPELINES_FILENAME,
 } from './pipelines/yaml/pipelinesYamlHelper';
 import { registerResources } from './resources';
+import { RovodevStaticConfig } from './rovo-dev/api/rovodevStaticConfig';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { GitExtension } from './typings/git';
 import { Features } from './util/featureFlags';
 import Performance from './util/perf';
 import { NotificationManagerImpl } from './views/notifications/notificationManager';
-
-const IsBoysenberry = process.env.ROVODEV_BBY === 'true';
 
 const AnalyticDelay = 5000;
 const PerfStartMarker = 'extension.start';
@@ -52,7 +51,7 @@ export async function activate(context: ExtensionContext) {
     Logger.configure(context);
 
     // this disables the main Atlassian activity bar when we are in Boysenberry,
-    setCommandContext(CommandContext.BbyEnvironmentActive, IsBoysenberry);
+    setCommandContext(CommandContext.BbyEnvironmentActive, RovodevStaticConfig.isBBY);
 
     // Mark ourselves as the PID in charge of refreshing credentials and start listening for pings.
     context.globalState.update('rulingPid', pid);
@@ -63,7 +62,7 @@ export async function activate(context: ExtensionContext) {
         activateErrorReporting();
         registerRovoDevCommands(context);
 
-        if (!IsBoysenberry) {
+        if (!RovodevStaticConfig.isBBY) {
             registerCommands(context);
             activateCodebucket(context);
 
@@ -86,7 +85,7 @@ export async function activate(context: ExtensionContext) {
         Container.clientManager.requestSite(site);
     });
 
-    if (!IsBoysenberry) {
+    if (!RovodevStaticConfig.isBBY) {
         if (previousVersion === undefined) {
             commands.executeCommand(Commands.ShowOnboardingFlow);
         } else {
@@ -99,7 +98,7 @@ export async function activate(context: ExtensionContext) {
         sendAnalytics(atlascodeVersion, context.globalState);
     }, delay);
 
-    if (!IsBoysenberry) {
+    if (!RovodevStaticConfig.isBBY) {
         context.subscriptions.push(languages.registerCodeLensProvider({ scheme: 'file' }, { provideCodeLenses }));
 
         // Following are async functions called without await so that they are run
@@ -212,7 +211,7 @@ async function sendAnalytics(version: string, globalState: Memento) {
 
 // this method is called when your extension is deactivated
 export function deactivate() {
-    if (!IsBoysenberry) {
+    if (!RovodevStaticConfig.isBBY) {
         RovoDevProcessManager.deactivateRovoDevProcessManager();
         NotificationManagerImpl.getInstance().stopListening();
     }

@@ -29,7 +29,7 @@ import { BitbucketAuthenticator } from './bitbucketAuthenticator';
 import { JiraAuthentictor as JiraAuthenticator } from './jiraAuthenticator';
 import { OAuthDancer } from './oauthDancer';
 
-const CLOUD_TLD = '.atlassian.net';
+const CLOUD_TLDS = ['.atlassian.net', '.jira.com'];
 
 export class LoginManager {
     private _dancer: OAuthDancer = OAuthDancer.Instance;
@@ -94,6 +94,7 @@ export class LoginManager {
                 recievedAt: resp.receivedAt,
                 user: resp.user,
                 state: AuthInfoState.Valid,
+                scopes: resp.scopes,
             };
 
             const siteDetails = await this.getOAuthSiteDetails(
@@ -176,9 +177,8 @@ export class LoginManager {
                 });
 
                 this.fireExplicitSiteChangeEvent([siteDetails]);
-            } catch (err) {
-                Logger.error(err, `Error authenticating with ${site.product.name}`);
-                return Promise.reject(`Error authenticating with ${site.product.name}: ${err}`);
+            } catch (err: unknown) {
+                return Promise.reject(this.formatServerAuthError(err, site.product.name));
             }
         }
     }
@@ -192,11 +192,22 @@ export class LoginManager {
                 });
 
                 this.fireExplicitSiteChangeEvent([siteDetails]);
-            } catch (err) {
-                Logger.error(err, `Error authenticating with ${site.product.name}`);
-                return Promise.reject(`Error authenticating with ${site.product.name}: ${err}`);
+            } catch (err: unknown) {
+                return Promise.reject(this.formatServerAuthError(err, site.product.name));
             }
         }
+    }
+
+    private formatServerAuthError(err: unknown, productName: string): string {
+        const error = err instanceof Error ? err : new Error(String(err));
+        Logger.error(error, `Error authenticating with ${productName}`);
+
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        if (status === 404) {
+            return `Error authenticating with ${productName}: invalid credentials`;
+        }
+
+        return `Error authenticating with ${productName}: ${error.message}`;
     }
 
     private isSiteAddedViaToken(site: DetailedSiteInfo): boolean {
@@ -313,7 +324,7 @@ export class LoginManager {
             pfxPassphrase: site.pfxPassphrase,
         };
 
-        if (site.host.endsWith(CLOUD_TLD)) {
+        if (CLOUD_TLDS.some((tld) => site.host.endsWith(tld))) {
             // Special case to accomodate for API key login to cloud instances
             siteDetails.isCloud = true;
             siteDetails.userId = json.accountId;

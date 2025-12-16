@@ -2,6 +2,7 @@ import { emptyProject, Project } from '@atlassianlabs/jira-pi-common-models';
 import { Disposable } from 'vscode';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
+import { ProjectsPagination } from '../constants';
 import { Container } from '../container';
 import { Logger } from '../logger';
 
@@ -68,6 +69,101 @@ export class JiraProjectManager extends Disposable {
         }
 
         return foundProjects;
+    }
+
+    async getProjectsPaginated(
+        site: DetailedSiteInfo,
+        maxResults: number = ProjectsPagination.pageSize,
+        startAt: number = ProjectsPagination.startAt,
+        orderBy?: OrderBy,
+        query?: string,
+        action?: 'view' | 'browse' | 'edit' | 'create',
+    ): Promise<{ projects: Project[]; total: number; hasMore: boolean }> {
+        try {
+            // For Jira Cloud we use /rest/api/2/project/search with native pagination
+            if (site.isCloud) {
+                try {
+                    return await this.cloudProjectSearch(site, orderBy, maxResults, startAt, query, action);
+                } catch (e) {
+                    Logger.info(e, `Failed to fetch paginated projects for Jira Cloud, trying legacy approach`);
+                    // Fall through to legacy approach
+                }
+            }
+
+            // Legacy approach
+            // For Jira Data Center we use old approach
+            // If cloud failed, we fall back to this
+            const allProjects = await this.getProjects(site, orderBy, query);
+            const filteredProjects = await this.filterProjectsByPermission(site, allProjects, 'CREATE_ISSUES');
+
+            return {
+                projects: filteredProjects,
+                total: filteredProjects.length,
+                hasMore: false,
+            };
+        } catch (e) {
+            Logger.error(e, `Failed to fetch paginated projects`);
+            return {
+                projects: [],
+                total: 0,
+                hasMore: false,
+            };
+        }
+    }
+
+    private async cloudProjectSearch(
+        site: DetailedSiteInfo,
+        orderBy: string | undefined,
+        maxResults: number,
+        startAt: number,
+        query: string | undefined,
+        action: string | undefined,
+    ) {
+        const client = await Container.clientManager.jiraClient(site);
+        const order = orderBy ?? 'key';
+        const url = site.baseApiUrl + '/rest/api/2/project/search';
+        const auth = await client.authorizationProvider('GET', url);
+
+        const queryParams: {
+            maxResults: number;
+            startAt: number;
+            orderBy: string;
+            query?: string;
+            action?: string;
+        } = {
+            maxResults,
+            startAt,
+            orderBy: order,
+        };
+
+        if (query) {
+            queryParams.query = query;
+        }
+
+        if (action) {
+            queryParams.action = action;
+        }
+
+        const response = await client.transportFactory().get(url, {
+            headers: {
+                Authorization: auth,
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+            },
+            method: 'GET',
+            params: queryParams,
+        });
+
+        const projects = response.data?.values || [];
+        const total = response.data?.total || 0;
+        const isLast = response.data?.isLast ?? false;
+        const hasMore = !isLast;
+
+        return {
+            projects,
+            total,
+            hasMore,
+        };
     }
 
     public async checkProjectPermission(

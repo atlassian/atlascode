@@ -3,6 +3,7 @@ import { useCallback, useContext, useEffect, useState } from 'react';
 
 import { StartWorkActionType } from '../../../../../lib/ipc/fromUI/startWork';
 import { RepoData } from '../../../../../lib/ipc/toUI/startWork';
+import { statusCategoryKeys } from '../../../../../react/atlascode/constants';
 import { Branch } from '../../../../../typings/git';
 import { ErrorControllerContext } from '../../../common/errorController';
 import { useStartWorkController } from '../../startWorkController';
@@ -14,7 +15,7 @@ export function useStartWorkFormState(
 ) {
     const errorController = useContext(ErrorControllerContext);
 
-    const [pushBranchEnabled, setPushBranchEnabled] = useState(true);
+    const [pushBranchEnabled, setPushBranchEnabled] = useState(state.pushBranchPreference);
     const [localBranch, setLocalBranch] = useState('');
     const [sourceBranch, setSourceBranch] = useState<Branch>({ type: 0, name: '' });
     const [selectedRepository, setSelectedRepository] = useState<RepoData | undefined>(state.repoData[0]);
@@ -43,6 +44,9 @@ export function useStartWorkFormState(
         controller.postMessage({
             type: StartWorkActionType.GetRovoDevPreference,
         });
+        controller.postMessage({
+            type: StartWorkActionType.GetPushBranchPreference,
+        });
     }, [controller]);
 
     useEffect(() => {
@@ -50,6 +54,12 @@ export function useStartWorkFormState(
             setStartWithRovoDev(state.rovoDevPreference);
         }
     }, [state.rovoDevPreference]);
+
+    useEffect(() => {
+        if (state.pushBranchPreference !== undefined) {
+            setPushBranchEnabled(state.pushBranchPreference);
+        }
+    }, [state.pushBranchPreference]);
 
     // useEffect: default values
     useEffect(() => {
@@ -75,6 +85,11 @@ export function useStartWorkFormState(
             );
         }
     }, [selectedRepository, selectedBranchType, state.issue, state.customTemplate]);
+
+    useEffect(() => {
+        const isInProgress = state.issue.status?.statusCategory?.key === statusCategoryKeys.inProgress;
+        setTransitionIssueEnabled(!isInProgress);
+    }, [state.issue.status?.statusCategory?.key]);
 
     const handleRepositoryChange = useCallback(
         (repository: RepoData) => {
@@ -118,6 +133,17 @@ export function useStartWorkFormState(
             setStartWithRovoDev(enabled);
             controller.postMessage({
                 type: StartWorkActionType.UpdateRovoDevPreference,
+                enabled,
+            });
+        },
+        [controller],
+    );
+
+    const handlePushBranchChange = useCallback(
+        (enabled: boolean) => {
+            setPushBranchEnabled(enabled);
+            controller.postMessage({
+                type: StartWorkActionType.UpdatePushBranchPreference,
                 enabled,
             });
         },
@@ -187,7 +213,7 @@ export function useStartWorkFormState(
             startWithRovoDev,
         },
         formActions: {
-            onPushBranchChange: setPushBranchEnabled,
+            onPushBranchChange: handlePushBranchChange,
             onLocalBranchChange: setLocalBranch,
             onSourceBranchChange: setSourceBranch,
             onRepositoryChange: handleRepositoryChange,

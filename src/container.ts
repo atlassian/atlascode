@@ -30,16 +30,20 @@ import { ConfigTarget } from './lib/ipc/models/config';
 import { SectionChangeMessage, SectionV3ChangeMessage } from './lib/ipc/toUI/config';
 import { StartWorkIssueMessage } from './lib/ipc/toUI/startWork';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
-import { Logger, RovoDevLogger } from './logger';
+import { Logger } from './logger';
 import OnboardingProvider from './onboarding/onboardingProvider';
 import { registerQuickAuthCommand } from './onboarding/quickFlow';
 import { Pipeline } from './pipelines/model';
+import { RovodevCommandContext } from './rovo-dev/api/componentApi';
+import { RovodevStaticConfig } from './rovo-dev/api/rovodevStaticConfig';
 import { RovoDevCodeActionProvider } from './rovo-dev/rovoDevCodeActionProvider';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
+import { RovoDevLogger } from './rovo-dev/util/rovoDevLogger';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, SETTINGS_URL } from './uriHandler';
 import { Experiments, FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
+import { RovoDevEntitlementChecker } from './util/rovo-dev-entitlement/rovoDevEntitlementChecker';
 import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
 import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
@@ -64,11 +68,11 @@ import { VSCPullRequestDetailsActionApi } from './webview/pullrequest/vscPullReq
 import { VSCPullRequestDetailsWebviewControllerFactory } from './webview/pullrequest/vscPullRequestDetailsWebviewControllerFactory';
 import { SingleWebview } from './webview/singleViewFactory';
 import { VSCStartWorkActionApi } from './webview/startwork/vscStartWorkActionApi';
-import { VSCStartWorkV3WebviewControllerFactory } from './webview/startwork/vscStartWorkV3WebviewControllerFactory';
 import { VSCStartWorkWebviewControllerFactory } from './webview/startwork/vscStartWorkWebviewControllerFactory';
 import { CreateIssueProblemsWebview } from './webviews/createIssueProblemsWebview';
 import { CreateIssueWebview } from './webviews/createIssueWebview';
 import { JiraIssueViewManager } from './webviews/jiraIssueViewManager';
+import { CreateWorkItemWebviewProvider } from './work-items/create-work-item/createWorkItemWebviewProvider';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
@@ -155,19 +159,9 @@ export class Container {
             this._analyticsApi,
         );
 
-        const startWorkV2ViewFactory = new SingleWebview<StartWorkIssueMessage, StartWorkAction>(
+        const startWorkViewFactory = new SingleWebview<StartWorkIssueMessage, StartWorkAction>(
             context.extensionPath,
             new VSCStartWorkWebviewControllerFactory(
-                new VSCStartWorkActionApi(),
-                this._commonMessageHandler,
-                this._analyticsApi,
-            ),
-            this._analyticsApi,
-        );
-
-        const startWorkV3ViewFactory = new SingleWebview<StartWorkIssueMessage, StartWorkAction>(
-            context.extensionPath,
-            new VSCStartWorkV3WebviewControllerFactory(
                 new VSCStartWorkActionApi(),
                 this._commonMessageHandler,
                 this._analyticsApi,
@@ -185,8 +179,7 @@ export class Container {
             this._analyticsApi,
         );
 
-        context.subscriptions.push((this._startWorkWebviewFactory = startWorkV2ViewFactory));
-        context.subscriptions.push((this._startWorkV3WebviewFactory = startWorkV3ViewFactory));
+        context.subscriptions.push((this._startWorkWebviewFactory = startWorkViewFactory));
         context.subscriptions.push((this._createPullRequestWebviewFactory = createPullRequestV2ViewFactory));
 
         const pipelinesV2Webview = new MultiWebview<Pipeline, PipelineSummaryAction>(
@@ -221,12 +214,19 @@ export class Container {
             setCommandContext(CommandContext.UseNewAuthFlow, false);
         }
 
+        context.subscriptions.push(
+            (this._rovoDevEntitlementChecker = new RovoDevEntitlementChecker(this._analyticsClient)),
+        );
+
         // in Boysenberry we don't need to listen to Jira auth updates
-        if (!process.env.ROVODEV_BBY) {
+        if (!RovodevStaticConfig.isBBY) {
+            // Check Rovo Dev entitlement on startup
+            await this._rovoDevEntitlementChecker.triggerEntitlementNotification();
             // refresh Rovo Dev when auth sites change
             this._siteManager.onDidSitesAvailableChange(async () => {
                 await this.updateFeatureFlagTenantId();
                 await this.refreshRovoDev(context);
+                await this._rovoDevEntitlementChecker.triggerEntitlementNotification();
             });
 
             // refresh Rovo Dev when Jira gets enabled or disabled
@@ -234,6 +234,7 @@ export class Container {
                 configuration.onDidChange(async (e) => {
                     if (configuration.changed(e, 'jira.enabled') || configuration.changed(e, 'rovodev.enabled')) {
                         await this.refreshRovoDev(context);
+                        await this._rovoDevEntitlementChecker.triggerEntitlementNotification();
                     }
                 }, this),
             );
@@ -248,6 +249,14 @@ export class Container {
         context.subscriptions.push(new CustomJQLViewProvider());
         context.subscriptions.push((this._assignedWorkItemsView = new AssignedWorkItemsViewProvider()));
 
+        if (this.featureFlagClient.checkGate(Features.CreateWorkItemWebviewV2)) {
+            context.subscriptions.push(
+                (this._createWorkItemWebviewProvider = new CreateWorkItemWebviewProvider(
+                    context,
+                    context.extensionPath,
+                )),
+            );
+        }
         this._onboardingProvider = new OnboardingProvider();
 
         this.refreshRovoDev(context);
@@ -325,14 +334,7 @@ export class Container {
             }
         } else {
             try {
-                // this enables the Rovo Dev activity bar
-                await setCommandContext(CommandContext.RovoDevEnabled, true);
-
-                // only in Boysenberry, we auto-focus the Rovo Dev view
-                if (this.isBoysenberryMode) {
-                    await vscode.commands.executeCommand('atlascode.views.rovoDev.webView.focus');
-                }
-
+                // don't add anything async before initializing _rovodevDisposable
                 this._rovodevDisposable = vscode.Disposable.from(
                     languages.registerCodeActionsProvider({ scheme: 'file' }, new RovoDevCodeActionProvider(), {
                         providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
@@ -342,7 +344,13 @@ export class Container {
 
                 context.subscriptions.push(this._rovodevDisposable);
 
-                if (!this.isBoysenberryMode) {
+                // this enables the Rovo Dev activity bar
+                await setCommandContext(RovodevCommandContext.RovoDevEnabled, true);
+
+                // only in Boysenberry, we auto-focus the Rovo Dev view
+                if (this.isBoysenberryMode) {
+                    await vscode.commands.executeCommand('atlascode.views.rovoDev.webView.focus');
+                } else {
                     // Update help explorer to show Rovo Dev content
                     this._helpExplorer.refresh();
 
@@ -380,10 +388,12 @@ export class Container {
         this._helpExplorer.refresh();
 
         try {
-            await setCommandContext(CommandContext.RovoDevEnabled, false);
+            // don't add anything async before disposing _rovodevDisposable
             this._rovodevDisposable.dispose();
             this._rovodevDisposable = undefined;
-            RovoDevProcessManager.deactivateRovoDevProcessManager();
+
+            await setCommandContext(RovodevCommandContext.RovoDevEnabled, false);
+            await RovoDevProcessManager.deactivateRovoDevProcessManager();
         } catch (error) {
             RovoDevLogger.error(error, 'Disabling Rovo Dev');
         }
@@ -401,7 +411,6 @@ export class Container {
         const factories = [
             this.settingsWebviewFactory,
             this.startWorkWebviewFactory,
-            this.startWorkV3WebviewFactory,
             this.createPullRequestWebviewFactory,
         ];
 
@@ -416,16 +425,28 @@ export class Container {
         this._assignedWorkItemsView.focus();
     }
 
+    static get assignedWorkItemsView() {
+        return this._assignedWorkItemsView;
+    }
+
+    static setIsEditorFocused(isFocused: boolean) {
+        setCommandContext(CommandContext.IsEditorFocused, isFocused);
+    }
+
     static openPullRequestHandler = (pullRequestUrl: string) => {
         return openPullRequest(this._bitbucketHelper, pullRequestUrl);
     };
 
     private static getAnalyticsEnabled(): boolean {
         if (process.env.DISABLE_ANALYTICS === '1') {
+            Logger.debug('[Analytics] Analytics disabled via DISABLE_ANALYTICS env var');
             return false;
         }
 
-        return env.isTelemetryEnabled;
+        const telemetryEnabled = env.isTelemetryEnabled || this.isBoysenberryMode;
+        Logger.debug(`[Analytics] VS Code telemetry enabled: ${telemetryEnabled}`);
+
+        return telemetryEnabled;
     }
 
     static initializeBitbucket(bbCtx: BitbucketContext) {
@@ -478,7 +499,7 @@ export class Container {
     }
 
     public static get isBoysenberryMode() {
-        return !!process.env.ROVODEV_BBY;
+        return !!RovodevStaticConfig.isBBY;
     }
 
     public static get configTarget(): ConfigTarget {
@@ -570,11 +591,6 @@ export class Container {
         return this._startWorkWebviewFactory;
     }
 
-    private static _startWorkV3WebviewFactory: SingleWebview<StartWorkIssueMessage, StartWorkAction>;
-    public static get startWorkV3WebviewFactory() {
-        return this._startWorkV3WebviewFactory;
-    }
-
     private static _createPullRequestWebviewFactory: SingleWebview<WorkspaceRepo, StartWorkAction>;
     public static get createPullRequestWebviewFactory() {
         return this._createPullRequestWebviewFactory;
@@ -653,6 +669,16 @@ export class Container {
     private static _rovodevWebviewProvider: RovoDevWebviewProvider;
     public static get rovodevWebviewProvider() {
         return this._rovodevWebviewProvider;
+    }
+
+    private static _rovoDevEntitlementChecker: RovoDevEntitlementChecker;
+    public static get rovoDevEntitlementChecker() {
+        return this._rovoDevEntitlementChecker;
+    }
+
+    private static _createWorkItemWebviewProvider: CreateWorkItemWebviewProvider;
+    public static get createWorkItemWebviewProvider() {
+        return this._createWorkItemWebviewProvider;
     }
 }
 

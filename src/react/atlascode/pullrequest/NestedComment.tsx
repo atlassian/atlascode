@@ -55,6 +55,7 @@ type NestedCommentProps = {
     fetchUsers: (input: string) => Promise<User[]>;
     onDelete: (comment: Comment) => Promise<void>;
     pullRequestState: PullRequestState;
+    handleEditorFocus: (isFocused: boolean) => void;
 };
 
 export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
@@ -63,6 +64,7 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
     fetchUsers,
     onDelete,
     pullRequestState,
+    handleEditorFocus,
 }) => {
     const classes = useStyles();
     const [isReplying, setIsReplying] = useState(false);
@@ -214,6 +216,7 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
                                         onSave={handleSave}
                                         onCancel={handleCancel}
                                         fetchUsers={fetchUsers}
+                                        handleEditorFocus={handleEditorFocus}
                                     />
                                 </Box>
                             </Grid>
@@ -225,6 +228,7 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
                                         onDelete={onDelete}
                                         fetchUsers={fetchUsers}
                                         pullRequestState={pullRequestState}
+                                        handleEditorFocus={handleEditorFocus}
                                     />
                                 </Box>
                             </Grid>
@@ -240,6 +244,7 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
                     onSave={handleEdit}
                     onCancel={handleCancelEdit}
                     fetchUsers={fetchUsers}
+                    handleEditorFocus={handleEditorFocus}
                 />
             </Box>
         </React.Fragment>

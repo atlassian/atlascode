@@ -1,11 +1,12 @@
 export enum Features {
     EnableErrorTelemetry = 'atlascode-send-error-telemetry',
     AtlassianNotifications = 'atlascode-atlassian-notifications-v2',
-    StartWorkV3 = 'atlascode-start-work-v3-new',
     RovoDevEnabled = 'rovo_dev_ff',
     UseNewAuthFlow = 'atlascode-use-new-auth-flow',
     EnableAiSuggestions = 'atlascode-enable-ai-suggestions-new',
     AtlaskitEditor = 'atlascode-use-new-atlaskit-editor',
+    CreateWorkItemWebviewV2 = 'atlascode-create-work-item-webview-test',
+    RovoDevEntitlementNotification = 'atlascode-rovodev-entitlement-notification',
 }
 
 export const enum Experiments {

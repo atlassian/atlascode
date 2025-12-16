@@ -6,7 +6,6 @@ import { connectRepository } from './connectRepository.spec';
 import { createPullRequest } from './createPullRequest.spec';
 import { startWorkFlow } from './startWorkFlow.spec';
 import { viewPullRequest } from './viewPullRequest.spec';
-
 export const bitbucketScenarios = [
     { name: 'Authenticate with Bitbucket', run: authFlow },
     { name: 'Connect repository', run: connectRepository },

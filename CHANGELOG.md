@@ -1,10 +1,55 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.13
+
+- Internal changes
+
+## What's new in 4.0.12
+
+### Improvements
+
+- Added support for Rovo Dev /usage and /prompts commands
+- Add saving of last chosen issue type
+
+### Bug Fixes
+
+- Fixed validation for required checkbox fields on issue creation
+
+## What's new in 4.0.10
+
+### Features
+
+- Added development field support
+- Added Branch creation and Rovo Dev actions in Create Issue Page
+- Added filter by project support
+
+## What's new in 4.0.9
+
+### Features
+
+- Added filter by assignee support
+
+## What's new in 4.0.8
+
+### Features
+
+- Added activity history support
+
+### Bug Fixes
+
+- Fixed issue with project loading in Jira Cloud Create Issue Screen
+
 ## What's new in 4.0.7
+
+### Features
+
+- Added edit and delete work log support
+- Added Call-to-Action links for Rovo Dev enablement errors and credit limit errors
 
 ### Bug Fixes
 
 - Fix issue with not working team adding functionality
+- Disabled CMD+B hotkey when Jira/Bitbucket editor has focus
 
 ## What's new in 4.0.6
 

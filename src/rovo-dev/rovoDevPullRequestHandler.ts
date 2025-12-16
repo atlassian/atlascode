@@ -1,8 +1,9 @@
 import { exec } from 'child_process';
-import { RovoDevLogger } from 'src/logger';
 import { API, GitExtension, Repository } from 'src/typings/git';
 import { promisify } from 'util';
 import { env, extensions, Uri } from 'vscode';
+
+import { RovoDevLogger } from './util/rovoDevLogger';
 
 const execAsync = promisify(exec);
 

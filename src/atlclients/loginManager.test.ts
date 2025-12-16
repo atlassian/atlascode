@@ -231,7 +231,7 @@ describe('LoginManager', () => {
                 jest.spyOn(authInfo, 'isPATAuthInfo').mockReturnValue(false);
 
                 await expect(loginManager.userInitiatedServerLogin(site, authInfoData)).rejects.toEqual(
-                    `Error authenticating with ${product.name}: Error: Authentication failed`,
+                    `Error authenticating with ${product.name}: Authentication failed`,
                 );
             },
         );
@@ -390,7 +390,7 @@ describe('LoginManager', () => {
             jest.spyOn(authInfo, 'isBasicAuthInfo').mockReturnValue(true);
 
             await expect(loginManager.updateInfo(site, authInfoData)).rejects.toEqual(
-                'Error authenticating with Jira: Error: Authentication failed',
+                'Error authenticating with Jira: Authentication failed',
             );
         });
     });

@@ -16,6 +16,7 @@ import { CredentialManager } from './atlclients/authStore';
 import { configuration } from './config/configuration';
 import { Container } from './container';
 import { Logger } from './logger';
+import { RovodevStaticConfig } from './rovo-dev/api/rovodevStaticConfig';
 
 export type SitesAvailableUpdateEvent = {
     sites: DetailedSiteInfo[];
@@ -253,8 +254,8 @@ export class SiteManager extends Disposable {
     }
 
     public getFirstAAID(productKey?: string): string | undefined {
-        if (process.env.ROVODEV_BBY && process.env.BBY_USERID) {
-            return process.env.BBY_USERID;
+        if (RovodevStaticConfig.isBBY && RovodevStaticConfig.bbyUserIdOverride) {
+            return RovodevStaticConfig.bbyUserIdOverride;
         }
         if (productKey) {
             return this.getFirstAAIDForProduct(productKey);
@@ -351,7 +352,7 @@ export class SiteManager extends Disposable {
                     });
                 }
 
-                if (deletedSite.id === Container.config.jira.lastCreateSiteAndProject.siteId) {
+                if (deletedSite.id === Container.config.jira.lastCreatePreSelectedValues.siteId) {
                     configuration.setLastCreateSiteAndProject(undefined);
                 }
 

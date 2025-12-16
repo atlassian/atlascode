@@ -200,6 +200,7 @@ export class OAuthDancer implements Disposable {
                             receivedAt: tokens.receivedAt,
                             user: user,
                             accessibleResources: accessibleResources,
+                            scopes: tokens.scopes,
                         };
                         this.maybeShutdown();
                         resolve(oauthResponse);

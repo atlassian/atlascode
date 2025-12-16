@@ -1,4 +1,4 @@
-import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
+import { defaultActionGuard } from 'src/ipc/messaging';
 import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } from 'src/lib/ipc/models/config';
 import { Logger } from 'src/logger';
 import * as vscode from 'vscode';
@@ -7,7 +7,6 @@ import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import { BitbucketBranchingModel } from '../../../../bitbucket/model';
 import { Commands } from '../../../../constants';
 import { Container } from '../../../../container';
-import { Features } from '../../../../util/featureFlags';
 import { Experiments } from '../../../../util/featureFlags';
 import { OnJiraEditedRefreshDelay } from '../../../../util/time';
 import { AnalyticsApi } from '../../../analyticsApi';
@@ -29,8 +28,6 @@ import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster, WebviewController } from '../webviewController';
 import { StartWorkActionApi } from './startWorkActionApi';
-
-const customBranchType: BranchType = { kind: 'Custom', prefix: '' };
 
 export class StartWorkWebviewController implements WebviewController<StartWorkIssueMessage> {
     public readonly requiredFeatureFlags = [];
@@ -87,8 +84,6 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                                     return a.kind.localeCompare(b.kind);
                                 },
                             ),
-                            // Only add customBranchType for old version (not V3)
-                            ...(Container.featureFlagClient.checkGate(Features.StartWorkV3) ? [] : [customBranchType]),
                         ];
                         const developmentBranch = repoDetails.developmentBranch;
                         const href = repoDetails.url;
@@ -260,6 +255,34 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error opening RovoDev'),
+                    });
+                }
+                break;
+            }
+            case StartWorkActionType.GetPushBranchPreference: {
+                try {
+                    const enabled = await this.api.getPushBranchPreference();
+                    this.postMessage({
+                        type: StartWorkMessageType.PushBranchPreferenceResponse,
+                        enabled,
+                    });
+                } catch (e) {
+                    this.logger.error(e, 'Error getting push branch preference');
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error getting push branch preference'),
+                    });
+                }
+                break;
+            }
+            case StartWorkActionType.UpdatePushBranchPreference: {
+                try {
+                    await this.api.updatePushBranchPreference(msg.enabled);
+                } catch (e) {
+                    this.logger.error(e, 'Error updating push branch preference');
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error updating push branch preference'),
                     });
                 }
                 break;

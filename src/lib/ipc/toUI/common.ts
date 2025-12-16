@@ -1,4 +1,6 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
+import { ReducerAction } from 'src/ipc/messaging';
+
+import { RovoDevEntitlementType } from '../../../util/rovo-dev-entitlement/rovoDevEntitlementChecker';
 
 export enum CommonMessageType {
     Error = 'error',
@@ -6,6 +8,7 @@ export enum CommonMessageType {
     UpdateFeatureFlags = 'updateFeatureFlags',
     UpdateExperimentValues = 'updateExperimentValues',
     AdditionalSettings = 'additionalSettings',
+    RovoDevEntitlementBanner = 'rovoDevEntitlementBanner',
 }
 
 export type CommonMessage =
@@ -13,7 +16,8 @@ export type CommonMessage =
     | ReducerAction<CommonMessageType.PMFStatus, PMFMessage>
     | ReducerAction<CommonMessageType.UpdateFeatureFlags, UpdateFeatureFlagsMessage>
     | ReducerAction<CommonMessageType.UpdateExperimentValues, UpdateExperimentValuesMessage>
-    | ReducerAction<CommonMessageType.AdditionalSettings, AdditionalSettings>;
+    | ReducerAction<CommonMessageType.AdditionalSettings, AdditionalSettings>
+    | ReducerAction<CommonMessageType.RovoDevEntitlementBanner, RovoDevEntitlementBannerMessage>;
 
 export interface HostErrorMessage {
     reason: string;
@@ -33,4 +37,9 @@ export interface UpdateExperimentValuesMessage {
 
 export interface AdditionalSettings {
     rovoDevEnabled: boolean;
+}
+
+export interface RovoDevEntitlementBannerMessage {
+    enabled: boolean;
+    entitlementType?: RovoDevEntitlementType;
 }

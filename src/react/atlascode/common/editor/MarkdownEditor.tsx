@@ -149,6 +149,8 @@ interface PropsType {
     onSave: (text: string, abortSignal?: AbortSignal) => Promise<void>;
     onCancel?: () => void;
     fetchUsers?: (input: string) => Promise<User[]>;
+    onFocus?: () => void;
+    onBlur?: () => void;
 }
 
 export const MarkdownEditor: React.FC<PropsType> = (props: PropsType) => {
@@ -262,7 +264,13 @@ export const MarkdownEditor: React.FC<PropsType> = (props: PropsType) => {
         });
         const currView = new EditorView(viewHost.current!, { state });
         view.current = currView;
-        return () => currView.destroy();
+        props.onFocus && view.current.dom.addEventListener('focus', props.onFocus);
+        props.onBlur && view.current.dom.addEventListener('blur', props.onBlur);
+        return () => {
+            props.onFocus && view.current?.dom.removeEventListener('focus', props.onFocus);
+            props.onBlur && view.current?.dom.removeEventListener('blur', props.onBlur);
+            currView.destroy();
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -293,6 +301,8 @@ export const MarkdownEditor: React.FC<PropsType> = (props: PropsType) => {
                         maxRows={20}
                         value={content}
                         onChange={handlePlainTextChange}
+                        onFocus={props.onFocus}
+                        onBlur={props.onBlur}
                     />
                 </Box>
             </Grid>

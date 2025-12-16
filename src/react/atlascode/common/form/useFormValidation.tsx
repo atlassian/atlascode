@@ -6,7 +6,7 @@ import useConstant from 'use-constant';
 
 import { Product } from '../../../../atlclients/authInfo';
 import { AuthFormType } from '../../constants';
-import { getFieldValue, isCheckboxOrRadio } from '../../util/authFormUtils';
+import { clearField, getFieldValue, isCheckboxOrRadio } from '../../util/authFormUtils';
 import { Errors, FieldDescriptor, Fields, FormValidation, InputElement, OnSubmit, ValidateFunc } from '../types';
 import { clearFieldsSwitchingFormTypes, getFieldsValidationHelpers, selectAuthFormType } from './helpers';
 
@@ -22,6 +22,11 @@ export function useFormValidation<FieldTypes>(
     const errors = useRef<Partial<Errors<FieldTypes>>>({});
     const [, reRender] = useState(false);
     const previousAuthFormType = useRef<AuthFormType>(AuthFormType.None);
+    const previousBaseUrl = useRef<string | undefined>(
+        'baseUrl' in watches.current
+            ? (watches.current as Partial<FieldTypes & { baseUrl: string }>).baseUrl
+            : undefined,
+    );
 
     const handleChange = useConstant(() => async (e: Event) => {
         const field = fields[(e.target as InputElement).name];
@@ -95,11 +100,19 @@ export function useFormValidation<FieldTypes>(
         }
     }, [watch]);
 
-    // Clear fields when switching between form types
+    // Clear fields when switching between form types or when baseUrl changes
     useEffect(() => {
+        const currentBaseUrl = (watches.current as Partial<FieldTypes & { baseUrl: string }>).baseUrl;
+        const baseUrlChanged = previousBaseUrl.current !== undefined && previousBaseUrl.current !== currentBaseUrl;
+        if (baseUrlChanged) {
+            clearField(fields, errors, 'username');
+            clearField(fields, errors, 'password');
+        }
+
         const currentAuthFormType = selectAuthFormType(product, watches.current, errors.current);
         clearFieldsSwitchingFormTypes(currentAuthFormType, fields, errors, authTypeTabIndex);
         previousAuthFormType.current = currentAuthFormType;
+        previousBaseUrl.current = currentBaseUrl;
 
         reRender((prevToggle) => !prevToggle);
     }, [authTypeTabIndex, product, (watches.current as any).baseUrl]); // eslint-disable-line react-hooks/exhaustive-deps

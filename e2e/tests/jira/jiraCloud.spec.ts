@@ -1,9 +1,11 @@
 import { test } from '@playwright/test';
-import { authenticateWithJiraCloud, closeOnboardingQuickPick } from 'e2e/helpers';
+import { authenticateWithJiraCloud, closeOnboardingQuickPick, resetWireMockMappings } from 'e2e/helpers';
 import { JiraTypes } from 'e2e/helpers/types';
 import { jiraCloudScenarios, unAuthenticatedJiraScenarios } from 'e2e/scenarios/jira';
 
 test.describe('Jira Cloud', () => {
+    test.beforeEach(resetWireMockMappings);
+
     // Unauthenticated scenarios
     for (const scenario of unAuthenticatedJiraScenarios) {
         test(scenario.name, async ({ page }) => {

@@ -1,0 +1,150 @@
+import {
+    CreateWorkItemWebviewProviderMessage,
+    CreateWorkItemWebviewProviderMessageType,
+} from 'src/work-items/create-work-item/messages/createWorkItemWebviewProviderMessages';
+
+import { CreateWorkItemViewRequiredField } from './createWorkItemWebviewMessages';
+
+export interface CreateOptionFields {
+    name: string;
+    value: string;
+    iconPath?: string;
+}
+
+export interface CreateFormState {
+    summary: string;
+    availableSites: CreateOptionFields[];
+    availableProjects: CreateOptionFields[];
+    availableIssueTypes: CreateOptionFields[];
+    selectedSiteId?: string;
+    selectedProjectId?: string;
+    selectedIssueTypeId?: string;
+    hasMoreProjects?: boolean;
+    requiredFieldsForIssueType: CreateWorkItemViewRequiredField[];
+}
+
+export enum CreateFormActionType {
+    SetSummary = 'setSummary',
+    InitFields = 'initFields',
+    UpdatedSelectedSite = 'updateSelectedSite',
+    UpdatedSelectedProject = 'updateSelectedProject',
+    UpdatedSelectedIssueType = 'updatedSelectedIssueType',
+    SetSelectedField = 'setSelectedField',
+}
+
+/**
+ * Actions for the create work item form reducer.
+ * Implements CreateWorkItemWebviewProviderMessage for some actions and
+ * adds additional actions for setting summary and selected fields
+ */
+type CreateFormAction =
+    | CreateWorkItemWebviewProviderMessage
+    | {
+          type: CreateFormActionType.SetSummary;
+          payload: {
+              summary: string;
+          };
+      }
+    | {
+          type: CreateFormActionType.SetSelectedField;
+          payload: {
+              fieldType: 'site' | 'project' | 'issueType';
+              id: string;
+          };
+      };
+
+export function createReducer(state: CreateFormState, action: CreateFormAction): CreateFormState {
+    switch (action.type) {
+        case CreateWorkItemWebviewProviderMessageType.InitFields: {
+            return {
+                ...state,
+                availableSites: action.payload.availableSites.map((site) => ({
+                    name: site.name,
+                    value: site.id,
+                    iconPath: site.avatarUrl,
+                })),
+                availableProjects: action.payload.availableProjects.map((project) => ({
+                    name: project.name,
+                    value: project.id,
+                    iconPath: project.avatarUrls['48x48'],
+                })),
+                hasMoreProjects: action.payload.hasMoreProjects,
+                availableIssueTypes: action.payload.availableIssueTypes.map((issueType) => ({
+                    name: issueType.name,
+                    value: issueType.id,
+                    iconPath: issueType.iconUrl,
+                })),
+                selectedSiteId: action.payload.selectedSiteId || action.payload.availableSites[0]?.id,
+                selectedProjectId: action.payload.selectedProjectId || action.payload.availableProjects[0]?.id,
+                selectedIssueTypeId: action.payload.selectedIssueTypeId || action.payload.availableIssueTypes[0]?.id,
+                requiredFieldsForIssueType: action.payload.requiredFields,
+            };
+        }
+        case CreateFormActionType.SetSummary: {
+            return {
+                ...state,
+                summary: action.payload.summary,
+            };
+        }
+        case CreateWorkItemWebviewProviderMessageType.UpdatedSelectedSite: {
+            return {
+                ...state,
+                availableProjects: action.payload.availableProjects.map((project) => ({
+                    name: project.name,
+                    value: project.key,
+                    iconPath: project.avatarUrls['48x48'],
+                })),
+                hasMoreProjects: action.payload.hasMoreProjects,
+                availableIssueTypes: action.payload.availableIssueTypes.map((issueType) => ({
+                    name: issueType.name,
+                    value: issueType.id,
+                    iconPath: issueType.iconUrl,
+                })),
+                selectedProjectId: action.payload.selectedProjectId || action.payload.availableProjects[0]?.id,
+                selectedIssueTypeId: action.payload.selectedIssueTypeId || action.payload.availableIssueTypes[0]?.id,
+                requiredFieldsForIssueType: action.payload.requiredFields,
+            };
+        }
+        case CreateWorkItemWebviewProviderMessageType.UpdatedSelectedProject: {
+            return {
+                ...state,
+                availableIssueTypes: action.payload.availableIssueTypes.map((issueType) => ({
+                    name: issueType.name,
+                    value: issueType.id,
+                    iconPath: issueType.iconUrl,
+                })),
+                selectedIssueTypeId: action.payload.selectedIssueTypeId || action.payload.availableIssueTypes[0]?.id,
+                requiredFieldsForIssueType: action.payload.requiredFields,
+            };
+        }
+        case CreateWorkItemWebviewProviderMessageType.UpdatedSelectedIssueType: {
+            return {
+                ...state,
+                requiredFieldsForIssueType: action.payload.requiredFields,
+            };
+        }
+        case CreateFormActionType.SetSelectedField: {
+            switch (action.payload.fieldType) {
+                case 'site':
+                    return {
+                        ...state,
+                        selectedSiteId: action.payload.id,
+                    };
+                case 'project':
+                    return {
+                        ...state,
+                        selectedProjectId: action.payload.id,
+                    };
+                case 'issueType':
+                    return {
+                        ...state,
+                        selectedIssueTypeId: action.payload.id,
+                    };
+                default:
+                    return state;
+            }
+        }
+        default:
+            return state;
+    }
+}

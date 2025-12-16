@@ -3,15 +3,21 @@ import Tooltip from '@atlaskit/tooltip';
 import WidthObserver from '@atlaskit/width-detector';
 import { CommentVisibility, IssueType, MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, InputFieldUI, SelectFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
-import { Box } from '@mui/material';
+import { Box, Tab, Tabs } from '@mui/material';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import * as React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { v4 } from 'uuid';
 
 import { AnalyticsView } from '../../../../analyticsTypes';
-import { EditIssueAction, IssueCommentAction } from '../../../../ipc/issueActions';
-import { EditIssueData, emptyEditIssueData, isIssueCreated } from '../../../../ipc/issueMessaging';
+import { EditIssueAction, IssueCommentAction, OpenRovoDevWithIssueAction } from '../../../../ipc/issueActions';
+import {
+    EditIssueData,
+    emptyDevelopmentInfo,
+    emptyEditIssueData,
+    isIssueCreated,
+} from '../../../../ipc/issueMessaging';
+import { IssueHistoryItem } from '../../../../ipc/issueMessaging';
 import { LegacyPMFData } from '../../../../ipc/messaging';
 import { AtlascodeErrorBoundary } from '../../../../react/atlascode/common/ErrorBoundary';
 import { readFilesContentAsync } from '../../../../util/files';
@@ -20,6 +26,7 @@ import { AtlLoader } from '../../AtlLoader';
 import ErrorBanner from '../../ErrorBanner';
 import Offline from '../../Offline';
 import PMFBBanner from '../../pmfBanner';
+import RovoDevPromoBanner from '../../RovoDevPromoBanner';
 import {
     AbstractIssueEditorPage,
     CommonEditorPageAccept,
@@ -29,15 +36,18 @@ import {
     MentionInfo,
 } from '../AbstractIssueEditorPage';
 import { AtlascodeMentionProvider } from '../common/AtlaskitEditor/AtlascodeMentionsProvider';
+import { MissingScopeBanner } from '../common/missing-scope-banner/MissingScopeBanner';
+import { Development } from '../Development';
 import NavItem from '../NavItem';
 import PullRequests from '../PullRequests';
 import { EditorStateProvider } from './EditorStateContext';
 import { IssueCommentComponent } from './mainpanel/IssueCommentComponent';
+import { IssueHistory } from './mainpanel/IssueHistory';
 import IssueMainPanel from './mainpanel/IssueMainPanel';
 import { IssueSidebarButtonGroup } from './sidebar/IssueSidebarButtonGroup';
 import { IssueSidebarCollapsible, SidebarItem } from './sidebar/IssueSidebarCollapsible';
 
-type Emit = CommonEditorPageEmit | EditIssueAction | IssueCommentAction;
+type Emit = CommonEditorPageEmit | EditIssueAction | IssueCommentAction | OpenRovoDevWithIssueAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
 
 export interface ViewState extends CommonEditorViewState, EditIssueData {
@@ -48,6 +58,11 @@ export interface ViewState extends CommonEditorViewState, EditIssueData {
     hierarchyLoading: boolean;
     hierarchy: MinimalIssue<DetailedSiteInfo>[];
     containerWidth?: number;
+    commentsTabIndex: number;
+    history: IssueHistoryItem[];
+    historyLoading: boolean;
+    imageToCopy: HTMLImageElement | null;
+    vsCodeContext: string;
 }
 
 const emptyState: ViewState = {
@@ -59,6 +74,11 @@ const emptyState: ViewState = {
     isEditingComment: false,
     hierarchyLoading: false,
     hierarchy: [],
+    commentsTabIndex: 0,
+    history: [],
+    historyLoading: false,
+    imageToCopy: null,
+    vsCodeContext: '',
 };
 
 export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
@@ -71,6 +91,48 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         super(props);
         this.state = emptyState;
         this.mentionProvider = this.getMentionProvider();
+        this.applyEditGuards();
+    }
+
+    /** Wraps a method to block execution when user is logged out */
+    private withEditGuard<TArgs extends unknown[], TReturn>(
+        fn: (...args: TArgs) => TReturn,
+    ): (...args: TArgs) => TReturn | void {
+        return (...args: TArgs) => {
+            if (this.state.isLoggedOut) {
+                return;
+            }
+            return fn.apply(this, args);
+        };
+    }
+
+    /** Apply edit guards to all methods that modify issue data */
+    private applyEditGuards() {
+        const guardedMethods = [
+            'handleStartWorkOnIssue',
+            'handleOpenRovoDev',
+            'handleCloneIssue',
+            'handleInlineEdit',
+            'handleEditIssue',
+            'handleChildIssueUpdate',
+            'handleCreateComment',
+            'handleUpdateComment',
+            'handleDeleteComment',
+            'handleStatusChange',
+            'handleAddWatcher',
+            'handleRemoveWatcher',
+            'handleAddVote',
+            'handleRemoveVote',
+            'handleAddAttachments',
+            'handleDeleteAttachment',
+            'handleDeleteIssuelink',
+        ] as const;
+
+        for (const method of guardedMethods) {
+            const self = this as unknown as Record<string, (...args: unknown[]) => unknown>;
+
+            self[method] = this.withEditGuard(self[method].bind(this));
+        }
     }
 
     // TODO: proper error handling in webviews :'(
@@ -100,11 +162,13 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 case 'update': {
                     const issueData = e as EditIssueData;
                     this.updateInternals(issueData);
+                    // Don't reset error banner if user has logged out
+                    const shouldKeepErrorBanner = this.state.isLoggedOut;
                     this.setState({
                         ...issueData,
                         ...{
-                            isErrorBannerOpen: false,
-                            errorDetails: undefined,
+                            isErrorBannerOpen: shouldKeepErrorBanner,
+                            errorDetails: shouldKeepErrorBanner ? this.state.errorDetails : undefined,
                             isSomethingLoading: false,
                             loadingField: '',
                         },
@@ -118,6 +182,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 }
                 case 'pullRequestUpdate': {
                     this.setState({ recentPullRequests: e.recentPullRequests });
+                    break;
+                }
+                case 'developmentInfoUpdate': {
+                    this.setState({ developmentInfo: e.developmentInfo });
                     break;
                 }
                 case 'currentUserUpdate': {
@@ -136,6 +204,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 }
                 case 'hierarchyLoading': {
                     this.setState({ hierarchy: e.hierarchy, hierarchyLoading: true });
+                    break;
+                }
+                case 'historyUpdate': {
+                    this.setState({ history: e.history, historyLoading: false });
+                    break;
+                }
+                case 'copyImage': {
+                    this.handleImageCopy();
                     break;
                 }
             }
@@ -170,6 +246,23 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             action: 'openStartWorkPage',
             issue: { key: this.state.key, siteDetails: this.state.siteDetails },
         });
+    };
+
+    handleOpenRovoDev = () => {
+        this.postMessage({
+            action: 'openRovoDevWithIssue',
+            issue: { key: this.state.key, siteDetails: this.state.siteDetails },
+        });
+    };
+
+    handleOpenRovoDevWithPromoBanner = () => {
+        this.postMessage({
+            action: 'openRovoDevWithPromoBanner',
+        });
+    };
+
+    handleDismissRovoDevPromoBanner = () => {
+        this.postMessage({ action: 'dismissRovoDevPromoBanner' });
     };
 
     handleCloneIssue = (cloneData: any) => {
@@ -252,12 +345,32 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             }
             case UIType.Worklog: {
                 this.setState({ isSomethingLoading: true, loadingField: field.key });
-                this.postMessage({
-                    action: 'createWorklog',
-                    site: this.state.siteDetails,
-                    worklogData: newValue,
-                    issueKey: this.state.key,
-                });
+
+                if (newValue.action === 'updateWorklog') {
+                    this.postMessage({
+                        action: 'updateWorklog',
+                        site: this.state.siteDetails,
+                        issueKey: this.state.key,
+                        worklogId: newValue.worklogId,
+                        worklogData: newValue.worklogData,
+                    });
+                } else if (newValue.action === 'deleteWorklog') {
+                    this.postMessage({
+                        action: 'deleteWorklog',
+                        site: this.state.siteDetails,
+                        issueKey: this.state.key,
+                        worklogId: newValue.worklogId,
+                        adjustEstimate: newValue.adjustEstimate,
+                        newEstimate: newValue.newEstimate,
+                    });
+                } else {
+                    this.postMessage({
+                        action: 'createWorklog',
+                        site: this.state.siteDetails,
+                        worklogData: newValue,
+                        issueKey: this.state.key,
+                    });
+                }
                 break;
             }
 
@@ -308,7 +421,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     loadingField: field.key,
                     fieldValues: { ...this.state.fieldValues, ...{ [field.key]: typedVal } },
                 });
-                if (typedVal === undefined) {
+                if (typedVal === undefined || typedVal === '') {
                     typedVal = null;
                 }
                 await this.handleEditIssue(field.key, typedVal, teamId);
@@ -396,6 +509,17 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             issue: { key: this.state.key, siteDetails: this.state.siteDetails },
             commentId: commentId,
         });
+    };
+
+    private handleCommentsTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+        this.setState({ commentsTabIndex: newValue });
+        if (newValue === 1 && this.state.history.length === 0 && !this.state.historyLoading) {
+            this.setState({ historyLoading: true });
+            this.postMessage({
+                action: 'fetchIssueHistory',
+                issueKey: this.state.key,
+            });
+        }
     };
 
     handleStatusChange = (transition: Transition) => {
@@ -531,6 +655,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
         return (
             <div>
+                {this.state.showRovoDevPromoBanner && (
+                    <RovoDevPromoBanner
+                        onOpen={this.handleOpenRovoDevWithPromoBanner}
+                        onDismiss={this.handleDismissRovoDevPromoBanner}
+                    />
+                )}
                 {this.state.showPMF && (
                     <PMFBBanner
                         onPMFOpen={() => this.onPMFOpen()}
@@ -540,6 +670,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         onPMFSubmit={(data: LegacyPMFData) => this.onPMFSubmit(data)}
                     />
                 )}
+
+                {this.state.showEditorMissedScopeBanner && <MissingScopeBanner />}
                 <div className="ac-page-header">
                     <div className="ac-breadcrumbs">
                         {this.state.hierarchy && this.state.hierarchy.length > 0 && (
@@ -608,7 +740,11 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     </div>
                 </div>
                 {this.state.isErrorBannerOpen && (
-                    <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
+                    <ErrorBanner
+                        onRetry={this.handleRetryLastAction}
+                        onSignIn={this.handleSignIn}
+                        errorDetails={this.state.errorDetails}
+                    />
                 )}
             </div>
         );
@@ -643,34 +779,68 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     onDelete={this.handleDeleteIssuelink}
                     fetchUsers={this.fetchAndTransformUsers}
                     fetchImage={(img) => this.fetchImage(img)}
-                    isAtlaskitEditorEnabled={this.state.isAtlaskitEditorEnabled}
+                    isAtlaskitEditorEnabled={this.state.showAtlaskitEditor}
                     onIssueUpdate={this.handleChildIssueUpdate}
                     mentionProvider={this.mentionProvider}
+                    handleEditorFocus={this.handleEditorFocus}
                 />
                 {this.advancedMain()}
                 {this.state.fields['comment'] && (
                     <div className="ac-vpadding">
-                        <label className="ac-field-label">Comments</label>
-                        <IssueCommentComponent
-                            comments={this.state.fieldValues['comment'].comments}
-                            currentUser={this.state.currentUser}
-                            siteDetails={this.state.siteDetails}
-                            onCreate={this.handleCreateComment}
-                            onSave={this.handleUpdateComment}
-                            fetchUsers={this.fetchAndTransformUsers}
-                            fetchImage={(img) => this.fetchImage(img)}
-                            onDelete={this.handleDeleteComment}
-                            isServiceDeskProject={
-                                this.state.fieldValues['project'] &&
-                                this.state.fieldValues['project'].projectTypeKey === 'service_desk'
-                            }
-                            isAtlaskitEditorEnabled={this.state.isAtlaskitEditorEnabled}
-                            commentText={this.state.commentText}
-                            onCommentTextChange={this.handleCommentTextChange}
-                            isEditingComment={this.state.isEditingComment}
-                            onEditingCommentChange={this.handleCommentEditingChange}
-                            mentionProvider={this.mentionProvider}
-                        />
+                        <Tabs
+                            value={this.state.commentsTabIndex}
+                            onChange={this.handleCommentsTabChange}
+                            aria-label="Issue activity tabs"
+                            variant="scrollable"
+                            scrollButtons
+                            allowScrollButtonsMobile
+                            sx={{
+                                '& .MuiTab-root': {
+                                    color: 'var(--vscode-tab-inactiveForeground)',
+                                    '&.Mui-selected': {
+                                        color: 'var(--vscode-tab-activeForeground)',
+                                    },
+                                },
+                                '& .MuiTabs-indicator': {
+                                    backgroundColor: 'var(--vscode-button-background)',
+                                },
+                            }}
+                        >
+                            <Tab label="Comments" id="issue-tab-comments" aria-controls="issue-tabpanel-comments" />
+                            <Tab label="History" id="issue-tab-history" aria-controls="issue-tabpanel-history" />
+                        </Tabs>
+
+                        {this.state.commentsTabIndex === 0 && (
+                            <div role="tabpanel" id="issue-tabpanel-comments" aria-labelledby="issue-tab-comments">
+                                <IssueCommentComponent
+                                    comments={this.state.fieldValues['comment'].comments}
+                                    currentUser={this.state.currentUser}
+                                    siteDetails={this.state.siteDetails}
+                                    onCreate={this.handleCreateComment}
+                                    onSave={this.handleUpdateComment}
+                                    fetchUsers={this.fetchAndTransformUsers}
+                                    fetchImage={(img) => this.fetchImage(img)}
+                                    onDelete={this.handleDeleteComment}
+                                    isServiceDeskProject={
+                                        this.state.fieldValues['project'] &&
+                                        this.state.fieldValues['project'].projectTypeKey === 'service_desk'
+                                    }
+                                    isAtlaskitEditorEnabled={this.state.showAtlaskitEditor}
+                                    commentText={this.state.commentText}
+                                    onCommentTextChange={this.handleCommentTextChange}
+                                    isEditingComment={this.state.isEditingComment}
+                                    onEditingCommentChange={this.handleCommentEditingChange}
+                                    mentionProvider={this.mentionProvider}
+                                    handleEditorFocus={this.handleEditorFocus}
+                                />
+                            </div>
+                        )}
+
+                        {this.state.commentsTabIndex === 1 && (
+                            <div role="tabpanel" id="issue-tabpanel-history" aria-labelledby="issue-tab-history">
+                                <IssueHistory history={this.state.history} historyLoading={this.state.historyLoading} />
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -710,6 +880,29 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         ),
                     };
                 });
+        }
+
+        const developmentInfo = this.state.developmentInfo || emptyDevelopmentInfo;
+        const totalDevCount =
+            (developmentInfo.branches?.length || 0) +
+            (developmentInfo.commits?.length || 0) +
+            (developmentInfo.pullRequests?.length || 0) +
+            (developmentInfo.builds?.length || 0);
+
+        if (this.state.siteDetails.isCloud && totalDevCount > 0) {
+            const parentIndex = commonItems.findIndex((item) => item.itemLabel === 'Parent');
+            const insertIndex = parentIndex >= 0 ? parentIndex + 1 : commonItems.length;
+
+            commonItems.splice(insertIndex, 0, {
+                itemLabel: 'Development',
+                itemComponent: (
+                    <Development
+                        developmentInfo={developmentInfo}
+                        onOpenPullRequest={(pr: any) => this.postMessage({ action: 'openPullRequest', prHref: pr.url })}
+                        onOpenExternalUrl={(url: string) => this.postMessage({ action: 'openExternalUrl', url })}
+                    />
+                ),
+            });
         }
 
         const advancedItems: SidebarItem[] = this.advancedSidebarFields
@@ -762,6 +955,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     handleStatusChange={this.handleStatusChange}
                     handleStartWork={this.handleStartWorkOnIssue}
                     handleCloneIssue={(cloneData: any) => this.handleCloneIssue(cloneData)}
+                    handleOpenRovoDev={this.handleOpenRovoDev}
+                    isRovoDevEnabled={this.state.isRovoDevEnabled}
                 />
                 <IssueSidebarCollapsible label="Details" items={commonItems} defaultOpen />
                 <IssueSidebarCollapsible label="More fields" items={advancedItems} />
@@ -804,7 +999,44 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
     override componentDidMount() {
         this.postMessage({ action: 'getFeatureFlags' });
+        this.postMessage({ action: 'checkRovoDevEntitlement' });
+        this.postMessage({ action: 'fetchMediaToken' });
     }
+    override shouldComponentUpdate(_nextProps: Readonly<{}>, nextState: Readonly<ViewState>): boolean {
+        const prevIssueKey = this.state.key;
+        const currentIssueKey = nextState.key;
+
+        if (prevIssueKey !== currentIssueKey) {
+            this.setState({ vsCodeContext: JSON.stringify({ viewKey: currentIssueKey }) });
+        }
+        return true;
+    }
+
+    private handleContextMenuOpen = (e: React.MouseEvent<HTMLDivElement>) => {
+        // save the image if image to be used when context menu item is clicked
+        const target = e.target as HTMLElement | null;
+        const isImage = target?.tagName === 'IMG';
+        this.setState({ imageToCopy: isImage ? (target as HTMLImageElement) : null });
+    };
+
+    private handleImageCopy = async () => {
+        const imageElement = this.state.imageToCopy;
+        if (!imageElement) {
+            console.error('No image element to copy');
+            return;
+        }
+        const selection = window.getSelection();
+        if (selection) {
+            if (selection.rangeCount > 0) {
+                selection.removeAllRanges();
+            }
+            const range = document.createRange();
+            range.selectNode(imageElement);
+            selection.addRange(range);
+            document.execCommand('copy');
+            selection.removeAllRanges();
+        }
+    };
 
     public override render() {
         if (
@@ -822,7 +1054,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
         return (
             <Page>
-                <EditorStateProvider isAtlaskitEditorEnabled={this.state.isAtlaskitEditorEnabled}>
+                <EditorStateProvider isAtlaskitEditorEnabled={this.state.showAtlaskitEditor}>
                     <AtlascodeErrorBoundary
                         context={{ view: AnalyticsView.JiraIssuePage }}
                         postMessageFunc={(e) => {
@@ -833,7 +1065,11 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             {(width?: number) => {
                                 if (width && width < 800) {
                                     return (
-                                        <div style={{ margin: '20px 16px 0px 16px' }}>
+                                        <div
+                                            style={{ margin: '20px 16px 0px 16px' }}
+                                            data-vscode-context={this.state.vsCodeContext}
+                                            onContextMenu={this.handleContextMenuOpen}
+                                        >
                                             {this.getMainPanelNavMarkup()}
                                             <h1>
                                                 {this.getInputMarkup(
@@ -850,7 +1086,11 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                     );
                                 }
                                 return (
-                                    <div style={{ maxWidth: '1200px', margin: '20px auto 0 auto' }}>
+                                    <div
+                                        style={{ maxWidth: '1200px', margin: '20px auto 0 auto' }}
+                                        data-vscode-context={this.state.vsCodeContext}
+                                        onContextMenu={this.handleContextMenuOpen}
+                                    >
                                         <Grid layout="fluid">
                                             <GridColumn>
                                                 {this.getMainPanelNavMarkup()}

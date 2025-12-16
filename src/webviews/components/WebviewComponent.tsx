@@ -78,9 +78,10 @@ export abstract class WebviewComponent<A extends Action, R, P, S> extends React.
 
             //set atlaskit components theme
             const isDark: boolean =
-                body.getAttribute('class') === 'vscode-dark' ||
+                body.classList.contains('vscode-dark') ||
                 (body.classList.contains('vscode-high-contrast') &&
                     !body.classList.contains('vscode-high-contrast-light'));
+
             setGlobalTheme({
                 light: 'light',
                 dark: 'dark',
@@ -106,6 +107,9 @@ export abstract class WebviewComponent<A extends Action, R, P, S> extends React.
     }
     protected onPMFOpen() {
         this._api.postMessage({ action: 'pmfOpen' });
+    }
+    protected onDismissRovoDevPromoBanner() {
+        this._api.postMessage({ action: 'dismissRovoDevPromoBanner' });
     }
 
     private onMessageEvent(e: MessageEvent) {

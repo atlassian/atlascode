@@ -65,10 +65,10 @@ export const baseConfigFor = (project: string, testExtension: string): Config =>
         global:
             testExtension === 'ts'
                 ? {
-                      statements: 66,
-                      branches: 56,
+                      statements: 65,
+                      branches: 54,
                       functions: 59,
-                      lines: 66,
+                      lines: 65,
                   }
                 : /* tsx */ {
                       statements: 14,

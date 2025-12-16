@@ -21,6 +21,8 @@ type MyProps = {
     onSave: (data: any) => void;
     onCancel: () => void;
     originalEstimate: string;
+    editingWorklog?: any;
+    worklogId?: string;
 };
 
 const emptyForm = {
@@ -36,11 +38,37 @@ const formatString = "yyyy-MM-dd'T'HH:mm:ss.SSSXX";
 export default class WorklogForm extends React.Component<MyProps, MyState> {
     constructor(props: any) {
         super(props);
+
+        const isEditing = props.editingWorklog && props.worklogId;
+        const initialForm = isEditing
+            ? {
+                  comment: props.editingWorklog.comment || '',
+                  started: props.editingWorklog.started || format(Date.now(), formatString),
+                  timeSpent: props.editingWorklog.timeSpent || '',
+                  newEstimate: '',
+                  autoAdjust: true,
+              }
+            : {
+                  ...emptyForm,
+                  started: format(Date.now(), formatString),
+              };
+
         this.state = {
-            ...emptyForm,
-            savingDisabled: true,
-            started: format(Date.now(), formatString),
+            ...initialForm,
+            savingDisabled: isEditing ? false : true,
         };
+    }
+
+    override componentDidMount() {
+        if (this.props.editingWorklog && this.props.worklogId) {
+            setTimeout(() => {
+                const timeSpentInput = document.querySelector('input[name="timeSpent"]') as HTMLInputElement;
+                if (timeSpentInput) {
+                    timeSpentInput.focus();
+                    timeSpentInput.select();
+                }
+            }, 0);
+        }
     }
 
     handleClose = () => {
@@ -66,7 +94,12 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
         };
 
         if (this.props.onSave) {
-            this.props.onSave(worklog);
+            // If editing, include the worklogId
+            if (this.props.editingWorklog && this.props.worklogId) {
+                this.props.onSave({ ...worklog, worklogId: this.props.worklogId });
+            } else {
+                this.props.onSave(worklog);
+            }
         }
 
         this.handleClose();

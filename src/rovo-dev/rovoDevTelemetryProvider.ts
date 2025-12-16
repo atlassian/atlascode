@@ -1,11 +1,7 @@
-import { Container } from 'src/container';
-import { Logger } from 'src/logger';
-
 import {
     rovoDevAiResultViewedEvent,
     rovoDevCreatePrButtonClickedEvent,
     rovoDevDetailsExpandedEvent,
-    RovoDevEnv,
     rovoDevFileChangedActionEvent,
     rovoDevFilesSummaryShownEvent,
     rovoDevGitPushActionEvent,
@@ -13,8 +9,10 @@ import {
     rovoDevPromptSentEvent,
     rovoDevStopActionEvent,
     rovoDevTechnicalPlanningShownEvent,
-} from '../../src/analytics';
+} from './analytics/rovodevAnalyticsApi';
+import { ExtensionApi, RovoDevEnv } from './api/extensionApi';
 import { PerformanceLogger } from './performanceLogger';
+import { RovoDevLogger } from './util/rovoDevLogger';
 
 const rovoDevTelemetryEvents = {
     rovoDevFileChangedActionEvent,
@@ -44,6 +42,7 @@ export class RovoDevTelemetryProvider {
     private _currentPromptId: string = '';
 
     private _firedTelemetryForCurrentPrompt: TelemetryRecord<boolean> = {};
+    private _extensionApi: ExtensionApi = new ExtensionApi();
 
     private readonly _perfLogger: PerformanceLogger;
     public get perfLogger() {
@@ -108,9 +107,9 @@ export class RovoDevTelemetryProvider {
                 undefined,
                 params,
             );
-            ret.then((evt) => Container.analyticsClient.sendTrackEvent(evt));
+            ret.then((evt) => this._extensionApi.analytics.sendTrackEvent(evt));
 
-            Logger.debug(`Event fired: ${funcName}(${params})`);
+            RovoDevLogger.debug(`Event fired: ${funcName}(${params})`);
         }
     }
 }

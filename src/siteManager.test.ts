@@ -77,8 +77,10 @@ describe('SiteManager', () => {
             },
             config: {
                 jira: {
-                    lastCreateSiteAndProject: {
+                    lastCreatePreSelectedValues: {
                         siteId: 'site1',
+                        projectKey: '',
+                        issueTypeId: '',
                     },
                 },
             },

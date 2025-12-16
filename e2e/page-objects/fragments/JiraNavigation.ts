@@ -8,7 +8,7 @@ export class JiraNavigation {
     constructor(page: Page) {
         this.page = page;
 
-        this.jiraItemsTree = page.getByRole('tree', { name: 'Assigned Jira Work Items' });
+        this.jiraItemsTree = page.getByRole('tree', { name: 'Jira Work Items' });
     }
 
     async openIssue(name: string) {
@@ -35,6 +35,6 @@ export class JiraNavigation {
     }
 
     async expectLoginToJiraItemExists() {
-        await expect(this.page.getByRole('button', { name: /^Log in to Jira$/ })).toBeVisible();
+        await expect(this.page.getByRole('button', { name: /^Log in to Jira$/ }).first()).toBeVisible();
     }
 }

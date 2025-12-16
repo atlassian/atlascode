@@ -19,7 +19,7 @@ jest.mock('../../common/errorController', () => ({
 
 jest.mock('src/analyticsTypes', () => ({
     AnalyticsView: {
-        StartWorkPageV3: 'StartWorkPageV3',
+        StartWorkPage: 'StartWorkPage',
     },
 }));
 
@@ -75,6 +75,7 @@ const mockState = {
     isSomethingLoading: false,
     isRovoDevEnabled: true,
     rovoDevPreference: false,
+    pushBranchPreference: true,
 };
 
 describe('StartWorkPageV3', () => {

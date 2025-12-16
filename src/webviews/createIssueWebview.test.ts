@@ -27,6 +27,7 @@ jest.mock('../container', () => ({
             getFirstProject: jest.fn(),
             getProjectForKey: jest.fn(),
             getProjects: jest.fn(),
+            getProjectsPaginated: jest.fn(),
             filterProjectsByPermission: jest.fn(),
         },
         pmfStats: {
@@ -34,9 +35,10 @@ jest.mock('../container', () => ({
         },
         config: {
             jira: {
-                lastCreateSiteAndProject: {
+                lastCreatePreSelectedValues: {
                     siteId: '',
                     projectKey: '',
+                    issueTypeId: '',
                 },
                 showCreateIssueProblems: false,
             },
@@ -48,6 +50,10 @@ jest.mock('../container', () => ({
             createOrShow: jest.fn(),
         },
         machineId: 'test-machine-id',
+        rovodevWebviewProvider: {
+            setPromptTextWithFocus: jest.fn(),
+        },
+        isRovoDevEnabled: true,
     },
 }));
 
@@ -81,6 +87,11 @@ jest.mock('form-data', () => ({
 jest.mock('../commands/jira/showIssue', () => ({
     showIssue: jest.fn(),
 }));
+
+jest.mock('../commands/jira/startWorkOnIssue', () => ({
+    startWorkOnIssue: jest.fn(),
+}));
+
 // Added feature flag mock as with jiraIssueWebview.test.ts
 jest.mock('src/util/featureFlags', () => ({
     FeatureFlagClient: {
@@ -175,6 +186,11 @@ describe('CreateIssueWebview', () => {
         Container.jiraProjectManager.getFirstProject = jest.fn().mockResolvedValue(mockProject);
         Container.jiraProjectManager.getProjectForKey = jest.fn().mockResolvedValue(mockProject);
         Container.jiraProjectManager.getProjects = jest.fn().mockResolvedValue([mockProject]);
+        Container.jiraProjectManager.getProjectsPaginated = jest.fn().mockResolvedValue({
+            projects: [mockProject],
+            total: 1,
+            hasMore: false,
+        });
         Container.jiraProjectManager.filterProjectsByPermission = jest.fn().mockResolvedValue([mockProject]);
 
         Container.clientManager.jiraClient = jest.fn().mockResolvedValue(mockClient);
@@ -306,7 +322,14 @@ describe('CreateIssueWebview', () => {
 
             expect(fetchIssue.fetchCreateIssueUI).toHaveBeenCalledWith(mockSiteDetails, mockProject.key);
             expect(Container.siteManager.getSitesAvailable).toHaveBeenCalledWith(ProductJira);
-            expect(Container.jiraProjectManager.getProjects).toHaveBeenCalledWith(mockSiteDetails);
+            expect(Container.jiraProjectManager.getProjectsPaginated).toHaveBeenCalledWith(
+                mockSiteDetails,
+                50,
+                0,
+                'key',
+                undefined,
+                'create',
+            );
             expect(webviewPostMessageMock).toHaveBeenCalled();
         });
 
@@ -377,10 +400,13 @@ describe('CreateIssueWebview', () => {
 
             await webview.forceUpdateFields();
 
-            expect(Container.jiraProjectManager.filterProjectsByPermission).toHaveBeenCalledWith(
+            expect(Container.jiraProjectManager.getProjectsPaginated).toHaveBeenCalledWith(
                 mockSiteDetails,
-                [mockProject],
-                'CREATE_ISSUES',
+                50,
+                0,
+                'key',
+                undefined,
+                'create',
             );
             expect(fetchIssue.fetchCreateIssueUI).toHaveBeenCalledWith(mockSiteDetails, mockProject.key);
             expect(webviewPostMessageMock).toHaveBeenCalledWith(
@@ -402,10 +428,11 @@ describe('CreateIssueWebview', () => {
             });
 
             // Mock projects with permission (different from current)
-            const projectsWithPermission = [mockProject];
-            Container.jiraProjectManager.filterProjectsByPermission = jest
-                .fn()
-                .mockResolvedValue(projectsWithPermission);
+            Container.jiraProjectManager.getProjectsPaginated = jest.fn().mockResolvedValue({
+                projects: [mockProject],
+                total: 1,
+                hasMore: false,
+            });
 
             await webview.forceUpdateFields();
 
@@ -948,6 +975,7 @@ describe('CreateIssueWebview', () => {
 
     describe('onMessageReceived', () => {
         const mockShowIssue = require('../commands/jira/showIssue').showIssue;
+        const mockStartWorkOnIssue = require('../commands/jira/startWorkOnIssue').startWorkOnIssue;
 
         const mockMessage = {
             action: 'createIssue',
@@ -974,24 +1002,39 @@ describe('CreateIssueWebview', () => {
             });
         });
 
-        it('should show VS Code notification on successful issue creation', async () => {
+        it('should show Jira Issue on successful issue creation', async () => {
             await (webview as any).onMessageReceived(mockMessage);
-
-            expect(mockWindow.showInformationMessage).toHaveBeenCalledWith(
-                'Issue TEST-123 has been created',
-                'Open Issue',
-            );
-        });
-
-        it('should call showIssue when user clicks Open Issue button', async () => {
-            mockWindow.showInformationMessage = jest.fn().mockResolvedValue('Open Issue');
-            await (webview as any).onMessageReceived(mockMessage);
-            await new Promise((resolve) => setTimeout(resolve, 0));
 
             expect(mockShowIssue).toHaveBeenCalledWith({
                 key: 'TEST-123',
                 siteDetails: mockSiteDetails,
             });
+        });
+
+        it('should call startWorkOnIssue when user clicks Create and create branch button', async () => {
+            const message = { ...mockMessage, onCreateAction: 'createAndStartWork' as const };
+            await (webview as any).onMessageReceived(message);
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            expect(mockStartWorkOnIssue).toHaveBeenCalledWith({
+                key: 'TEST-123',
+                siteDetails: mockSiteDetails,
+            });
+        });
+
+        it('should call Rovo Dev webview provider when user clicks Create and generate code button', async () => {
+            const message = { ...mockMessage, onCreateAction: 'createAndGenerateCode' as const };
+            const issueUrl = `${mockSiteDetails.baseLinkUrl}/browse/TEST-123`;
+            await (webview as any).onMessageReceived(message);
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            expect(Container.rovodevWebviewProvider.setPromptTextWithFocus).toHaveBeenCalledWith(
+                'Work on the attached Jira work item',
+                {
+                    contextType: 'jiraWorkItem',
+                    name: 'TEST-123',
+                    url: issueUrl,
+                },
+            );
         });
 
         it('should handle refresh action', async () => {
@@ -1053,11 +1096,12 @@ describe('CreateIssueWebview', () => {
         });
     });
 
-    describe('Should correctly set site and project (updateSiteAndProject)', () => {
+    describe('Should correctly set site, project and issueTypeId (updateSiteAndProject)', () => {
         beforeEach(() => {
-            Container.config.jira.lastCreateSiteAndProject = {
+            Container.config.jira.lastCreatePreSelectedValues = {
                 siteId: '',
                 projectKey: '',
+                issueTypeId: '',
             };
             jest.spyOn(SearchJiraHelper, 'getAssignedIssuesPerSite').mockReturnValue([]);
         });
@@ -1066,9 +1110,10 @@ describe('CreateIssueWebview', () => {
             const lastUsedSiteId = 'last-used-site';
             const lastUsedProjectKey = 'last-used-project';
 
-            Container.config.jira.lastCreateSiteAndProject = {
+            Container.config.jira.lastCreatePreSelectedValues = {
                 siteId: lastUsedSiteId,
                 projectKey: lastUsedProjectKey,
+                issueTypeId: '',
             };
 
             Container.siteManager.getSiteForId = jest.fn().mockReturnValue({
@@ -1084,6 +1129,7 @@ describe('CreateIssueWebview', () => {
             expect(configuration.setLastCreateSiteAndProject).toHaveBeenCalledWith({
                 siteId: lastUsedSiteId,
                 projectKey: lastUsedProjectKey,
+                issueTypeId: '',
             });
         });
 
@@ -1116,6 +1162,7 @@ describe('CreateIssueWebview', () => {
             expect(configuration.setLastCreateSiteAndProject).toHaveBeenCalledWith({
                 siteId: maxIssuesSite.id,
                 projectKey: maxIssuesProject.key,
+                issueTypeId: '',
             });
         });
 
@@ -1132,6 +1179,7 @@ describe('CreateIssueWebview', () => {
             expect(configuration.setLastCreateSiteAndProject).toHaveBeenCalledWith({
                 siteId: 'first-site',
                 projectKey: 'first-project',
+                issueTypeId: '',
             });
         });
 
@@ -1153,6 +1201,7 @@ describe('CreateIssueWebview', () => {
             expect(configuration.setLastCreateSiteAndProject).toHaveBeenLastCalledWith({
                 projectKey: inputProject.key,
                 siteId: 'site-1',
+                issueTypeId: 'issueType-1',
             });
         });
 
@@ -1174,6 +1223,7 @@ describe('CreateIssueWebview', () => {
             expect(configuration.setLastCreateSiteAndProject).toHaveBeenLastCalledWith({
                 siteId: inputSite.id,
                 projectKey: 'TEST',
+                issueTypeId: 'issueType-1',
             });
         });
     });

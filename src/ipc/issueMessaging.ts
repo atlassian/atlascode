@@ -13,6 +13,38 @@ import { PullRequestData } from '../bitbucket/model';
 import { HostErrorMessage, Message } from './messaging';
 import { RepoData } from './prMessaging';
 
+export interface BranchInfo {
+    name: string;
+    url?: string;
+}
+
+export interface CommitInfo {
+    hash: string;
+    message: string;
+    url?: string;
+    authorName?: string;
+}
+
+export interface BuildInfo {
+    name?: string;
+    key?: string;
+    state: string;
+}
+
+export interface DevelopmentInfo {
+    branches: BranchInfo[];
+    commits: CommitInfo[];
+    pullRequests: PullRequestData[];
+    builds: BuildInfo[];
+}
+
+export const emptyDevelopmentInfo: DevelopmentInfo = {
+    branches: [],
+    commits: [],
+    pullRequests: [],
+    builds: [],
+};
+
 // IssueData is the message that gets sent to the JiraIssuePage react view containing the issue details.
 // we simply use the same name with two extend statements to merge the multiple interfaces
 export interface EditIssueData extends Message {}
@@ -20,6 +52,7 @@ export interface EditIssueData extends EditIssueUI<DetailedSiteInfo> {
     currentUser: User;
     workInProgress: boolean;
     recentPullRequests: PullRequestData[];
+    developmentInfo?: DevelopmentInfo;
 }
 
 export const emptyEditIssueData: EditIssueData = {
@@ -28,6 +61,7 @@ export const emptyEditIssueData: EditIssueData = {
     currentUser: emptyUser,
     workInProgress: false,
     recentPullRequests: [],
+    developmentInfo: emptyDevelopmentInfo,
 };
 
 export interface IssueProblemsData extends Message {
@@ -39,6 +73,12 @@ export interface CreateIssueData extends Message {}
 export interface CreateIssueData extends IssueTypeUI<DetailedSiteInfo> {
     currentUser: User;
     transformerProblems: CreateMetaTransformerProblems;
+    projectPagination?: {
+        total: number;
+        loaded: number;
+        hasMore: boolean;
+        isLoadingMore: boolean;
+    };
 }
 
 export const emptyCreateIssueData: CreateIssueData = {
@@ -99,4 +139,27 @@ export function isStartWorkOnIssueData(m: Message): m is StartWorkOnIssueData {
 
 export function isStartWorkOnIssueResult(m: Message): m is StartWorkOnIssueResult {
     return (<StartWorkOnIssueResult>m).type === 'startWorkOnIssueResult';
+}
+
+export interface IssueHistoryItem {
+    id: string;
+    timestamp: string;
+    author: {
+        displayName: string;
+        accountId?: string;
+        avatarUrl?: string;
+    };
+    field: string;
+    fieldDisplayName: string;
+    from?: string | null;
+    to?: string | null;
+    fromString?: string;
+    toString?: string;
+    worklogTimeSpent?: string;
+    worklogComment?: string;
+}
+
+export interface IssueHistoryUpdate extends Message {
+    type: 'historyUpdate';
+    history: IssueHistoryItem[];
 }
