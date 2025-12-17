@@ -1,10 +1,10 @@
 import { LoadingButton } from '@atlaskit/button';
 import { cssMap } from '@atlaskit/css';
 import { token } from '@atlaskit/tokens';
-import React from 'react';
+import * as React from 'react';
 import { RovoDevPromoBannerIcon } from 'src/webviews/components/RovoDevPromoBannerIcon';
 
-type MissingScopesBannerProps = {
+export type MissingScopesBannerProps = {
     onOpen: () => void;
     onDismiss: () => void;
 };
@@ -57,7 +57,7 @@ export const MissingScopesBanner: React.FC<MissingScopesBannerProps> = ({ onOpen
             <div css={styles.buttonGroup}>
                 <LoadingButton
                     className="ac-button-secondary"
-                    testId="rovo-dev-promo-dismiss-button"
+                    testId="missing-scopes-dismiss-button"
                     onClick={onDismiss}
                     isLoading={false}
                 >
@@ -65,7 +65,7 @@ export const MissingScopesBanner: React.FC<MissingScopesBannerProps> = ({ onOpen
                 </LoadingButton>
                 <LoadingButton
                     className="ac-button"
-                    testId="rov-dev-promo-open-button"
+                    testId="missing-scopes-open-button"
                     onClick={onOpen}
                     isLoading={false}
                 >
