@@ -13,7 +13,7 @@ import { AuthInfo, DetailedSiteInfo, ProductJira } from './extensionApiTypes';
 
 // Re-export types for convenience
 export * from './extensionApiTypes';
-export * from '../analytics/rovodevAnalyticsTypes';
+export * from '../analytics/events';
 
 // TODO: getAxiosInstance is being re-exported for now, to not break compatability with curl logging
 //       in the future, we'd need to re-implement it, or just use the library directly
