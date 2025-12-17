@@ -198,7 +198,6 @@ export class ClientManager implements Disposable {
                 });
             });
         } catch (e) {
-            Logger.error(e, `Failed to refresh tokens`);
             throw e;
         }
 
