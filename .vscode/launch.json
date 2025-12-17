@@ -17,7 +17,9 @@
                 "${workspaceFolder}/build/**/*.js"
             ],
             "preLaunchTask": "npm: devcompile",
-            "envFile": "${workspaceFolder}/.env"
+            "envFile": "${workspaceFolder}/.env",
+            "debugWebviews": true,
+            "debugWebWorkerHost": true
         },
         {
             "name": "Extension (RovoDev BBY)",
@@ -36,7 +38,9 @@
                 "ROVODEV_BBY": "true",
                 "ROVODEV_SANDBOX_ID": "bby_sandbox"
             },
-            "preLaunchTask": "Start RovoDev Server"
+            "preLaunchTask": "Start RovoDev Server",
+            "debugWebviews": true,
+            "debugWebWorkerHost": true
         },
         {
             // This configuration requires npm run dev to be running externally
@@ -51,7 +55,9 @@
             "outFiles": [
                 "${workspaceFolder}/build/**/*.js"
             ],
-            "envFile": "${workspaceFolder}/.env"
+            "envFile": "${workspaceFolder}/.env",
+            "debugWebviews": true,
+            "debugWebWorkerHost": true
         }
     ]
 }
