@@ -201,6 +201,20 @@
                 "category": "Jira"
             },
             {
+                "command": "atlascode.jira.createIssue.fromSidebar",
+                "title": "Create Jira Issue",
+                "icon": {
+                    "dark": "resources/dark/add.svg",
+                    "light": "resources/light/add.svg"
+                },
+                "category": "Jira"
+            },
+            {
+                "command": "atlascode.jira.createIssue.fromIssueContext",
+                "title": "Create Jira Issue",
+                "category": "Jira"
+            },
+            {
                 "command": "atlascode.jira.createIssue.startWork",
                 "title": "Create and create branch",
                 "category": "Jira"
@@ -721,10 +735,9 @@
                     "group": "navigation@1"
                 },
                 {
-                    "command": "atlascode.jira.createIssue",
+                    "command": "atlascode.jira.createIssue.fromSidebar",
                     "when": "view =~ /(atlascode.views.jira.assignedWorkItemsTreeView)/ && atlascode:isJiraAuthenticated",
-                    "group": "navigation@1",
-                    "args": [null, "sidebarButton"]
+                    "group": "navigation@1"
                 },
                 {
                     "command": "atlascode.jira.refreshAssignedWorkItemsExplorer",
@@ -835,10 +848,9 @@
                     "group": "jiraContextMenuGroup3"
                 },
                 {
-                    "command": "atlascode.jira.createIssue",
+                    "command": "atlascode.jira.createIssue.fromIssueContext",
                     "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|jiraIssue_.+|assignedJiraIssue_.+)/ && atlascode:isJiraAuthenticated",
-                    "group": "jiraContextMenuGroup2",
-                    "args": [null, "issueContextMenu"]
+                    "group": "jiraContextMenuGroup2"
                 },
                 {
                     "command": "atlascode.viewInWebBrowser",
@@ -1105,6 +1117,14 @@
                 },
                 {
                     "command": "atlascode.jira.expandCreateWorkItem",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.createIssue.fromSidebar",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.createIssue.fromIssueContext",
                     "when": "false"
                 }
             ],
