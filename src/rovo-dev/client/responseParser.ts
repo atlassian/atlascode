@@ -160,6 +160,10 @@ interface RovoDevReplayEndChunk {
     event_kind: 'replay_end';
 }
 
+interface RovoDevRequestUsageChunk {
+    event_kind: 'request-usage';
+}
+
 type RovoDevSingleResponseRaw =
     | RovoDevUserPromptResponseRaw
     | RovoDevTextResponseRaw
@@ -187,7 +191,8 @@ type RovoDevSingleChunk =
     | RovoDevUsageChunk
     | RovoDevPromptsChunk
     | RovoDevCloseChunk
-    | RovoDevReplayEndChunk;
+    | RovoDevReplayEndChunk
+    | RovoDevRequestUsageChunk;
 
 // https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.PartStartEvent
 interface RovoDevPartStartResponseRaw {
@@ -529,19 +534,17 @@ export class RovoDevResponseParser {
                     : parseOnCallToolStart(chunk.data);
 
             case 'status':
-                return buffer
-                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
-                    : chunk;
-
             case 'usage':
-                return buffer
-                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
-                    : chunk;
-
             case 'prompts':
                 return buffer
                     ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
                     : chunk;
+
+            // events we ignore
+            case 'request-usage':
+                return buffer
+                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
+                    : { event_kind: '_ignored' };
 
             // events with no payload
             case 'close':
