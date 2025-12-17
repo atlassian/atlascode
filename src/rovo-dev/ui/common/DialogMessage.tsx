@@ -124,7 +124,12 @@ export const DialogMessageItem: React.FC<{
                         retryAfterError &&
                         isRetryAfterErrorButtonEnabled?.(msg.uid) && (
                             <div
-                                style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '8px' }}
+                                style={{
+                                    display: 'flex',
+                                    justifyContent: 'flex-start',
+                                    width: '100%',
+                                    marginTop: '8px',
+                                }}
                             >
                                 <button style={inChatButtonStyles} onClick={retryAfterError}>
                                     Try again
@@ -136,29 +141,29 @@ export const DialogMessageItem: React.FC<{
                         <div
                             style={{
                                 display: 'flex',
-                                justifyContent: 'flex-end',
+                                justifyContent: 'flex-start',
                                 width: '100%',
                                 marginTop: '8px',
                                 gap: '8px',
                             }}
                         >
                             <button
-                                style={inChatSecondaryButtonStyles}
-                                onClick={() => onToolPermissionChoice(msg.toolCallId, 'deny')}
-                            >
-                                Deny
-                            </button>
-                            <button
                                 style={inChatButtonStyles}
                                 onClick={() => onToolPermissionChoice(msg.toolCallId, 'allow')}
                             >
                                 Allow
                             </button>
+                            <button
+                                style={inChatSecondaryButtonStyles}
+                                onClick={() => onToolPermissionChoice(msg.toolCallId, 'deny')}
+                            >
+                                Deny
+                            </button>
                         </div>
                     )}
 
                     {customButton && (
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'flex-start', width: '100%', marginTop: '8px' }}>
                             <button style={inChatButtonStyles} onClick={customButton.onClick}>
                                 {customButton.text}
                             </button>
