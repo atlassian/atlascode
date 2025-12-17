@@ -2,6 +2,7 @@ import { Features } from 'src/util/features';
 import { Position, Range, Uri, ViewColumn, window, workspace, WorkspaceEdit } from 'vscode';
 
 import { startIssueCreationEvent } from '../../analytics';
+import { CreateIssueSource } from '../../analyticsTypes';
 import { ProductJira } from '../../atlclients/authInfo';
 import { WorkspaceRepo } from '../../bitbucket/model';
 import { SimplifiedTodoIssueData } from '../../config/model';
@@ -29,7 +30,7 @@ function simplify(data: TodoIssueData): SimplifiedTodoIssueData {
     };
 }
 
-export async function createIssue(data: Uri | TodoIssueData | undefined, source?: string) {
+export async function createIssue(data: Uri | TodoIssueData | undefined, source?: CreateIssueSource) {
     if (isTodoIssueData(data)) {
         const settings = await buildSuggestionSettings();
         const todoData = simplify(data);
