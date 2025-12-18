@@ -10,9 +10,9 @@ import { categorizeNetworkError, retryWithBackoff } from '../../util/retry';
 import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 
 export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
-    private _lastCheckedTime = new Map<String, Date>();
-    private _lastSuccessfulFetch = new Map<String, Date | undefined>();
-    private _consecutiveFailures = new Map<String, number>();
+    private _lastCheckedTime = new Map<string, Date>();
+    private _lastSuccessfulFetch = new Map<string, Date | undefined>();
+    private _consecutiveFailures = new Map<string, number>();
     private readonly MAX_CONSECUTIVE_FAILURES = 5;
 
     constructor(private _bbCtx: BitbucketContext) {
