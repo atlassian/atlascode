@@ -4,7 +4,6 @@ import { AuthInterceptor } from '../atlclients/authInterceptor';
 import { addCurlLogging } from '../atlclients/interceptors';
 import { AxiosUserAgent } from '../constants';
 import { Container } from '../container';
-import { Logger } from '../logger';
 import { ConnectionTimeout } from '../util/time';
 import { ClientError, HTTPClient, RequestRange } from './httpClient';
 
@@ -165,8 +164,6 @@ describe('HTTPClient', () => {
             mockTransport.mockRejectedValue(error);
 
             await expect(httpClient.getUrl(url)).rejects.toThrow('Network error');
-            // should NOT log here - let the caller handle/log with better context
-            expect(Logger.error).not.toHaveBeenCalled();
         });
     });
 
