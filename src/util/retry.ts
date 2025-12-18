@@ -8,11 +8,27 @@ export interface RetryOptions {
     onRetry?: (error: Error, attempt: number) => void;
 }
 
+export type NetworkErrorCategory = 'timeout' | 'dns' | 'network' | 'auth' | 'unknown';
+
+export interface CategorizedError {
+    category: NetworkErrorCategory;
+    message: string;
+}
+
+const JITTER_FACTOR = 0.3;
+
+const TIMEOUT_ERROR_CODES = ['ETIMEDOUT', 'ECONNABORTED'] as const;
+const DNS_ERROR_CODES = ['ENOTFOUND'] as const;
+const NETWORK_ERROR_CODES = ['ECONNRESET', 'ECONNREFUSED', 'EHOSTUNREACH', 'ENETUNREACH'] as const;
+const AUTH_STATUS_CODES = [401, 403] as const;
+
+const DEFAULT_RETRYABLE_ERRORS = [...TIMEOUT_ERROR_CODES, ...DNS_ERROR_CODES, ...NETWORK_ERROR_CODES] as const;
+
 const DEFAULT_OPTIONS: Required<RetryOptions> = {
     maxAttempts: 3,
     initialDelayMs: 1000,
     maxDelayMs: 10000,
-    retryableErrors: ['ETIMEDOUT', 'ECONNRESET', 'ENOTFOUND', 'ECONNREFUSED', 'EHOSTUNREACH', 'ENETUNREACH'],
+    retryableErrors: [...DEFAULT_RETRYABLE_ERRORS],
     onRetry: () => {},
 };
 
@@ -25,29 +41,43 @@ function isRetryableError(error: any, retryableErrors: string[]): boolean {
         return false;
     }
 
-    if (error.code && retryableErrors.includes(error.code)) {
-        return true;
-    }
+    const errorMessage = error.message ?? '';
+    const errorCode = error.code ?? '';
 
-    if (error.message && (error.message.includes('timeout') || error.message.includes('ETIMEDOUT'))) {
-        return true;
-    }
+    const hasRetryableErrorCode = retryableErrors.includes(errorCode);
+    const hasRetryableErrorInMessage = retryableErrors.some((code) => errorMessage.includes(code));
+    const hasTimeoutInMessage = errorMessage.includes('timeout');
+    const isAbortedWithTimeout = errorCode === 'ECONNABORTED' && errorMessage.includes('timeout');
 
-    if (error.message && error.message.includes('ENOTFOUND')) {
-        return true;
-    }
-
-    if (error.code === 'ECONNABORTED' && error.message && error.message.includes('timeout')) {
-        return true;
-    }
-
-    return false;
+    return hasRetryableErrorCode || hasRetryableErrorInMessage || hasTimeoutInMessage || isAbortedWithTimeout;
 }
 
 function calculateDelay(attempt: number, initialDelayMs: number, maxDelayMs: number): number {
     const exponentialDelay = initialDelayMs * Math.pow(2, attempt - 1);
-    const jitter = Math.random() * 0.3 * exponentialDelay;
+    const jitter = Math.random() * JITTER_FACTOR * exponentialDelay;
+
     return Math.min(exponentialDelay + jitter, maxDelayMs);
+}
+
+function isDnsError(errorCode: string, errorMessage: string): boolean {
+    return DNS_ERROR_CODES.some((code) => errorCode === code || errorMessage.includes(code));
+}
+
+function isTimeoutError(errorCode: string, errorMessage: string): boolean {
+    const hasTimeoutCode = TIMEOUT_ERROR_CODES.some((code) => errorCode === code);
+    const hasTimeoutMessage = errorMessage.includes('timeout') || errorMessage.includes('ETIMEDOUT');
+
+    return hasTimeoutCode || hasTimeoutMessage;
+}
+
+function isAuthError(error: any): boolean {
+    const statusCode = error?.response?.status;
+
+    return AUTH_STATUS_CODES.some((code) => statusCode === code);
+}
+
+function isNetworkError(errorCode: string): boolean {
+    return NETWORK_ERROR_CODES.some((code) => errorCode === code);
 }
 
 /**
@@ -80,7 +110,10 @@ export async function retryWithBackoff<T>(operation: () => Promise<T>, options: 
         } catch (error: any) {
             lastError = error;
 
-            if (attempt === config.maxAttempts || !isRetryableError(error, config.retryableErrors)) {
+            const isLastAttempt = attempt === config.maxAttempts;
+            const shouldRetry = isRetryableError(error, config.retryableErrors);
+
+            if (isLastAttempt || !shouldRetry) {
                 throw error;
             }
 
@@ -91,65 +124,43 @@ export async function retryWithBackoff<T>(operation: () => Promise<T>, options: 
             );
 
             config.onRetry(error, attempt);
-
             await sleep(delay);
         }
     }
 
     // This should never be reached, but TypeScript needs it
-    throw lastError || new Error('All retry attempts failed');
+    throw lastError ?? new Error('All retry attempts failed');
 }
 
 /**
  * Categorizes network errors for better analytics and logging.
+ *
+ * @param error - The error to categorize
+ * @returns Object with error category and formatted message
  */
-export function categorizeNetworkError(error: any): {
-    category: 'timeout' | 'dns' | 'network' | 'auth' | 'unknown';
-    message: string;
-} {
+export function categorizeNetworkError(error: any): CategorizedError {
     if (!error) {
         return { category: 'unknown', message: 'Unknown error' };
     }
 
-    if (error.code === 'ENOTFOUND' || (error.message && error.message.includes('ENOTFOUND'))) {
-        return {
-            category: 'dns',
-            message: `DNS resolution failed: ${error.message}`,
-        };
+    const errorCode = error.code ?? '';
+    const errorMessage = error.message ?? '';
+
+    if (isDnsError(errorCode, errorMessage)) {
+        return { category: 'dns', message: `DNS resolution failed: ${errorMessage}` };
     }
 
-    if (
-        error.code === 'ETIMEDOUT' ||
-        error.code === 'ECONNABORTED' ||
-        (error.message && (error.message.includes('timeout') || error.message.includes('ETIMEDOUT')))
-    ) {
-        return {
-            category: 'timeout',
-            message: `Request timeout: ${error.message}`,
-        };
+    if (isTimeoutError(errorCode, errorMessage)) {
+        return { category: 'timeout', message: `Request timeout: ${errorMessage}` };
     }
 
-    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-        return {
-            category: 'auth',
-            message: `Authentication error: ${error.response.status}`,
-        };
+    if (isAuthError(error)) {
+        return { category: 'auth', message: `Authentication error: ${error.response.status}` };
     }
 
-    if (
-        error.code === 'ECONNRESET' ||
-        error.code === 'ECONNREFUSED' ||
-        error.code === 'EHOSTUNREACH' ||
-        error.code === 'ENETUNREACH'
-    ) {
-        return {
-            category: 'network',
-            message: `Network error (${error.code}): ${error.message}`,
-        };
+    if (isNetworkError(errorCode)) {
+        return { category: 'network', message: `Network error (${errorCode}): ${errorMessage}` };
     }
 
-    return {
-        category: 'unknown',
-        message: error.message || 'Unknown error',
-    };
+    return { category: 'unknown', message: errorMessage || 'Unknown error' };
 }
