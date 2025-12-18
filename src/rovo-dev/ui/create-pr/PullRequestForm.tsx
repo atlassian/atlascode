@@ -129,9 +129,6 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
                             </div>
                         </div>
                         <div className="form-actions">
-                            <button type="button" onClick={() => onCancel()} className="form-cancel-button">
-                                Cancel
-                            </button>
                             <button type="submit" className="form-submit-button">
                                 {isPullRequestLoading ? (
                                     <i className="codicon codicon-loading codicon-modifier-spin" />
@@ -139,6 +136,9 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
                                     <PullRequestIcon label="pull-request-icon" spacing="none" />
                                 )}
                                 Create pull request
+                            </button>
+                            <button type="button" onClick={() => onCancel()} className="form-cancel-button">
+                                Cancel
                             </button>
                         </div>
                     </form>
