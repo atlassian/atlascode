@@ -9,6 +9,9 @@ import {
     NotificationType,
 } from './notificationManager';
 
+// Helper to flush all pending promises when using fake timers
+const flushPromises = () => new Promise((resolve) => jest.requireActual('timers').setImmediate(resolve));
+
 jest.mock('../../commands', () => ({
     Commands: {
         ShowJiraAuth: 'ShowJiraAuth',
@@ -91,13 +94,8 @@ describe('BannerDelegate', () => {
 
         // Verify that after a short time, the timer will trigger the display of the notification
         jest.advanceTimersByTime(SHORT_TIMEOUT); // Simulate the passage of time
-        // Flush promises to allow async aggregateAndShowNotifications and showNotification to complete
-        // Need multiple ticks: setTimeout callback -> aggregateAndShowNotifications -> Promise.all -> showNotification -> markBannerShown
-        await Promise.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
+        // Flush all pending promises from async aggregateAndShowNotifications chain
+        await flushPromises();
         expect(window.showInformationMessage).toHaveBeenCalledTimes(1);
         expect((bannerDelegate as any).timer).toBeUndefined();
         expect((bannerDelegate as any).pile.size).toBe(0); // Pile should be cleared after showing the notification
@@ -157,13 +155,8 @@ describe('BannerDelegate', () => {
 
         // Advance the timer to trigger the display of notifications
         jest.advanceTimersByTime(SHORT_TIMEOUT / 2 + 1); // Simulate the passage of time
-        // Flush promises to allow async aggregateAndShowNotifications and showNotification calls to complete
-        // Need multiple ticks for the full async chain to resolve
-        await Promise.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
+        // Flush all pending promises from async aggregateAndShowNotifications chain
+        await flushPromises();
 
         // Verify that the notifications are displayed
         expect(window.showInformationMessage).toHaveBeenCalledTimes(2);
