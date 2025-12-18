@@ -168,13 +168,26 @@ export class CredentialManager implements Disposable {
     public async getAllValidAuthInfo(product: Product): Promise<AuthInfo[]> {
         // Get all unique sites by credentialId
         const sites = Container.siteManager.getSitesAvailable(product);
-        const uniquelyCredentialedSites = Array.from(new Map(sites.map((site) => [site.credentialId, site])).values());
+        // Get only cloud sites
+        const cloudSites = sites.filter((site) => site.isCloud);
+        const uniquelyCredentialedSites = Array.from(
+            new Map(cloudSites.map((site) => [site.credentialId, site])).values(),
+        );
 
         const authInfos = await Promise.all(uniquelyCredentialedSites.map((site) => this.getAuthInfo(site, true)));
 
-        return authInfos.filter(
+        const validAuthInfos = authInfos.filter(
             (authInfo): authInfo is AuthInfo => !!authInfo && authInfo.state !== AuthInfoState.Invalid,
         );
+        // Deduplicate by user email to handle OAuth + API token for the same user
+        const uniqueByEmail = new Map<string, AuthInfo>();
+        validAuthInfos.forEach((authInfo) => {
+            const email = authInfo.user.email;
+            if (email && !uniqueByEmail.has(email)) {
+                uniqueByEmail.set(email, authInfo);
+            }
+        });
+        return Array.from(uniqueByEmail.values());
     }
 
     /**
