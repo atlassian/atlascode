@@ -54,7 +54,7 @@ body {
     font-family: var(--vscode-font-family);
     height: 100vh;
     margin: auto;
-    max-width: 800px;
+    width: 100%;
 
 
     /* atlaskit overrides */
@@ -298,7 +298,7 @@ body {
     justify-content: center;
     border: 1px solid var(--vscode-editorWidget-border);
     border-radius: 6px;
-    max-width: 400px;
+    width: fit-content;
     background-color: inherit;
     padding: 6px 12px;
 }
@@ -863,6 +863,7 @@ body {
 
 .prompt-settings-action {
     --ds-icon-inverse: var(--vscode-sideBar-background);
+    margin-left: auto;
 }
 
 .prompt-settings-logo {
