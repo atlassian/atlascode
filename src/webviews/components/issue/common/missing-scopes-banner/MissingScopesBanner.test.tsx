@@ -35,17 +35,11 @@ describe('MissingScopesBanner', () => {
         jest.clearAllMocks();
     });
 
-    it('should render the banner with correct title', () => {
-        render(<MissingScopesBanner onOpen={mockOnOpen} onDismiss={mockOnDismiss} />);
-
-        expect(screen.getByText('Jira editor functionality has been improved')).toBeTruthy();
-    });
-
     it('should render the banner with correct description', () => {
         render(<MissingScopesBanner onOpen={mockOnOpen} onDismiss={mockOnDismiss} />);
 
         const descriptionText =
-            'Jira editing functionality has been enhanced for a better experience. Please reauthenticate to access new features.';
+            "We've updated Jira's editing experience. Please reauthenticate to use the new features.";
         expect(screen.getByText(descriptionText)).toBeTruthy();
     });
 

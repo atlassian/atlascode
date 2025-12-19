@@ -2,7 +2,8 @@ import { LoadingButton } from '@atlaskit/button';
 import { cssMap } from '@atlaskit/css';
 import { token } from '@atlaskit/tokens';
 import * as React from 'react';
-import { RovoDevPromoBannerIcon } from 'src/webviews/components/RovoDevPromoBannerIcon';
+
+import { MissingScopesLogo } from './MissingScopesLogo';
 
 export type MissingScopesBannerProps = {
     onOpen: () => void;
@@ -14,44 +15,43 @@ const styles = cssMap({
         display: 'flex',
         maxWidth: '100%',
         alignItems: 'center',
-        padding: token('space.200', '14px'),
+        paddingLeft: token('space.150', '12px'),
+        paddingRight: token('space.150', '12px'),
+        paddingBlockStart: token('space.100', '8px'),
+        paddingBlockEnd: token('space.100', '8px'),
         marginBottom: token('space.200', '16px'),
-        gap: token('space.200', '16px'),
+        gap: token('space.150', '12px'),
         backgroundColor: 'var(--vscode-sideBar-background) !important' as any,
     },
     content: {
         flex: 1,
     },
-    titleLine: {
-        color: 'var(--vscode-foreground) !important' as any,
-        fontFamily: 'var(--vscode-font-family) !important' as any,
-        fontSize: 'var(--vscode-font-size) !important' as any,
-        fontWeight: 'bold' as any,
-        lineHeight: '16px' as any,
-        paddingBottom: '9px' as any,
-    },
     descriptionLine: {
         color: 'var(--vscode-descriptionForeground) !important' as any,
         fontFamily: 'var(--vscode-font-family) !important' as any,
         fontSize: 'var(--vscode-font-size) !important' as any,
-        fontWeight: '400' as any,
+        fontWeight: token('font.weight.medium'),
         lineHeight: '16px' as any,
     },
     buttonGroup: {
         display: 'flex',
         gap: token('space.150', '12px'),
     },
+    svgContainer: {
+        width: '22px',
+        height: '22px',
+    },
 });
 
 export const MissingScopesBanner: React.FC<MissingScopesBannerProps> = ({ onOpen, onDismiss }) => {
     return (
         <div css={styles.banner}>
-            <RovoDevPromoBannerIcon width={70} height={50} />
+            <div css={styles.svgContainer}>
+                <MissingScopesLogo width={22} height={22} />
+            </div>
             <div css={styles.content}>
-                <div css={styles.titleLine}>Jira editor functionality has been improved</div>
                 <div css={styles.descriptionLine}>
-                    Jira editing functionality has been enhanced for a better experience. Please reauthenticate to
-                    access new features.
+                    We've updated Jira's editing experience. Please reauthenticate to use the new features.
                 </div>
             </div>
             <div css={styles.buttonGroup}>
