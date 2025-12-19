@@ -36,7 +36,7 @@ import {
     MentionInfo,
 } from '../AbstractIssueEditorPage';
 import { AtlascodeMentionProvider } from '../common/AtlaskitEditor/AtlascodeMentionsProvider';
-import { MissingScopeBanner } from '../common/missing-scope-banner/MissingScopeBanner';
+import { MissingScopesBanner } from '../common/missing-scopes-banner/MissingScopesBanner';
 import { Development } from '../Development';
 import NavItem from '../NavItem';
 import PullRequests from '../PullRequests';
@@ -255,14 +255,17 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
     };
 
-    handleOpenRovoDevWithPromoBanner = () => {
+    handleOpenBanner = (banner: 'rovo' | 'missingScopes') => {
         this.postMessage({
-            action: 'openRovoDevWithPromoBanner',
+            action: banner === 'rovo' ? 'openRovoDevWithPromoBanner' : 'openJiraAuth',
         });
     };
 
-    handleDismissRovoDevPromoBanner = () => {
-        this.postMessage({ action: 'dismissRovoDevPromoBanner' });
+    handleDismissBanner = (banner: 'rovo' | 'missingScopes') => {
+        if (banner === 'rovo') {
+            return this.postMessage({ action: 'dismissRovoDevPromoBanner' });
+        }
+        return this.setState({ showEditorMissedScopeBanner: false });
     };
 
     handleCloneIssue = (cloneData: any) => {
@@ -657,8 +660,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             <div>
                 {this.state.showRovoDevPromoBanner && (
                     <RovoDevPromoBanner
-                        onOpen={this.handleOpenRovoDevWithPromoBanner}
-                        onDismiss={this.handleDismissRovoDevPromoBanner}
+                        onOpen={() => this.handleOpenBanner('rovo')}
+                        onDismiss={() => this.handleDismissBanner('rovo')}
                     />
                 )}
                 {this.state.showPMF && (
@@ -671,7 +674,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     />
                 )}
 
-                {this.state.showEditorMissedScopeBanner && <MissingScopeBanner />}
+                {this.state.showEditorMissedScopeBanner && (
+                    <MissingScopesBanner
+                        onDismiss={() => this.handleDismissBanner('missingScopes')}
+                        onOpen={() => {
+                            this.handleOpenBanner('missingScopes');
+                        }}
+                    />
+                )}
                 <div className="ac-page-header">
                     <div className="ac-breadcrumbs">
                         {this.state.hierarchy && this.state.hierarchy.length > 0 && (
