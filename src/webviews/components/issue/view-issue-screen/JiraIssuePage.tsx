@@ -256,23 +256,16 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     };
 
     handleOpenBanner = (banner: 'rovo' | 'missingScopes') => {
-        if (banner === 'rovo') {
-            this.postMessage({
-                action: 'openRovoDevWithPromoBanner',
-            });
-        } else {
-            this.postMessage({
-                action: 'openJiraAuth',
-            });
-        }
+        this.postMessage({
+            action: banner === 'rovo' ? 'openRovoDevWithPromoBanner' : 'openJiraAuth',
+        });
     };
 
     handleDismissBanner = (banner: 'rovo' | 'missingScopes') => {
         if (banner === 'rovo') {
-            this.postMessage({ action: 'dismissRovoDevPromoBanner' });
-        } else {
-            this.setState({ showEditorMissedScopeBanner: false });
+            return this.postMessage({ action: 'dismissRovoDevPromoBanner' });
         }
+        return this.setState({ showEditorMissedScopeBanner: false });
     };
 
     handleCloneIssue = (cloneData: any) => {
