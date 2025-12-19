@@ -424,8 +424,12 @@ body {
 
 .rovodev-markdown-link {
     cursor: pointer;
-    color: var(--ds-text-inverse);
+    color: var(--vscode-textLink-foreground);
     text-decoration: underline;
+}
+
+.user-message .rovodev-markdown-link {
+    color: var(--ds-text-inverse);
 }
 
 /* Pull Request button styles */
