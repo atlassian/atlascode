@@ -3,6 +3,7 @@ import Button, { ButtonGroup } from '@atlaskit/button';
 import { Checkbox } from '@atlaskit/checkbox';
 import { DatePicker, DateTimePicker } from '@atlaskit/datetime-picker';
 import { CheckboxField, ErrorMessage, Field, Fieldset, HelperMessage } from '@atlaskit/form';
+import Form from '@atlaskit/form';
 import Lozenge from '@atlaskit/lozenge';
 import { MentionNameStatus } from '@atlaskit/mention';
 import { RadioGroup } from '@atlaskit/radio';
@@ -30,7 +31,7 @@ import {
 import { Tooltip } from '@mui/material';
 import { formatDistanceToNow } from 'date-fns';
 import debounce from 'lodash.debounce';
-import React from 'react';
+import React, { useState } from 'react';
 import EdiText, { EdiTextType } from 'react-editext';
 import { v4 } from 'uuid';
 
@@ -145,6 +146,90 @@ const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions
     }
 
     return true;
+};
+
+export type CascadingSelectOption = {
+    child?: CascadingSelectOption;
+    children?: CascadingSelectOption[];
+    id: string;
+    self: string;
+    value: string;
+};
+export type CascadingSelectFieldProps = {
+    commonProps: {
+        isMulti: boolean;
+        getOptionLabel: SelectFieldHelper.OptionFunc;
+        getOptionValue: SelectFieldHelper.OptionFunc;
+        components: Object;
+        value: Omit<CascadingSelectOption, 'children'>;
+    };
+    isClearable: boolean;
+    options: CascadingSelectOption[];
+    isDisabled: boolean;
+};
+
+const CascadingSelectField: React.FC<CascadingSelectFieldProps> = ({
+    commonProps,
+    isClearable,
+    options,
+    isDisabled,
+}) => {
+    const childRef = React.useRef<HTMLElement>(null);
+    const [isButtonPressed, setIsButtonPressed] = useState(false);
+    const [childOptions, setChildOptions] = useState<Omit<CascadingSelectOption, 'children' | 'child'>[]>([]);
+    const [childValue, setChildValue] = useState<Omit<CascadingSelectOption, 'children' | 'child'> | null>(null);
+    const [parentValue, setParentValue] = useState<Omit<CascadingSelectOption, 'children' | 'child'> | null>(null);
+
+    const initialValueCopy = { ...commonProps.value };
+    if (initialValueCopy?.child && initialValueCopy.child.value) {
+        initialValueCopy.value = initialValueCopy.value + ' - ' + initialValueCopy.child.value;
+    }
+    const hasChild = childOptions.length > 0 || initialValueCopy?.child;
+    return !isButtonPressed ? (
+        <button onClick={() => setIsButtonPressed(true)}>{initialValueCopy.value}</button>
+    ) : (
+        <Form>
+            <Select
+                {...commonProps}
+                value={parentValue || initialValueCopy}
+                className="ac-select-container"
+                classNamePrefix="ac-select"
+                isClearable={isClearable}
+                options={options}
+                isDisabled={isDisabled}
+                defaultMenuIsOpen={!parentValue}
+                onChange={(selected: Omit<CascadingSelectOption, 'child'>) => {
+                    console.debug('Parent selected:', selected);
+                    setParentValue(selected);
+                    if (selected && selected.children && selected.children.length > 0) {
+                        setChildOptions(selected.children);
+                        setChildValue(null);
+                        childRef.current?.focus();
+                    } else {
+                        setChildOptions([]);
+                    }
+                }}
+            />
+            {hasChild && (
+                <Select
+                    {...commonProps}
+                    value={childValue || commonProps.value?.child?.value}
+                    className="ac-select-container"
+                    classNamePrefix="ac-select"
+                    isClearable={isClearable}
+                    options={childOptions}
+                    isDisabled={isDisabled}
+                    openMenuOnFocus
+                    onChange={(selected: Omit<CascadingSelectOption, 'child'>) => {
+                        console.debug('Child selected:', selected);
+                        setChildValue(selected);
+                    }}
+                    onMenuClose={() => setChildOptions([])}
+                    ref={childRef}
+                />
+            )}
+        </Form>
+    );
 };
 
 export abstract class AbstractIssueEditorPage<
@@ -1599,27 +1684,12 @@ export abstract class AbstractIssueEditorPage<
 
                     case SelectFieldHelper.SelectComponentType.Cascading: {
                         if (editmode) {
-                            const defValCopy = { ...defVal };
-                            if (defValCopy?.child && defValCopy.child.value) {
-                                defValCopy.value = defVal.value + ' - ' + defValCopy.child.value;
-                            }
-                            commonProps.value = defValCopy;
                             return (
-                                <Select
-                                    {...commonProps}
-                                    className="ac-select-container"
-                                    classNamePrefix="ac-select"
+                                <CascadingSelectField
+                                    commonProps={commonProps}
                                     isClearable={this.isClearableSelect(selectField)}
                                     options={this.state.selectFieldOptions[field.key]}
                                     isDisabled={this.state.isSomethingLoading}
-                                    onChange={(selected: any) => {
-                                        this.handleSelectChange(selectField, selected);
-                                    }}
-                                    onMenuClose={() => {
-                                        if (this.state.loadingField === field.key) {
-                                            this.setState({ isSomethingLoading: false, loadingField: '' });
-                                        }
-                                    }}
                                 />
                             );
                         }

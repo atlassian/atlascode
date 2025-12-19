@@ -6,7 +6,7 @@ import * as React from 'react';
 
 import { colorToLozengeAppearanceMap } from './colors';
 
-type OptionFunc = (option: any) => string;
+export type OptionFunc = (option: any) => string;
 type ComponentFunc = (props: any) => JSX.Element;
 
 const returnOptionOrValueFunc = (option: any): any => {
@@ -372,6 +372,9 @@ export function labelFuncForValueType(vt: ValueType): OptionFunc {
         case ValueType.User:
         case ValueType.Watches: {
             return returnDisplayNameFunc;
+        }
+        case ValueType.OptionWithChild: {
+            return returnValueFunc;
         }
 
         default: {
