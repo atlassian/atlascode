@@ -184,7 +184,6 @@ export class CredentialManager implements Disposable {
     }
 
     // Gets valid auth info for cloud sites, deduplicated by user email (used for notifications and handles OAuth + API token for the same user)
-
     public async getCloudAuthInfo(product: Product): Promise<AuthInfo[]> {
         const authInfos = await this.getAllValidAuthInfo(product, (site) => site.isCloud);
 
