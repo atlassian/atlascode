@@ -1701,10 +1701,15 @@ export class JiraIssueWebview
                         const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
 
                         // Build the notification payload for Jira API
-                        const notifyPayload: any = {
-                            subject: `${this._currentUser.displayName} shared "${this._issue.key} ${shareMsg.issueSummary}" with you`,
-                            textBody: shareMsg.shareData.message || '',
-                            htmlBody: shareMsg.shareData.message ? `<p>${shareMsg.shareData.message}</p>` : undefined,
+                        const apiVersion = client.apiVersion || '3';
+                        const baseApiUrl = this._issue.siteDetails.baseApiUrl.replace(/\/rest$/, '');
+                        const messageText = shareMsg.shareData.message || '';
+                        const issueTitle = `${this._issue.key} ${shareMsg.issueSummary}`;
+                        const notifyPayload = {
+                            subject: `Shared with you: ${issueTitle}`,
+                            textBody: messageText
+                                ? messageText
+                                : `${this._currentUser.displayName} shared an issue with you.`,
                             to: {
                                 users: shareMsg.shareData.recipients.map((user: User) => ({
                                     accountId: user.accountId,
@@ -1712,13 +1717,24 @@ export class JiraIssueWebview
                             },
                         };
 
+                        // Only add htmlBody if there's a message
+                        if (messageText) {
+                            (notifyPayload as any).htmlBody = `<p>${messageText}</p>`;
+                        }
+
+                        Logger.debug(`Share issue payload: ${JSON.stringify(notifyPayload)}`);
+
                         // Call the Jira notify API
-                        const notifyUrl = `${this._issue.siteDetails.baseApiUrl}/issue/${this._issue.key}/notify`;
-                        await client.transportFactory().post(notifyUrl, notifyPayload, {
+                        const notifyUrl = `${baseApiUrl}/rest/api/${apiVersion}/issue/${this._issue.key}/notify`;
+                        const authHeader = await client.authorizationProvider('POST', notifyUrl);
+
+                        await client.transportFactory()(notifyUrl, {
+                            method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                Authorization: await client.authorizationProvider('POST', notifyUrl),
+                                Authorization: authHeader,
                             },
+                            data: JSON.stringify(notifyPayload),
                         });
 
                         // Show VS Code notification
@@ -1729,11 +1745,15 @@ export class JiraIssueWebview
                             fieldValues: { loadingField: '' },
                             nonce: msg.nonce,
                         });
-                    } catch (e) {
-                        Logger.error(e, 'Error sharing issue');
+                    } catch (e: any) {
+                        const errorMessage =
+                            e?.response?.data?.errorMessages?.join(', ') || e?.response?.data?.errors
+                                ? JSON.stringify(e?.response?.data?.errors)
+                                : e?.message || 'Error sharing issue';
+                        Logger.error(e, `Error sharing issue: ${errorMessage}`);
                         this.postMessage({
                             type: 'error',
-                            reason: 'Error sharing issue',
+                            reason: `Error sharing issue: ${errorMessage}`,
                             nonce: msg.nonce,
                         });
                         this.postMessage({
