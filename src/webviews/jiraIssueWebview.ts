@@ -1694,6 +1694,56 @@ export class JiraIssueWebview
                     Container.rovodevWebviewProvider.setPromptTextWithFocus((msg as any).text);
                     break;
                 }
+                case 'shareIssue': {
+                    handled = true;
+                    try {
+                        const shareMsg = msg as any;
+                        const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+
+                        // Build the notification payload for Jira API
+                        const notifyPayload: any = {
+                            subject: `${this._currentUser.displayName} shared "${this._issue.key} ${shareMsg.issueSummary}" with you`,
+                            textBody: shareMsg.shareData.message || '',
+                            htmlBody: shareMsg.shareData.message ? `<p>${shareMsg.shareData.message}</p>` : undefined,
+                            to: {
+                                users: shareMsg.shareData.recipients.map((user: User) => ({
+                                    accountId: user.accountId,
+                                })),
+                            },
+                        };
+
+                        // Call the Jira notify API
+                        const notifyUrl = `${this._issue.siteDetails.baseApiUrl}/issue/${this._issue.key}/notify`;
+                        await client.transportFactory().post(notifyUrl, notifyPayload, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                Authorization: await client.authorizationProvider('POST', notifyUrl),
+                            },
+                        });
+
+                        // Show VS Code notification
+                        window.showInformationMessage('Issue shared');
+
+                        this.postMessage({
+                            type: 'fieldValueUpdate',
+                            fieldValues: { loadingField: '' },
+                            nonce: msg.nonce,
+                        });
+                    } catch (e) {
+                        Logger.error(e, 'Error sharing issue');
+                        this.postMessage({
+                            type: 'error',
+                            reason: 'Error sharing issue',
+                            nonce: msg.nonce,
+                        });
+                        this.postMessage({
+                            type: 'fieldValueUpdate',
+                            fieldValues: { loadingField: '' },
+                            nonce: msg.nonce,
+                        });
+                    }
+                    break;
+                }
                 case 'openExternalUrl': {
                     // Open URL in external browser
                     if (isOpenExternalUrl(msg)) {
