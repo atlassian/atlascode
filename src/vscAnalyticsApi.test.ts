@@ -314,7 +314,7 @@ describe('VSCAnalyticsApi', () => {
         });
 
         it('should fire start issue creation event', async () => {
-            const source = 'test-source';
+            const source = 'contextMenu';
             const product: Product = { key: 'jira', name: 'Jira' };
 
             await analyticsApi.fireStartIssueCreationEvent(source, product);

@@ -8,6 +8,7 @@ import {
     Registry,
     viewScreenEvent,
 } from './analytics';
+import { CreateIssueSource } from './analyticsTypes';
 import { BasicAuthInfo, DetailedSiteInfo, ProductBitbucket, ProductJira } from './atlclients/authInfo';
 import { showBitbucketDebugInfo } from './bitbucket/bbDebug';
 import { setCommandContext } from './commandContext';
@@ -52,7 +53,14 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 }
             },
         ),
-        commands.registerCommand(Commands.CreateIssue, (data: any, source?: string) => createIssue(data, source)),
+        commands.registerCommand(Commands.CreateIssue, (data: any, source?: CreateIssueSource) => {
+            const effectiveSource: CreateIssueSource = source ?? (data === undefined ? 'commandPalette' : 'explorer');
+            return createIssue(data, effectiveSource);
+        }),
+        commands.registerCommand(Commands.CreateIssueFromSidebar, () => createIssue(undefined, 'sidebarButton')),
+        commands.registerCommand(Commands.CreateIssueFromIssueContext, () =>
+            createIssue(undefined, 'issueContextMenu'),
+        ),
         commands.registerCommand(
             Commands.ShowIssue,
             async (issueOrKeyAndSite: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => await showIssue(issueOrKeyAndSite),

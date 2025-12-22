@@ -21,6 +21,7 @@ import {
     SiteInfo,
 } from '../../atlclients/authInfo';
 import { configuration, JQLEntry } from '../../config/configuration';
+import { Commands } from '../../constants';
 import { Container } from '../../container';
 import { getFeedbackUser } from '../../feedback/feedbackUser';
 import { AnalyticsApi } from '../../lib/analyticsApi';
@@ -885,10 +886,11 @@ describe('VSCConfigActionApi', () => {
     });
 
     describe('explorer focus manager methods', () => {
-        it('should fire create issue event', () => {
+        it('should fire create issue event and execute create issue command', () => {
             vscConfigActionApi.createJiraIssue();
 
             expect(mockExplorerFocusManager.fireEvent).toHaveBeenCalledWith(FocusEventActions.CREATEISSUE, true);
+            expect(commands.executeCommand).toHaveBeenCalledWith(Commands.CreateIssue, undefined, 'settingsPage');
         });
 
         it('should fire view issue event', () => {

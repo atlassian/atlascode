@@ -22,6 +22,7 @@ import {
     SiteInfo,
 } from '../../atlclients/authInfo';
 import { configuration, IConfig, JQLEntry } from '../../config/configuration';
+import { Commands } from '../../constants';
 import { Container } from '../../container';
 import { getFeedbackUser } from '../../feedback/feedbackUser';
 import { AnalyticsApi } from '../../lib/analyticsApi';
@@ -334,6 +335,7 @@ export class VSCConfigActionApi implements ConfigActionApi {
 
     public createJiraIssue(): void {
         Container.explorerFocusManager.fireEvent(FocusEventActions.CREATEISSUE, true);
+        commands.executeCommand(Commands.CreateIssue, undefined, 'settingsPage');
     }
 
     public viewJiraIssue(): void {
