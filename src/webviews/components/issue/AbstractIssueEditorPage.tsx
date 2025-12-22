@@ -1,9 +1,13 @@
 import Avatar from '@atlaskit/avatar';
 import Button, { ButtonGroup } from '@atlaskit/button';
+import { IconButton } from '@atlaskit/button/new';
 import { Checkbox } from '@atlaskit/checkbox';
 import { DatePicker, DateTimePicker } from '@atlaskit/datetime-picker';
 import { CheckboxField, ErrorMessage, Field, Fieldset, HelperMessage } from '@atlaskit/form';
 import Form from '@atlaskit/form';
+import { FormFooter } from '@atlaskit/form';
+import CheckMarkIcon from '@atlaskit/icon/core/check-mark';
+import CrossIcon from '@atlaskit/icon/core/cross';
 import Lozenge from '@atlaskit/lozenge';
 import { MentionNameStatus } from '@atlaskit/mention';
 import { RadioGroup } from '@atlaskit/radio';
@@ -166,6 +170,7 @@ export type CascadingSelectFieldProps = {
     isClearable: boolean;
     options: CascadingSelectOption[];
     isDisabled: boolean;
+    onSave: (selected: any) => void;
 };
 
 const CascadingSelectField: React.FC<CascadingSelectFieldProps> = ({
@@ -173,20 +178,47 @@ const CascadingSelectField: React.FC<CascadingSelectFieldProps> = ({
     isClearable,
     options,
     isDisabled,
+    onSave,
 }) => {
     const childRef = React.useRef<HTMLElement>(null);
-    const [isButtonPressed, setIsButtonPressed] = useState(false);
+    const [isCascadingSelectEditing, setIsCascadingSelectEditing] = useState(false);
     const [childOptions, setChildOptions] = useState<Omit<CascadingSelectOption, 'children' | 'child'>[]>([]);
     const [childValue, setChildValue] = useState<Omit<CascadingSelectOption, 'children' | 'child'> | null>(null);
-    const [parentValue, setParentValue] = useState<Omit<CascadingSelectOption, 'children' | 'child'> | null>(null);
+    const [parentValue, setParentValue] =
+        useState<Required<Omit<CascadingSelectOption, 'children' | 'child'> | null>>(null);
 
     const initialValueCopy = { ...commonProps.value };
     if (initialValueCopy?.child && initialValueCopy.child.value) {
         initialValueCopy.value = initialValueCopy.value + ' - ' + initialValueCopy.child.value;
     }
     const hasChild = childOptions.length > 0 || initialValueCopy?.child;
-    return !isButtonPressed ? (
-        <button onClick={() => setIsButtonPressed(true)}>{initialValueCopy.value}</button>
+
+    const handleSave = () => {
+        if (!parentValue) {
+            setIsCascadingSelectEditing(false);
+            handleCancel();
+            return;
+        }
+        const combinedValue = {
+            ...parentValue,
+        } as NonNullable<Omit<CascadingSelectOption, 'children'>>;
+
+        if (childValue && childValue.id) {
+            combinedValue.child = childValue;
+        }
+        onSave(combinedValue);
+        setIsCascadingSelectEditing(false);
+    };
+
+    const handleCancel = () => {
+        setIsCascadingSelectEditing(false);
+        setParentValue(null);
+        setChildValue(null);
+        setChildOptions([]);
+    };
+
+    return !isCascadingSelectEditing ? (
+        <button onClick={() => setIsCascadingSelectEditing(true)}>{initialValueCopy.value}</button>
     ) : (
         <Form>
             <Select
@@ -198,16 +230,26 @@ const CascadingSelectField: React.FC<CascadingSelectFieldProps> = ({
                 options={options}
                 isDisabled={isDisabled}
                 defaultMenuIsOpen={!parentValue}
-                onChange={(selected: Omit<CascadingSelectOption, 'child'>) => {
-                    console.debug('Parent selected:', selected);
+                onChange={(selected: Required<Omit<CascadingSelectOption, 'child'>>) => {
                     setParentValue(selected);
                     if (selected && selected.children && selected.children.length > 0) {
                         setChildOptions(selected.children);
-                        setChildValue(null);
-                        childRef.current?.focus();
                     } else {
                         setChildOptions([]);
                     }
+                }}
+                onMenuClose={() => {
+                    setChildValue({
+                        self: '',
+                        value: '',
+                        id: '',
+                    });
+
+                    if (!parentValue) {
+                        // in case user closes menu without selecting a value
+                        handleCancel();
+                    }
+                    childRef.current?.focus();
                 }}
             />
             {hasChild && (
@@ -221,13 +263,36 @@ const CascadingSelectField: React.FC<CascadingSelectFieldProps> = ({
                     isDisabled={isDisabled}
                     openMenuOnFocus
                     onChange={(selected: Omit<CascadingSelectOption, 'child'>) => {
-                        console.debug('Child selected:', selected);
                         setChildValue(selected);
                     }}
-                    onMenuClose={() => setChildOptions([])}
                     ref={childRef}
+                    onMenuClose={() => {
+                        if (!childValue?.id) {
+                            // in case user closes menu without selecting a value
+                            // saving parent only
+                            handleSave();
+                        }
+                    }}
                 />
             )}
+            <FormFooter>
+                <ButtonGroup>
+                    <IconButton
+                        icon={CheckMarkIcon}
+                        label="Save"
+                        isTooltipDisabled={false}
+                        appearance="primary"
+                        onClick={handleSave}
+                    ></IconButton>
+                    <IconButton
+                        icon={CrossIcon}
+                        label="Cancel"
+                        isTooltipDisabled={false}
+                        appearance="primary"
+                        onClick={handleCancel}
+                    ></IconButton>
+                </ButtonGroup>
+            </FormFooter>
         </Form>
     );
 };
@@ -1687,9 +1752,12 @@ export abstract class AbstractIssueEditorPage<
                             return (
                                 <CascadingSelectField
                                     commonProps={commonProps}
-                                    isClearable={this.isClearableSelect(selectField)}
+                                    isClearable={false}
                                     options={this.state.selectFieldOptions[field.key]}
                                     isDisabled={this.state.isSomethingLoading}
+                                    onSave={(selected: CascadingSelectOption) => {
+                                        this.handleSelectChange(selectField, selected);
+                                    }}
                                 />
                             );
                         }
