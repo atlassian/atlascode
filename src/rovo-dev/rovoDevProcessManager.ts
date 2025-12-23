@@ -525,6 +525,14 @@ class RovoDevSubprocessInstance extends Disposable {
                             this.rovoDevProcess = undefined;
                             this.stop();
 
+                            // Log stderr if there's any when process exits
+                            if (code !== 0 && stderrData.trim()) {
+                                RovoDevLogger.error(
+                                    new Error(`RovoDev Stderr`),
+                                    `RovoDev process exited with stderr and code: ${code}: ${stderrData.trim()}`,
+                                );
+                            }
+
                             // we don't want to pass the 0 code as a number, as it's not an error
                             setState({
                                 state: 'Terminated',
@@ -535,7 +543,9 @@ class RovoDevSubprocessInstance extends Disposable {
 
                     if (this.rovoDevProcess.stderr) {
                         this.rovoDevProcess.stderr.on('data', (data) => {
-                            stderrData += data.toString();
+                            const stderrOutput = data.toString();
+                            stderrData += stderrOutput;
+                            RovoDevLogger.warn(`RovoDev stderr: ${stderrOutput.trim()}`);
                         });
                     }
 
