@@ -53,7 +53,7 @@ export const DialogMessageItem: React.FC<{
             parts.push(`\n${msg.statusCode}`);
         }
         if (msg.stackTrace) {
-            parts.push(`\n\nExtensionStack Trace:\n${msg.stackTrace}`);
+            parts.push(`\n\nExtension Stack Trace:\n${msg.stackTrace}`);
         }
         if (msg.stderr) {
             parts.push(`\n\nRovo Dev Stderr:\n${msg.stderr}`);
