@@ -551,7 +551,17 @@ class RovoDevSubprocessInstance extends Disposable {
     public async stop(): Promise<void> {
         const rovoDevProcess = this.rovoDevProcess;
         this.rovoDevProcess = undefined;
-        rovoDevProcess?.kill();
+        if (rovoDevProcess) {
+            // Try graceful termination first
+            rovoDevProcess.kill('SIGTERM');
+
+            // If process doesn't terminate gracefully, force kill after timeout
+            setTimeout(() => {
+                if (rovoDevProcess && !rovoDevProcess.killed) {
+                    rovoDevProcess.kill('SIGKILL');
+                }
+            }, 5000);
+        }
 
         this.disposables.forEach((x) => x.dispose());
         this.disposables = [];
