@@ -1,19 +1,16 @@
 import Avatar from '@atlaskit/avatar';
 import Button, { ButtonGroup } from '@atlaskit/button';
-import { IconButton } from '@atlaskit/button/new';
 import { Checkbox } from '@atlaskit/checkbox';
 import { DatePicker, DateTimePicker } from '@atlaskit/datetime-picker';
 import { CheckboxField, ErrorMessage, Field, Fieldset, HelperMessage } from '@atlaskit/form';
-import Form from '@atlaskit/form';
-import { FormFooter } from '@atlaskit/form';
-import CheckMarkIcon from '@atlaskit/icon/core/check-mark';
-import CrossIcon from '@atlaskit/icon/core/cross';
+import InlineEdit from '@atlaskit/inline-edit';
 import Lozenge from '@atlaskit/lozenge';
 import { MentionNameStatus } from '@atlaskit/mention';
 import { RadioGroup } from '@atlaskit/radio';
 import Select, { AsyncCreatableSelect, AsyncSelect, CreatableSelect } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
 import Textfield from '@atlaskit/textfield';
+import { token } from '@atlaskit/tokens';
 import {
     CommentVisibility,
     emptyIssueType,
@@ -35,7 +32,7 @@ import {
 import { Tooltip } from '@mui/material';
 import { formatDistanceToNow } from 'date-fns';
 import debounce from 'lodash.debounce';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import EdiText, { EdiTextType } from 'react-editext';
 import { v4 } from 'uuid';
 
@@ -181,7 +178,6 @@ const CascadingSelectField: React.FC<CascadingSelectFieldProps> = ({
     onSave,
 }) => {
     const childRef = React.useRef<HTMLElement>(null);
-    const [isCascadingSelectEditing, setIsCascadingSelectEditing] = useState(false);
     const [childOptions, setChildOptions] = useState<Omit<CascadingSelectOption, 'children' | 'child'>[]>([]);
     const [childValue, setChildValue] = useState<Omit<CascadingSelectOption, 'children' | 'child'> | null>(null);
     const [parentValue, setParentValue] =
@@ -195,7 +191,6 @@ const CascadingSelectField: React.FC<CascadingSelectFieldProps> = ({
 
     const handleSave = () => {
         if (!parentValue) {
-            setIsCascadingSelectEditing(false);
             handleCancel();
             return;
         }
@@ -207,93 +202,97 @@ const CascadingSelectField: React.FC<CascadingSelectFieldProps> = ({
             combinedValue.child = childValue;
         }
         onSave(combinedValue);
-        setIsCascadingSelectEditing(false);
     };
 
     const handleCancel = () => {
-        setIsCascadingSelectEditing(false);
         setParentValue(null);
         setChildValue(null);
         setChildOptions([]);
     };
 
-    return !isCascadingSelectEditing ? (
-        <button onClick={() => setIsCascadingSelectEditing(true)}>{initialValueCopy.value}</button>
-    ) : (
-        <Form>
-            <Select
-                {...commonProps}
-                value={parentValue || initialValueCopy}
-                className="ac-select-container"
-                classNamePrefix="ac-select"
-                isClearable={isClearable}
-                options={options}
-                isDisabled={isDisabled}
-                defaultMenuIsOpen={!parentValue}
-                onChange={(selected: Required<Omit<CascadingSelectOption, 'child'>>) => {
-                    setParentValue(selected);
-                    if (selected && selected.children && selected.children.length > 0) {
-                        setChildOptions(selected.children);
-                    } else {
-                        setChildOptions([]);
-                    }
-                }}
-                onMenuClose={() => {
-                    setChildValue({
-                        self: '',
-                        value: '',
-                        id: '',
-                    });
+    const editView = () => {
+        const parentRef = React.useRef<HTMLElement>(null);
+        useEffect(() => {
+            const rafId = requestAnimationFrame(() => {
+                parentRef.current?.focus();
+            });
+            return () => cancelAnimationFrame(rafId);
+        }, []);
 
-                    if (!parentValue) {
-                        // in case user closes menu without selecting a value
-                        handleCancel();
-                    }
-                    childRef.current?.focus();
-                }}
-            />
-            {hasChild && (
+        return (
+            <div>
                 <Select
                     {...commonProps}
-                    value={childValue || commonProps.value?.child?.value}
+                    value={parentValue || initialValueCopy}
                     className="ac-select-container"
                     classNamePrefix="ac-select"
                     isClearable={isClearable}
-                    options={childOptions}
+                    options={options}
                     isDisabled={isDisabled}
                     openMenuOnFocus
-                    onChange={(selected: Omit<CascadingSelectOption, 'child'>) => {
-                        setChildValue(selected);
-                    }}
-                    ref={childRef}
-                    onMenuClose={() => {
-                        if (!childValue?.id) {
-                            // in case user closes menu without selecting a value
-                            // saving parent only
-                            handleSave();
+                    onChange={(selected: Required<Omit<CascadingSelectOption, 'child'>>) => {
+                        setParentValue(selected);
+                        if (selected && selected.children && selected.children.length > 0) {
+                            setChildOptions(selected.children);
+                            // reset child value on parent change
+                            setChildValue({
+                                self: '',
+                                value: '',
+                                id: '',
+                            });
+                        } else {
+                            setChildOptions([]);
                         }
                     }}
+                    onMenuClose={() => {
+                        requestAnimationFrame(() => {
+                            childRef.current?.focus();
+                        });
+                    }}
+                    ref={parentRef}
                 />
+                {hasChild && (
+                    <Select
+                        {...commonProps}
+                        value={childValue || commonProps.value?.child?.value}
+                        className="ac-select-container"
+                        classNamePrefix="ac-select"
+                        isClearable={true}
+                        options={childOptions}
+                        isDisabled={isDisabled}
+                        openMenuOnFocus
+                        onChange={(selected: Omit<CascadingSelectOption, 'child'>) => {
+                            setChildValue(selected);
+                        }}
+                        ref={childRef}
+                    />
+                )}
+            </div>
+        );
+    };
+
+    return (
+        <InlineEdit
+            defaultValue={initialValueCopy.value}
+            editButtonLabel={initialValueCopy.value}
+            editView={editView}
+            readViewFitContainerWidth
+            readView={() => (
+                <div
+                    style={{
+                        color: !initialValueCopy.value
+                            ? 'var(--vscode-input-placeholderForeground) !important'
+                            : undefined,
+                        paddingBlock: token('space.100'),
+                        wordBreak: 'break-word',
+                        fontSize: '14px',
+                    }}
+                >
+                    {initialValueCopy.value || 'Add option'}
+                </div>
             )}
-            <FormFooter>
-                <ButtonGroup>
-                    <IconButton
-                        icon={CheckMarkIcon}
-                        label="Save"
-                        isTooltipDisabled={false}
-                        appearance="primary"
-                        onClick={handleSave}
-                    ></IconButton>
-                    <IconButton
-                        icon={CrossIcon}
-                        label="Cancel"
-                        isTooltipDisabled={false}
-                        appearance="primary"
-                        onClick={handleCancel}
-                    ></IconButton>
-                </ButtonGroup>
-            </FormFooter>
-        </Form>
+            onConfirm={() => handleSave()}
+        />
     );
 };
 
