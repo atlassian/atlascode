@@ -50,6 +50,7 @@ export interface AbstractDialogMessage {
         link: string;
     };
     stackTrace?: string;
+    stderr?: string;
     rovoDevLogs?: string[];
 }
 

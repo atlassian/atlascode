@@ -40,6 +40,7 @@ export const DialogMessageItem: React.FC<{
 }) => {
     const [isDetailsExpanded, setIsDetailsExpanded] = React.useState(false);
     const [isStackTraceExpanded, setIsStackTraceExpanded] = React.useState(false);
+    const [isStderrExpanded, setIsStderrExpanded] = React.useState(false);
     const [isLogsExpanded, setIsLogsExpanded] = React.useState(false);
     const [isCopied, setIsCopied] = React.useState(false);
 
@@ -54,6 +55,9 @@ export const DialogMessageItem: React.FC<{
         }
         if (msg.stackTrace) {
             parts.push(`\n\nStack Trace:\n${msg.stackTrace}`);
+        }
+        if (msg.stderr) {
+            parts.push(`\n\nStderr:\n${msg.stderr}`);
         }
         if (msg.rovoDevLogs && msg.rovoDevLogs.length > 0) {
             parts.push(`\n\nRovo Dev Logs:\n${msg.rovoDevLogs.join('\n')}`);
@@ -167,7 +171,7 @@ export const DialogMessageItem: React.FC<{
 
                     {msg.statusCode && <div style={{ fontSize: 'smaller', textAlign: 'right' }}>{msg.statusCode}</div>}
 
-                    {(msg.stackTrace || (msg.rovoDevLogs && msg.rovoDevLogs.length > 0)) && (
+                    {(msg.stackTrace || msg.stderr || (msg.rovoDevLogs && msg.rovoDevLogs.length > 0)) && (
                         <div style={{ marginTop: '8px' }}>
                             <button
                                 style={{
@@ -234,6 +238,52 @@ export const DialogMessageItem: React.FC<{
                                                     }}
                                                 >
                                                     {msg.stackTrace}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {msg.stderr && (
+                                        <div style={{ marginTop: '8px' }}>
+                                            <button
+                                                style={{
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    color: 'var(--vscode-textLink-foreground)',
+                                                    cursor: 'pointer',
+                                                    padding: '0',
+                                                    fontSize: 'inherit',
+                                                    textDecoration: 'underline',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px',
+                                                }}
+                                                onClick={() => setIsStderrExpanded(!isStderrExpanded)}
+                                            >
+                                                {isStderrExpanded ? (
+                                                    <ChevronDownIcon label="" spacing="none" />
+                                                ) : (
+                                                    <ChevronRightIcon label="" spacing="none" />
+                                                )}
+                                                Stderr
+                                            </button>
+                                            {isStderrExpanded && (
+                                                <div
+                                                    style={{
+                                                        marginTop: '8px',
+                                                        padding: '8px',
+                                                        backgroundColor: 'var(--vscode-editor-background)',
+                                                        border: '1px solid var(--vscode-panel-border)',
+                                                        borderRadius: '4px',
+                                                        fontSize: 'smaller',
+                                                        fontFamily: 'var(--vscode-editor-font-family)',
+                                                        whiteSpace: 'pre-wrap',
+                                                        wordBreak: 'break-word',
+                                                        maxHeight: '200px',
+                                                        overflowY: 'auto',
+                                                    }}
+                                                >
+                                                    {msg.stderr}
                                                 </div>
                                             )}
                                         </div>

@@ -586,6 +586,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 isProcessTerminated,
                 uid: v4(),
                 stackTrace: buildErrorDetails(error),
+                stderr: (error as any).stderr,
                 rovoDevLogs: readLastNLogLines(),
             },
         });
@@ -1075,7 +1076,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 break;
 
             case 'Terminated':
-                await this.signalProcessTerminated(newState.exitCode);
+                await this.signalProcessTerminated(newState.exitCode, newState.stderr);
                 break;
 
             case 'Disabled':
@@ -1324,7 +1325,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await this.processError(error, { title, isProcessTerminated: true, skipLogError: true });
     }
 
-    private async signalProcessTerminated(code?: number) {
+    private async signalProcessTerminated(code?: number, stderr?: string) {
         if (this._isProviderDisabled) {
             return;
         }
@@ -1339,6 +1340,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 : 'Please start a new chat session to continue.';
 
         const error = new Error(errorMessage);
+
+        // Include stderr if available
+        if (stderr && stderr.trim()) {
+            (error as any).stderr = stderr.trim();
+        }
+
         // we assume that the real error has been logged somehwere else, so we don't log this one
         await this.processError(error, { title, isProcessTerminated: true, skipLogError: true });
     }
