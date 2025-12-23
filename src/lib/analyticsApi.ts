@@ -2,7 +2,7 @@ import { IssueSuggestionSettings } from 'src/config/model';
 import { QuickFlowAnalyticsEvent } from 'src/onboarding/quickFlow/types';
 
 import { DeepLinkEventErrorType } from '../analytics';
-import { FeedbackSentEvent, UIErrorInfo } from '../analyticsTypes';
+import { CreateIssueSource, FeedbackSentEvent, UIErrorInfo } from '../analyticsTypes';
 import { DetailedSiteInfo, Product, SiteInfo } from '../atlclients/authInfo';
 
 export interface AnalyticsApi {
@@ -29,7 +29,7 @@ export interface AnalyticsApi {
     fireIssueCommentEvent(site: DetailedSiteInfo): Promise<void>;
     fireIssueWorkStartedEvent(site: DetailedSiteInfo, pushBranchToRemoteChecked: boolean): Promise<void>;
     fireIssueUpdatedEvent(site: DetailedSiteInfo, issueKey: string, fieldName: string, fieldKey: string): Promise<void>;
-    fireStartIssueCreationEvent(source: string, product: Product): Promise<void>;
+    fireStartIssueCreationEvent(source: CreateIssueSource, product: Product): Promise<void>;
     firePrCreatedEvent(site: DetailedSiteInfo): Promise<void>;
     firePrCommentEvent(site: DetailedSiteInfo): Promise<void>;
     firePrTaskEvent(site: DetailedSiteInfo, commentId?: string): Promise<void>;

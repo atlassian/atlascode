@@ -45,6 +45,8 @@ export const enum Commands {
     BitbucketToggleCommentsVisibility = 'atlascode.bb.toggleCommentsVisibility',
     EditThisFile = 'atlascode.bb.editThisFile',
     CreateIssue = 'atlascode.jira.createIssue',
+    CreateIssueFromSidebar = 'atlascode.jira.createIssue.fromSidebar',
+    CreateIssueFromIssueContext = 'atlascode.jira.createIssue.fromIssueContext',
     RefreshAssignedWorkItemsExplorer = 'atlascode.jira.refreshAssignedWorkItemsExplorer',
     JiraFilter = 'atlascode.jira.filter',
     RefreshCustomJqlExplorer = 'atlascode.jira.refreshCustomJqlExplorer',
