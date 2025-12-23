@@ -4,6 +4,7 @@ import React from 'react';
 import { DetailedSiteInfo, Product } from 'src/atlclients/authInfo';
 import { disableConsole } from 'testsutil';
 
+import { MissingScopesBannerProps } from '../common/missing-scopes-banner/MissingScopesBanner';
 import CreateIssuePage from './CreateIssuePage';
 
 // Mock all the dependencies
@@ -75,6 +76,21 @@ jest.mock('../../Offline', () => ({
 jest.mock('../../pmfBanner', () => ({
     __esModule: true,
     default: () => <div data-testid="pmf-banner">PMF Banner</div>,
+}));
+
+jest.mock('../common/missing-scopes-banner/MissingScopesBanner', () => ({
+    __esModule: true,
+    MissingScopesBanner: ({ onDismiss, onOpen }: MissingScopesBannerProps) => (
+        <div data-testid="missing-scopes-banner">
+            Missing Scopes Banner
+            <button data-testid="missing-scopes-dismiss" onClick={onDismiss}>
+                Dismiss
+            </button>
+            <button data-testid="missing-scopes-open" onClick={onOpen}>
+                Open
+            </button>
+        </div>
+    ),
 }));
 
 jest.mock('../../../../react/atlascode/common/ErrorBoundary', () => ({
@@ -202,6 +218,157 @@ describe('CreateIssuePage', () => {
             // Error banner should NOT be visible
             expect(queryByTestId('error-banner')).toBeNull();
             expect(container.textContent).not.toContain('Error:');
+        });
+    });
+
+    describe('Missing Scopes Banner rendering', () => {
+        it('should show MissingScopesBanner when showEditorMissedScopeBanner is true', () => {
+            const component = new CreateIssuePage({});
+            component.state = {
+                ...component.state,
+                showEditorMissedScopeBanner: true,
+                siteDetails: mockSiteDetails,
+                fieldValues: {
+                    issuetype: { id: '1', name: 'Task' },
+                    project: { key: 'TEST', name: 'Test Project' },
+                },
+                fields: {
+                    summary: {
+                        key: 'summary',
+                        name: 'Summary',
+                        required: true,
+                        uiType: UIType.Input,
+                        displayOrder: 1,
+                        valueType: ValueType.String,
+                        advanced: false,
+                        isArray: false,
+                        schema: 'summary',
+                    },
+                },
+                selectFieldOptions: {
+                    site: [mockSiteDetails],
+                },
+            };
+
+            const { queryByTestId } = render(component.render());
+
+            // Missing scopes banner should be visible
+            expect(queryByTestId('missing-scopes-banner')).not.toBeNull();
+        });
+
+        it('should NOT show MissingScopesBanner when showEditorMissedScopeBanner is false', () => {
+            const component = new CreateIssuePage({});
+            component.state = {
+                ...component.state,
+                showEditorMissedScopeBanner: false,
+                siteDetails: mockSiteDetails,
+                fieldValues: {
+                    issuetype: { id: '1', name: 'Task' },
+                    project: { key: 'TEST', name: 'Test Project' },
+                },
+                fields: {
+                    summary: {
+                        key: 'summary',
+                        name: 'Summary',
+                        required: true,
+                        uiType: UIType.Input,
+                        displayOrder: 1,
+                        valueType: ValueType.String,
+                        advanced: false,
+                        isArray: false,
+                        schema: 'summary',
+                    },
+                },
+                selectFieldOptions: {
+                    site: [mockSiteDetails],
+                },
+            };
+
+            const { queryByTestId } = render(component.render());
+
+            // Missing scopes banner should NOT be visible
+            expect(queryByTestId('missing-scopes-banner')).toBeNull();
+        });
+
+        it('should call setState to hide banner when dismiss is clicked', () => {
+            const component = new CreateIssuePage({});
+            component.state = {
+                ...component.state,
+                showEditorMissedScopeBanner: true,
+                siteDetails: mockSiteDetails,
+                fieldValues: {
+                    issuetype: { id: '1', name: 'Task' },
+                    project: { key: 'TEST', name: 'Test Project' },
+                },
+                fields: {
+                    summary: {
+                        key: 'summary',
+                        name: 'Summary',
+                        required: true,
+                        uiType: UIType.Input,
+                        displayOrder: 1,
+                        valueType: ValueType.String,
+                        advanced: false,
+                        isArray: false,
+                        schema: 'summary',
+                    },
+                },
+                selectFieldOptions: {
+                    site: [mockSiteDetails],
+                },
+            };
+
+            // Mock setState
+            const setStateSpy = jest.spyOn(component, 'setState');
+
+            const { getByTestId } = render(component.render());
+
+            // Click dismiss button
+            const dismissButton = getByTestId('missing-scopes-dismiss');
+            dismissButton.click();
+
+            // Verify setState was called to hide the banner
+            expect(setStateSpy).toHaveBeenCalledWith({ showEditorMissedScopeBanner: false });
+        });
+
+        it('should post openJiraAuth message when onOpen is clicked', () => {
+            const component = new CreateIssuePage({});
+            const postMessageSpy = jest.spyOn(component, 'postMessage');
+
+            component.state = {
+                ...component.state,
+                showEditorMissedScopeBanner: true,
+                siteDetails: mockSiteDetails,
+                fieldValues: {
+                    issuetype: { id: '1', name: 'Task' },
+                    project: { key: 'TEST', name: 'Test Project' },
+                },
+                fields: {
+                    summary: {
+                        key: 'summary',
+                        name: 'Summary',
+                        required: true,
+                        uiType: UIType.Input,
+                        displayOrder: 1,
+                        valueType: ValueType.String,
+                        advanced: false,
+                        isArray: false,
+                        schema: 'summary',
+                    },
+                },
+                selectFieldOptions: {
+                    site: [mockSiteDetails],
+                },
+            };
+
+            const { getByTestId } = render(component.render());
+
+            // Click open button
+            const openButton = getByTestId('missing-scopes-open');
+            openButton.click();
+
+            // Verify postMessage was called with openJiraAuth action
+            expect(postMessageSpy).toHaveBeenCalledWith({ action: 'openJiraAuth' });
         });
     });
 });

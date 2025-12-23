@@ -25,6 +25,18 @@ export interface TreeViewIssue extends MinimalIssue<DetailedSiteInfo> {
 export async function executeJqlQuery(jqlEntry: JQLEntry): Promise<TreeViewIssue[]> {
     try {
         if (jqlEntry) {
+            const trimmedQuery = jqlEntry.query.trim();
+            const hasOperator = /(=|!=|<|>|<=|>=|~|!~|\b(IN|NOT\s+IN|IS|IS\s+NOT|AND|OR)\b)/i.test(trimmedQuery);
+            if (!hasOperator) {
+                Logger.warn(
+                    'Skipping JQL query execution: query appears incomplete (no operators found)',
+                    jqlEntry.siteId,
+                    jqlEntry.id,
+                    trimmedQuery,
+                );
+                return [];
+            }
+
             const jqlSite = Container.siteManager.getSiteForId(ProductJira, jqlEntry.siteId);
             if (jqlSite) {
                 const issues = (await issuesForJQL(jqlEntry.query, jqlSite)) as TreeViewIssue[];
