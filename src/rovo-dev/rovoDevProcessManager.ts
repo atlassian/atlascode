@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import { ChildProcess, spawn } from 'child_process';
 import { access, constants } from 'fs';
 import fs from 'fs';
 import net from 'net';
@@ -9,10 +9,9 @@ import { downloadAndUnzip } from 'src/rovo-dev/util/downloadFile';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { waitFor } from 'src/rovo-dev/util/waitFor';
 import { v4 } from 'uuid';
-import { Disposable, Event, EventEmitter, ExtensionContext, Terminal, Uri, window, workspace } from 'vscode';
+import { Disposable, Event, EventEmitter, ExtensionContext, Uri, workspace } from 'vscode';
 
 import { ExtensionApi, ValidBasicAuthSiteData } from './api/extensionApi';
-import { RovoDevApiClient } from './client';
 import { RovoDevDisabledReason, RovoDevEntitlementCheckFailedDetail } from './rovoDevWebviewProviderMessages';
 import { RovoDevLogger } from './util/rovoDevLogger';
 
@@ -37,7 +36,6 @@ function GetRovoDevURIs(context: ExtensionContext) {
     const rovoDevBaseDir = path.join(extensionPath, 'atlascode-rovodev-bin');
     const rovoDevVersionDir = path.join(rovoDevBaseDir, MIN_SUPPORTED_ROVODEV_VERSION);
     const rovoDevBinPath = path.join(rovoDevVersionDir, 'atlassian_cli_rovodev') + (platform === 'win32' ? '.exe' : '');
-    const rovoDevIconUri = Uri.file(context.asAbsolutePath(path.join('resources', 'rovodev-terminal-icon.svg')));
 
     let rovoDevZipUrl = undefined;
     if (platform === 'win32' || platform === 'linux' || platform === 'darwin') {
@@ -56,7 +54,6 @@ function GetRovoDevURIs(context: ExtensionContext) {
         RovoDevVersionDir: rovoDevVersionDir,
         RovoDevBinPath: rovoDevBinPath,
         RovoDevZipUrl: rovoDevZipUrl,
-        RovoDevIconUri: rovoDevIconUri,
     };
 }
 
@@ -83,16 +80,6 @@ function isPortAvailable(port: number): Promise<boolean> {
 
         server.listen(port, '127.0.0.1');
     });
-}
-
-// don't rely on the RovoDevWebviewProvider for shutting Rovo Dev down, as it may
-// already have set itself as Terminated and lost the reference to the API client
-async function shutdownRovoDev(port: number, sessionToken: string) {
-    if (port) {
-        try {
-            await new RovoDevApiClient('127.0.0.1', port, sessionToken).shutdown();
-        } catch {}
-    }
 }
 
 function getRandomInt(min: number, max: number): number {
@@ -160,6 +147,7 @@ export interface RovoDevProcessStartedState {
     state: 'Started';
     jiraSiteHostname: string;
     jiraSiteUserInfo: UserInfo;
+    pid: number | undefined;
     hostname: string;
     httpPort: number;
     sessionToken: string;
@@ -169,6 +157,7 @@ export interface RovoDevProcessStartedState {
 export interface RovoDevProcessTerminatedState {
     state: 'Terminated';
     exitCode?: number;
+    stderr?: string;
 }
 
 export interface RovoDevProcessEntitlementCheckFailedState {
@@ -220,7 +209,7 @@ export abstract class RovoDevProcessManager {
      */
     private static asyncLocked = false;
 
-    private static rovoDevInstance: RovoDevTerminalInstance | undefined;
+    private static rovoDevInstance: RovoDevSubprocessInstance | undefined;
     private static stopRovoDevInstance() {
         this.rovoDevInstance?.dispose();
         this.rovoDevInstance = undefined;
@@ -439,38 +428,27 @@ export abstract class RovoDevProcessManager {
         }
 
         const folder = workspace.workspaceFolders[0];
-        this.rovoDevInstance = new RovoDevTerminalInstance(
-            folder.uri.fsPath,
-            rovoDevURIs.RovoDevBinPath,
-            rovoDevURIs.RovoDevIconUri,
-        );
+        this.rovoDevInstance = new RovoDevSubprocessInstance(folder.uri.fsPath, rovoDevURIs.RovoDevBinPath);
 
         context.subscriptions.push(this.rovoDevInstance);
 
         await this.rovoDevInstance.start(credentials, (newState) => this.setState(newState));
     }
-
-    public static showTerminal() {
-        this.rovoDevInstance?.showTerminal();
-    }
 }
 
-class RovoDevTerminalInstance extends Disposable {
-    private rovoDevTerminal: Terminal | undefined;
+class RovoDevSubprocessInstance extends Disposable {
+    private rovoDevProcess: ChildProcess | undefined;
     private started = false;
-    private httpPort: number = 0;
-    private sessionToken: string = '';
     private disposables: Disposable[] = [];
     private extensionApi = new ExtensionApi();
 
     public get stopped() {
-        return !this.rovoDevTerminal;
+        return !this.rovoDevProcess;
     }
 
     constructor(
         private readonly workspacePath: string,
         private readonly rovoDevBinPath: string,
-        private readonly rovoDevIconUri: Uri,
     ) {
         super(() => this.stop());
     }
@@ -512,14 +490,12 @@ class RovoDevTerminalInstance extends Disposable {
                         shellArgs.push('--server-env', 'staging');
                     }
 
-                    this.rovoDevTerminal = window.createTerminal({
-                        name: 'Rovo Dev',
-                        shellPath: this.rovoDevBinPath,
-                        shellArgs,
+                    let stderrData = '';
+
+                    this.rovoDevProcess = spawn(this.rovoDevBinPath, shellArgs, {
                         cwd: this.workspacePath,
-                        hideFromUser: true,
-                        isTransient: true,
-                        iconPath: this.rovoDevIconUri,
+                        stdio: ['ignore', 'pipe', 'pipe'],
+                        detached: true,
                         env: {
                             USER: process.env.USER || process.env.USERNAME,
                             USER_EMAIL: credentials.authInfo.username,
@@ -527,47 +503,51 @@ class RovoDevTerminalInstance extends Disposable {
                             ROVODEV_SERVE_SESSION_TOKEN: sessionToken,
                             ...(credentials.authInfo.password ? { USER_API_TOKEN: credentials.authInfo.password } : {}),
                         },
-                    });
+                    })
+                        .on('spawn', () => {
+                            const timeStarted = new Date();
+                            setState({
+                                state: 'Started',
+                                jiraSiteHostname: credentials.host,
+                                jiraSiteUserInfo: credentials.authInfo.user,
+                                pid: this.rovoDevProcess?.pid,
+                                hostname: RovoDevInfo.hostname,
+                                httpPort: port,
+                                sessionToken,
+                                timeStarted: timeStarted.getTime(),
+                            });
+                        })
+                        .on('exit', (code) => {
+                            if (!this.rovoDevProcess) {
+                                return;
+                            }
 
-                    const timeStarted = new Date();
+                            this.rovoDevProcess = undefined;
+                            this.stop();
 
-                    // prints a line in the terminal indicating when the process started, and the full command line
-                    this.rovoDevTerminal.sendText(
-                        `${format(timeStarted, 'yyyy-MM-dd hh:mm:ss.sss')} | START    | ${this.rovoDevBinPath} ${shellArgs.join(' ')}\r\n`,
-                        false,
-                    );
-
-                    this.httpPort = port;
-                    this.sessionToken = sessionToken;
-
-                    const onDidCloseTerminal = window.onDidCloseTerminal((event) => {
-                        if (event === this.rovoDevTerminal) {
-                            this.finalizeStop();
-
-                            if (event.exitStatus?.code) {
+                            // Log stderr if there's any when process exits
+                            if (code !== 0 && stderrData.trim()) {
                                 RovoDevLogger.error(
-                                    new Error(`Rovo Dev process terminated with exit code ${event.exitStatus.code}.`),
+                                    new Error(`RovoDev Stderr`),
+                                    `RovoDev process exited with stderr and code: ${code}: ${stderrData.trim()}`,
                                 );
                             }
 
                             // we don't want to pass the 0 code as a number, as it's not an error
                             setState({
                                 state: 'Terminated',
-                                exitCode: event.exitStatus?.code || undefined,
+                                exitCode: code || undefined,
+                                stderr: stderrData,
                             });
-                        }
-                    });
-                    this.disposables.push(onDidCloseTerminal);
+                        });
 
-                    setState({
-                        state: 'Started',
-                        jiraSiteHostname: credentials.host,
-                        jiraSiteUserInfo: credentials.authInfo.user,
-                        hostname: RovoDevInfo.hostname,
-                        httpPort: port,
-                        sessionToken,
-                        timeStarted: timeStarted.getTime(),
-                    });
+                    if (this.rovoDevProcess.stderr) {
+                        this.rovoDevProcess.stderr.on('data', (data) => {
+                            const stderrOutput = data.toString();
+                            stderrData += stderrOutput;
+                            RovoDevLogger.warn(`RovoDev stderr: ${stderrOutput.trim()}`);
+                        });
+                    }
 
                     resolve();
                 } catch (error) {
@@ -579,32 +559,21 @@ class RovoDevTerminalInstance extends Disposable {
     }
 
     public async stop(): Promise<void> {
-        // save these values before `finalizeStop` erases them
-        const rovoDevPort = this.httpPort;
-        const sessionToken = this.sessionToken;
-        const isTerminalAlive = !!this.rovoDevTerminal;
+        const rovoDevProcess = this.rovoDevProcess;
+        this.rovoDevProcess = undefined;
+        if (rovoDevProcess) {
+            // Try graceful termination first
+            rovoDevProcess.kill('SIGTERM');
 
-        // call this regardless
-        this.finalizeStop();
-
-        if (isTerminalAlive) {
-            await shutdownRovoDev(rovoDevPort, sessionToken);
+            // If process doesn't terminate gracefully, force kill after timeout
+            setTimeout(() => {
+                if (rovoDevProcess && !rovoDevProcess.killed) {
+                    rovoDevProcess.kill('SIGKILL');
+                }
+            }, 5000);
         }
-    }
 
-    private finalizeStop() {
-        this.httpPort = 0;
-        this.sessionToken = '';
-        this.rovoDevTerminal?.dispose();
-        this.rovoDevTerminal = undefined;
         this.disposables.forEach((x) => x.dispose());
         this.disposables = [];
-    }
-
-    public showTerminal() {
-        //this.rovoDevTerminal?.show();
-
-        // show all terminals named "Rovo Dev"
-        window.terminals.filter((x) => x.name === 'Rovo Dev').forEach((x) => x.show());
     }
 }

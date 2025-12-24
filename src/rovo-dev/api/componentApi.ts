@@ -6,7 +6,6 @@ export const RovodevCommands = {
     RovodevAskInteractive: 'atlascode.rovodev.askInteractive',
     RovodevAddToContext: 'atlascode.rovodev.addToContext',
     RovodevNewSession: 'atlascode.rovodev.newChatSession',
-    RovodevShowTerminal: 'atlascode.rovodev.showTerminal',
     RovodevShareFeedback: 'atlascode.rovodev.shareFeedback',
     OpenRovoDevConfig: 'atlascode.openRovoDevConfig',
     OpenRovoDevMcpJson: 'atlascode.openRovoDevMcpJson',
