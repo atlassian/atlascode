@@ -46,7 +46,7 @@ const CascadingSelectField: React.FC<CascadingSelectFieldProps> = ({
     if (initialValueCopy?.child && initialValueCopy.child.value) {
         initialValueCopy.value = initialValueCopy.value + ' - ' + initialValueCopy.child.value;
     }
-    const hasChild = childOptions.length > 0 || initialValueCopy?.child;
+    const hasChild = childOptions.length > 0 || (!parentValue && initialValueCopy?.child);
 
     const handleSave = () => {
         if (!parentValue) {
@@ -96,14 +96,14 @@ const CascadingSelectField: React.FC<CascadingSelectFieldProps> = ({
                     onChange={(selected: Omit<CascadingSelectOption, 'child'>) => {
                         const childrenOptions = selected?.children || [];
                         setParentValue(selected);
+                        // reset child value on parent change
+                        setChildValue({
+                            self: '',
+                            value: '',
+                            id: '',
+                        });
                         if (childrenOptions.length > 0) {
                             setChildOptions(childrenOptions);
-                            // reset child value on parent change
-                            setChildValue({
-                                self: '',
-                                value: '',
-                                id: '',
-                            });
                         } else {
                             setChildOptions([]);
                         }
