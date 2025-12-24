@@ -16,6 +16,7 @@ describe('IssueSidebarButtonGroup', () => {
     const mockHandleStatusChange = jest.fn();
     const mockHandleStartWork = jest.fn();
     const mockHandleCloneIssue = jest.fn();
+    const mockHandleShareIssue = jest.fn();
 
     const defaultProps = {
         handleRefresh: mockHandleRefresh,
@@ -32,7 +33,10 @@ describe('IssueSidebarButtonGroup', () => {
         handleStatusChange: mockHandleStatusChange,
         handleStartWork: mockHandleStartWork,
         handleCloneIssue: mockHandleCloneIssue,
+        handleShareIssue: mockHandleShareIssue,
         transitions: [] as Transition[],
+        issueKey: 'TEST-123',
+        issueUrl: 'https://test.atlassian.net/browse/TEST-123',
     };
 
     it('renders without crashing', () => {

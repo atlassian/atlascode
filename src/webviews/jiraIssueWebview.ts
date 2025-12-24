@@ -1694,6 +1694,76 @@ export class JiraIssueWebview
                     Container.rovodevWebviewProvider.setPromptTextWithFocus((msg as any).text);
                     break;
                 }
+                case 'shareIssue': {
+                    handled = true;
+                    try {
+                        const shareMsg = msg as any;
+                        const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+
+                        // Build the notification payload for Jira API
+                        const apiVersion = client.apiVersion || '3';
+                        const baseApiUrl = this._issue.siteDetails.baseApiUrl.replace(/\/rest$/, '');
+                        const messageText = shareMsg.shareData.message || '';
+                        const issueTitle = `${this._issue.key} ${shareMsg.issueSummary}`;
+                        const notifyPayload = {
+                            subject: `Shared with you: ${issueTitle}`,
+                            textBody: messageText
+                                ? messageText
+                                : `${this._currentUser.displayName} shared an issue with you.`,
+                            to: {
+                                users: shareMsg.shareData.recipients.map((user: User) => ({
+                                    accountId: user.accountId,
+                                })),
+                            },
+                        };
+
+                        // Only add htmlBody if there's a message
+                        if (messageText) {
+                            (notifyPayload as any).htmlBody = `<p>${messageText}</p>`;
+                        }
+
+                        Logger.debug(`Share issue payload: ${JSON.stringify(notifyPayload)}`);
+
+                        // Call the Jira notify API
+                        const notifyUrl = `${baseApiUrl}/rest/api/${apiVersion}/issue/${this._issue.key}/notify`;
+                        const authHeader = await client.authorizationProvider('POST', notifyUrl);
+
+                        await client.transportFactory()(notifyUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                Authorization: authHeader,
+                            },
+                            data: JSON.stringify(notifyPayload),
+                        });
+
+                        // Show VS Code notification
+                        window.showInformationMessage('Issue shared');
+
+                        this.postMessage({
+                            type: 'fieldValueUpdate',
+                            fieldValues: { loadingField: '' },
+                            nonce: msg.nonce,
+                        });
+                    } catch (e: any) {
+                        const errorMessage =
+                            e?.response?.data?.errorMessages?.join(', ') || e?.response?.data?.errors
+                                ? JSON.stringify(e?.response?.data?.errors)
+                                : e?.message || 'Error sharing issue';
+                        Logger.error(e, `Error sharing issue: ${errorMessage}`);
+                        this.postMessage({
+                            type: 'error',
+                            reason: `Error sharing issue: ${errorMessage}`,
+                            nonce: msg.nonce,
+                        });
+                        this.postMessage({
+                            type: 'fieldValueUpdate',
+                            fieldValues: { loadingField: '' },
+                            nonce: msg.nonce,
+                        });
+                    }
+                    break;
+                }
                 case 'openExternalUrl': {
                     // Open URL in external browser
                     if (isOpenExternalUrl(msg)) {
