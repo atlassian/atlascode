@@ -3,14 +3,12 @@ import Button, { ButtonGroup } from '@atlaskit/button';
 import { Checkbox } from '@atlaskit/checkbox';
 import { DatePicker, DateTimePicker } from '@atlaskit/datetime-picker';
 import { CheckboxField, ErrorMessage, Field, Fieldset, HelperMessage } from '@atlaskit/form';
-import InlineEdit from '@atlaskit/inline-edit';
 import Lozenge from '@atlaskit/lozenge';
 import { MentionNameStatus } from '@atlaskit/mention';
 import { RadioGroup } from '@atlaskit/radio';
 import Select, { AsyncCreatableSelect, AsyncSelect, CreatableSelect } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
 import Textfield from '@atlaskit/textfield';
-import { token } from '@atlaskit/tokens';
 import {
     CommentVisibility,
     emptyIssueType,
@@ -32,7 +30,7 @@ import {
 import { Tooltip } from '@mui/material';
 import { formatDistanceToNow } from 'date-fns';
 import debounce from 'lodash.debounce';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import EdiText, { EdiTextType } from 'react-editext';
 import { v4 } from 'uuid';
 
@@ -60,6 +58,7 @@ import { chain } from '../fieldValidators';
 import * as SelectFieldHelper from '../selectFieldHelper';
 import { WebviewComponent } from '../WebviewComponent';
 import { AttachmentForm } from './AttachmentForm';
+import CascadingSelectField, { CascadingSelectOption } from './CascadingSelectField';
 import { convertAdfToWikimarkup } from './common/adfToWikimarkup';
 import { AtlascodeMentionProvider } from './common/AtlaskitEditor/AtlascodeMentionsProvider';
 import AtlaskitEditor from './common/AtlaskitEditor/AtlaskitEditor';
@@ -147,153 +146,6 @@ const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions
     }
 
     return true;
-};
-
-export type CascadingSelectOption = {
-    child?: CascadingSelectOption;
-    children?: CascadingSelectOption[];
-    id: string;
-    self: string;
-    value: string;
-};
-export type CascadingSelectFieldProps = {
-    commonProps: {
-        isMulti: boolean;
-        getOptionLabel: SelectFieldHelper.OptionFunc;
-        getOptionValue: SelectFieldHelper.OptionFunc;
-        components: Object;
-        value: Omit<CascadingSelectOption, 'children'>;
-    };
-    isClearable: boolean;
-    options: CascadingSelectOption[];
-    isDisabled: boolean;
-    onSave: (selected: any) => void;
-};
-
-const CascadingSelectField: React.FC<CascadingSelectFieldProps> = ({
-    commonProps,
-    isClearable,
-    options,
-    isDisabled,
-    onSave,
-}) => {
-    const childRef = React.useRef<HTMLElement>(null);
-    const [childOptions, setChildOptions] = useState<Omit<CascadingSelectOption, 'children' | 'child'>[]>([]);
-    const [childValue, setChildValue] = useState<Omit<CascadingSelectOption, 'children' | 'child'> | null>(null);
-    const [parentValue, setParentValue] =
-        useState<Required<Omit<CascadingSelectOption, 'children' | 'child'> | null>>(null);
-
-    const initialValueCopy = { ...commonProps.value };
-    if (initialValueCopy?.child && initialValueCopy.child.value) {
-        initialValueCopy.value = initialValueCopy.value + ' - ' + initialValueCopy.child.value;
-    }
-    const hasChild = childOptions.length > 0 || initialValueCopy?.child;
-
-    const handleSave = () => {
-        if (!parentValue) {
-            handleCancel();
-            return;
-        }
-        const combinedValue = {
-            ...parentValue,
-        } as NonNullable<Omit<CascadingSelectOption, 'children'>>;
-
-        if (childValue && childValue.id) {
-            combinedValue.child = childValue;
-        }
-        onSave(combinedValue);
-    };
-
-    const handleCancel = () => {
-        setParentValue(null);
-        setChildValue(null);
-        setChildOptions([]);
-    };
-
-    const editView = () => {
-        const parentRef = React.useRef<HTMLElement>(null);
-        useEffect(() => {
-            const rafId = requestAnimationFrame(() => {
-                parentRef.current?.focus();
-            });
-            return () => cancelAnimationFrame(rafId);
-        }, []);
-
-        return (
-            <div>
-                <Select
-                    {...commonProps}
-                    value={parentValue || initialValueCopy}
-                    className="ac-select-container"
-                    classNamePrefix="ac-select"
-                    isClearable={isClearable}
-                    options={options}
-                    isDisabled={isDisabled}
-                    openMenuOnFocus
-                    onChange={(selected: Required<Omit<CascadingSelectOption, 'child'>>) => {
-                        setParentValue(selected);
-                        if (selected && selected.children && selected.children.length > 0) {
-                            setChildOptions(selected.children);
-                            // reset child value on parent change
-                            setChildValue({
-                                self: '',
-                                value: '',
-                                id: '',
-                            });
-                        } else {
-                            setChildOptions([]);
-                        }
-                    }}
-                    onMenuClose={() => {
-                        requestAnimationFrame(() => {
-                            childRef.current?.focus();
-                        });
-                    }}
-                    ref={parentRef}
-                />
-                {hasChild && (
-                    <Select
-                        {...commonProps}
-                        value={childValue || commonProps.value?.child?.value}
-                        className="ac-select-container"
-                        classNamePrefix="ac-select"
-                        isClearable={true}
-                        options={childOptions}
-                        isDisabled={isDisabled}
-                        openMenuOnFocus
-                        onChange={(selected: Omit<CascadingSelectOption, 'child'>) => {
-                            setChildValue(selected);
-                        }}
-                        ref={childRef}
-                    />
-                )}
-            </div>
-        );
-    };
-
-    return (
-        <InlineEdit
-            defaultValue={initialValueCopy.value}
-            editButtonLabel={initialValueCopy.value}
-            editView={editView}
-            readViewFitContainerWidth
-            readView={() => (
-                <div
-                    style={{
-                        color: !initialValueCopy.value
-                            ? 'var(--vscode-input-placeholderForeground) !important'
-                            : undefined,
-                        paddingBlock: token('space.100'),
-                        wordBreak: 'break-word',
-                        fontSize: '14px',
-                    }}
-                >
-                    {initialValueCopy.value || 'Add option'}
-                </div>
-            )}
-            onConfirm={() => handleSave()}
-        />
-    );
 };
 
 export abstract class AbstractIssueEditorPage<
@@ -1757,10 +1609,48 @@ export abstract class AbstractIssueEditorPage<
                                     onSave={(selected: CascadingSelectOption) => {
                                         this.handleSelectChange(selectField, selected);
                                     }}
+                                    isCreateMode={false}
+                                    initialValue={commonProps.value}
                                 />
                             );
                         }
-                        return null;
+                        // create mode
+                        return (
+                            <Field
+                                label={<span>{field.name}</span>}
+                                isRequired={field.required}
+                                id={field.key}
+                                name={field.key}
+                                validate={validateFunc}
+                                defaultValue={defVal}
+                            >
+                                {(fieldArgs: any) => {
+                                    let errDiv = <span />;
+                                    if (fieldArgs.error === 'EMPTY') {
+                                        errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                                    }
+                                    return (
+                                        <>
+                                            <CascadingSelectField
+                                                commonProps={commonProps}
+                                                initialValue={defVal}
+                                                isClearable={false}
+                                                options={this.state.selectFieldOptions[field.key]}
+                                                isDisabled={this.state.isSomethingLoading}
+                                                onSave={FieldValidators.chain(
+                                                    fieldArgs.fieldProps.onChange,
+                                                    (selected: any) => {
+                                                        this.handleSelectChange(selectField, selected);
+                                                    },
+                                                )}
+                                                isCreateMode={true}
+                                            />
+                                            {errDiv}
+                                        </>
+                                    );
+                                }}
+                            </Field>
+                        );
                     }
                 }
             }
