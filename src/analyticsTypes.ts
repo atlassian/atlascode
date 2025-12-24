@@ -62,7 +62,7 @@ export enum CreatePrTerminalSelection {
 
 // in the future we may use this to classify where the error is coming from:
 // e.g., Jira, Bitbucket, Authentication, Notifications, etc
-export type ErrorProductArea = 'RovoDev' | undefined;
+export type ErrorProductArea = 'RovoDev' | 'Bitbucket' | undefined;
 
 export type FeedbackSentEvent = {
     feature: 'issueSuggestions'; // | 'otherFeature' - this is generic
