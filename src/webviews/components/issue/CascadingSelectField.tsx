@@ -36,7 +36,7 @@ const CascadingSelectField: React.FC<CascadingSelectFieldProps> = ({
     initialValue,
     onSave,
 }) => {
-    const childRef = React.useRef<HTMLElement>(null);
+    const childRef = useRef<HTMLElement>(null);
     const [childOptions, setChildOptions] = useState<Omit<CascadingSelectOption, 'children' | 'child'>[]>([]);
     const [childValue, setChildValue] = useState<Omit<CascadingSelectOption, 'children' | 'child'> | null>(null);
     const [parentValue, setParentValue] =
