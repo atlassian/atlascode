@@ -51,11 +51,15 @@ jest.mock('src/util/staticConfig', () => ({
         timeout: 1000,
     },
     isFX3ConfigValid: jest.fn(() => true),
+    FeatureFlagOverrides: {
+        gates: {},
+        experiments: {},
+    },
 }));
 
 import { Identifiers } from '@atlaskit/feature-gate-js-client';
 import { it } from '@jest/globals';
-import { isFX3ConfigValid } from 'src/util/staticConfig';
+import { FeatureFlagOverrides, isFX3ConfigValid } from 'src/util/staticConfig';
 import { forceCastTo } from 'testsutil';
 
 import { ClientInitializedErrorType } from '../../analytics';
@@ -273,7 +277,8 @@ describe('FeatureFlagClient', () => {
 
     describe('overrides', () => {
         it('if overrides are set, checkGate returns the overridden value', async () => {
-            process.env.ATLASCODE_FF_OVERRIDES = `another-very-real-feature=false`;
+            // Set up override directly in the mocked object
+            FeatureFlagOverrides.gates['another-very-real-feature' as Features] = false;
 
             FeatureFlagClient['singleton'] = undefined;
             featureFlagClient = FeatureFlagClient.getInstance();
@@ -287,10 +292,14 @@ describe('FeatureFlagClient', () => {
             expect(featureFlagClient.checkGate(forceCastTo<Features>('some-very-real-feature'))).toBeTruthy();
             expect(featureFlagClient.checkGate(forceCastTo<Features>('another-very-real-feature'))).toBeFalsy();
             expect(featureFlagClient.checkGate(forceCastTo<Features>('some-fake-feature'))).toBeFalsy();
+
+            // Clean up
+            delete FeatureFlagOverrides.gates['another-very-real-feature' as Features];
         });
 
         it('if overrides are set, getExperimentValue returns the overridden value', async () => {
-            process.env.ATLASCODE_EXP_OVERRIDES_STRING = `another-exp-name=another value`;
+            // Set up override directly in the mocked object
+            FeatureFlagOverrides.experiments['another-exp-name' as Experiments] = 'another value';
 
             FeatureFlagClient['singleton'] = undefined;
             featureFlagClient = FeatureFlagClient.getInstance();
@@ -316,6 +325,9 @@ describe('FeatureFlagClient', () => {
             expect(
                 featureFlagClient.checkExperimentValue(forceCastTo<Experiments>('one-more-exp-name')),
             ).toBeUndefined();
+
+            // Clean up
+            delete FeatureFlagOverrides.experiments['another-exp-name' as Experiments];
         });
     });
 });
