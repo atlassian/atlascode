@@ -470,7 +470,23 @@ class RovoDevSubprocessInstance extends Disposable {
         return new Promise<void>((resolve, reject) => {
             access(this.rovoDevBinPath, constants.X_OK, async (err) => {
                 if (err) {
-                    reject(new Error(`executable not found.`));
+                    if (err.code === 'ENOENT') {
+                        reject(
+                            new Error(
+                                `Executable not found at: ${this.rovoDevBinPath}. Error: ${err.message} (${err.code})`,
+                            ),
+                        );
+                    } else if (err.code === 'EACCES') {
+                        reject(
+                            new Error(
+                                `Executable found but not executable. Please check permissions: ${this.rovoDevBinPath}. Error: ${err.message} (${err.code})`,
+                            ),
+                        );
+                    } else {
+                        reject(
+                            new Error(`Cannot access executable: ${err.message}${err.code ? ` (${err.code})` : ''}`),
+                        );
+                    }
                     return;
                 }
 
@@ -497,6 +513,7 @@ class RovoDevSubprocessInstance extends Disposable {
                         stdio: ['ignore', 'pipe', 'pipe'],
                         detached: true,
                         env: {
+                            ...process.env,
                             USER: process.env.USER || process.env.USERNAME,
                             USER_EMAIL: credentials.authInfo.username,
                             ROVODEV_SANDBOX_ID: this.extensionApi.metadata.appInstanceId(),
