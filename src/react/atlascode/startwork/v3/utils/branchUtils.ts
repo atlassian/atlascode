@@ -51,7 +51,7 @@ export const generateBranchName = (
     customTemplate: string,
 ): string => {
     // Use branchType if it has a prefix, otherwise use empty prefix
-    const branchTypeToUse = branchType.prefix ? branchType : { kind: '', prefix: '' };
+    const branchTypeToUse = branchType?.prefix ? branchType : { kind: '', prefix: '' };
     const usernameBase = repo.userEmail
         ? repo.userEmail
               .split('@')[0]
