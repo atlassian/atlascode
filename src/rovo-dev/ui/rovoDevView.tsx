@@ -21,6 +21,7 @@ import { useMessagingApi } from './messagingApi';
 import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
 import { PromptContextCollection } from './prompt-box/promptContext/promptContextCollection';
 import { UpdatedFilesComponent } from './prompt-box/updated-files/UpdatedFilesComponent';
+import { RovoDevErrorBoundary } from './RovoDevErrorBoundary';
 import {
     FileOperationType,
     McpConsentChoice,
@@ -74,6 +75,7 @@ const RovoDevView: React.FC = () => {
     const [lastCompletedPromptId, setLastCompletedPromptId] = useState<string | undefined>(undefined);
     const [isAtlassianUser, setIsAtlassianUser] = useState(false);
     const [feedbackType, setFeedbackType] = React.useState<'like' | 'dislike' | undefined>(undefined);
+
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
         const initializeTheme = () => {
@@ -917,7 +919,7 @@ const RovoDevView: React.FC = () => {
         (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance');
 
     return (
-        <>
+        <RovoDevErrorBoundary postMessage={postMessage}>
             <div
                 id="rovoDevDragDropOverlay"
                 onDragLeave={(event) => {
@@ -1072,7 +1074,7 @@ const RovoDevView: React.FC = () => {
                     </div>
                 )}
             </div>
-        </>
+        </RovoDevErrorBoundary>
     );
 };
 
