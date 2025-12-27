@@ -39,6 +39,7 @@ export const enum RovoDevViewResponseType {
     OpenRovoDevLogFile = 'openRovoDevLogFile',
     MessageRendered = 'messageRendered',
     ReportRenderError = 'reportRenderError',
+    StartNewSession = 'startNewSession',
 }
 
 export type FileOperationType = 'modify' | 'create' | 'delete';
@@ -99,4 +100,5 @@ export type RovoDevViewResponse =
               errorStack?: string;
               componentStack?: string;
           }
-      >;
+      >
+    | ReducerAction<RovoDevViewResponseType.StartNewSession>;

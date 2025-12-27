@@ -10,6 +10,7 @@ const STACK_LIMIT = 1500;
 interface Props {
     children: ReactNode;
     postMessage: PostMessageFunc<RovoDevViewResponse>;
+    onStartNewSession?: () => void;
 }
 
 interface State {
@@ -66,6 +67,16 @@ export class RovoDevErrorBoundary extends Component<Props, State> {
     }
 
     private handleStartNewSession = () => {
+        // Send message to extension to start new session
+        this.props.postMessage({
+            type: RovoDevViewResponseType.StartNewSession,
+        });
+
+        // Call the callback to reset any parent state (e.g., test error state)
+        if (this.props.onStartNewSession) {
+            this.props.onStartNewSession();
+        }
+
         // Use setTimeout to reset state after a brief delay
         // This gives the command time to execute before React tries to re-render
         setTimeout(() => {
@@ -95,7 +106,6 @@ export class RovoDevErrorBoundary extends Component<Props, State> {
                     msg={errorDialog}
                     customButton={{
                         text: 'Start New Chat Session',
-                        href: 'command:atlascode.rovodev.newChatSession',
                         onClick: this.handleStartNewSession,
                     }}
                     onLinkClick={() => {}} // Required prop, but not used for error boundary

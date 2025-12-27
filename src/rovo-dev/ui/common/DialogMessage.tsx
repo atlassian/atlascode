@@ -25,7 +25,7 @@ export const DialogMessageItem: React.FC<{
     isRetryAfterErrorButtonEnabled?: (uid: string) => boolean;
     retryAfterError?: () => void;
     onToolPermissionChoice?: (toolCallId: string, choice: ToolPermissionChoice) => void;
-    customButton?: { text: string; onClick?: () => void; href?: string };
+    customButton?: { text: string; onClick?: () => void };
     onOpenLogFile?: () => void;
     onLinkClick: (href: string) => void;
 }> = ({
@@ -167,15 +167,7 @@ export const DialogMessageItem: React.FC<{
 
                     {customButton && (
                         <div style={{ display: 'flex', justifyContent: 'flex-start', width: '100%', marginTop: '8px' }}>
-                            <button
-                                style={inChatButtonStyles}
-                                onClick={() => {
-                                    if (customButton.href) {
-                                        window.location.href = customButton.href;
-                                    }
-                                    customButton.onClick?.();
-                                }}
-                            >
+                            <button style={inChatButtonStyles} onClick={customButton.onClick}>
                                 {customButton.text}
                             </button>
                         </div>
