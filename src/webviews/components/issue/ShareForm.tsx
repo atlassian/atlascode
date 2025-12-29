@@ -111,7 +111,6 @@ const ShareForm: React.FC<Props> = ({
         setOpen(false);
     }, []);
 
-    // Filter out already selected users from options
     const filteredOptions = (fetchUsersResult.result || []).filter(
         (option) => !recipients.some((r) => r.accountId === option.accountId),
     );
