@@ -8,6 +8,7 @@ import {
     Registry,
     viewScreenEvent,
 } from './analytics';
+import { CreateIssueSource } from './analyticsTypes';
 import { BasicAuthInfo, DetailedSiteInfo, ProductBitbucket, ProductJira } from './atlclients/authInfo';
 import { showBitbucketDebugInfo } from './bitbucket/bbDebug';
 import { setCommandContext } from './commandContext';
@@ -29,7 +30,6 @@ import { Logger } from './logger';
 import { runQuickAuth } from './onboarding/quickFlow';
 import { AuthenticationType } from './onboarding/quickFlow/authentication/types';
 import { RovodevCommands } from './rovo-dev/api/componentApi';
-import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevContextItem } from './rovo-dev/rovoDevTypes';
 import { openRovoDevConfigFile } from './rovo-dev/rovoDevUtils';
 import { Experiments, Features } from './util/featureFlags';
@@ -52,7 +52,14 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 }
             },
         ),
-        commands.registerCommand(Commands.CreateIssue, (data: any, source?: string) => createIssue(data, source)),
+        commands.registerCommand(Commands.CreateIssue, (data: any, source?: CreateIssueSource) => {
+            const effectiveSource: CreateIssueSource = source ?? (data === undefined ? 'commandPalette' : 'explorer');
+            return createIssue(data, effectiveSource);
+        }),
+        commands.registerCommand(Commands.CreateIssueFromSidebar, () => createIssue(undefined, 'sidebarButton')),
+        commands.registerCommand(Commands.CreateIssueFromIssueContext, () =>
+            createIssue(undefined, 'issueContextMenu'),
+        ),
         commands.registerCommand(
             Commands.ShowIssue,
             async (issueOrKeyAndSite: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => await showIssue(issueOrKeyAndSite),
@@ -383,7 +390,6 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(RovodevCommands.RovodevNewSession, () => {
             Container.rovodevWebviewProvider.executeNewSession();
         }),
-        commands.registerCommand(RovodevCommands.RovodevShowTerminal, () => RovoDevProcessManager.showTerminal()),
         commands.registerCommand(RovodevCommands.RovodevShareFeedback, () =>
             Container.rovodevWebviewProvider.executeTriggerFeedback(),
         ),

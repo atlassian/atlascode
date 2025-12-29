@@ -23,7 +23,7 @@ jest.mock('../../container', () => ({
         },
         credentialManager: {
             onDidAuthChange: jest.fn(),
-            getAllValidAuthInfo: jest.fn(() => Promise.resolve([])),
+            getCloudAuthInfo: jest.fn(() => Promise.resolve([])),
         },
         config: {
             jira: {

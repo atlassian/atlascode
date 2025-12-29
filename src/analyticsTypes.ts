@@ -62,9 +62,21 @@ export enum CreatePrTerminalSelection {
 
 // in the future we may use this to classify where the error is coming from:
 // e.g., Jira, Bitbucket, Authentication, Notifications, etc
-export type ErrorProductArea = 'RovoDev' | undefined;
+export type ErrorProductArea = 'RovoDev' | 'Bitbucket' | undefined;
 
 export type FeedbackSentEvent = {
     feature: 'issueSuggestions'; // | 'otherFeature' - this is generic
     feedbackType: 'positive' | 'negative';
 };
+
+/**
+ * Source values for tracking where the Create Jira Issue page was opened from
+ */
+export type CreateIssueSource =
+    | 'commandPalette' // Command Palette (Cmd+Shift+P)
+    | 'sidebarButton' // Sidebar [+] button
+    | 'todoComment' // TODO comment code lens
+    | 'contextMenu' // File right-click context menu
+    | 'issueContextMenu' // Issue right-click context menu
+    | 'settingsPage' // Settings Explore page
+    | 'explorer'; // Default/legacy fallback

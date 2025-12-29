@@ -53,7 +53,7 @@ import {
     viewScreenEvent,
 } from './analytics';
 import { AnalyticsClient } from './analytics-node-client/src/client.min.js';
-import { FeedbackSentEvent, UIErrorInfo } from './analyticsTypes';
+import { CreateIssueSource, FeedbackSentEvent, UIErrorInfo } from './analyticsTypes';
 import { DetailedSiteInfo, Product, SiteInfo } from './atlclients/authInfo';
 import { IssueSuggestionSettings } from './config/model';
 import { AnalyticsApi } from './lib/analyticsApi';
@@ -173,7 +173,7 @@ export class VSCAnalyticsApi implements AnalyticsApi {
         });
     }
 
-    public async fireStartIssueCreationEvent(source: string, product: Product): Promise<void> {
+    public async fireStartIssueCreationEvent(source: CreateIssueSource, product: Product): Promise<void> {
         return startIssueCreationEvent(source, product).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
