@@ -142,7 +142,7 @@ const ShareForm: React.FC<Props> = ({
                             variant="body2"
                             sx={{ marginBottom: '8px', color: 'var(--vscode-descriptionForeground)' }}
                         >
-                            Names, teams, or emails
+                            Names
                         </Typography>
                         <Autocomplete
                             multiple

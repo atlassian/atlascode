@@ -47,7 +47,7 @@ describe('ShareForm', () => {
         render(<ShareForm {...defaultProps} />);
 
         expect(screen.getByText('Share issue')).toBeTruthy();
-        expect(screen.getByText('Names, teams, or emails')).toBeTruthy();
+        expect(screen.getByText('Names')).toBeTruthy();
         expect(screen.getByText('Message')).toBeTruthy();
         expect(screen.getByText('Copy link')).toBeTruthy();
         expect(screen.getByText('Cancel')).toBeTruthy();
