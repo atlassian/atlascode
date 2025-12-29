@@ -138,14 +138,6 @@
                 "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
             },
             {
-                "command": "atlascode.rovodev.showTerminal",
-                "title": "Show in terminal",
-                "icon": "$(terminal)",
-                "category": "Rovo Dev",
-                "description": "Shows the Rovo Dev process in a terminal window.",
-                "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
-            },
-            {
                 "command": "atlascode.openRovoDevConfig",
                 "title": "Open Settings File",
                 "category": "Rovo Dev",
@@ -198,6 +190,20 @@
                     "dark": "resources/dark/add.svg",
                     "light": "resources/light/add.svg"
                 },
+                "category": "Jira"
+            },
+            {
+                "command": "atlascode.jira.createIssue.fromSidebar",
+                "title": "Create Jira Issue",
+                "icon": {
+                    "dark": "resources/dark/add.svg",
+                    "light": "resources/light/add.svg"
+                },
+                "category": "Jira"
+            },
+            {
+                "command": "atlascode.jira.createIssue.fromIssueContext",
+                "title": "Create Jira Issue",
                 "category": "Jira"
             },
             {
@@ -691,11 +697,6 @@
                     "group": "navigation@1"
                 },
                 {
-                    "command": "atlascode.rovodev.showTerminal",
-                    "when": "atlascode:rovoDevTerminalEnabled && view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
-                    "group": "navigation@2"
-                },
-                {
                     "command": "atlascode.openRovoDevConfig",
                     "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
                     "group": "rovoDevContextMenu1@1"
@@ -721,7 +722,7 @@
                     "group": "navigation@1"
                 },
                 {
-                    "command": "atlascode.jira.createIssue",
+                    "command": "atlascode.jira.createIssue.fromSidebar",
                     "when": "view =~ /(atlascode.views.jira.assignedWorkItemsTreeView)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation@1"
                 },
@@ -834,7 +835,7 @@
                     "group": "jiraContextMenuGroup3"
                 },
                 {
-                    "command": "atlascode.jira.createIssue",
+                    "command": "atlascode.jira.createIssue.fromIssueContext",
                     "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|jiraIssue_.+|assignedJiraIssue_.+)/ && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup2"
                 },
@@ -920,10 +921,6 @@
                 {
                     "command": "atlascode.rovodev.newChatSession",
                     "when": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
-                },
-                {
-                    "command": "atlascode.rovodev.showTerminal",
-                    "when": "atlascode:rovoDevEnabled"
                 },
                 {
                     "command": "atlascode.openRovoDevConfig",
@@ -1103,6 +1100,14 @@
                 },
                 {
                     "command": "atlascode.jira.expandCreateWorkItem",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.createIssue.fromSidebar",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.createIssue.fromIssueContext",
                     "when": "false"
                 }
             ],

@@ -165,9 +165,15 @@ export class CredentialManager implements Disposable {
         return results.find((authInfo) => authInfo !== undefined);
     }
 
-    public async getAllValidAuthInfo(product: Product): Promise<AuthInfo[]> {
+    public async getAllValidAuthInfo(
+        product: Product,
+        siteFilter?: (site: DetailedSiteInfo) => boolean,
+    ): Promise<AuthInfo[]> {
         // Get all unique sites by credentialId
-        const sites = Container.siteManager.getSitesAvailable(product);
+        let sites = Container.siteManager.getSitesAvailable(product);
+        if (siteFilter) {
+            sites = sites.filter(siteFilter);
+        }
         const uniquelyCredentialedSites = Array.from(new Map(sites.map((site) => [site.credentialId, site])).values());
 
         const authInfos = await Promise.all(uniquelyCredentialedSites.map((site) => this.getAuthInfo(site, true)));
@@ -175,6 +181,20 @@ export class CredentialManager implements Disposable {
         return authInfos.filter(
             (authInfo): authInfo is AuthInfo => !!authInfo && authInfo.state !== AuthInfoState.Invalid,
         );
+    }
+
+    // Gets valid auth info for cloud sites, deduplicated by user email (used for notifications and handles OAuth + API token for the same user)
+    public async getCloudAuthInfo(product: Product): Promise<AuthInfo[]> {
+        const authInfos = await this.getAllValidAuthInfo(product, (site) => site.isCloud);
+
+        const uniqueByEmail = new Map<string, AuthInfo>();
+        authInfos.forEach((authInfo) => {
+            const email = authInfo.user.email;
+            if (email && !uniqueByEmail.has(email)) {
+                uniqueByEmail.set(email, authInfo);
+            }
+        });
+        return Array.from(uniqueByEmail.values());
     }
 
     /**
