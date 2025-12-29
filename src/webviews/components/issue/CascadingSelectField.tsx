@@ -1,9 +1,9 @@
 import InlineEdit from '@atlaskit/inline-edit';
 import Select from '@atlaskit/select';
 import { token } from '@atlaskit/tokens';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import * as SelectFieldHelper from '../selectFieldHelper';
+import { ComponentsForValueType, OptionFunc } from '../selectFieldHelper';
 
 export type CascadingSelectOption = {
     child?: CascadingSelectOption;
@@ -15,38 +15,124 @@ export type CascadingSelectOption = {
 export type CascadingSelectFieldProps = {
     commonProps: {
         isMulti: boolean;
-        getOptionLabel: SelectFieldHelper.OptionFunc;
-        getOptionValue: SelectFieldHelper.OptionFunc;
-        components: Object;
+        getOptionLabel: OptionFunc;
+        getOptionValue: OptionFunc;
+        components: ComponentsForValueType;
     };
     isClearable: boolean;
-    options: CascadingSelectOption[];
+    parentSelectOptions: CascadingSelectOption[];
     isDisabled: boolean;
     isCreateMode: boolean;
     onSave: (selected: any) => void;
     initialValue: Omit<CascadingSelectOption, 'children'>;
 };
 
-const CascadingSelectField: React.FC<CascadingSelectFieldProps> = ({
-    commonProps,
-    isClearable,
-    options,
-    isDisabled,
-    isCreateMode,
-    initialValue,
-    onSave,
-}) => {
+export type CascadingSelectEditViewProps = Omit<
+    CascadingSelectFieldProps,
+    'isCreateMode' | 'onSave' | 'initialValue'
+> & {
+    hasChild: boolean;
+    parentSelectValue: Omit<CascadingSelectOption, 'child'>;
+    childSelectValue: Omit<CascadingSelectOption, 'children' | 'child'> | null;
+    childSelectOptions: Omit<CascadingSelectOption, 'children' | 'child'>[];
+    classesInfo: {
+        className: string;
+        classNamePrefix: string;
+    };
+    handleParentChange: (selected: Omit<CascadingSelectOption, 'child'>) => void;
+    handleChildChange: (selected: Omit<CascadingSelectOption, 'children' | 'child'>) => void;
+    shouldFocusParentOnOpen: boolean;
+};
+
+const CascadingSelectEditView: React.FC<CascadingSelectEditViewProps> = (props) => {
+    const {
+        commonProps,
+        isClearable,
+        parentSelectOptions,
+        isDisabled,
+        hasChild,
+        parentSelectValue,
+        childSelectValue,
+        childSelectOptions,
+        classesInfo,
+        handleParentChange,
+        handleChildChange,
+        shouldFocusParentOnOpen,
+    } = props;
+
     const childRef = useRef<HTMLElement>(null);
+    const parentSelectRef = useRef<HTMLElement>(null);
+    useEffect(() => {
+        if (!shouldFocusParentOnOpen) {
+            return;
+        }
+        const rafId = requestAnimationFrame(() => {
+            // focus parent select on opening edit view
+            parentSelectRef.current?.focus();
+        });
+        return () => cancelAnimationFrame(rafId);
+    }, [shouldFocusParentOnOpen]);
+
+    return (
+        <div>
+            <Select
+                {...commonProps}
+                value={parentSelectValue}
+                className={classesInfo.className}
+                classNamePrefix={classesInfo.classNamePrefix}
+                isClearable={isClearable}
+                options={parentSelectOptions}
+                isDisabled={isDisabled}
+                openMenuOnFocus
+                onChange={handleParentChange}
+                onMenuClose={() => {
+                    requestAnimationFrame(() => {
+                        childRef.current?.focus();
+                    });
+                }}
+                ref={parentSelectRef}
+            />
+            {hasChild && (
+                <Select
+                    {...commonProps}
+                    value={childSelectValue}
+                    className={classesInfo.className}
+                    classNamePrefix={classesInfo.classNamePrefix}
+                    isClearable={true}
+                    options={childSelectOptions}
+                    isDisabled={isDisabled}
+                    openMenuOnFocus
+                    onChange={handleChildChange}
+                    ref={childRef}
+                />
+            )}
+        </div>
+    );
+};
+
+const CascadingSelectField: React.FC<CascadingSelectFieldProps> = (props) => {
+    const { isCreateMode, initialValue, onSave } = props;
     const [childOptions, setChildOptions] = useState<Omit<CascadingSelectOption, 'children' | 'child'>[]>([]);
     const [childValue, setChildValue] = useState<Omit<CascadingSelectOption, 'children' | 'child'> | null>(null);
-    const [parentValue, setParentValue] =
-        useState<Required<Omit<CascadingSelectOption, 'children' | 'child'> | null>>(null);
+    const [parentValue, setParentValue] = useState<Omit<CascadingSelectOption, 'children' | 'child'> | null>(null);
 
-    const initialValueCopy = { ...initialValue };
-    if (initialValueCopy?.child && initialValueCopy.child.value) {
-        initialValueCopy.value = initialValueCopy.value + ' - ' + initialValueCopy.child.value;
-    }
-    const hasChild = childOptions.length > 0 || (!parentValue && initialValueCopy?.child);
+    const initialText =
+        initialValue?.child && initialValue.child.value
+            ? `${initialValue.value} - ${initialValue.child.value}`
+            : initialValue?.value || '';
+    const hasChild = childOptions.length > 0 || Boolean(!parentValue && initialValue?.child);
+
+    const classesInfo = useMemo(() => {
+        return isCreateMode
+            ? {
+                  className: 'ac-form-select-container',
+                  classNamePrefix: 'ac-form-select',
+              }
+            : {
+                  className: 'ac-select-container',
+                  classNamePrefix: 'ac-select',
+              };
+    }, [isCreateMode]);
 
     const handleSave = () => {
         if (!parentValue) {
@@ -69,101 +155,65 @@ const CascadingSelectField: React.FC<CascadingSelectFieldProps> = ({
         setChildOptions([]);
     };
 
-    const editView = ({}) => {
-        const parentRef = useRef<HTMLElement>(null);
-        useEffect(() => {
-            if (isCreateMode) {
-                return;
-            }
-            const rafId = requestAnimationFrame(() => {
-                // focus parent select on opening edit view
-                parentRef.current?.focus();
-            });
-            return () => cancelAnimationFrame(rafId);
-        }, []);
+    const handleParentChange = (selected: Omit<CascadingSelectOption, 'child'>) => {
+        const childrenOptions = selected?.children || [];
+        setParentValue(selected);
+        // reset child value on parent change
+        setChildValue({
+            self: '',
+            value: '',
+            id: '',
+        });
+        if (childrenOptions.length > 0) {
+            setChildOptions(childrenOptions);
+        } else {
+            setChildOptions([]);
+        }
+        if (isCreateMode) {
+            onSave(selected);
+        }
+    };
 
-        return (
-            <div>
-                <Select
-                    {...commonProps}
-                    value={parentValue || initialValueCopy}
-                    className={isCreateMode ? 'ac-form-select-container' : 'ac-select-container'}
-                    classNamePrefix={isCreateMode ? 'ac-form-select' : 'ac-select'}
-                    isClearable={isClearable}
-                    options={options}
-                    isDisabled={isDisabled}
-                    openMenuOnFocus
-                    onChange={(selected: Omit<CascadingSelectOption, 'child'>) => {
-                        const childrenOptions = selected?.children || [];
-                        setParentValue(selected);
-                        // reset child value on parent change
-                        setChildValue({
-                            self: '',
-                            value: '',
-                            id: '',
-                        });
-                        if (childrenOptions.length > 0) {
-                            setChildOptions(childrenOptions);
-                        } else {
-                            setChildOptions([]);
-                        }
-                        if (isCreateMode) {
-                            onSave(selected);
-                        }
-                    }}
-                    onMenuClose={() => {
-                        requestAnimationFrame(() => {
-                            childRef.current?.focus();
-                        });
-                    }}
-                    ref={parentRef}
-                />
-                {hasChild && (
-                    <Select
-                        {...commonProps}
-                        value={childValue || initialValue?.child?.value}
-                        className={isCreateMode ? 'ac-form-select-container' : 'ac-select-container'}
-                        classNamePrefix={isCreateMode ? 'ac-form-select' : 'ac-select'}
-                        isClearable={true}
-                        options={childOptions}
-                        isDisabled={isDisabled}
-                        openMenuOnFocus
-                        onChange={(selected: Omit<CascadingSelectOption, 'child'>) => {
-                            setChildValue(selected);
-                            if (isCreateMode) {
-                                onSave({
-                                    ...parentValue,
-                                    child: selected,
-                                });
-                            }
-                        }}
-                        ref={childRef}
-                    />
-                )}
-            </div>
-        );
+    const handleChildChange = (selected: Omit<CascadingSelectOption, 'child'>) => {
+        setChildValue(selected);
+        if (isCreateMode) {
+            onSave({
+                ...parentValue,
+                child: selected,
+            });
+        }
+    };
+
+    const editViewProps: CascadingSelectEditViewProps = {
+        ...props,
+        childSelectOptions: childOptions,
+        hasChild,
+        childSelectValue: childValue || initialValue?.child || null,
+        parentSelectValue: parentValue || initialValue,
+        classesInfo,
+        handleParentChange,
+        handleChildChange,
+        shouldFocusParentOnOpen: !isCreateMode,
     };
 
     return !isCreateMode ? (
         <InlineEdit
-            defaultValue={initialValueCopy.value}
-            editButtonLabel={initialValueCopy.value}
-            editView={editView}
+            defaultValue={initialText}
+            editButtonLabel={initialText}
+            editView={() => CascadingSelectEditView(editViewProps)}
             readViewFitContainerWidth
             startWithEditViewOpen={isCreateMode}
             hideActionButtons={isCreateMode}
             readView={() => (
                 <div
                     style={{
-                        color: !initialValueCopy.value
-                            ? 'var(--vscode-input-placeholderForeground) !important'
-                            : undefined,
+                        color: !initialText ? 'var(--vscode-input-placeholderForeground) !important' : undefined,
                         paddingBlock: token('space.100'),
                         wordBreak: 'break-word',
                         fontSize: '14px',
                     }}
                 >
-                    {initialValueCopy.value || 'Add option'}
+                    {initialText || 'Add option'}
                 </div>
             )}
             onConfirm={() => {
@@ -171,7 +221,7 @@ const CascadingSelectField: React.FC<CascadingSelectFieldProps> = ({
             }}
         />
     ) : (
-        editView({})
+        CascadingSelectEditView(editViewProps)
     );
 };
 

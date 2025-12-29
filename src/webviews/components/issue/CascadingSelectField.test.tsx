@@ -10,7 +10,11 @@ describe('CascadingSelectField Component', () => {
         isMulti: false,
         getOptionLabel: (option: any) => option.value,
         getOptionValue: (option: any) => option.id,
-        components: {},
+        components: {
+            Option: jest.fn(),
+            SingleValue: jest.fn(),
+            MultiValue: jest.fn(),
+        },
     };
 
     const mockOptions: CascadingSelectOption[] = [
@@ -58,7 +62,7 @@ describe('CascadingSelectField Component', () => {
                 <CascadingSelectField
                     commonProps={mockCommonProps}
                     isClearable={true}
-                    options={mockOptions}
+                    parentSelectOptions={mockOptions}
                     isDisabled={false}
                     isCreateMode={true}
                     initialValue={{ id: '', value: '', self: '' }}
@@ -75,7 +79,7 @@ describe('CascadingSelectField Component', () => {
                 <CascadingSelectField
                     commonProps={mockCommonProps}
                     isClearable={true}
-                    options={mockOptions}
+                    parentSelectOptions={mockOptions}
                     isDisabled={false}
                     isCreateMode={true}
                     initialValue={mockInitialValue}
@@ -95,7 +99,7 @@ describe('CascadingSelectField Component', () => {
                 <CascadingSelectField
                     commonProps={mockCommonProps}
                     isClearable={true}
-                    options={mockOptions}
+                    parentSelectOptions={mockOptions}
                     isDisabled={false}
                     isCreateMode={false}
                     initialValue={mockInitialValue}
@@ -112,7 +116,7 @@ describe('CascadingSelectField Component', () => {
                 <CascadingSelectField
                     commonProps={mockCommonProps}
                     isClearable={true}
-                    options={mockOptions}
+                    parentSelectOptions={mockOptions}
                     isDisabled={false}
                     isCreateMode={false}
                     initialValue={{ id: '', value: '', self: '' }}
@@ -128,7 +132,7 @@ describe('CascadingSelectField Component', () => {
                 <CascadingSelectField
                     commonProps={mockCommonProps}
                     isClearable={true}
-                    options={mockOptions}
+                    parentSelectOptions={mockOptions}
                     isDisabled={false}
                     isCreateMode={false}
                     initialValue={mockInitialValue}
@@ -147,7 +151,7 @@ describe('CascadingSelectField Component', () => {
                 <CascadingSelectField
                     commonProps={mockCommonProps}
                     isClearable={true}
-                    options={mockOptions}
+                    parentSelectOptions={mockOptions}
                     isDisabled={true}
                     isCreateMode={true}
                     initialValue={mockInitialValue}
@@ -172,7 +176,7 @@ describe('CascadingSelectField Component', () => {
                 <CascadingSelectField
                     commonProps={mockCommonProps}
                     isClearable={true}
-                    options={mockOptions}
+                    parentSelectOptions={mockOptions}
                     isDisabled={false}
                     isCreateMode={false}
                     initialValue={valueWithoutChild}
@@ -194,7 +198,7 @@ describe('CascadingSelectField Component', () => {
                 <CascadingSelectField
                     commonProps={mockCommonProps}
                     isClearable={true}
-                    options={mockOptions}
+                    parentSelectOptions={mockOptions}
                     isDisabled={false}
                     isCreateMode={false}
                     initialValue={emptyValue}
@@ -212,7 +216,7 @@ describe('CascadingSelectField Component', () => {
                 <CascadingSelectField
                     commonProps={mockCommonProps}
                     isClearable={true}
-                    options={mockOptions}
+                    parentSelectOptions={mockOptions}
                     isDisabled={false}
                     isCreateMode={true}
                     initialValue={mockInitialValue}
@@ -228,7 +232,7 @@ describe('CascadingSelectField Component', () => {
                 <CascadingSelectField
                     commonProps={mockCommonProps}
                     isClearable={false}
-                    options={mockOptions}
+                    parentSelectOptions={mockOptions}
                     isDisabled={false}
                     isCreateMode={true}
                     initialValue={mockInitialValue}
@@ -261,7 +265,7 @@ describe('CascadingSelectField Component', () => {
                 <CascadingSelectField
                     commonProps={mockCommonProps}
                     isClearable={true}
-                    options={optionsWithoutChildren}
+                    parentSelectOptions={optionsWithoutChildren}
                     isDisabled={false}
                     isCreateMode={true}
                     initialValue={{ id: '', value: '', self: '' }}
@@ -278,7 +282,7 @@ describe('CascadingSelectField Component', () => {
                 <CascadingSelectField
                     commonProps={mockCommonProps}
                     isClearable={true}
-                    options={[]}
+                    parentSelectOptions={[]}
                     isDisabled={false}
                     isCreateMode={true}
                     initialValue={{ id: '', value: '', self: '' }}
@@ -296,7 +300,7 @@ describe('CascadingSelectField Component', () => {
                 <CascadingSelectField
                     commonProps={mockCommonProps}
                     isClearable={true}
-                    options={mockOptions}
+                    parentSelectOptions={mockOptions}
                     isDisabled={false}
                     isCreateMode={true}
                     initialValue={mockInitialValue}
@@ -320,7 +324,7 @@ describe('CascadingSelectField Component', () => {
                 <CascadingSelectField
                     commonProps={mockCommonProps}
                     isClearable={true}
-                    options={mockOptions}
+                    parentSelectOptions={mockOptions}
                     isDisabled={false}
                     isCreateMode={true}
                     initialValue={valueWithoutChild}
@@ -340,7 +344,7 @@ describe('CascadingSelectField Component', () => {
                 <CascadingSelectField
                     commonProps={mockCommonProps}
                     isClearable={true}
-                    options={mockOptions}
+                    parentSelectOptions={mockOptions}
                     isDisabled={false}
                     isCreateMode={true}
                     initialValue={{ id: '', value: '', self: '' }}
@@ -356,7 +360,7 @@ describe('CascadingSelectField Component', () => {
                 <CascadingSelectField
                     commonProps={mockCommonProps}
                     isClearable={true}
-                    options={mockOptions}
+                    parentSelectOptions={mockOptions}
                     isDisabled={false}
                     isCreateMode={false}
                     initialValue={mockInitialValue}
@@ -377,7 +381,7 @@ describe('CascadingSelectField Component', () => {
                 <CascadingSelectField
                     commonProps={mockCommonProps}
                     isClearable={true}
-                    options={mockOptions}
+                    parentSelectOptions={mockOptions}
                     isDisabled={false}
                     isCreateMode={false}
                     initialValue={mockInitialValue}
@@ -403,7 +407,7 @@ describe('CascadingSelectField Component', () => {
                 <CascadingSelectField
                     commonProps={mockCommonProps}
                     isClearable={true}
-                    options={mockOptions}
+                    parentSelectOptions={mockOptions}
                     isDisabled={false}
                     isCreateMode={true}
                     initialValue={valueWithUndefinedChild}
@@ -421,7 +425,7 @@ describe('CascadingSelectField Component', () => {
                 <CascadingSelectField
                     commonProps={mockCommonProps}
                     isClearable={true}
-                    options={malformedOptions}
+                    parentSelectOptions={malformedOptions}
                     isDisabled={false}
                     isCreateMode={true}
                     initialValue={{ id: '', value: '', self: '' }}

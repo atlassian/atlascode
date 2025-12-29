@@ -417,8 +417,13 @@ export function valueFuncForValueType(vt: ValueType): OptionFunc {
         }
     }
 }
+export type ComponentsForValueType = {
+    Option: ComponentFunc;
+    SingleValue: (props: any) => React.JSX.Element;
+    MultiValueLabel?: (props: any) => React.JSX.Element;
+};
 
-export function getComponentsForValueType(vt: ValueType): Object {
+export function getComponentsForValueType(vt: ValueType): ComponentsForValueType {
     return {
         ...{ Option: getOptionComponentForValueType(vt) },
         ...getValueComponentForValueType(vt),
@@ -452,7 +457,12 @@ function getOptionComponentForValueType(vt: ValueType): ComponentFunc {
     }
 }
 
-function getValueComponentForValueType(vt: ValueType): Object {
+export type ValueComponentForValueType = {
+    SingleValue: (props: any) => React.JSX.Element;
+    MultiValueLabel?: (props: any) => React.JSX.Element;
+};
+
+function getValueComponentForValueType(vt: ValueType): ValueComponentForValueType {
     switch (vt) {
         case ValueType.Priority:
         case ValueType.IssueType: {

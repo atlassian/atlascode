@@ -1604,7 +1604,7 @@ export abstract class AbstractIssueEditorPage<
                                 <CascadingSelectField
                                     commonProps={commonProps}
                                     isClearable={false}
-                                    options={this.state.selectFieldOptions[field.key]}
+                                    parentSelectOptions={this.state.selectFieldOptions[field.key]}
                                     isDisabled={this.state.isSomethingLoading}
                                     onSave={(selected: CascadingSelectOption) => {
                                         this.handleSelectChange(selectField, selected);
@@ -1635,7 +1635,7 @@ export abstract class AbstractIssueEditorPage<
                                                 commonProps={commonProps}
                                                 initialValue={defVal}
                                                 isClearable={false}
-                                                options={this.state.selectFieldOptions[field.key]}
+                                                parentSelectOptions={this.state.selectFieldOptions[field.key]}
                                                 isDisabled={this.state.isSomethingLoading}
                                                 onSave={FieldValidators.chain(
                                                     fieldArgs.fieldProps.onChange,
