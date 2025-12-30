@@ -172,7 +172,7 @@ describe('PullRequestForm', () => {
             expect(mockPostMessagePromise).toHaveBeenCalledWith(
                 {
                     type: RovoDevViewResponseType.CreatePR,
-                    payload: { branchName: 'test-branch', commitMessage: undefined },
+                    payload: { branchName: 'test-branch', commitMessage: 'Commit by Rovo Dev' },
                 },
                 RovoDevProviderMessageType.CreatePRComplete,
                 expect.any(Number),
