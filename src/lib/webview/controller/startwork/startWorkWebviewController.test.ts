@@ -148,6 +148,7 @@ describe('StartWorkWebviewController', () => {
         } as any;
         mockAnalytics = {
             fireIssueWorkStartedEvent: jest.fn(),
+            fireIssueStartWorkErrorEvent: jest.fn(),
         } as any;
 
         mockTransportFactory = {
