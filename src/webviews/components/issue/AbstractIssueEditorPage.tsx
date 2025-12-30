@@ -58,6 +58,7 @@ import { chain } from '../fieldValidators';
 import * as SelectFieldHelper from '../selectFieldHelper';
 import { WebviewComponent } from '../WebviewComponent';
 import { AttachmentForm } from './AttachmentForm';
+import CascadingSelectField, { CascadingSelectOption } from './CascadingSelectField';
 import { convertAdfToWikimarkup } from './common/adfToWikimarkup';
 import { AtlascodeMentionProvider } from './common/AtlaskitEditor/AtlascodeMentionsProvider';
 import AtlaskitEditor from './common/AtlaskitEditor/AtlaskitEditor';
@@ -1171,6 +1172,7 @@ export abstract class AbstractIssueEditorPage<
                     </div>
                 );
             }
+            case UIType.Cascading:
             case UIType.Select: {
                 const selectField = field as SelectFieldUI;
 
@@ -1590,6 +1592,61 @@ export abstract class AbstractIssueEditorPage<
                                             ></AsyncCreatableSelect>
                                             {errDiv}
                                         </React.Fragment>
+                                    );
+                                }}
+                            </Field>
+                        );
+                    }
+
+                    case SelectFieldHelper.SelectComponentType.Cascading: {
+                        if (editmode) {
+                            return (
+                                <CascadingSelectField
+                                    commonProps={commonProps}
+                                    isClearable={false}
+                                    parentSelectOptions={this.state.selectFieldOptions[field.key]}
+                                    isDisabled={this.state.isSomethingLoading}
+                                    onSave={(selected: CascadingSelectOption) => {
+                                        this.handleSelectChange(selectField, selected);
+                                    }}
+                                    isCreateMode={false}
+                                    initialValue={commonProps.value}
+                                />
+                            );
+                        }
+                        // create mode
+                        return (
+                            <Field
+                                label={<span>{field.name}</span>}
+                                isRequired={field.required}
+                                id={field.key}
+                                name={field.key}
+                                validate={validateFunc}
+                                defaultValue={defVal}
+                            >
+                                {(fieldArgs: any) => {
+                                    let errDiv = <span />;
+                                    if (fieldArgs.error === 'EMPTY') {
+                                        errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                                    }
+                                    return (
+                                        <>
+                                            <CascadingSelectField
+                                                commonProps={commonProps}
+                                                initialValue={defVal}
+                                                isClearable={false}
+                                                parentSelectOptions={this.state.selectFieldOptions[field.key]}
+                                                isDisabled={this.state.isSomethingLoading}
+                                                onSave={FieldValidators.chain(
+                                                    fieldArgs.fieldProps.onChange,
+                                                    (selected: any) => {
+                                                        this.handleSelectChange(selectField, selected);
+                                                    },
+                                                )}
+                                                isCreateMode={true}
+                                            />
+                                            {errDiv}
+                                        </>
                                     );
                                 }}
                             </Field>
