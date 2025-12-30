@@ -233,7 +233,7 @@ body {
 .tool-return-item-base {
     display: flex;
     flex-direction: row;
-    align-items: flex-start;
+    align-items: center;
     gap: 4px;
 }
 
