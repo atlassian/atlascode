@@ -153,7 +153,7 @@ export namespace Track {
         attributes: {
             rovoDevEnv: RovoDevEnv;
             appInstanceId: string;
-            sessionId: string;
+            rovoDevSessionId: string;
             messagePartsCount: number;
         };
     };
