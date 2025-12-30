@@ -320,6 +320,15 @@ export class RovoDevChatProvider {
 
         if (replayBuffer.length > 0) {
             await this.processRovoDevReplayResponse(replayBuffer);
+
+            // Emit analytics for replay completion
+            this._telemetryProvider.fireTelemetryEvent({
+                action: 'rovoDevReplayCompleted',
+                subject: 'atlascode',
+                attributes: {
+                    messagePartsCount: replayBuffer.length,
+                },
+            });
         }
 
         while (!isDone) {
