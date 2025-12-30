@@ -1,0 +1,50 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Start RovoDev Server",
+            "type": "shell",
+            "command": "acli rovodev serve 8899",
+            "isBackground": true,
+            "options": {
+                "env": {
+                    "ROVODEV_SERVE_SESSION_TOKEN": "bby-dev-session-token"
+                }
+            },
+            "problemMatcher": {
+                "pattern": {
+                    "regexp": "^.*$",
+                    "file": 1,
+                    "location": 2,
+                    "message": 3
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": ".*",
+                    "endsPattern": ".*"
+                }
+            }
+        },
+        {
+            "label": "devcompile BBY",
+            "type": "shell",
+            "command": "npm",
+            "args": ["run", "devcompile"],
+            "group": "build",
+            "options": {
+                "env": {
+                    "ROVODEV_PORT": "8899",
+                    "ROVODEV_ENABLED": "true",
+                    "ROVODEV_BBY": "true",
+                    "ROVODEV_SANDBOX_ID": "bby_sandbox",
+                    "ROVODEV_SERVE_SESSION_TOKEN": "bby-dev-session-token"
+                }
+            }
+        },
+        {
+            "label": "Build and Start RovoDev",
+            "dependsOrder": "sequence",
+            "dependsOn": ["devcompile BBY", "Start RovoDev Server"]
+        }
+    ]
+}
