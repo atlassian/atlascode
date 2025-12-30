@@ -79,7 +79,7 @@ export class RovoDevTelemetryProvider {
             return false;
         }
 
-        // rovoDevNewSessionActionEvent is the only event that doesn't need the promptId
+        // these events are the only events that don't need the promptId
         if (
             event.action !== 'rovoDevNewSessionAction' &&
             event.action !== 'rovoDevReplayCompleted' &&
