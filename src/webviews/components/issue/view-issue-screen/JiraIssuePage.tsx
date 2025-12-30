@@ -10,7 +10,12 @@ import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { v4 } from 'uuid';
 
 import { AnalyticsView } from '../../../../analyticsTypes';
-import { EditIssueAction, IssueCommentAction, OpenRovoDevWithIssueAction } from '../../../../ipc/issueActions';
+import {
+    EditIssueAction,
+    IssueCommentAction,
+    OpenRovoDevWithIssueAction,
+    ShareIssueData,
+} from '../../../../ipc/issueActions';
 import {
     EditIssueData,
     emptyDevelopmentInfo,
@@ -278,7 +283,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
     };
 
-    handleShareIssue = (shareData: { recipients: any[]; message: string }) => {
+    handleShareIssue = (shareData: ShareIssueData) => {
         this.setState({ isSomethingLoading: true, loadingField: 'share' });
         this.postMessage({
             action: 'shareIssue',
@@ -977,7 +982,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     handleStatusChange={this.handleStatusChange}
                     handleStartWork={this.handleStartWorkOnIssue}
                     handleCloneIssue={(cloneData: any) => this.handleCloneIssue(cloneData)}
-                    handleShareIssue={(shareData: any) => this.handleShareIssue(shareData)}
+                    handleShareIssue={(shareData: ShareIssueData) => this.handleShareIssue(shareData)}
                     handleOpenRovoDev={this.handleOpenRovoDev}
                     isRovoDevEnabled={this.state.isRovoDevEnabled}
                     issueKey={this.state.key}

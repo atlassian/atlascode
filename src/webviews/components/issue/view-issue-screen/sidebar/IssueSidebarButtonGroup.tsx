@@ -314,7 +314,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                 </div>
                 <div className={`ac-inline-dialog ${shareDialogOpen ? 'active' : ''}`}>
                     <Popup
-                        content={({ isOpen, onClose }) => (
+                        content={() => (
                             <ShareForm
                                 onShare={(shareData) => {
                                     handleShareIssue(shareData);
@@ -323,8 +323,6 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                                 onCancel={() => setShareDialogOpen(false)}
                                 fetchUsers={fetchUsers}
                                 isLoading={loadingField === 'share'}
-                                issueKey={issueKey}
-                                issueSummary={fieldValues['summary'] || ''}
                                 issueUrl={issueUrl}
                             />
                         )}

@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useAsyncAbortable } from 'react-async-hook';
 import useConstant from 'use-constant';
 
@@ -22,20 +22,10 @@ type Props = {
     onCancel: () => void;
     fetchUsers: (input: string) => Promise<User[]>;
     isLoading?: boolean;
-    issueKey: string;
-    issueSummary: string;
     issueUrl: string;
 };
 
-const ShareForm: React.FC<Props> = ({
-    onShare,
-    onCancel,
-    fetchUsers,
-    isLoading = false,
-    issueKey,
-    issueSummary,
-    issueUrl,
-}) => {
+const ShareForm: React.FC<Props> = ({ onShare, onCancel, fetchUsers, isLoading = false, issueUrl }) => {
     const [recipients, setRecipients] = useState<User[]>([]);
     const [message, setMessage] = useState('');
     const [inputText, setInputText] = useState('');
@@ -66,7 +56,8 @@ const ShareForm: React.FC<Props> = ({
                 try {
                     const results = await debouncedUserFetcher(inputText, abortSignal);
                     return results || [];
-                } catch {
+                } catch (error) {
+                    console.error('Error fetching users:', error);
                     return [];
                 }
             }
@@ -86,10 +77,15 @@ const ShareForm: React.FC<Props> = ({
     };
 
     const handleCopyLink = useCallback(() => {
-        navigator.clipboard.writeText(issueUrl).then(() => {
-            setCopySuccess(true);
-            setTimeout(() => setCopySuccess(false), 2000);
-        });
+        navigator.clipboard
+            .writeText(issueUrl)
+            .then(() => {
+                setCopySuccess(true);
+                setTimeout(() => setCopySuccess(false), 2000);
+            })
+            .catch((error) => {
+                console.error('Failed to copy link to clipboard:', error);
+            });
     }, [issueUrl]);
 
     const handleInputChange = useCallback((_event: React.SyntheticEvent, newInputValue: string, reason: string) => {
@@ -111,8 +107,12 @@ const ShareForm: React.FC<Props> = ({
         setOpen(false);
     }, []);
 
-    const filteredOptions = (fetchUsersResult.result || []).filter(
-        (option) => !recipients.some((r) => r.accountId === option.accountId),
+    const filteredOptions = useMemo(
+        () =>
+            (fetchUsersResult.result || []).filter(
+                (option) => !recipients.some((r) => r.accountId === option.accountId),
+            ),
+        [fetchUsersResult.result, recipients],
     );
 
     return (
