@@ -33,6 +33,13 @@ jest.mock('./container', () => ({
     },
 }));
 
+// Mock SentryService
+jest.mock('./sentry', () => ({
+    SentryService: {
+        getInstance: jest.fn(),
+    },
+}));
+
 const mockContainerIsDebugging = () => {
     (Container.isDebugging as any) = true;
 };
@@ -49,6 +56,13 @@ describe('Logger', () => {
     beforeEach(() => {
         // Reset mocks
         jest.clearAllMocks();
+
+        // Setup default SentryService mock to avoid crashes in other tests
+        const { SentryService } = require('./sentry');
+        (SentryService.getInstance as jest.Mock).mockReturnValue({
+            isInitialized: jest.fn().mockReturnValue(false),
+            captureException: jest.fn(),
+        });
 
         mockOutputChannel = expansionCastTo<LogOutputChannel>({
             dispose: jest.fn(),
@@ -321,6 +335,102 @@ describe('Logger', () => {
             } finally {
                 eventRegistration!.dispose();
             }
+        });
+    });
+
+    describe('Sentry integration', () => {
+        let mockSentryService: any;
+
+        beforeEach(() => {
+            // Set up Logger with Error level
+            (configuration.initializing as jest.Mock).mockReturnValue(true);
+            (configuration.get as jest.Mock).mockReturnValue(OutputLevel.Errors);
+            Logger.configure(expansionCastTo<ExtensionContext>({ subscriptions: [] }));
+
+            // Setup the mocked Sentry service to be returned by getInstance
+            mockSentryService = {
+                isInitialized: jest.fn(),
+                captureException: jest.fn(),
+            };
+            const { SentryService } = require('./sentry');
+            (SentryService.getInstance as jest.Mock).mockReturnValue(mockSentryService);
+            mockSentryService.isInitialized.mockReturnValue(true);
+        });
+
+        it('should not capture exception to Sentry when not initialized', () => {
+            mockSentryService.isInitialized.mockReturnValue(false);
+
+            const testError = new Error('test error');
+            Logger.error(testError, 'Error message');
+
+            expect(mockSentryService.captureException).not.toHaveBeenCalled();
+        });
+
+        it('should include capturedBy in Sentry tags', () => {
+            mockSentryService.isInitialized.mockReturnValue(true);
+
+            const testError = new Error('test error');
+            Logger.error(testError, 'Error message');
+
+            expect(mockSentryService.captureException).toHaveBeenCalledWith(
+                testError,
+                expect.objectContaining({
+                    tags: expect.objectContaining({
+                        capturedBy: expect.any(String),
+                    }),
+                }),
+            );
+        });
+
+        it('should include params in Sentry extra context', () => {
+            mockSentryService.isInitialized.mockReturnValue(true);
+
+            const testError = new Error('test error');
+            Logger.error(testError, 'Error message', 'param1', 'param2');
+
+            expect(mockSentryService.captureException).toHaveBeenCalledWith(
+                testError,
+                expect.objectContaining({
+                    extra: expect.objectContaining({
+                        params: ['param1', 'param2'],
+                    }),
+                }),
+            );
+        });
+
+        it('should handle Sentry errors gracefully and continue logging', () => {
+            mockSentryService.isInitialized.mockReturnValue(true);
+            mockSentryService.captureException.mockImplementation(() => {
+                throw new Error('Sentry failed');
+            });
+
+            const testError = new Error('test error');
+
+            // Should not throw
+            expect(() => {
+                Logger.error(testError, 'Error message');
+            }).not.toThrow();
+
+            // Should still log to output channel
+            expect(mockOutputChannel.appendLine).toHaveBeenCalled();
+        });
+
+        it('should call Sentry before logging to output channel', () => {
+            mockSentryService.isInitialized.mockReturnValue(true);
+            const callOrder: string[] = [];
+
+            mockSentryService.captureException.mockImplementation(() => {
+                callOrder.push('sentry');
+            });
+
+            (mockOutputChannel.appendLine as jest.Mock).mockImplementation(() => {
+                callOrder.push('output');
+            });
+
+            const testError = new Error('test error');
+            Logger.error(testError, 'Error message');
+
+            expect(callOrder).toEqual(['sentry', 'output']);
         });
     });
 });

@@ -41,6 +41,7 @@ import { RovoDevLanguageServerProvider } from './rovo-dev/rovoDevLanguageServerP
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { RovoDevLogger } from './rovo-dev/util/rovoDevLogger';
+import { SentryConfig, SentryService } from './sentry';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, SETTINGS_URL } from './uriHandler';
 import { Experiments, FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
@@ -261,6 +262,25 @@ export class Container {
         this._onboardingProvider = new OnboardingProvider();
 
         this.refreshRovoDev(context);
+
+        // Initialize Sentry for error tracking
+        try {
+            const sentryConfig: SentryConfig = {
+                enabled: process.env.SENTRY_ENABLED === 'true',
+                dsn: process.env.SENTRY_DSN,
+                environment: process.env.SENTRY_ENVIRONMENT || 'development',
+                sampleRate: parseFloat(process.env.SENTRY_SAMPLE_RATE || '1.0'),
+                atlasCodeVersion: version,
+            };
+
+            if (sentryConfig.enabled && sentryConfig.dsn) {
+                await SentryService.getInstance().initialize(sentryConfig);
+                Logger.info('Sentry initialized successfully');
+            }
+        } catch (error) {
+            Logger.error(error as Error, 'Failed to initialize Sentry');
+            // Continue with extension startup regardless
+        }
     }
 
     private static async initializeFeatureFlagClient() {

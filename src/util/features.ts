@@ -8,6 +8,7 @@ export enum Features {
     CreateWorkItemWebviewV2 = 'atlascode-create-work-item-webview-test',
     RovoDevEntitlementNotification = 'atlascode-rovodev-entitlement-notification',
     RovoDevLspEnabled = 'atlascode-enable-rovodev-lsp',
+    SentryLogging = 'atlascode-sentry-logging',
 }
 
 export const enum Experiments {

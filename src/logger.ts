@@ -156,6 +156,25 @@ export class Logger {
     ): void {
         Logger._onError.fire({ error: ex, errorMessage, capturedBy, params, productArea });
 
+        // Capture to Sentry if initialized
+        try {
+            const { SentryService } = require('./sentry');
+            if (SentryService.getInstance().isInitialized()) {
+                SentryService.getInstance().captureException(ex, {
+                    tags: {
+                        productArea: productArea || 'unknown',
+                        capturedBy: capturedBy || 'unknown',
+                    },
+                    extra: {
+                        errorMessage,
+                        params,
+                    },
+                });
+            }
+        } catch (e) {
+            console.error('Failed to initialize Sentry:', e);
+        }
+
         if (this.level === OutputLevel.Silent) {
             return;
         }
