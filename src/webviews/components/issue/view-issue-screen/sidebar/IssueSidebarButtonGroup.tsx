@@ -42,7 +42,6 @@ type Props = {
     handleOpenRovoDev?: () => void;
     isRovoDevEnabled?: boolean;
     transitions: Transition[];
-    issueKey: string;
     issueUrl: string;
 };
 
@@ -65,7 +64,6 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
     handleOpenRovoDev,
     isRovoDevEnabled,
     transitions,
-    issueKey,
     issueUrl,
 }) => {
     const originalEstimate: string = fieldValues['timetracking'] ? fieldValues['timetracking'].originalEstimate : '';

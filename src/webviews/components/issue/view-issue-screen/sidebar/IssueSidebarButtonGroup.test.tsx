@@ -35,7 +35,6 @@ describe('IssueSidebarButtonGroup', () => {
         handleCloneIssue: mockHandleCloneIssue,
         handleShareIssue: mockHandleShareIssue,
         transitions: [] as Transition[],
-        issueKey: 'TEST-123',
         issueUrl: 'https://test.atlassian.net/browse/TEST-123',
     };
 

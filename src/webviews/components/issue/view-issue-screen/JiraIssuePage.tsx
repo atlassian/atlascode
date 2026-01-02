@@ -985,7 +985,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     handleShareIssue={(shareData: ShareIssueData) => this.handleShareIssue(shareData)}
                     handleOpenRovoDev={this.handleOpenRovoDev}
                     isRovoDevEnabled={this.state.isRovoDevEnabled}
-                    issueKey={this.state.key}
                     issueUrl={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`}
                 />
                 <IssueSidebarCollapsible label="Details" items={commonItems} defaultOpen />
