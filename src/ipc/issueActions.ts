@@ -148,6 +148,19 @@ export interface CloneIssueAction extends Action {
     issueData: any;
 }
 
+export interface ShareIssueData {
+    recipients: User[];
+    message: string;
+}
+
+export interface ShareIssueAction extends Action {
+    action: 'shareIssue';
+    site: DetailedSiteInfo;
+    issueKey: string;
+    issueSummary: string;
+    shareData: ShareIssueData;
+}
+
 export interface WorklogData {
     comment: string;
     started: string;
@@ -389,6 +402,16 @@ export function isOpenRovoDevWithIssueAction(a: Action): a is OpenRovoDevWithIss
 
 export function isCloneIssue(a: Action): a is CloneIssueAction {
     return a && a.action === 'cloneIssue';
+}
+
+export function isShareIssue(a: Action): a is ShareIssueAction {
+    return (
+        a &&
+        a.action === 'shareIssue' &&
+        (<ShareIssueAction>a).shareData !== undefined &&
+        (<ShareIssueAction>a).site !== undefined &&
+        (<ShareIssueAction>a).issueKey !== undefined
+    );
 }
 
 export function isUpdateAiSettings(a: Action): a is UpdateAiSettingsAction {

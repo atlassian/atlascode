@@ -5,6 +5,7 @@ import CopyIcon from '@atlaskit/icon/core/copy';
 import EyeOpenIcon from '@atlaskit/icon/core/eye-open';
 import EyeOpenFilledIcon from '@atlaskit/icon/core/eye-open-filled';
 import RefreshIcon from '@atlaskit/icon/core/refresh';
+import ShareIcon from '@atlaskit/icon/core/share';
 import ThumbsUpIcon from '@atlaskit/icon/core/thumbs-up';
 import AssetsSchemaIcon from '@atlaskit/icon-lab/core/assets-schema';
 import InlineDialog from '@atlaskit/inline-dialog';
@@ -16,6 +17,7 @@ import { Box } from '@mui/material';
 import React from 'react';
 
 import CloneForm from '../../CloneForm';
+import ShareForm from '../../ShareForm';
 import VotesForm from '../../VotesForm';
 import WatchesForm from '../../WatchesForm';
 import { WorklogFormDialog } from '../../WorklogFormDialog';
@@ -36,9 +38,11 @@ type Props = {
     handleStatusChange: (t: Transition) => void;
     handleStartWork: () => void;
     handleCloneIssue: (cloneData: any) => void;
+    handleShareIssue: (shareData: { recipients: User[]; message: string }) => void;
     handleOpenRovoDev?: () => void;
     isRovoDevEnabled?: boolean;
     transitions: Transition[];
+    issueUrl: string;
 };
 
 export const IssueSidebarButtonGroup: React.FC<Props> = ({
@@ -56,9 +60,11 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
     handleStatusChange,
     handleStartWork,
     handleCloneIssue,
+    handleShareIssue,
     handleOpenRovoDev,
     isRovoDevEnabled,
     transitions,
+    issueUrl,
 }) => {
     const originalEstimate: string = fieldValues['timetracking'] ? fieldValues['timetracking'].originalEstimate : '';
     const numWatches: string =
@@ -72,6 +78,7 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
     const [votesDialogOpen, setVotesDialogOpen] = React.useState(false);
     const [watchesDialogOpen, setWatchesDialogOpen] = React.useState(false);
     const [cloneDialogOpen, setCloneDialogOpen] = React.useState(false);
+    const [shareDialogOpen, setShareDialogOpen] = React.useState(false);
     const worklogDialogTriggerRef = React.useRef(null);
 
     return (
@@ -297,6 +304,37 @@ export const IssueSidebarButtonGroup: React.FC<Props> = ({
                                     onClick={() => setCloneDialogOpen(true)}
                                     icon={() => <CopyIcon label="Clone issue" />}
                                     isLoading={loadingField === 'clone'}
+                                    spacing="compact"
+                                />
+                            </Tooltip>
+                        )}
+                    />
+                </div>
+                <div className={`ac-inline-dialog ${shareDialogOpen ? 'active' : ''}`}>
+                    <Popup
+                        content={() => (
+                            <ShareForm
+                                onShare={(shareData) => {
+                                    handleShareIssue(shareData);
+                                    setShareDialogOpen(false);
+                                }}
+                                onCancel={() => setShareDialogOpen(false)}
+                                fetchUsers={fetchUsers}
+                                isLoading={loadingField === 'share'}
+                                issueUrl={issueUrl}
+                            />
+                        )}
+                        isOpen={shareDialogOpen}
+                        onClose={() => setShareDialogOpen(false)}
+                        placement="bottom-end"
+                        trigger={(triggerProps) => (
+                            <Tooltip content="Share issue">
+                                <IconButton
+                                    {...triggerProps}
+                                    label="Share issue"
+                                    onClick={() => setShareDialogOpen(true)}
+                                    icon={() => <ShareIcon label="Share issue" />}
+                                    isLoading={loadingField === 'share'}
                                     spacing="compact"
                                 />
                             </Tooltip>
