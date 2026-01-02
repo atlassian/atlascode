@@ -160,6 +160,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error executing start work action'),
                     });
+                    this.analytics.fireIssueStartWorkErrorEvent(e.message, e?.stack);
                 }
                 break;
             }

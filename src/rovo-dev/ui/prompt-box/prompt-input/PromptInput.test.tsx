@@ -27,6 +27,7 @@ jest.mock('monaco-editor', () => ({
     },
     KeyCode: {
         Enter: 3,
+        Tab: 2,
     },
     KeyMod: {
         Shift: 1024,

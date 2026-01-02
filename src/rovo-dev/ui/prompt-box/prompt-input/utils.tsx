@@ -269,6 +269,47 @@ export function setupPromptKeyBindings(editor: monaco.editor.IStandaloneCodeEdit
     editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
         editor.trigger('keyboard', 'type', { text: '\n' });
     });
+
+    // Tab key moves focus to the next focusable element (for keyboard accessibility)
+    editor.addCommand(
+        monaco.KeyCode.Tab,
+        () => {
+            const container = editor.getContainerDomNode();
+            const promptContainer = container.closest('.prompt-container');
+            if (promptContainer) {
+                const focusableElements = promptContainer.querySelectorAll<HTMLElement>(
+                    'button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+                );
+                for (const element of focusableElements) {
+                    if (!container.contains(element)) {
+                        element.focus();
+                        return;
+                    }
+                }
+            }
+        },
+        '!suggestWidgetVisible',
+    );
+
+    // Shift+Tab moves focus to the previous focusable element
+    editor.addCommand(
+        monaco.KeyMod.Shift | monaco.KeyCode.Tab,
+        () => {
+            const container = editor.getContainerDomNode();
+            const promptContainer = container.closest('.prompt-container');
+            if (promptContainer) {
+                const allFocusable = document.querySelectorAll<HTMLElement>(
+                    'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+                );
+                const focusableArray = Array.from(allFocusable);
+                const editorIndex = focusableArray.findIndex((el) => container.contains(el));
+                if (editorIndex > 0) {
+                    focusableArray[editorIndex - 1].focus();
+                }
+            }
+        },
+        '!suggestWidgetVisible',
+    );
 }
 
 // Auto-resize functionality

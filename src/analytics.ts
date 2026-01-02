@@ -285,6 +285,10 @@ export async function issueWorkStartedEvent(
     return instanceTrackEvent(site, 'workStarted', 'issue', attributesObject);
 }
 
+export async function issueStartWorkErrorEvent(error: { message: string; stack?: string }): Promise<TrackEvent> {
+    return trackEvent('failed', 'startWork', { attributes: { error } });
+}
+
 export async function issueUpdatedEvent(
     site: DetailedSiteInfo,
     issueKey: string,

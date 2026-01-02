@@ -69,17 +69,27 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         // checkout if a branch exists already
         try {
             await scm.fetch(remote, sourceBranch.name);
+        } catch {
+            // Continue anyway as the branch might exist locally
+            Logger.debug(`Fetch failed for ${remote}/${sourceBranch.name}`);
+        }
+
+        try {
             await scm.getBranch(destinationBranch);
             await scm.checkout(destinationBranch);
             return;
-        } catch {}
+        } catch {
+            Logger.debug(`Local branch ${destinationBranch} not found`);
+        }
 
         // checkout if there's a matching remote branch (checkout will track remote branch automatically)
         try {
             await scm.getBranch(`remotes/${remote}/${destinationBranch}`);
             await scm.checkout(destinationBranch);
             return;
-        } catch {}
+        } catch {
+            Logger.debug(`Remote branch ${remote}/${destinationBranch} not found`);
+        }
 
         // no existing branches, create a new one
         await scm.createBranch(

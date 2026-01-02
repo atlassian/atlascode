@@ -25,6 +25,6 @@ test-results/*
 resources/rovo-dev/*
 !resources/rovo-dev/script.sh
 
-!.vscode/launch.json.example
-!.vscode/tasks.json.example
+!.vscode/launch.json
+!.vscode/tasks.json
 /.idea/
