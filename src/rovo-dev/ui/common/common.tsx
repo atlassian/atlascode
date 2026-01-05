@@ -17,7 +17,7 @@ const mdParser = new MarkdownIt({
 
 mdParser.linkify.set({ fuzzyLink: false });
 
-mdParser.validateLink = (url) => /^(https?):/i.test(url);
+mdParser.validateLink = (url) => /^(https?|ftp):/i.test(url);
 
 mdParser.renderer.rules.link_open = function (tokens, idx, options, env, self) {
     const token = tokens[idx];
@@ -69,6 +69,7 @@ export const normalizeLinks = (messageText: string) => {
     );
 
     processed = processed.replace(/https?:\/\/[^\n\r]+/g, (rawUrl) => strictEncodeUrl(rawUrl));
+    processed = processed.replace(/ftp:\/\/[^\n\r]+/g, (rawUrl) => strictEncodeUrl(rawUrl));
 
     return processed;
 };
@@ -78,7 +79,35 @@ export const MarkedDown: React.FC<{ value: string; onLinkClick: (href: string) =
     onLinkClick,
 }) => {
     const spanRef = React.useRef<HTMLSpanElement>(null);
+    const [ftpPreviewUrl, setFtpPreviewUrl] = React.useState<string | null>(null);
+    const [ftpPreviewError, setFtpPreviewError] = React.useState<boolean>(false);
+    const [ftpButtonPosition, setFtpButtonPosition] = React.useState<{ top: number; left: number } | null>(null);
     const html = React.useMemo(() => mdParser.render(normalizeLinks(value)), [value]);
+
+    const handleFtpPreview = React.useCallback(async (ftpUrl: string, buttonElement: HTMLElement) => {
+        // Position the popup next to the button
+        const rect = buttonElement.getBoundingClientRect();
+        setFtpButtonPosition({ top: rect.bottom + window.scrollY, left: rect.left + window.scrollX });
+        setFtpPreviewUrl(ftpUrl);
+        setFtpPreviewError(false);
+
+        try {
+            // Attempt to fetch the FTP file
+            const response = await fetch(ftpUrl);
+            if (!response.ok) {
+                throw new Error('Failed to fetch FTP resource');
+            }
+        } catch (error) {
+            // If fetching fails, show error state
+            setFtpPreviewError(true);
+        }
+    }, []);
+
+    const closeFtpPreview = React.useCallback(() => {
+        setFtpPreviewUrl(null);
+        setFtpPreviewError(false);
+        setFtpButtonPosition(null);
+    }, []);
 
     React.useEffect(() => {
         if (!spanRef.current) {
@@ -87,6 +116,18 @@ export const MarkedDown: React.FC<{ value: string; onLinkClick: (href: string) =
 
         const handleClick = (event: Event) => {
             const target = event.target as HTMLElement;
+            
+            // Handle FTP preview button click
+            if (target.classList.contains('ftp-preview-button')) {
+                event.preventDefault();
+                event.stopPropagation();
+                const ftpUrl = target.getAttribute('data-ftp-url');
+                if (ftpUrl) {
+                    handleFtpPreview(ftpUrl, target);
+                }
+                return;
+            }
+
             if (target.tagName === 'A' && onLinkClick) {
                 const href = target.getAttribute('data-href');
                 if (href) {
@@ -102,10 +143,76 @@ export const MarkedDown: React.FC<{ value: string; onLinkClick: (href: string) =
         return () => {
             currentSpan.removeEventListener('click', handleClick);
         };
-    }, [onLinkClick]);
+    }, [onLinkClick, handleFtpPreview]);
+
+    // Add FTP preview buttons after links are rendered
+    React.useEffect(() => {
+        if (!spanRef.current) {
+            return;
+        }
+
+        const links = spanRef.current.querySelectorAll('a.rovodev-markdown-link');
+        links.forEach((link) => {
+            const href = link.getAttribute('data-href');
+            if (href && href.startsWith('ftp://')) {
+                // Check if button already exists
+                if (!link.parentElement?.querySelector('.ftp-preview-button')) {
+                    const button = document.createElement('button');
+                    button.className = 'ftp-preview-button';
+                    button.setAttribute('data-ftp-url', href);
+                    button.setAttribute('aria-label', 'Preview FTP file');
+                    button.innerHTML = '▼';
+                    button.title = 'Preview FTP file';
+                    link.parentNode?.insertBefore(button, link.nextSibling);
+                }
+            }
+        });
+    }, [html]);
 
     // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- necessary to apply MarkDown formatting
-    return <span ref={spanRef} dangerouslySetInnerHTML={{ __html: html }} />;
+    return (
+        <>
+            <span ref={spanRef} dangerouslySetInnerHTML={{ __html: html }} />
+            {ftpPreviewUrl && ftpButtonPosition && (
+                <div
+                    className="ftp-preview-popup"
+                    style={{ top: ftpButtonPosition.top, left: ftpButtonPosition.left }}
+                >
+                    <div className="ftp-preview-header">
+                        <span>FTP File Preview</span>
+                        <button className="ftp-preview-close" onClick={closeFtpPreview} aria-label="Close preview">
+                            ×
+                        </button>
+                    </div>
+                    <div className="ftp-preview-content">
+                        {ftpPreviewError ? (
+                            <div className="ftp-preview-error">
+                                <p>Unable to connect to FTP server.</p>
+                                <a
+                                    href="#"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        onLinkClick(ftpPreviewUrl);
+                                        closeFtpPreview();
+                                    }}
+                                    className="ftp-fallback-link"
+                                >
+                                    Open FTP link
+                                </a>
+                            </div>
+                        ) : (
+                            <iframe
+                                src={ftpPreviewUrl}
+                                title="FTP File Preview"
+                                className="ftp-preview-iframe"
+                                sandbox="allow-same-origin"
+                            />
+                        )}
+                    </div>
+                </div>
+            )}
+        </>
+    );
 };
 
 export interface OpenFileFunc {

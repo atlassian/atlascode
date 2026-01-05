@@ -69,4 +69,28 @@ https://site2.atlassian.net/issues/?jql=status = "In Progress"`;
         expect(result).not.toContain('assignee = currentUser()');
         expect(result).not.toContain('status = "In Progress"');
     });
+
+    it('should handle FTP links', () => {
+        const input = 'ftp://example.com/file.txt';
+        const result = normalizeLinks(input);
+
+        expect(result).toContain('ftp://');
+        expect(result).toContain('example.com');
+    });
+
+    it('should encode parentheses in FTP URLs', () => {
+        const input = 'ftp://example.com/file(with)parentheses.txt';
+        const result = normalizeLinks(input);
+
+        expect(result).toBe('ftp://example.com/file%28with%29parentheses.txt');
+    });
+
+    it('should handle mixed FTP and HTTP links', () => {
+        const input = `Here is an FTP link: ftp://files.example.com/document.pdf
+And an HTTP link: https://example.com/page`;
+        const result = normalizeLinks(input);
+
+        expect(result).toContain('ftp://files.example.com');
+        expect(result).toContain('https://example.com');
+    });
 });
