@@ -10,8 +10,13 @@ on:
 jobs:
   check-should-build:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
     outputs:
       should_skip: ${{ steps.check_skip.outputs.skip }}
+
     steps:
       - uses: actions/checkout@v4
         with:
