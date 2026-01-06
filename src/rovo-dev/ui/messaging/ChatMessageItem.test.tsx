@@ -48,4 +48,37 @@ describe('ChatMessageItem', () => {
         );
         expect(screen.getByText('Bold text')).toBeTruthy();
     });
+
+    it('renders malformed markdown links correctly (period before parenthesis)', () => {
+        const rovoDevMessage = {
+            event_kind: 'text' as const,
+            content: 'assign [Alex Marginson].(/people/712020:05ca66ee-d3b6-4a5e-923a-fddbf1663d1c).',
+            index: 0,
+        };
+
+        const { container } = render(
+            <ChatMessageItem msg={rovoDevMessage} openFile={jest.fn()} openJira={jest.fn()} onLinkClick={jest.fn()} />,
+        );
+
+        // Should render as a proper link, not raw text with period
+        const link = container.querySelector('a[data-href="/people/712020:05ca66ee-d3b6-4a5e-923a-fddbf1663d1c"]');
+        expect(link).toBeTruthy();
+        expect(link?.textContent).toBe('Alex Marginson');
+    });
+
+    it('renders URLs broken across line breaks correctly', () => {
+        const rovoDevMessage = {
+            event_kind: 'text' as const,
+            content: 'Start working on [SCRUM-175] ([https://bbplay.atlassian.net/browse/SCRUM-](https://bbplay.atlassian.net/browse/SCRUM-)\n175)',
+            index: 0,
+        };
+
+        const { container } = render(
+            <ChatMessageItem msg={rovoDevMessage} openFile={jest.fn()} openJira={jest.fn()} onLinkClick={jest.fn()} />,
+        );
+
+        // Should merge the broken URL into a single link
+        const link = container.querySelector('a[data-href*="SCRUM-175"]');
+        expect(link).toBeTruthy();
+    });
 });

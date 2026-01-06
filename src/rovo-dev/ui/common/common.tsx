@@ -51,9 +51,12 @@ const strictEncodeUrl = (url: string) => {
 };
 
 // Normalizes URLs before Markdown rendering:
-// 1) Encodes the entire Atlassian JQL query (everything after "jql=" to end of line)
+// 1) Fixes malformed markdown links like [text].(url) by removing the period
+// 2) Fixes broken URLs across line breaks by removing the line break
+// 3) Fixes malformed nested markdown links from ADF conversion: [url-text](url) -> just use the url
+// 4) Encodes the entire Atlassian JQL query (everything after "jql=" to end of line)
 // so spaces, commas, and parentheses don't break the link.
-// 2) Strict-encodes any http/https URL (encodeURI + () -> %28/%29) to prevent
+// 5) Strict-encodes any http/https URL (encodeURI + () -> %28/%29) to prevent
 // linkify from truncating at closing parentheses.
 // Keep validateLink to allow only http/https.
 export const normalizeLinks = (messageText: string) => {
@@ -63,12 +66,31 @@ export const normalizeLinks = (messageText: string) => {
         return '';
     }
 
-    let processed = messageText.replace(
+    // Fix malformed markdown links: [text].(url) -> [text](url)
+    let processed = messageText.replace(/\]\.\(/g, '](');
+
+    // Fix URLs broken across line breaks within markdown links: [text](url-part\nurl-continuation) -> [text](url-parturl-continuation)
+    // This must be done before URL encoding to properly merge the URL parts
+    processed = processed.replace(/(\[[^\]]+\]\([^\)]*?)\s*[\r\n]+\s*([^\)]*\))/g, '$1$2');
+
+    // Fix malformed nested links from ADF conversion where link text is same as URL:
+    // [https://example.com/path-](https://example.com/path-) -> https://example.com/path-
+    // This handles cases where ADF creates redundant markdown links
+    processed = processed.replace(/\[(https?:\/\/[^\]]+)\]\(\1\)/g, '$1');
+
+    // Fix plain URLs broken across line breaks (not inside markdown links)
+    // Match: url-ending-with-dash\nrest-of-url and merge them
+    processed = processed.replace(/(https?:\/\/[^\s\)]+[-\/])\s*[\r\n]+\s*([^\s\)]+)/g, '$1$2');
+
+    // Encode JQL queries
+    processed = processed.replace(
         /(https?:\/\/[^\s]+\/issues\/\?jql=)(.*?)(?=$|\n|\r)/gi,
         (_match, prefix: string, jqlTail: string) => prefix + encodeURIComponent(decodeUriComponentSafely(jqlTail)),
     );
 
-    processed = processed.replace(/https?:\/\/[^\n\r]+/g, (rawUrl) => strictEncodeUrl(rawUrl));
+    // Strict-encode URLs that are NOT inside markdown links
+    // Match URLs outside of [text](url) patterns
+    processed = processed.replace(/(?<!\]\()https?:\/\/[^\s\)]+(?!\))/g, (rawUrl) => strictEncodeUrl(rawUrl));
 
     return processed;
 };
