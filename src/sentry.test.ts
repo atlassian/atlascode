@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals
 import * as Sentry from '@sentry/node';
 import { extensions } from 'vscode';
 
-import { Container } from './container';
 import { ErrorContext, SentryConfig, SentryService } from './sentry';
 
 // Mock dependencies
@@ -10,13 +9,6 @@ jest.mock('@sentry/node');
 jest.mock('vscode', () => ({
     extensions: {
         getExtension: jest.fn(),
-    },
-}));
-jest.mock('./container', () => ({
-    Container: {
-        featureFlagClient: {
-            checkGate: jest.fn(),
-        },
     },
 }));
 
@@ -49,7 +41,6 @@ describe('SentryService', () => {
         (Sentry.captureException as jest.Mock) = mockCaptureException;
 
         // Mock feature flag to be enabled by default
-        (Container.featureFlagClient.checkGate as jest.Mock).mockReturnValue(true);
 
         // Mock extension version
         (extensions.getExtension as jest.Mock).mockReturnValue({
@@ -78,6 +69,7 @@ describe('SentryService', () => {
         it('should initialize Sentry with valid configuration', async () => {
             const config: SentryConfig = {
                 enabled: true,
+                featureFlagEnabled: true,
                 dsn: 'https://test@sentry.io/123456',
                 environment: 'test',
                 sampleRate: 0.5,
@@ -120,8 +112,6 @@ describe('SentryService', () => {
         });
 
         it('should not initialize when feature flag is disabled', async () => {
-            (Container.featureFlagClient.checkGate as jest.Mock).mockReturnValue(false);
-
             const config: SentryConfig = {
                 enabled: true,
                 dsn: 'https://test@sentry.io/123456',
@@ -136,6 +126,7 @@ describe('SentryService', () => {
         it('should use default environment when not provided', async () => {
             const config: SentryConfig = {
                 enabled: true,
+                featureFlagEnabled: true,
                 dsn: 'https://test@sentry.io/123456',
             };
 
@@ -151,6 +142,7 @@ describe('SentryService', () => {
         it('should use default sample rate when not provided', async () => {
             const config: SentryConfig = {
                 enabled: true,
+                featureFlagEnabled: true,
                 dsn: 'https://test@sentry.io/123456',
             };
 
@@ -170,6 +162,7 @@ describe('SentryService', () => {
 
             const config: SentryConfig = {
                 enabled: true,
+                featureFlagEnabled: true,
                 dsn: 'https://test@sentry.io/123456',
             };
 
@@ -185,6 +178,7 @@ describe('SentryService', () => {
             // Initialize Sentry before testing captureException
             await sentryService.initialize({
                 enabled: true,
+                featureFlagEnabled: true,
                 dsn: 'https://test@sentry.io/123456',
             });
         });
@@ -311,6 +305,7 @@ describe('SentryService', () => {
         it('should return true after successful initialization', async () => {
             await sentryService.initialize({
                 enabled: true,
+                featureFlagEnabled: true,
                 dsn: 'https://test@sentry.io/123456',
             });
 
@@ -339,6 +334,7 @@ describe('SentryService', () => {
         it('should return config after initialization', async () => {
             const config: SentryConfig = {
                 enabled: true,
+                featureFlagEnabled: true,
                 dsn: 'https://test@sentry.io/123456',
                 environment: 'test',
                 sampleRate: 0.5,
@@ -356,6 +352,7 @@ describe('SentryService', () => {
 
             await sentryService.initialize({
                 enabled: true,
+                featureFlagEnabled: true,
                 dsn: 'https://test@sentry.io/123456',
             });
 
@@ -368,6 +365,7 @@ describe('SentryService', () => {
         it('should handle sampleRate of 0', async () => {
             const config: SentryConfig = {
                 enabled: true,
+                featureFlagEnabled: true,
                 dsn: 'https://test@sentry.io/123456',
                 sampleRate: 0,
             };
@@ -384,6 +382,7 @@ describe('SentryService', () => {
         it('should always set tracesSampleRate to 0', async () => {
             const config: SentryConfig = {
                 enabled: true,
+                featureFlagEnabled: true,
                 dsn: 'https://test@sentry.io/123456',
             };
 

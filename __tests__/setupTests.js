@@ -5,4 +5,4 @@ global.console = {
     debug: jest.fn(),
     info: jest.fn(),
     warn: jest.fn(),
-};
+};jest.mock('@sentry/node');

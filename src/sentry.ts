@@ -9,11 +9,10 @@ import * as Sentry from '@sentry/node';
 import { extensions } from 'vscode';
 
 import { ExtensionId } from './constants';
-import { Container } from './container';
-import { Features } from './util/features';
 
 export interface SentryConfig {
     enabled?: boolean; // Enable/disable Sentry (default: false)
+    featureFlagEnabled?: boolean; // Feature flag status
     dsn?: string; // Sentry DSN URL (required if enabled)
     environment?: string; // Environment name (default: 'development')
     sampleRate?: number; // Sample rate 0.0-1.0 (default: 1.0)
@@ -48,15 +47,8 @@ export class SentryService {
      * @param config - Sentry configuration
      */
     public async initialize(config: SentryConfig): Promise<void> {
-        // Check if Sentry logging feature flag is enabled
-        const isSentryLoggingEnabled = Container.featureFlagClient.checkGate(Features.SentryLogging);
-
         // If not enabled, silently return without initializing
-        if (!config.enabled || !config.dsn || !isSentryLoggingEnabled) {
-            return;
-        }
-
-        if (!config.enabled || !config.dsn) {
+        if (!config.enabled || !config.dsn || !config.featureFlagEnabled) {
             return;
         }
 

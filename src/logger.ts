@@ -4,6 +4,7 @@ import { EventEmitter } from 'vscode';
 import { ErrorProductArea } from './analyticsTypes';
 import { configuration, OutputLevel } from './config/configuration';
 import { extensionOutputChannelName } from './constants';
+import { SentryService } from './sentry';
 
 // Let's prevent a circular dependency with Container and the other modules that it imports
 function isDebugging(): boolean {
@@ -158,7 +159,6 @@ export class Logger {
 
         // Capture to Sentry if initialized
         try {
-            const { SentryService } = require('./sentry');
             if (SentryService.getInstance().isInitialized()) {
                 SentryService.getInstance().captureException(ex, {
                     tags: {
@@ -172,7 +172,9 @@ export class Logger {
                 });
             }
         } catch (e) {
+            // Surpress errors during Sentry capture to ensure logging continues
             console.error('Failed to initialize Sentry:', e);
+            Logger.error(e as Error, 'Failed to initialize Sentry');
         }
 
         if (this.level === OutputLevel.Silent) {

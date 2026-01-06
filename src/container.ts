@@ -264,23 +264,18 @@ export class Container {
         this.refreshRovoDev(context);
 
         // Initialize Sentry for error tracking
-        try {
-            const sentryConfig: SentryConfig = {
-                enabled: process.env.SENTRY_ENABLED === 'true',
-                dsn: process.env.SENTRY_DSN,
-                environment: process.env.SENTRY_ENVIRONMENT || 'development',
-                sampleRate: parseFloat(process.env.SENTRY_SAMPLE_RATE || '1.0'),
-                atlasCodeVersion: version,
-            };
 
-            if (sentryConfig.enabled && sentryConfig.dsn) {
-                await SentryService.getInstance().initialize(sentryConfig);
-                Logger.info('Sentry initialized successfully');
-            }
-        } catch (error) {
-            Logger.error(error as Error, 'Failed to initialize Sentry');
-            // Continue with extension startup regardless
-        }
+        const sentryConfig: SentryConfig = {
+            enabled: process.env.SENTRY_ENABLED === 'true',
+            featureFlagEnabled: this.featureFlagClient.checkGate(Features.SentryLogging),
+            dsn: process.env.SENTRY_DSN,
+            environment: process.env.SENTRY_ENVIRONMENT || 'development',
+            sampleRate: parseFloat(process.env.SENTRY_SAMPLE_RATE || '1.0'),
+            atlasCodeVersion: version,
+        };
+
+        await SentryService.getInstance().initialize(sentryConfig);
+        Logger.info('Sentry initialized successfully');
     }
 
     private static async initializeFeatureFlagClient() {
