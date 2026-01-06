@@ -77,15 +77,11 @@ export class RovoDevErrorBoundary extends Component<Props, State> {
             this.props.onStartNewSession();
         }
 
-        // Use setTimeout to reset state after a brief delay
-        // This gives the command time to execute before React tries to re-render
-        setTimeout(() => {
-            this.setState({
-                hasError: false,
-                error: null,
-                errorInfo: null,
-            });
-        }, 100);
+        this.setState({
+            hasError: false,
+            error: null,
+            errorInfo: null,
+        });
     };
 
     override render() {
