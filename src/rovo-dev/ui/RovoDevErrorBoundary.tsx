@@ -47,23 +47,18 @@ export class RovoDevErrorBoundary extends Component<Props, State> {
             type: RovoDevViewResponseType.ReportRenderError,
             errorType: error.name,
             errorMessage: error.message,
-            errorStack: this.simplifyStack(error.stack || ''),
-            componentStack: this.simplifyStack(errorInfo.componentStack || ''),
+            errorStack: this.simplifyStack(error.stack || '', (line) => line.match(/at (.*) \((.*)\)/)?.[1]),
+            componentStack: this.simplifyStack(
+                errorInfo.componentStack || '',
+                (line) => line.match(/in (.*) \(created by (.*)\)/)?.[1],
+            ),
         });
     }
 
-    private simplifyStack(stack: string): string {
-        const lines = stack
-            .split('\n')
-            .map((line) => {
-                // Extract function/component name
-                const match = line.match(/at (.*) \((.*)\)/);
-                return match ? match[1] : line.match(/at (.*)/)?.[1];
-            })
-            .filter(Boolean)
-            .join(' < ');
+    private simplifyStack(stack: string, extractFunc: (line: string) => string | undefined): string {
+        const line = stack.split('\n').map(extractFunc).filter(Boolean).join(' < ');
 
-        return lines.length > STACK_LIMIT ? lines.substring(0, STACK_LIMIT) + '...' : lines;
+        return line.length > STACK_LIMIT ? line.substring(0, STACK_LIMIT) + '...' : line;
     }
 
     private handleStartNewSession = () => {
