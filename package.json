@@ -46,7 +46,7 @@
     ],
     "main": "./build/extension/extension",
     "rovoDev": {
-        "version": "0.13.17"
+        "version": "0.13.22"
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
@@ -135,14 +135,6 @@
                     "light": "resources/light/add.svg"
                 },
                 "category": "Rovo Dev",
-                "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
-            },
-            {
-                "command": "atlascode.rovodev.showTerminal",
-                "title": "Show in terminal",
-                "icon": "$(terminal)",
-                "category": "Rovo Dev",
-                "description": "Shows the Rovo Dev process in a terminal window.",
                 "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
             },
             {
@@ -705,11 +697,6 @@
                     "group": "navigation@1"
                 },
                 {
-                    "command": "atlascode.rovodev.showTerminal",
-                    "when": "atlascode:rovoDevTerminalEnabled && view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
-                    "group": "navigation@2"
-                },
-                {
                     "command": "atlascode.openRovoDevConfig",
                     "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
                     "group": "rovoDevContextMenu1@1"
@@ -934,10 +921,6 @@
                 {
                     "command": "atlascode.rovodev.newChatSession",
                     "when": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
-                },
-                {
-                    "command": "atlascode.rovodev.showTerminal",
-                    "when": "atlascode:rovoDevEnabled"
                 },
                 {
                     "command": "atlascode.openRovoDevConfig",
@@ -1646,6 +1629,7 @@
         "@atlaskit/icon": "^27.12.0",
         "@atlaskit/icon-lab": "^5.7.0",
         "@atlaskit/inline-dialog": "^18.0.4",
+        "@atlaskit/inline-edit": "^15.4.2",
         "@atlaskit/layering": "^3.0.0",
         "@atlaskit/lozenge": "^13.0.8",
         "@atlaskit/media-client": "^35.6.0",

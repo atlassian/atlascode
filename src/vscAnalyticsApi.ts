@@ -20,6 +20,7 @@ import {
     installedEvent,
     issueCommentEvent,
     issueCreatedEvent,
+    issueStartWorkErrorEvent,
     issueSuggestionFailedEvent,
     issueSuggestionGeneratedEvent,
     issueSuggestionSettingsChangeEvent,
@@ -158,6 +159,12 @@ export class VSCAnalyticsApi implements AnalyticsApi {
 
     public async fireIssueWorkStartedEvent(site: DetailedSiteInfo, pushBranchToRemoteChecked: boolean): Promise<void> {
         return issueWorkStartedEvent(site, pushBranchToRemoteChecked).then((e) => {
+            this._analyticsClient.sendTrackEvent(e);
+        });
+    }
+
+    public async fireIssueStartWorkErrorEvent(message: string, stack?: string): Promise<void> {
+        return issueStartWorkErrorEvent({ message, stack }).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }

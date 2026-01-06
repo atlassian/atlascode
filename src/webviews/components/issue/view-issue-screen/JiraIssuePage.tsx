@@ -10,7 +10,12 @@ import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { v4 } from 'uuid';
 
 import { AnalyticsView } from '../../../../analyticsTypes';
-import { EditIssueAction, IssueCommentAction, OpenRovoDevWithIssueAction } from '../../../../ipc/issueActions';
+import {
+    EditIssueAction,
+    IssueCommentAction,
+    OpenRovoDevWithIssueAction,
+    ShareIssueData,
+} from '../../../../ipc/issueActions';
 import {
     EditIssueData,
     emptyDevelopmentInfo,
@@ -112,6 +117,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             'handleStartWorkOnIssue',
             'handleOpenRovoDev',
             'handleCloneIssue',
+            'handleShareIssue',
             'handleInlineEdit',
             'handleEditIssue',
             'handleChildIssueUpdate',
@@ -274,6 +280,17 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             action: 'cloneIssue',
             site: this.state.siteDetails,
             issueData: cloneData,
+        });
+    };
+
+    handleShareIssue = (shareData: ShareIssueData) => {
+        this.setState({ isSomethingLoading: true, loadingField: 'share' });
+        this.postMessage({
+            action: 'shareIssue',
+            site: this.state.siteDetails,
+            issueKey: this.state.key,
+            issueSummary: this.state.fieldValues['summary'] || '',
+            shareData: shareData,
         });
     };
 
@@ -975,8 +992,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     handleStatusChange={this.handleStatusChange}
                     handleStartWork={this.handleStartWorkOnIssue}
                     handleCloneIssue={(cloneData: any) => this.handleCloneIssue(cloneData)}
+                    handleShareIssue={(shareData: ShareIssueData) => this.handleShareIssue(shareData)}
                     handleOpenRovoDev={this.handleOpenRovoDev}
                     isRovoDevEnabled={this.state.isRovoDevEnabled}
+                    issueUrl={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`}
                 />
                 <IssueSidebarCollapsible label="Details" items={commonItems} defaultOpen />
                 <IssueSidebarCollapsible label="More fields" items={advancedItems} />
