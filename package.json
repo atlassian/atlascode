@@ -172,6 +172,12 @@
                 "enablement": "atlascode:rovoDevEnabled"
             },
             {
+                "command": "atlascode.rovodev.restartLsp",
+                "title": "Restart Language Server",
+                "category": "Rovo Dev",
+                "enablement": "atlascode:rovoDevEnabled"
+            },
+            {
                 "command": "atlascode.jira.todoIssue",
                 "title": "TO DO"
             },
@@ -208,7 +214,7 @@
             },
             {
                 "command": "atlascode.jira.createIssue.startWork",
-                "title": "Create and create branch",
+                "title": "Create and start work",
                 "category": "Jira"
             },
             {
@@ -1184,7 +1190,7 @@
                 },
                 "atlascode.issueSuggestion.contextLevel": {
                     "type": "string",
-                    "description": "What context to use for issue suggestions - only the TODO text, surrouding code, or the entire file",
+                    "description": "What context to use for issue suggestions - only the TODO text, surrounding code, or the entire file",
                     "default": "codeContext",
                     "enum": [
                         "todoOnly",
@@ -1736,6 +1742,7 @@
         "turndown": "^7.2.0",
         "use-constant": "^2.0.0",
         "uuid": "^11.1.0",
+        "vscode-languageclient": "^9.0.1",
         "websocket": "^1.0.35"
     },
     "devDependencies": {

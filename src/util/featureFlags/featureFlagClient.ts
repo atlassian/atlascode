@@ -40,7 +40,7 @@ export class FeatureFlagClient {
     private readonly isExperimentationDisabled: boolean;
 
     /* We keep two clients:
-     * - a static base client that only tracks the user's anonoymous id
+     * - a static base client that only tracks the user's anonymous id
      * - a variable tenant client that tracks the user's association with their tenant
      * The former is used as a fallback for every time the latter is not available
      */

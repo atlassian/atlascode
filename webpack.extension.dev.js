@@ -62,6 +62,14 @@ module.exports = [
             devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]',
         },
         externals: ['vscode', nodeExternals()],
+        // Ignore harmless warning from vscode-languageserver-types UMD wrapper
+        // The dynamic require in the UMD boilerplate is never actually called
+        ignoreWarnings: [
+            {
+                module: /vscode-languageserver-types/,
+                message: /Critical dependency/,
+            },
+        ],
         plugins: [
             new webpack.IgnorePlugin({
                 resourceRegExp: /iconv-loader\.js/,
