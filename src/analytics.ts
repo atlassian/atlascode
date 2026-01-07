@@ -477,6 +477,10 @@ export async function issueSuggestionFailedEvent(error: string): Promise<TrackEv
     return trackEvent('failed', 'issueSuggestion', { attributes: { error } });
 }
 
+export async function sentryCapturedExceptionFailedEvent(error: string): Promise<TrackEvent> {
+    return trackEvent('failed', 'captureException', { attributes: { error } });
+}
+
 export async function issueSuggestionSettingsChangeEvent(settings: IssueSuggestionSettings): Promise<TrackEvent> {
     return trackEvent('changed', 'issueSuggestionSettings', { attributes: { ...settings } });
 }

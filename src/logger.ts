@@ -157,9 +157,8 @@ export class Logger {
     ): void {
         Logger._onError.fire({ error: ex, errorMessage, capturedBy, params, productArea });
 
-        // Capture to Sentry if initialized
-        try {
-            if (SentryService.getInstance().isInitialized()) {
+        if (SentryService.getInstance().isInitialized()) {
+            try {
                 SentryService.getInstance().captureException(ex, {
                     tags: {
                         productArea: productArea || 'unknown',
@@ -170,11 +169,9 @@ export class Logger {
                         params,
                     },
                 });
+            } catch (err) {
+                console.error('Error reporting to Sentry:', err);
             }
-        } catch (e) {
-            // Surpress errors during Sentry capture to ensure logging continues
-            console.error('Failed to initialize Sentry:', e);
-            Logger._onError.fire({ error: e as Error, errorMessage: 'Failed to initialize Sentry' });
         }
 
         if (this.level === OutputLevel.Silent) {

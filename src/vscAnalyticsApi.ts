@@ -48,6 +48,7 @@ import {
     prUrlCopiedEvent,
     quickFlowEvent,
     saveManualCodeEvent,
+    sentryCapturedExceptionFailedEvent,
     startIssueCreationEvent,
     uiErrorEvent,
     upgradedEvent,
@@ -400,6 +401,11 @@ export class VSCAnalyticsApi implements AnalyticsApi {
 
     async fireApiTokenRetainedEvent() {
         const event = await apiTokenRetainedEvent();
+        this._analyticsClient.sendTrackEvent(event);
+    }
+
+    async fireSentryCapturedExceptionFailedEvent({ error }: { error: string }) {
+        const event = await sentryCapturedExceptionFailedEvent(error);
         this._analyticsClient.sendTrackEvent(event);
     }
 }
