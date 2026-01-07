@@ -1,12 +1,12 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { ExtensionId } from 'src/constants';
 import { Uri, window, workspace } from 'vscode';
 
 import { addRecommendedExtensionTriggeredEvent } from '../analytics';
 import { Container } from '../container';
 import { Logger } from '../logger';
 
-const ATLASCODE_EXTENSION_ID = 'atlassian.atlascode';
 const VSCODE_FOLDER = '.vscode';
 const EXTENSIONS_JSON_FILE = 'extensions.json';
 
@@ -59,13 +59,13 @@ export async function addAtlascodeAsRecommendedExtension(source: string = 'comma
         }
 
         // Check if atlascode is already recommended
-        if (extensionsConfig.recommendations.includes(ATLASCODE_EXTENSION_ID)) {
+        if (extensionsConfig.recommendations.includes(ExtensionId)) {
             window.showInformationMessage('Atlassian extension is already in the recommended extensions list.');
             return;
         }
 
         // Add atlascode to recommendations
-        extensionsConfig.recommendations.push(ATLASCODE_EXTENSION_ID);
+        extensionsConfig.recommendations.push(ExtensionId);
 
         // Write the updated extensions.json file
         try {
