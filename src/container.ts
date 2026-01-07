@@ -37,6 +37,7 @@ import { Pipeline } from './pipelines/model';
 import { RovodevCommandContext } from './rovo-dev/api/componentApi';
 import { RovodevStaticConfig } from './rovo-dev/api/rovodevStaticConfig';
 import { RovoDevCodeActionProvider } from './rovo-dev/rovoDevCodeActionProvider';
+import { RovoDevLanguageServerProvider } from './rovo-dev/rovoDevLanguageServerProvider';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { RovoDevLogger } from './rovo-dev/util/rovoDevLogger';
@@ -335,11 +336,16 @@ export class Container {
         } else {
             try {
                 // don't add anything async before initializing _rovodevDisposable
+                const lspEnabled = this._featureFlagClient.checkGate(Features.RovoDevLspEnabled);
+
                 this._rovodevDisposable = vscode.Disposable.from(
                     languages.registerCodeActionsProvider({ scheme: 'file' }, new RovoDevCodeActionProvider(), {
                         providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
                     }),
                     (this._rovodevWebviewProvider = new RovoDevWebviewProvider(context, context.extensionPath)),
+                    ...(lspEnabled
+                        ? [(this._rovodevLanguageServerProvider = new RovoDevLanguageServerProvider(context))]
+                        : []),
                 );
 
                 context.subscriptions.push(this._rovodevDisposable);
@@ -669,6 +675,11 @@ export class Container {
     private static _rovodevWebviewProvider: RovoDevWebviewProvider;
     public static get rovodevWebviewProvider() {
         return this._rovodevWebviewProvider;
+    }
+
+    private static _rovodevLanguageServerProvider: RovoDevLanguageServerProvider;
+    public static get rovodevLanguageServerProvider() {
+        return this._rovodevLanguageServerProvider;
     }
 
     private static _rovoDevEntitlementChecker: RovoDevEntitlementChecker;
