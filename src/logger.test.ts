@@ -4,8 +4,8 @@ import { ConfigurationChangeEvent, Disposable, ExtensionContext, LogOutputChanne
 
 import { configuration, OutputLevel } from './config/configuration';
 import { extensionOutputChannelName } from './constants';
-import { Container } from './container';
 import { ErrorEvent, Logger } from './logger';
+import { isDebugging } from './util/isDebugging';
 
 // Mock configuration
 jest.mock('./config/configuration', () => {
@@ -26,11 +26,9 @@ jest.mock('./config/configuration', () => {
     };
 });
 
-// Mock Container
-jest.mock('./container', () => ({
-    Container: {
-        isDebugging: false,
-    },
+// Mock isDebugging
+jest.mock('./util/isDebugging', () => ({
+    isDebugging: jest.fn().mockReturnValue(false),
 }));
 
 // Mock SentryService
@@ -41,7 +39,7 @@ jest.mock('./sentry', () => ({
 }));
 
 const mockContainerIsDebugging = () => {
-    (Container.isDebugging as any) = true;
+    (isDebugging as jest.Mock).mockReturnValue(true);
 };
 
 const deleteLoggerInstance = () => {
@@ -85,8 +83,8 @@ describe('Logger', () => {
 
     afterEach(() => {
         deleteLoggerInstance();
-        // Reset Container debugging state
-        (Container.isDebugging as any) = false;
+        // Reset debugging state
+        (isDebugging as jest.Mock).mockReturnValue(false);
     });
 
     describe('configure', () => {

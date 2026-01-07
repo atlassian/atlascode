@@ -9,7 +9,6 @@ import * as Sentry from '@sentry/node';
 import { extensions } from 'vscode';
 
 import { ExtensionId } from './constants';
-import { Container } from './container';
 
 export interface SentryConfig {
     enabled?: boolean; // Enable/disable Sentry (default: false)
@@ -31,6 +30,7 @@ export class SentryService {
     private initialized = false;
     private config: SentryConfig | null = null;
     private sentryClient: any = null;
+    private analyticsCallback: ((error: string) => void) | undefined;
 
     private constructor() {}
 
@@ -47,11 +47,13 @@ export class SentryService {
      *
      * @param config - Sentry configuration
      */
-    public async initialize(config: SentryConfig): Promise<void> {
+    public async initialize(config: SentryConfig, analyticsCallback?: (error: string) => void): Promise<void> {
         // If not enabled, silently return without initializing
         if (!config.enabled || !config.dsn || !config.featureFlagEnabled) {
             return;
         }
+
+        this.analyticsCallback = analyticsCallback;
 
         try {
             this.config = config;
@@ -113,7 +115,9 @@ export class SentryService {
         } catch (err) {
             // Silently fail - don't break error logging
             console.error('Failed to capture exception in Sentry:', err);
-            Container.analyticsApi.fireSentryCapturedExceptionFailedEvent({ error: (err as Error).message });
+            if (this.analyticsCallback) {
+                this.analyticsCallback((err as Error).message);
+            }
         }
     }
 

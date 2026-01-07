@@ -5,16 +5,7 @@ import { ErrorProductArea } from './analyticsTypes';
 import { configuration, OutputLevel } from './config/configuration';
 import { extensionOutputChannelName } from './constants';
 import { SentryService } from './sentry';
-
-// Let's prevent a circular dependency with Container and the other modules that it imports
-function isDebugging(): boolean {
-    try {
-        const { Container } = require('./container');
-        return Container.isDebugging;
-    } catch {
-        return false;
-    }
-}
+import { isDebugging } from './util/isDebugging';
 
 function getConsolePrefix(productArea?: string) {
     return productArea ? `[${extensionOutputChannelName} ${productArea}]` : `[${extensionOutputChannelName}]`;
