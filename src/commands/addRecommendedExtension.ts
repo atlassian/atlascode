@@ -1,9 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { ExtensionId } from '../constants';
 import { Uri, window, workspace } from 'vscode';
 
 import { addRecommendedExtensionTriggeredEvent } from '../analytics';
+import { ExtensionId } from '../constants';
 import { Container } from '../container';
 import { Logger } from '../logger';
 
