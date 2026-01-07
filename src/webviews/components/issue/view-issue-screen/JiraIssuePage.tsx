@@ -1027,6 +1027,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     }
 
     override componentDidMount() {
+        this.postMessage({ action: 'webviewReady' });
         this.postMessage({ action: 'getFeatureFlags' });
         this.postMessage({ action: 'checkRovoDevEntitlement' });
         this.postMessage({ action: 'fetchMediaToken' });
