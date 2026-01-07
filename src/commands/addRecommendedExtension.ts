@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { ExtensionId } from 'src/constants';
+import { ExtensionId } from '../constants';
 import { Uri, window, workspace } from 'vscode';
 
 import { addRecommendedExtensionTriggeredEvent } from '../analytics';
