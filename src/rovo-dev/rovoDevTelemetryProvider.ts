@@ -31,6 +31,8 @@ export type TelemetryEvent =
     | PartialEvent<Track.ReplayCompleted>;
 
 export class RovoDevTelemetryProvider {
+    private static readonly EVENTS_WITHOUT_PROMPT_ID = new Set(['rovoDevNewSessionAction', 'rovoDevReplayCompleted']);
+
     private _chatSessionId: string = '';
 
     private _firedTelemetryForCurrentPrompt: Record<string, boolean> = {};
@@ -79,10 +81,8 @@ export class RovoDevTelemetryProvider {
             return false;
         }
 
-        // these events are the only events that don't need the promptId
-        const eventsWithoutPromptId = ['rovoDevNewSessionAction', 'rovoDevReplayCompleted'];
-        const hasPromptId = (event.attributes as any).promptId !== undefined;
-        if (!eventsWithoutPromptId.includes(event.action) && !hasPromptId) {
+        const hasPromptId = 'promptId' in event.attributes && event.attributes.promptId !== undefined;
+        if (!RovoDevTelemetryProvider.EVENTS_WITHOUT_PROMPT_ID.has(event.action) && !hasPromptId) {
             this.onError(new Error('Unable to send Rovo Dev telemetry: PromptId not initialized'));
             return false;
         }
