@@ -525,10 +525,22 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.ReportRenderError:
-                        RovoDevLogger.error(
-                            new Error(`Render Error: ${e.errorMessage}`),
-                            `Type: ${e.errorType}${e.errorStack ? `\nStack: ${e.errorStack}` : ''}${e.componentStack ? `\nComponent Stack: ${e.componentStack}` : ''}`,
-                        );
+                        const renderError = new Error(`Render Error: ${e.errorMessage}`);
+                        renderError.name = e.errorType;
+                        // Build detailed error context
+                        const errorDetails: string[] = [];
+                        if (e.errorStack) {
+                            errorDetails.push(`Error Stack:\n${e.errorStack}`);
+                        }
+                        if (e.componentStack) {
+                            errorDetails.push(`Component Stack:\n${e.componentStack}`);
+                        }
+                        const contextMessage =
+                            errorDetails.length > 0
+                                ? `Type: ${e.errorType}\n${errorDetails.join('\n\n')}`
+                                : `Type: ${e.errorType}`;
+
+                        RovoDevLogger.error(renderError, contextMessage);
                         break;
 
                     default:
