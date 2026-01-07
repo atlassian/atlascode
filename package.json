@@ -289,6 +289,11 @@
                 "category": "Bitbucket"
             },
             {
+                "command": "atlascode.bb.applySuggestionWithRovoDev",
+                "title": "Apply suggestion by Rovo Dev",
+                "category": "Bitbucket"
+            },
+            {
                 "command": "atlascode.bb.editTask",
                 "title": "Edit",
                 "icon": {
@@ -881,6 +886,11 @@
                     "command": "atlascode.bb.addTask",
                     "group": "inline@4",
                     "when": "comment =~ /canAddTask/ && resourceScheme == atlascode.bbpr"
+                },
+                {
+                    "command": "atlascode.bb.applySuggestionWithRovoDev",
+                    "group": "inline@5",
+                    "when": "comment =~ /canApplySuggestion/ && resourceScheme == atlascode.bbpr && atlascode:rovoDevEnabled"
                 },
                 {
                     "command": "atlascode.bb.markTaskIncomplete",

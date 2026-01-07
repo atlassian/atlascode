@@ -147,6 +147,14 @@ export class PullRequestCommentController implements vscode.Disposable {
                 this.editCommentClicked(comment);
             }),
 
+            //Invoked when "Apply suggestion by Rovo Dev" is pressed on a comment with code blocks
+            vscode.commands.registerCommand(
+                Commands.BBPRApplySuggestionWithRovoDev,
+                async (comment: PullRequestComment) => {
+                    await this.applySuggestionWithRovoDev(comment);
+                },
+            ),
+
             //Invoked when the 'Save' or 'Save Changes' buttons are pressed on a comment with a text body.
             //Creating a new comment, creating a new task, editing an existing comment, and editing an existing task all invoke this action when 'save' is pressed
             //saveChangesPressed() does different actions depending on the 'saveChangesContext' attribute
@@ -951,6 +959,10 @@ export class PullRequestCommentController implements vscode.Disposable {
         if (comment.deletable) {
             contextValues.push('canDelete');
         }
+        // Check if comment contains code blocks that could be applied as suggestions
+        if (this.hasCodeBlocks(comment.rawContent)) {
+            contextValues.push('canApplySuggestion');
+        }
 
         return {
             site: site,
@@ -977,6 +989,115 @@ export class PullRequestCommentController implements vscode.Disposable {
         if (this._commentsCache.has(prHref)) {
             this._commentsCache.get(prHref)!.forEach((val) => val.dispose());
             this._commentsCache.delete(prHref);
+        }
+    }
+
+    private hasCodeBlocks(content: string): boolean {
+        // Check if the content contains code blocks (markdown fenced code blocks)
+        const codeBlockRegex = /```[\s\S]*?```/g;
+        return codeBlockRegex.test(content);
+    }
+
+    private extractCodeBlocks(content: string): string[] {
+        // Extract all code blocks from the content
+        const codeBlockRegex = /```(?:\w+)?\s*\n([\s\S]*?)```/g;
+        const codeBlocks: string[] = [];
+        let match;
+
+        while ((match = codeBlockRegex.exec(content)) !== null) {
+            if (match[1]) {
+                codeBlocks.push(match[1].trim());
+            }
+        }
+
+        return codeBlocks;
+    }
+
+    private async applySuggestionWithRovoDev(comment: PullRequestComment) {
+        try {
+            // Get the parent comment thread to find the file context
+            const thread = comment.parent;
+            if (!thread) {
+                vscode.window.showErrorMessage('Unable to determine file context for this comment.');
+                return;
+            }
+
+            // Parse the query params to get file information
+            const queryParams = JSON.parse(thread.uri.query) as PRFileDiffQueryParams;
+            const filePath = queryParams.path;
+
+            if (!filePath) {
+                vscode.window.showErrorMessage('Unable to determine file path for this comment.');
+                return;
+            }
+
+            // Extract code blocks from the comment
+            const codeBlocks = this.extractCodeBlocks(comment.body.toString());
+
+            if (codeBlocks.length === 0) {
+                vscode.window.showWarningMessage('No code suggestions found in this comment.');
+                return;
+            }
+
+            // Build the prompt for Rovo Dev
+            let prompt = `Apply the following suggestion from a pull request comment to the file ${filePath}:\n\n`;
+
+            if (codeBlocks.length === 1) {
+                prompt += `\`\`\`\n${codeBlocks[0]}\n\`\`\`\n\n`;
+            } else {
+                prompt += 'Multiple code blocks were suggested:\n\n';
+                codeBlocks.forEach((block, index) => {
+                    prompt += `${index + 1}. \`\`\`\n${block}\n\`\`\`\n\n`;
+                });
+            }
+
+            prompt += `Please apply this suggestion to the appropriate location in the file.`;
+
+            // Check if Rovo Dev is available
+            if (!Container.rovodevWebviewProvider) {
+                vscode.window.showErrorMessage('Rovo Dev is not available. Please ensure it is enabled.');
+                return;
+            }
+
+            // Build context for the file
+            const workspaceFolders = vscode.workspace.workspaceFolders;
+            if (!workspaceFolders || workspaceFolders.length === 0) {
+                vscode.window.showErrorMessage('No workspace folder open.');
+                return;
+            }
+
+            const absolutePath = vscode.Uri.joinPath(workspaceFolders[0].uri, filePath).fsPath;
+
+            // Check if file exists and open it
+            try {
+                const document = await vscode.workspace.openTextDocument(absolutePath);
+                await vscode.window.showTextDocument(document);
+            } catch (error) {
+                // File might not exist locally yet, continue anyway
+                console.warn(`Could not open file ${absolutePath}:`, error);
+            }
+
+            // Send to Rovo Dev with file context
+            const context: any[] = [
+                {
+                    contextType: 'file',
+                    isFocus: true,
+                    file: {
+                        name: filePath.split('/').pop() || filePath,
+                        absolutePath: absolutePath,
+                    },
+                    enabled: true,
+                },
+            ];
+
+            // Invoke Rovo Dev with the prompt and context
+            Container.rovodevWebviewProvider.invokeRovoDevAskCommand(prompt, context);
+
+            // Show success message
+            vscode.window.showInformationMessage('Suggestion sent to Rovo Dev for application.');
+        } catch (error) {
+            console.error('Error applying suggestion with Rovo Dev:', error);
+            vscode.window.showErrorMessage(`Failed to apply suggestion: ${error}`);
         }
     }
 

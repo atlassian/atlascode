@@ -77,6 +77,7 @@ export const enum Commands {
     BitbucketIssuesNextPage = 'atlascode.bb.issuesNextPage',
     BBPRCancelAction = 'atlascode.bb.cancelCommentAction',
     BBPRSaveAction = 'atlascode.bb.saveCommentAction',
+    BBPRApplySuggestionWithRovoDev = 'atlascode.bb.applySuggestionWithRovoDev',
     ViewDiff = 'atlascode.viewDiff',
     DebugBitbucketSites = 'atlascode.debug.bitbucketSites',
     WorkbenchOpenRepository = 'atlascode.workbenchOpenRepository',
