@@ -1,4 +1,6 @@
-export const ExtensionId = 'atlassian.atlascode';
+import packageJson from 'package.json';
+
+export const ExtensionId = `${packageJson.publisher}.${packageJson.name}`;
 export const ConfigNamespace = 'atlascode';
 export const extensionOutputChannelName = 'Atlassian';
 export const JiraPreSelectedCreateKey = 'jira.lastCreatePreSelectedValues';
