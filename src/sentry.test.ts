@@ -2,10 +2,18 @@ import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals
 import * as Sentry from '@sentry/node';
 import { extensions } from 'vscode';
 
+import { Container } from './container';
 import { ErrorContext, SentryConfig, SentryService } from './sentry';
 
 // Mock dependencies
 jest.mock('@sentry/node');
+jest.mock('./container', () => ({
+    Container: {
+        analyticsApi: {
+            fireSentryCapturedExceptionFailedEvent: jest.fn(),
+        },
+    },
+}));
 jest.mock('vscode', () => ({
     extensions: {
         getExtension: jest.fn(),
@@ -265,6 +273,9 @@ describe('SentryService', () => {
             sentryService.captureException(error);
 
             expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to capture exception in Sentry:', expect.any(Error));
+            expect(Container.analyticsApi.fireSentryCapturedExceptionFailedEvent).toHaveBeenCalledWith({
+                error: 'Capture failed',
+            });
         });
 
         it('should set multiple tags when provided', () => {

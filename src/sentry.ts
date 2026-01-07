@@ -9,6 +9,7 @@ import * as Sentry from '@sentry/node';
 import { extensions } from 'vscode';
 
 import { ExtensionId } from './constants';
+import { Container } from './container';
 
 export interface SentryConfig {
     enabled?: boolean; // Enable/disable Sentry (default: false)
@@ -112,6 +113,7 @@ export class SentryService {
         } catch (err) {
             // Silently fail - don't break error logging
             console.error('Failed to capture exception in Sentry:', err);
+            Container.analyticsApi.fireSentryCapturedExceptionFailedEvent({ error: (err as Error).message });
         }
     }
 
