@@ -174,7 +174,7 @@ export class Logger {
         } catch (e) {
             // Surpress errors during Sentry capture to ensure logging continues
             console.error('Failed to initialize Sentry:', e);
-            Logger.error(e as Error, 'Failed to initialize Sentry');
+            Logger._onError.fire({ error: e as Error, errorMessage: 'Failed to initialize Sentry' });
         }
 
         if (this.level === OutputLevel.Silent) {
