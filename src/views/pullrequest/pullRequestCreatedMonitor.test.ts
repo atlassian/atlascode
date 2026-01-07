@@ -7,7 +7,14 @@ import { PullRequestCreatedMonitor } from './pullRequestCreatedMonitor';
 
 jest.mock('../../bitbucket/bbUtils');
 jest.mock('../../util/retry');
-jest.mock('../../logger');
+jest.mock('../../logger', () => ({
+    Logger: class {
+        static debug = jest.fn();
+        static error = jest.fn();
+        static info = jest.fn();
+        static warn = jest.fn();
+    },
+}));
 jest.mock('../../bitbucket/bbLogger');
 
 const flushPromises = () => new Promise((resolve) => setImmediate(resolve));

@@ -11,7 +11,14 @@ import { SimpleNode } from './simpleNode';
 
 // Mock dependencies
 jest.mock('../../bitbucket/bbUtils');
-jest.mock('../../logger');
+jest.mock('../../logger', () => ({
+    Logger: class {
+        static debug = jest.fn();
+        static error = jest.fn();
+        static info = jest.fn();
+        static warn = jest.fn();
+    },
+}));
 jest.mock('../pullrequest/diffViewHelper');
 
 const mockClientForSite = clientForSite as jest.MockedFunction<typeof clientForSite>;
