@@ -228,7 +228,7 @@ describe('IssueHistory', () => {
         const history: IssueHistoryItem[] = [
             {
                 id: '123-status',
-                timestamp: '2025-11-05T15:58:00.000Z',
+                timestamp: '2025-11-05T00:00:00.000Z',
                 author: {
                     displayName: 'John Doe',
                     accountId: 'user-1',
