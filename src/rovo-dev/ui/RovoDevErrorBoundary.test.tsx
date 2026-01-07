@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
@@ -193,15 +193,23 @@ describe('RovoDevErrorBoundary', () => {
             const user = userEvent.setup();
             const NoErrorComponent = () => <div>No error</div>;
 
-            const { rerender } = render(
-                <RovoDevErrorBoundary
-                    key="error-boundary-1"
-                    postMessage={mockPostMessage}
-                    onStartNewSession={mockOnStartNewSession}
-                >
-                    <ThrowError />
-                </RovoDevErrorBoundary>,
-            );
+            // Use a wrapper component with state to control which children are rendered
+            const TestWrapper = () => {
+                const [shouldThrow, setShouldThrow] = React.useState(true);
+
+                const handleStartNewSession = () => {
+                    mockOnStartNewSession();
+                    setShouldThrow(false);
+                };
+
+                return (
+                    <RovoDevErrorBoundary postMessage={mockPostMessage} onStartNewSession={handleStartNewSession}>
+                        {shouldThrow ? <ThrowError /> : <NoErrorComponent />}
+                    </RovoDevErrorBoundary>
+                );
+            };
+
+            render(<TestWrapper />);
 
             expect(screen.getByTestId('dialog-message-item')).toBeTruthy();
 
@@ -214,20 +222,10 @@ describe('RovoDevErrorBoundary', () => {
             });
             expect(mockOnStartNewSession).toHaveBeenCalledTimes(1);
 
-            // After clicking, the error state should be reset internally
-            rerender(
-                <RovoDevErrorBoundary
-                    key="error-boundary-2"
-                    postMessage={mockPostMessage}
-                    onStartNewSession={mockOnStartNewSession}
-                >
-                    <NoErrorComponent />
-                </RovoDevErrorBoundary>,
-            );
-
-            // The error boundary should now render children normally
-            expect(screen.getByText('No error')).toBeTruthy();
-            expect(screen.queryByTestId('dialog-message-item')).not.toBeTruthy();
+            await waitFor(() => {
+                expect(screen.getByText('No error')).toBeTruthy();
+                expect(screen.queryByTestId('dialog-message-item')).not.toBeTruthy();
+            });
         });
     });
 
