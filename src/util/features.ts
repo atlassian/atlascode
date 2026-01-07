@@ -7,6 +7,7 @@ export enum Features {
     AtlaskitEditor = 'atlascode-use-new-atlaskit-editor',
     CreateWorkItemWebviewV2 = 'atlascode-create-work-item-webview-test',
     RovoDevEntitlementNotification = 'atlascode-rovodev-entitlement-notification',
+    RovoDevLspEnabled = 'atlascode-enable-rovodev-lsp',
 }
 
 export const enum Experiments {
