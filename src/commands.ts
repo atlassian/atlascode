@@ -20,7 +20,7 @@ import { createIssue } from './commands/jira/createIssue';
 import { showIssue, showIssueForKey, showIssueForSiteIdAndKey, showIssueForURL } from './commands/jira/showIssue';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
 import { configuration } from './config/configuration';
-import { Commands, HelpTreeViewId } from './constants';
+import { Commands, ExtensionId, HelpTreeViewId } from './constants';
 import { Container } from './container';
 import { FilterProvider } from './filter/filterProvider';
 import { transitionIssue } from './jira/transitionIssue';
@@ -239,10 +239,10 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             ),
             // Natigate them to VSCode Native settings
             commands.registerCommand(Commands.ShowPullRequestSettings, () =>
-                commands.executeCommand('workbench.action.openSettings', '@ext:atlassian.atlascode pull requests'),
+                commands.executeCommand('workbench.action.openSettings', `@ext:${ExtensionId} pull requests`),
             ),
             commands.registerCommand(Commands.ShowPipelineSettings, () =>
-                commands.executeCommand('workbench.action.openSettings', '@ext:atlassian.atlascode pipeline'),
+                commands.executeCommand('workbench.action.openSettings', `@ext:${ExtensionId} pipeline`),
             ),
             commands.registerCommand(Commands.JiraAPITokenLogin, () => {
                 const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
