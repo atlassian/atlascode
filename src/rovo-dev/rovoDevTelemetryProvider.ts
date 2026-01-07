@@ -80,11 +80,8 @@ export class RovoDevTelemetryProvider {
         }
 
         // these events are the only events that don't need the promptId
-        if (
-            event.action !== 'rovoDevNewSessionAction' &&
-            event.action !== 'rovoDevReplayCompleted' &&
-            !event.attributes.promptId
-        ) {
+        const eventsWithoutPromptId = ['rovoDevNewSessionAction', 'rovoDevReplayCompleted'];
+        if (!eventsWithoutPromptId.includes(event.action) && !event.attributes.promptId) {
             this.onError(new Error('Unable to send Rovo Dev telemetry: PromptId not initialized'));
             return false;
         }
