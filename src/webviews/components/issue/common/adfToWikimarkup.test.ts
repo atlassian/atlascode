@@ -149,6 +149,25 @@ describe('adfToWikimarkup', () => {
             expect(resultStr).toContain('"id":"user-abc"');
         });
 
+        it('should produce valid mention structure for Jira API v3', () => {
+            // This test documents the exact ADF structure required by Jira API v3
+            const wikimarkup = '[~accountid:user-id-123]';
+            const result = convertWikimarkupToAdf(wikimarkup);
+
+            // Find the mention node in the ADF
+            const paragraph = result.content?.[0];
+            const mentionNode = paragraph?.content?.find((node: any) => node.type === 'mention');
+
+            expect(mentionNode).toBeDefined();
+            expect(mentionNode!.type).toBe('mention');
+            // ID must NOT have 'accountid:' prefix - Jira API rejects it
+            expect(mentionNode!.attrs!.id).toBe('user-id-123');
+            expect(mentionNode!.attrs!.id).not.toContain('accountid:');
+            // Must not have null values - Jira API rejects them
+            expect(mentionNode!.attrs!.localId).toBeUndefined();
+            expect(mentionNode!.attrs!.userType).toBeUndefined();
+        });
+
         it('should handle headings', () => {
             const wikimarkup = 'h1. Heading';
             const result = convertWikimarkupToAdf(wikimarkup);
