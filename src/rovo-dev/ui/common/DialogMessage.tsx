@@ -25,7 +25,7 @@ export const DialogMessageItem: React.FC<{
     isRetryAfterErrorButtonEnabled?: (uid: string) => boolean;
     retryAfterError?: () => void;
     onToolPermissionChoice?: (toolCallId: string, choice: ToolPermissionChoice) => void;
-    customButton?: { text: string; onClick: () => void };
+    customButton?: { text: string; onClick?: () => void };
     onOpenLogFile?: () => void;
     onLinkClick: (href: string) => void;
 }> = ({
