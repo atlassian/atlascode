@@ -10,7 +10,12 @@ import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { v4 } from 'uuid';
 
 import { AnalyticsView } from '../../../../analyticsTypes';
-import { EditIssueAction, IssueCommentAction, OpenRovoDevWithIssueAction } from '../../../../ipc/issueActions';
+import {
+    EditIssueAction,
+    IssueCommentAction,
+    OpenRovoDevWithIssueAction,
+    ShareIssueData,
+} from '../../../../ipc/issueActions';
 import {
     EditIssueData,
     emptyDevelopmentInfo,
@@ -36,7 +41,7 @@ import {
     MentionInfo,
 } from '../AbstractIssueEditorPage';
 import { AtlascodeMentionProvider } from '../common/AtlaskitEditor/AtlascodeMentionsProvider';
-import { MissingScopeBanner } from '../common/missing-scope-banner/MissingScopeBanner';
+import { MissingScopesBanner } from '../common/missing-scopes-banner/MissingScopesBanner';
 import { Development } from '../Development';
 import NavItem from '../NavItem';
 import PullRequests from '../PullRequests';
@@ -112,6 +117,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             'handleStartWorkOnIssue',
             'handleOpenRovoDev',
             'handleCloneIssue',
+            'handleShareIssue',
             'handleInlineEdit',
             'handleEditIssue',
             'handleChildIssueUpdate',
@@ -255,14 +261,17 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
     };
 
-    handleOpenRovoDevWithPromoBanner = () => {
+    handleOpenBanner = (banner: 'rovo' | 'missingScopes') => {
         this.postMessage({
-            action: 'openRovoDevWithPromoBanner',
+            action: banner === 'rovo' ? 'openRovoDevWithPromoBanner' : 'openJiraAuth',
         });
     };
 
-    handleDismissRovoDevPromoBanner = () => {
-        this.postMessage({ action: 'dismissRovoDevPromoBanner' });
+    handleDismissBanner = (banner: 'rovo' | 'missingScopes') => {
+        if (banner === 'rovo') {
+            return this.postMessage({ action: 'dismissRovoDevPromoBanner' });
+        }
+        return this.setState({ showEditorMissedScopeBanner: false });
     };
 
     handleCloneIssue = (cloneData: any) => {
@@ -271,6 +280,17 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             action: 'cloneIssue',
             site: this.state.siteDetails,
             issueData: cloneData,
+        });
+    };
+
+    handleShareIssue = (shareData: ShareIssueData) => {
+        this.setState({ isSomethingLoading: true, loadingField: 'share' });
+        this.postMessage({
+            action: 'shareIssue',
+            site: this.state.siteDetails,
+            issueKey: this.state.key,
+            issueSummary: this.state.fieldValues['summary'] || '',
+            shareData: shareData,
         });
     };
 
@@ -657,8 +677,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             <div>
                 {this.state.showRovoDevPromoBanner && (
                     <RovoDevPromoBanner
-                        onOpen={this.handleOpenRovoDevWithPromoBanner}
-                        onDismiss={this.handleDismissRovoDevPromoBanner}
+                        onOpen={() => this.handleOpenBanner('rovo')}
+                        onDismiss={() => this.handleDismissBanner('rovo')}
                     />
                 )}
                 {this.state.showPMF && (
@@ -671,7 +691,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     />
                 )}
 
-                {this.state.showEditorMissedScopeBanner && <MissingScopeBanner />}
+                {this.state.showEditorMissedScopeBanner && (
+                    <MissingScopesBanner
+                        onDismiss={() => this.handleDismissBanner('missingScopes')}
+                        onOpen={() => {
+                            this.handleOpenBanner('missingScopes');
+                        }}
+                    />
+                )}
                 <div className="ac-page-header">
                     <div className="ac-breadcrumbs">
                         {this.state.hierarchy && this.state.hierarchy.length > 0 && (
@@ -955,8 +982,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     handleStatusChange={this.handleStatusChange}
                     handleStartWork={this.handleStartWorkOnIssue}
                     handleCloneIssue={(cloneData: any) => this.handleCloneIssue(cloneData)}
+                    handleShareIssue={(shareData: ShareIssueData) => this.handleShareIssue(shareData)}
                     handleOpenRovoDev={this.handleOpenRovoDev}
                     isRovoDevEnabled={this.state.isRovoDevEnabled}
+                    issueUrl={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`}
                 />
                 <IssueSidebarCollapsible label="Details" items={commonItems} defaultOpen />
                 <IssueSidebarCollapsible label="More fields" items={advancedItems} />

@@ -1,7 +1,13 @@
 import { Uri } from 'vscode';
 
 import { ScreenEvent, TrackEvent, UIEvent } from './analytics-node-client/src/types';
-import { CreatePrTerminalSelection, ErrorProductArea, FeedbackSentEvent, UIErrorInfo } from './analyticsTypes';
+import {
+    CreateIssueSource,
+    CreatePrTerminalSelection,
+    ErrorProductArea,
+    FeedbackSentEvent,
+    UIErrorInfo,
+} from './analyticsTypes';
 import {
     DetailedSiteInfo,
     isEmptySiteInfo,
@@ -279,6 +285,10 @@ export async function issueWorkStartedEvent(
     return instanceTrackEvent(site, 'workStarted', 'issue', attributesObject);
 }
 
+export async function issueStartWorkErrorEvent(error: { message: string; stack?: string }): Promise<TrackEvent> {
+    return trackEvent('failed', 'startWork', { attributes: { error } });
+}
+
 export async function issueUpdatedEvent(
     site: DetailedSiteInfo,
     issueKey: string,
@@ -291,7 +301,7 @@ export async function issueUpdatedEvent(
     });
 }
 
-export async function startIssueCreationEvent(source: string, product: Product): Promise<TrackEvent> {
+export async function startIssueCreationEvent(source: CreateIssueSource, product: Product): Promise<TrackEvent> {
     return trackEvent('createFromSource', 'issue', { attributes: { source: source, hostProduct: product.name } });
 }
 
@@ -465,6 +475,10 @@ export async function issueSuggestionGeneratedEvent(): Promise<TrackEvent> {
 
 export async function issueSuggestionFailedEvent(error: string): Promise<TrackEvent> {
     return trackEvent('failed', 'issueSuggestion', { attributes: { error } });
+}
+
+export async function sentryCapturedExceptionFailedEvent(error: string): Promise<TrackEvent> {
+    return trackEvent('failed', 'captureException', { attributes: { error } });
 }
 
 export async function issueSuggestionSettingsChangeEvent(settings: IssueSuggestionSettings): Promise<TrackEvent> {

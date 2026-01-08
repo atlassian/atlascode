@@ -20,6 +20,7 @@ import {
     installedEvent,
     issueCommentEvent,
     issueCreatedEvent,
+    issueStartWorkErrorEvent,
     issueSuggestionFailedEvent,
     issueSuggestionGeneratedEvent,
     issueSuggestionSettingsChangeEvent,
@@ -47,13 +48,14 @@ import {
     prUrlCopiedEvent,
     quickFlowEvent,
     saveManualCodeEvent,
+    sentryCapturedExceptionFailedEvent,
     startIssueCreationEvent,
     uiErrorEvent,
     upgradedEvent,
     viewScreenEvent,
 } from './analytics';
 import { AnalyticsClient } from './analytics-node-client/src/client.min.js';
-import { FeedbackSentEvent, UIErrorInfo } from './analyticsTypes';
+import { CreateIssueSource, FeedbackSentEvent, UIErrorInfo } from './analyticsTypes';
 import { DetailedSiteInfo, Product, SiteInfo } from './atlclients/authInfo';
 import { IssueSuggestionSettings } from './config/model';
 import { AnalyticsApi } from './lib/analyticsApi';
@@ -162,6 +164,12 @@ export class VSCAnalyticsApi implements AnalyticsApi {
         });
     }
 
+    public async fireIssueStartWorkErrorEvent(message: string, stack?: string): Promise<void> {
+        return issueStartWorkErrorEvent({ message, stack }).then((e) => {
+            this._analyticsClient.sendTrackEvent(e);
+        });
+    }
+
     public async fireIssueUpdatedEvent(
         site: DetailedSiteInfo,
         issueKey: string,
@@ -173,7 +181,7 @@ export class VSCAnalyticsApi implements AnalyticsApi {
         });
     }
 
-    public async fireStartIssueCreationEvent(source: string, product: Product): Promise<void> {
+    public async fireStartIssueCreationEvent(source: CreateIssueSource, product: Product): Promise<void> {
         return startIssueCreationEvent(source, product).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
@@ -393,6 +401,11 @@ export class VSCAnalyticsApi implements AnalyticsApi {
 
     async fireApiTokenRetainedEvent() {
         const event = await apiTokenRetainedEvent();
+        this._analyticsClient.sendTrackEvent(event);
+    }
+
+    async fireSentryCapturedExceptionFailedEvent({ error }: { error: string }) {
+        const event = await sentryCapturedExceptionFailedEvent(error);
         this._analyticsClient.sendTrackEvent(event);
     }
 }

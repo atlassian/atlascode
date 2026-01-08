@@ -1,6 +1,4 @@
 import CheckCircleIcon from '@atlaskit/icon/core/check-circle';
-import ChevronDownIcon from '@atlaskit/icon/core/chevron-down';
-import ChevronRightIcon from '@atlaskit/icon/core/chevron-right';
 import CopyIcon from '@atlaskit/icon/core/copy';
 import LinkExternalIcon from '@atlaskit/icon/core/link-external';
 import StatusErrorIcon from '@atlaskit/icon/core/status-error';
@@ -20,13 +18,14 @@ import {
 } from '../rovoDevViewStyles';
 import { DialogMessage } from '../utils';
 import { MarkedDown } from './common';
+import { ExpandableSection } from './ExpandableSection';
 
 export const DialogMessageItem: React.FC<{
     msg: DialogMessage;
     isRetryAfterErrorButtonEnabled?: (uid: string) => boolean;
     retryAfterError?: () => void;
     onToolPermissionChoice?: (toolCallId: string, choice: ToolPermissionChoice) => void;
-    customButton?: { text: string; onClick: () => void };
+    customButton?: { text: string; onClick?: () => void };
     onOpenLogFile?: () => void;
     onLinkClick: (href: string) => void;
 }> = ({
@@ -40,6 +39,7 @@ export const DialogMessageItem: React.FC<{
 }) => {
     const [isDetailsExpanded, setIsDetailsExpanded] = React.useState(false);
     const [isStackTraceExpanded, setIsStackTraceExpanded] = React.useState(false);
+    const [isStderrExpanded, setIsStderrExpanded] = React.useState(false);
     const [isLogsExpanded, setIsLogsExpanded] = React.useState(false);
     const [isCopied, setIsCopied] = React.useState(false);
 
@@ -53,7 +53,10 @@ export const DialogMessageItem: React.FC<{
             parts.push(`\n${msg.statusCode}`);
         }
         if (msg.stackTrace) {
-            parts.push(`\n\nStack Trace:\n${msg.stackTrace}`);
+            parts.push(`\n\nExtension Stack Trace:\n${msg.stackTrace}`);
+        }
+        if (msg.stderr) {
+            parts.push(`\n\nRovo Dev Stderr:\n${msg.stderr}`);
         }
         if (msg.rovoDevLogs && msg.rovoDevLogs.length > 0) {
             parts.push(`\n\nRovo Dev Logs:\n${msg.rovoDevLogs.join('\n')}`);
@@ -172,180 +175,92 @@ export const DialogMessageItem: React.FC<{
 
                     {msg.statusCode && <div style={{ fontSize: 'smaller', textAlign: 'right' }}>{msg.statusCode}</div>}
 
-                    {(msg.stackTrace || (msg.rovoDevLogs && msg.rovoDevLogs.length > 0)) && (
-                        <div style={{ marginTop: '8px' }}>
-                            <button
-                                style={{
-                                    background: 'none',
-                                    border: 'none',
-                                    color: 'var(--vscode-textLink-foreground)',
-                                    cursor: 'pointer',
-                                    padding: '0',
-                                    fontSize: 'inherit',
-                                    textDecoration: 'underline',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px',
-                                }}
-                                onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
-                            >
-                                {isDetailsExpanded ? (
-                                    <ChevronDownIcon label="" spacing="none" />
-                                ) : (
-                                    <ChevronRightIcon label="" spacing="none" />
-                                )}
-                                Details
-                            </button>
-                            {isDetailsExpanded && (
-                                <div style={{ marginLeft: '20px' }}>
-                                    {msg.stackTrace && (
-                                        <div style={{ marginTop: '8px' }}>
-                                            <button
-                                                style={{
-                                                    background: 'none',
-                                                    border: 'none',
-                                                    color: 'var(--vscode-textLink-foreground)',
-                                                    cursor: 'pointer',
-                                                    padding: '0',
-                                                    fontSize: 'inherit',
-                                                    textDecoration: 'underline',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '4px',
-                                                }}
-                                                onClick={() => setIsStackTraceExpanded(!isStackTraceExpanded)}
-                                            >
-                                                {isStackTraceExpanded ? (
-                                                    <ChevronDownIcon label="" spacing="none" />
-                                                ) : (
-                                                    <ChevronRightIcon label="" spacing="none" />
-                                                )}
-                                                Stack Trace
-                                            </button>
-                                            {isStackTraceExpanded && (
-                                                <div
-                                                    style={{
-                                                        marginTop: '8px',
-                                                        padding: '8px',
-                                                        backgroundColor: 'var(--vscode-editor-background)',
-                                                        border: '1px solid var(--vscode-panel-border)',
-                                                        borderRadius: '4px',
-                                                        fontSize: 'smaller',
-                                                        fontFamily: 'var(--vscode-editor-font-family)',
-                                                        whiteSpace: 'pre-wrap',
-                                                        wordBreak: 'break-word',
-                                                        maxHeight: '200px',
-                                                        overflowY: 'auto',
-                                                    }}
-                                                >
-                                                    {msg.stackTrace}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {msg.rovoDevLogs && msg.rovoDevLogs.length > 0 && (
-                                        <div style={{ marginTop: '8px' }}>
-                                            <div
-                                                style={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'space-between',
-                                                }}
-                                            >
-                                                <button
-                                                    style={{
-                                                        background: 'none',
-                                                        border: 'none',
-                                                        color: 'var(--vscode-textLink-foreground)',
-                                                        cursor: 'pointer',
-                                                        padding: '0',
-                                                        fontSize: 'inherit',
-                                                        textDecoration: 'underline',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '4px',
-                                                    }}
-                                                    onClick={() => setIsLogsExpanded(!isLogsExpanded)}
-                                                >
-                                                    {isLogsExpanded ? (
-                                                        <ChevronDownIcon label="" spacing="none" />
-                                                    ) : (
-                                                        <ChevronRightIcon label="" spacing="none" />
-                                                    )}
-                                                    Rovo Dev Logs
-                                                </button>
-                                                {onOpenLogFile && (
-                                                    <Tooltip content="Open log file in editor">
-                                                        <button
-                                                            aria-label="open-log-file-button"
-                                                            className="chat-message-action"
-                                                            onClick={onOpenLogFile}
-                                                            style={{
-                                                                background: 'none',
-                                                                border: 'none',
-                                                                cursor: 'pointer',
-                                                                padding: '4px',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                color: 'var(--vscode-foreground)',
-                                                            }}
-                                                        >
-                                                            <LinkExternalIcon label="Open log file" spacing="none" />
-                                                        </button>
-                                                    </Tooltip>
-                                                )}
-                                            </div>
-                                            {isLogsExpanded && (
-                                                <div
-                                                    style={{
-                                                        marginTop: '8px',
-                                                        padding: '8px',
-                                                        backgroundColor: 'var(--vscode-editor-background)',
-                                                        border: '1px solid var(--vscode-panel-border)',
-                                                        borderRadius: '4px',
-                                                        fontSize: 'smaller',
-                                                        fontFamily: 'var(--vscode-editor-font-family)',
-                                                        whiteSpace: 'pre-wrap',
-                                                        wordBreak: 'break-word',
-                                                        maxHeight: '200px',
-                                                        overflowY: 'auto',
-                                                    }}
-                                                >
-                                                    {msg.rovoDevLogs.join('\n')}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    <div
-                                        style={{
-                                            display: 'flex',
-                                            justifyContent: 'flex-end',
-                                            width: '100%',
-                                            marginTop: '12px',
-                                        }}
+                    {(msg.stackTrace || msg.stderr || (msg.rovoDevLogs && msg.rovoDevLogs.length > 0)) && (
+                        <ExpandableSection
+                            title="Details"
+                            isExpanded={isDetailsExpanded}
+                            onToggle={() => setIsDetailsExpanded(!isDetailsExpanded)}
+                        >
+                            <div style={{ marginLeft: '20px' }}>
+                                {msg.stackTrace && (
+                                    <ExpandableSection
+                                        title="Extension Stack Trace"
+                                        isExpanded={isStackTraceExpanded}
+                                        onToggle={() => setIsStackTraceExpanded(!isStackTraceExpanded)}
                                     >
-                                        <Tooltip
-                                            key={isCopied ? 'copied' : 'copy'}
-                                            content={isCopied ? 'Copied!' : 'Copy to clipboard'}
+                                        {msg.stackTrace}
+                                    </ExpandableSection>
+                                )}
+
+                                {msg.stderr && (
+                                    <ExpandableSection
+                                        title="Rovo Dev Stderr"
+                                        isExpanded={isStderrExpanded}
+                                        onToggle={() => setIsStderrExpanded(!isStderrExpanded)}
+                                    >
+                                        {msg.stderr}
+                                    </ExpandableSection>
+                                )}
+
+                                {msg.rovoDevLogs && msg.rovoDevLogs.length > 0 && (
+                                    <ExpandableSection
+                                        title="Rovo Dev Logs"
+                                        isExpanded={isLogsExpanded}
+                                        onToggle={() => setIsLogsExpanded(!isLogsExpanded)}
+                                        headerActions={
+                                            onOpenLogFile && (
+                                                <Tooltip content="Open log file in editor">
+                                                    <button
+                                                        aria-label="open-log-file-button"
+                                                        className="chat-message-action"
+                                                        onClick={onOpenLogFile}
+                                                        style={{
+                                                            background: 'none',
+                                                            border: 'none',
+                                                            cursor: 'pointer',
+                                                            padding: '4px',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            color: 'var(--vscode-foreground)',
+                                                        }}
+                                                    >
+                                                        <LinkExternalIcon label="Open log file" spacing="none" />
+                                                    </button>
+                                                </Tooltip>
+                                            )
+                                        }
+                                    >
+                                        {msg.rovoDevLogs.join('\n')}
+                                    </ExpandableSection>
+                                )}
+
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        justifyContent: 'flex-end',
+                                        width: '100%',
+                                        marginTop: '12px',
+                                    }}
+                                >
+                                    <Tooltip
+                                        key={isCopied ? 'copied' : 'copy'}
+                                        content={isCopied ? 'Copied!' : 'Copy to clipboard'}
+                                    >
+                                        <button
+                                            aria-label="copy-details-button"
+                                            className={`chat-message-action copy-button ${isCopied ? 'copied' : ''}`}
+                                            onClick={copyToClipboard}
                                         >
-                                            <button
-                                                aria-label="copy-details-button"
-                                                className={`chat-message-action copy-button ${isCopied ? 'copied' : ''}`}
-                                                onClick={copyToClipboard}
-                                            >
-                                                {isCopied ? (
-                                                    <CheckCircleIcon label="Copied!" spacing="none" />
-                                                ) : (
-                                                    <CopyIcon label="Copy to clipboard" spacing="none" />
-                                                )}
-                                            </button>
-                                        </Tooltip>
-                                    </div>
+                                            {isCopied ? (
+                                                <CheckCircleIcon label="Copied!" spacing="none" />
+                                            ) : (
+                                                <CopyIcon label="Copy to clipboard" spacing="none" />
+                                            )}
+                                        </button>
+                                    </Tooltip>
                                 </div>
-                            )}
-                        </div>
+                            </div>
+                        </ExpandableSection>
                     )}
                 </div>
             </div>

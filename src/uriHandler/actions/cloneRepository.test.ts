@@ -4,6 +4,13 @@ import { expansionCastTo } from '../../../testsutil';
 import { CheckoutHelper } from '../../bitbucket/interfaces';
 import { CloneRepositoryUriHandler } from './cloneRepository';
 
+jest.mock('../../logger', () => ({
+    Logger: {
+        debug: jest.fn(),
+        error: jest.fn(),
+    },
+}));
+
 describe('CloneRepositoryUriHandlerAction', () => {
     const mockCheckoutHelper = {
         cloneRepository: jest.fn(),

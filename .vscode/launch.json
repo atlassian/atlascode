@@ -36,9 +36,10 @@
                 "ROVODEV_PORT": "8899",
                 "ROVODEV_ENABLED": "true",
                 "ROVODEV_BBY": "true",
-                "ROVODEV_SANDBOX_ID": "bby_sandbox"
+                "ROVODEV_SANDBOX_ID": "bby_sandbox",
+                "ROVODEV_SERVE_SESSION_TOKEN": "bby-dev-session-token"
             },
-            "preLaunchTask": "Start RovoDev Server",
+            "preLaunchTask": "Build and Start RovoDev",
             "debugWebviews": true,
             "debugWebWorkerHost": true
         },

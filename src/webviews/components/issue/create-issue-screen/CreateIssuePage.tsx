@@ -27,7 +27,7 @@ import {
     emptyCommonEditorState,
 } from '../AbstractIssueEditorPage';
 import { convertWikimarkupToAdf } from '../common/adfToWikimarkup';
-import { MissingScopeBanner } from '../common/missing-scope-banner/MissingScopeBanner';
+import { MissingScopesBanner } from '../common/missing-scopes-banner/MissingScopesBanner';
 import { CreateIssueButton } from './actions/CreateIssueButton';
 import { Panel } from './Panel';
 
@@ -561,7 +561,16 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                         errorDetails={this.state.errorDetails}
                                     />
                                 )}
-                                {this.state.showEditorMissedScopeBanner && <MissingScopeBanner />}
+                                {this.state.showEditorMissedScopeBanner && (
+                                    <MissingScopesBanner
+                                        onDismiss={() => {
+                                            this.setState({ showEditorMissedScopeBanner: false });
+                                        }}
+                                        onOpen={() => {
+                                            this.postMessage({ action: 'openJiraAuth' });
+                                        }}
+                                    />
+                                )}
                                 <Form name="create-issue" key={this.state.formKey} onSubmit={this.handleSubmit}>
                                     {(frmArgs: any) => {
                                         return (

@@ -1,4 +1,6 @@
-export const ExtensionId = 'atlassian.atlascode';
+import packageJson from 'package.json';
+
+export const ExtensionId = `${packageJson.publisher}.${packageJson.name}`;
 export const ConfigNamespace = 'atlascode';
 export const extensionOutputChannelName = 'Atlassian';
 export const JiraPreSelectedCreateKey = 'jira.lastCreatePreSelectedValues';
@@ -45,6 +47,8 @@ export const enum Commands {
     BitbucketToggleCommentsVisibility = 'atlascode.bb.toggleCommentsVisibility',
     EditThisFile = 'atlascode.bb.editThisFile',
     CreateIssue = 'atlascode.jira.createIssue',
+    CreateIssueFromSidebar = 'atlascode.jira.createIssue.fromSidebar',
+    CreateIssueFromIssueContext = 'atlascode.jira.createIssue.fromIssueContext',
     RefreshAssignedWorkItemsExplorer = 'atlascode.jira.refreshAssignedWorkItemsExplorer',
     JiraFilter = 'atlascode.jira.filter',
     RefreshCustomJqlExplorer = 'atlascode.jira.refreshCustomJqlExplorer',
@@ -101,7 +105,6 @@ export const enum Commands {
 
     // Extension management commands
     AddRecommendedExtension = 'atlascode.addRecommendedExtension',
-    OpenRovoDevLogFile = 'OpenRovoDevLogFile',
 }
 
 // Jira projects field pagination
