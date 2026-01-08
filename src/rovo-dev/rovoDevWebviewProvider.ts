@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 import path from 'path';
-import { Commands } from 'src/constants';
 import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { safeWaitFor } from 'src/rovo-dev/util/waitFor';
@@ -25,7 +24,7 @@ import {
 } from 'vscode';
 
 import { GitErrorCodes } from '../typings/git';
-import { RovodevCommandContext } from './api/componentApi';
+import { RovodevCommandContext, RovodevCommands } from './api/componentApi';
 import { DetailedSiteInfo, ExtensionApi, MinimalIssue } from './api/extensionApi';
 import { RovoDevApiClient, RovoDevApiError, RovoDevHealthcheckResponse } from './client';
 import { buildErrorDetails } from './errorDetailsBuilder';
@@ -513,7 +512,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.OpenRovoDevLogFile:
-                        await commands.executeCommand(Commands.OpenRovoDevLogFile);
+                        await commands.executeCommand(RovodevCommands.OpenRovoDevLogFile);
                         break;
 
                     case RovoDevViewResponseType.StartNewSession:

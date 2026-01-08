@@ -22,7 +22,7 @@ import {
     SiteInfo,
 } from '../../atlclients/authInfo';
 import { configuration, IConfig, JQLEntry } from '../../config/configuration';
-import { Commands } from '../../constants';
+import { Commands, ExtensionId } from '../../constants';
 import { Container } from '../../container';
 import { getFeedbackUser } from '../../feedback/feedbackUser';
 import { AnalyticsApi } from '../../lib/analyticsApi';
@@ -351,7 +351,7 @@ export class VSCConfigActionApi implements ConfigActionApi {
     }
 
     public async openNativeSettings(): Promise<void> {
-        await commands.executeCommand('workbench.action.openSettings', '@ext:atlassian.atlascode');
+        await commands.executeCommand('workbench.action.openSettings', `@ext:${ExtensionId}`);
         this._analyticsApi.fireOpenSettingsButtonEvent('advancedConfigsPanel');
     }
 

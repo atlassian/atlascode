@@ -29,7 +29,7 @@ const RovoDevInfo = {
     },
 };
 
-function GetRovoDevURIs(context: ExtensionContext) {
+export function GetRovoDevURIs(context: ExtensionContext) {
     const platform = process.platform;
     const arch = process.arch;
     const extensionPath = context.storageUri!.fsPath;
@@ -57,7 +57,7 @@ function GetRovoDevURIs(context: ExtensionContext) {
     };
 }
 
-type RovoDevURIs = ReturnType<typeof GetRovoDevURIs>;
+export type RovoDevURIs = ReturnType<typeof GetRovoDevURIs>;
 
 function isPortAvailable(port: number): Promise<boolean> {
     return new Promise<boolean>((resolve) => {
