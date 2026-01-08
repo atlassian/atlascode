@@ -301,6 +301,14 @@ export class RovoDevChatProvider {
         const replayBuffer: RovoDevResponse[] = [];
 
         while (replayInProgress) {
+            // Check for cancellation during replay
+            if (this.pendingCancellation) {
+                await reader.cancel();
+                isDone = true;
+                this._pendingCancellation = false;
+                break;
+            }
+
             const { done, value } = await reader.read();
             if (done) {
                 isDone = true;
@@ -323,6 +331,14 @@ export class RovoDevChatProvider {
         }
 
         while (!isDone) {
+            // Check for cancellation before each read
+            if (this.pendingCancellation) {
+                await reader.cancel();
+                isDone = true;
+                this._pendingCancellation = false;
+                break;
+            }
+
             const { done, value } = await reader.read();
             if (done) {
                 isDone = true;
@@ -336,6 +352,14 @@ export class RovoDevChatProvider {
 
             const data = decoder.decode(value, { stream: true });
             for (const msg of parser.parse(data)) {
+                // Check for cancellation while processing messages
+                if (this.pendingCancellation) {
+                    await reader.cancel();
+                    isDone = true;
+                    this._pendingCancellation = false;
+                    break;
+                }
+
                 if (isFirstMessage) {
                     telemetryProvider?.perfLogger.promptFirstMessageReceived(this._currentPromptId);
                     isFirstMessage = false;
@@ -674,6 +698,10 @@ export class RovoDevChatProvider {
             } catch (error) {
                 // the error is retriable only when it happens during the streaming of a 'chat' response
                 await this.processError(error, { isRetriable: sourceApi === 'chat' });
+            } finally {
+                if (this.pendingCancellation) {
+                    this._pendingCancellation = false;
+                }
             }
         } else {
             await this.processError(new Error('RovoDev client not initialized'));
