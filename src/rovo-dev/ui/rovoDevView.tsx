@@ -160,9 +160,10 @@ const RovoDevView: React.FC = () => {
 
     const onError = useCallback(
         (error: Error, errorMessage: string) => {
+            const msg = `${errorMessage}\n\n${error.message}`;
             dispatch({
                 type: RovoDevViewResponseType.ReportRenderError,
-                errorMessage,
+                errorMessage: msg,
                 errorType: error.name,
                 errorStack: error.stack || undefined,
             });
