@@ -159,8 +159,8 @@ const RovoDevView: React.FC = () => {
     }, [keepFiles, totalModifiedFiles]);
 
     const onError = useCallback(
-        (error: Error, errorMessage: string) => {
-            const msg = `${errorMessage}\n\n${error.message}`;
+        (error: Error, errorMessage?: string) => {
+            const msg = errorMessage ? `${errorMessage}\n\n${error.message}` : error.message;
             dispatch({
                 type: RovoDevViewResponseType.ReportRenderError,
                 errorMessage: msg,
