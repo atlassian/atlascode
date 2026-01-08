@@ -107,7 +107,10 @@ export const modifyFileTitleMap: Record<string, ToolReturnInfo> = {
  *
  * @param msg - The tool-return object to parse.
  */
-export function parseToolReturnMessage(msg: RovoDevToolReturnResponse): ToolReturnParseResult[] {
+export function parseToolReturnMessage(
+    msg: RovoDevToolReturnResponse,
+    onError: (error: Error, msg: string) => void,
+): ToolReturnParseResult[] {
     const resp: ToolReturnParseResult[] = [];
 
     try {
@@ -235,7 +238,10 @@ export function parseToolReturnMessage(msg: RovoDevToolReturnResponse): ToolRetu
                 break;
         }
     } catch (error) {
-        console.warn('Error parsing ToolReturnMessage:', error, msg);
+        console.error('Error parsing ToolReturnMessage:', error, msg);
+        const errorMessage = `Error parsing ToolReturnMessage for tool ${msg.tool_name}`;
+
+        onError(error as Error, errorMessage);
         resp.push({
             content: msg.tool_name,
         });

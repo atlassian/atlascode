@@ -142,10 +142,11 @@ export const renderChatHistory = (
     checkFileExists: CheckFileExistsFunc,
     isRetryAfterErrorButtonEnabled: (uid: string) => boolean,
     retryAfterError: () => void,
+    onError: (error: Error, errorMessage: string) => void,
 ) => {
     switch (msg.event_kind) {
         case 'tool-return':
-            const parsedMessages = parseToolReturnMessage(msg);
+            const parsedMessages = parseToolReturnMessage(msg, onError);
             return parsedMessages.map((message) => {
                 if (message.technicalPlan) {
                     return (

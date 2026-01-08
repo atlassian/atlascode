@@ -26,6 +26,7 @@ interface ChatStreamProps {
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
         onOpenLogFile: () => void;
+        onError: (error: Error, errorMessage: string) => void;
     };
     messagingApi: ReturnType<
         typeof useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>

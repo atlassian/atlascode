@@ -13,6 +13,7 @@ interface MessageDrawerProps {
         checkFileExists: CheckFileExistsFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
+        onError: (error: Error, errorMessage: string) => void;
     };
     opened: boolean;
     onCollapsiblePanelExpanded: () => void;
@@ -21,7 +22,14 @@ interface MessageDrawerProps {
 
 export const MessageDrawer: React.FC<MessageDrawerProps> = ({
     messages,
-    renderProps: { openFile, openJira, checkFileExists, isRetryAfterErrorButtonEnabled, retryPromptAfterError },
+    renderProps: {
+        openFile,
+        openJira,
+        checkFileExists,
+        isRetryAfterErrorButtonEnabled,
+        retryPromptAfterError,
+        onError,
+    },
     onCollapsiblePanelExpanded,
     opened,
     onLinkClick,
@@ -68,6 +76,7 @@ export const MessageDrawer: React.FC<MessageDrawerProps> = ({
                         checkFileExists,
                         isRetryAfterErrorButtonEnabled,
                         retryPromptAfterError,
+                        onError,
                     ),
                 )}
             </div>
