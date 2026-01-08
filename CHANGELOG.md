@@ -1,4 +1,8 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
+## What's new in 4.0.15
+
+### Bug Fixes
+- Added missing labels for PR merge strategies(AXON-1733)
 
 ## What's new in 4.0.14
 
@@ -10,7 +14,7 @@
 
 ### Improvements
 
-- **Rovo Dev Updates**: 
+- **Rovo Dev Updates**:
   - Updated Rovo Dev to v0.13.22
   - Improved keyboard navigation for context and preference buttons (AXON-1697)
   - Made Rovo Dev interface responsive with better width properties and aligned settings actions
