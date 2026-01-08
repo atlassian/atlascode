@@ -1053,7 +1053,9 @@ const RovoDevView: React.FC = () => {
                                             RovodevStaticConfig.isBBY ? undefined : () => onYoloModeToggled()
                                         }
                                         onFullContextToggled={
-                                            isAtlassianUser ? () => onFullContextModeToggled() : undefined
+                                            isAtlassianUser && !RovodevStaticConfig.isBBY
+                                                ? () => onFullContextModeToggled()
+                                                : undefined
                                         }
                                         onSend={sendPrompt}
                                         onCancel={cancelResponse}
