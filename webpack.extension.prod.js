@@ -14,6 +14,9 @@ module.exports = [
         bail: true,
         name: 'extension',
         mode: 'production',
+        // added because of sentry aws sdk imports
+        // read more at https://sentry.io/answers/critical-dependency-the-request-of-a-dependency-is-an-expression/
+        ignoreWarnings: [/Critical dependency/],
         target: 'node',
         entry: {
             extension: './src/extension.ts',
@@ -98,14 +101,6 @@ module.exports = [
             createEnvPlugin({ nodeEnv: 'production' }),
         ],
         externals: ['vscode'],
-        // Ignore harmless warning from vscode-languageserver-types UMD wrapper
-        // The dynamic require in the UMD boilerplate is never actually called
-        ignoreWarnings: [
-            {
-                module: /vscode-languageserver-types/,
-                message: /Critical dependency/,
-            },
-        ],
     },
     {
         bail: true,
