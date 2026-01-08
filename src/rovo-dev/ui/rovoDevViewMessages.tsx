@@ -38,6 +38,8 @@ export const enum RovoDevViewResponseType {
     OpenExternalLink = 'openExternalLink',
     OpenRovoDevLogFile = 'openRovoDevLogFile',
     MessageRendered = 'messageRendered',
+    ReportRenderError = 'reportRenderError',
+    StartNewSession = 'startNewSession',
 }
 
 export type FileOperationType = 'modify' | 'create' | 'delete';
@@ -89,4 +91,14 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.FilterModifiedFilesByContent, { files: ModifiedFile[] }>
     | ReducerAction<RovoDevViewResponseType.OpenExternalLink, { href: string }>
     | ReducerAction<RovoDevViewResponseType.OpenRovoDevLogFile>
-    | ReducerAction<RovoDevViewResponseType.MessageRendered, { promptId: string }>;
+    | ReducerAction<RovoDevViewResponseType.MessageRendered, { promptId: string }>
+    | ReducerAction<
+          RovoDevViewResponseType.ReportRenderError,
+          {
+              errorType: string;
+              errorMessage: string;
+              errorStack?: string;
+              componentStack?: string;
+          }
+      >
+    | ReducerAction<RovoDevViewResponseType.StartNewSession>;

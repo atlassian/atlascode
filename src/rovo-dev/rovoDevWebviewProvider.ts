@@ -515,8 +515,31 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await commands.executeCommand(RovodevCommands.OpenRovoDevLogFile);
                         break;
 
+                    case RovoDevViewResponseType.StartNewSession:
+                        await this.executeNewSession();
+                        break;
+
                     case RovoDevViewResponseType.MessageRendered:
                         this._chatProvider.signalMessageRendered(e.promptId);
+                        break;
+
+                    case RovoDevViewResponseType.ReportRenderError:
+                        const renderError = new Error(`Render Error: ${e.errorMessage}`);
+                        renderError.name = e.errorType;
+                        // Build detailed error context
+                        const errorDetails: string[] = [];
+                        if (e.errorStack) {
+                            errorDetails.push(`Error Stack:\n${e.errorStack}`);
+                        }
+                        if (e.componentStack) {
+                            errorDetails.push(`Component Stack:\n${e.componentStack}`);
+                        }
+                        const contextMessage =
+                            errorDetails.length > 0
+                                ? `Type: ${e.errorType}\n${errorDetails.join('\n\n')}`
+                                : `Type: ${e.errorType}`;
+
+                        RovoDevLogger.error(renderError, contextMessage);
                         break;
 
                     default:
