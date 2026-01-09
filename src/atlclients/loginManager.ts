@@ -336,7 +336,7 @@ export class LoginManager {
                 displayName: json.displayName,
                 id: userId,
                 email: json.emailAddress,
-                avatarUrl: json.avatarUrls['48x48'],
+                avatarUrl: json.avatarUrls?.['48x48'] || '',
             };
         } else {
             credentials.user = {
