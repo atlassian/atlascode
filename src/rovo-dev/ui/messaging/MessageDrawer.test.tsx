@@ -34,6 +34,7 @@ describe('MessageDrawer', () => {
         retryPromptAfterError: jest.fn(),
         getOriginalText: jest.fn(),
         onOpenLogFile: jest.fn(),
+        onError: jest.fn(),
     };
 
     const mockMessages: ChatMessage[] = [
