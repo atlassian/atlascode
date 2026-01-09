@@ -21,6 +21,7 @@ import { useMessagingApi } from './messagingApi';
 import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
 import { PromptContextCollection } from './prompt-box/promptContext/promptContextCollection';
 import { UpdatedFilesComponent } from './prompt-box/updated-files/UpdatedFilesComponent';
+import { RovoDevErrorBoundary } from './RovoDevErrorBoundary';
 import {
     FileOperationType,
     McpConsentChoice,
@@ -74,6 +75,7 @@ const RovoDevView: React.FC = () => {
     const [lastCompletedPromptId, setLastCompletedPromptId] = useState<string | undefined>(undefined);
     const [isAtlassianUser, setIsAtlassianUser] = useState(false);
     const [feedbackType, setFeedbackType] = React.useState<'like' | 'dislike' | undefined>(undefined);
+
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
         const initializeTheme = () => {
@@ -156,58 +158,74 @@ const RovoDevView: React.FC = () => {
         setPendingToolCallMessage('');
     }, [keepFiles, totalModifiedFiles]);
 
-    const handleAppendModifiedFileToolReturns = useCallback((toolReturn: RovoDevToolReturnResponse) => {
-        if (isCodeChangeTool(toolReturn.tool_name)) {
-            const msg = parseToolReturnMessage(toolReturn).filter((msg) => msg.filePath !== undefined);
+    const onError = useCallback(
+        (error: Error, errorMessage?: string) => {
+            const msg = errorMessage ? `${errorMessage}\n\n${error.message}` : error.message;
+            dispatch({
+                type: RovoDevViewResponseType.ReportRenderError,
+                errorMessage: msg,
+                errorType: error.name,
+                errorStack: error.stack || undefined,
+            });
+        },
+        [dispatch],
+    );
 
-            setTotalModifiedFiles((currentFiles) => {
-                const filesMap = new Map([...currentFiles].map((item) => [item.filePath!, item]));
+    const handleAppendModifiedFileToolReturns = useCallback(
+        (toolReturn: RovoDevToolReturnResponse) => {
+            if (isCodeChangeTool(toolReturn.tool_name)) {
+                const msg = parseToolReturnMessage(toolReturn, onError).filter((msg) => msg.filePath !== undefined);
 
-                // Logic for handling deletions and modifications
-                msg.forEach((file) => {
-                    if (!file.filePath) {
-                        return;
-                    }
-                    if (file.type === 'delete') {
-                        if (filesMap.has(file.filePath)) {
-                            const existingFile = filesMap.get(file.filePath);
-                            if (existingFile?.type === 'modify') {
-                                filesMap.set(file.filePath, file); // If file was only modified but not created by RovoDev, still show deletion
+                setTotalModifiedFiles((currentFiles) => {
+                    const filesMap = new Map([...currentFiles].map((item) => [item.filePath!, item]));
+
+                    // Logic for handling deletions and modifications
+                    msg.forEach((file) => {
+                        if (!file.filePath) {
+                            return;
+                        }
+                        if (file.type === 'delete') {
+                            if (filesMap.has(file.filePath)) {
+                                const existingFile = filesMap.get(file.filePath);
+                                if (existingFile?.type === 'modify') {
+                                    filesMap.set(file.filePath, file); // If file was only modified but not created by RovoDev, still show deletion
+                                } else {
+                                    filesMap.delete(file.filePath); // If file was created by RovoDev, remove it from the map
+                                }
                             } else {
-                                filesMap.delete(file.filePath); // If file was created by RovoDev, remove it from the map
+                                filesMap.set(file.filePath, file);
                             }
                         } else {
-                            filesMap.set(file.filePath, file);
+                            if (!filesMap.has(file.filePath) || filesMap.get(file.filePath)?.type === 'delete') {
+                                filesMap.set(file.filePath, file); // Only add on first modification so we can track if file was created by RovoDev or just modified
+                            }
                         }
-                    } else {
-                        if (!filesMap.has(file.filePath) || filesMap.get(file.filePath)?.type === 'delete') {
-                            filesMap.set(file.filePath, file); // Only add on first modification so we can track if file was created by RovoDev or just modified
-                        }
+                    });
+
+                    const allFiles = Array.from(filesMap.values());
+                    const modifiedFiles = allFiles
+                        .filter((file) =>
+                            [
+                                modifyFileTitleMap.updated.type,
+                                modifyFileTitleMap.created.type,
+                                modifyFileTitleMap.deleted.type,
+                            ].includes(file.type!),
+                        )
+                        .map((file) => ({
+                            filePath: file.filePath!,
+                            type: file.type as FileOperationType,
+                        }));
+
+                    if (modifiedFiles.length > 0) {
+                        setPendingFilesForFiltering(modifiedFiles);
                     }
+
+                    return allFiles;
                 });
-
-                const allFiles = Array.from(filesMap.values());
-                const modifiedFiles = allFiles
-                    .filter((file) =>
-                        [
-                            modifyFileTitleMap.updated.type,
-                            modifyFileTitleMap.created.type,
-                            modifyFileTitleMap.deleted.type,
-                        ].includes(file.type!),
-                    )
-                    .map((file) => ({
-                        filePath: file.filePath!,
-                        type: file.type as FileOperationType,
-                    }));
-
-                if (modifiedFiles.length > 0) {
-                    setPendingFilesForFiltering(modifiedFiles);
-                }
-
-                return allFiles;
-            });
-        }
-    }, []);
+            }
+        },
+        [onError],
+    );
 
     const setSummaryMessageInHistory = useCallback(() => {
         setHistory((prev) => {
@@ -917,7 +935,7 @@ const RovoDevView: React.FC = () => {
         (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance');
 
     return (
-        <>
+        <RovoDevErrorBoundary postMessage={postMessage}>
             <div
                 id="rovoDevDragDropOverlay"
                 onDragLeave={(event) => {
@@ -967,6 +985,7 @@ const RovoDevView: React.FC = () => {
                         isRetryAfterErrorButtonEnabled,
                         retryPromptAfterError,
                         onOpenLogFile: () => postMessage({ type: RovoDevViewResponseType.OpenRovoDevLogFile }),
+                        onError,
                     }}
                     messagingApi={{
                         postMessage,
@@ -1051,7 +1070,9 @@ const RovoDevView: React.FC = () => {
                                             RovodevStaticConfig.isBBY ? undefined : () => onYoloModeToggled()
                                         }
                                         onFullContextToggled={
-                                            isAtlassianUser ? () => onFullContextModeToggled() : undefined
+                                            isAtlassianUser && !RovodevStaticConfig.isBBY
+                                                ? () => onFullContextModeToggled()
+                                                : undefined
                                         }
                                         onSend={sendPrompt}
                                         onCancel={cancelResponse}
@@ -1072,7 +1093,7 @@ const RovoDevView: React.FC = () => {
                     </div>
                 )}
             </div>
-        </>
+        </RovoDevErrorBoundary>
     );
 };
 

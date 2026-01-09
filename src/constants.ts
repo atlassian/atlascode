@@ -1,4 +1,6 @@
-export const ExtensionId = 'atlassian.atlascode';
+import packageJson from 'package.json';
+
+export const ExtensionId = `${packageJson.publisher}.${packageJson.name}`;
 export const ConfigNamespace = 'atlascode';
 export const extensionOutputChannelName = 'Atlassian';
 export const JiraPreSelectedCreateKey = 'jira.lastCreatePreSelectedValues';
@@ -103,7 +105,6 @@ export const enum Commands {
 
     // Extension management commands
     AddRecommendedExtension = 'atlascode.addRecommendedExtension',
-    OpenRovoDevLogFile = 'OpenRovoDevLogFile',
 }
 
 // Jira projects field pagination

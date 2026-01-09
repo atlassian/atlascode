@@ -64,7 +64,7 @@ export class JiraPKCEResponseHandler extends ResponseHandler {
                 id: data.accountId,
                 displayName: data.displayName,
                 email: data.emailAddress,
-                avatarUrl: data.avatarUrls['48x48'],
+                avatarUrl: data.avatarUrls?.['48x48'] || '',
             };
         } catch (err) {
             Logger.error(err, 'Error fetching Jira user');

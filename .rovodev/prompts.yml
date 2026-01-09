@@ -1,0 +1,4 @@
+prompts:
+  - name: bump-version
+    description: Bump version
+    content_file: bump-version.md

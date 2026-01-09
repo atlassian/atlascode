@@ -4,16 +4,8 @@ import { EventEmitter } from 'vscode';
 import { ErrorProductArea } from './analyticsTypes';
 import { configuration, OutputLevel } from './config/configuration';
 import { extensionOutputChannelName } from './constants';
-
-// Let's prevent a circular dependency with Container and the other modules that it imports
-function isDebugging(): boolean {
-    try {
-        const { Container } = require('./container');
-        return Container.isDebugging;
-    } catch {
-        return false;
-    }
-}
+import { SentryService } from './sentry';
+import { isDebugging } from './util/isDebugging';
 
 function getConsolePrefix(productArea?: string) {
     return productArea ? `[${extensionOutputChannelName} ${productArea}]` : `[${extensionOutputChannelName}]`;
@@ -155,6 +147,23 @@ export class Logger {
         ...params: string[]
     ): void {
         Logger._onError.fire({ error: ex, errorMessage, capturedBy, params, productArea });
+
+        if (SentryService.getInstance().isInitialized()) {
+            try {
+                SentryService.getInstance().captureException(ex, {
+                    tags: {
+                        productArea: productArea || 'unknown',
+                        capturedBy: capturedBy || 'unknown',
+                    },
+                    extra: {
+                        errorMessage,
+                        params,
+                    },
+                });
+            } catch (err) {
+                console.error('Error reporting to Sentry:', err);
+            }
+        }
 
         if (this.level === OutputLevel.Silent) {
             return;

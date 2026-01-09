@@ -238,6 +238,27 @@ describe('JiraPKCEResponseHandler', () => {
                 expect.any(Object),
             );
         });
+
+        it('should handle missing avatarUrls gracefully', async () => {
+            const mockUserData = {
+                accountId: 'user_id',
+                displayName: 'User',
+                emailAddress: 'user@example.com',
+            };
+
+            mockAxios.mockResolvedValueOnce({
+                data: mockUserData,
+            } as AxiosResponse);
+
+            const result: UserInfo = await handler.user(mockAccessToken, mockResource);
+
+            expect(result).toEqual({
+                id: 'user_id',
+                displayName: 'User',
+                email: 'user@example.com',
+                avatarUrl: '',
+            });
+        });
     });
 
     describe('accessibleResources', () => {

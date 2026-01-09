@@ -476,7 +476,14 @@ describe('CloudPullRequestApi', () => {
                 data: {
                     destination: {
                         branch: {
-                            merge_strategies: ['merge_commit', 'squash', 'fast_forward'],
+                            merge_strategies: [
+                                'merge_commit',
+                                'squash',
+                                'fast_forward',
+                                'squash_fast_forward',
+                                'rebase_fast_forward',
+                                'rebase_merge',
+                            ],
                             default_merge_strategy: 'squash',
                         },
                     },
@@ -494,6 +501,9 @@ describe('CloudPullRequestApi', () => {
                 { label: 'Merge commit', value: 'merge_commit', isDefault: false },
                 { label: 'Squash', value: 'squash', isDefault: true },
                 { label: 'Fast forward', value: 'fast_forward', isDefault: false },
+                { label: 'Squash, fast forward', value: 'squash_fast_forward', isDefault: false },
+                { label: 'Rebase, fast forward', value: 'rebase_fast_forward', isDefault: false },
+                { label: 'Rebase, merge', value: 'rebase_merge', isDefault: false },
             ]);
         });
     });

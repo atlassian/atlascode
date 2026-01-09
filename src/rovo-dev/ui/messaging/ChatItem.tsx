@@ -24,6 +24,7 @@ interface ChatItemProps {
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
         onOpenLogFile: () => void;
+        onError: (error: Error, errorMessage: string) => void;
     };
     drawerOpen: boolean;
     onLinkClick: (href: string) => void;
@@ -67,7 +68,7 @@ export const ChatItem = React.memo<ChatItemProps>(
                 />
             );
         } else if (block.event_kind === 'tool-return') {
-            const parsedMessages = parseToolReturnMessage(block);
+            const parsedMessages = parseToolReturnMessage(block, renderProps.onError);
 
             return parsedMessages.map((message) => {
                 if (message.technicalPlan) {
