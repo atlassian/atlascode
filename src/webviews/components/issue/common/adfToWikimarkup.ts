@@ -120,18 +120,19 @@ function sanitizeAdf(node: AdfNode): AdfNode {
 
     // Remove null/undefined attributes - Jira API doesn't accept them
     if (sanitized.attrs) {
-        const cleanedAttrs: Record<string, any> = {};
-        for (const [key, value] of Object.entries(sanitized.attrs)) {
-            if (value !== null && value !== undefined) {
-                cleanedAttrs[key] = value;
-            }
-        }
+        const cleanedAttrs = Object.entries(sanitized.attrs).reduce(
+            (acc, [key, value]) => {
+                if (value !== null && value !== undefined) {
+                    acc[key] = value;
+                }
+                return acc;
+            },
+            {} as Record<string, any>,
+        );
 
         // Strip 'accountid:' prefix from mention id (WikiMarkupTransformer adds it, but API expects plain id)
         if (sanitized.type === 'mention' && cleanedAttrs.id && typeof cleanedAttrs.id === 'string') {
-            if (cleanedAttrs.id.startsWith('accountid:')) {
-                cleanedAttrs.id = cleanedAttrs.id.replace('accountid:', '');
-            }
+            cleanedAttrs.id = cleanedAttrs.id.replace(/^accountid:/, '');
         }
 
         // If attrs is now empty, remove it entirely
