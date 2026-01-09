@@ -5,11 +5,6 @@
 ### Bug Fixes
 
 - Added missing labels for PR merge strategies(AXON-1733)
-
-## What's new in 4.0.15
-
-### Bug Fixes
-
 - Fixed authentication error
 
 ## What's new in 4.0.14
