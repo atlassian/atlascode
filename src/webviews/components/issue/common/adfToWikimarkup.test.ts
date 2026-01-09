@@ -119,6 +119,55 @@ describe('adfToWikimarkup', () => {
             expect(hasNullLocalId).toBe(false);
         });
 
+        it('should remove all null and undefined values from attrs', () => {
+            // WikiMarkupTransformer creates mentions with null values like localId, userType
+            const wikimarkup = '[~accountid:test-user-id]';
+            const result = convertWikimarkupToAdf(wikimarkup);
+            const resultStr = JSON.stringify(result);
+            expect(resultStr).not.toContain(':null');
+            expect(resultStr).not.toContain(':undefined');
+        });
+
+        it('should remove accountid: prefix from mention id', () => {
+            const wikimarkup = '[~accountid:abc123def456]';
+            const result = convertWikimarkupToAdf(wikimarkup);
+            const resultStr = JSON.stringify(result);
+            // Should have the id without prefix
+            expect(resultStr).toContain('"id":"abc123def456"');
+            // Should NOT have the prefix
+            expect(resultStr).not.toContain('accountid:abc123def456');
+        });
+
+        it('should handle mention with text in wikimarkup format', () => {
+            const wikimarkup = 'Hello [~accountid:user-abc] how are you?';
+            const result = convertWikimarkupToAdf(wikimarkup);
+            expect(result.version).toBe(1);
+            expect(result.type).toBe('doc');
+            // Check that mention node exists and id is cleaned
+            const resultStr = JSON.stringify(result);
+            expect(resultStr).toContain('"type":"mention"');
+            expect(resultStr).toContain('"id":"user-abc"');
+        });
+
+        it('should produce valid mention structure for Jira API v3', () => {
+            // This test documents the exact ADF structure required by Jira API v3
+            const wikimarkup = '[~accountid:user-id-123]';
+            const result = convertWikimarkupToAdf(wikimarkup);
+
+            // Find the mention node in the ADF
+            const paragraph = result.content?.[0];
+            const mentionNode = paragraph?.content?.find((node: any) => node.type === 'mention');
+
+            expect(mentionNode).toBeDefined();
+            expect(mentionNode!.type).toBe('mention');
+            // ID must NOT have 'accountid:' prefix - Jira API rejects it
+            expect(mentionNode!.attrs!.id).toBe('user-id-123');
+            expect(mentionNode!.attrs!.id).not.toContain('accountid:');
+            // Must not have null values - Jira API rejects them
+            expect(mentionNode!.attrs!.localId).toBeUndefined();
+            expect(mentionNode!.attrs!.userType).toBeUndefined();
+        });
+
         it('should handle headings', () => {
             const wikimarkup = 'h1. Heading';
             const result = convertWikimarkupToAdf(wikimarkup);
