@@ -30,6 +30,7 @@ export async function transitionIssue(
         issueKey = issueOrKey.key;
         site = issueOrKey.siteDetails;
     } else {
+        Logger.error(new Error('invalid issue or key'), 'Invalid issue parameter for transition');
         throw new Error('invalid issue or key');
     }
 

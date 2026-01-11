@@ -293,7 +293,7 @@ export class Container {
             });
         } catch (err) {
             const error = err as FeatureFlagClientInitError;
-            Logger.debug(`FeatureFlagClient: Failed to initialize the client: ${error.message}`);
+            Logger.error(error, `FeatureFlagClient: Failed to initialize the client`);
             featureFlagClientInitializedEvent(false, error.errorType, error.message).then((e) => {
                 this.analyticsClient.sendTrackEvent(e);
             });

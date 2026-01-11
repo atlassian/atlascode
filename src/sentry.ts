@@ -9,6 +9,7 @@ import * as Sentry from '@sentry/node';
 import { extensions } from 'vscode';
 
 import { ExtensionId } from './constants';
+import { RovodevStaticConfig } from './rovo-dev/api/rovodevStaticConfig';
 
 export interface SentryConfig {
     enabled?: boolean; // Enable/disable Sentry (default: false)
@@ -102,6 +103,8 @@ export class SentryService {
                 // Add version tag
                 const atlascodeVersion = extensions.getExtension(ExtensionId)?.packageJSON.version;
                 scope.setTag('atlascodeVersion', atlascodeVersion);
+
+                scope.setTag('rovoDevEnv', RovodevStaticConfig.isBBY ? 'BBY' : 'IDE');
 
                 // Add extra context
                 if (context?.extra) {

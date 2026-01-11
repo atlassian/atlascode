@@ -1,3 +1,4 @@
+import { RovoDevLogger } from '../util/rovoDevLogger';
 import {
     RovoDevCancelResponse,
     RovoDevChatRequest,
@@ -60,12 +61,19 @@ export class RovoDevApiClient {
             });
         } catch (error) {
             const reason = error.cause?.code || error.message || error;
+            RovoDevLogger.error(error, `Rovo Dev API fetch failed: ${restApi}`, String(reason));
             throw new RovoDevApiError(`Failed to fetch '${restApi} API: ${reason}`, 0, undefined);
         }
 
         if (statusIsSuccessful(response.status)) {
             return response;
         } else {
+            RovoDevLogger.error(
+                new Error(`Failed to fetch '${restApi} API: HTTP ${response.status}`),
+                'Rovo Dev API returned error status',
+                String(response.status),
+                restApi,
+            );
             throw new RovoDevApiError(
                 `Failed to fetch '${restApi} API: HTTP ${response.status}`,
                 response.status,
