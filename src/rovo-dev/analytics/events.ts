@@ -147,6 +147,17 @@ export namespace Track {
         };
     };
 
+    export type ReplayCompleted = {
+        action: 'rovoDevReplayCompleted';
+        subject: 'atlascode';
+        attributes: {
+            rovoDevEnv: RovoDevEnv;
+            appInstanceId: string;
+            sessionId: string;
+            messagePartsCount: number;
+        };
+    };
+
     // TODO: rovodev metadata fields here are different from other events, reconcile later?
     export type PerformanceEvent = {
         action: 'performanceEvent';
@@ -173,4 +184,5 @@ export type TrackEvent =
     | Track.DetailsExpanded
     | Track.CreatePrButtonClicked
     | Track.AiResultViewed
+    | Track.ReplayCompleted
     | Track.PerformanceEvent;
