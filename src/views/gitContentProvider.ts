@@ -4,6 +4,7 @@ import vscode from 'vscode';
 import { BitbucketContext } from '../bitbucket/bbContext';
 import { clientForSite } from '../bitbucket/bbUtils';
 import { Container } from '../container';
+import { Logger } from '../logger';
 import { PRFileDiffQueryParams } from './pullrequest/diffViewHelper';
 
 //This class is responsible for fetching the text of a specific version of a file which may not be on your machine
@@ -35,6 +36,10 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
                     const wsRepo = this.bbContext.getRepository(u);
                     const scm = wsRepo ? Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri) : undefined;
                     if (!scm) {
+                        Logger.error(
+                            new Error('no workspace repo'),
+                            'No workspace repository found for git content provider',
+                        );
                         throw new Error('no workspace repo');
                     }
 

@@ -14,6 +14,7 @@ export class RovoDevPullRequestHandler {
     constructor() {
         const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
         if (!gitExtension) {
+            RovoDevLogger.error(new Error('vscode.git extension not found'), 'Git extension not available');
             throw new Error('vscode.git extension not found');
         }
 
@@ -33,6 +34,7 @@ export class RovoDevPullRequestHandler {
         const gitApi = await this.getGitAPI();
 
         if (gitApi.repositories.length === 0) {
+            RovoDevLogger.error(new Error('No Git repositories found'), 'No Git repositories in workspace');
             throw new Error('No Git repositories found');
         }
 
@@ -124,6 +126,10 @@ export class RovoDevPullRequestHandler {
         const hasUncommitted = await this.hasUncommittedChanges();
         if (hasUncommitted) {
             if (!commitMessage || commitMessage.trim() === '') {
+                RovoDevLogger.error(
+                    new Error('Commit message is required when you have uncommitted changes.'),
+                    'Cannot create PR without commit message',
+                );
                 throw new Error('Commit message is required when you have uncommitted changes.');
             }
 
@@ -144,6 +150,10 @@ export class RovoDevPullRequestHandler {
         } else {
             const hasUnpushed = await this.hasUnpushedCommits();
             if (!hasUnpushed) {
+                RovoDevLogger.error(
+                    new Error('No changes to create PR. Please make changes or commit them first.'),
+                    'No changes available for PR creation',
+                );
                 throw new Error('No changes to create PR. Please make changes or commit them first.');
             }
 
@@ -170,15 +180,19 @@ export class RovoDevPullRequestHandler {
             const errorMessage = error.stderr || error.message || 'Unknown error';
 
             if (errorMessage.includes('no upstream branch')) {
+                RovoDevLogger.error(error, 'Git push failed: no upstream branch');
                 throw new Error(
                     `Branch "${branchName}" has no upstream. Try: git push --set-upstream origin ${branchName}`,
                 );
             } else if (errorMessage.includes('rejected')) {
+                RovoDevLogger.error(error, 'Git push rejected by remote');
                 throw new Error('Push was rejected. The remote branch may have changes you need to pull first.');
             } else if (errorMessage.includes('permission denied') || errorMessage.includes('Authentication failed')) {
+                RovoDevLogger.error(error, 'Git push failed: authentication error');
                 throw new Error('Push failed: Authentication error. Please check your Git credentials.');
             }
 
+            RovoDevLogger.error(error, 'Git push failed with unknown error');
             throw new Error(`Failed to push changes: ${errorMessage}`);
         }
 
