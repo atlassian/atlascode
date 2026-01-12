@@ -13,7 +13,7 @@ import {
     SiteInfo,
 } from './atlclients/authInfo';
 import { CredentialManager } from './atlclients/authStore';
-import { configuration } from './config/configuration';
+import { saveLastCreatePreferences } from './config/configurationHelpers';
 import { Container } from './container';
 import { Logger } from './logger';
 import { RovodevStaticConfig } from './rovo-dev/api/rovodevStaticConfig';
@@ -353,7 +353,7 @@ export class SiteManager extends Disposable {
                 }
 
                 if (deletedSite.id === Container.config.jira.lastCreatePreSelectedValues.siteId) {
-                    configuration.setLastCreateSiteAndProject(undefined);
+                    saveLastCreatePreferences(undefined);
                 }
 
                 return true;
