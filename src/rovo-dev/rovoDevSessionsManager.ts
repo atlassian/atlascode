@@ -1,5 +1,4 @@
 import {
-    Disposable,
     Event,
     EventEmitter,
     QuickInputButton,
@@ -67,7 +66,12 @@ function formatItemDescription(created: number): string {
     return `- Last used ${formatDuration(Date.now() - created)} ago`;
 }
 
-export class RovoDevSessionsManager extends Disposable {
+/** Implements a Session manager via quick picker.
+ *
+ * Note: This class instance is good for a single `showPicker()` invocation only.
+ * This instance will automatically dispose when the picker closes.
+ */
+export class RovoDevSessionsManager {
     private quickPicker: QuickPick<QuickPickSessionItem> | undefined;
     private busy = false;
     private disposed = false;
@@ -80,10 +84,12 @@ export class RovoDevSessionsManager extends Disposable {
     constructor(
         private readonly _workspaceFolder: string,
         private readonly _rovoDevApiClient: RovoDevApiClient,
-    ) {
-        super(() => this._dispose());
-    }
+    ) {}
 
+    /** Shows the VS Code quick picker to manage the existing sessions.
+     *
+     * Note: This class instance will automatically dispose when the picker closes!
+     */
     public async showPicker() {
         this.quickPicker?.dispose();
         this.quickPicker = undefined;
@@ -100,8 +106,7 @@ export class RovoDevSessionsManager extends Disposable {
         quickPick.matchOnDetail = true;
         quickPick.items = quickPickItems;
 
-        quickPick.onDidHide(() => quickPick.dispose());
-
+        // click on the item itself
         quickPick.onDidAccept(async () => {
             if (!this.busy && !this.disposed) {
                 try {
@@ -117,6 +122,7 @@ export class RovoDevSessionsManager extends Disposable {
             }
         });
 
+        // click on any of the item's buttons
         quickPick.onDidTriggerItemButton(async (e) => {
             if (!this.busy && !this.disposed) {
                 try {
@@ -140,6 +146,9 @@ export class RovoDevSessionsManager extends Disposable {
                 }
             }
         });
+
+        // on quickpick close, we dispose everything
+        quickPick.onDidHide(() => this.dispose());
 
         this.quickPicker = quickPick;
         this.quickPicker.show();
@@ -232,21 +241,23 @@ export class RovoDevSessionsManager extends Disposable {
                 };
             });
 
-        // sorts them from the most recent to the oldest, and bumps the current session on top
-        items.sort((a, b) => (a.picked ? -1 : b.picked ? 1 : b.lastSaved - a.lastSaved));
+        if (items.length > 0) {
+            // sorts them from the most recent to the oldest, and bumps the current session on top
+            items.sort((a, b) => (a.picked ? -1 : b.picked ? 1 : b.lastSaved - a.lastSaved));
 
-        // it's possible that the current session doesn't appear in the list if it's empty
-        if (items[0].picked) {
-            items.splice(1, 0, PastSessionsSeparator);
-            items.splice(0, 0, CurrentSessionSeparator);
-        } else {
-            items.splice(0, 0, PastSessionsSeparator);
+            // it's possible that the current session doesn't appear in the list if it's empty
+            if (items[0].picked) {
+                items.splice(1, 0, PastSessionsSeparator);
+                items.splice(0, 0, CurrentSessionSeparator);
+            } else {
+                items.splice(0, 0, PastSessionsSeparator);
+            }
         }
 
         return items;
     }
 
-    private _dispose() {
+    private dispose() {
         this.disposed = true;
 
         this.quickPicker?.dispose();

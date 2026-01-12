@@ -85,7 +85,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _webView?: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse>;
     private _webviewView?: WebviewView;
     private _rovoDevApiClient?: RovoDevApiClient;
-    private _rovoDevSessionsManager?: RovoDevSessionsManager;
     private _isProviderDisabled = false;
     private _disabledReason: RovoDevDisabledReason | 'none' = 'none';
     private _webviewReady = false;
@@ -644,12 +643,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         const workspacePath = workspace.workspaceFolders?.[0]?.uri.fsPath;
 
         if (!this.isBoysenberry && this.rovoDevApiClient && workspacePath) {
-            this._rovoDevSessionsManager = new RovoDevSessionsManager(workspacePath, this.rovoDevApiClient);
-            this._rovoDevSessionsManager.onSessionRestored(async () => {
+            const sessionsManager = new RovoDevSessionsManager(workspacePath, this.rovoDevApiClient);
+            sessionsManager.onSessionRestored(async () => {
                 await this._chatProvider.clearChat();
                 await this._chatProvider.executeReplay();
             });
-            await this._rovoDevSessionsManager.showPicker();
+            await sessionsManager.showPicker();
         }
     }
 
@@ -1411,9 +1410,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     // with Terminated you can restart Rovo Dev with the [+] button,
     // and with Disabled you can't.
     private setRovoDevTerminated(): Promise<void> {
-        this._rovoDevSessionsManager?.dispose();
-        this._rovoDevSessionsManager = undefined;
-
         this._rovoDevApiClient = undefined;
         setCommandContext(RovodevCommandContext.RovoDevApiReady, false);
 

@@ -50,7 +50,8 @@ describe('RovoDevSessionsManager', () => {
     });
 
     afterEach(() => {
-        sessionsManager.dispose();
+        // Note: RovoDevSessionsManager now auto-disposes when the picker closes
+        // We don't need to manually dispose it here
     });
 
     describe('constructor', () => {
@@ -714,7 +715,17 @@ describe('RovoDevSessionsManager', () => {
             ];
 
             await sessionsManager.showPicker();
-            sessionsManager.dispose();
+
+            // Simulate hiding the picker which triggers auto-disposal
+            let onDidHideCallback: Function = jest.fn();
+            mockQuickPick.onDidHide.mockImplementation((callback: Function) => {
+                onDidHideCallback = callback;
+            });
+
+            // Re-show picker to set up the onDidHide handler
+            await sessionsManager.showPicker();
+            onDidHideCallback(); // This triggers disposal
+
             await onAcceptCallback();
 
             expect(mockApiClient.restoreSession).not.toHaveBeenCalled();
@@ -724,8 +735,15 @@ describe('RovoDevSessionsManager', () => {
             mockApiClient.listSessions.mockResolvedValue([mockSession]);
             mockApiClient.getCurrentSession.mockResolvedValue(mockSession);
 
+            let onDidHideCallback: Function = jest.fn();
+            mockQuickPick.onDidHide.mockImplementation((callback: Function) => {
+                onDidHideCallback = callback;
+            });
+
             await sessionsManager.showPicker();
-            sessionsManager.dispose();
+
+            // Trigger the onDidHide callback which causes auto-disposal
+            onDidHideCallback();
 
             expect(mockQuickPick.dispose).toHaveBeenCalled();
         });
