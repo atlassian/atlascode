@@ -81,7 +81,8 @@ export class JiraIssueNode extends TreeItem implements AbstractBaseNode {
         // therefore, multiple jql entries must have a unique id for the same site.
         this.id = `${issue.key}_${issue.siteDetails.id}_${issue.source.id}`;
 
-        this.description = isMinimalIssue(issue) && issue.isEpic ? issue.epicName : issue.summary;
+        const summary = isMinimalIssue(issue) && issue.isEpic ? issue.epicName : issue.summary;
+        this.description = `${summary}  |  ${issue.status.name}`;
         this.command = { command: Commands.ShowIssue, title: 'Show Issue', arguments: [issue] };
         this.iconPath = Uri.parse(issue.issuetype.iconUrl);
         this.contextValue = this.getIssueContextValue(nodeType, issue);
