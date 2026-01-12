@@ -5,6 +5,7 @@ export const RovodevCommands = {
     RovodevAsk: 'atlascode.rovodev.askRovoDev',
     RovodevAskInteractive: 'atlascode.rovodev.askInteractive',
     RovodevAddToContext: 'atlascode.rovodev.addToContext',
+    RovodevSessionHistory: 'atlascode.rovodev.sessionsHistory',
     RovodevNewSession: 'atlascode.rovodev.newChatSession',
     RovodevShareFeedback: 'atlascode.rovodev.shareFeedback',
     OpenRovoDevConfig: 'atlascode.openRovoDevConfig',
@@ -20,6 +21,7 @@ export const RovodevCommands = {
 export const RovodevCommandContext = {
     RovoDevEnabled: 'atlascode:rovoDevEnabled',
     RovoDevTerminalEnabled: 'atlascode:rovoDevTerminalEnabled',
+    RovoDevApiReady: 'atlascode:rovoDevApiReady',
 } as const;
 
 // Type safety in case we need to refer to these elsewhere
