@@ -2,6 +2,14 @@
 
 ## What's new in 4.0.15
 
+### Features
+
+- Rovo Dev sessions management: restore a previous session, fork session, delete session
+
+### Improvements
+
+- Updated Rovo Dev to v0.13.27
+
 ### Bug Fixes
 
 - Added missing labels for PR merge strategies(AXON-1733)
