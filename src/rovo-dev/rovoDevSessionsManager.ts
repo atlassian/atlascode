@@ -1,3 +1,4 @@
+import { Logger } from 'src/logger';
 import {
     Event,
     EventEmitter,
@@ -160,6 +161,7 @@ export class RovoDevSessionsManager {
             window.showInformationMessage(`Session "${label}" restored successfully.`);
         } catch (error) {
             window.showErrorMessage(`Failed to restore session "${label}": ${error}`);
+            Logger.error(error, 'Failed to restore a session');
             return false;
         }
 
@@ -177,6 +179,7 @@ export class RovoDevSessionsManager {
             window.showInformationMessage(`Session "${label}" forked successfully.`);
         } catch (error) {
             window.showErrorMessage(`Failed to fork session "${label}": ${error}`);
+            Logger.error(error, 'Failed to fork a session');
             return false;
         }
 
@@ -202,6 +205,7 @@ export class RovoDevSessionsManager {
             window.showInformationMessage(`Session "${label}" deleted successfully.`);
         } catch (error) {
             window.showErrorMessage(`Failed to delete session "${label}": ${error}`);
+            Logger.error(error, 'Failed to delete a session');
             return false;
         }
 
