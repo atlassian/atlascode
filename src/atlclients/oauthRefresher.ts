@@ -73,7 +73,9 @@ export class OAuthRefesher implements Disposable {
             }
         } catch (err) {
             const responseStatusDescription = err.response?.status ? ` ${err.response.status}` : '';
-            Logger.error(err, 'Error while refreshing tokens' + responseStatusDescription);
+            const axiosErrorData = ` (Axios message: ${err?.response?.data?.error}. Axios description: ${err?.response?.data?.error_description})`;
+
+            Logger.error(err, 'Error while refreshing tokens' + responseStatusDescription + axiosErrorData);
             if (err.response?.status === 401 || err.response?.status === 403) {
                 Logger.debug(`Invalidating credentials due to ${err.response.status} while refreshing tokens`);
                 response.shouldInvalidate = true;
