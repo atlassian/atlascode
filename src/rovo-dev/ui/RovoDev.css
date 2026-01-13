@@ -423,8 +423,9 @@ body {
 }
 
 /* Code blocks and quotes */
-.user-message .message-content code:not(pre code) {
-    background-color: var(--ds-background-inverse-subtle);
+.user-message .message-content pre,
+.user-message .message-content code {
+    background-color: var(--ds-background-inverse-subtle) !important;
     color: var(--ds-text-inverse) !important;
 }
 
@@ -919,12 +920,12 @@ body {
     color: inherit;
 }
 
-.vscode-high-contrast .user-message .message-content code:not(pre code) {
+.vscode-high-contrast .user-message .message-content code {
     background-color: var(--vscode-editor-background);
     color: var(--vscode-editor-foreground) !important;
 }
 
-.vscode-high-contrast-light .user-message .message-content code:not(pre code) {
+.vscode-high-contrast-light .user-message .message-content code {
     background-color: var(--vscode-editor-background);
     color: var(--vscode-editor-foreground) !important;
 }
