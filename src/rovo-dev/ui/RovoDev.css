@@ -422,6 +422,13 @@ body {
     color: var(--ds-text-inverse);
 }
 
+/* Code blocks and quotes */
+.user-message .message-content pre,
+.user-message .message-content code {
+    background-color: var(--ds-background-inverse-subtle) !important;
+    color: var(--ds-text-inverse) !important;
+}
+
 .rovodev-markdown-link {
     cursor: pointer;
     color: var(--vscode-textLink-foreground);
@@ -911,6 +918,16 @@ body {
 
 .vscode-high-contrast .user-message .message-content {
     color: inherit;
+}
+
+.vscode-high-contrast .user-message .message-content code {
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground) !important;
+}
+
+.vscode-high-contrast-light .user-message .message-content code {
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground) !important;
 }
 
 .vscode-high-contrast code {
