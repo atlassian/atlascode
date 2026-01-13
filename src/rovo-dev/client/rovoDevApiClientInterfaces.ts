@@ -78,3 +78,28 @@ export interface RovoDevStatusAPIResponse {
 }
 
 export type ToolPermissionChoice = 'allow' | 'deny';
+
+export type AgentMode = 'ask' | 'default' | 'plan';
+
+export interface RovoDevGetAgentModeResponse {
+    mode: AgentMode;
+    message: string;
+}
+
+export interface RovoDevSetAgentModeRequest {
+    mode: AgentMode;
+}
+
+export interface RovoDevSetAgentModeResponse {
+    mode: AgentMode;
+    message: string;
+}
+
+export interface RovoDevModeInfo {
+    mode: string;
+    description: string;
+}
+
+export interface RovoDevAvailableModesResponse {
+    modes: RovoDevModeInfo[];
+}
