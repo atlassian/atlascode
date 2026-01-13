@@ -8,7 +8,7 @@ import { AuthInterceptor } from './authInterceptor';
 import { CredentialManager } from './authStore';
 
 /**
- * BasicInterceptor detects any 401 or 403 responses from the REST service and blocks any further requests unitl the
+ * BasicInterceptor detects any 401 or 403 responses from the REST service and blocks any further requests until the
  * user has updated their password.
  */
 export class BasicInterceptor implements AuthInterceptor {
