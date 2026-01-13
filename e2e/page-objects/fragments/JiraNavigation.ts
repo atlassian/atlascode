@@ -19,9 +19,11 @@ export class JiraNavigation {
 
     async getIssueStatus(name: string) {
         const item = this.jiraItemsTree.getByRole('treeitem', { name });
-        await item.hover();
-        const status = item.getByRole('toolbar');
-        return status.getByRole('button').innerText();
+        const description = item.locator('.label-description');
+        const descriptionText = await description.innerText();
+        // Description format is: "status | summary", extract status before the pipe
+        const status = descriptionText.split(' | ')[0];
+        return status;
     }
 
     async expectIssueStatus(name: string, expectedStatus: string) {
