@@ -264,6 +264,8 @@ export class RovoDevSessionsManager {
     private dispose() {
         this.disposed = true;
 
+        this._onSessionRestored.dispose();
+
         this.quickPicker?.dispose();
         this.quickPicker = undefined;
     }

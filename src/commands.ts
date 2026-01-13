@@ -388,7 +388,7 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
             Container.rovodevWebviewProvider.invokeRovoDevAskCommand(prompt, context);
         }),
         commands.registerCommand(RovodevCommands.RovodevSessionHistory, () => {
-            Container.rovodevWebviewProvider.showSessionsHistory();
+            Container.rovodevWebviewProvider.showSessionHistory();
         }),
         commands.registerCommand(RovodevCommands.RovodevNewSession, () => {
             Container.rovodevWebviewProvider.executeNewSession();

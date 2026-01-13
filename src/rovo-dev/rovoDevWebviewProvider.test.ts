@@ -271,7 +271,7 @@ describe('RovoDevWebviewProvider - Real Implementation Tests', () => {
             workspaceFoldersSpy.mockRestore();
         });
 
-        it('should create and show sessions manager when showSessionsHistory is called', async () => {
+        it('should create and show sessions manager when showSessionHistory is called', async () => {
             // Setup provider with required dependencies
             (provider as any).isBoysenberry = false;
             (provider as any)._rovoDevApiClient = {
@@ -279,7 +279,7 @@ describe('RovoDevWebviewProvider - Real Implementation Tests', () => {
                 createSession: jest.fn(),
             };
 
-            await provider.showSessionsHistory();
+            await provider.showSessionHistory();
 
             expect(RovoDevSessionsManager).toHaveBeenCalledWith('/test/workspace', (provider as any)._rovoDevApiClient);
 
@@ -295,7 +295,7 @@ describe('RovoDevWebviewProvider - Real Implementation Tests', () => {
                 healthcheck: jest.fn(),
             };
 
-            await provider.showSessionsHistory();
+            await provider.showSessionHistory();
 
             expect(RovoDevSessionsManager).not.toHaveBeenCalled();
         });
@@ -304,7 +304,7 @@ describe('RovoDevWebviewProvider - Real Implementation Tests', () => {
             (provider as any).isBoysenberry = false;
             (provider as any)._rovoDevApiClient = undefined;
 
-            await provider.showSessionsHistory();
+            await provider.showSessionHistory();
 
             expect(RovoDevSessionsManager).not.toHaveBeenCalled();
         });
@@ -316,7 +316,7 @@ describe('RovoDevWebviewProvider - Real Implementation Tests', () => {
             };
             workspaceFoldersSpy.mockReturnValue(undefined);
 
-            await provider.showSessionsHistory();
+            await provider.showSessionHistory();
 
             expect(RovoDevSessionsManager).not.toHaveBeenCalled();
         });
@@ -347,7 +347,7 @@ describe('RovoDevWebviewProvider - Real Implementation Tests', () => {
             };
             (provider as any)._chatProvider = mockChatProvider;
 
-            await provider.showSessionsHistory();
+            await provider.showSessionHistory();
 
             // Verify callback was registered
             expect(mockSessionsManager.onSessionRestored).toHaveBeenCalled();

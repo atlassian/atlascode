@@ -129,8 +129,8 @@
                 "category": "Rovo Dev"
             },
             {
-                "command": "atlascode.rovodev.sessionsHistory",
-                "title": "Sessions history",
+                "command": "atlascode.rovodev.sessionHistory",
+                "title": "Session history",
                 "icon": "$(history)",
                 "category": "Rovo Dev",
                 "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive && atlascode:rovoDevApiReady"
@@ -706,7 +706,7 @@
             ],
             "view/title": [
                 {
-                    "command": "atlascode.rovodev.sessionsHistory",
+                    "command": "atlascode.rovodev.sessionHistory",
                     "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive && atlascode:rovoDevApiReady",
                     "group": "navigation@1"
                 },
@@ -938,7 +938,7 @@
                     "when": "atlascode:rovoDevEnabled"
                 },
                 {
-                    "command": "atlascode.rovodev.sessionsHistory",
+                    "command": "atlascode.rovodev.sessionHistory",
                     "when": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive && atlascode:rovoDevApiReady"
                 },
                 {

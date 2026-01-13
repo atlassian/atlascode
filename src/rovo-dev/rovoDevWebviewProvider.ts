@@ -639,7 +639,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    public async showSessionsHistory(): Promise<void> {
+    public async showSessionHistory(): Promise<void> {
         const workspacePath = workspace.workspaceFolders?.[0]?.uri.fsPath;
 
         if (!this.isBoysenberry && this.rovoDevApiClient && workspacePath) {
