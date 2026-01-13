@@ -9,6 +9,7 @@ export enum Features {
     RovoDevEntitlementNotification = 'atlascode-rovodev-entitlement-notification',
     RovoDevLspEnabled = 'atlascode-enable-rovodev-lsp',
     SentryLogging = 'atlascode-sentry-logging',
+    DedicatedRovoDevAuth = 'atlascode-use-dedicated-rovodev-auth',
 }
 
 export const enum Experiments {
