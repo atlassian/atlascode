@@ -101,4 +101,4 @@ export type RovoDevViewResponse =
               componentStack?: string;
           }
       >
-    | ReducerAction<RovoDevViewResponseType.StartNewSession>;
+    | ReducerAction<RovoDevViewResponseType.StartNewSession, { force?: boolean }>;

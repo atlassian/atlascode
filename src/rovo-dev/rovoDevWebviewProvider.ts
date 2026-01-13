@@ -516,7 +516,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.StartNewSession:
-                        await this.executeNewSession();
+                        const force = e.force;
+                        await this.executeNewSession(force);
                         break;
 
                     case RovoDevViewResponseType.MessageRendered:
@@ -541,7 +542,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                         RovoDevLogger.error(renderError, contextMessage);
                         break;
-
                     default:
                         // @ts-expect-error ts(2339) - e here should be 'never'
                         this.processError(new Error(`Unknown message type: ${e.type}`));
@@ -637,7 +637,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    public async executeNewSession(): Promise<void> {
+    public async executeNewSession(forceNewProcess?: boolean): Promise<void> {
         const webview = this._webView!;
 
         // new session is disabled for these process states,
@@ -658,7 +658,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         if (
             this.processState === 'Terminated' ||
             this.processState === 'DownloadingFailed' ||
-            this.processState === 'StartingFailed'
+            this.processState === 'StartingFailed' ||
+            forceNewProcess
         ) {
             this.refreshDebugPanel();
 
