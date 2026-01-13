@@ -186,7 +186,7 @@ describe('CustomJqlViewProvider', () => {
                     expect(issues).toHaveLength(2);
 
                     expect(issues[0].label).toBe(mockedIssue2.key);
-                    expect(issues[0].description).toBe(mockedIssue2.summary);
+                    expect(issues[0].description).toBe(`${mockedIssue2.status.name} | ${mockedIssue2.summary}`);
                     expect(issues[0].contextValue).toBe('jiraIssue_inProgress');
 
                     expect(await provider.getChildren(issues[0])).toHaveLength(0);
@@ -198,29 +198,29 @@ describe('CustomJqlViewProvider', () => {
                     expect(childrenIssues).toHaveLength(2);
 
                     expect(childrenIssues[0].label).toBe(mockedIssue1.key);
-                    expect(childrenIssues[0].description).toBe(mockedIssue1.summary);
+                    expect(childrenIssues[0].description).toBe(`${mockedIssue1.status.name} | ${mockedIssue1.summary}`);
                     expect(childrenIssues[0].contextValue).toBe('jiraIssue_todo');
 
                     expect(childrenIssues[1].label).toBe(mockedIssue3.key);
-                    expect(childrenIssues[1].description).toBe(mockedIssue3.summary);
+                    expect(childrenIssues[1].description).toBe(`${mockedIssue3.status.name} | ${mockedIssue3.summary}`);
                     expect(childrenIssues[1].contextValue).toBe('jiraIssue_done');
                 } else {
                     expect(issues).toHaveLength(3);
 
                     expect(issues[0].label).toBe(mockedIssue1.key);
-                    expect(issues[0].description).toBe(mockedIssue1.summary);
+                    expect(issues[0].description).toBe(`${mockedIssue1.status.name} | ${mockedIssue1.summary}`);
                     expect(issues[0].contextValue).toBe('jiraIssue_todo');
 
                     expect(await provider.getChildren(issues[0])).toHaveLength(0);
 
                     expect(issues[1].label).toBe(mockedIssue2.key);
-                    expect(issues[1].description).toBe(mockedIssue2.summary);
+                    expect(issues[1].description).toBe(`${mockedIssue2.status.name} | ${mockedIssue2.summary}`);
                     expect(issues[1].contextValue).toBe('jiraIssue_inProgress');
 
                     expect(await provider.getChildren(issues[1])).toHaveLength(0);
 
                     expect(issues[2].label).toBe(mockedIssue3.key);
-                    expect(issues[2].description).toBe(mockedIssue3.summary);
+                    expect(issues[2].description).toBe(`${mockedIssue3.status.name} | ${mockedIssue3.summary}`);
                     expect(issues[2].contextValue).toBe('jiraIssue_done');
 
                     expect(await provider.getChildren(issues[2])).toHaveLength(0);

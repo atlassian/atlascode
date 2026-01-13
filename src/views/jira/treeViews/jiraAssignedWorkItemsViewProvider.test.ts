@@ -292,15 +292,15 @@ describe('AssignedWorkItemsViewProvider', () => {
             expect(children).toHaveLength(3);
 
             expect(children[0].label).toBe(mockedIssue1.key);
-            expect(children[0].description).toBe(mockedIssue1.summary);
+            expect(children[0].description).toBe(`${mockedIssue1.status.name} | ${mockedIssue1.summary}`);
             expect(children[0].contextValue).toBe('assignedJiraIssue_todo');
 
             expect(children[1].label).toBe(mockedIssue2.key);
-            expect(children[1].description).toBe(mockedIssue2.summary);
+            expect(children[1].description).toBe(`${mockedIssue2.status.name} | ${mockedIssue2.summary}`);
             expect(children[1].contextValue).toBe('assignedJiraIssue_inProgress');
 
             expect(children[2].label).toBe(mockedIssue3.key);
-            expect(children[2].description).toBe(mockedIssue3.summary);
+            expect(children[2].description).toBe(`${mockedIssue3.status.name} | ${mockedIssue3.summary}`);
             expect(children[2].contextValue).toBe('assignedJiraIssue_done');
         });
     });
