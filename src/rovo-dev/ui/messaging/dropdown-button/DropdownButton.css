@@ -1,7 +1,7 @@
 .dropdown-button-container {
     width: 100%;
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
     flex-direction: row;
     align-items: center;
     margin-bottom: 8px;

@@ -8,8 +8,34 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  release-nightly:
+  check-should-build:
+    runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+
+    outputs:
+      should_skip: ${{ steps.check_skip.outputs.skip }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if build should be skipped
+        id: check_skip
+        run: |
+          if ./scripts/version/should-skip-nightly.sh; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Build will be skipped - no new commits since last nightly"
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "Build will proceed - new commits detected"
+          fi
+
+  release-nightly:
+    needs: check-should-build
+    if: needs.check-should-build.outputs.should_skip != 'true'
     runs-on: ubuntu-latest
 
     permissions:

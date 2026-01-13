@@ -27,12 +27,17 @@ export class JiraPKCEResponseHandler extends ResponseHandler {
             });
 
             const data = tokenResponse.data;
-            return { accessToken: data.access_token, refreshToken: data.refresh_token, receivedAt: Date.now() };
+            return {
+                accessToken: data.access_token,
+                refreshToken: data.refresh_token,
+                receivedAt: Date.now(),
+                scopes: data.scope ? data.scope.split(' ') : [],
+            };
         } catch (err) {
             Logger.error(err, 'Error fetching Jira tokens');
             const data = err?.response?.data;
             const newErr = new Error(`Error fetching Jira tokens: ${err}
-            
+
             Response: ${JSON.stringify(data ?? {})}`);
             throw newErr;
         }
@@ -59,7 +64,7 @@ export class JiraPKCEResponseHandler extends ResponseHandler {
                 id: data.accountId,
                 displayName: data.displayName,
                 email: data.emailAddress,
-                avatarUrl: data.avatarUrls['48x48'],
+                avatarUrl: data.avatarUrls?.['48x48'] || '',
             };
         } catch (err) {
             Logger.error(err, 'Error fetching Jira user');

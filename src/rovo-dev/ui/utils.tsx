@@ -50,6 +50,7 @@ export interface AbstractDialogMessage {
         link: string;
     };
     stackTrace?: string;
+    stderr?: string;
     rovoDevLogs?: string[];
 }
 
@@ -106,130 +107,144 @@ export const modifyFileTitleMap: Record<string, ToolReturnInfo> = {
  *
  * @param msg - The tool-return object to parse.
  */
-export function parseToolReturnMessage(msg: RovoDevToolReturnResponse): ToolReturnParseResult[] {
+export function parseToolReturnMessage(
+    msg: RovoDevToolReturnResponse,
+    onError: (error: Error, msg: string) => void,
+): ToolReturnParseResult[] {
     const resp: ToolReturnParseResult[] = [];
 
-    switch (msg.tool_name) {
-        case 'expand_code_chunks':
-        case 'find_and_replace_code':
-        case 'open_files':
-        case 'create_file':
-        case 'delete_file':
-            const contentArray = msg.parsedContent ? msg.parsedContent : [msg.content];
-            if (!Array.isArray(contentArray)) {
-                console.warn('Invalid content format in ToolReturnMessage:', msg.content);
-                break;
-            }
-
-            for (const line of contentArray) {
-                if (typeof line !== 'string') {
-                    console.warn('Invalid line format in ToolReturnMessage:', line);
-                    continue;
+    try {
+        switch (msg.tool_name) {
+            case 'expand_code_chunks':
+            case 'find_and_replace_code':
+            case 'open_files':
+            case 'create_file':
+            case 'delete_file':
+                const contentArray = msg.parsedContent ? msg.parsedContent : [msg.content];
+                if (!Array.isArray(contentArray)) {
+                    console.warn('Invalid content format in ToolReturnMessage:', msg.content);
+                    break;
                 }
 
-                const trimmedLine = line.split('\n\n')[0].trim();
-                const matches = trimmedLine.match(
-                    /^Successfully\s+(expanded code chunks|replaced code|opened|created|deleted|updated)(?:\s+in)?\s+(.+)?$/,
-                );
-                if (matches && matches.length >= 3) {
-                    let filePath = matches[2].trim();
-                    // Remove trailing colon if present
-                    if (filePath.endsWith(':') || filePath.endsWith('.')) {
-                        filePath = filePath.slice(0, -1);
+                for (const line of contentArray) {
+                    if (typeof line !== 'string') {
+                        console.warn('Invalid line format in ToolReturnMessage:', line);
+                        continue;
                     }
 
-                    const toolReturnType = matches[1].trim();
-                    const title = filePath ? filePath.match(/([^/\\]+)$/)?.[0] : undefined;
+                    const trimmedLine = line.split('\n\n')[0].trim();
+                    const matches = trimmedLine.match(
+                        /^Successfully\s+(expanded code chunks|replaced code|opened|created|deleted|updated)(?:\s+in)?\s+(.+)?$/,
+                    );
+                    if (matches && matches.length >= 3) {
+                        let filePath = matches[2].trim();
+                        // Remove trailing colon if present
+                        if (filePath.endsWith(':') || filePath.endsWith('.')) {
+                            filePath = filePath.slice(0, -1);
+                        }
 
-                    const content = modifyFileTitleMap[toolReturnType.replace(/ /g, '_')];
+                        const toolReturnType = matches[1].trim();
+                        const title = filePath ? filePath.match(/([^/\\]+)$/)?.[0] : undefined;
 
+                        const content = modifyFileTitleMap[toolReturnType.replace(/ /g, '_')];
+
+                        resp.push({
+                            content: content ? content.title : matches[1].trim().toUpperCase(),
+                            filePath: filePath,
+                            title: title,
+                            type: content ? content.type : undefined,
+                        });
+                    }
+                }
+                break;
+
+            case 'expand_folder':
+                const folder = msg.toolCallMessage.args && JSON.parse(msg.toolCallMessage.args);
+                if (folder?.folder_path) {
                     resp.push({
-                        content: content ? content.title : matches[1].trim().toUpperCase(),
-                        filePath: filePath,
-                        title: title,
-                        type: content ? content.type : undefined,
+                        title: folder.folder_path,
+                        content: 'Expanded folder',
+                        type: 'open',
+                    });
+                } else {
+                    resp.push({
+                        content: 'Expanded folder',
+                        type: 'open',
                     });
                 }
-            }
-            break;
+                break;
 
-        case 'expand_folder':
-            const folder = msg.toolCallMessage.args && JSON.parse(msg.toolCallMessage.args);
-            if (folder?.folder_path) {
+            case 'bash':
+                const args = msg.toolCallMessage.args && JSON.parse(msg.toolCallMessage.args);
+                if (args?.command) {
+                    resp.push({
+                        title: args.command,
+                        content: 'Executed command',
+                        type: 'bash',
+                    });
+                }
+                break;
+
+            case 'grep':
+                const toolCallArgs = msg.toolCallMessage.args;
+                const searchPattern = toolCallArgs ? JSON.parse(toolCallArgs).content_pattern : undefined;
+                const pathGlob = toolCallArgs ? JSON.parse(toolCallArgs).path_glob : undefined;
+                const matches = (msg.content ?? '').split('\n').filter((line) => line.trim() !== '');
+                let content = 'Searched files';
+                if (searchPattern && pathGlob) {
+                    content = `Searched for \`${searchPattern}\` in files matching \`${pathGlob}\``;
+                } else if (pathGlob) {
+                    content = `Searched files matching \`${pathGlob}\``;
+                } else if (searchPattern) {
+                    content = `Searched for \`${searchPattern}\``;
+                }
+
                 resp.push({
-                    title: folder.folder_path,
-                    content: 'Expanded folder',
+                    title:
+                        matches.length > 0
+                            ? `${matches.length} ${matches.length > 1 ? 'matches' : 'match'} found`
+                            : 'No matches found',
+                    content: content,
                     type: 'open',
                 });
-            } else {
-                resp.push({
-                    content: 'Expanded folder',
-                    type: 'open',
-                });
-            }
-            break;
 
-        case 'bash':
-            const args = msg.toolCallMessage.args && JSON.parse(msg.toolCallMessage.args);
-            if (args?.command) {
-                resp.push({
-                    title: args.command,
-                    content: 'Executed command',
-                    type: 'bash',
-                });
-            }
-            break;
+                break;
 
-        case 'grep':
-            const toolCallArgs = msg.toolCallMessage.args;
-            const searchPattern = toolCallArgs ? JSON.parse(toolCallArgs).content_pattern : undefined;
-            const pathGlob = toolCallArgs ? JSON.parse(toolCallArgs).path_glob : undefined;
-            const matches = (msg.content ?? '').split('\n').filter((line) => line.trim() !== '');
-            let content = 'Searched files';
-            if (searchPattern && pathGlob) {
-                content = `Searched for \`${searchPattern}\` in files matching \`${pathGlob}\``;
-            } else if (pathGlob) {
-                content = `Searched files matching \`${pathGlob}\``;
-            } else if (searchPattern) {
-                content = `Searched for \`${searchPattern}\``;
-            }
+            case 'create_technical_plan':
+                // Use parsedContent if available (it's the parsed object), otherwise parse msg.content (string)
+                const planData: TechnicalPlan = msg.parsedContent ?? (msg.content ? JSON.parse(msg.content) : null);
 
-            resp.push({
-                title:
-                    matches.length > 0
-                        ? `${matches.length} ${matches.length > 1 ? 'matches' : 'match'} found`
-                        : 'No matches found',
-                content: content,
-                type: 'open',
-            });
-
-            break;
-
-        case 'create_technical_plan':
-            if (msg.parsedContent) {
                 resp.push({
                     content: '',
-                    technicalPlan: msg.parsedContent as TechnicalPlan,
+                    technicalPlan: planData,
                 });
-            }
-            break;
+                break;
 
-        case 'mcp__atlassian__invoke_tool':
-        case 'mcp__atlassian__get_tool_schema':
-        case 'mcp__scout__invoke_tool':
-            const mcpToolCallArgs = msg.toolCallMessage.args;
-            const mcpToolData = mcpToolCallArgs ? JSON.parse(mcpToolCallArgs) : undefined;
-            resp.push({
-                content: `Invoked MCP tool: \`${mcpToolData?.tool_name || 'unknown tool'}\``,
-                type: 'bash',
-            });
-            break;
-        default:
-            // For other tool names, we just return the raw content
-            resp.push({
-                content: msg.tool_name,
-            });
-            break;
+            case 'mcp__atlassian__invoke_tool':
+            case 'mcp__atlassian__get_tool_schema':
+            case 'mcp__scout__invoke_tool':
+                const mcpToolCallArgs = msg.toolCallMessage.args;
+                const mcpToolData = mcpToolCallArgs ? JSON.parse(mcpToolCallArgs) : undefined;
+                resp.push({
+                    content: `Invoked MCP tool: \`${mcpToolData?.tool_name || 'unknown tool'}\``,
+                    type: 'bash',
+                });
+                break;
+            default:
+                // For other tool names, we just return the raw content
+                resp.push({
+                    content: msg.tool_name,
+                });
+                break;
+        }
+    } catch (error) {
+        console.error('Error parsing ToolReturnMessage:', error, msg);
+        const errorMessage = `Error parsing ToolReturnMessage for tool ${msg.tool_name}`;
+
+        onError(error as Error, errorMessage);
+        resp.push({
+            content: msg.tool_name,
+        });
     }
 
     return resp;

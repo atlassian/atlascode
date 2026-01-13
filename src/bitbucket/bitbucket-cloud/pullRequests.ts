@@ -42,6 +42,9 @@ const mergeStrategyLabels: Record<string, string> = {
     merge_commit: 'Merge commit',
     squash: 'Squash',
     fast_forward: 'Fast forward',
+    squash_fast_forward: 'Squash, fast forward',
+    rebase_fast_forward: 'Rebase, fast forward',
+    rebase_merge: 'Rebase, merge',
 };
 
 const TEAM_MEMBERS_CACHE_LIMIT = 1000;

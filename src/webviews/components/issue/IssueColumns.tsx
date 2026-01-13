@@ -280,7 +280,24 @@ export const StatusColumn = (data: ItemData) => {
     return <Lozenge appearance={lozColor}>{data.issue.status.name}</Lozenge>;
 };
 
-export const Summary = (data: ItemData) => <p style={{ display: 'inline' }}>{data.issue.summary}</p>;
+export const Summary = (data: ItemData) => (
+    <Tooltip content={data.issue.summary}>
+        <p
+            style={{
+                display: '-webkit-box',
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                margin: 0,
+                lineHeight: '1.4',
+                maxWidth: '120px',
+            }}
+        >
+            {data.issue.summary}
+        </p>
+    </Tooltip>
+);
 
 export const Priority = (data: ItemData) => {
     if (!data.issue.priority || !data.issue.priority.name || !data.issue.priority.iconUrl) {

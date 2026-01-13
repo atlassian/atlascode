@@ -14,12 +14,14 @@ import { v4 } from 'uuid';
 import { DetailedSiteInfo, MinimalIssue } from '../api/extensionApiTypes';
 import { RovodevStaticConfig } from '../api/rovodevStaticConfig';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../rovoDevWebviewProviderMessages';
-import { FeedbackType } from './feedback-form/FeedbackForm';
+import { FeedbackConfirmationForm } from './feedback-form/FeedbackConfirmationForm';
+import { FeedbackForm, FeedbackType } from './feedback-form/FeedbackForm';
 import { ChatStream } from './messaging/ChatStream';
 import { useMessagingApi } from './messagingApi';
 import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
 import { PromptContextCollection } from './prompt-box/promptContext/promptContextCollection';
 import { UpdatedFilesComponent } from './prompt-box/updated-files/UpdatedFilesComponent';
+import { RovoDevErrorBoundary } from './RovoDevErrorBoundary';
 import {
     FileOperationType,
     McpConsentChoice,
@@ -59,6 +61,7 @@ const RovoDevView: React.FC = () => {
     const [history, setHistory] = useState<Response[]>([]);
     const [modalDialogs, setModalDialogs] = useState<DialogMessage[]>([]);
     const [isFeedbackFormVisible, setIsFeedbackFormVisible] = React.useState(false);
+    const [isFeedbackConfirmationFormVisible, setIsFeedbackConfirmationFormVisible] = React.useState(false);
     const [outgoingMessage, dispatch] = useState<RovoDevViewResponse | undefined>(undefined);
     const [promptContextCollection, setPromptContextCollection] = useState<RovoDevContextItem[]>([]);
     const [debugPanelEnabled, setDebugPanelEnabled] = useState(false);
@@ -71,6 +74,7 @@ const RovoDevView: React.FC = () => {
     const [thinkingBlockEnabled, setThinkingBlockEnabled] = useState(true);
     const [lastCompletedPromptId, setLastCompletedPromptId] = useState<string | undefined>(undefined);
     const [isAtlassianUser, setIsAtlassianUser] = useState(false);
+    const [feedbackType, setFeedbackType] = React.useState<'like' | 'dislike' | undefined>(undefined);
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -154,58 +158,74 @@ const RovoDevView: React.FC = () => {
         setPendingToolCallMessage('');
     }, [keepFiles, totalModifiedFiles]);
 
-    const handleAppendModifiedFileToolReturns = useCallback((toolReturn: RovoDevToolReturnResponse) => {
-        if (isCodeChangeTool(toolReturn.tool_name)) {
-            const msg = parseToolReturnMessage(toolReturn).filter((msg) => msg.filePath !== undefined);
+    const onError = useCallback(
+        (error: Error, errorMessage?: string) => {
+            const msg = errorMessage ? `${errorMessage}\n\n${error.message}` : error.message;
+            dispatch({
+                type: RovoDevViewResponseType.ReportRenderError,
+                errorMessage: msg,
+                errorType: error.name,
+                errorStack: error.stack || undefined,
+            });
+        },
+        [dispatch],
+    );
 
-            setTotalModifiedFiles((currentFiles) => {
-                const filesMap = new Map([...currentFiles].map((item) => [item.filePath!, item]));
+    const handleAppendModifiedFileToolReturns = useCallback(
+        (toolReturn: RovoDevToolReturnResponse) => {
+            if (isCodeChangeTool(toolReturn.tool_name)) {
+                const msg = parseToolReturnMessage(toolReturn, onError).filter((msg) => msg.filePath !== undefined);
 
-                // Logic for handling deletions and modifications
-                msg.forEach((file) => {
-                    if (!file.filePath) {
-                        return;
-                    }
-                    if (file.type === 'delete') {
-                        if (filesMap.has(file.filePath)) {
-                            const existingFile = filesMap.get(file.filePath);
-                            if (existingFile?.type === 'modify') {
-                                filesMap.set(file.filePath, file); // If file was only modified but not created by RovoDev, still show deletion
+                setTotalModifiedFiles((currentFiles) => {
+                    const filesMap = new Map([...currentFiles].map((item) => [item.filePath!, item]));
+
+                    // Logic for handling deletions and modifications
+                    msg.forEach((file) => {
+                        if (!file.filePath) {
+                            return;
+                        }
+                        if (file.type === 'delete') {
+                            if (filesMap.has(file.filePath)) {
+                                const existingFile = filesMap.get(file.filePath);
+                                if (existingFile?.type === 'modify') {
+                                    filesMap.set(file.filePath, file); // If file was only modified but not created by RovoDev, still show deletion
+                                } else {
+                                    filesMap.delete(file.filePath); // If file was created by RovoDev, remove it from the map
+                                }
                             } else {
-                                filesMap.delete(file.filePath); // If file was created by RovoDev, remove it from the map
+                                filesMap.set(file.filePath, file);
                             }
                         } else {
-                            filesMap.set(file.filePath, file);
+                            if (!filesMap.has(file.filePath) || filesMap.get(file.filePath)?.type === 'delete') {
+                                filesMap.set(file.filePath, file); // Only add on first modification so we can track if file was created by RovoDev or just modified
+                            }
                         }
-                    } else {
-                        if (!filesMap.has(file.filePath) || filesMap.get(file.filePath)?.type === 'delete') {
-                            filesMap.set(file.filePath, file); // Only add on first modification so we can track if file was created by RovoDev or just modified
-                        }
+                    });
+
+                    const allFiles = Array.from(filesMap.values());
+                    const modifiedFiles = allFiles
+                        .filter((file) =>
+                            [
+                                modifyFileTitleMap.updated.type,
+                                modifyFileTitleMap.created.type,
+                                modifyFileTitleMap.deleted.type,
+                            ].includes(file.type!),
+                        )
+                        .map((file) => ({
+                            filePath: file.filePath!,
+                            type: file.type as FileOperationType,
+                        }));
+
+                    if (modifiedFiles.length > 0) {
+                        setPendingFilesForFiltering(modifiedFiles);
                     }
+
+                    return allFiles;
                 });
-
-                const allFiles = Array.from(filesMap.values());
-                const modifiedFiles = allFiles
-                    .filter((file) =>
-                        [
-                            modifyFileTitleMap.updated.type,
-                            modifyFileTitleMap.created.type,
-                            modifyFileTitleMap.deleted.type,
-                        ].includes(file.type!),
-                    )
-                    .map((file) => ({
-                        filePath: file.filePath!,
-                        type: file.type as FileOperationType,
-                    }));
-
-                if (modifiedFiles.length > 0) {
-                    setPendingFilesForFiltering(modifiedFiles);
-                }
-
-                return allFiles;
-            });
-        }
-    }, []);
+            }
+        },
+        [onError],
+    );
 
     const setSummaryMessageInHistory = useCallback(() => {
         setHistory((prev) => {
@@ -870,6 +890,20 @@ const RovoDevView: React.FC = () => {
         [setIsFullContextModeToggled],
     );
 
+    const handleFeedbackTrigger = useCallback(
+        (isPositive: boolean) => {
+            setFeedbackType(isPositive ? 'like' : 'dislike');
+            setIsFeedbackFormVisible(true);
+        },
+        [setIsFeedbackFormVisible],
+    );
+
+    const confirmFeedback = () => {
+        setIsFeedbackConfirmationFormVisible(true);
+        setTimeout(() => {
+            setIsFeedbackConfirmationFormVisible(false);
+        }, 2000);
+    };
     const onLinkClick = React.useCallback(
         (href: string) => {
             postMessage({ type: RovoDevViewResponseType.OpenExternalLink, href });
@@ -901,7 +935,7 @@ const RovoDevView: React.FC = () => {
         (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance');
 
     return (
-        <>
+        <RovoDevErrorBoundary postMessage={postMessage}>
             <div
                 id="rovoDevDragDropOverlay"
                 onDragLeave={(event) => {
@@ -951,6 +985,7 @@ const RovoDevView: React.FC = () => {
                         isRetryAfterErrorButtonEnabled,
                         retryPromptAfterError,
                         onOpenLogFile: () => postMessage({ type: RovoDevViewResponseType.OpenRovoDevLogFile }),
+                        onError,
                     }}
                     messagingApi={{
                         postMessage,
@@ -963,9 +998,7 @@ const RovoDevView: React.FC = () => {
                     currentState={currentState}
                     onChangesGitPushed={onChangesGitPushed}
                     onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
-                    feedbackVisible={isFeedbackFormVisible}
-                    setFeedbackVisible={setIsFeedbackFormVisible}
-                    sendFeedback={executeSendFeedback}
+                    handleFeedbackTrigger={handleFeedbackTrigger}
                     onLoginClick={onLoginClick}
                     onOpenFolder={onOpenFolder}
                     onMcpChoice={onMcpChoice}
@@ -977,57 +1010,90 @@ const RovoDevView: React.FC = () => {
                 />
                 {!hidePromptBox && (
                     <div className="input-section-container">
-                        <UpdatedFilesComponent
-                            modifiedFiles={totalModifiedFiles}
-                            onUndo={undoFiles}
-                            onKeep={keepFiles}
-                            openDiff={openFile}
-                            actionsEnabled={currentState.state === 'WaitingForPrompt'}
-                            workspacePath={workspacePath}
-                            homeDir={homeDir}
-                        />
-                        <div className="prompt-container-container">
-                            <div className="prompt-container">
-                                <PromptContextCollection
-                                    content={promptContextCollection}
-                                    readonly={false}
-                                    onRemoveContext={onRemoveContext}
-                                    onToggleActiveItem={onToggleContextFocus}
-                                    openFile={openFile}
-                                    openJira={openJira}
-                                />
-                                <PromptInputBox
-                                    disabled={currentState.state === 'ProcessTerminated'}
-                                    currentState={currentState}
-                                    isDeepPlanEnabled={isDeepPlanToggled}
-                                    isYoloModeEnabled={isYoloModeToggled}
-                                    isFullContextEnabled={isFullContextModeToggled}
-                                    onDeepPlanToggled={() => setIsDeepPlanToggled((prev) => !prev)}
-                                    onYoloModeToggled={
-                                        RovodevStaticConfig.isBBY ? undefined : () => onYoloModeToggled()
-                                    }
-                                    onFullContextToggled={
-                                        isAtlassianUser ? () => onFullContextModeToggled() : undefined
-                                    }
-                                    onSend={sendPrompt}
-                                    onCancel={cancelResponse}
-                                    onAddContext={onAddContext}
-                                    onCopy={handleCopyResponse}
-                                    handleMemoryCommand={executeGetAgentMemory}
-                                    handleTriggerFeedbackCommand={handleShowFeedbackForm}
-                                    promptText={promptText}
-                                    onPromptTextSet={handlePromptTextSet}
+                        {isFeedbackFormVisible && (
+                            <div
+                                style={{
+                                    padding: '8px 16px',
+                                }}
+                            >
+                                <FeedbackForm
+                                    type={feedbackType}
+                                    onSubmit={(feedbackType, feedback, canContact, includeTenMessages) => {
+                                        setFeedbackType(undefined);
+                                        executeSendFeedback(feedbackType, feedback, canContact, includeTenMessages);
+                                        confirmFeedback();
+                                    }}
+                                    onCancel={() => {
+                                        setFeedbackType(undefined);
+                                        setIsFeedbackFormVisible(false);
+                                    }}
                                 />
                             </div>
+                        )}{' '}
+                        <div
+                            style={{
+                                padding: '8px 16px',
+                            }}
+                        >
+                            {isFeedbackConfirmationFormVisible && (
+                                <FeedbackConfirmationForm onClose={() => setIsFeedbackConfirmationFormVisible(false)} />
+                            )}
                         </div>
-                        <div className="ai-disclaimer">
-                            <InformationCircleIcon label="Disclaimer logo" size="small" />
-                            Uses AI. Verify results.
+                        <div className="input-section-container">
+                            <UpdatedFilesComponent
+                                modifiedFiles={totalModifiedFiles}
+                                onUndo={undoFiles}
+                                onKeep={keepFiles}
+                                openDiff={openFile}
+                                actionsEnabled={currentState.state === 'WaitingForPrompt'}
+                                workspacePath={workspacePath}
+                                homeDir={homeDir}
+                            />
+                            <div className="prompt-container-container">
+                                <div className="prompt-container">
+                                    <PromptContextCollection
+                                        content={promptContextCollection}
+                                        readonly={false}
+                                        onRemoveContext={onRemoveContext}
+                                        onToggleActiveItem={onToggleContextFocus}
+                                        openFile={openFile}
+                                        openJira={openJira}
+                                    />
+                                    <PromptInputBox
+                                        disabled={currentState.state === 'ProcessTerminated'}
+                                        currentState={currentState}
+                                        isDeepPlanEnabled={isDeepPlanToggled}
+                                        isYoloModeEnabled={isYoloModeToggled}
+                                        isFullContextEnabled={isFullContextModeToggled}
+                                        onDeepPlanToggled={() => setIsDeepPlanToggled((prev) => !prev)}
+                                        onYoloModeToggled={
+                                            RovodevStaticConfig.isBBY ? undefined : () => onYoloModeToggled()
+                                        }
+                                        onFullContextToggled={
+                                            isAtlassianUser && !RovodevStaticConfig.isBBY
+                                                ? () => onFullContextModeToggled()
+                                                : undefined
+                                        }
+                                        onSend={sendPrompt}
+                                        onCancel={cancelResponse}
+                                        onAddContext={onAddContext}
+                                        onCopy={handleCopyResponse}
+                                        handleMemoryCommand={executeGetAgentMemory}
+                                        handleTriggerFeedbackCommand={handleShowFeedbackForm}
+                                        promptText={promptText}
+                                        onPromptTextSet={handlePromptTextSet}
+                                    />
+                                </div>
+                            </div>
+                            <div className="ai-disclaimer">
+                                <InformationCircleIcon label="Disclaimer logo" size="small" />
+                                Uses AI. Verify results.
+                            </div>
                         </div>
                     </div>
                 )}
             </div>
-        </>
+        </RovoDevErrorBoundary>
     );
 };
 

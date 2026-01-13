@@ -139,10 +139,10 @@ describe('createIssue', () => {
         });
 
         it('should create issue with custom source', async () => {
-            await createIssue(undefined, 'customSource');
+            await createIssue(undefined, 'settingsPage');
 
             expect(Container.createIssueWebview.createOrShow).toHaveBeenCalledWith();
-            expect(startIssueCreationEvent).toHaveBeenCalledWith('customSource', ProductJira);
+            expect(startIssueCreationEvent).toHaveBeenCalledWith('settingsPage', ProductJira);
         });
     });
 

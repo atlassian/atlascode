@@ -7,7 +7,6 @@ import { DetailedSiteInfo, MinimalIssue } from '../../api/extensionApiTypes';
 import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
 import { PullRequestForm } from '../create-pr/PullRequestForm';
-import { FeedbackForm, FeedbackType } from '../feedback-form/FeedbackForm';
 import { RovoDevLanding } from '../landing-page/RovoDevLanding';
 import { useMessagingApi } from '../messagingApi';
 import { McpConsentChoice, RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
@@ -27,6 +26,7 @@ interface ChatStreamProps {
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
         onOpenLogFile: () => void;
+        onError: (error: Error, errorMessage: string) => void;
     };
     messagingApi: ReturnType<
         typeof useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>
@@ -37,9 +37,7 @@ interface ChatStreamProps {
     currentState: State;
     onChangesGitPushed: (msg: PullRequestMessage, pullRequestCreated: boolean) => void;
     onCollapsiblePanelExpanded: () => void;
-    feedbackVisible: boolean;
-    setFeedbackVisible: (visible: boolean) => void;
-    sendFeedback: (feedbackType: FeedbackType, feedack: string, canContact: boolean, lastTenMessages: boolean) => void;
+    handleFeedbackTrigger: (isPositive: boolean) => void;
     onLoginClick: (openApiTokenLogin: boolean) => void;
     onOpenFolder: () => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
@@ -61,9 +59,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     messagingApi,
     onChangesGitPushed,
     onCollapsiblePanelExpanded,
-    feedbackVisible = false,
-    setFeedbackVisible,
-    sendFeedback,
+    handleFeedbackTrigger,
     onLoginClick,
     onOpenFolder,
     onMcpChoice,
@@ -79,7 +75,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     const [canCreatePR, setCanCreatePR] = React.useState(false);
     const [hasChangesInGit, setHasChangesInGit] = React.useState(false);
     const [isFormVisible, setIsFormVisible] = React.useState(false);
-    const [feedbackType, setFeedbackType] = React.useState<'like' | 'dislike' | undefined>(undefined);
 
     const checkGitChanges = React.useCallback(async () => {
         const response = await messagingApi.postMessagePromise(
@@ -182,7 +177,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
             container.removeEventListener('wheel', handleWheel);
         };
     }, [autoScrollEnabled, chatHistory]);
-
     // Auto-scroll when content changes or when re-enabled
     React.useEffect(performAutoScroll, [
         chatHistory,
@@ -214,14 +208,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         }
         navigator.clipboard.writeText(text);
     }, []);
-
-    const handleFeedbackTrigger = React.useCallback(
-        (isPositive: boolean) => {
-            setFeedbackType(isPositive ? 'like' : 'dislike');
-            setFeedbackVisible(true);
-        },
-        [setFeedbackVisible],
-    );
 
     const isChatHistoryDisabled =
         (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance') ||
@@ -302,8 +288,8 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
             {!isChatHistoryDisabled && currentState.state === 'WaitingForPrompt' && (
                 <FollowUpActionFooter>
-                    {deepPlanCreated && !feedbackVisible && <CodePlanButton execute={executeCodePlan} />}
-                    {canCreatePR && !deepPlanCreated && !feedbackVisible && hasChangesInGit && (
+                    {deepPlanCreated && <CodePlanButton execute={executeCodePlan} />}
+                    {canCreatePR && !deepPlanCreated && hasChangesInGit && (
                         <PullRequestForm
                             onCancel={() => {
                                 setCanCreatePR(false);
@@ -327,19 +313,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             }}
                             isFormVisible={isFormVisible}
                             setFormVisible={setIsFormVisible}
-                        />
-                    )}
-                    {feedbackVisible && (
-                        <FeedbackForm
-                            type={feedbackType}
-                            onSubmit={(feedbackType, feedback, canContact, includeTenMessages) => {
-                                setFeedbackType(undefined);
-                                sendFeedback(feedbackType, feedback, canContact, includeTenMessages);
-                            }}
-                            onCancel={() => {
-                                setFeedbackType(undefined);
-                                setFeedbackVisible(false);
-                            }}
                         />
                     )}
                 </FollowUpActionFooter>

@@ -43,7 +43,7 @@ export class AtlassianNotificationNotifier extends Disposable implements Notific
     }
 
     public fetchNotifications(): void {
-        Container.credentialManager.getAllValidAuthInfo(ProductJira).then((authInfos: AuthInfo[]) => {
+        Container.credentialManager.getCloudAuthInfo(ProductJira).then((authInfos) => {
             authInfos.forEach(async (authInfo: AuthInfo) => {
                 await this.getLatestNotifications(authInfo);
             });

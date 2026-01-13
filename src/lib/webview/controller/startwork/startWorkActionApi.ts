@@ -31,4 +31,6 @@ export interface StartWorkActionApi {
     getRovoDevPreference(): Promise<boolean>;
     updateRovoDevPreference(enabled: boolean): Promise<void>;
     openRovoDev(issue: MinimalIssue<DetailedSiteInfo>): Promise<void>;
+    getPushBranchPreference(): Promise<boolean>;
+    updatePushBranchPreference(enabled: boolean): Promise<void>;
 }

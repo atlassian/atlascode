@@ -37,12 +37,15 @@ import { Pipeline } from './pipelines/model';
 import { RovodevCommandContext } from './rovo-dev/api/componentApi';
 import { RovodevStaticConfig } from './rovo-dev/api/rovodevStaticConfig';
 import { RovoDevCodeActionProvider } from './rovo-dev/rovoDevCodeActionProvider';
+import { RovoDevLanguageServerProvider } from './rovo-dev/rovoDevLanguageServerProvider';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { RovoDevLogger } from './rovo-dev/util/rovoDevLogger';
+import { SentryConfig, SentryService } from './sentry';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, SETTINGS_URL } from './uriHandler';
 import { Experiments, FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
+import { isDebugging } from './util/isDebugging';
 import { RovoDevEntitlementChecker } from './util/rovo-dev-entitlement/rovoDevEntitlementChecker';
 import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
@@ -74,7 +77,6 @@ import { CreateIssueWebview } from './webviews/createIssueWebview';
 import { JiraIssueViewManager } from './webviews/jiraIssueViewManager';
 import { CreateWorkItemWebviewProvider } from './work-items/create-work-item/createWorkItemWebviewProvider';
 
-const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
 
 export class Container {
@@ -260,6 +262,22 @@ export class Container {
         this._onboardingProvider = new OnboardingProvider();
 
         this.refreshRovoDev(context);
+
+        // Initialize Sentry for error tracking
+
+        const sentryConfig: SentryConfig = {
+            enabled: process.env.SENTRY_ENABLED === 'true',
+            featureFlagEnabled: this.featureFlagClient.checkGate(Features.SentryLogging),
+            dsn: process.env.SENTRY_DSN,
+            environment: process.env.SENTRY_ENVIRONMENT || 'development',
+            sampleRate: parseFloat(process.env.SENTRY_SAMPLE_RATE || '1.0'),
+            atlasCodeVersion: version,
+        };
+
+        await SentryService.getInstance().initialize(sentryConfig, (error: string) => {
+            this.analyticsApi.fireSentryCapturedExceptionFailedEvent({ error });
+        });
+        Logger.info('Sentry initialized successfully');
     }
 
     private static async initializeFeatureFlagClient() {
@@ -335,11 +353,16 @@ export class Container {
         } else {
             try {
                 // don't add anything async before initializing _rovodevDisposable
+                const lspEnabled = this._featureFlagClient.checkGate(Features.RovoDevLspEnabled);
+
                 this._rovodevDisposable = vscode.Disposable.from(
                     languages.registerCodeActionsProvider({ scheme: 'file' }, new RovoDevCodeActionProvider(), {
                         providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
                     }),
                     (this._rovodevWebviewProvider = new RovoDevWebviewProvider(context, context.extensionPath)),
+                    ...(lspEnabled
+                        ? [(this._rovodevLanguageServerProvider = new RovoDevLanguageServerProvider(context))]
+                        : []),
                 );
 
                 context.subscriptions.push(this._rovodevDisposable);
@@ -487,17 +510,8 @@ export class Container {
         return env.uiKind === UIKind.Web;
     }
 
-    private static _isDebugging: boolean | undefined;
     public static get isDebugging() {
-        if (this._isDebugging === undefined) {
-            try {
-                const args = process.execArgv;
-
-                this._isDebugging = args ? args.some((arg) => isDebuggingRegex.test(arg)) : false;
-            } catch {}
-        }
-
-        return !!this._isDebugging;
+        return isDebugging();
     }
 
     public static get isBoysenberryMode() {
@@ -675,6 +689,11 @@ export class Container {
     private static _rovodevWebviewProvider: RovoDevWebviewProvider;
     public static get rovodevWebviewProvider() {
         return this._rovodevWebviewProvider;
+    }
+
+    private static _rovodevLanguageServerProvider: RovoDevLanguageServerProvider;
+    public static get rovodevLanguageServerProvider() {
+        return this._rovodevLanguageServerProvider;
     }
 
     private static _rovoDevEntitlementChecker: RovoDevEntitlementChecker;

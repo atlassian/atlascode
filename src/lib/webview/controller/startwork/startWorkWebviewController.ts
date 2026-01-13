@@ -160,6 +160,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error executing start work action'),
                     });
+                    this.analytics.fireIssueStartWorkErrorEvent(e.message, e?.stack);
                 }
                 break;
             }
@@ -255,6 +256,34 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error opening RovoDev'),
+                    });
+                }
+                break;
+            }
+            case StartWorkActionType.GetPushBranchPreference: {
+                try {
+                    const enabled = await this.api.getPushBranchPreference();
+                    this.postMessage({
+                        type: StartWorkMessageType.PushBranchPreferenceResponse,
+                        enabled,
+                    });
+                } catch (e) {
+                    this.logger.error(e, 'Error getting push branch preference');
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error getting push branch preference'),
+                    });
+                }
+                break;
+            }
+            case StartWorkActionType.UpdatePushBranchPreference: {
+                try {
+                    await this.api.updatePushBranchPreference(msg.enabled);
+                } catch (e) {
+                    this.logger.error(e, 'Error updating push branch preference');
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error updating push branch preference'),
                     });
                 }
                 break;

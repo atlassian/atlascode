@@ -29,10 +29,7 @@ mdParser.renderer.rules.link_open = function (tokens, idx, options, env, self) {
 
             token.attrs!.splice(hrefIndex, 1);
             token.attrSet('data-href', hrefValue);
-            token.attrSet(
-                'style',
-                'cursor: pointer; color: var(--vscode-textLink-foreground); text-decoration: underline;',
-            );
+            token.attrSet('class', 'rovodev-markdown-link');
         }
     }
     return self.renderToken(tokens, idx, options);
@@ -60,6 +57,12 @@ const strictEncodeUrl = (url: string) => {
 // linkify from truncating at closing parentheses.
 // Keep validateLink to allow only http/https.
 export const normalizeLinks = (messageText: string) => {
+    if (typeof messageText !== 'string') {
+        console.warn('normalizeLinks called with non-string messageText', messageText, 'typeof:', typeof messageText);
+        // Silently recover from invalid types
+        return '';
+    }
+
     let processed = messageText.replace(
         /(https?:\/\/[^\s]+\/issues\/\?jql=)(.*?)(?=$|\n|\r)/gi,
         (_match, prefix: string, jqlTail: string) => prefix + encodeURIComponent(decodeUriComponentSafely(jqlTail)),
@@ -74,11 +77,6 @@ export const MarkedDown: React.FC<{ value: string; onLinkClick: (href: string) =
     value,
     onLinkClick,
 }) => {
-    if (typeof value !== 'string') {
-        // Silently recover from invalid types
-        value = '';
-    }
-
     const spanRef = React.useRef<HTMLSpanElement>(null);
     const html = React.useMemo(() => mdParser.render(normalizeLinks(value)), [value]);
 
@@ -126,7 +124,7 @@ export const FollowUpActionFooter: React.FC<{ children?: React.ReactNode }> = ({
             style={{
                 display: 'flex',
                 flexDirection: 'row',
-                justifyContent: 'flex-end',
+                justifyContent: 'flex-start',
                 marginTop: '8px',
                 marginBottom: '8px',
             }}
@@ -144,10 +142,11 @@ export const renderChatHistory = (
     checkFileExists: CheckFileExistsFunc,
     isRetryAfterErrorButtonEnabled: (uid: string) => boolean,
     retryAfterError: () => void,
+    onError: (error: Error, errorMessage: string) => void,
 ) => {
     switch (msg.event_kind) {
         case 'tool-return':
-            const parsedMessages = parseToolReturnMessage(msg);
+            const parsedMessages = parseToolReturnMessage(msg, onError);
             return parsedMessages.map((message) => {
                 if (message.technicalPlan) {
                     return (

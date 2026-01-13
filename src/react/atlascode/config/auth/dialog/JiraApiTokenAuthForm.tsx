@@ -57,7 +57,6 @@ export const JiraBasicAuthForm = ({
                     id="password"
                     name="password"
                     label="API token"
-                    defaultValue={(defaultSiteWithAuth.auth as BasicAuthInfo).password}
                     type={authFormState.showPassword ? 'text' : 'password'}
                     helperText={errors.password ? errors.password : undefined}
                     fullWidth

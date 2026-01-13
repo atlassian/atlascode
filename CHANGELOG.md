@@ -1,5 +1,51 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.15
+
+### Bug Fixes
+
+- Added missing labels for PR merge strategies(AXON-1733)
+- Fixed authentication error
+- Fixed user mentions not working in Jira issue comments when using editor
+
+## What's new in 4.0.14
+
+### Features
+
+- **Share Issue Feature**: Added ability to share Jira issues (AXON-1695)
+- **Cascading Field Support**: Added support for cascading value types in Jira fields (AXON-326)
+- **Missing Scopes Banner**: Added new banner notification for missing authentication scopes (AXON-1678)
+
+### Improvements
+
+- **Rovo Dev Updates**:
+    - Updated Rovo Dev to v0.13.22
+    - Improved keyboard navigation for context and preference buttons (AXON-1697)
+    - Made Rovo Dev interface responsive with better width properties and aligned settings actions
+    - Left-aligned CTA buttons for better UI consistency (AXON-1291)
+    - Run Rovo Dev as a subprocess instead of in terminal for better performance (AXON-1643)
+    - Improved analytics tracking and refactored analytics implementation (AXON-1545, AXON-1670)
+    - Fixed text styling for user messages
+    - Minor CSS improvements
+
+- **Build Process**: Skip nightly builds when there are no new commits to improve efficiency (AXON-1129)
+- **Default Commit Messages**: Added support for default commit messages (commit #1448)
+- **Streamlined Configuration**: Improved launch configuration setup
+
+### Bug Fixes
+
+- **Pull Request Issues**: Fixed error while fetching latest pull requests (AXON-1651)
+- **JQL Execution**: Fixed "failed to execute JQL" error (AXON-1653)
+- **Branch Creation**: Fixed branch creation errors in Start Work page (AXON-1707)
+- **Authentication**: Prevented duplicate authentication notifications (AXON-727, AXON-449)
+- **Telemetry**: Removed noisy "Error getting URL" telemetry logging from HTTP client (AXON-1650)
+- **Security**: Fixed querystring vulnerability (CVE fix)
+- **Rovo Dev Messages**: Properly handle and ignore request-usage messages from Rovo Dev
+
+## What's new in 4.0.13
+
+- Internal changes
+
 ## What's new in 4.0.12
 
 ### Improvements

@@ -44,6 +44,11 @@ function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export type CheckedScopes = {
+    isApiToken?: boolean;
+    checkedScopes: { [key: string]: boolean };
+};
+
 export class CredentialManager implements Disposable {
     private _memStore: Map<string, Map<string, AuthInfo>> = new Map<string, Map<string, AuthInfo>>();
     private _queue = new PQueue({ concurrency: 1 });
@@ -78,6 +83,39 @@ export class CredentialManager implements Disposable {
     public async getAuthInfo(site: DetailedSiteInfo, allowCache = true): Promise<AuthInfo | undefined> {
         const authInfo = await this.getAuthInfoForProductAndCredentialId(site, allowCache);
         return this.softRefreshOAuth(site, authInfo);
+    }
+
+    public async checkScopes(site: DetailedSiteInfo, scopes: string[]): Promise<CheckedScopes | undefined> {
+        // Scopes are only applicable to cloud sites
+        if (!site.host.endsWith('.atlassian.net')) {
+            return undefined;
+        }
+
+        const authInfo = await this.getAuthInfo(site, true);
+
+        if (isOAuthInfo(authInfo)) {
+            const allowedScopes = authInfo.scopes || [];
+            const checkedScopes = scopes.reduce(
+                (acc, scope) => {
+                    acc[scope] = allowedScopes.includes(scope);
+                    return acc;
+                },
+                {} as CheckedScopes['checkedScopes'],
+            );
+
+            return {
+                isApiToken: allowedScopes.length === 0,
+                checkedScopes,
+            };
+        }
+        // Basic auth for cloud site means API token
+        if (isBasicAuthInfo(authInfo)) {
+            return {
+                isApiToken: true,
+                checkedScopes: {},
+            };
+        }
+        return undefined;
     }
 
     async getApiTokenIfExists(site: DetailedSiteInfo): Promise<BasicAuthInfo | undefined> {
@@ -129,9 +167,15 @@ export class CredentialManager implements Disposable {
         return results.find((authInfo) => authInfo !== undefined);
     }
 
-    public async getAllValidAuthInfo(product: Product): Promise<AuthInfo[]> {
+    public async getAllValidAuthInfo(
+        product: Product,
+        siteFilter?: (site: DetailedSiteInfo) => boolean,
+    ): Promise<AuthInfo[]> {
         // Get all unique sites by credentialId
-        const sites = Container.siteManager.getSitesAvailable(product);
+        let sites = Container.siteManager.getSitesAvailable(product);
+        if (siteFilter) {
+            sites = sites.filter(siteFilter);
+        }
         const uniquelyCredentialedSites = Array.from(new Map(sites.map((site) => [site.credentialId, site])).values());
 
         const authInfos = await Promise.all(uniquelyCredentialedSites.map((site) => this.getAuthInfo(site, true)));
@@ -139,6 +183,20 @@ export class CredentialManager implements Disposable {
         return authInfos.filter(
             (authInfo): authInfo is AuthInfo => !!authInfo && authInfo.state !== AuthInfoState.Invalid,
         );
+    }
+
+    // Gets valid auth info for cloud sites, deduplicated by user email (used for notifications and handles OAuth + API token for the same user)
+    public async getCloudAuthInfo(product: Product): Promise<AuthInfo[]> {
+        const authInfos = await this.getAllValidAuthInfo(product, (site) => site.isCloud);
+
+        const uniqueByEmail = new Map<string, AuthInfo>();
+        authInfos.forEach((authInfo) => {
+            const email = authInfo.user.email;
+            if (email && !uniqueByEmail.has(email)) {
+                uniqueByEmail.set(email, authInfo);
+            }
+        });
+        return Array.from(uniqueByEmail.values());
     }
 
     /**

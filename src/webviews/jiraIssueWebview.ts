@@ -56,10 +56,12 @@ import {
     isOpenRovoDevWithIssueAction,
     isOpenRovoDevWithPromoBanner,
     isOpenStartWorkPageAction,
+    isShareIssue,
     isTransitionIssue,
     isUpdateVoteAction,
     isUpdateWatcherAction,
     isUpdateWorklog,
+    ShareIssueAction,
     TransitionChildIssueAction,
 } from '../ipc/issueActions';
 import {
@@ -97,6 +99,8 @@ export class JiraIssueWebview
     private _issue: MinimalIssue<DetailedSiteInfo>;
     private _editUIData: EditIssueData;
     private _currentUser: User;
+    private _webviewReady: boolean = false;
+    private _needsRefresh: boolean = false;
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -124,6 +128,12 @@ export class JiraIssueWebview
         this._panel!.iconPath = Resources.icons.get(iconSet.JIRAICON);
     }
 
+    public override async createOrShow(column?: vscode.ViewColumn): Promise<void> {
+        this._webviewReady = false;
+        this._needsRefresh = false;
+        await super.createOrShow(column);
+    }
+
     async initialize(issue: MinimalIssue<DetailedSiteInfo>) {
         this._issue = issue;
 
@@ -137,6 +147,11 @@ export class JiraIssueWebview
     }
 
     async invalidate() {
+        if (!this._webviewReady) {
+            this._needsRefresh = true;
+            return;
+        }
+
         // TODO: we might want to also update feature gates here?
         this.fireAdditionalSettings({
             rovoDevEnabled: Container.isRovoDevEnabled,
@@ -264,7 +279,6 @@ export class JiraIssueWebview
             this._editUIData.recentPullRequests = [];
 
             const msg = this._editUIData;
-
             msg.type = 'update';
 
             this.postMessage(msg); // Issue has rendered
@@ -651,6 +665,15 @@ export class JiraIssueWebview
 
         if (!handled) {
             switch (msg.action) {
+                case 'webviewReady': {
+                    handled = true;
+                    this._webviewReady = true;
+                    if (this._needsRefresh) {
+                        this._needsRefresh = false;
+                        this.invalidate();
+                    }
+                    break;
+                }
                 case 'copyJiraIssueLink': {
                     handled = true;
                     const linkUrl = `${this._issue.siteDetails.baseLinkUrl}/browse/${this._issue.key}`;
@@ -1692,6 +1715,97 @@ export class JiraIssueWebview
                 }
                 case 'setRovoDevPromptText': {
                     Container.rovodevWebviewProvider.setPromptTextWithFocus((msg as any).text);
+                    break;
+                }
+                case 'shareIssue': {
+                    if (isShareIssue(msg)) {
+                        handled = true;
+                        try {
+                            const shareMsg: ShareIssueAction = msg;
+                            const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+
+                            const apiVersion = client.apiVersion || '3';
+                            const baseApiUrl = this._issue.siteDetails.baseApiUrl.replace(/\/rest$/, '');
+                            const messageText = shareMsg.shareData.message || '';
+                            const issueTitle = `${this._issue.key} ${shareMsg.issueSummary}`;
+
+                            const currentUserAccountId = this._currentUser.accountId;
+                            const filteredRecipients = shareMsg.shareData.recipients.filter(
+                                (user: User) => user.accountId !== currentUserAccountId,
+                            );
+
+                            if (filteredRecipients.length === 0) {
+                                window.showInformationMessage('Issue shared');
+                                this.postMessage({
+                                    type: 'fieldValueUpdate',
+                                    fieldValues: { loadingField: '' },
+                                    nonce: msg.nonce,
+                                });
+                                break;
+                            }
+
+                            const notifyPayload = {
+                                subject: `Shared with you: ${issueTitle}`,
+                                textBody: messageText
+                                    ? messageText
+                                    : `${this._currentUser.displayName} shared an issue with you.`,
+                                to: {
+                                    users: filteredRecipients.map((user: User) => ({
+                                        accountId: user.accountId,
+                                    })),
+                                },
+                            };
+
+                            if (messageText) {
+                                const escapeHtml = (text: string): string =>
+                                    text
+                                        .replace(/&/g, '&amp;')
+                                        .replace(/</g, '&lt;')
+                                        .replace(/>/g, '&gt;')
+                                        .replace(/"/g, '&quot;')
+                                        .replace(/'/g, '&#039;');
+                                (notifyPayload as any).htmlBody = `<p>${escapeHtml(messageText)}</p>`;
+                            }
+
+                            Logger.debug(`Share issue payload: ${JSON.stringify(notifyPayload)}`);
+
+                            const notifyUrl = `${baseApiUrl}/rest/api/${apiVersion}/issue/${this._issue.key}/notify`;
+                            const authHeader = await client.authorizationProvider('POST', notifyUrl);
+
+                            await client.transportFactory()(notifyUrl, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    Authorization: authHeader,
+                                },
+                                data: JSON.stringify(notifyPayload),
+                            });
+
+                            window.showInformationMessage('Issue shared');
+
+                            this.postMessage({
+                                type: 'fieldValueUpdate',
+                                fieldValues: { loadingField: '' },
+                                nonce: msg.nonce,
+                            });
+                        } catch (e: any) {
+                            const errorMessage =
+                                e?.response?.data?.errorMessages?.join(', ') || e?.response?.data?.errors
+                                    ? JSON.stringify(e?.response?.data?.errors)
+                                    : e?.message || 'Error sharing issue';
+                            Logger.error(e, `Error sharing issue: ${errorMessage}`);
+                            this.postMessage({
+                                type: 'error',
+                                reason: `Error sharing issue: ${errorMessage}`,
+                                nonce: msg.nonce,
+                            });
+                            this.postMessage({
+                                type: 'fieldValueUpdate',
+                                fieldValues: { loadingField: '' },
+                                nonce: msg.nonce,
+                            });
+                        }
+                    }
                     break;
                 }
                 case 'openExternalUrl': {

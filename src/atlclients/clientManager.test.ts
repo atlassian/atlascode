@@ -17,7 +17,6 @@ import {
     jiraTokenAuthProvider,
     oauthJiraTransportFactory,
 } from '../jira/jira-client/providers';
-import { Logger } from '../logger';
 import { PipelineApiImpl } from '../pipelines/pipelines';
 import { SitesAvailableUpdateEvent } from '../siteManager';
 import { CacheMap } from '../util/cachemap';
@@ -159,14 +158,6 @@ describe('ClientManager', () => {
             initializingChangeEvent: {} as ConfigurationChangeEvent,
             initializing: jest.fn().mockReturnValue(false),
             changed: jest.fn().mockReturnValue(false),
-        };
-
-        // Mock Logger
-        (Logger as any) = {
-            debug: jest.fn(),
-            info: jest.fn(),
-            warn: jest.fn(),
-            error: jest.fn(),
         };
 
         // Mock queue
@@ -397,7 +388,6 @@ describe('ClientManager', () => {
             );
 
             expect(window.showErrorMessage).toHaveBeenCalled();
-            expect(Logger.error).toHaveBeenCalled();
         });
     });
 

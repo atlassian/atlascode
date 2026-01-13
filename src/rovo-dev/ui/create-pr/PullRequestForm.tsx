@@ -43,6 +43,7 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
     const [isPullRequestLoading, setPullRequestLoading] = React.useState(false);
     const [isBranchNameLoading, setBranchNameLoading] = React.useState(false);
     const [branchName, setBranchName] = React.useState<string | undefined>(undefined);
+    const commitMessageRef = React.useRef<HTMLInputElement>(null);
 
     const getCurrentBranchName = async () => {
         setBranchNameLoading(true);
@@ -61,6 +62,17 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
         await getCurrentBranchName();
         setFormVisible?.(true);
     };
+
+    // Auto-select commit message text when form becomes visible
+    React.useEffect(() => {
+        if (isFormVisible && commitMessageRef.current) {
+            // Use setTimeout to ensure the input is rendered and focused
+            setTimeout(() => {
+                commitMessageRef.current?.focus();
+                commitMessageRef.current?.select();
+            }, 0);
+        }
+    }, [isFormVisible]);
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -110,10 +122,12 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
                                     </span>
                                 </label>
                                 <input
+                                    ref={commitMessageRef}
                                     type="text"
                                     id="pr-commit-message"
                                     name="pr-commit-message"
                                     placeholder="Enter a commit message"
+                                    defaultValue="Commit by Rovo Dev"
                                 />
                             </div>
                             <div className="form-field">
@@ -129,9 +143,6 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
                             </div>
                         </div>
                         <div className="form-actions">
-                            <button type="button" onClick={() => onCancel()} className="form-cancel-button">
-                                Cancel
-                            </button>
                             <button type="submit" className="form-submit-button">
                                 {isPullRequestLoading ? (
                                     <i className="codicon codicon-loading codicon-modifier-spin" />
@@ -139,6 +150,9 @@ export const PullRequestForm: React.FC<PullRequestFormProps> = ({
                                     <PullRequestIcon label="pull-request-icon" spacing="none" />
                                 )}
                                 Create pull request
+                            </button>
+                            <button type="button" onClick={() => onCancel()} className="form-cancel-button">
+                                Cancel
                             </button>
                         </div>
                     </form>

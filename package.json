@@ -7,6 +7,7 @@
         "jira",
         "atlassian",
         "rovo dev",
+        "rovodev",
         "issues",
         "builds",
         "pull requests"
@@ -46,7 +47,7 @@
     ],
     "main": "./build/extension/extension",
     "rovoDev": {
-        "version": "0.13.11"
+        "version": "0.13.27"
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
@@ -138,14 +139,6 @@
                 "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
             },
             {
-                "command": "atlascode.rovodev.showTerminal",
-                "title": "Show in terminal",
-                "icon": "$(terminal)",
-                "category": "Rovo Dev",
-                "description": "Shows the Rovo Dev process in a terminal window.",
-                "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
-            },
-            {
                 "command": "atlascode.openRovoDevConfig",
                 "title": "Open Settings File",
                 "category": "Rovo Dev",
@@ -184,6 +177,12 @@
                 "title": "Atlassian: Authenticate with Bitbucket Token"
             },
             {
+                "command": "atlascode.rovodev.restartLsp",
+                "title": "Restart Language Server",
+                "category": "Rovo Dev",
+                "enablement": "atlascode:rovoDevEnabled"
+            },
+            {
                 "command": "atlascode.jira.todoIssue",
                 "title": "TO DO"
             },
@@ -205,8 +204,22 @@
                 "category": "Jira"
             },
             {
+                "command": "atlascode.jira.createIssue.fromSidebar",
+                "title": "Create Jira Issue",
+                "icon": {
+                    "dark": "resources/dark/add.svg",
+                    "light": "resources/light/add.svg"
+                },
+                "category": "Jira"
+            },
+            {
+                "command": "atlascode.jira.createIssue.fromIssueContext",
+                "title": "Create Jira Issue",
+                "category": "Jira"
+            },
+            {
                 "command": "atlascode.jira.createIssue.startWork",
-                "title": "Create and create branch",
+                "title": "Create and start work",
                 "category": "Jira"
             },
             {
@@ -695,11 +708,6 @@
                     "group": "navigation@1"
                 },
                 {
-                    "command": "atlascode.rovodev.showTerminal",
-                    "when": "atlascode:rovoDevTerminalEnabled && view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
-                    "group": "navigation@2"
-                },
-                {
                     "command": "atlascode.openRovoDevConfig",
                     "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
                     "group": "rovoDevContextMenu1@1"
@@ -725,7 +733,7 @@
                     "group": "navigation@1"
                 },
                 {
-                    "command": "atlascode.jira.createIssue",
+                    "command": "atlascode.jira.createIssue.fromSidebar",
                     "when": "view =~ /(atlascode.views.jira.assignedWorkItemsTreeView)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation@1"
                 },
@@ -838,7 +846,7 @@
                     "group": "jiraContextMenuGroup3"
                 },
                 {
-                    "command": "atlascode.jira.createIssue",
+                    "command": "atlascode.jira.createIssue.fromIssueContext",
                     "when": "viewItem =~ /(jiraIssue|assignedJiraIssue|jiraIssue_.+|assignedJiraIssue_.+)/ && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup2"
                 },
@@ -924,10 +932,6 @@
                 {
                     "command": "atlascode.rovodev.newChatSession",
                     "when": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
-                },
-                {
-                    "command": "atlascode.rovodev.showTerminal",
-                    "when": "atlascode:rovoDevEnabled"
                 },
                 {
                     "command": "atlascode.openRovoDevConfig",
@@ -1108,6 +1112,14 @@
                 {
                     "command": "atlascode.jira.expandCreateWorkItem",
                     "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.createIssue.fromSidebar",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.createIssue.fromIssueContext",
+                    "when": "false"
                 }
             ],
             "webview/context": [
@@ -1183,7 +1195,7 @@
                 },
                 "atlascode.issueSuggestion.contextLevel": {
                     "type": "string",
-                    "description": "What context to use for issue suggestions - only the TODO text, surrouding code, or the entire file",
+                    "description": "What context to use for issue suggestions - only the TODO text, surrounding code, or the entire file",
                     "default": "codeContext",
                     "enum": [
                         "todoOnly",
@@ -1634,6 +1646,7 @@
         "@atlaskit/icon": "^27.12.0",
         "@atlaskit/icon-lab": "^5.7.0",
         "@atlaskit/inline-dialog": "^18.0.4",
+        "@atlaskit/inline-edit": "^15.4.2",
         "@atlaskit/layering": "^3.0.0",
         "@atlaskit/lozenge": "^13.0.8",
         "@atlaskit/mention": "^24.2.18",
@@ -1674,6 +1687,7 @@
         "@mui/styles": "^5.18.0",
         "@mui/utils": "^5.17.1",
         "@segment/analytics-node": "^2.1.3",
+        "@sentry/node": "^9.40.0",
         "@speed-highlight/core": "^1.2.7",
         "@vscode/codicons": "^0.0.40",
         "@vscode/webview-ui-toolkit": "^1.4.0",
@@ -1741,6 +1755,7 @@
         "turndown": "^7.2.0",
         "use-constant": "^2.0.0",
         "uuid": "^11.1.0",
+        "vscode-languageclient": "^9.0.1",
         "websocket": "^1.0.35"
     },
     "devDependencies": {
@@ -1806,6 +1821,7 @@
         "process": "^0.11.10",
         "source-map-loader": "^5.0.0",
         "terser-webpack-plugin": "^5.3.0",
+        "timezone-mock": "^1.3.6",
         "ts-jest": "^29.4.0",
         "ts-loader": "^9.5.2",
         "ts-node": "^10.9.2",

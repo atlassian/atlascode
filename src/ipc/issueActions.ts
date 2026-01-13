@@ -148,6 +148,19 @@ export interface CloneIssueAction extends Action {
     issueData: any;
 }
 
+export interface ShareIssueData {
+    recipients: User[];
+    message: string;
+}
+
+export interface ShareIssueAction extends Action {
+    action: 'shareIssue';
+    site: DetailedSiteInfo;
+    issueKey: string;
+    issueSummary: string;
+    shareData: ShareIssueData;
+}
+
 export interface WorklogData {
     comment: string;
     started: string;
@@ -248,6 +261,10 @@ export interface OpenRovoDevWithPromoBannerAction extends Action {
 
 export interface DismissRovoDevPromoBannerAction extends Action {
     action: 'dismissRovoDevPromoBanner';
+}
+
+export interface MediaTokenFetchAction extends Action {
+    action: 'fetchMediaToken';
 }
 
 export function isGetImage(a: Action): a is GetImageAction {
@@ -387,6 +404,16 @@ export function isCloneIssue(a: Action): a is CloneIssueAction {
     return a && a.action === 'cloneIssue';
 }
 
+export function isShareIssue(a: Action): a is ShareIssueAction {
+    return (
+        a &&
+        a.action === 'shareIssue' &&
+        (<ShareIssueAction>a).shareData !== undefined &&
+        (<ShareIssueAction>a).site !== undefined &&
+        (<ShareIssueAction>a).issueKey !== undefined
+    );
+}
+
 export function isUpdateAiSettings(a: Action): a is UpdateAiSettingsAction {
     return a && a.action === 'updateAiSettings' && (<UpdateAiSettingsAction>a).newState !== undefined;
 }
@@ -423,4 +450,8 @@ export function isOpenRovoDevWithPromoBanner(a: Action): a is OpenRovoDevWithPro
 
 export function isDismissRovoDevPromoBanner(a: Action): a is DismissRovoDevPromoBannerAction {
     return a && a.action === 'dismissRovoDevPromoBanner';
+}
+
+export function isMediaTokenFetchAction(a: Action): a is MediaTokenFetchAction {
+    return (<MediaTokenFetchAction>a).action === 'fetchMediaToken';
 }

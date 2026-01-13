@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 import path from 'path';
-import { Commands } from 'src/constants';
 import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { safeWaitFor } from 'src/rovo-dev/util/waitFor';
@@ -25,7 +24,7 @@ import {
 } from 'vscode';
 
 import { GitErrorCodes } from '../typings/git';
-import { RovodevCommandContext } from './api/componentApi';
+import { RovodevCommandContext, RovodevCommands } from './api/componentApi';
 import { DetailedSiteInfo, ExtensionApi, MinimalIssue } from './api/extensionApi';
 import { RovoDevApiClient, RovoDevApiError, RovoDevHealthcheckResponse } from './client';
 import { buildErrorDetails } from './errorDetailsBuilder';
@@ -348,19 +347,25 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.ReportChangedFilesPanelShown:
-                        this._telemetryProvider.fireTelemetryEvent(
-                            'rovoDevFilesSummaryShownEvent',
-                            this._chatProvider.currentPromptId,
-                            e.filesCount,
-                        );
+                        this._telemetryProvider.fireTelemetryEvent({
+                            action: 'rovoDevFilesSummaryShown',
+                            subject: 'atlascode',
+                            attributes: {
+                                promptId: this._chatProvider.currentPromptId,
+                                filesCount: e.filesCount,
+                            },
+                        });
                         break;
 
                     case RovoDevViewResponseType.ReportChangesGitPushed:
-                        this._telemetryProvider.fireTelemetryEvent(
-                            'rovoDevGitPushActionEvent',
-                            this._chatProvider.currentPromptId,
-                            e.pullRequestCreated,
-                        );
+                        this._telemetryProvider.fireTelemetryEvent({
+                            action: 'rovoDevGitPushAction',
+                            subject: 'atlascode',
+                            attributes: {
+                                promptId: this._chatProvider.currentPromptId,
+                                prCreated: e.pullRequestCreated,
+                            },
+                        });
                         break;
 
                     case RovoDevViewResponseType.CheckGitChanges:
@@ -383,16 +388,22 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.ReportThinkingDrawerExpanded:
-                        this._telemetryProvider.fireTelemetryEvent(
-                            'rovoDevDetailsExpandedEvent',
-                            this._chatProvider.currentPromptId,
-                        );
+                        this._telemetryProvider.fireTelemetryEvent({
+                            subject: 'atlascode',
+                            action: 'rovoDevDetailsExpanded',
+                            attributes: {
+                                promptId: this._chatProvider.currentPromptId,
+                            },
+                        });
                         break;
                     case RovoDevViewResponseType.ReportCreatePrButtonClicked:
-                        this._telemetryProvider.fireTelemetryEvent(
-                            'rovoDevCreatePrButtonClickedEvent',
-                            this._chatProvider.currentPromptId,
-                        );
+                        this._telemetryProvider.fireTelemetryEvent({
+                            subject: 'rovoDevCreatePrButton',
+                            action: 'clicked',
+                            attributes: {
+                                promptId: this._chatProvider.currentPromptId,
+                            },
+                        });
                         break;
 
                     case RovoDevViewResponseType.WebviewReady:
@@ -501,11 +512,34 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.OpenRovoDevLogFile:
-                        await commands.executeCommand(Commands.OpenRovoDevLogFile);
+                        await commands.executeCommand(RovodevCommands.OpenRovoDevLogFile);
+                        break;
+
+                    case RovoDevViewResponseType.StartNewSession:
+                        await this.executeNewSession();
                         break;
 
                     case RovoDevViewResponseType.MessageRendered:
                         this._chatProvider.signalMessageRendered(e.promptId);
+                        break;
+
+                    case RovoDevViewResponseType.ReportRenderError:
+                        const renderError = new Error(`Render Error: ${e.errorMessage}`);
+                        renderError.name = e.errorType;
+                        // Build detailed error context
+                        const errorDetails: string[] = [];
+                        if (e.errorStack) {
+                            errorDetails.push(`Error Stack:\n${e.errorStack}`);
+                        }
+                        if (e.componentStack) {
+                            errorDetails.push(`Component Stack:\n${e.componentStack}`);
+                        }
+                        const contextMessage =
+                            errorDetails.length > 0
+                                ? `Type: ${e.errorType}\n${errorDetails.join('\n\n')}`
+                                : `Type: ${e.errorType}`;
+
+                        RovoDevLogger.error(renderError, contextMessage);
                         break;
 
                     default:
@@ -586,6 +620,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 isProcessTerminated,
                 uid: v4(),
                 stackTrace: buildErrorDetails(error),
+                stderr: (error as any).stderr,
                 rovoDevLogs: readLastNLogLines(),
             },
         });
@@ -795,12 +830,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         const paths = files.map((x) => x.filePath);
         this._revertedChanges.push(...paths);
 
-        this._telemetryProvider.fireTelemetryEvent(
-            'rovoDevFileChangedActionEvent',
-            this._chatProvider.currentPromptId,
-            'undo',
-            files.length,
-        );
+        this._telemetryProvider.fireTelemetryEvent({
+            action: 'rovoDevFileChangedAction',
+            subject: 'atlascode',
+            attributes: {
+                promptId: this._chatProvider.currentPromptId,
+                action: 'undo',
+                filesCount: files.length,
+            },
+        });
     }
 
     private async executeKeepFiles(files: ModifiedFile[]) {
@@ -811,12 +849,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         await Promise.all(promises);
 
-        this._telemetryProvider.fireTelemetryEvent(
-            'rovoDevFileChangedActionEvent',
-            this._chatProvider.currentPromptId,
-            'keep',
-            files.length,
-        );
+        this._telemetryProvider.fireTelemetryEvent({
+            action: 'rovoDevFileChangedAction',
+            subject: 'atlascode',
+            attributes: {
+                promptId: this._chatProvider.currentPromptId,
+                action: 'keep',
+                filesCount: files.length,
+            },
+        });
     }
 
     public async executeTriggerFeedback() {
@@ -1066,11 +1107,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 break;
 
             case 'Started':
-                await this.signalProcessStarted(newState.hostname, newState.httpPort, newState.sessionToken);
+                await this.signalProcessStarted(
+                    newState.hostname,
+                    newState.httpPort,
+                    newState.sessionToken,
+                    newState.pid,
+                );
                 break;
 
             case 'Terminated':
-                await this.signalProcessTerminated(newState.exitCode);
+                await this.signalProcessTerminated(newState.exitCode, newState.stderr);
                 break;
 
             case 'Disabled':
@@ -1093,9 +1139,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
-    private signalProcessStarted(hostname: string, rovoDevPort: number, sessionToken: string) {
+    private signalProcessStarted(hostname: string, rovoDevPort: number, sessionToken: string, pid?: number) {
         // initialize the API client
         this._rovoDevApiClient = new RovoDevApiClient(hostname, rovoDevPort, sessionToken);
+
+        if (pid) {
+            this._debugPanelContext['PID'] = `${pid}`;
+        }
 
         this._debugPanelContext['RovoDevAddress'] = `http://${hostname}:${rovoDevPort}`;
         this._debugPanelContext['SessionToken'] = sessionToken;
@@ -1315,7 +1365,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await this.processError(error, { title, isProcessTerminated: true, skipLogError: true });
     }
 
-    private async signalProcessTerminated(code?: number) {
+    private async signalProcessTerminated(code?: number, stderr?: string) {
         if (this._isProviderDisabled) {
             return;
         }
@@ -1330,6 +1380,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 : 'Please start a new chat session to continue.';
 
         const error = new Error(errorMessage);
+
+        // Include stderr if available
+        if (stderr && stderr.trim()) {
+            (error as any).stderr = stderr.trim();
+        }
+
         // we assume that the real error has been logged somehwere else, so we don't log this one
         await this.processError(error, { title, isProcessTerminated: true, skipLogError: true });
     }

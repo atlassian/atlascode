@@ -4,9 +4,10 @@ import { errorEvent } from './analytics';
 import { AnalyticsClient } from './analytics-node-client/src/client.min';
 import { TrackEvent } from './analytics-node-client/src/types';
 import { ErrorProductArea } from './analyticsTypes';
+import { ExtensionId } from './constants';
 import { Logger } from './logger';
 
-const AtlascodeStackTraceHint = '/.vscode/extensions/atlassian.atlascode-';
+const AtlascodeStackTraceHint = `/.vscode/extensions/${ExtensionId}-`;
 
 let nodeJsErrorReportingRegistered = false;
 let analyticsClientRegistered = false;

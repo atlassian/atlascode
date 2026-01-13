@@ -54,7 +54,7 @@ body {
     font-family: var(--vscode-font-family);
     height: 100vh;
     margin: auto;
-    max-width: 800px;
+    width: 100%;
 
 
     /* atlaskit overrides */
@@ -233,7 +233,7 @@ body {
 .tool-return-item-base {
     display: flex;
     flex-direction: row;
-    align-items: flex-start;
+    align-items: center;
     gap: 4px;
 }
 
@@ -288,7 +288,7 @@ body {
 
 .code-plan-button-container {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
     margin-bottom: 8px;
 }
   
@@ -298,7 +298,7 @@ body {
     justify-content: center;
     border: 1px solid var(--vscode-editorWidget-border);
     border-radius: 6px;
-    max-width: 400px;
+    width: fit-content;
     background-color: inherit;
     padding: 6px 12px;
 }
@@ -422,6 +422,23 @@ body {
     color: var(--ds-text-inverse);
 }
 
+/* Code blocks and quotes */
+.user-message .message-content pre,
+.user-message .message-content code {
+    background-color: var(--ds-background-inverse-subtle) !important;
+    color: var(--ds-text-inverse) !important;
+}
+
+.rovodev-markdown-link {
+    cursor: pointer;
+    color: var(--vscode-textLink-foreground);
+    text-decoration: underline;
+}
+
+.user-message .rovodev-markdown-link {
+    color: var(--ds-text-inverse);
+}
+
 /* Pull Request button styles */
 .pull-request-button {
     display: flex;
@@ -535,7 +552,7 @@ body {
     flex-direction: row;
     gap: 10px;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: flex-start;
 }
 
 .form-cancel-button,
@@ -857,6 +874,7 @@ body {
 
 .prompt-settings-action {
     --ds-icon-inverse: var(--vscode-sideBar-background);
+    margin-left: auto;
 }
 
 .prompt-settings-logo {
@@ -900,6 +918,16 @@ body {
 
 .vscode-high-contrast .user-message .message-content {
     color: inherit;
+}
+
+.vscode-high-contrast .user-message .message-content code {
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground) !important;
+}
+
+.vscode-high-contrast-light .user-message .message-content code {
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground) !important;
 }
 
 .vscode-high-contrast code {
@@ -970,4 +998,8 @@ body {
 }
 .vscode-high-contrast .deep-plan-indicator:hover {
     border: 2px solid var(--vscode-focusBorder);
+}
+
+.vscode-high-contrast .rovodev-markdown-link {
+    color: inherit;
 }

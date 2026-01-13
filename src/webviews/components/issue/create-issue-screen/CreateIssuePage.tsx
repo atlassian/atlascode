@@ -27,6 +27,7 @@ import {
     emptyCommonEditorState,
 } from '../AbstractIssueEditorPage';
 import { convertWikimarkupToAdf } from '../common/adfToWikimarkup';
+import { MissingScopesBanner } from '../common/missing-scopes-banner/MissingScopesBanner';
 import { CreateIssueButton } from './actions/CreateIssueButton';
 import { Panel } from './Panel';
 
@@ -309,9 +310,11 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
             return errs;
         }
 
-        // Convert WikiMarkup fields to ADF if using legacy editor
+        // Convert WikiMarkup fields to ADF if using legacy editor AND site is Cloud
+        // Jira Data Center requires WikiMarkup string, not ADF object
         const issueData = { ...this.state.fieldValues };
-        if (!this.state.isAtlaskitEditorEnabled) {
+
+        if (!this.state.showAtlaskitEditor && this.state.siteDetails.isCloud) {
             // Convert description if it's a string (WikiMarkup)
             if (issueData.description && typeof issueData.description === 'string') {
                 issueData.description = convertWikimarkupToAdf(issueData.description);
@@ -354,6 +357,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         });
 
         this.postMessage(action);
+        this.postMessage({ action: 'fetchMediaToken' });
     };
 
     protected handleInlineAttachments = async (fieldkey: string, newValue: any) => {
@@ -515,6 +519,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
 
     override componentDidMount() {
         this.postMessage({ action: 'getFeatureFlags' });
+        this.postMessage({ action: 'fetchMediaToken' });
     }
 
     public override render() {
@@ -556,6 +561,16 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                         onRetry={this.handleRetryLastAction}
                                         onSignIn={this.handleSignIn}
                                         errorDetails={this.state.errorDetails}
+                                    />
+                                )}
+                                {this.state.showEditorMissedScopeBanner && (
+                                    <MissingScopesBanner
+                                        onDismiss={() => {
+                                            this.setState({ showEditorMissedScopeBanner: false });
+                                        }}
+                                        onOpen={() => {
+                                            this.postMessage({ action: 'openJiraAuth' });
+                                        }}
                                     />
                                 )}
                                 <Form name="create-issue" key={this.state.formKey} onSubmit={this.handleSubmit}>

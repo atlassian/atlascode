@@ -1,5 +1,5 @@
 import { FieldDescriptor, Fields } from '../common/types';
-import { clearField, getFieldValue, isCheckboxOrRadio, isCustomUrl } from './authFormUtils';
+import { clearField, getFieldValue, isCheckboxOrRadio, isCustomUrl, setFieldValue } from './authFormUtils';
 
 // mock URL.parse if missing
 if (!URL.parse) {
@@ -258,6 +258,70 @@ describe('authFormUtils', () => {
 
             expect(mockInput.value).toBe('');
             expect(mockErrors.current.testField).toBeUndefined();
+        });
+    });
+
+    describe('setFieldValue', () => {
+        let mockFields: Fields;
+        let mockErrors: { current: any };
+
+        beforeEach(() => {
+            mockFields = {};
+            mockErrors = { current: {} };
+        });
+
+        it('should set field value, remove error, and dispatch input event when field exists', () => {
+            const dispatchEventMock = jest.fn();
+            const mockInput = {
+                value: '',
+                dispatchEvent: dispatchEventMock,
+            } as unknown as HTMLInputElement;
+
+            mockFields.testField = {
+                inputRef: mockInput,
+                error: undefined,
+                touched: false,
+                validator: undefined,
+                options: [],
+            };
+            mockErrors.current.testField = 'Some error';
+
+            setFieldValue(mockFields, mockErrors, 'testField', 'new value');
+
+            expect(mockInput.value).toBe('new value');
+            expect(mockErrors.current.testField).toBeUndefined();
+            expect(dispatchEventMock).toHaveBeenCalledTimes(1);
+            expect(dispatchEventMock).toHaveBeenCalledWith(expect.any(Event));
+        });
+
+        it('should do nothing when field does not exist', () => {
+            mockErrors.current.someField = 'Some error';
+
+            setFieldValue(mockFields, mockErrors, 'nonExistentField', 'new value');
+
+            expect(mockErrors.current.someField).toBe('Some error');
+        });
+
+        it('should handle field without error', () => {
+            const dispatchEventMock = jest.fn();
+            const mockInput = {
+                value: 'old value',
+                dispatchEvent: dispatchEventMock,
+            } as unknown as HTMLInputElement;
+
+            mockFields.testField = {
+                inputRef: mockInput,
+                error: undefined,
+                touched: false,
+                validator: undefined,
+                options: [],
+            };
+
+            setFieldValue(mockFields, mockErrors, 'testField', 'new value');
+
+            expect(mockInput.value).toBe('new value');
+            expect(mockErrors.current.testField).toBeUndefined();
+            expect(dispatchEventMock).toHaveBeenCalledTimes(1);
         });
     });
 });

@@ -4,12 +4,14 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { IssueHistoryItem } from 'src/ipc/issueMessaging';
 import { disableConsole } from 'testsutil/console';
+import timezoneMock from 'timezone-mock';
 
 import { IssueHistory } from './IssueHistory';
 
 describe('IssueHistory', () => {
     beforeAll(() => {
         disableConsole('warn', 'error');
+        timezoneMock.register('US/Pacific');
     });
 
     it('renders loading state', () => {
