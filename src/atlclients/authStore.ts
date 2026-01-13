@@ -26,6 +26,7 @@ import {
     Product,
     ProductBitbucket,
     ProductJira,
+    ProductRovoDev,
     RemoveAuthInfoEvent,
     UpdateAuthInfoEvent,
 } from './authInfo';
@@ -622,11 +623,64 @@ export class CredentialManager implements Disposable {
                 return CommandContext.IsJiraAuthenticated;
             case ProductBitbucket.key:
                 return CommandContext.IsBBAuthenticated;
+            // Added for uniformity, currently unused in conditional views
+            case ProductRovoDev.key:
+                return CommandContext.IsRovoDevAuthenticated;
         }
         return undefined;
     }
 
     public static generateCredentialId(siteId: string, userId: string): string {
         return crypto.createHash('md5').update(`${siteId}::${userId}`).digest('hex');
+    }
+
+    // RovoDev-specific methods (not site-based)
+    private static readonly ROVODEV_CREDENTIAL_ID = 'rovodev-single';
+
+    public async getRovoDevAuthInfo(): Promise<AuthInfo | undefined> {
+        Logger.debug(`Retrieving RovoDev auth info`);
+        try {
+            return await this.getAuthInfoFromSecretStorage(ProductRovoDev.key, CredentialManager.ROVODEV_CREDENTIAL_ID);
+        } catch (e) {
+            Logger.error(e, `secretstorage error for RovoDev: ${e}`);
+            return undefined;
+        }
+    }
+
+    public async saveRovoDevAuthInfo(info: AuthInfo): Promise<void> {
+        Logger.debug(`Saving RovoDev auth info`);
+        const cmdctx = this.commandContextFor(ProductRovoDev);
+        if (cmdctx !== undefined) {
+            setCommandContext(cmdctx, info !== emptyAuthInfo ? true : false);
+        }
+
+        try {
+            await this.addSiteInformationToSecretStorage(
+                ProductRovoDev.key,
+                CredentialManager.ROVODEV_CREDENTIAL_ID,
+                info,
+            );
+        } catch (e) {
+            Logger.error(e, 'error saving RovoDev auth info to secretstorage');
+        }
+    }
+
+    public async removeRovoDevAuthInfo(): Promise<boolean> {
+        Logger.debug(`Removing RovoDev auth info`);
+        const wasKeyDeleted = await this.removeSiteInformationFromSecretStorage(
+            ProductRovoDev.key,
+            CredentialManager.ROVODEV_CREDENTIAL_ID,
+        );
+
+        if (wasKeyDeleted) {
+            const cmdctx = this.commandContextFor(ProductRovoDev);
+            if (cmdctx) {
+                setCommandContext(cmdctx, false);
+            }
+
+            return true;
+        }
+
+        return false;
     }
 }
