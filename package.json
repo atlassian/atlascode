@@ -807,21 +807,6 @@
             ],
             "view/item/context": [
                 {
-                    "command": "atlascode.jira.todoIssue",
-                    "when": "viewItem =~ /(jiraIssue_todo|assignedJiraIssue_todo)/ && atlascode:isJiraAuthenticated",
-                    "group": "inline"
-                },
-                {
-                    "command": "atlascode.jira.inProgressIssue",
-                    "when": "viewItem =~ /(jiraIssue_inProgress|assignedJiraIssue_inProgress)/ && atlascode:isJiraAuthenticated",
-                    "group": "inline"
-                },
-                {
-                    "command": "atlascode.jira.doneIssue",
-                    "when": "viewItem =~ /(jiraIssue_done|assignedJiraIssue_done)/ && atlascode:isJiraAuthenticated",
-                    "group": "inline"
-                },
-                {
                     "command": "atlascode.jira.assignIssueToMe",
                     "when": "viewItem =~ /(jiraIssue|jiraIssue_.+)/ && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup1"
