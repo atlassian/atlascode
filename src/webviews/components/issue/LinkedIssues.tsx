@@ -1,4 +1,6 @@
 import Button from '@atlaskit/button';
+import CrossIcon from '@atlaskit/icon/core/cross';
+import InlineDialog from '@atlaskit/inline-dialog';
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
 import { IssueLinkIssue, MinimalIssueLink, MinimalIssueOrKeyAndSite, User } from '@atlassianlabs/jira-pi-common-models';
@@ -19,6 +21,7 @@ type LinkedIssuesProps = {
 type ItemData = {
     linkDescription: string;
     issue: IssueLinkIssue<DetailedSiteInfo>;
+    issueLinkId: string;
     onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => void;
     onDelete: (issueLink: any) => void;
     onStatusChange?: (issueKey: string, statusName: string) => void;
@@ -60,6 +63,86 @@ const IssueKey = (data: ItemData) => {
     );
 };
 
+const Actions = (data: ItemData) => {
+    const [isDeleting, setIsDeleting] = React.useState(false);
+
+    const handleDeleteClick = () => {
+        setIsDeleting(true);
+    };
+
+    const handleConfirmDelete = () => {
+        data.onDelete({ id: data.issueLinkId });
+        setIsDeleting(false);
+    };
+
+    const handleCancelDelete = () => {
+        setIsDeleting(false);
+    };
+
+    return (
+        <div className={`ac-inline-dialog ${isDeleting ? 'active' : ''}`}>
+            <InlineDialog
+                content={
+                    <div style={{ padding: '0' }}>
+                        <p
+                            style={{
+                                color: 'var(--vscode-foreground)',
+                                margin: '0 0 16px 0',
+                                fontSize: '14px',
+                                lineHeight: '1.4',
+                            }}
+                        >
+                            Are you sure you want to remove this linked issue?
+                        </p>
+                        <div
+                            style={{
+                                display: 'flex',
+                                gap: '8px',
+                                justifyContent: 'flex-end',
+                            }}
+                        >
+                            <Button appearance="subtle" onClick={handleCancelDelete} spacing="compact">
+                                Cancel
+                            </Button>
+                            <Button appearance="danger" onClick={handleConfirmDelete} spacing="compact">
+                                Remove
+                            </Button>
+                        </div>
+                    </div>
+                }
+                isOpen={isDeleting}
+                onClose={handleCancelDelete}
+                placement="left-end"
+            >
+                <Tooltip content="Unlink work item" position="top">
+                    <span
+                        onClick={handleDeleteClick}
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Unlink work item"
+                        onKeyDown={(e) => e.key === 'Enter' && handleDeleteClick()}
+                        style={{
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '2px',
+                            borderRadius: '3px',
+                            color: 'var(--vscode-descriptionForeground)',
+                            opacity: 0.7,
+                            transition: 'opacity 0.15s',
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+                        onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.7')}
+                    >
+                        <CrossIcon size="small" label="Remove" />
+                    </span>
+                </Tooltip>
+            </InlineDialog>
+        </div>
+    );
+};
+
 export const LinkedIssues: React.FunctionComponent<LinkedIssuesProps> = ({
     issuelinks,
     onIssueClick,
@@ -70,14 +153,15 @@ export const LinkedIssues: React.FunctionComponent<LinkedIssuesProps> = ({
 }) => {
     return (
         <TableTree
-            columns={[IssueKey, Summary, Priority, AssigneeColumn, StatusColumn]}
-            columnWidths={['100%', '100%', '20px', '100%', '150px']}
+            columns={[IssueKey, Summary, Priority, AssigneeColumn, StatusColumn, Actions]}
+            columnWidths={['100%', '100%', '20px', '100%', '150px', '20px']}
             items={issuelinks.map((issuelink) => {
                 return {
                     id: issuelink.id,
                     content: {
                         linkDescription: issuelink.inwardIssue ? issuelink.type.inward : issuelink.type.outward,
                         issue: issuelink.inwardIssue || issuelink.outwardIssue,
+                        issueLinkId: issuelink.id,
                         onIssueClick: onIssueClick,
                         onDelete: onDelete,
                         onStatusChange: onStatusChange,
