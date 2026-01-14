@@ -669,11 +669,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
             await RovoDevProcessManager.initializeRovoDev(this._context, true);
 
-            return this._telemetryProvider.fireTelemetryEvent({
-                action: 'rovoDevRestartProcessAction',
-                subject: 'atlascode',
-                attributes: {}, // no additional attributes
-            });
+            if (forceNewProcess) {
+                this._revertedChanges = [];
+                return this._telemetryProvider.fireTelemetryEvent({
+                    action: 'rovoDevRestartProcessAction',
+                    subject: 'atlascode',
+                    attributes: {}, // no additional attributes
+                });
+            } else {
+                return;
+            }
         }
 
         await this.executeApiWithErrorHandling(async (client) => {
