@@ -28,7 +28,7 @@ export class BasicInterceptor implements AuthInterceptor {
         this._requestInterceptor = async (config: AxiosRequestConfig) => {
             if (this._invalidCredentials) {
                 Logger.debug(`Blocking request due to previous 40[1|3]`);
-                return;
+                return Promise.reject(new Error('Credentials are invalid. Please update your credentials.'));
             }
             return config;
         };

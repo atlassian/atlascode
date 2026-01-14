@@ -8,6 +8,7 @@
 - Fixed authentication error
 - Fixed user mentions not working in Jira issue comments when using editor
 - Fixed dismiss button handling for 'Credentials refused...' popup
+- Added more meaningful error message in case of expired access token usage
 
 ## What's new in 4.0.14
 
