@@ -54,7 +54,7 @@ export class SentryService {
 
         // If not enabled, silently return without initializing
         if (!config.enabled || !config.dsn || !config.featureFlagEnabled) {
-            Logger.info(
+            Logger.debug(
                 'Sentry not enabled or missing configuration, skipping initialization.',
                 JSON.stringify(config),
             );
@@ -73,12 +73,12 @@ export class SentryService {
                 tracesSampleRate: 0, // Disable transaction tracing
             });
             this.sentryClient = Sentry;
-            Logger.info('Sentry initialized for Node.js environment.');
+            Logger.debug('Sentry initialized for Node.js environment.');
 
             this.initialized = true;
         } catch (error) {
             // Silently fail - don't break extension startup
-            Logger.info(new Error('Failed to initialize Sentry:'), error);
+            Logger.debug(new Error('Failed to initialize Sentry:'), error);
             console.error('Failed to initialize Sentry:', error);
             this.initialized = false;
         }

@@ -99,8 +99,9 @@ export async function retryWithBackoff<T>(operation: () => Promise<T>, options: 
     const config = { ...DEFAULT_OPTIONS, ...options };
 
     if (config.maxAttempts < 1) {
-        Logger.error(new Error('maxAttempts must be at least 1'), 'Invalid retry configuration');
-        throw new Error('maxAttempts must be at least 1');
+        const error = new Error('maxAttempts must be at least 1');
+        Logger.error(error, 'Invalid retry configuration');
+        throw error;
     }
 
     let lastError: Error | undefined;
@@ -115,7 +116,7 @@ export async function retryWithBackoff<T>(operation: () => Promise<T>, options: 
             const shouldRetry = isRetryableError(error, config.retryableErrors);
 
             if (isLastAttempt || !shouldRetry) {
-                Logger.error(error as Error, 'Retry exhausted or error not retryable');
+                Logger.error(error, 'Retry exhausted or error not retryable');
                 throw error;
             }
 
@@ -131,11 +132,9 @@ export async function retryWithBackoff<T>(operation: () => Promise<T>, options: 
     }
 
     // This should never be reached, but TypeScript needs it
-    Logger.error(
-        lastError ?? new Error('All retry attempts failed'),
-        'Retry logic reached unreachable code path - this indicates a logic bug',
-    );
-    throw lastError ?? new Error('All retry attempts failed');
+    const error = lastError ?? new Error('All retry attempts failed');
+    Logger.error(error, 'Retry logic reached unreachable code path - this indicates a logic bug');
+    throw error;
 }
 
 /**

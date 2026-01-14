@@ -66,14 +66,12 @@ export class RovoDevEntitlementChecker extends Disposable {
             const credentials = await Container.clientManager.getCloudPrimarySite();
 
             if (!credentials) {
-                Logger.error(
-                    new Error('No valid Rovo Dev credentials found'),
-                    'Failed to get credentials for Rovo Dev entitlement check',
-                );
-                throw new RovoDevEntitlementError(
+                const error = new RovoDevEntitlementError(
                     RovoDevEntitlementErrorType.CREDENTIAL_ERROR,
                     'No valid Rovo Dev credentials found',
                 );
+                Logger.error(error, 'Failed to get credentials for Rovo Dev entitlement check');
+                throw error;
             }
 
             const options = {
@@ -82,40 +80,35 @@ export class RovoDevEntitlementChecker extends Disposable {
             };
 
             const response = await fetch(`https://${credentials.host}${this._endpoint}`, options).catch((err) => {
-                Logger.error(err, 'Rovo Dev entitlement fetch failed', credentials.host);
-                throw new RovoDevEntitlementError(
+                const error = new RovoDevEntitlementError(
                     RovoDevEntitlementErrorType.FETCH_FAILED,
                     `Failed to fetch Rovo Dev entitlement: ${err.message}`,
                 );
+                Logger.error(error, 'Rovo Dev entitlement fetch failed', credentials.host);
+                throw error;
             });
 
             if (!response.ok) {
                 const message = response.toString();
-                Logger.error(
-                    new Error(`Failed to fetch Rovo Dev entitlement: ${message}`),
-                    'Rovo Dev entitlement API returned error',
-                    String(response.status),
-                );
-                throw new RovoDevEntitlementError(
+                const error = new RovoDevEntitlementError(
                     RovoDevEntitlementErrorType.FETCH_FAILED,
                     `Failed to fetch Rovo Dev entitlement: ${message}`,
                     response.status,
                 );
+                Logger.error(error, String(response.status));
+                throw error;
             }
 
             const value = await response.text();
             Logger.debug(`Entitlement response: ${value}`);
 
             if (!(value.trim() in RovoDevEntitlementType)) {
-                Logger.error(
-                    new Error('No active Rovo Dev product found for the provided credentials'),
-                    'Invalid Rovo Dev entitlement type',
-                    value.trim(),
-                );
-                throw new RovoDevEntitlementError(
+                const error = new RovoDevEntitlementError(
                     RovoDevEntitlementErrorType.NO_ACTIVE_PRODUCT,
                     'No active Rovo Dev product found for the provided credentials',
                 );
+                Logger.error(error, 'Invalid Rovo Dev entitlement type');
+                throw error;
             }
 
             rovoDevEntitlementCheckEvent(true, value).then((e) => {

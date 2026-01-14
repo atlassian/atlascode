@@ -14,8 +14,9 @@ export class RovoDevPullRequestHandler {
     constructor() {
         const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
         if (!gitExtension) {
-            RovoDevLogger.error(new Error('vscode.git extension not found'), 'Git extension not available');
-            throw new Error('vscode.git extension not found');
+            const error = new Error('vscode.git extension not found');
+            RovoDevLogger.error(error, 'Git extension not available');
+            throw error;
         }
 
         this.gitExtensionPromise = gitExtension.activate();
@@ -34,8 +35,9 @@ export class RovoDevPullRequestHandler {
         const gitApi = await this.getGitAPI();
 
         if (gitApi.repositories.length === 0) {
-            RovoDevLogger.error(new Error('No Git repositories found'), 'No Git repositories in workspace');
-            throw new Error('No Git repositories found');
+            const error = new Error('No Git repositories found');
+            RovoDevLogger.error(error, 'No Git repositories in workspace');
+            throw error;
         }
 
         // TODO: what do we want to do in case of multiple repositories?
@@ -126,11 +128,9 @@ export class RovoDevPullRequestHandler {
         const hasUncommitted = await this.hasUncommittedChanges();
         if (hasUncommitted) {
             if (!commitMessage || commitMessage.trim() === '') {
-                RovoDevLogger.error(
-                    new Error('Commit message is required when you have uncommitted changes.'),
-                    'Cannot create PR without commit message',
-                );
-                throw new Error('Commit message is required when you have uncommitted changes.');
+                const error = new Error('Commit message is required when you have uncommitted changes.');
+                RovoDevLogger.error(error, 'Cannot create PR without commit message');
+                throw error;
             }
 
             const curBranch = repo.state.HEAD?.name;
@@ -150,11 +150,9 @@ export class RovoDevPullRequestHandler {
         } else {
             const hasUnpushed = await this.hasUnpushedCommits();
             if (!hasUnpushed) {
-                RovoDevLogger.error(
-                    new Error('No changes to create PR. Please make changes or commit them first.'),
-                    'No changes available for PR creation',
-                );
-                throw new Error('No changes to create PR. Please make changes or commit them first.');
+                const error = new Error('No changes to create PR. Please make changes or commit them first.');
+                RovoDevLogger.error(error, 'No changes available for PR creation');
+                throw error;
             }
 
             const curBranch = repo.state.HEAD?.name;
@@ -180,16 +178,21 @@ export class RovoDevPullRequestHandler {
             const errorMessage = error.stderr || error.message || 'Unknown error';
 
             if (errorMessage.includes('no upstream branch')) {
-                RovoDevLogger.error(error, 'Git push failed: no upstream branch');
-                throw new Error(
+                const error = new Error(
                     `Branch "${branchName}" has no upstream. Try: git push --set-upstream origin ${branchName}`,
                 );
+                RovoDevLogger.error(error, 'Git push failed: no upstream branch');
+                throw error;
             } else if (errorMessage.includes('rejected')) {
+                const error = new Error(
+                    'Push was rejected. The remote branch may have changes you need to pull first.',
+                );
                 RovoDevLogger.error(error, 'Git push rejected by remote');
-                throw new Error('Push was rejected. The remote branch may have changes you need to pull first.');
+                throw error;
             } else if (errorMessage.includes('permission denied') || errorMessage.includes('Authentication failed')) {
+                const error = new Error('Push failed: Authentication error. Please check your Git credentials.');
                 RovoDevLogger.error(error, 'Git push failed: authentication error');
-                throw new Error('Push failed: Authentication error. Please check your Git credentials.');
+                throw error;
             }
 
             RovoDevLogger.error(error, 'Git push failed with unknown error');

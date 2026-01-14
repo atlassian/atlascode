@@ -36,11 +36,9 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
                     const wsRepo = this.bbContext.getRepository(u);
                     const scm = wsRepo ? Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri) : undefined;
                     if (!scm) {
-                        Logger.error(
-                            new Error('no workspace repo'),
-                            'No workspace repository found for git content provider',
-                        );
-                        throw new Error('no workspace repo');
+                        const error = new Error('no workspace repo');
+                        Logger.error(error, 'No workspace repository found for git content provider');
+                        throw error;
                     }
 
                     const absolutePath = pathlib.join(scm.rootUri.fsPath, path);
