@@ -28,7 +28,7 @@ export class BasicInterceptor implements AuthInterceptor {
         this._requestInterceptor = async (config: AxiosRequestConfig) => {
             if (this._invalidCredentials) {
                 Logger.debug(`Blocking request due to previous 40[1|3]`);
-                return;
+                return Promise.reject(new Error('Credentials are invalid. Please update your credentials.'));
             }
             return config;
         };
@@ -63,8 +63,10 @@ export class BasicInterceptor implements AuthInterceptor {
     showError() {
         window
             .showErrorMessage(`Credentials refused for ${this.site.baseApiUrl}`, { modal: false }, `Update Credentials`)
-            .then((response) => {
-                commands.executeCommand(Commands.ShowJiraAuth);
+            .then((userChoice) => {
+                if (userChoice === 'Update Credentials') {
+                    commands.executeCommand(Commands.ShowJiraAuth);
+                }
             });
     }
 }

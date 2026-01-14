@@ -827,11 +827,16 @@ export class JiraIssueWebview
                                     msg.restriction,
                                 );
                                 const comments: Comment[] = this._editUIData.fieldValues['comment'].comments;
-                                comments.splice(
-                                    comments.findIndex((value) => value.id === msg.commentId),
-                                    1,
-                                    res,
-                                );
+                                if (Array.isArray(comments)) {
+                                    const idx = comments.findIndex((value) => value.id === msg.commentId);
+                                    if (idx >= 0) {
+                                        comments.splice(idx, 1, res);
+                                    }
+                                } else {
+                                    throw new Error(
+                                        `Comments field is not an array. Actual value: ${comments} with type ${typeof comments}`,
+                                    );
+                                }
                             } else {
                                 const res = await postComment(msg.issue, msg.commentBody, undefined, msg.restriction);
                                 this._editUIData.fieldValues['comment'].comments.push(res);
@@ -859,10 +864,14 @@ export class JiraIssueWebview
                             const client = await Container.clientManager.jiraClient(msg.issue.siteDetails);
                             await client.deleteComment(msg.issue.key, msg.commentId);
                             const comments: Comment[] = this._editUIData.fieldValues['comment'].comments;
-                            comments.splice(
-                                comments.findIndex((value) => value.id === msg.commentId),
-                                1,
-                            );
+                            if (Array.isArray(comments)) {
+                                const idx = comments.findIndex((value) => value.id === msg.commentId);
+                                comments.splice(idx, 1);
+                            } else {
+                                throw new Error(
+                                    `Comments field is not an array. Actual value: ${comments} with type ${typeof comments}`,
+                                );
+                            }
 
                             this.postMessage({
                                 type: 'fieldValueUpdate',
