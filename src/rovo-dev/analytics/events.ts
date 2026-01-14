@@ -32,6 +32,16 @@ export namespace Track {
         };
     };
 
+    export type RestartProcessAction = {
+        action: 'rovoDevRestartProcessAction';
+        subject: 'atlascode';
+        attributes: {
+            rovoDevEnv: RovoDevEnv;
+            appInstanceId: string;
+            sessionId: string;
+        };
+    };
+
     export type PromptSent = {
         action: 'rovoDevPromptSent';
         subject: 'atlascode';
@@ -173,4 +183,5 @@ export type TrackEvent =
     | Track.DetailsExpanded
     | Track.CreatePrButtonClicked
     | Track.AiResultViewed
-    | Track.PerformanceEvent;
+    | Track.PerformanceEvent
+    | Track.RestartProcessAction;

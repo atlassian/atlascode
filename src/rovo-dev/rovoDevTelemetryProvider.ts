@@ -27,7 +27,8 @@ export type TelemetryEvent =
     | PartialEvent<Track.GitPushAction>
     | PartialEvent<Track.DetailsExpanded>
     | PartialEvent<Track.CreatePrButtonClicked>
-    | PartialEvent<Track.AiResultViewed>;
+    | PartialEvent<Track.AiResultViewed>
+    | PartialEvent<Track.RestartProcessAction>;
 
 export class RovoDevTelemetryProvider {
     private _chatSessionId: string = '';
@@ -78,8 +79,12 @@ export class RovoDevTelemetryProvider {
             return false;
         }
 
-        // rovoDevNewSessionActionEvent is the only event that doesn't need the promptId
-        if (event.action !== 'rovoDevNewSessionAction' && !event.attributes.promptId) {
+        // rovoDevNewSessionActionEvent and rovoDevRestartProcessActionEvent are the only events that don't need the promptId
+        if (
+            event.action !== 'rovoDevNewSessionAction' &&
+            event.action !== 'rovoDevRestartProcessAction' &&
+            !event.attributes.promptId
+        ) {
             this.onError(new Error('Unable to send Rovo Dev telemetry: PromptId not initialized'));
             return false;
         }
@@ -91,6 +96,7 @@ export class RovoDevTelemetryProvider {
             // Allow multiple firings for these events
             eventId === 'atlascode_rovoDevFileChangedAction' ||
             eventId === 'rovoDevCreatePrButton_clicked' ||
+            eventId === 'atlascode_rovoDevRestartProcessAction' || // We want to log every restart attempt
             // Otherwise, only allow if not fired yet
             !this._firedTelemetryForCurrentPrompt[eventId]
         );

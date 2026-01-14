@@ -139,6 +139,12 @@
                 "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
             },
             {
+                "command": "atlascode.rovodev.restartProcess",
+                "title": "Restart Rovo Dev Process",
+                "category": "Rovo Dev",
+                "enablement": "atlascode:rovoDevEnabled"
+            },
+            {
                 "command": "atlascode.openRovoDevConfig",
                 "title": "Open Settings File",
                 "category": "Rovo Dev",
@@ -722,6 +728,11 @@
                     "command": "atlascode.rovodev.shareFeedback",
                     "when": "view == atlascode.views.rovoDev.webView",
                     "group": "rovoDevContextMenu2@1"
+                },
+                {
+                    "command": "atlascode.rovodev.restartProcess",
+                    "when": "view == atlascode.views.rovoDev.webView",
+                    "group": "rovoDevContextMenu3@1"
                 },
                 {
                     "command": "atlascode.jira.expandCreateWorkItem",

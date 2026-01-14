@@ -420,6 +420,10 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
             RovodevCommands.OpenRovoDevLogFile,
             async () => await openRovoDevConfigFile('rovodev.log'),
         ),
+        commands.registerCommand(
+            RovodevCommands.RestartProcess,
+            async () => await Container.rovodevWebviewProvider.executeNewSession(true),
+        ),
     );
 }
 

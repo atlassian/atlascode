@@ -516,7 +516,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.StartNewSession:
-                        const force = e.force;
+                        const force = e.force ?? false;
                         await this.executeNewSession(force);
                         break;
 
@@ -637,7 +637,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    public async executeNewSession(forceNewProcess?: boolean): Promise<void> {
+    public async executeNewSession(forceNewProcess: boolean = false): Promise<void> {
         const webview = this._webView!;
 
         // new session is disabled for these process states,
@@ -654,7 +654,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             return;
         }
 
-        // special handling for when the Rovo Dev process has been terminated, or failed to initialize
+        // special handling for when the Rovo Dev process has been terminated, failed to initialize, or a forced restart is requested
         if (
             this.processState === 'Terminated' ||
             this.processState === 'DownloadingFailed' ||
@@ -668,7 +668,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             });
 
             await RovoDevProcessManager.initializeRovoDev(this._context, true);
-            return;
+
+            return this._telemetryProvider.fireTelemetryEvent({
+                action: 'rovoDevRestartProcessAction',
+                subject: 'atlascode',
+                attributes: {}, // no additional attributes
+            });
         }
 
         await this.executeApiWithErrorHandling(async (client) => {
