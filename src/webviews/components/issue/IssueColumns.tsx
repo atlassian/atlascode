@@ -115,13 +115,14 @@ export const AssigneeColumn = (data: ItemData) => {
                         appearance="subtle"
                         style={{
                             padding: '4px 6px',
-                            minHeight: '32px',
                         }}
                         iconAfter={<ChevronDownIcon label="" size="small" />}
                     >
                         <span className="ac-flex" style={{ alignItems: 'center', gap: '3px' }}>
-                            {assignee && <Avatar size="xsmall" src={avatar} style={{ flexShrink: 0 }} />}
-                            <span style={{ fontSize: '12px', lineHeight: 1 }}>{label}</span>
+                            {(assignee && <Avatar size="xsmall" src={avatar} style={{ flexShrink: 0 }} />) || (
+                                <div style={{ height: '16px' }} />
+                            )}
+                            <span style={{ fontSize: '12px', lineHeight: '12px' }}>{label}</span>
                         </span>
                     </Button>
                 )}
