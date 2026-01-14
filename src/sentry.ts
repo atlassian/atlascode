@@ -9,6 +9,7 @@ import * as Sentry from '@sentry/node';
 import { extensions } from 'vscode';
 
 import { ExtensionId } from './constants';
+import { Logger } from './logger';
 import { RovodevStaticConfig } from './rovo-dev/api/rovodevStaticConfig';
 
 export interface SentryConfig {
@@ -49,11 +50,16 @@ export class SentryService {
      * @param config - Sentry configuration
      */
     public async initialize(config: SentryConfig, analyticsCallback?: (error: string) => void): Promise<void> {
+        Logger.info('Sentry trying to be initialized for Node.js environment.');
+
         // If not enabled, silently return without initializing
         if (!config.enabled || !config.dsn || !config.featureFlagEnabled) {
+            Logger.info(
+                'Sentry not enabled or missing configuration, skipping initialization.',
+                JSON.stringify(config),
+            );
             return;
         }
-
         this.analyticsCallback = analyticsCallback;
 
         try {
@@ -67,10 +73,12 @@ export class SentryService {
                 tracesSampleRate: 0, // Disable transaction tracing
             });
             this.sentryClient = Sentry;
+            Logger.info('Sentry initialized for Node.js environment.');
 
             this.initialized = true;
         } catch (error) {
             // Silently fail - don't break extension startup
+            Logger.info(new Error('Failed to initialize Sentry:'), error);
             console.error('Failed to initialize Sentry:', error);
             this.initialized = false;
         }

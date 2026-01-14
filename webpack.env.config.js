@@ -18,6 +18,12 @@ const ENV_VARS = [
 
     // Is this BBY? (set to "true" if this is a special internal build)
     'ROVODEV_BBY',
+
+    // Sentry configuration
+    'SENTRY_ENABLED',
+    'SENTRY_DSN',
+    'SENTRY_ENVIRONMENT',
+    'SENTRY_SAMPLE_RATE',
 ];
 
 function createEnvPlugin({ nodeEnv, isBrowser = false }) {

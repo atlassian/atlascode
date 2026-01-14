@@ -1,3 +1,4 @@
+import { SentryConfigs } from 'src/util/sentryConfig';
 import { v4 } from 'uuid';
 import { env, ExtensionContext, languages, UIKind } from 'vscode';
 import * as vscode from 'vscode';
@@ -266,18 +267,16 @@ export class Container {
         // Initialize Sentry for error tracking
 
         const sentryConfig: SentryConfig = {
-            enabled: process.env.SENTRY_ENABLED === 'true',
+            enabled: SentryConfigs.enabled === 'true',
             featureFlagEnabled: this.featureFlagClient.checkGate(Features.SentryLogging),
-            dsn: process.env.SENTRY_DSN,
-            environment: process.env.SENTRY_ENVIRONMENT || 'development',
-            sampleRate: parseFloat(process.env.SENTRY_SAMPLE_RATE || '1.0'),
+            dsn: SentryConfigs.dsn,
+            environment: SentryConfigs.environment || 'development',
+            sampleRate: SentryConfigs.sampleRate || 1.0,
             atlasCodeVersion: version,
         };
-
         await SentryService.getInstance().initialize(sentryConfig, (error: string) => {
             this.analyticsApi.fireSentryCapturedExceptionFailedEvent({ error });
         });
-        Logger.info('Sentry initialized successfully');
     }
 
     private static async initializeFeatureFlagClient() {
