@@ -316,4 +316,81 @@ describe('LinkedIssues', () => {
         expect(await screen.findByText('Test linked issue')).toBeTruthy();
         expect(await screen.findByText('Another linked issue')).toBeTruthy();
     });
+
+    describe('Delete functionality', () => {
+        const hoverRowAndGetDeleteButton = async () => {
+            // Find the row by issue key and hover to show delete button
+            const issueKey = await screen.findByText('TEST-123');
+            const row = issueKey.closest('[style*="display: flex"]');
+            if (row) {
+                await act(async () => {
+                    fireEvent.mouseEnter(row);
+                });
+            }
+            return screen.findByRole('button', { name: 'Unlink work item' });
+        };
+
+        it('shows delete button on row hover', async () => {
+            await act(async () => {
+                render(React.createElement(LinkedIssues, defaultProps));
+            });
+
+            const deleteButton = await hoverRowAndGetDeleteButton();
+            expect(deleteButton).toBeTruthy();
+        });
+
+        it('shows confirmation dialog when delete button is clicked', async () => {
+            await act(async () => {
+                render(React.createElement(LinkedIssues, defaultProps));
+            });
+
+            const deleteButton = await hoverRowAndGetDeleteButton();
+            await act(async () => {
+                fireEvent.click(deleteButton);
+            });
+
+            expect(await screen.findByText('Remove the link to TEST-123?')).toBeTruthy();
+            expect(await screen.findByRole('button', { name: 'Cancel' })).toBeTruthy();
+            expect(await screen.findByRole('button', { name: 'Remove' })).toBeTruthy();
+        });
+
+        it('calls onDelete when Remove is clicked in confirmation dialog', async () => {
+            await act(async () => {
+                render(React.createElement(LinkedIssues, defaultProps));
+            });
+
+            const deleteButton = await hoverRowAndGetDeleteButton();
+            await act(async () => {
+                fireEvent.click(deleteButton);
+            });
+
+            const removeButton = await screen.findByRole('button', { name: 'Remove' });
+            await act(async () => {
+                fireEvent.click(removeButton);
+            });
+
+            expect(mockOnDelete).toHaveBeenCalledWith({ id: 'link-1' });
+        });
+
+        it('closes confirmation dialog when Cancel is clicked', async () => {
+            await act(async () => {
+                render(React.createElement(LinkedIssues, defaultProps));
+            });
+
+            const deleteButton = await hoverRowAndGetDeleteButton();
+            await act(async () => {
+                fireEvent.click(deleteButton);
+            });
+
+            expect(await screen.findByText('Remove the link to TEST-123?')).toBeTruthy();
+
+            const cancelButton = await screen.findByRole('button', { name: 'Cancel' });
+            await act(async () => {
+                fireEvent.click(cancelButton);
+            });
+
+            expect(screen.queryByText('Remove the link to TEST-123?')).toBeNull();
+            expect(mockOnDelete).not.toHaveBeenCalled();
+        });
+    });
 });

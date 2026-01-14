@@ -116,27 +116,13 @@ export const AssigneeColumn = (data: ItemData) => {
                         style={{
                             padding: '4px 6px',
                             minHeight: '32px',
-                            height: 'auto',
-                            width: '100%',
-                            justifyContent: 'flex-start',
                         }}
                         iconAfter={<ChevronDownIcon label="" size="small" />}
                     >
-                        <div className="ac-flex" style={{ alignItems: 'center', gap: '3px', flex: 1 }}>
+                        <span className="ac-flex" style={{ alignItems: 'center', gap: '3px' }}>
                             {assignee && <Avatar size="xsmall" src={avatar} style={{ flexShrink: 0 }} />}
-                            <span
-                                style={{
-                                    fontSize: '12px',
-                                    wordBreak: 'break-word',
-                                    overflowWrap: 'break-word',
-                                    whiteSpace: 'normal',
-                                    lineHeight: '1.2',
-                                    textAlign: 'left',
-                                }}
-                            >
-                                {label}
-                            </span>
-                        </div>
+                            <span style={{ fontSize: '12px', lineHeight: 1 }}>{label}</span>
+                        </span>
                     </Button>
                 )}
                 placement="bottom-start"
@@ -291,7 +277,6 @@ export const Summary = (data: ItemData) => (
                 textOverflow: 'ellipsis',
                 margin: 0,
                 lineHeight: '1.4',
-                maxWidth: '120px',
             }}
         >
             {data.issue.summary}
