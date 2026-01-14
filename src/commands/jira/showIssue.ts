@@ -35,13 +35,9 @@ export async function showIssue(issueOrKeyAndSite: MinimalIssueOrKeyAndSite<Deta
         issue = await getCachedOrFetchMinimalIssue(issueKey, site);
 
         if (!issue) {
-            Logger.error(
-                new Error(`Jira issue ${issueKey} not found in site ${site.host}`),
-                'Failed to fetch Jira issue',
-                issueKey,
-                site.host,
-            );
-            throw new Error(`Jira issue ${issueKey} not found in site ${site.host}`);
+            const error = new Error(`Jira issue ${issueKey} not found in site ${site.host}`);
+            Logger.error(error, 'Failed to fetch Jira issue');
+            throw error;
         }
     }
 
