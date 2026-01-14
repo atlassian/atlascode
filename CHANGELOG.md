@@ -7,6 +7,7 @@
 - Added missing labels for PR merge strategies(AXON-1733)
 - Fixed authentication error
 - Fixed user mentions not working in Jira issue comments when using editor
+- Fixed settings write failures blocking issue creation and site removal
 
 ## What's new in 4.0.14
 
