@@ -40,7 +40,7 @@ jobs:
       - name: Run vulnerability audit
         # We allow low severity vulnerabilities to not block the build, 
         # but we should be diligent and fix them when they are discovered
-        run: npm audit --audit-level moderate 
+        run: npm audit --audit-level=moderate 
 
       - name: Compress node_modules
         run: tar -czf node_modules.tar.gz node_modules
