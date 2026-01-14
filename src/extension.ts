@@ -197,20 +197,19 @@ async function showWelcomePage(version: string, previousVersion: string | undefi
             Container.config.showWelcomeOnInstall &&
             window.state.focused
         ) {
-            Promise.resolve(
-                window
-                    .showInformationMessage(
-                        `Jira and Bitbucket (Official) has been updated to v${version}`,
-                        'Release notes',
-                    )
-                    .then((userChoice) => {
-                        if (userChoice === 'Release notes') {
-                            commands.executeCommand('extension.open', ExtensionId, 'changelog');
-                        }
-                    }),
-            ).catch((e) => {
-                Logger.error(e, 'Error showing welcome page notification');
-            });
+            window
+                .showInformationMessage(
+                    `Jira and Bitbucket (Official) has been updated to v${version}`,
+                    'Release notes',
+                )
+                .then((userChoice) => {
+                    if (userChoice === 'Release notes') {
+                        commands.executeCommand('extension.open', ExtensionId, 'changelog');
+                    }
+                })
+                .catch((e) => {
+                    Logger.error(e, 'Error showing welcome page notification');
+                });
         }
     } catch (e) {
         Logger.error(e, 'Error showing welcome page');
@@ -224,9 +223,7 @@ async function sendAnalytics(version: string, globalState: Memento) {
 
         if (previousVersion === undefined) {
             installedEvent(version)
-                .then((e) => {
-                    Container.analyticsClient.sendTrackEvent(e);
-                })
+                .then((e) => Container.analyticsClient.sendTrackEvent(e))
                 .catch((e) => {
                     Logger.error(e, 'Error sending installed event');
                 });
@@ -237,9 +234,7 @@ async function sendAnalytics(version: string, globalState: Memento) {
         if (semver_gt(version, previousVersion)) {
             Logger.info(`Atlassian for VS Code upgraded from v${previousVersion} to v${version}`);
             upgradedEvent(version, previousVersion)
-                .then((e) => {
-                    Container.analyticsClient.sendTrackEvent(e);
-                })
+                .then((e) => Container.analyticsClient.sendTrackEvent(e))
                 .catch((e) => {
                     Logger.error(e, 'Error sending upgraded event');
                 });
@@ -256,9 +251,7 @@ async function sendAnalytics(version: string, globalState: Memento) {
             Container.config.bitbucket.enabled,
             Container.config.rovodev.enabled,
         )
-            .then((e) => {
-                Container.analyticsClient.sendTrackEvent(e);
-            })
+            .then((e) => Container.analyticsClient.sendTrackEvent(e))
             .catch((e) => {
                 Logger.error(e, 'Error sending launched event');
             });
