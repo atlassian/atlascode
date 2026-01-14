@@ -4,6 +4,7 @@ import { State } from 'src/rovo-dev/rovoDevTypes';
 import { DialogMessageItem } from '../../common/DialogMessage';
 import { McpConsentChoice } from '../../rovoDevViewMessages';
 import { inChatButtonStyles, inChatSecondaryButtonStyles } from '../../rovoDevViewStyles';
+import { RovoDevLoginForm } from './RovoDevLoginForm';
 
 const messageOuterStyles: React.CSSProperties = {
     marginTop: '24px',
@@ -12,15 +13,33 @@ const messageOuterStyles: React.CSSProperties = {
 export const DisabledMessage: React.FC<{
     currentState: State;
     onLoginClick: (openApiTokenLogin: boolean) => void;
+    onRovoDevAuthSubmit: (host: string, email: string, apiToken: string) => void;
     onOpenFolder: () => void;
     onLinkClick: (url: string) => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
-}> = ({ currentState, onLoginClick, onOpenFolder, onLinkClick, onMcpChoice }) => {
+}> = ({ currentState, onLoginClick, onRovoDevAuthSubmit, onOpenFolder, onLinkClick, onMcpChoice }) => {
+    const [showInlineLogin, setShowInlineLogin] = React.useState(false);
+
     if (currentState.state === 'Disabled' && currentState.subState === 'NeedAuth') {
+        if (showInlineLogin) {
+            return (
+                <div style={messageOuterStyles}>
+                    <div style={{ marginBottom: '12px' }}>Sign in to Rovo Dev with your Jira API token</div>
+                    <RovoDevLoginForm
+                        onSubmit={(host, email, apiToken) => {
+                            onRovoDevAuthSubmit(host, email, apiToken);
+                            setShowInlineLogin(false);
+                        }}
+                        onCancel={() => setShowInlineLogin(false)}
+                    />
+                </div>
+            );
+        }
+
         return (
             <div style={messageOuterStyles}>
                 <div>Create an API token in Jira Cloud and add it here to use Rovo Dev beta</div>
-                <button style={{ ...inChatButtonStyles, marginTop: '8px' }} onClick={() => onLoginClick(true)}>
+                <button style={{ ...inChatButtonStyles, marginTop: '8px' }} onClick={() => setShowInlineLogin(true)}>
                     Add API Token
                 </button>
             </div>

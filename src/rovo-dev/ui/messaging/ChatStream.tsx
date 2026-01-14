@@ -39,6 +39,7 @@ interface ChatStreamProps {
     onCollapsiblePanelExpanded: () => void;
     handleFeedbackTrigger: (isPositive: boolean) => void;
     onLoginClick: (openApiTokenLogin: boolean) => void;
+    onRovoDevAuthSubmit: (host: string, email: string, apiToken: string) => void;
     onOpenFolder: () => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
     setPromptText: (context: string) => void;
@@ -61,6 +62,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     onCollapsiblePanelExpanded,
     handleFeedbackTrigger,
     onLoginClick,
+    onRovoDevAuthSubmit,
     onOpenFolder,
     onMcpChoice,
     setPromptText,
@@ -226,6 +228,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     currentState={currentState}
                     isHistoryEmpty={chatHistory.length === 0}
                     onLoginClick={onLoginClick}
+                    onRovoDevAuthSubmit={onRovoDevAuthSubmit}
                     onOpenFolder={onOpenFolder}
                     onMcpChoice={onMcpChoice}
                     setPromptText={setPromptText}

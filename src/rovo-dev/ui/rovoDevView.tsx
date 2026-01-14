@@ -759,6 +759,18 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
+    const onRovoDevAuthSubmit = useCallback(
+        (host: string, email: string, apiToken: string) => {
+            postMessage({
+                type: RovoDevViewResponseType.SubmitRovoDevAuth,
+                host,
+                email,
+                apiToken,
+            });
+        },
+        [postMessage],
+    );
+
     const onOpenFolder = useCallback(() => {
         postMessage({
             type: RovoDevViewResponseType.OpenFolder,
@@ -1000,6 +1012,7 @@ const RovoDevView: React.FC = () => {
                     onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
                     handleFeedbackTrigger={handleFeedbackTrigger}
                     onLoginClick={onLoginClick}
+                    onRovoDevAuthSubmit={onRovoDevAuthSubmit}
                     onOpenFolder={onOpenFolder}
                     onMcpChoice={onMcpChoice}
                     setPromptText={setPromptTextFromAction}

@@ -30,6 +30,7 @@ export const RovoDevLanding: React.FC<{
     currentState: State;
     isHistoryEmpty: boolean;
     onLoginClick: (openApiTokenLogin: boolean) => void;
+    onRovoDevAuthSubmit: (host: string, email: string, apiToken: string) => void;
     onOpenFolder: () => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
     setPromptText: (context: string) => void;
@@ -40,6 +41,7 @@ export const RovoDevLanding: React.FC<{
     currentState,
     isHistoryEmpty,
     onLoginClick,
+    onRovoDevAuthSubmit,
     onOpenFolder,
     onMcpChoice,
     setPromptText,
@@ -86,6 +88,7 @@ export const RovoDevLanding: React.FC<{
             <DisabledMessage
                 currentState={currentState}
                 onLoginClick={onLoginClick}
+                onRovoDevAuthSubmit={onRovoDevAuthSubmit}
                 onMcpChoice={onMcpChoice}
                 onOpenFolder={onOpenFolder}
                 onLinkClick={onLinkClick}

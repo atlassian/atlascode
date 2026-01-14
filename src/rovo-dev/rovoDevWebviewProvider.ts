@@ -472,6 +472,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         });
                         break;
 
+                    case RovoDevViewResponseType.SubmitRovoDevAuth:
+                        await this.handleRovoDevAuth(e.host, e.email, e.apiToken);
+                        break;
+
                     case RovoDevViewResponseType.OpenFolder:
                         await this.extensionApi.commands.openFolder();
                         break;
@@ -774,6 +778,43 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 filePath,
                 exists: false,
             });
+        }
+    }
+
+    private async handleRovoDevAuth(host: string, email: string, apiToken: string): Promise<void> {
+        try {
+            // Normalize host to remove protocol and trailing slashes
+            const normalizedHost = host.replace(/^https?:\/\//, '').replace(/\/$/, '');
+
+            // Validate that it's an atlassian.net domain
+            if (!normalizedHost.endsWith('.atlassian.net')) {
+                window.showErrorMessage('Please enter a valid Atlassian Cloud site (*.atlassian.net)');
+                return;
+            }
+
+            // Create AuthInfo for RovoDev
+            const authInfo = {
+                user: {
+                    id: email, // Use email as ID for now
+                    displayName: email.split('@')[0],
+                    email: email,
+                    avatarUrl: '',
+                },
+                state: 0, // AuthInfoState.Valid
+                username: email,
+                password: apiToken,
+            };
+
+            // Save to RovoDev credential store
+            await this.extensionApi.auth.saveRovoDevAuthInfo(authInfo);
+
+            // Trigger process restart to use new credentials
+            await commands.executeCommand('atlascode.rovodev.refresh');
+
+            window.showInformationMessage('Successfully authenticated with Rovo Dev');
+        } catch (error) {
+            RovoDevLogger.error(error, 'Error saving RovoDev auth');
+            window.showErrorMessage(`Failed to save credentials: ${error}`);
         }
     }
 

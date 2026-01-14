@@ -137,6 +137,14 @@ export class ExtensionApi {
                 return false;
             }
         },
+
+        saveRovoDevAuthInfo: async (authInfo: any): Promise<void> => {
+            await Container.credentialManager.saveRovoDevAuthInfo(authInfo);
+        },
+
+        getRovoDevAuthInfo: async (): Promise<any | undefined> => {
+            return await Container.credentialManager.getRovoDevAuthInfo();
+        },
     };
 
     commands = {
