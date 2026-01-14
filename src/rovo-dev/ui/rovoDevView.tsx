@@ -471,6 +471,9 @@ const RovoDevView: React.FC = () => {
                     if (event.state.isAskModeToggled !== undefined) {
                         setIsAskModeToggled(event.state.isAskModeToggled);
                     }
+                    if (event.state.isAskModeToggled !== undefined) {
+                        setIsAskModeToggled(event.state.isAskModeToggled);
+                    }
                     if (event.state.isAtlassianUser !== undefined) {
                         setIsAtlassianUser(event.state.isAtlassianUser);
                     }
