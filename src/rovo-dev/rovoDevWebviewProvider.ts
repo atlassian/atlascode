@@ -37,7 +37,7 @@ import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
 import { RovoDevJiraItemsProvider } from './rovoDevJiraItemsProvider';
 import { RovoDevProcessManager, RovoDevProcessState } from './rovoDevProcessManager';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
-import { RovoDevSessionsManager } from './rovoDevSessionsManager';
+import { RovoDevSessionsManager } from './rovoDevSessionManager';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import { RovoDevContextItem } from './rovoDevTypes';
 import { readLastNLogLines } from './rovoDevUtils';
@@ -643,7 +643,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         const workspacePath = workspace.workspaceFolders?.[0]?.uri.fsPath;
 
         if (!this.isBoysenberry && this.rovoDevApiClient && workspacePath) {
-            const sessionsManager = new RovoDevSessionsManager(workspacePath, this.rovoDevApiClient);
+            const sessionsManager = new RovoDevSessionsManager(
+                workspacePath,
+                this.rovoDevApiClient,
+                this._telemetryProvider,
+            );
             sessionsManager.onSessionRestored(async () => {
                 await this._chatProvider.clearChat();
                 await this._chatProvider.executeReplay();

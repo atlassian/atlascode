@@ -11,6 +11,7 @@ import {
 } from 'vscode';
 
 import { RovoDevApiClient } from './client';
+import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 
 interface QuickPickSessionItem extends QuickPickItem {
     id: string;
@@ -85,6 +86,7 @@ export class RovoDevSessionsManager {
     constructor(
         private readonly _workspaceFolder: string,
         private readonly _rovoDevApiClient: RovoDevApiClient,
+        private readonly _telemetryProvider: RovoDevTelemetryProvider,
     ) {}
 
     /** Shows the VS Code quick picker to manage the existing sessions.
@@ -156,69 +158,112 @@ export class RovoDevSessionsManager {
     }
 
     private async restoreSession(sessionId: string, label: string) {
+        let success: boolean;
         try {
             await this._rovoDevApiClient.restoreSession(sessionId);
             window.showInformationMessage(`Session "${label}" restored successfully.`);
+            success = true;
         } catch (error) {
             window.showErrorMessage(`Failed to restore session "${label}": ${error}`);
             Logger.error(error, 'Failed to restore a session');
-            return false;
+            success = false;
         }
 
         try {
-            this._onSessionRestored.fire(sessionId);
+            this._telemetryProvider.fireTelemetryEvent({
+                action: 'clicked',
+                subject: 'rovoDevRestoreSession',
+                attributes: {
+                    failed: !success,
+                },
+            });
         } catch {}
 
-        return true;
+        if (success) {
+            try {
+                this._onSessionRestored.fire(sessionId);
+            } catch {}
+        }
+
+        return success;
     }
 
     private async forkSession(sessionId: string, label: string) {
+        let success: boolean;
         let newSessionId: string;
         try {
             newSessionId = await this._rovoDevApiClient.forkSession(sessionId);
             window.showInformationMessage(`Session "${label}" forked successfully.`);
+            success = true;
         } catch (error) {
+            newSessionId = '';
             window.showErrorMessage(`Failed to fork session "${label}": ${error}`);
             Logger.error(error, 'Failed to fork a session');
-            return false;
+            success = false;
         }
 
         try {
-            // this should not be necessary, but Rovo Dev seems not to restore the message history
-            // on fork, and we want to replay them
-            await this._rovoDevApiClient.restoreSession(newSessionId);
-
-            // we fire a session restored here because effectively the new forked session has been restored.
-            // the user may have forked from a different session than the previous loaded one, so we need to start a replay.
-            this._onSessionRestored.fire(newSessionId);
+            this._telemetryProvider.fireTelemetryEvent({
+                action: 'clicked',
+                subject: 'rovoDevForkSession',
+                attributes: {
+                    failed: !success,
+                },
+            });
         } catch {}
 
-        return true;
+        if (success) {
+            try {
+                // this should not be necessary, but Rovo Dev seems not to restore the message history
+                // on fork, and we want to replay them
+                await this._rovoDevApiClient.restoreSession(newSessionId);
+
+                // we fire a session restored here because effectively the new forked session has been restored.
+                // the user may have forked from a different session than the previous loaded one, so we need to start a replay.
+                this._onSessionRestored.fire(newSessionId);
+            } catch {}
+        }
+
+        return success;
     }
 
     private async deleteSession(sessionId: string, label: string) {
+        let success: boolean;
         let currentSessionId: string;
         try {
             currentSessionId = (await this._rovoDevApiClient.getCurrentSession()).id;
-
             await this._rovoDevApiClient.deleteSession(sessionId);
             window.showInformationMessage(`Session "${label}" deleted successfully.`);
+            success = true;
         } catch (error) {
+            currentSessionId = '';
             window.showErrorMessage(`Failed to delete session "${label}": ${error}`);
             Logger.error(error, 'Failed to delete a session');
-            return false;
+            success = false;
         }
 
         try {
-            // if the current session gets deleted, a new one is created.
-            // in this case, we need to clear the chat
-            if (sessionId === currentSessionId) {
-                const newSessionId = (await this._rovoDevApiClient.getCurrentSession()).id;
-                this._onSessionRestored.fire(newSessionId);
-            }
+            this._telemetryProvider.fireTelemetryEvent({
+                action: 'clicked',
+                subject: 'rovoDevDeleteSession',
+                attributes: {
+                    failed: !success,
+                },
+            });
         } catch {}
 
-        return true;
+        if (success) {
+            try {
+                // if the current session gets deleted, a new one is created.
+                // in this case, we need to clear the chat
+                if (sessionId === currentSessionId) {
+                    const newSessionId = (await this._rovoDevApiClient.getCurrentSession()).id;
+                    this._onSessionRestored.fire(newSessionId);
+                }
+            } catch {}
+        }
+
+        return success;
     }
 
     private async getItems(): Promise<QuickPickSessionItem[]> {

@@ -42,7 +42,7 @@ import { ExtensionContext, workspace } from 'vscode';
 
 import { setCommandContext } from '../../src/commandContext';
 import { RovodevCommandContext } from './api/componentApi';
-import { RovoDevSessionsManager } from './rovoDevSessionsManager';
+import { RovoDevSessionsManager } from './rovoDevSessionManager';
 import { RovoDevWebviewProvider } from './rovoDevWebviewProvider';
 
 jest.mock('./util/rovoDevLogger', () => ({
@@ -281,7 +281,11 @@ describe('RovoDevWebviewProvider - Real Implementation Tests', () => {
 
             await provider.showSessionHistory();
 
-            expect(RovoDevSessionsManager).toHaveBeenCalledWith('/test/workspace', (provider as any)._rovoDevApiClient);
+            expect(RovoDevSessionsManager).toHaveBeenCalledWith(
+                '/test/workspace',
+                (provider as any)._rovoDevApiClient,
+                (provider as any)._telemetryProvider,
+            );
 
             const MockedSessionsManager = jest.mocked(RovoDevSessionsManager);
             const mockInstance = MockedSessionsManager.mock.results[0].value;

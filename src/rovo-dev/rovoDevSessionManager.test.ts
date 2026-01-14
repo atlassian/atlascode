@@ -1,10 +1,12 @@
 import { QuickInputButton, ThemeIcon, window } from 'vscode';
 
 import { RovoDevApiClient, RovoDevSession } from './client/rovoDevApiClient';
-import { RovoDevSessionsManager } from './rovoDevSessionsManager';
+import { RovoDevSessionsManager } from './rovoDevSessionManager';
+import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 
 describe('RovoDevSessionsManager', () => {
     let mockApiClient: jest.Mocked<RovoDevApiClient>;
+    let mockTelemetryProvider: jest.Mocked<RovoDevTelemetryProvider>;
     let sessionsManager: RovoDevSessionsManager;
     let mockQuickPick: any;
     const workspaceFolder = '/test/workspace';
@@ -44,9 +46,22 @@ describe('RovoDevSessionsManager', () => {
             onDidTriggerButton: jest.fn(),
         } as any;
 
+        mockTelemetryProvider = {
+            fireTelemetryEvent: jest.fn(),
+            startNewPrompt: jest.fn(),
+            perfLogger: {
+                promptStarted: jest.fn(),
+                promptFirstByteReceived: jest.fn(),
+                promptFirstMessageReceived: jest.fn(),
+                promptLastMessageReceived: jest.fn(),
+                promptTechnicalPlanReceived: jest.fn(),
+                promptLastMessageRendered: jest.fn(),
+            },
+        } as any;
+
         (window.createQuickPick as jest.Mock).mockReturnValue(mockQuickPick);
 
-        sessionsManager = new RovoDevSessionsManager(workspaceFolder, mockApiClient);
+        sessionsManager = new RovoDevSessionsManager(workspaceFolder, mockApiClient, mockTelemetryProvider);
     });
 
     afterEach(() => {
@@ -243,6 +258,11 @@ describe('RovoDevSessionsManager', () => {
             expect(window.showInformationMessage).toHaveBeenCalledWith(
                 'Session "Test Session 1" restored successfully.',
             );
+            expect(mockTelemetryProvider.fireTelemetryEvent).toHaveBeenCalledWith({
+                action: 'clicked',
+                subject: 'rovoDevRestoreSession',
+                attributes: { failed: false },
+            });
             expect(mockQuickPick.hide).toHaveBeenCalled();
         });
 
@@ -270,6 +290,11 @@ describe('RovoDevSessionsManager', () => {
             expect(window.showErrorMessage).toHaveBeenCalledWith(
                 'Failed to restore session "Test Session 1": Error: Network error',
             );
+            expect(mockTelemetryProvider.fireTelemetryEvent).toHaveBeenCalledWith({
+                action: 'clicked',
+                subject: 'rovoDevRestoreSession',
+                attributes: { failed: true },
+            });
         });
 
         it('should fire onSessionRestored event after successful restore', async () => {
@@ -339,6 +364,11 @@ describe('RovoDevSessionsManager', () => {
 
             expect(mockApiClient.forkSession).toHaveBeenCalledWith('session-1');
             expect(window.showInformationMessage).toHaveBeenCalledWith('Session "Test Session 1" forked successfully.');
+            expect(mockTelemetryProvider.fireTelemetryEvent).toHaveBeenCalledWith({
+                action: 'clicked',
+                subject: 'rovoDevForkSession',
+                attributes: { failed: false },
+            });
             expect(mockQuickPick.hide).toHaveBeenCalled();
         });
 
@@ -420,6 +450,11 @@ describe('RovoDevSessionsManager', () => {
             expect(window.showErrorMessage).toHaveBeenCalledWith(
                 'Failed to fork session "Test Session 1": Error: Fork failed',
             );
+            expect(mockTelemetryProvider.fireTelemetryEvent).toHaveBeenCalledWith({
+                action: 'clicked',
+                subject: 'rovoDevForkSession',
+                attributes: { failed: true },
+            });
         });
     });
 
@@ -463,6 +498,11 @@ describe('RovoDevSessionsManager', () => {
             expect(window.showInformationMessage).toHaveBeenCalledWith(
                 'Session "Test Session 1" deleted successfully.',
             );
+            expect(mockTelemetryProvider.fireTelemetryEvent).toHaveBeenCalledWith({
+                action: 'clicked',
+                subject: 'rovoDevDeleteSession',
+                attributes: { failed: false },
+            });
         });
 
         it('should remove deleted session from quick pick items', async () => {
@@ -578,6 +618,11 @@ describe('RovoDevSessionsManager', () => {
             expect(window.showErrorMessage).toHaveBeenCalledWith(
                 'Failed to delete session "Test Session 1": Error: Delete failed',
             );
+            expect(mockTelemetryProvider.fireTelemetryEvent).toHaveBeenCalledWith({
+                action: 'clicked',
+                subject: 'rovoDevDeleteSession',
+                attributes: { failed: true },
+            });
         });
     });
 

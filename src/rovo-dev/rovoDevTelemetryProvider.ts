@@ -27,7 +27,12 @@ export type TelemetryEvent =
     | PartialEvent<Track.GitPushAction>
     | PartialEvent<Track.DetailsExpanded>
     | PartialEvent<Track.CreatePrButtonClicked>
+    | PartialEvent<Track.RestoreSessionClicked>
+    | PartialEvent<Track.ForkSessionClicked>
+    | PartialEvent<Track.DeleteSessionClicked>
     | PartialEvent<Track.AiResultViewed>;
+
+export type TelemetryScreenEvent = 'rovoDevSessionHistoryPicker';
 
 export class RovoDevTelemetryProvider {
     private _chatSessionId: string = '';
@@ -78,12 +83,19 @@ export class RovoDevTelemetryProvider {
             return false;
         }
 
-        // rovoDevNewSessionActionEvent is the only event that doesn't need the promptId
-        if (event.action !== 'rovoDevNewSessionAction' && !event.attributes.promptId) {
-            this.onError(new Error('Unable to send Rovo Dev telemetry: PromptId not initialized'));
-            return false;
+        // skip promptId validation for the following events
+        if (
+            event.action === 'rovoDevNewSessionAction' ||
+            event.subject === 'rovoDevRestoreSession' ||
+            event.subject === 'rovoDevForkSession' ||
+            event.subject === 'rovoDevDeleteSession' ||
+            !!event.attributes.promptId
+        ) {
+            return true;
         }
-        return true;
+
+        this.onError(new Error('Unable to send Rovo Dev telemetry: PromptId not initialized'));
+        return false;
     }
 
     private canFire(eventId: string): boolean {
@@ -115,6 +127,10 @@ export class RovoDevTelemetryProvider {
         } as TrackEvent);
 
         RovoDevLogger.debug(`Event fired: ${event.subject} ${event.action} (${JSON.stringify(event.attributes)})`);
+    }
+
+    async fireScreenTelemetryEvent(screenName: TelemetryScreenEvent): Promise<void> {
+        await this._extensionApi.analytics.sendScreenEvent(screenName);
     }
 
     private get metadata(): CommonSessionAttributes {
