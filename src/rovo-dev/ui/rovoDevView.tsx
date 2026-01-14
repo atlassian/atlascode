@@ -56,6 +56,7 @@ const RovoDevView: React.FC = () => {
     const [isDeepPlanToggled, setIsDeepPlanToggled] = useState(false);
     const [isYoloModeToggled, setIsYoloModeToggled] = useState(RovodevStaticConfig.isBBY); // Yolo mode is default in Boysenberry
     const [isFullContextModeToggled, setIsFullContextModeToggled] = useState(false);
+    const [isAskModeToggled, setIsAskModeToggled] = useState(false);
     const [workspacePath, setWorkspacePath] = useState<string>('');
     const [homeDir, setHomeDir] = useState<string>('');
     const [history, setHistory] = useState<Response[]>([]);
@@ -467,6 +468,9 @@ const RovoDevView: React.FC = () => {
                     if (event.state.isFullContextModeToggled !== undefined) {
                         setIsFullContextModeToggled(event.state.isFullContextModeToggled);
                     }
+                    if (event.state.isAskModeToggled !== undefined) {
+                        setIsAskModeToggled(event.state.isAskModeToggled);
+                    }
                     if (event.state.isAtlassianUser !== undefined) {
                         setIsAtlassianUser(event.state.isAtlassianUser);
                     }
@@ -526,6 +530,7 @@ const RovoDevView: React.FC = () => {
             isDeepPlanToggled,
             isYoloModeToggled,
             isFullContextModeToggled,
+            isAskModeToggled,
             isAtlassianUser,
             promptContextCollection,
         });
@@ -535,6 +540,7 @@ const RovoDevView: React.FC = () => {
         isDeepPlanToggled,
         isYoloModeToggled,
         isFullContextModeToggled,
+        isAskModeToggled,
         isAtlassianUser,
         promptContextCollection,
         setState,
@@ -890,6 +896,8 @@ const RovoDevView: React.FC = () => {
         [setIsFullContextModeToggled],
     );
 
+    const onAskModeToggled = useCallback(() => setIsAskModeToggled((prev) => !prev), [setIsAskModeToggled]);
+
     const handleFeedbackTrigger = useCallback(
         (isPositive: boolean) => {
             setFeedbackType(isPositive ? 'like' : 'dislike');
@@ -929,6 +937,13 @@ const RovoDevView: React.FC = () => {
             value: isFullContextModeToggled,
         });
     }, [postMessage, isFullContextModeToggled]);
+
+    React.useEffect(() => {
+        postMessage({
+            type: RovoDevViewResponseType.AskModeToggled,
+            value: isAskModeToggled,
+        });
+    }, [postMessage, isAskModeToggled]);
 
     const hidePromptBox =
         currentState.state === 'Disabled' ||
@@ -1065,6 +1080,7 @@ const RovoDevView: React.FC = () => {
                                         isDeepPlanEnabled={isDeepPlanToggled}
                                         isYoloModeEnabled={isYoloModeToggled}
                                         isFullContextEnabled={isFullContextModeToggled}
+                                        isAskModeEnabled={isAskModeToggled}
                                         onDeepPlanToggled={() => setIsDeepPlanToggled((prev) => !prev)}
                                         onYoloModeToggled={
                                             RovodevStaticConfig.isBBY ? undefined : () => onYoloModeToggled()
@@ -1074,6 +1090,7 @@ const RovoDevView: React.FC = () => {
                                                 ? () => onFullContextModeToggled()
                                                 : undefined
                                         }
+                                        onAskModeToggled={() => onAskModeToggled()}
                                         onSend={sendPrompt}
                                         onCancel={cancelResponse}
                                         onAddContext={onAddContext}

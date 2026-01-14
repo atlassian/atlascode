@@ -55,6 +55,7 @@ export interface RovoDevWebviewState {
     isDeepPlanToggled: boolean;
     isYoloModeToggled: boolean;
     isFullContextModeToggled: boolean;
+    isAskModeToggled: boolean;
     isAtlassianUser: boolean;
     promptContextCollection: RovoDevContextItem[];
 }
