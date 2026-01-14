@@ -206,9 +206,6 @@ async function showWelcomePage(version: string, previousVersion: string | undefi
                     if (userChoice === 'Release notes') {
                         commands.executeCommand('extension.open', ExtensionId, 'changelog');
                     }
-                })
-                .catch((e) => {
-                    Logger.error(e, 'Error showing welcome page notification');
                 });
         }
     } catch (e) {
