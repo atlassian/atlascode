@@ -1,13 +1,13 @@
 import { QuickInputButton, ThemeIcon, window } from 'vscode';
 
 import { RovoDevApiClient, RovoDevSession } from './client/rovoDevApiClient';
-import { RovoDevSessionsManager } from './rovoDevSessionManager';
+import { RovoDevSessionManager } from './rovoDevSessionManager';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 
-describe('RovoDevSessionsManager', () => {
+describe('RovoDevSessionManager', () => {
     let mockApiClient: jest.Mocked<RovoDevApiClient>;
     let mockTelemetryProvider: jest.Mocked<RovoDevTelemetryProvider>;
-    let sessionsManager: RovoDevSessionsManager;
+    let sessionsManager: RovoDevSessionManager;
     let mockQuickPick: any;
     const workspaceFolder = '/test/workspace';
 
@@ -48,6 +48,7 @@ describe('RovoDevSessionsManager', () => {
 
         mockTelemetryProvider = {
             fireTelemetryEvent: jest.fn(),
+            fireScreenTelemetryEvent: jest.fn(),
             startNewPrompt: jest.fn(),
             perfLogger: {
                 promptStarted: jest.fn(),
@@ -61,11 +62,11 @@ describe('RovoDevSessionsManager', () => {
 
         (window.createQuickPick as jest.Mock).mockReturnValue(mockQuickPick);
 
-        sessionsManager = new RovoDevSessionsManager(workspaceFolder, mockApiClient, mockTelemetryProvider);
+        sessionsManager = new RovoDevSessionManager(workspaceFolder, mockApiClient, mockTelemetryProvider);
     });
 
     afterEach(() => {
-        // Note: RovoDevSessionsManager now auto-disposes when the picker closes
+        // Note: RovoDevSessionManager now auto-disposes when the picker closes
         // We don't need to manually dispose it here
     });
 
@@ -216,6 +217,15 @@ describe('RovoDevSessionsManager', () => {
             await sessionsManager.showPicker();
 
             expect(firstQuickPick.dispose).toHaveBeenCalled();
+        });
+
+        it('should fire screen telemetry event when picker is shown', async () => {
+            mockApiClient.listSessions.mockResolvedValue(mockSessions);
+            mockApiClient.getCurrentSession.mockResolvedValue(mockSessions[0]);
+
+            await sessionsManager.showPicker();
+
+            expect(mockTelemetryProvider.fireScreenTelemetryEvent).toHaveBeenCalledWith('rovoDevSessionHistoryPicker');
         });
     });
 

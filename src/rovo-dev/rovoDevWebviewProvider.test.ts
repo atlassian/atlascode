@@ -42,7 +42,7 @@ import { ExtensionContext, workspace } from 'vscode';
 
 import { setCommandContext } from '../../src/commandContext';
 import { RovodevCommandContext } from './api/componentApi';
-import { RovoDevSessionsManager } from './rovoDevSessionManager';
+import { RovoDevSessionManager } from './rovoDevSessionManager';
 import { RovoDevWebviewProvider } from './rovoDevWebviewProvider';
 
 jest.mock('./util/rovoDevLogger', () => ({
@@ -51,7 +51,7 @@ jest.mock('./util/rovoDevLogger', () => ({
     },
 }));
 
-jest.mock('../../src/rovo-dev/rovoDevProcessManager', () => ({
+jest.mock('./rovoDevProcessManager', () => ({
     RovoDevProcessManager: {
         setRovoDevWebviewProvider: jest.fn(),
         initializeRovoDev: jest.fn(),
@@ -61,7 +61,7 @@ jest.mock('../../src/rovo-dev/rovoDevProcessManager', () => ({
     },
 }));
 
-jest.mock('../../src/rovo-dev/rovoDevTelemetryProvider', () => ({
+jest.mock('./rovoDevTelemetryProvider', () => ({
     RovoDevTelemetryProvider: jest.fn().mockImplementation(() => ({
         fireTelemetryEvent: jest.fn(),
         startNewSession: jest.fn(),
@@ -79,7 +79,7 @@ jest.mock('./errorDetailsBuilder', () => ({
     buildExceptionDetails: jest.fn(),
 }));
 
-jest.mock('../../src/rovo-dev/rovoDevChatProvider', () => ({
+jest.mock('./rovoDevChatProvider', () => ({
     RovoDevChatProvider: jest.fn().mockImplementation(() => ({
         setWebview: jest.fn(),
         executeChat: jest.fn(),
@@ -95,7 +95,7 @@ jest.mock('../../src/rovo-dev/rovoDevChatProvider', () => ({
     })),
 }));
 
-jest.mock('../../src/rovo-dev/rovoDevJiraItemsProvider', () => ({
+jest.mock('./rovoDevJiraItemsProvider', () => ({
     RovoDevJiraItemsProvider: jest.fn().mockImplementation(() => ({
         onNewJiraItems: jest.fn(),
         setJiraSite: jest.fn(),
@@ -103,7 +103,7 @@ jest.mock('../../src/rovo-dev/rovoDevJiraItemsProvider', () => ({
     })),
 }));
 
-jest.mock('../../src/rovo-dev/rovoDevPullRequestHandler', () => ({
+jest.mock('./rovoDevPullRequestHandler', () => ({
     RovoDevPullRequestHandler: jest.fn().mockImplementation(() => ({
         hasChangesOrUnpushedCommits: jest.fn(),
         createPR: jest.fn(),
@@ -111,30 +111,21 @@ jest.mock('../../src/rovo-dev/rovoDevPullRequestHandler', () => ({
     })),
 }));
 
-jest.mock('../../src/rovo-dev/rovoDevDwellTracker', () => ({
+jest.mock('./rovoDevDwellTracker', () => ({
     RovoDevDwellTracker: jest.fn().mockImplementation(() => ({
         startDwellTimer: jest.fn(),
         dispose: jest.fn(),
     })),
 }));
 
-jest.mock('../../src/rovo-dev/client/rovoDevApiClient', () => ({
-    RovoDevApiClient: jest.fn().mockImplementation(() => ({
-        healthcheck: jest.fn(),
-        createSession: jest.fn(),
-        getCacheFilePath: jest.fn(),
-        acceptMcpTerms: jest.fn(),
-    })),
-}));
-
-jest.mock('../../src/rovo-dev/rovoDevFeedbackManager', () => ({
+jest.mock('./rovoDevFeedbackManager', () => ({
     RovoDevFeedbackManager: {
         submitFeedback: jest.fn(),
     },
 }));
 
-jest.mock('../../src/rovo-dev/rovoDevSessionsManager', () => ({
-    RovoDevSessionsManager: jest.fn().mockImplementation(() => ({
+jest.mock('./rovoDevSessionManager', () => ({
+    RovoDevSessionManager: jest.fn().mockImplementation(() => ({
         onSessionRestored: jest.fn((callback) => {
             // Store the callback for testing
             return { dispose: jest.fn() };
@@ -144,15 +135,11 @@ jest.mock('../../src/rovo-dev/rovoDevSessionsManager', () => ({
     })),
 }));
 
-jest.mock('../../src/commandContext', () => ({
+jest.mock('src/commandContext', () => ({
     setCommandContext: jest.fn(),
     CommandContext: {
         CustomJQLExplorer: 'atlascode:customJQLExplorerEnabled',
     },
-}));
-
-jest.mock('../../src/webview/common/getHtmlForView', () => ({
-    getHtmlForView: jest.fn(() => '<html>test</html>'),
 }));
 
 jest.mock('path', () => ({
@@ -281,13 +268,13 @@ describe('RovoDevWebviewProvider - Real Implementation Tests', () => {
 
             await provider.showSessionHistory();
 
-            expect(RovoDevSessionsManager).toHaveBeenCalledWith(
+            expect(RovoDevSessionManager).toHaveBeenCalledWith(
                 '/test/workspace',
                 (provider as any)._rovoDevApiClient,
                 (provider as any)._telemetryProvider,
             );
 
-            const MockedSessionsManager = jest.mocked(RovoDevSessionsManager);
+            const MockedSessionsManager = jest.mocked(RovoDevSessionManager);
             const mockInstance = MockedSessionsManager.mock.results[0].value;
             expect(mockInstance.onSessionRestored).toHaveBeenCalled();
             expect(mockInstance.showPicker).toHaveBeenCalled();
@@ -301,7 +288,7 @@ describe('RovoDevWebviewProvider - Real Implementation Tests', () => {
 
             await provider.showSessionHistory();
 
-            expect(RovoDevSessionsManager).not.toHaveBeenCalled();
+            expect(RovoDevSessionManager).not.toHaveBeenCalled();
         });
 
         it('should not create sessions manager if rovoDevApiClient is not available', async () => {
@@ -310,7 +297,7 @@ describe('RovoDevWebviewProvider - Real Implementation Tests', () => {
 
             await provider.showSessionHistory();
 
-            expect(RovoDevSessionsManager).not.toHaveBeenCalled();
+            expect(RovoDevSessionManager).not.toHaveBeenCalled();
         });
 
         it('should not create sessions manager if no workspace folder exists', async () => {
@@ -322,7 +309,7 @@ describe('RovoDevWebviewProvider - Real Implementation Tests', () => {
 
             await provider.showSessionHistory();
 
-            expect(RovoDevSessionsManager).not.toHaveBeenCalled();
+            expect(RovoDevSessionManager).not.toHaveBeenCalled();
         });
 
         it('should set up onSessionRestored callback to clear and replay chat', async () => {
@@ -342,7 +329,7 @@ describe('RovoDevWebviewProvider - Real Implementation Tests', () => {
                 dispose: jest.fn(),
             };
 
-            const MockedSessionsManager = jest.mocked(RovoDevSessionsManager);
+            const MockedSessionsManager = jest.mocked(RovoDevSessionManager);
             MockedSessionsManager.mockImplementation(() => mockSessionsManager as any);
 
             const mockChatProvider = {

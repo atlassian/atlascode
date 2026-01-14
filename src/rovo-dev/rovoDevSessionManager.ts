@@ -73,7 +73,7 @@ function formatItemDescription(created: number): string {
  * Note: This class instance is good for a single `showPicker()` invocation only.
  * This instance will automatically dispose when the picker closes.
  */
-export class RovoDevSessionsManager {
+export class RovoDevSessionManager {
     private quickPicker: QuickPick<QuickPickSessionItem> | undefined;
     private busy = false;
     private disposed = false;
@@ -155,6 +155,8 @@ export class RovoDevSessionsManager {
 
         this.quickPicker = quickPick;
         this.quickPicker.show();
+
+        this._telemetryProvider.fireScreenTelemetryEvent('rovoDevSessionHistoryPicker');
     }
 
     private async restoreSession(sessionId: string, label: string) {
