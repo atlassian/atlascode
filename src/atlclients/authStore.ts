@@ -56,6 +56,7 @@ export class CredentialManager implements Disposable {
     private negotiator: Negotiator;
     private _refreshInFlight = new Map<string, Promise<void>>();
     private mutex = new Mutex();
+    private _failedRefreshCache = new Map<string, { attemptsCount: number; lastAttemptAt: Date }>();
 
     constructor(
         context: ExtensionContext,
@@ -393,7 +394,10 @@ export class CredentialManager implements Disposable {
 
         if (credentials.expirationDate) {
             const diff = credentials.expirationDate - Date.now();
-            Logger.debug(`${Math.floor(diff / 1000)} seconds remaining for auth token.`);
+            Logger.debug(
+                `${Math.floor(diff / 1000)} seconds remaining for ${site.name} refresh token. ${diff > GRACE_PERIOD ? 'No refresh needed yet.' : 'refreshing...'}`,
+            );
+
             if (diff > GRACE_PERIOD) {
                 return credentials; // no need to refresh, we have enough time left
             }
@@ -552,6 +556,17 @@ export class CredentialManager implements Disposable {
         if (!isOAuthInfo(credentials)) {
             return undefined;
         }
+
+        const failedRefresh = this._failedRefreshCache.get(site.credentialId);
+        if (failedRefresh) {
+            const RETRY_DELAY = 5 * Time.MINUTES;
+            // if we already had multiple failed attempts recently, don't try again yet until enough time has passed
+            if (failedRefresh.attemptsCount > 5 && Date.now() - failedRefresh.lastAttemptAt.getTime() < RETRY_DELAY) {
+                Logger.debug(`Skipping token refresh for credentialID: ${site.credentialId} due to previous failures.`);
+                return undefined;
+            }
+        }
+
         Logger.debug(`refreshingAccessToken for ${site.baseApiUrl} credentialID: ${site.credentialId}`);
 
         const provider: OAuthProvider | undefined = oauthProviderForSite(site);
@@ -569,9 +584,16 @@ export class CredentialManager implements Disposable {
                 }
 
                 await this.saveAuthInfo(site, credentials);
+                if (this._failedRefreshCache.has(site.credentialId)) {
+                    this._failedRefreshCache.delete(site.credentialId);
+                }
                 Logger.debug(`Successfully saved refreshed tokens for credentialId: ${site.credentialId}`);
             } else if (tokenResponse.shouldInvalidate) {
                 credentials.state = AuthInfoState.Invalid;
+                this._failedRefreshCache.set(site.credentialId, {
+                    attemptsCount: (this._failedRefreshCache.get(site.credentialId)?.attemptsCount ?? 0) + 1,
+                    lastAttemptAt: new Date(),
+                });
                 await this.saveAuthInfo(site, credentials);
             }
         }
