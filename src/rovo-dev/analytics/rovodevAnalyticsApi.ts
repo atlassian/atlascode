@@ -11,7 +11,8 @@ export class RovodevAnalyticsApi {
     };
 
     sendScreenEvent = async (screenName: string) => {
-        const finalizedEevent = await viewScreenEvent(screenName, undefined, ProductRovoDev);
+        const finalizedEvent = await viewScreenEvent(screenName, undefined, ProductRovoDev);
+        await Container.analyticsClient.sendScreenEvent(finalizedEvent);
         await Container.analyticsClient.sendScreenEvent(finalizedEevent);
     };
 }
