@@ -4,6 +4,7 @@ import SendIcon from '@atlaskit/icon/core/arrow-up';
 import CrossIcon from '@atlaskit/icon/core/cross';
 import LockUnlockedIcon from '@atlaskit/icon/core/lock-unlocked';
 import VideoStopOverlayIcon from '@atlaskit/icon/core/video-stop-overlay';
+import AiGenerativeRemoveSilenceIcon from '@atlaskit/icon-lab/core/ai-generative-remove-silence';
 import TelescopeIcon from '@atlaskit/icon-lab/core/telescope';
 import { token } from '@atlaskit/tokens';
 import Tooltip from '@atlaskit/tooltip';
@@ -34,9 +35,11 @@ interface PromptInputBoxProps {
     isDeepPlanEnabled: boolean;
     isYoloModeEnabled: boolean;
     isFullContextEnabled: boolean;
+    isAskModeEnabled: boolean;
     onDeepPlanToggled?: () => void;
     onYoloModeToggled?: () => void;
     onFullContextToggled?: () => void;
+    onAskModeToggled?: () => void;
     onSend: (text: string) => boolean;
     onCancel: () => void;
     onAddContext: () => void;
@@ -107,9 +110,11 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     isDeepPlanEnabled,
     isYoloModeEnabled,
     isFullContextEnabled,
+    isAskModeEnabled,
     onDeepPlanToggled,
     onYoloModeToggled,
     onFullContextToggled,
+    onAskModeToggled,
     onSend,
     onCancel,
     onAddContext,
@@ -217,6 +222,9 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         [currentState],
     );
 
+    console.log('isAskModeEnabled', isAskModeEnabled, 'onAskModeToggled', onAskModeToggled);
+    console.log('isFullContextEnabled', isFullContextEnabled, 'onFullContextToggled', onFullContextToggled);
+
     return (
         <>
             <div id="prompt-editor-container" style={{ ...{ fieldSizing: 'content' }, ...rovoDevTextareaStyles }} />
@@ -246,15 +254,17 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                             onDeepPlanToggled={onDeepPlanToggled}
                             onYoloModeToggled={onYoloModeToggled}
                             onFullContextToggled={onFullContextToggled}
+                            onAskModeToggled={onAskModeToggled}
                             isDeepPlanEnabled={isDeepPlanEnabled}
                             isYoloModeEnabled={isYoloModeEnabled}
                             isFullContextEnabled={isFullContextEnabled}
+                            isAskModeEnabled={isAskModeEnabled}
                             onClose={() => {}}
                         />
                     </Tooltip>
                     {isDeepPlanEnabled && onDeepPlanToggled && (
                         <Tooltip content="Disable deep plan">
-                            <div className="deep-plan-indicator" onClick={() => onDeepPlanToggled()}>
+                            <div className="mode-indicator" onClick={() => onDeepPlanToggled()}>
                                 <AiGenerativeTextSummaryIcon label="deep plan icon" />
                                 <CrossIcon size="small" label="disable deep plan" />
                             </div>
@@ -262,7 +272,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                     )}
                     {isFullContextEnabled && onFullContextToggled && (
                         <Tooltip content="Disable Full-Context mode">
-                            <div className="deep-plan-indicator" onClick={() => onFullContextToggled()}>
+                            <div className="mode-indicator" onClick={() => onFullContextToggled()}>
                                 <TelescopeIcon label="full-context mode icon" />
                                 <CrossIcon size="small" label="disable full-context mode" />
                             </div>
@@ -270,12 +280,20 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                     )}{' '}
                     {isYoloModeEnabled && onYoloModeToggled && (
                         <Tooltip content="Disable YOLO mode">
-                            <div className="deep-plan-indicator" onClick={() => onYoloModeToggled()}>
+                            <div className="mode-indicator" onClick={() => onYoloModeToggled()}>
                                 <LockUnlockedIcon label="yolo mode icon" />
                                 <CrossIcon size="small" label="disable yolo mode" />
                             </div>
                         </Tooltip>
                     )}{' '}
+                    {isAskModeEnabled && onAskModeToggled && (
+                        <Tooltip content="Disable Ask mode">
+                            <div className="mode-indicator" onClick={() => onAskModeToggled()}>
+                                <AiGenerativeRemoveSilenceIcon label="ask mode icon" />
+                                <CrossIcon size="small" label="disable ask mode" />
+                            </div>
+                        </Tooltip>
+                    )}
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                     {!showCancelButton && (

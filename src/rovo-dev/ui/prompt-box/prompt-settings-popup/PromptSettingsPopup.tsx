@@ -2,6 +2,7 @@ import AiGenerativeTextSummaryIcon from '@atlaskit/icon/core/ai-generative-text-
 import CrossIcon from '@atlaskit/icon/core/cross';
 import CustomizeIcon from '@atlaskit/icon/core/customize';
 import LockUnlockedIcon from '@atlaskit/icon/core/lock-unlocked';
+import AiGenerativeRemoveSilenceIcon from '@atlaskit/icon-lab/core/ai-generative-remove-silence';
 import TelescopeIcon from '@atlaskit/icon-lab/core/telescope';
 import Popup, { PopupComponentProps } from '@atlaskit/popup';
 import Toggle from '@atlaskit/toggle';
@@ -11,9 +12,11 @@ interface PromptSettingsPopupProps {
     onDeepPlanToggled?: () => void;
     onYoloModeToggled?: () => void;
     onFullContextToggled?: () => void;
+    onAskModeToggled?: () => void;
     isDeepPlanEnabled: boolean;
     isYoloModeEnabled: boolean;
     isFullContextEnabled: boolean;
+    isAskModeEnabled: boolean;
     onClose: () => void;
 }
 
@@ -41,14 +44,16 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
     onDeepPlanToggled,
     onYoloModeToggled,
     onFullContextToggled,
+    onAskModeToggled,
     isDeepPlanEnabled,
     isYoloModeEnabled,
     isFullContextEnabled,
+    isAskModeEnabled,
     onClose,
 }) => {
     const [isOpen, setIsOpen] = React.useState(false);
 
-    if (!onDeepPlanToggled && !onYoloModeToggled) {
+    if (!onDeepPlanToggled && !onYoloModeToggled && !onAskModeToggled) {
         return false;
     }
 
@@ -110,6 +115,16 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                             action={onYoloModeToggled}
                             actionType="toggle"
                             toggled={isYoloModeEnabled}
+                        />
+                    )}
+                    {onAskModeToggled && (
+                        <PromptSettingsItem
+                            icon={<AiGenerativeRemoveSilenceIcon label="Ask mode" />}
+                            label="Ask mode"
+                            description="Ask questions without editing code"
+                            action={onAskModeToggled}
+                            actionType="toggle"
+                            toggled={isAskModeEnabled}
                         />
                     )}
                 </div>
