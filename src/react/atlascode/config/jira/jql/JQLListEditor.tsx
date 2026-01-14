@@ -16,8 +16,16 @@ import { useJqlEditDialog } from './useJqlEditDialog';
 
 const reorder = (jqlList: JQLEntry[], oldIndex: number, newIndex: number): JQLEntry[] => {
     const result = [...jqlList];
-    const [removed] = result.splice(oldIndex, 1);
-    result.splice(newIndex, 0, removed);
+    if (Array.isArray(result) && oldIndex >= 0 && oldIndex < result.length) {
+        const [removed] = result.splice(oldIndex, 1);
+        if (newIndex >= 0 && newIndex <= result.length) {
+            result.splice(newIndex, 0, removed);
+        }
+    } else {
+        throw new Error(
+            `Invalid jqlList array for reorder operation. Actual value: ${jqlList} with type ${typeof jqlList}`,
+        );
+    }
 
     return result;
 };
