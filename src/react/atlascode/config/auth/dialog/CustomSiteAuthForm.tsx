@@ -123,7 +123,6 @@ export const CustomSiteAuthForm = ({
                         id="password"
                         name="password"
                         label="Password"
-                        defaultValue={(defaultSiteWithAuth.auth as BasicAuthInfo).password}
                         type={authFormState.showPassword ? 'text' : 'password'}
                         helperText={errors.password ? errors.password : undefined}
                         fullWidth

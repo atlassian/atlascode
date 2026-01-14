@@ -4,9 +4,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { SiteWithAuthInfo } from 'src/lib/ipc/toUI/config';
 import useConstant from 'use-constant';
 
-import { Product } from '../../../../atlclients/authInfo';
+import { BasicAuthInfo, isBasicAuthInfo, Product } from '../../../../atlclients/authInfo';
 import { AuthFormType } from '../../constants';
-import { clearField, getFieldValue, isCheckboxOrRadio } from '../../util/authFormUtils';
+import { clearField, getFieldValue, isCheckboxOrRadio, setFieldValue } from '../../util/authFormUtils';
 import { Errors, FieldDescriptor, Fields, FormValidation, InputElement, OnSubmit, ValidateFunc } from '../types';
 import { clearFieldsSwitchingFormTypes, getFieldsValidationHelpers, selectAuthFormType } from './helpers';
 
@@ -100,12 +100,29 @@ export function useFormValidation<FieldTypes>(
         }
     }, [watch]);
 
-    // Clear fields when switching between form types or when baseUrl changes
+    // Clear or populate fields when switching between form types or when baseUrl changes
     useEffect(() => {
         const currentBaseUrl = (watches.current as Partial<FieldTypes & { baseUrl: string }>).baseUrl;
         const baseUrlChanged = previousBaseUrl.current !== undefined && previousBaseUrl.current !== currentBaseUrl;
         if (baseUrlChanged) {
-            clearField(fields, errors, 'username');
+            // Find if there's an existing site matching the new URL
+            const matchingSite = currentBaseUrl
+                ? allSitesWithAuth.find((x) => x.site.baseLinkUrl === currentBaseUrl)
+                : undefined;
+
+            if (matchingSite) {
+                const username = isBasicAuthInfo(matchingSite.auth)
+                    ? (matchingSite.auth as BasicAuthInfo).username || matchingSite.auth.user.email
+                    : matchingSite.auth.user.email;
+
+                if (username) {
+                    setFieldValue(fields, errors, 'username', username);
+                } else {
+                    clearField(fields, errors, 'username');
+                }
+            } else {
+                clearField(fields, errors, 'username');
+            }
             clearField(fields, errors, 'password');
         }
 
@@ -115,7 +132,7 @@ export function useFormValidation<FieldTypes>(
         previousBaseUrl.current = currentBaseUrl;
 
         reRender((prevToggle) => !prevToggle);
-    }, [authTypeTabIndex, product, (watches.current as any).baseUrl]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [authTypeTabIndex, product, allSitesWithAuth, (watches.current as any).baseUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const doRegister = useCallback(
         (ref: InputElement | null, validate?: ValidateFunc) => {

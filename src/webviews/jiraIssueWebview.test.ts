@@ -270,15 +270,28 @@ describe('JiraIssueWebview', () => {
     });
 
     describe('invalidate', () => {
-        test('should update issue and update status bar', async () => {
+        test('should update issue and update status bar when webview is ready', async () => {
             const forceUpdateSpy = jest.spyOn(jiraIssueWebview as any, 'forceUpdateIssue').mockResolvedValue(undefined);
             jiraIssueWebview['_issue'] = mockIssue;
+            jiraIssueWebview['_webviewReady'] = true;
 
             await jiraIssueWebview.invalidate();
 
             expect(forceUpdateSpy).toHaveBeenCalled();
             expect(Container.jiraActiveIssueStatusBar.handleActiveIssueChange).toHaveBeenCalledWith(mockIssue.key);
             expect(Container.pmfStats.touchActivity).toHaveBeenCalled();
+        });
+
+        test('should defer invalidate when webview is not ready', async () => {
+            const forceUpdateSpy = jest.spyOn(jiraIssueWebview as any, 'forceUpdateIssue').mockResolvedValue(undefined);
+            jiraIssueWebview['_issue'] = mockIssue;
+            jiraIssueWebview['_webviewReady'] = false;
+            jiraIssueWebview['_needsRefresh'] = false;
+
+            await jiraIssueWebview.invalidate();
+
+            expect(forceUpdateSpy).not.toHaveBeenCalled();
+            expect(jiraIssueWebview['_needsRefresh']).toBe(true);
         });
     });
 

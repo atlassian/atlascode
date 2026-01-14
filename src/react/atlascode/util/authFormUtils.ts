@@ -69,6 +69,14 @@ export const clearField = (fields: Fields, errors: any, name: string) => {
     }
 };
 
+export const setFieldValue = (fields: Fields, errors: any, name: string, value: string) => {
+    if (fields[name]) {
+        fields[name].inputRef.value = value;
+        delete (errors.current as any)[name];
+        fields[name].inputRef.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+};
+
 export const clearFieldsAndWatches = (
     updateWatches: (updates: Record<string, string>) => void,
     watchUpdates: Record<string, string>,

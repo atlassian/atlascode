@@ -99,6 +99,8 @@ export class JiraIssueWebview
     private _issue: MinimalIssue<DetailedSiteInfo>;
     private _editUIData: EditIssueData;
     private _currentUser: User;
+    private _webviewReady: boolean = false;
+    private _needsRefresh: boolean = false;
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -126,6 +128,12 @@ export class JiraIssueWebview
         this._panel!.iconPath = Resources.icons.get(iconSet.JIRAICON);
     }
 
+    public override async createOrShow(column?: vscode.ViewColumn): Promise<void> {
+        this._webviewReady = false;
+        this._needsRefresh = false;
+        await super.createOrShow(column);
+    }
+
     async initialize(issue: MinimalIssue<DetailedSiteInfo>) {
         this._issue = issue;
 
@@ -139,6 +147,11 @@ export class JiraIssueWebview
     }
 
     async invalidate() {
+        if (!this._webviewReady) {
+            this._needsRefresh = true;
+            return;
+        }
+
         // TODO: we might want to also update feature gates here?
         this.fireAdditionalSettings({
             rovoDevEnabled: Container.isRovoDevEnabled,
@@ -652,6 +665,15 @@ export class JiraIssueWebview
 
         if (!handled) {
             switch (msg.action) {
+                case 'webviewReady': {
+                    handled = true;
+                    this._webviewReady = true;
+                    if (this._needsRefresh) {
+                        this._needsRefresh = false;
+                        this.invalidate();
+                    }
+                    break;
+                }
                 case 'copyJiraIssueLink': {
                     handled = true;
                     const linkUrl = `${this._issue.siteDetails.baseLinkUrl}/browse/${this._issue.key}`;
