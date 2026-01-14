@@ -63,8 +63,10 @@ export class BasicInterceptor implements AuthInterceptor {
     showError() {
         window
             .showErrorMessage(`Credentials refused for ${this.site.baseApiUrl}`, { modal: false }, `Update Credentials`)
-            .then((response) => {
-                commands.executeCommand(Commands.ShowJiraAuth);
+            .then((userChoice) => {
+                if (userChoice === 'Update Credentials') {
+                    commands.executeCommand(Commands.ShowJiraAuth);
+                }
             });
     }
 }
