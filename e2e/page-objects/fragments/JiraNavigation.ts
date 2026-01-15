@@ -21,8 +21,9 @@ export class JiraNavigation {
         const item = this.jiraItemsTree.getByRole('treeitem', { name });
         const description = item.locator('.label-description');
         const descriptionText = await description.innerText();
-        // Description format is: "status | summary", extract status before the pipe
-        const status = descriptionText.split(' | ')[0];
+        // Description format is: "summary | status", extract status after the pipe
+        const parts = descriptionText.split(' | ');
+        const status = parts[parts.length - 1];
         return status;
     }
 
