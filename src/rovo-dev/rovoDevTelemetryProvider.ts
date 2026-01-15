@@ -28,7 +28,13 @@ export type TelemetryEvent =
     | PartialEvent<Track.DetailsExpanded>
     | PartialEvent<Track.CreatePrButtonClicked>
     | PartialEvent<Track.AiResultViewed>
-    | PartialEvent<Track.RestartProcessAction>;
+    | PartialEvent<Track.RestartProcessAction>
+    | PartialEvent<Track.RestoreSessionClicked>
+    | PartialEvent<Track.ForkSessionClicked>
+    | PartialEvent<Track.DeleteSessionClicked>
+    | PartialEvent<Track.ReplayCompleted>;
+
+export type TelemetryScreenEvent = 'rovoDevSessionHistoryPicker';
 
 export class RovoDevTelemetryProvider {
     private _chatSessionId: string = '';
@@ -79,16 +85,21 @@ export class RovoDevTelemetryProvider {
             return false;
         }
 
-        // rovoDevNewSessionActionEvent and rovoDevRestartProcessActionEvent are the only events that don't need the promptId
+        // skip promptId validation for the following events
         if (
-            event.action !== 'rovoDevNewSessionAction' &&
-            event.action !== 'rovoDevRestartProcessAction' &&
-            !event.attributes.promptId
+            event.action === 'rovoDevNewSessionAction' ||
+            event.action === 'rovoDevReplayCompleted' ||
+            event.subject === 'rovoDevRestoreSession' ||
+            event.subject === 'rovoDevForkSession' ||
+            event.subject === 'rovoDevDeleteSession' ||
+            event.action === 'rovoDevRestartProcessAction' ||
+            !!event.attributes.promptId
         ) {
-            this.onError(new Error('Unable to send Rovo Dev telemetry: PromptId not initialized'));
-            return false;
+            return true;
         }
-        return true;
+
+        this.onError(new Error('Unable to send Rovo Dev telemetry: PromptId not initialized'));
+        return false;
     }
 
     private canFire(eventId: string): boolean {
@@ -121,6 +132,10 @@ export class RovoDevTelemetryProvider {
         } as TrackEvent);
 
         RovoDevLogger.debug(`Event fired: ${event.subject} ${event.action} (${JSON.stringify(event.attributes)})`);
+    }
+
+    async fireScreenTelemetryEvent(screenName: TelemetryScreenEvent): Promise<void> {
+        await this._extensionApi.analytics.sendScreenEvent(screenName);
     }
 
     private get metadata(): CommonSessionAttributes {

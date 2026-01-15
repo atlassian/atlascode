@@ -47,7 +47,7 @@
     ],
     "main": "./build/extension/extension",
     "rovoDev": {
-        "version": "0.13.27"
+        "version": "0.13.28"
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
@@ -127,6 +127,13 @@
                 "title": "Add to Context",
                 "enablement": "atlascode:rovoDevEnabled",
                 "category": "Rovo Dev"
+            },
+            {
+                "command": "atlascode.rovodev.sessionHistory",
+                "title": "Session history",
+                "icon": "$(history)",
+                "category": "Rovo Dev",
+                "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive && atlascode:rovoDevApiReady"
             },
             {
                 "command": "atlascode.rovodev.newChatSession",
@@ -705,9 +712,14 @@
             ],
             "view/title": [
                 {
+                    "command": "atlascode.rovodev.sessionHistory",
+                    "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive && atlascode:rovoDevApiReady",
+                    "group": "navigation@1"
+                },
+                {
                     "command": "atlascode.rovodev.newChatSession",
                     "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
-                    "group": "navigation@1"
+                    "group": "navigation@2"
                 },
                 {
                     "command": "atlascode.openRovoDevConfig",
@@ -935,6 +947,10 @@
                 {
                     "command": "atlascode.rovodev.askRovoDev",
                     "when": "atlascode:rovoDevEnabled"
+                },
+                {
+                    "command": "atlascode.rovodev.sessionHistory",
+                    "when": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive && atlascode:rovoDevApiReady"
                 },
                 {
                     "command": "atlascode.rovodev.newChatSession",
@@ -1690,7 +1706,7 @@
         "@segment/analytics-node": "^2.1.3",
         "@sentry/node": "^9.40.0",
         "@speed-highlight/core": "^1.2.7",
-        "@vscode/codicons": "^0.0.40",
+        "@vscode/codicons": "^0.0.44",
         "@vscode/webview-ui-toolkit": "^1.4.0",
         "adm-zip": "^0.5.16",
         "awesome-debounce-promise": "^2.1.0",
@@ -1788,7 +1804,6 @@
         "@vscode/vsce": "^3.7.0",
         "ajv": "^8.17.1",
         "ajv-formats": "^3.0.1",
-        "audit-ci": "^7.1.0",
         "autoprefixer": "^10.4.20",
         "concurrently": "^9.1.2",
         "css-loader": "^7.1.2",

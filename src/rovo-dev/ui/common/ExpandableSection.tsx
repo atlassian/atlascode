@@ -14,11 +14,11 @@ export interface ExpandableSectionProps {
 const toggleButtonStyles: React.CSSProperties = {
     background: 'none',
     border: 'none',
-    color: 'var(--vscode-textLink-foreground)',
+    color: 'var(--vscode-descriptionForeground)',
     cursor: 'pointer',
     padding: '0',
     fontSize: 'inherit',
-    textDecoration: 'underline',
+    textDecoration: 'none',
     display: 'flex',
     alignItems: 'center',
     gap: '4px',
@@ -56,11 +56,13 @@ export const ExpandableSection: React.FC<ExpandableSectionProps> = ({
                 }}
             >
                 <button style={toggleButtonStyles} onClick={onToggle}>
-                    {isExpanded ? (
-                        <ChevronDownIcon label="" spacing="none" />
-                    ) : (
-                        <ChevronRightIcon label="" spacing="none" />
-                    )}
+                    <span style={{ color: 'var(--vscode-descriptionForeground)' }}>
+                        {isExpanded ? (
+                            <ChevronDownIcon label="" spacing="none" />
+                        ) : (
+                            <ChevronRightIcon label="" spacing="none" />
+                        )}
+                    </span>
                     {title}
                 </button>
                 {headerActions}

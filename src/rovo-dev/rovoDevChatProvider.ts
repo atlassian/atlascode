@@ -114,6 +114,12 @@ export class RovoDevChatProvider {
         this._lastMessageSentTime = undefined;
     }
 
+    public async clearChat(): Promise<void> {
+        await this._webView!.postMessage({
+            type: RovoDevProviderMessageType.ClearChat,
+        });
+    }
+
     public executeChat(prompt: RovoDevPrompt, revertedFiles: string[]) {
         return this.internalExecuteChat(prompt, revertedFiles, false);
     }
@@ -327,6 +333,15 @@ export class RovoDevChatProvider {
             }
         }
 
+        // Emit analytics for replay completion
+        this._telemetryProvider.fireTelemetryEvent({
+            action: 'rovoDevReplayCompleted',
+            subject: 'atlascode',
+            attributes: {
+                messagePartsCount: replayBuffer.length,
+            },
+        });
+
         if (replayBuffer.length > 0) {
             await this.processRovoDevReplayResponse(replayBuffer);
         }
@@ -504,9 +519,7 @@ export class RovoDevChatProvider {
             }
 
             case 'clear':
-                await webview.postMessage({
-                    type: RovoDevProviderMessageType.ClearChat,
-                });
+                await this.clearChat();
                 break;
 
             case 'prune':

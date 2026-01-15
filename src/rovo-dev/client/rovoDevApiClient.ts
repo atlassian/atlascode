@@ -20,6 +20,20 @@ export class RovoDevApiError extends Error {
     }
 }
 
+export interface RovoDevSession {
+    id: string;
+    title: string;
+    created: string;
+    last_saved: string;
+    initial_prompt: string;
+    prompts: string[];
+    latest_result: string;
+    workspace_path: string;
+    parent_session_id: string | null;
+    num_messages: number;
+    log_dir: string;
+}
+
 /** Implements the http client for the RovoDev CLI server */
 export class RovoDevApiClient {
     private readonly _authBearerHeader: string | undefined;
@@ -41,19 +55,19 @@ export class RovoDevApiClient {
 
     private async fetchApi(
         restApi: string,
-        method: 'GET',
+        method: 'GET' | 'DELETE',
         body?: undefined,
         abortSignal?: AbortSignal | null,
     ): Promise<Response>;
     private async fetchApi(
         restApi: string,
-        method: 'POST',
+        method: 'POST' | 'PATCH',
         body?: BodyInit | null,
         abortSignal?: AbortSignal | null,
     ): Promise<Response>;
     private async fetchApi(
         restApi: string,
-        method: 'GET' | 'POST',
+        method: 'GET' | 'DELETE' | 'POST' | 'PATCH',
         body?: BodyInit | null,
         abortSignal?: AbortSignal | null,
     ): Promise<Response> {
@@ -98,12 +112,52 @@ export class RovoDevApiClient {
         return await response.json();
     }
 
+    /** Invokes the GET `/v3/sessions/current_session` API
+     * @returns {Promise<RovoDevSession>} An object representing the current session.
+     */
+    public async getCurrentSession(): Promise<RovoDevSession> {
+        const response = await this.fetchApi('/v3/sessions/current_session', 'GET');
+        return await response.json();
+    }
+
+    /** Invokes the GET `/v3/sessions/list` API
+     * @returns {Promise<RovoDevSession[]>} The list of sessions.
+     */
+    public async listSessions(): Promise<RovoDevSession[]> {
+        const response = await this.fetchApi('/v3/sessions/list', 'GET');
+        const obj = await response.json();
+        return obj.sessions || [];
+    }
+
+    /** Invokes the POST `/v3/sessions/{session_id}/restore` API
+     */
+    public async restoreSession(sessionId: string): Promise<void> {
+        const response = await this.fetchApi(`/v3/sessions/${sessionId}/restore`, 'POST');
+        await response.json();
+    }
+
+    /** Invokes the POST `/v3/sessions/{session_id}/fork` API
+     * @returns {Promise<string>} A value representing the new session id.
+     */
+    public async forkSession(sessionId: string): Promise<string> {
+        const response = await this.fetchApi(`/v3/sessions/${sessionId}/fork`, 'POST');
+        const obj = await response.json();
+        return obj.session_id;
+    }
+
     /** Invokes the POST `/v3/sessions/create` API
      * @returns {Promise<string>} A value representing the new session id.
      */
     public async createSession(): Promise<string | null> {
         const response = await this.fetchApi('/v3/sessions/create', 'POST');
         return response.headers.get('x-session-id');
+    }
+
+    /** Invokes the DELETE `/v3/sessions/{session_id}` API
+     */
+    public async deleteSession(sessionId: string): Promise<void> {
+        const response = await this.fetchApi(`/v3/sessions/${sessionId}`, 'DELETE');
+        await response.json();
     }
 
     /** Invokes the POST `/v3/set_chat_message` API, then the GET `/v3/stream_chat` API.

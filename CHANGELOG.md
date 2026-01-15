@@ -2,11 +2,22 @@
 
 ## What's new in 4.0.15
 
+### Features
+
+- Rovo Dev sessions management: restore a previous session, fork session, delete session
+
+### Improvements
+
+- Updated Rovo Dev to v0.13.27
+
 ### Bug Fixes
 
 - Added missing labels for PR merge strategies(AXON-1733)
 - Fixed authentication error
 - Fixed user mentions not working in Jira issue comments when using editor
+- Fixed settings write failures blocking issue creation and site removal
+- Fixed dismiss button handling for 'Credentials refused...' popup
+- Added more meaningful error message in case of expired access token usage
 
 ## What's new in 4.0.14
 

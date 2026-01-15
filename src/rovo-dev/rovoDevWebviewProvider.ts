@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import path from 'path';
+import { setCommandContext } from 'src/commandContext';
 import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { safeWaitFor } from 'src/rovo-dev/util/waitFor';
@@ -36,6 +37,7 @@ import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
 import { RovoDevJiraItemsProvider } from './rovoDevJiraItemsProvider';
 import { RovoDevProcessManager, RovoDevProcessState } from './rovoDevProcessManager';
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
+import { RovoDevSessionManager } from './rovoDevSessionManager';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import { RovoDevContextItem } from './rovoDevTypes';
 import { readLastNLogLines } from './rovoDevUtils';
@@ -634,6 +636,23 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             type: RovoDevProviderMessageType.SetJiraWorkItems,
             issues,
         });
+    }
+
+    public async showSessionHistory(): Promise<void> {
+        const workspacePath = workspace.workspaceFolders?.[0]?.uri.fsPath;
+
+        if (!this.isBoysenberry && this.rovoDevApiClient && workspacePath) {
+            const sessionsManager = new RovoDevSessionManager(
+                workspacePath,
+                this.rovoDevApiClient,
+                this._telemetryProvider,
+            );
+            sessionsManager.onSessionRestored(async () => {
+                await this._chatProvider.clearChat();
+                await this._chatProvider.executeReplay();
+            });
+            await sessionsManager.showPicker();
+        }
     }
 
     public async executeNewSession(): Promise<void> {
@@ -1305,6 +1324,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             throw new Error(`Invalid healthcheck's response: "${result.status.toString()}".`);
         }
 
+        setCommandContext(RovodevCommandContext.RovoDevApiReady, true);
         this.beginNewSession(result.sessionId || null, false);
 
         this.refreshDebugPanel();
@@ -1420,6 +1440,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     // and with Disabled you can't.
     private setRovoDevTerminated(): Promise<void> {
         this._rovoDevApiClient = undefined;
+        setCommandContext(RovodevCommandContext.RovoDevApiReady, false);
+
         this._chatProvider.shutdown();
         this._telemetryProvider.shutdown();
         this._dwellTracker?.dispose();

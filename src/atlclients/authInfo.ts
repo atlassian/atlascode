@@ -33,6 +33,11 @@ export const ProductBitbucket: Product = {
     key: 'bitbucket',
 };
 
+export const ProductRovoDev: Product = {
+    name: 'Rovo Dev',
+    key: 'RovoDev',
+};
+
 export enum OAuthProvider {
     BitbucketCloud = 'bbcloud',
     BitbucketCloudStaging = 'bbcloudstaging',
