@@ -121,7 +121,7 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                         <PromptSettingsItem
                             icon={<AiGenerativeRemoveSilenceIcon label="Ask mode" />}
                             label="Ask mode"
-                            description="Ask questions without editing code"
+                            description="Ask a question in read-only mode (no file changes or terminal access)."
                             action={onAskModeToggled}
                             actionType="toggle"
                             toggled={isAskModeEnabled}
