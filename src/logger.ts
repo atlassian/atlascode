@@ -140,8 +140,7 @@ export class Logger {
         this.Instance.errorInternal(productArea, ex, capturedBy, errorMessage, sessionId, ...params);
     }
 
-    protected errorInternalWithConstructor(
-        callingClass: typeof Logger,
+    protected errorInternal(
         productArea: ErrorProductArea,
         ex: Error,
         capturedBy?: string,
@@ -153,7 +152,6 @@ export class Logger {
 
         if (SentryService.getInstance().isInitialized()) {
             try {
-
                 SentryService.getInstance().captureException(ex, {
                     tags: {
                         productArea: productArea || 'unknown',
@@ -181,24 +179,6 @@ export class Logger {
         if (this.output !== undefined) {
             this.output.appendLine([this.timestamp, errorMessage, ex, ...params].join(' '));
         }
-    }
-
-    protected errorInternal(
-        productArea: ErrorProductArea,
-        ex: Error,
-        capturedBy?: string,
-        errorMessage?: string,
-        ...params: string[]
-    ): void {
-        // For instance method calls, use this.constructor
-        this.errorInternalWithConstructor(
-            this.constructor as typeof Logger,
-            productArea,
-            ex,
-            capturedBy,
-            errorMessage,
-            ...params,
-        );
     }
 
     public static warn(message?: any, ...params: any[]): void {
