@@ -706,6 +706,32 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }, false);
     }
 
+    public async executeRestartProcess(): Promise<void> {
+        const webview = this._webView!;
+
+        await webview.postMessage({
+            type: RovoDevProviderMessageType.ForceStop,
+        });
+
+        this._chatProvider.executeAbortSignal();
+
+        this._chatProvider.shutdown();
+
+        await RovoDevProcessManager.initializeRovoDev(this._context, true);
+
+        this.refreshDebugPanel();
+        await webview.postMessage({
+            type: RovoDevProviderMessageType.ClearChat,
+        });
+
+        this._revertedChanges = [];
+        return this._telemetryProvider.fireTelemetryEvent({
+            action: 'rovoDevRestartProcessAction',
+            subject: 'atlascode',
+            attributes: {}, // no additional attributes
+        });
+    }
+
     private async executeHealthcheckInfo(): Promise<{ httpStatus: number; data?: RovoDevHealthcheckResponse }> {
         let data: RovoDevHealthcheckResponse | undefined = undefined;
         let httpStatus = 0;

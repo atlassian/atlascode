@@ -39,9 +39,24 @@ export class RovoDevApiClient {
         this._authBearerHeader = sessionToken ? 'Bearer ' + sessionToken : undefined;
     }
 
-    private async fetchApi(restApi: string, method: 'GET'): Promise<Response>;
-    private async fetchApi(restApi: string, method: 'POST', body?: BodyInit | null): Promise<Response>;
-    private async fetchApi(restApi: string, method: 'GET' | 'POST', body?: BodyInit | null): Promise<Response> {
+    private async fetchApi(
+        restApi: string,
+        method: 'GET',
+        body?: undefined,
+        abortSignal?: AbortSignal | null,
+    ): Promise<Response>;
+    private async fetchApi(
+        restApi: string,
+        method: 'POST',
+        body?: BodyInit | null,
+        abortSignal?: AbortSignal | null,
+    ): Promise<Response>;
+    private async fetchApi(
+        restApi: string,
+        method: 'GET' | 'POST',
+        body?: BodyInit | null,
+        abortSignal?: AbortSignal | null,
+    ): Promise<Response> {
         const headers: Record<string, string> = {
             accept: 'text/event-stream',
             'Content-Type': 'application/json',
@@ -57,6 +72,7 @@ export class RovoDevApiClient {
                 method,
                 headers,
                 body,
+                signal: abortSignal ?? undefined,
             });
         } catch (error) {
             const reason = error.cause?.code || error.message || error;
@@ -93,16 +109,30 @@ export class RovoDevApiClient {
     /** Invokes the POST `/v3/set_chat_message` API, then the GET `/v3/stream_chat` API.
      * @param {string} message The message (prompt) to send to Rovo Dev.
      * @param {boolean?} pause_on_call_tools_start Set to `true` to pause before every tool execution. Defaults to `false`.
+     * @param {AbortSignal?} abortSignal An optional AbortSignal to cancel the request.
      * @returns {Promise<Response>} An object representing the API response.
      */
-    public chat(message: string, pause_on_call_tools_start?: boolean): Promise<Response>;
+    public chat(
+        message: string,
+        pause_on_call_tools_start?: boolean,
+        abortSignal?: AbortSignal | null,
+    ): Promise<Response>;
     /** Invokes the POST `/v3/set_chat_message` API, then the GET `/v3/stream_chat` API.
      * @param {RovoDevChatRequest} message The chat payload to send to Rovo Dev.
      * @param {boolean?} pause_on_call_tools_start Set to `true` to pause before every tool execution. Defaults to `false`.
+     * @param {AbortSignal?} abortSignal An optional AbortSignal to cancel the request.
      * @returns {Promise<Response>} An object representing the API response.
      */
-    public chat(message: RovoDevChatRequest, pause_on_call_tools_start?: boolean): Promise<Response>;
-    public async chat(message: string | RovoDevChatRequest, pause_on_call_tools_start?: boolean): Promise<Response> {
+    public chat(
+        message: RovoDevChatRequest,
+        pause_on_call_tools_start?: boolean,
+        abortSignal?: AbortSignal | null,
+    ): Promise<Response>;
+    public async chat(
+        message: string | RovoDevChatRequest,
+        pause_on_call_tools_start?: boolean,
+        abortSignal?: AbortSignal | null,
+    ): Promise<Response> {
         if (typeof message === 'string') {
             message = {
                 message: message,
@@ -113,7 +143,7 @@ export class RovoDevApiClient {
         await this.fetchApi('/v3/set_chat_message', 'POST', JSON.stringify(message));
 
         const qs = `pause_on_call_tools_start=${pause_on_call_tools_start ? 'true' : 'false'}`;
-        return await this.fetchApi(`/v3/stream_chat?${qs}`, 'GET');
+        return await this.fetchApi(`/v3/stream_chat?${qs}`, 'GET', undefined, abortSignal);
     }
 
     /** Invokes the POST `/v3/resume_tool_calls` API.
@@ -136,10 +166,11 @@ export class RovoDevApiClient {
     }
 
     /** Invokes the POST `/v3/replay` API
+     * @param {AbortSignal?} abortSignal An optional AbortSignal to cancel the request.
      * @returns {Promise<Response>} An object representing the API response.
      */
-    public replay(): Promise<Response> {
-        return this.fetchApi('/v3/replay', 'POST');
+    public replay(abortSignal?: AbortSignal | null): Promise<Response> {
+        return this.fetchApi('/v3/replay', 'POST', undefined, abortSignal);
     }
 
     /** Invokes the GET `/v3/cache-file-path` API.

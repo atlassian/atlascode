@@ -422,7 +422,7 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
         ),
         commands.registerCommand(
             RovodevCommands.RestartProcess,
-            async () => await Container.rovodevWebviewProvider.executeNewSession(true),
+            async () => await Container.rovodevWebviewProvider.executeRestartProcess(),
         ),
     );
 }
