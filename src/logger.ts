@@ -136,10 +136,12 @@ export class Logger {
         errorMessage?: string,
         ...params: string[]
     ): void {
-        this.Instance.errorInternal(productArea, ex, capturedBy, errorMessage, ...params);
+        // Pass the calling class constructor to instance method so it can access static sessionId
+        this.Instance.errorInternalWithConstructor(this, productArea, ex, capturedBy, errorMessage, ...params);
     }
 
-    protected errorInternal(
+    protected errorInternalWithConstructor(
+        callingClass: typeof Logger,
         productArea: ErrorProductArea,
         ex: Error,
         capturedBy?: string,
@@ -151,7 +153,8 @@ export class Logger {
         if (SentryService.getInstance().isInitialized()) {
             try {
                 // Check if the subclass (e.g., RovoDevLogger) has a sessionId
-                const sessionId = (this.constructor as any)._rovoDevSessionId;
+                // Use the calling class constructor passed from static method
+                const sessionId = (callingClass as any)._rovoDevSessionId;
 
                 SentryService.getInstance().captureException(ex, {
                     tags: {
@@ -180,6 +183,24 @@ export class Logger {
         if (this.output !== undefined) {
             this.output.appendLine([this.timestamp, errorMessage, ex, ...params].join(' '));
         }
+    }
+
+    protected errorInternal(
+        productArea: ErrorProductArea,
+        ex: Error,
+        capturedBy?: string,
+        errorMessage?: string,
+        ...params: string[]
+    ): void {
+        // For instance method calls, use this.constructor
+        this.errorInternalWithConstructor(
+            this.constructor as typeof Logger,
+            productArea,
+            ex,
+            capturedBy,
+            errorMessage,
+            ...params,
+        );
     }
 
     public static warn(message?: any, ...params: any[]): void {
