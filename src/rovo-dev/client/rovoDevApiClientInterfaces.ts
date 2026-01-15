@@ -96,7 +96,7 @@ export interface RovoDevSetAgentModeResponse {
 }
 
 export interface RovoDevModeInfo {
-    mode: string;
+    mode: string; // Use string to allow new modes to be added on Rovo Dev side
     description: string;
 }
 
