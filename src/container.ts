@@ -272,6 +272,8 @@ export class Container {
             environment: process.env.SENTRY_ENVIRONMENT || 'development',
             sampleRate: parseFloat(process.env.SENTRY_SAMPLE_RATE || '1.0'),
             atlasCodeVersion: version,
+            machineId: this.machineId,
+            appInstanceId: this.appInstanceId,
         };
 
         await SentryService.getInstance().initialize(sentryConfig, (error: string) => {
