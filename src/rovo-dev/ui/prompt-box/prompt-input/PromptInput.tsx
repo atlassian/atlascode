@@ -222,9 +222,6 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         [currentState],
     );
 
-    console.log('isAskModeEnabled', isAskModeEnabled, 'onAskModeToggled', onAskModeToggled);
-    console.log('isFullContextEnabled', isFullContextEnabled, 'onFullContextToggled', onFullContextToggled);
-
     return (
         <>
             <div id="prompt-editor-container" style={{ ...{ fieldSizing: 'content' }, ...rovoDevTextareaStyles }} />
