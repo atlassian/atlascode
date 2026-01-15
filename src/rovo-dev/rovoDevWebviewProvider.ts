@@ -543,6 +543,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                         RovoDevLogger.error(renderError, contextMessage);
                         break;
+
                     default:
                         // @ts-expect-error ts(2339) - e here should be 'never'
                         this.processError(new Error(`Unknown message type: ${e.type}`));
@@ -672,7 +673,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             return;
         }
 
-        // special handling for when the Rovo Dev process has been terminated, failed to initialize, or a forced restart is requested
+        // special handling for when the Rovo Dev process has been terminated, or failed to initialize
         if (
             this.processState === 'Terminated' ||
             this.processState === 'DownloadingFailed' ||
@@ -713,6 +714,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }, false);
     }
 
+    /**
+     * Restart the Rovo Dev process by aborting any ongoing operations,
+     * shutting down the current process, and re-initializing it.
+     */
     public async executeRestartProcess(): Promise<void> {
         const webview = this._webView!;
 
