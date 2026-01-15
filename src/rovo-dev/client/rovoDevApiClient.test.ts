@@ -1618,4 +1618,254 @@ describe('RovoDevApiClient', () => {
             );
         });
     });
+
+    describe('getAgentMode method', () => {
+        it('should return current agent mode successfully', async () => {
+            const mockAgentModeResponse = {
+                mode: 'ask' as const,
+                message: 'Agent mode is set to ask',
+            };
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue(mockAgentModeResponse),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.getAgentMode();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/agent-mode', {
+                method: 'GET',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: undefined,
+            });
+            expect(result).toEqual(mockAgentModeResponse);
+            expect(result.mode).toBe('ask');
+        });
+
+        it('should return default mode', async () => {
+            const mockAgentModeResponse = {
+                mode: 'default' as const,
+                message: 'Agent mode is set to default',
+            };
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue(mockAgentModeResponse),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.getAgentMode();
+
+            expect(result.mode).toBe('default');
+            expect(result.message).toBe('Agent mode is set to default');
+        });
+
+        it('should return plan mode', async () => {
+            const mockAgentModeResponse = {
+                mode: 'plan' as const,
+                message: 'Agent mode is set to plan',
+            };
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue(mockAgentModeResponse),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.getAgentMode();
+
+            expect(result.mode).toBe('plan');
+        });
+
+        it('should throw error when API call fails', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.getAgentMode()).rejects.toThrow("Failed to fetch '/v3/agent-mode API: HTTP 500");
+        });
+
+        it('should throw error when API returns 404', async () => {
+            const mockResponse = {
+                status: 404,
+                statusText: 'Not Found',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.getAgentMode()).rejects.toThrow("Failed to fetch '/v3/agent-mode API: HTTP 404");
+        });
+    });
+
+    describe('setAgentMode method', () => {
+        it('should set agent mode to ask successfully', async () => {
+            const mockSetAgentModeResponse = {
+                mode: 'ask' as const,
+                message: 'Agent mode set to ask',
+            };
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue(mockSetAgentModeResponse),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.setAgentMode('ask');
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/agent-mode', {
+                method: 'PUT',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: JSON.stringify({ mode: 'ask' }),
+            });
+            expect(result).toEqual(mockSetAgentModeResponse);
+            expect(result.mode).toBe('ask');
+        });
+
+        it('should set agent mode to default successfully', async () => {
+            const mockSetAgentModeResponse = {
+                mode: 'default' as const,
+                message: 'Agent mode set to default',
+            };
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue(mockSetAgentModeResponse),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.setAgentMode('default');
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/agent-mode', {
+                method: 'PUT',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: JSON.stringify({ mode: 'default' }),
+            });
+            expect(result.mode).toBe('default');
+        });
+
+        it('should set agent mode to plan successfully', async () => {
+            const mockSetAgentModeResponse = {
+                mode: 'plan' as const,
+                message: 'Agent mode set to plan',
+            };
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue(mockSetAgentModeResponse),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.setAgentMode('plan');
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/agent-mode', {
+                method: 'PUT',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: JSON.stringify({ mode: 'plan' }),
+            });
+            expect(result.mode).toBe('plan');
+        });
+
+        it('should throw error when API call fails', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.setAgentMode('ask')).rejects.toThrow("Failed to fetch '/v3/agent-mode API: HTTP 500");
+        });
+
+        it('should throw error when API returns 400 (invalid mode)', async () => {
+            const mockResponse = {
+                status: 400,
+                statusText: 'Bad Request',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.setAgentMode('invalid' as any)).rejects.toThrow(
+                "Failed to fetch '/v3/agent-mode API: HTTP 400",
+            );
+        });
+    });
+
+    describe('getAvailableModes method', () => {
+        it('should return list of available modes successfully', async () => {
+            const mockAvailableModesResponse = {
+                modes: [
+                    { mode: 'ask', description: 'Ask questions without editing code' },
+                    { mode: 'default', description: 'Default agent mode' },
+                    { mode: 'plan', description: 'Generate plans before executing' },
+                ],
+            };
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue(mockAvailableModesResponse),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.getAvailableModes();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/available-modes', {
+                method: 'GET',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: undefined,
+            });
+            expect(result).toEqual(mockAvailableModesResponse);
+            expect(result.modes).toHaveLength(3);
+            expect(result.modes[0].mode).toBe('ask');
+            expect(result.modes[0].description).toBe('Ask questions without editing code');
+        });
+
+        it('should throw error when API call fails', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.getAvailableModes()).rejects.toThrow(
+                "Failed to fetch '/v3/available-modes API: HTTP 500",
+            );
+        });
+    });
 });
