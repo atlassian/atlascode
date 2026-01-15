@@ -516,8 +516,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.StartNewSession:
-                        const force = e.force ?? false;
-                        await this.executeNewSession(force);
+                        await this.executeNewSession();
                         break;
 
                     case RovoDevViewResponseType.MessageRendered:
@@ -637,7 +636,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    public async executeNewSession(forceNewProcess: boolean = false): Promise<void> {
+    public async executeNewSession(): Promise<void> {
         const webview = this._webView!;
 
         // new session is disabled for these process states,
@@ -658,8 +657,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         if (
             this.processState === 'Terminated' ||
             this.processState === 'DownloadingFailed' ||
-            this.processState === 'StartingFailed' ||
-            forceNewProcess
+            this.processState === 'StartingFailed'
         ) {
             this.refreshDebugPanel();
 
@@ -668,17 +666,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             });
 
             await RovoDevProcessManager.initializeRovoDev(this._context, true);
-
-            if (forceNewProcess) {
-                this._revertedChanges = [];
-                return this._telemetryProvider.fireTelemetryEvent({
-                    action: 'rovoDevRestartProcessAction',
-                    subject: 'atlascode',
-                    attributes: {}, // no additional attributes
-                });
-            } else {
-                return;
-            }
+            return;
         }
 
         await this.executeApiWithErrorHandling(async (client) => {
