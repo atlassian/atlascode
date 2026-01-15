@@ -129,6 +129,36 @@ export namespace Track {
         };
     };
 
+    export type RestoreSessionClicked = {
+        action: 'clicked';
+        subject: 'rovoDevRestoreSession';
+        attributes: {
+            rovoDevEnv: RovoDevEnv;
+            appInstanceId: string;
+            failed?: boolean;
+        };
+    };
+
+    export type ForkSessionClicked = {
+        action: 'clicked';
+        subject: 'rovoDevForkSession';
+        attributes: {
+            rovoDevEnv: RovoDevEnv;
+            appInstanceId: string;
+            failed?: boolean;
+        };
+    };
+
+    export type DeleteSessionClicked = {
+        action: 'clicked';
+        subject: 'rovoDevDeleteSession';
+        attributes: {
+            rovoDevEnv: RovoDevEnv;
+            appInstanceId: string;
+            failed?: boolean;
+        };
+    };
+
     export type AiResultViewed = {
         action: 'viewed';
         subject: 'aiResult';

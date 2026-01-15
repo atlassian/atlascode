@@ -27,12 +27,15 @@ export type TelemetryEvent =
     | PartialEvent<Track.GitPushAction>
     | PartialEvent<Track.DetailsExpanded>
     | PartialEvent<Track.CreatePrButtonClicked>
+    | PartialEvent<Track.RestoreSessionClicked>
+    | PartialEvent<Track.ForkSessionClicked>
+    | PartialEvent<Track.DeleteSessionClicked>
     | PartialEvent<Track.AiResultViewed>
     | PartialEvent<Track.ReplayCompleted>;
 
-export class RovoDevTelemetryProvider {
-    private static readonly EVENTS_WITHOUT_PROMPT_ID = new Set(['rovoDevNewSessionAction', 'rovoDevReplayCompleted']);
+export type TelemetryScreenEvent = 'rovoDevSessionHistoryPicker';
 
+export class RovoDevTelemetryProvider {
     private _chatSessionId: string = '';
 
     private _firedTelemetryForCurrentPrompt: Record<string, boolean> = {};
@@ -81,12 +84,20 @@ export class RovoDevTelemetryProvider {
             return false;
         }
 
-        const hasPromptId = 'promptId' in event.attributes && event.attributes.promptId !== undefined;
-        if (!RovoDevTelemetryProvider.EVENTS_WITHOUT_PROMPT_ID.has(event.action) && !hasPromptId) {
-            this.onError(new Error('Unable to send Rovo Dev telemetry: PromptId not initialized'));
-            return false;
+        // skip promptId validation for the following events
+        if (
+            event.action === 'rovoDevNewSessionAction' ||
+            event.action === 'rovoDevReplayCompleted' ||
+            event.subject === 'rovoDevRestoreSession' ||
+            event.subject === 'rovoDevForkSession' ||
+            event.subject === 'rovoDevDeleteSession' ||
+            !!event.attributes.promptId
+        ) {
+            return true;
         }
-        return true;
+
+        this.onError(new Error('Unable to send Rovo Dev telemetry: PromptId not initialized'));
+        return false;
     }
 
     private canFire(eventId: string): boolean {
@@ -118,6 +129,10 @@ export class RovoDevTelemetryProvider {
         } as TrackEvent);
 
         RovoDevLogger.debug(`Event fired: ${event.subject} ${event.action} (${JSON.stringify(event.attributes)})`);
+    }
+
+    async fireScreenTelemetryEvent(screenName: TelemetryScreenEvent): Promise<void> {
+        await this._extensionApi.analytics.sendScreenEvent(screenName);
     }
 
     private get metadata(): CommonSessionAttributes {
