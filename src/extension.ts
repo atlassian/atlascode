@@ -78,29 +78,25 @@ export async function activate(context: ExtensionContext) {
         // Mark ourselves as the PID in charge of refreshing credentials and start listening for pings.
         context.globalState.update('rulingPid', pid);
 
-        try {
-            await Container.initialize(context, atlascodeVersion);
+        await Container.initialize(context, atlascodeVersion);
 
-            activateErrorReporting();
-            registerRovoDevCommands(context);
+        activateErrorReporting();
+        registerRovoDevCommands(context);
 
-            if (!RovodevStaticConfig.isBBY) {
-                registerCommands(context);
-                activateCodebucket(context);
+        if (!RovodevStaticConfig.isBBY) {
+            registerCommands(context);
+            activateCodebucket(context);
 
-                setCommandContext(
-                    CommandContext.IsJiraAuthenticated,
-                    Container.siteManager.productHasAtLeastOneSite(ProductJira),
-                );
-                setCommandContext(
-                    CommandContext.IsBBAuthenticated,
-                    Container.siteManager.productHasAtLeastOneSite(ProductBitbucket),
-                );
+            setCommandContext(
+                CommandContext.IsJiraAuthenticated,
+                Container.siteManager.productHasAtLeastOneSite(ProductJira),
+            );
+            setCommandContext(
+                CommandContext.IsBBAuthenticated,
+                Container.siteManager.productHasAtLeastOneSite(ProductBitbucket),
+            );
 
-                NotificationManagerImpl.getInstance().listen();
-            }
-        } catch (e) {
-            Logger.error(e, 'Error initializing atlascode!');
+            NotificationManagerImpl.getInstance().listen();
         }
 
         startListening((site: DetailedSiteInfo) => {
@@ -176,98 +172,79 @@ async function activateBitbucketFeatures() {
 }
 
 async function activateYamlFeatures(context: ExtensionContext) {
-    try {
-        context.subscriptions.push(
-            languages.registerCompletionItemProvider(
-                { scheme: 'file', language: 'yaml', pattern: `**/*${BB_PIPELINES_FILENAME}` },
-                new PipelinesYamlCompletionProvider(),
-            ),
-        );
-        await addPipelinesSchemaToYamlConfig();
-        await activateYamlExtension();
-    } catch (e) {
-        Logger.error(e, 'Error activating YAML features');
-    }
+    context.subscriptions.push(
+        languages.registerCompletionItemProvider(
+            { scheme: 'file', language: 'yaml', pattern: `**/*${BB_PIPELINES_FILENAME}` },
+            new PipelinesYamlCompletionProvider(),
+        ),
+    );
+    await addPipelinesSchemaToYamlConfig();
+    await activateYamlExtension();
 }
 
 async function showWelcomePage(version: string, previousVersion: string | undefined) {
-    try {
-        if (
-            (previousVersion === undefined || semver_gt(version, previousVersion)) &&
-            Container.config.showWelcomeOnInstall &&
-            window.state.focused
-        ) {
-            window
-                .showInformationMessage(
-                    `Jira and Bitbucket (Official) has been updated to v${version}`,
-                    'Release notes',
-                )
-                .then((userChoice) => {
-                    if (userChoice === 'Release notes') {
-                        commands.executeCommand('extension.open', ExtensionId, 'changelog');
-                    }
-                });
-        }
-    } catch (e) {
-        Logger.error(e, 'Error showing welcome page');
+    if (
+        (previousVersion === undefined || semver_gt(version, previousVersion)) &&
+        Container.config.showWelcomeOnInstall &&
+        window.state.focused
+    ) {
+        window
+            .showInformationMessage(`Jira and Bitbucket (Official) has been updated to v${version}`, 'Release notes')
+            .then((userChoice) => {
+                if (userChoice === 'Release notes') {
+                    commands.executeCommand('extension.open', ExtensionId, 'changelog');
+                }
+            });
     }
 }
 
 async function sendAnalytics(version: string, globalState: Memento) {
-    try {
-        const previousVersion = globalState.get<string>(GlobalStateVersionKey);
-        globalState.update(GlobalStateVersionKey, version);
+    const previousVersion = globalState.get<string>(GlobalStateVersionKey);
+    globalState.update(GlobalStateVersionKey, version);
 
-        if (previousVersion === undefined) {
-            installedEvent(version)
-                .then((e) => Container.analyticsClient.sendTrackEvent(e))
-                .catch((e) => {
-                    Logger.error(e, 'Error sending installed event');
-                });
-
-            return;
-        }
-
-        if (semver_gt(version, previousVersion)) {
-            Logger.info(`Atlassian for VS Code upgraded from v${previousVersion} to v${version}`);
-            upgradedEvent(version, previousVersion)
-                .then((e) => Container.analyticsClient.sendTrackEvent(e))
-                .catch((e) => {
-                    Logger.error(e, 'Error sending upgraded event');
-                });
-        }
-
-        launchedEvent(
-            env.remoteName || 'local',
-            env.uriScheme,
-            Container.siteManager.numberOfAuthedSites(ProductJira, true),
-            Container.siteManager.numberOfAuthedSites(ProductJira, false),
-            Container.siteManager.numberOfAuthedSites(ProductBitbucket, true),
-            Container.siteManager.numberOfAuthedSites(ProductBitbucket, false),
-            Container.config.jira.enabled,
-            Container.config.bitbucket.enabled,
-            Container.config.rovodev.enabled,
-        )
+    if (previousVersion === undefined) {
+        installedEvent(version)
             .then((e) => Container.analyticsClient.sendTrackEvent(e))
             .catch((e) => {
-                Logger.error(e, 'Error sending launched event');
+                Logger.error(e, 'Error sending installed event');
             });
-    } catch (e) {
-        Logger.error(e, 'Error sending analytics');
+
+        return;
     }
+
+    if (semver_gt(version, previousVersion)) {
+        Logger.info(`Atlassian for VS Code upgraded from v${previousVersion} to v${version}`);
+        upgradedEvent(version, previousVersion)
+            .then((e) => Container.analyticsClient.sendTrackEvent(e))
+            .catch((e) => {
+                Logger.error(e, 'Error sending upgraded event');
+            });
+    }
+
+    launchedEvent(
+        env.remoteName || 'local',
+        env.uriScheme,
+        Container.siteManager.numberOfAuthedSites(ProductJira, true),
+        Container.siteManager.numberOfAuthedSites(ProductJira, false),
+        Container.siteManager.numberOfAuthedSites(ProductBitbucket, true),
+        Container.siteManager.numberOfAuthedSites(ProductBitbucket, false),
+        Container.config.jira.enabled,
+        Container.config.bitbucket.enabled,
+        Container.config.rovodev.enabled,
+    )
+        .then((e) => Container.analyticsClient.sendTrackEvent(e))
+        .catch((e) => {
+            Logger.error(e, 'Error sending launched event');
+        });
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {
-    try {
-        if (!RovodevStaticConfig.isBBY) {
-            RovoDevProcessManager.deactivateRovoDevProcessManager();
-            NotificationManagerImpl.getInstance().stopListening();
-        }
-
-        unregisterErrorReporting();
-        Container.featureFlagClient.dispose();
-    } catch (e) {
-        Logger.error(e, 'Error during extension deactivation');
+    if (!RovodevStaticConfig.isBBY) {
+        RovoDevProcessManager.deactivateRovoDevProcessManager();
+        NotificationManagerImpl.getInstance().stopListening();
     }
+
+    unregisterErrorReporting();
+    Container.featureFlagClient.dispose();
 }
