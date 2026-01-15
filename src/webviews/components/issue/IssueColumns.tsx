@@ -104,7 +104,7 @@ export const AssigneeColumn = (data: ItemData) => {
     const avatar = assignee?.avatarUrls && assignee.avatarUrls['24x24'] ? assignee.avatarUrls['24x24'] : '';
 
     return (
-        <div style={{ width: '180px', minWidth: '140px' }}>
+        <div style={{ width: '100%', maxWidth: '180px' }}>
             <DropdownMenu
                 isOpen={isOpen}
                 onOpenChange={(attrs) => setIsOpen(attrs.isOpen)}
@@ -115,14 +115,25 @@ export const AssigneeColumn = (data: ItemData) => {
                         appearance="subtle"
                         style={{
                             padding: '4px 6px',
+                            maxWidth: '100%',
                         }}
                         iconAfter={<ChevronDownIcon label="" size="small" />}
                     >
-                        <span className="ac-flex" style={{ alignItems: 'center', gap: '3px' }}>
+                        <span className="ac-flex" style={{ alignItems: 'center', gap: '3px', overflow: 'hidden' }}>
                             {(assignee && <Avatar size="xsmall" src={avatar} style={{ flexShrink: 0 }} />) || (
                                 <div style={{ height: '16px' }} />
                             )}
-                            <span style={{ fontSize: '12px', lineHeight: '12px' }}>{label}</span>
+                            <span
+                                style={{
+                                    fontSize: '12px',
+                                    lineHeight: '12px',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                }}
+                            >
+                                {label}
+                            </span>
                         </span>
                     </Button>
                 )}

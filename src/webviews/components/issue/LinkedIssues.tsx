@@ -57,7 +57,6 @@ const LinkedIssueRow: React.FC<RowProps> = ({
         setIsDeleting(false);
     };
 
-    // Data object для переиспользования компонентов из IssueColumns
     const itemData = {
         issue,
         onIssueClick,
@@ -74,12 +73,13 @@ const LinkedIssueRow: React.FC<RowProps> = ({
                 gap: '8px',
                 padding: '6px 8px',
                 borderBottom: '1px solid var(--vscode-widget-border)',
+                overflow: 'hidden',
             }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
             {/* Issue Key + Type */}
-            <div style={{ flex: '0 0 auto', minWidth: '80px', maxWidth: '120px' }}>
+            <div style={{ flex: '0 0 100px', width: '100px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                     <em
                         style={{
@@ -116,16 +116,16 @@ const LinkedIssueRow: React.FC<RowProps> = ({
             </div>
 
             {/* Summary */}
-            <div style={{ flex: '1 1 auto', minWidth: 0 }}>{Summary(itemData)}</div>
+            <div style={{ flex: '1 1 60px', minWidth: '60px', overflow: 'hidden' }}>{Summary(itemData)}</div>
 
             {/* Priority */}
             <div style={{ flex: '0 0 24px', display: 'flex', justifyContent: 'center' }}>{Priority(itemData)}</div>
 
             {/* Assignee */}
-            <div style={{ flex: '0 0 140px' }}>{AssigneeColumn(itemData)}</div>
+            <div style={{ flex: '0 1 160px', minWidth: '100px' }}>{AssigneeColumn(itemData)}</div>
 
             {/* Status */}
-            <div style={{ flex: '0 0 130px' }}>{StatusColumn(itemData)}</div>
+            <div style={{ flex: '0 1 150px', minWidth: '90px' }}>{StatusColumn(itemData)}</div>
 
             {/* Delete button */}
             <div
