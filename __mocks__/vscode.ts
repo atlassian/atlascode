@@ -14,5 +14,10 @@ module.exports = {
             exports: {},
             activate: jest.fn().mockResolvedValue({}),
         })),
-    },    
+    },
+    QuickPickItemKind: {
+        Separator: -1,
+        Default: 0,
+    },
+    ThemeIcon: jest.fn().mockImplementation((iconName) => ({ id: iconName })),
 }
