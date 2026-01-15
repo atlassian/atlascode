@@ -53,8 +53,8 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
 }) => {
     const [isOpen, setIsOpen] = React.useState(false);
 
-    if (!onDeepPlanToggled && !onYoloModeToggled && !onAskModeToggled) {
-        return false;
+    if (!onDeepPlanToggled && !onYoloModeToggled && !onFullContextToggled && !onAskModeToggled) {
+        return null;
     }
 
     return (
