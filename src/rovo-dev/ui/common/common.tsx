@@ -26,8 +26,13 @@ mdParser.renderer.rules.link_open = function (tokens, idx, options, env, self) {
         const hrefAttr = token.attrs ? token.attrs[hrefIndex] : null;
         if (hrefAttr && hrefAttr[1]) {
             const hrefValue = hrefAttr[1];
-
-            token.attrs!.splice(hrefIndex, 1);
+            if (Array.isArray(token.attrs)) {
+                token.attrs!.splice(hrefIndex, 1);
+            } else {
+                throw new Error(
+                    `Token attrs is not an array. Actual value: ${token.attrs} with type ${typeof token.attrs}`,
+                );
+            }
             token.attrSet('data-href', hrefValue);
             token.attrSet('class', 'rovodev-markdown-link');
         }
