@@ -20,13 +20,13 @@ export class RovoDevLogger extends Logger {
         // `retrieveCallerName` must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
         // If not, the function will return the name of a method inside Logger.
         const callerName = retrieveCallerName();
-        this.errorInternal('RovoDev', ex, callerName, errorMessage, ...params);
+        this.errorInternal('RovoDev', ex, callerName, errorMessage, RovoDevLogger._rovoDevSessionId, ...params);
     }
 
     public override error(ex: Error, errorMessage?: string, ...params: string[]): void {
         // `retrieveCallerName` must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
         // If not, the function will return the name of a method inside Logger.
         const callerName = retrieveCallerName();
-        this.errorInternal('RovoDev', ex, callerName, errorMessage, ...params);
+        this.errorInternal('RovoDev', ex, callerName, errorMessage, RovoDevLogger._rovoDevSessionId, ...params);
     }
 }
