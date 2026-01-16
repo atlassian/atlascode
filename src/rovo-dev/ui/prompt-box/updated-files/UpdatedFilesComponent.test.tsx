@@ -112,7 +112,7 @@ describe('UpdatedFilesComponent', () => {
             />,
         );
 
-        const fileItems = screen.getAllByLabelText('modified-file-item');
+        const fileItems = screen.getAllByLabelText(/^Modified file:/);
         expect(fileItems).toHaveLength(3);
     });
 

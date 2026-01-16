@@ -1,4 +1,4 @@
-import { IPC } from 'node-ipc';
+import IPCModule from 'node-ipc';
 import { uptime } from 'process';
 import { Memento } from 'vscode';
 
@@ -15,7 +15,7 @@ jest.mock('process', () => ({
 jest.mock('../logger');
 
 describe('negotiate', () => {
-    const mockIPC = IPC as jest.MockedClass<typeof IPC>;
+    const mockIPC = IPCModule.IPC as jest.MockedClass<typeof IPCModule.IPC>;
     const mockUptime = uptime as jest.MockedFunction<typeof uptime>;
     const mockLogger = Logger as jest.Mocked<typeof Logger>;
 
@@ -59,7 +59,7 @@ describe('negotiate', () => {
 
             expect(mockIPCInstance.serve).toHaveBeenCalledWith(expect.any(Function));
             expect(mockIPCInstance.server.start).toHaveBeenCalled();
-            expect(mockLogger.debug).toHaveBeenCalledWith('atlascode-12345 is listening');
+            expect(mockLogger.debug).toHaveBeenCalledWith('[IPC] server on atlascode-12345 is listening');
         });
 
         it('should handle ping messages correctly', () => {

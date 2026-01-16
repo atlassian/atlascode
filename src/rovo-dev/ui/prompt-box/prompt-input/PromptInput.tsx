@@ -14,6 +14,7 @@ import { RovodevStaticConfig } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
 
 import { rovoDevTextareaStyles } from '../../rovoDevViewStyles';
+import { onKeyDownHandler } from '../../utils';
 import PromptContextPopup from '../prompt-context-popup/PromptContextPopup';
 import PromptSettingsPopup from '../prompt-settings-popup/PromptSettingsPopup';
 import {
@@ -261,7 +262,14 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                     </Tooltip>
                     {isDeepPlanEnabled && onDeepPlanToggled && (
                         <Tooltip content="Disable deep plan">
-                            <div className="mode-indicator" onClick={() => onDeepPlanToggled()}>
+                            <div
+                                className="mode-indicator"
+                                onClick={() => onDeepPlanToggled()}
+                                onKeyDown={onKeyDownHandler(onDeepPlanToggled)}
+                                tabIndex={0}
+                                role="button"
+                                aria-label="Disable deep plan"
+                            >
                                 <AiGenerativeTextSummaryIcon label="deep plan icon" />
                                 <CrossIcon size="small" label="disable deep plan" />
                             </div>
@@ -269,7 +277,14 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                     )}
                     {isFullContextEnabled && onFullContextToggled && (
                         <Tooltip content="Disable Full-Context mode">
-                            <div className="mode-indicator" onClick={() => onFullContextToggled()}>
+                            <div
+                                className="mode-indicator"
+                                onClick={() => onFullContextToggled()}
+                                onKeyDown={onKeyDownHandler(onFullContextToggled)}
+                                tabIndex={0}
+                                role="button"
+                                aria-label="Disable Full-Context mode"
+                            >
                                 <TelescopeIcon label="full-context mode icon" />
                                 <CrossIcon size="small" label="disable full-context mode" />
                             </div>
@@ -277,7 +292,14 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                     )}{' '}
                     {isYoloModeEnabled && onYoloModeToggled && (
                         <Tooltip content="Disable YOLO mode">
-                            <div className="mode-indicator" onClick={() => onYoloModeToggled()}>
+                            <div
+                                className="mode-indicator"
+                                onClick={() => onYoloModeToggled()}
+                                onKeyDown={onKeyDownHandler(onYoloModeToggled)}
+                                tabIndex={0}
+                                role="button"
+                                aria-label="Disable YOLO mode"
+                            >
                                 <LockUnlockedIcon label="yolo mode icon" />
                                 <CrossIcon size="small" label="disable yolo mode" />
                             </div>
