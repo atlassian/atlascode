@@ -9,7 +9,7 @@ export interface RovoDevAuthInfo {
         email: string;
         avatarUrl: string;
     };
-    state: number; // AuthInfoState.Valid = 0
+    state: AuthInfoState;
     username: string;
     password: string;
     host: string;
@@ -44,8 +44,8 @@ export async function createValidatedRovoDevAuthInfo(
         throw new Error('Please enter a valid Atlassian Cloud site (*.atlassian.net)');
     }
 
-    // Validate credentials and fetch user information
-    const userInfo = await validateCredentialsAndFetchUser(normalizedHost, email, apiToken);
+    // Fetch user information (validates credentials implicitly)
+    const userInfo = await fetchUserInfo(normalizedHost, email, apiToken);
 
     // Fetch cloud ID for the site
     const cloudId = await fetchCloudId(normalizedHost);
@@ -67,13 +67,10 @@ export async function createValidatedRovoDevAuthInfo(
 }
 
 /**
- * Validates credentials by calling the GraphQL API and returns user information.
+ * Fetches user information from the GraphQL API using the provided credentials.
+ * This is done mainly to validate that the credentials are correct.
  */
-async function validateCredentialsAndFetchUser(
-    host: string,
-    email: string,
-    apiToken: string,
-): Promise<GraphQLUserInfo> {
+async function fetchUserInfo(host: string, email: string, apiToken: string): Promise<GraphQLUserInfo> {
     try {
         const response = await fetch(`https://${host}/gateway/api/graphql`, {
             method: 'POST',
@@ -82,7 +79,7 @@ async function validateCredentialsAndFetchUser(
                 Authorization: `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
             },
             body: JSON.stringify({
-                query: `query test {
+                query: `query fetchUserInfo {
                     me {
                         user {
                             name,

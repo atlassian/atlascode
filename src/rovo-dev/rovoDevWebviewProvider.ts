@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import path from 'path';
 import { setCommandContext } from 'src/commandContext';
-import { Container } from 'src/container';
 import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { safeWaitFor } from 'src/rovo-dev/util/waitFor';
@@ -678,35 +677,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
 
         try {
-            const sites = this.extensionApi.jira.getSites();
-            const credentialsPromises = sites.map(async (site) => {
-                try {
-                    const authInfo = await Container.credentialManager.getAuthInfo(site);
-                    if (!authInfo || !authInfo.user?.email) {
-                        return null;
-                    }
-                    return {
-                        host: site.host,
-                        email: authInfo.user.email,
-                    };
-                } catch {
-                    return null;
-                }
-            });
-
-            const allCredentials = await Promise.all(credentialsPromises);
-            const credentials = allCredentials.filter((c): c is { host: string; email: string } => c !== null);
-
-            // Remove duplicates by creating a unique key
-            const uniqueCredentials = Array.from(new Map(credentials.map((c) => [`${c.host}-${c.email}`, c])).values());
+            const credentials = await this.extensionApi.auth.getCredentialHints();
 
             await this._webView.postMessage({
                 type: RovoDevProviderMessageType.SetExistingJiraCredentials,
-                credentials: uniqueCredentials,
+                credentials,
             });
         } catch (error) {
             // Silently fail - autocomplete is a nice-to-have feature
-            RovoDevLogger.error(error, 'Failed to fetch existing Jira credentials for autocomplete');
+            RovoDevLogger.error(error, 'Failed to fetch credential hints for autocomplete');
         }
     }
 
