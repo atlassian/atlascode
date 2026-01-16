@@ -2,23 +2,18 @@ import './ActionItem.css';
 
 import * as React from 'react';
 
+import { onKeyDownHandler } from '../../utils';
+
 export const ActionItem: React.FC<{
     icon: string | React.ReactNode;
     text: string;
     onClick: () => void;
 }> = ({ icon, text, onClick }) => {
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onClick();
-        }
-    };
-
     return (
         <div
             className="action-item"
             onClick={onClick}
-            onKeyDown={handleKeyDown}
+            onKeyDown={onKeyDownHandler(onClick)}
             tabIndex={0}
             role="button"
             aria-label={text}

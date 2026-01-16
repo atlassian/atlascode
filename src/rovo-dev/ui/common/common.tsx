@@ -5,7 +5,7 @@ import React from 'react';
 import { ChatMessageItem } from '../messaging/ChatMessageItem';
 import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
-import { ChatMessage, parseToolReturnMessage } from '../utils';
+import { ChatMessage, onKeyDownHandler, parseToolReturnMessage } from '../utils';
 import { DialogMessageItem } from './DialogMessage';
 
 const mdParser = new MarkdownIt({
@@ -218,17 +218,10 @@ export const FileLozenge: React.FC<{
         }
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if ((e.key === 'Enter' || e.key === ' ') && !isDisabled && openFile) {
-            e.preventDefault();
-            openFile(filePath);
-        }
-    };
-
     return (
         <div
             onClick={handleClick}
-            onKeyDown={handleKeyDown}
+            onKeyDown={!isDisabled && openFile ? onKeyDownHandler(() => openFile(filePath)) : undefined}
             tabIndex={isDisabled ? -1 : 0}
             role="button"
             aria-label={`Open file: ${filePath}`}

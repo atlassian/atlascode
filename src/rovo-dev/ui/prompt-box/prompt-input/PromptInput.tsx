@@ -13,6 +13,7 @@ import { RovodevStaticConfig } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
 
 import { rovoDevTextareaStyles } from '../../rovoDevViewStyles';
+import { onKeyDownHandler } from '../../utils';
 import PromptContextPopup from '../prompt-context-popup/PromptContextPopup';
 import PromptSettingsPopup from '../prompt-settings-popup/PromptSettingsPopup';
 import {
@@ -257,12 +258,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                             <div
                                 className="deep-plan-indicator"
                                 onClick={() => onDeepPlanToggled()}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
-                                        e.preventDefault();
-                                        onDeepPlanToggled();
-                                    }
-                                }}
+                                onKeyDown={onKeyDownHandler(onDeepPlanToggled)}
                                 tabIndex={0}
                                 role="button"
                                 aria-label="Disable deep plan"
@@ -277,12 +273,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                             <div
                                 className="deep-plan-indicator"
                                 onClick={() => onFullContextToggled()}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
-                                        e.preventDefault();
-                                        onFullContextToggled();
-                                    }
-                                }}
+                                onKeyDown={onKeyDownHandler(onFullContextToggled)}
                                 tabIndex={0}
                                 role="button"
                                 aria-label="Disable Full-Context mode"
@@ -297,12 +288,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                             <div
                                 className="deep-plan-indicator"
                                 onClick={() => onYoloModeToggled()}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
-                                        e.preventDefault();
-                                        onYoloModeToggled();
-                                    }
-                                }}
+                                onKeyDown={onKeyDownHandler(onYoloModeToggled)}
                                 tabIndex={0}
                                 role="button"
                                 aria-label="Disable YOLO mode"
@@ -319,12 +305,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                             className="prompt-button-primary"
                             aria-label="send"
                             onClick={() => handleSend()}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                    e.preventDefault();
-                                    handleSend();
-                                }
-                            }}
+                            onKeyDown={onKeyDownHandler(handleSend)}
                             disabled={disabled || !isWaitingForPrompt || isEmpty}
                         >
                             <SendIcon label="Send prompt" />
@@ -337,12 +318,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                 id="bordered-button"
                                 aria-label="stop"
                                 onClick={() => onCancel()}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
-                                        e.preventDefault();
-                                        onCancel();
-                                    }
-                                }}
+                                onKeyDown={onKeyDownHandler(onCancel)}
                                 disabled={disabled || currentState.state === 'CancellingResponse'}
                             >
                                 <VideoStopOverlayIcon color={token('color.icon.danger')} label="Stop" />

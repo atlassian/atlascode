@@ -4,7 +4,7 @@ import Tooltip from '@atlaskit/tooltip';
 import { isAbsolute, join } from 'path';
 import React from 'react';
 
-import { ToolReturnParseResult } from '../../utils';
+import { onKeyDownHandler, ToolReturnParseResult } from '../../utils';
 
 export const ModifiedFileItem: React.FC<{
     msg: ToolReturnParseResult;
@@ -41,13 +41,6 @@ export const ModifiedFileItem: React.FC<{
         onKeep(msg);
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onFileClick(filePath);
-        }
-    };
-
     const getDisplayPath = (): string => {
         if (!filePath) {
             return '';
@@ -71,7 +64,7 @@ export const ModifiedFileItem: React.FC<{
             aria-label={`Modified file: ${filePath}`}
             className="modified-file-item"
             onClick={() => onFileClick(filePath)}
-            onKeyDown={handleKeyDown}
+            onKeyDown={onKeyDownHandler(() => onFileClick(filePath))}
             tabIndex={0}
             role="button"
             title={getDisplayPath()}

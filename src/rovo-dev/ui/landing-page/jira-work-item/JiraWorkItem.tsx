@@ -2,6 +2,8 @@ import './JiraWorkItem.css';
 
 import * as React from 'react';
 
+import { onKeyDownHandler } from '../../utils';
+
 export interface JiraWorkItemProps {
     issueKey: string;
     summary: string;
@@ -42,18 +44,11 @@ export const JiraWorkItem: React.FC<JiraWorkItemProps> = ({
 
     const displayText = `${issueKey}: ${summary}`;
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onClick();
-        }
-    };
-
     return (
         <div
             className="jira-work-item"
             onClick={onClick}
-            onKeyDown={handleKeyDown}
+            onKeyDown={onKeyDownHandler(onClick)}
             tabIndex={0}
             role="button"
             title={displayText}
