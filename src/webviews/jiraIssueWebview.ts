@@ -980,9 +980,19 @@ export class JiraIssueWebview
                         try {
                             const client = await Container.clientManager.jiraClient(msg.site);
 
-                            // We wish we could just call the delete issuelink endpoint, but it doesn't support OAuth 2.0
-                            //await client.deleteIssuelink(msg.objectWithId.id);
+                            // Use direct DELETE request to issueLink endpoint
+                            const apiVersion = client.apiVersion || '3';
+                            const baseApiUrl = msg.site.baseApiUrl.replace(/\/rest$/, '');
+                            const deleteUrl = `${baseApiUrl}/rest/api/${apiVersion}/issueLink/${msg.objectWithId.id}`;
 
+                            await client.transportFactory()(deleteUrl, {
+                                method: 'DELETE',
+                                headers: {
+                                    Authorization: await client.authorizationProvider('DELETE', deleteUrl),
+                                },
+                            });
+
+                            // Update local state after successful deletion
                             if (
                                 !this._editUIData.fieldValues['issuelinks'] ||
                                 !Array.isArray(this._editUIData.fieldValues['issuelinks'])
@@ -993,10 +1003,6 @@ export class JiraIssueWebview
                             this._editUIData.fieldValues['issuelinks'] = this._editUIData.fieldValues[
                                 'issuelinks'
                             ].filter((link: any) => link.id !== msg.objectWithId.id);
-
-                            await client.editIssue(this._issue.key, {
-                                ['issuelinks']: this._editUIData.fieldValues['issuelinks'],
-                            });
 
                             this.postMessage({
                                 type: 'fieldValueUpdate',

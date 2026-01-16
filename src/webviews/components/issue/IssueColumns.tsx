@@ -104,7 +104,7 @@ export const AssigneeColumn = (data: ItemData) => {
     const avatar = assignee?.avatarUrls && assignee.avatarUrls['24x24'] ? assignee.avatarUrls['24x24'] : '';
 
     return (
-        <div style={{ width: '180px', minWidth: '140px' }}>
+        <div style={{ width: '100%', maxWidth: '180px' }}>
             <DropdownMenu
                 isOpen={isOpen}
                 onOpenChange={(attrs) => setIsOpen(attrs.isOpen)}
@@ -115,28 +115,26 @@ export const AssigneeColumn = (data: ItemData) => {
                         appearance="subtle"
                         style={{
                             padding: '4px 6px',
-                            minHeight: '32px',
-                            height: 'auto',
-                            width: '100%',
-                            justifyContent: 'flex-start',
+                            maxWidth: '100%',
                         }}
                         iconAfter={<ChevronDownIcon label="" size="small" />}
                     >
-                        <div className="ac-flex" style={{ alignItems: 'center', gap: '3px', flex: 1 }}>
-                            {assignee && <Avatar size="xsmall" src={avatar} style={{ flexShrink: 0 }} />}
+                        <span className="ac-flex" style={{ alignItems: 'center', gap: '3px', overflow: 'hidden' }}>
+                            {(assignee && <Avatar size="xsmall" src={avatar} style={{ flexShrink: 0 }} />) || (
+                                <div style={{ height: '16px' }} />
+                            )}
                             <span
                                 style={{
                                     fontSize: '12px',
-                                    wordBreak: 'break-word',
-                                    overflowWrap: 'break-word',
-                                    whiteSpace: 'normal',
-                                    lineHeight: '1.2',
-                                    textAlign: 'left',
+                                    lineHeight: '12px',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
                                 }}
                             >
                                 {label}
                             </span>
-                        </div>
+                        </span>
                     </Button>
                 )}
                 placement="bottom-start"
@@ -291,7 +289,6 @@ export const Summary = (data: ItemData) => (
                 textOverflow: 'ellipsis',
                 margin: 0,
                 lineHeight: '1.4',
-                maxWidth: '120px',
             }}
         >
             {data.issue.summary}

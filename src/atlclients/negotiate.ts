@@ -1,4 +1,4 @@
-import { IPC } from 'node-ipc';
+import IPCModule from 'node-ipc';
 import { pid, uptime } from 'process';
 import { Memento } from 'vscode';
 
@@ -16,14 +16,13 @@ const LAUNCH_DELAY_SECONDS = 20;
 /*
     To avoid race conditions we need to ensure that only one workspace is responsible for refreshing tokens. When a workspace is opened
     it writes its process ID to the global state. When it comes time to refresh tokens all processes will send a message to the refreshing
-    process via IPC to make sure it's still active. If it is no further action is taken (that process is resposnible for refreshing tokens).
-    If it doesn't respond all processes will try and write their PID to the global configuration and another round of messages will 
+    process via IPC to make sure it's still active. If it is no further action is taken (that process is responsible for refreshing tokens).
+    If it doesn't respond all processes will try and write their PID to the global configuration and another round of messages will
     be sent to ensure that the responsible process is responding.
 */
 
 export function startListening(requestSite: (site: DetailedSiteInfo) => void) {
-    const ipc = new IPC();
-
+    const ipc = new IPCModule.IPC();
     ipc.config.id = `atlascode-${pid}`;
     ipc.config.retry = 1500;
     ipc.config.silent = true;
@@ -32,20 +31,20 @@ export function startListening(requestSite: (site: DetailedSiteInfo) => void) {
             const tag = Math.floor(Math.random() * 1000);
 
             const site: DetailedSiteInfo = JSON.parse(message);
-            Logger.debug(`${tag}: Received ping for site ${site.baseApiUrl}`);
+            Logger.debug(`[IPC] server ${tag}: Received ping for site ${site.baseApiUrl}`);
             try {
                 requestSite(site);
             } catch (e) {
                 Logger.error(e, 'Error in Negotiate.startListening requestSite');
             }
-            Logger.debug(`${tag}: done requesting site`);
+            Logger.debug(`[IPC] server ${tag}: done requesting site`);
             ipc.server.emit(socket, ACK_MESSAGE);
-            Logger.debug(`${tag}: done responding`);
+            Logger.debug(`[IPC] server ${tag}: done responding`);
         });
     });
     ipc.server.start();
 
-    Logger.debug(`${ipc.config.id} is listening`);
+    Logger.debug(`[IPC] server on ${ipc.config.id} is listening`);
 }
 
 function sleep(ms: number) {
@@ -112,7 +111,7 @@ export class Negotiator {
     }
 
     async sendSiteRequest(myPort: number, theirPort: number, site: string): Promise<boolean> {
-        const ipc = new IPC();
+        const ipc = new IPCModule.IPC();
         const myAddress = `atlascode-${myPort}`;
         const theirAddress = `atlascode-${theirPort}`;
 
@@ -125,18 +124,19 @@ export class Negotiator {
         ipc.config.silent = true;
         return new Promise((resolve, reject) => {
             const timeout = setTimeout(() => {
-                Logger.debug(`${tag}: Timed out waiting on ${theirAddress}`);
+                Logger.debug(`[IPC] client ${tag}: Timed out waiting on ${theirAddress} IPC connection`);
                 ipc.disconnect(theirAddress);
                 resolve(false);
             }, TIMEOUT);
 
             ipc.connectTo(theirAddress, () => {
                 ipc.of[theirAddress].on('connect', () => {
+                    Logger.debug(`[IPC] client ${tag}: connected`);
                     ipc.of[theirAddress].emit(PING_MESSAGE, site);
                 });
                 ipc.of[theirAddress].on(ACK_MESSAGE, () => {
                     clearTimeout(timeout);
-                    Logger.debug(`${tag}: ${theirPort} acked`);
+                    Logger.debug(`[IPC] client ${tag}: ${theirPort} acked`);
                     ipc.disconnect(theirAddress);
                     resolve(true);
                 });
