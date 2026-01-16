@@ -222,6 +222,7 @@ export class JiraProjectManager extends Disposable {
                             Container.analyticsApi.fireRateLimitHitEvent(
                                 '/rest/api/2/mypermissions',
                                 'filterProjectsByPermission',
+                                site.isCloud,
                                 size,
                                 batchNumber,
                             );

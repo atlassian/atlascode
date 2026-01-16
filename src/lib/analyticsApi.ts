@@ -74,5 +74,11 @@ export interface AnalyticsApi {
     fireApiTokenRetainedEvent(): Promise<void>;
 
     // Rate Limiting
-    fireRateLimitHitEvent(endpoint: string, context: string, batchSize?: number, batchNumber?: number): Promise<void>;
+    fireRateLimitHitEvent(
+        endpoint: string,
+        context: string,
+        isCloud: boolean,
+        batchSize?: number,
+        batchNumber?: number,
+    ): Promise<void>;
 }

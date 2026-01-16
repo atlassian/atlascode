@@ -189,6 +189,7 @@ export async function errorEvent(
 export async function rateLimitHitEvent(
     endpoint: string,
     context: string,
+    isCloud: boolean,
     batchSize?: number,
     batchNumber?: number,
 ): Promise<TrackEvent> {
@@ -196,6 +197,7 @@ export async function rateLimitHitEvent(
         attributes: {
             endpoint,
             context,
+            isCloud,
             batchSize,
             batchNumber,
         },

@@ -410,8 +410,14 @@ export class VSCAnalyticsApi implements AnalyticsApi {
         this._analyticsClient.sendTrackEvent(event);
     }
 
-    async fireRateLimitHitEvent(endpoint: string, context: string, batchSize?: number, batchNumber?: number) {
-        const event = await rateLimitHitEvent(endpoint, context, batchSize, batchNumber);
+    async fireRateLimitHitEvent(
+        endpoint: string,
+        context: string,
+        isCloud: boolean,
+        batchSize?: number,
+        batchNumber?: number,
+    ) {
+        const event = await rateLimitHitEvent(endpoint, context, isCloud, batchSize, batchNumber);
         this._analyticsClient.sendTrackEvent(event);
     }
 }
