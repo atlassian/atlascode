@@ -72,4 +72,7 @@ export interface AnalyticsApi {
     fireIssueSuggestionSettingsChangeEvent(newSettings: IssueSuggestionSettings): Promise<void>;
 
     fireApiTokenRetainedEvent(): Promise<void>;
+
+    // Rate Limiting
+    fireRateLimitHitEvent(endpoint: string, context: string, batchSize?: number, batchNumber?: number): Promise<void>;
 }

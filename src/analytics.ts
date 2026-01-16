@@ -186,6 +186,22 @@ export async function errorEvent(
     return trackEvent('errorEvent_v2', 'atlascode', { attributes });
 }
 
+export async function rateLimitHitEvent(
+    endpoint: string,
+    context: string,
+    batchSize?: number,
+    batchNumber?: number,
+): Promise<TrackEvent> {
+    return trackEvent('rateLimitHit', 'api', {
+        attributes: {
+            endpoint,
+            context,
+            batchSize,
+            batchNumber,
+        },
+    });
+}
+
 // Feature Flag Events
 
 export const enum ClientInitializedErrorType {

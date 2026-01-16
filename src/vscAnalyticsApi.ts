@@ -47,6 +47,7 @@ import {
     prTaskEvent,
     prUrlCopiedEvent,
     quickFlowEvent,
+    rateLimitHitEvent,
     saveManualCodeEvent,
     sentryCapturedExceptionFailedEvent,
     startIssueCreationEvent,
@@ -406,6 +407,11 @@ export class VSCAnalyticsApi implements AnalyticsApi {
 
     async fireSentryCapturedExceptionFailedEvent({ error }: { error: string }) {
         const event = await sentryCapturedExceptionFailedEvent(error);
+        this._analyticsClient.sendTrackEvent(event);
+    }
+
+    async fireRateLimitHitEvent(endpoint: string, context: string, batchSize?: number, batchNumber?: number) {
+        const event = await rateLimitHitEvent(endpoint, context, batchSize, batchNumber);
         this._analyticsClient.sendTrackEvent(event);
     }
 }
