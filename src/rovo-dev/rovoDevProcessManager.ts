@@ -219,7 +219,7 @@ export abstract class RovoDevProcessManager {
     }
 
     public static get state(): RovoDevProcessState {
-        if (this.extensionApi.metadata.isBoysenberry()) {
+        if (RovoDevProcessManager.extensionApi.metadata.isBoysenberry()) {
             const httpPort = parseInt(process.env[RovoDevInfo.envVars.port] || '0');
             const sessionToken = process.env.ROVODEV_SERVE_SESSION_TOKEN || '';
             return { state: 'Boysenberry', hostname: RovoDevInfo.hostname, httpPort, sessionToken };
@@ -410,7 +410,7 @@ export abstract class RovoDevProcessManager {
 
         if (featureFlagClient.checkGate(Features.DedicatedRovoDevAuth)) {
             // Use dedicated RovoDev credentials
-            const rovoDevAuth = await this.extensionApi.auth.getRovoDevAuthInfo();
+            const rovoDevAuth = await RovoDevProcessManager.extensionApi.auth.getRovoDevAuthInfo();
 
             // If we have RovoDev credentials, use them
             if (rovoDevAuth && rovoDevAuth.host) {
@@ -420,20 +420,20 @@ export abstract class RovoDevProcessManager {
                     authInfo: rovoDevAuth,
                     isValid: rovoDevAuth.state === AuthInfoState.Valid,
                     isStaging: false,
-                    siteCloudId: '',
+                    siteCloudId: rovoDevAuth.cloudId,
                 };
             }
 
             // If RequireDedicatedRovoDevAuth is disabled and no RovoDev credentials exist,
             // fall back to Jira credentials for migration
             if (!featureFlagClient.checkGate(Features.RequireDedicatedRovoDevAuth)) {
-                return await this.extensionApi.auth.getCloudPrimaryAuthSite();
+                return await RovoDevProcessManager.extensionApi.auth.getCloudPrimaryAuthSite();
             }
 
             return undefined;
         } else {
             // Fall back to primary Jira auth
-            return await this.extensionApi.auth.getCloudPrimaryAuthSite();
+            return await RovoDevProcessManager.extensionApi.auth.getCloudPrimaryAuthSite();
         }
     }
 
