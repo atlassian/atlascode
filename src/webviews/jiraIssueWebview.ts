@@ -692,7 +692,7 @@ export class JiraIssueWebview
 
                         await client.editIssue(
                             this._issue!.key,
-                            teamId ? { [Object.keys(newFieldValues)[0]]: teamId } : newFieldValues,
+                            teamId ? { [Object.keys(newFieldValues)[0]]: { id: teamId } } : newFieldValues,
                         );
                         if (
                             Object.keys(newFieldValues).some(
