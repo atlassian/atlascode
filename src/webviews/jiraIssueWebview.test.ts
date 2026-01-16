@@ -956,11 +956,22 @@ describe('JiraIssueWebview', () => {
                 nonce: 'nonce-123',
             };
 
+            const mockTransport = jest.fn().mockResolvedValue({});
+            mockJiraClient.transportFactory.mockReturnValue(mockTransport);
+            mockJiraClient.authorizationProvider.mockResolvedValue('Bearer test-token');
+            mockJiraClient.apiVersion = '3';
+
             const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
 
             await jiraIssueWebview['onMessageReceived'](msg);
 
-            expect(mockJiraClient.editIssue).toHaveBeenCalledWith(mockIssue.key, { issuelinks: [existingLinks[1]] });
+            const expectedUrl = `${mockSiteDetails.baseApiUrl.replace(/\/rest$/, '')}/rest/api/3/issueLink/${linkId}`;
+            expect(mockTransport).toHaveBeenCalledWith(expectedUrl, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: 'Bearer test-token',
+                },
+            });
             expect(jiraIssueWebview['_editUIData'].fieldValues['issuelinks']).toHaveLength(1);
             expect(jiraIssueWebview['_editUIData'].fieldValues['issuelinks'][0].id).toBe('link-2');
             expect(postMessageSpy).toHaveBeenCalled();
