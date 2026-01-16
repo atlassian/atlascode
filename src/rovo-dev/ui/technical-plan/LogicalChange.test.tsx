@@ -78,7 +78,7 @@ describe('LogicalChange', () => {
             />,
         );
 
-        fireEvent.click(screen.getByRole('button'));
+        fireEvent.click(screen.getByRole('button', { name: 'Expand' }));
 
         expect(screen.getByText('Update function signature')).toBeTruthy();
         expect(screen.getByText('Add new method')).toBeTruthy();
@@ -95,8 +95,8 @@ describe('LogicalChange', () => {
             />,
         );
 
-        fireEvent.click(screen.getByRole('button'));
-        fireEvent.click(screen.getByRole('button'));
+        fireEvent.click(screen.getByRole('button', { name: 'Expand' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Collapse' }));
 
         expect(screen.queryByText('Update function signature')).not.toBeTruthy();
         expect(screen.getByLabelText('Expand')).toBeTruthy();
@@ -116,7 +116,7 @@ describe('LogicalChange', () => {
                 checkFileExists={mockCheckFileExists}
             />,
         );
-        fireEvent.click(screen.getByRole('button'));
+        fireEvent.click(screen.getByRole('button', { name: 'Expand' }));
 
         expect(screen.getByText('Update function signature')).toBeTruthy();
         expect(screen.queryByRole('list')).not.toBeTruthy();
@@ -131,7 +131,7 @@ describe('LogicalChange', () => {
                 checkFileExists={mockCheckFileExists}
             />,
         );
-        fireEvent.click(screen.getByRole('button'));
+        fireEvent.click(screen.getByRole('button', { name: 'Expand' }));
 
         expect(screen.getByRole('list')).toBeTruthy();
         expect(screen.getAllByRole('listitem')).toHaveLength(2);
@@ -151,7 +151,7 @@ describe('LogicalChange', () => {
                 checkFileExists={mockCheckFileExists}
             />,
         );
-        fireEvent.click(screen.getByRole('button'));
+        fireEvent.click(screen.getByRole('button', { name: 'Expand' }));
 
         expect(screen.queryByText('Update function signature')).not.toBeTruthy();
         expect(screen.queryByRole('list')).not.toBeTruthy();
@@ -166,7 +166,7 @@ describe('LogicalChange', () => {
                 checkFileExists={mockCheckFileExists}
             />,
         );
-        fireEvent.click(screen.getByRole('button'));
+        fireEvent.click(screen.getByRole('button', { name: 'Expand' }));
 
         // This test assumes FileToChangeComponent renders clickable elements
         // You may need to adjust based on actual FileToChangeComponent implementation
