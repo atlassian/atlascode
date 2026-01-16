@@ -13,6 +13,7 @@ export const RovodevCommands = {
     OpenRovoDevGlobalMemory: 'atlascode.openRovoDevGlobalMemory',
     OpenRovoDevLogFile: 'atlascode.openRovoDevLogFile',
     FocusRovoDevWindow: 'atlascode.views.rovoDev.webView.focus',
+    RestartProcess: 'atlascode.rovodev.restartProcess',
 } as const;
 
 /**

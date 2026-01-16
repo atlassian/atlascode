@@ -87,6 +87,8 @@ export class RovoDevChatProvider {
         return !!this._pendingPrompt;
     }
 
+    private _abortController: AbortController | null = null;
+
     constructor(
         private readonly _isBoysenberry: boolean,
         private _telemetryProvider: RovoDevTelemetryProvider,
@@ -185,8 +187,10 @@ export class RovoDevChatProvider {
         this.beginNewPrompt();
 
         const fetchOp = async (client: RovoDevApiClient) => {
+            this._abortController?.abort();
+            this._abortController = new AbortController();
             // Boysenberry is always in YOLO mode
-            const response = await client.chat(requestPayload, !this._isBoysenberry);
+            const response = await client.chat(requestPayload, !this._isBoysenberry, this._abortController.signal);
 
             this._telemetryProvider.fireTelemetryEvent({
                 action: 'rovoDevPromptSent',
@@ -201,6 +205,7 @@ export class RovoDevChatProvider {
         };
 
         await this.executeStreamingApiWithErrorHandling('chat', fetchOp);
+        this._abortController = null;
     }
 
     public async executeReplay(): Promise<void> {
@@ -213,13 +218,17 @@ export class RovoDevChatProvider {
         this._replayInProgress = true;
 
         const fetchOp = async (client: RovoDevApiClient) => {
-            const response = client.replay();
+            this._abortController?.abort();
+            this._abortController = new AbortController();
+
+            const response = client.replay(this._abortController?.signal);
             return this.processResponse('replay', response);
         };
 
         await this.executeStreamingApiWithErrorHandling('replay', fetchOp);
 
         this._replayInProgress = false;
+        this._abortController = null;
     }
 
     public async executeCancel(fromNewSession: boolean): Promise<boolean> {
@@ -685,6 +694,14 @@ export class RovoDevChatProvider {
             try {
                 await func(this._rovoDevApiClient);
             } catch (error) {
+                if (error.name === 'AbortError') {
+                    await webview.postMessage({
+                        type: RovoDevProviderMessageType.CompleteMessage,
+                        promptId: this._currentPromptId,
+                    });
+                    RovoDevLogger.info('Rovo Dev API request aborted by user');
+                    return;
+                }
                 // the error is retriable only when it happens during the streaming of a 'chat' response
                 await this.processError(error, { isRetriable: sourceApi === 'chat' });
             }
@@ -844,5 +861,10 @@ export class RovoDevChatProvider {
         }
 
         return { text: exceptionText, link: links.length === 1 ? links[0] : undefined };
+    }
+
+    public executeAbortSignal() {
+        this._abortController?.abort();
+        this._abortController = null;
     }
 }

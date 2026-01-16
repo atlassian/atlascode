@@ -254,6 +254,7 @@ describe('RovoDevChatProvider', () => {
                     ]),
                 }),
                 true,
+                expect.any(AbortSignal),
             );
         });
 
@@ -687,6 +688,7 @@ describe('RovoDevChatProvider', () => {
                     context: expect.arrayContaining([expect.objectContaining({ file_path: '/path/file1.ts' })]),
                 }),
                 true,
+                expect.any(AbortSignal),
             );
 
             const callArgs = mockApiClient.chat.mock.calls[0][0] as any;
@@ -724,6 +726,7 @@ describe('RovoDevChatProvider', () => {
                     context: [],
                 }),
                 true,
+                expect.any(AbortSignal),
             );
         });
 
@@ -752,6 +755,7 @@ describe('RovoDevChatProvider', () => {
                     message: 'use fullcontext: test prompt',
                 }),
                 true,
+                expect.any(AbortSignal),
             );
         });
 
@@ -789,6 +793,7 @@ describe('RovoDevChatProvider', () => {
                     ]),
                 }),
                 true,
+                expect.any(AbortSignal),
             );
         });
 
@@ -899,6 +904,7 @@ describe('RovoDevChatProvider', () => {
                     ]),
                 }),
                 true,
+                expect.any(AbortSignal),
             );
         });
     });
