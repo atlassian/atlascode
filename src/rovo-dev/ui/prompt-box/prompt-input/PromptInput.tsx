@@ -305,7 +305,6 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                             className="prompt-button-primary"
                             aria-label="send"
                             onClick={() => handleSend()}
-                            onKeyDown={onKeyDownHandler(handleSend)}
                             disabled={disabled || !isWaitingForPrompt || isEmpty}
                         >
                             <SendIcon label="Send prompt" />
@@ -318,7 +317,6 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                 id="bordered-button"
                                 aria-label="stop"
                                 onClick={() => onCancel()}
-                                onKeyDown={onKeyDownHandler(onCancel)}
                                 disabled={disabled || currentState.state === 'CancellingResponse'}
                             >
                                 <VideoStopOverlayIcon color={token('color.icon.danger')} label="Stop" />
