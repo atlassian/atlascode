@@ -42,8 +42,23 @@ export const JiraWorkItem: React.FC<JiraWorkItemProps> = ({
 
     const displayText = `${issueKey}: ${summary}`;
 
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick();
+        }
+    };
+
     return (
-        <div className="jira-work-item" onClick={onClick} title={displayText}>
+        <div
+            className="jira-work-item"
+            onClick={onClick}
+            onKeyDown={handleKeyDown}
+            tabIndex={0}
+            role="button"
+            title={displayText}
+            aria-label={displayText}
+        >
             {isBrokenImage || hasImageError ? (
                 // Show transparent placeholder to maintain layout
                 <div className="jira-work-item-icon" />

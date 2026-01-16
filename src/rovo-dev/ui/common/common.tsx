@@ -218,8 +218,23 @@ export const FileLozenge: React.FC<{
         }
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if ((e.key === 'Enter' || e.key === ' ') && !isDisabled && openFile) {
+            e.preventDefault();
+            openFile(filePath);
+        }
+    };
+
     return (
-        <div onClick={handleClick} className={isDisabled ? 'file-lozenge file-lozenge-disabled' : 'file-lozenge'}>
+        <div
+            onClick={handleClick}
+            onKeyDown={handleKeyDown}
+            tabIndex={isDisabled ? -1 : 0}
+            role="button"
+            aria-label={`Open file: ${filePath}`}
+            aria-disabled={isDisabled}
+            className={isDisabled ? 'file-lozenge file-lozenge-disabled' : 'file-lozenge'}
+        >
             <span className="file-path">{fileTitle || filePath}</span>
         </div>
     );

@@ -41,6 +41,13 @@ export const ModifiedFileItem: React.FC<{
         onKeep(msg);
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onFileClick(filePath);
+        }
+    };
+
     const getDisplayPath = (): string => {
         if (!filePath) {
             return '';
@@ -61,9 +68,12 @@ export const ModifiedFileItem: React.FC<{
 
     return (
         <div
-            aria-label="modified-file-item"
+            aria-label={`Modified file: ${filePath}`}
             className="modified-file-item"
             onClick={() => onFileClick(filePath)}
+            onKeyDown={handleKeyDown}
+            tabIndex={0}
+            role="button"
             title={getDisplayPath()}
         >
             <div className={getClassName(msg)}>

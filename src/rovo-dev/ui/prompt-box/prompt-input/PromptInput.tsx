@@ -254,7 +254,19 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                     </Tooltip>
                     {isDeepPlanEnabled && onDeepPlanToggled && (
                         <Tooltip content="Disable deep plan">
-                            <div className="deep-plan-indicator" onClick={() => onDeepPlanToggled()}>
+                            <div
+                                className="deep-plan-indicator"
+                                onClick={() => onDeepPlanToggled()}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        onDeepPlanToggled();
+                                    }
+                                }}
+                                tabIndex={0}
+                                role="button"
+                                aria-label="Disable deep plan"
+                            >
                                 <AiGenerativeTextSummaryIcon label="deep plan icon" />
                                 <CrossIcon size="small" label="disable deep plan" />
                             </div>
@@ -262,7 +274,19 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                     )}
                     {isFullContextEnabled && onFullContextToggled && (
                         <Tooltip content="Disable Full-Context mode">
-                            <div className="deep-plan-indicator" onClick={() => onFullContextToggled()}>
+                            <div
+                                className="deep-plan-indicator"
+                                onClick={() => onFullContextToggled()}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        onFullContextToggled();
+                                    }
+                                }}
+                                tabIndex={0}
+                                role="button"
+                                aria-label="Disable Full-Context mode"
+                            >
                                 <TelescopeIcon label="full-context mode icon" />
                                 <CrossIcon size="small" label="disable full-context mode" />
                             </div>
@@ -270,7 +294,19 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                     )}{' '}
                     {isYoloModeEnabled && onYoloModeToggled && (
                         <Tooltip content="Disable YOLO mode">
-                            <div className="deep-plan-indicator" onClick={() => onYoloModeToggled()}>
+                            <div
+                                className="deep-plan-indicator"
+                                onClick={() => onYoloModeToggled()}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        onYoloModeToggled();
+                                    }
+                                }}
+                                tabIndex={0}
+                                role="button"
+                                aria-label="Disable YOLO mode"
+                            >
                                 <LockUnlockedIcon label="yolo mode icon" />
                                 <CrossIcon size="small" label="disable yolo mode" />
                             </div>
@@ -283,6 +319,12 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                             className="prompt-button-primary"
                             aria-label="send"
                             onClick={() => handleSend()}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    handleSend();
+                                }
+                            }}
                             disabled={disabled || !isWaitingForPrompt || isEmpty}
                         >
                             <SendIcon label="Send prompt" />
@@ -295,6 +337,12 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                 id="bordered-button"
                                 aria-label="stop"
                                 onClick={() => onCancel()}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        onCancel();
+                                    }
+                                }}
                                 disabled={disabled || currentState.state === 'CancellingResponse'}
                             >
                                 <VideoStopOverlayIcon color={token('color.icon.danger')} label="Stop" />
