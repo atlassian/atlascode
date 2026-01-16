@@ -307,7 +307,14 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                     )}{' '}
                     {isAskModeEnabled && onAskModeToggled && (
                         <Tooltip content="Disable Ask mode">
-                            <div className="mode-indicator" onClick={() => onAskModeToggled()}>
+                            <div
+                                className="mode-indicator"
+                                onClick={() => onAskModeToggled()}
+                                onKeyDown={onKeyDownHandler(onAskModeToggled)}
+                                tabIndex={0}
+                                role="button"
+                                aria-label="Disable Ask mode"
+                            >
                                 <AiGenerativeRemoveSilenceIcon label="ask mode icon" />
                                 <CrossIcon size="small" label="disable ask mode" />
                             </div>
