@@ -1,7 +1,7 @@
 import vscode, { Disposable, Event, EventEmitter } from 'vscode';
 
-import { ProductBitbucket, ProductJira } from '../atlclients/authInfo';
-import { AssignedJiraItemsViewId, PullRequestTreeViewId } from '../constants';
+import { ProductJira } from '../atlclients/authInfo';
+import { AssignedJiraItemsViewId } from '../constants';
 import { Container } from '../container';
 import { SitesAvailableUpdateEvent } from '../siteManager';
 
@@ -52,8 +52,6 @@ export class ExplorerFocusManager extends Disposable {
                 if (!isRovoDevVisible) {
                     vscode.commands.executeCommand(`${AssignedJiraItemsViewId}.focus`);
                 }
-            } else if (updateEvent.product.key === ProductBitbucket.key) {
-                vscode.commands.executeCommand(`${PullRequestTreeViewId}.focus`);
             }
         }
     }
