@@ -623,7 +623,6 @@ export class CredentialManager implements Disposable {
                 return CommandContext.IsJiraAuthenticated;
             case ProductBitbucket.key:
                 return CommandContext.IsBBAuthenticated;
-            // Added for uniformity, currently unused in conditional views
             case ProductRovoDev.key:
                 return CommandContext.IsRovoDevAuthenticated;
         }
@@ -640,7 +639,18 @@ export class CredentialManager implements Disposable {
     public async getRovoDevAuthInfo(): Promise<AuthInfo | undefined> {
         Logger.debug(`Retrieving RovoDev auth info`);
         try {
-            return await this.getAuthInfoFromSecretStorage(ProductRovoDev.key, CredentialManager.ROVODEV_CREDENTIAL_ID);
+            const authInfo = await this.getAuthInfoFromSecretStorage(
+                ProductRovoDev.key,
+                CredentialManager.ROVODEV_CREDENTIAL_ID,
+            );
+
+            // Set context based on whether credentials exist
+            const cmdctx = this.commandContextFor(ProductRovoDev);
+            if (cmdctx !== undefined) {
+                setCommandContext(cmdctx, authInfo !== undefined && authInfo !== emptyAuthInfo);
+            }
+
+            return authInfo;
         } catch (e) {
             Logger.error(e, `secretstorage error for RovoDev: ${e}`);
             return undefined;

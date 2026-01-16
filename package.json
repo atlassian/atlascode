@@ -183,7 +183,7 @@
                 "command": "atlascode.rovodev.logout",
                 "title": "Sign out",
                 "category": "Rovo Dev",
-                "enablement": "atlascode:rovoDevEnabled"
+                "enablement": "atlascode:rovoDevEnabled && atlascode:isRovoDevAuthenticated"
             },
             {
                 "command": "atlascode.rovodev.restartLsp",
@@ -743,7 +743,7 @@
                 },
                 {
                     "command": "atlascode.rovodev.logout",
-                    "when": "view == atlascode.views.rovoDev.webView",
+                    "when": "view == atlascode.views.rovoDev.webView && atlascode:isRovoDevAuthenticated",
                     "group": "rovoDevContextMenu2@2"
                 },
                 {
