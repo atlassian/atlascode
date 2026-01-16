@@ -3,6 +3,7 @@ import { v4 } from 'uuid';
 
 import { ExtensionApi } from './api/extensionApi';
 import {
+    AgentMode,
     RovoDevApiClient,
     RovoDevChatRequest,
     RovoDevChatRequestContext,
@@ -71,6 +72,14 @@ export class RovoDevChatProvider {
         }
     }
 
+    private _agentMode: AgentMode = 'default';
+    public get agentMode() {
+        return this._agentMode;
+    }
+    public set agentMode(value: AgentMode) {
+        this._agentMode = value;
+    }
+
     public fullContextMode = false;
 
     private _currentPromptId: string = '';
@@ -98,6 +107,15 @@ export class RovoDevChatProvider {
 
     public async setReady(rovoDevApiClient: RovoDevApiClient) {
         this._rovoDevApiClient = rovoDevApiClient;
+
+        // Initialize agent mode from API
+        try {
+            const agentModeResp = await this._rovoDevApiClient!.getAgentMode();
+            this.agentMode = agentModeResp.mode;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            RovoDevLogger.error(new Error(`Failed to initialize agent mode: ${errorMessage}`));
+        }
 
         if (this._pendingPrompt) {
             const pendingPrompt = this._pendingPrompt;
@@ -672,6 +690,20 @@ export class RovoDevChatProvider {
             const renderTime = performance.now() - this._lastMessageSentTime;
             this._telemetryProvider.perfLogger.promptLastMessageRendered(promptId, renderTime);
             this._lastMessageSentTime = undefined;
+        }
+    }
+
+    public async setAgentMode(mode: AgentMode) {
+        if (!this._rovoDevApiClient) {
+            return;
+        }
+
+        try {
+            await this._rovoDevApiClient.setAgentMode(mode);
+            this._agentMode = mode;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            throw new Error(`Failed to set agent mode: ${errorMessage}`);
         }
     }
 

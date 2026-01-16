@@ -2,6 +2,7 @@ import AiGenerativeTextSummaryIcon from '@atlaskit/icon/core/ai-generative-text-
 import CrossIcon from '@atlaskit/icon/core/cross';
 import CustomizeIcon from '@atlaskit/icon/core/customize';
 import LockUnlockedIcon from '@atlaskit/icon/core/lock-unlocked';
+import AiGenerativeRemoveSilenceIcon from '@atlaskit/icon-lab/core/ai-generative-remove-silence';
 import TelescopeIcon from '@atlaskit/icon-lab/core/telescope';
 import Popup, { PopupComponentProps } from '@atlaskit/popup';
 import Toggle from '@atlaskit/toggle';
@@ -11,9 +12,11 @@ interface PromptSettingsPopupProps {
     onDeepPlanToggled?: () => void;
     onYoloModeToggled?: () => void;
     onFullContextToggled?: () => void;
+    onAskModeToggled?: () => void;
     isDeepPlanEnabled: boolean;
     isYoloModeEnabled: boolean;
     isFullContextEnabled: boolean;
+    isAskModeEnabled: boolean;
     onClose: () => void;
 }
 
@@ -41,15 +44,17 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
     onDeepPlanToggled,
     onYoloModeToggled,
     onFullContextToggled,
+    onAskModeToggled,
     isDeepPlanEnabled,
     isYoloModeEnabled,
     isFullContextEnabled,
+    isAskModeEnabled,
     onClose,
 }) => {
     const [isOpen, setIsOpen] = React.useState(false);
 
-    if (!onDeepPlanToggled && !onYoloModeToggled) {
-        return false;
+    if (!onDeepPlanToggled && !onYoloModeToggled && !onFullContextToggled && !onAskModeToggled) {
+        return null;
     }
 
     return (
@@ -110,6 +115,16 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                             action={onYoloModeToggled}
                             actionType="toggle"
                             toggled={isYoloModeEnabled}
+                        />
+                    )}
+                    {onAskModeToggled && (
+                        <PromptSettingsItem
+                            icon={<AiGenerativeRemoveSilenceIcon label="Ask mode" />}
+                            label="Ask mode"
+                            description="Ask a question in read-only mode (no file changes or terminal access)."
+                            action={onAskModeToggled}
+                            actionType="toggle"
+                            toggled={isAskModeEnabled}
                         />
                     )}
                 </div>

@@ -882,7 +882,7 @@ body {
     padding-top: 4px;
 }
 
-.deep-plan-indicator {
+.mode-indicator {
     display: flex;
     align-items: center;
     gap: 4px;
@@ -993,10 +993,10 @@ body {
     border: 2px solid var(--vscode-focusBorder);
 }
 
-.vscode-high-contrast .deep-plan-indicator {
+.vscode-high-contrast .mode-indicator {
     border: 2px solid var(--vscode-contrastBorder);
 }
-.vscode-high-contrast .deep-plan-indicator:hover {
+.vscode-high-contrast .mode-indicator:hover {
     border: 2px solid var(--vscode-focusBorder);
 }
 

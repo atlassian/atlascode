@@ -142,6 +142,12 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         description: 'Toggle tool confirmations',
         command: { title: 'Yolo Mode', id: 'rovo-dev.toggleYoloMode', tooltip: 'Toggle tool confirmations' },
     },
+    {
+        label: '/ask',
+        insertText: '/ask',
+        description: 'Ask a question in read-only mode (no file changes or terminal access)',
+        command: { title: 'Ask Mode', id: 'rovo-dev.toggleAskMode', tooltip: 'Toggle Ask mode' },
+    },
 ];
 
 export const createSlashCommandProvider = (commands: SlashCommand[]): monaco.languages.CompletionItemProvider => {
