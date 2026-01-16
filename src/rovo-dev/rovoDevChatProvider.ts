@@ -838,7 +838,7 @@ export class RovoDevChatProvider {
             exceptionText = exceptionText.replace('{link1}', '').trim();
         } else if (links.length > 1) {
             for (let i = 1; i <= links.length; ++i) {
-                exceptionText = exceptionText.replace('{link' + i + '}', links[i - 1].link);
+                exceptionText = exceptionText.replace('{link' + i + '}', links[i - 1].text);
             }
             links = [];
         }
