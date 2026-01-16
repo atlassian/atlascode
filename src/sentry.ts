@@ -17,6 +17,8 @@ export interface SentryConfig {
     environment?: string; // Environment name (default: 'development')
     sampleRate?: number; // Sample rate 0.0-1.0 (default: 1.0)
     atlasCodeVersion?: string; // Version tag for events
+    machineId?: string; // VS Code machine ID for tracking
+    appInstanceId?: string; // Extension instance ID for tracking
 }
 
 export interface ErrorContext {
@@ -102,6 +104,14 @@ export class SentryService {
                 // Add version tag
                 const atlascodeVersion = extensions.getExtension(ExtensionId)?.packageJSON.version;
                 scope.setTag('atlascodeVersion', atlascodeVersion);
+
+                // Add tracking tags for atlascode/rovodev transactions
+                if (this.config?.machineId) {
+                    scope.setTag('machineId', this.config.machineId);
+                }
+                if (this.config?.appInstanceId) {
+                    scope.setTag('appInstanceId', this.config.appInstanceId);
+                }
 
                 // Add extra context
                 if (context?.extra) {
