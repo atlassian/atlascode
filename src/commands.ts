@@ -396,6 +396,9 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(RovodevCommands.RovodevShareFeedback, () =>
             Container.rovodevWebviewProvider.executeTriggerFeedback(),
         ),
+        commands.registerCommand(RovodevCommands.RovodevLogout, () => {
+            Container.rovodevWebviewProvider.executeRovoDevLogout();
+        }),
         commands.registerCommand(RovodevCommands.RovodevAddToContext, async () => {
             const context = buildContext(window.activeTextEditor, vscodeContext);
             if (!context || context.length === 0) {

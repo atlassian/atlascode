@@ -137,6 +137,48 @@ export class ExtensionApi {
                 return false;
             }
         },
+
+        saveRovoDevAuthInfo: async (authInfo: any): Promise<void> => {
+            await Container.credentialManager.saveRovoDevAuthInfo(authInfo);
+        },
+
+        getRovoDevAuthInfo: async (): Promise<any | undefined> => {
+            return await Container.credentialManager.getRovoDevAuthInfo();
+        },
+
+        removeRovoDevAuthInfo: async (): Promise<void> => {
+            await Container.credentialManager.removeRovoDevAuthInfo();
+        },
+
+        /**
+         * Get credential hints (host + email) from all configured Jira sites.
+         * Used for autocomplete suggestions in credential forms.
+         *
+         * @returns Array of unique {host, email} combinations from all sites
+         */
+        getCredentialHints: async (): Promise<{ host: string; email: string }[]> => {
+            const sites = Container.siteManager.getSitesAvailable(ProductJira);
+            const credentialsPromises = sites.map(async (site) => {
+                try {
+                    const authInfo = await Container.credentialManager.getAuthInfo(site);
+                    if (!authInfo || !authInfo.user?.email) {
+                        return null;
+                    }
+                    return {
+                        host: site.host,
+                        email: authInfo.user.email,
+                    };
+                } catch {
+                    return null;
+                }
+            });
+
+            const allCredentials = await Promise.all(credentialsPromises);
+            const credentials = allCredentials.filter((c): c is { host: string; email: string } => c !== null);
+
+            // Remove duplicates by creating a unique key
+            return Array.from(new Map(credentials.map((c) => [`${c.host}-${c.email}`, c])).values());
+        },
     };
 
     commands = {

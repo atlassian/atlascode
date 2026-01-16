@@ -11,6 +11,7 @@ export enum CommandContext {
     JiraLoginTree = 'atlascode:jiraLoginTreeEnabled',
     IsJiraAuthenticated = 'atlascode:isJiraAuthenticated',
     IsBBAuthenticated = 'atlascode:isBBAuthenticated',
+    IsRovoDevAuthenticated = 'atlascode:isRovoDevAuthenticated',
     BbyEnvironmentActive = 'atlascode:bbyEnvironmentActive',
     DebugMode = 'atlascode:debugMode',
     UseNewAuthFlow = 'atlascode:useNewAuthFlow',

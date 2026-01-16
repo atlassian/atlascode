@@ -25,10 +25,13 @@ import {
 } from 'vscode';
 
 import { GitErrorCodes } from '../typings/git';
+import { FeatureFlagClient } from '../util/featureFlags/featureFlagClient';
+import { Features } from '../util/features';
 import { RovodevCommandContext, RovodevCommands } from './api/componentApi';
 import { DetailedSiteInfo, ExtensionApi, MinimalIssue } from './api/extensionApi';
 import { RovoDevApiClient, RovoDevApiError, RovoDevHealthcheckResponse } from './client';
 import { buildErrorDetails } from './errorDetailsBuilder';
+import { createValidatedRovoDevAuthInfo } from './rovoDevAuthValidator';
 import { RovoDevChatContextProvider } from './rovoDevChatContextProvider';
 import { RovoDevChatProvider } from './rovoDevChatProvider';
 import { RovoDevContentTracker } from './rovoDevContentTracker';
@@ -472,6 +475,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         });
                         break;
 
+                    case RovoDevViewResponseType.SubmitRovoDevAuth:
+                        await this.handleRovoDevAuth(e.host, e.email, e.apiToken);
+                        break;
+
                     case RovoDevViewResponseType.OpenFolder:
                         await this.extensionApi.commands.openFolder();
                         break;
@@ -557,13 +564,21 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private async sendProviderReadyEvent(userEmail: string | undefined) {
         const yoloMode = await this.loadYoloModeFromStorage();
+        const featureFlagClient = FeatureFlagClient.getInstance();
+
         await this._webView!.postMessage({
             type: RovoDevProviderMessageType.ProviderReady,
             isAtlassianUser: !!userEmail?.endsWith('@atlassian.com'),
             workspacePath: workspace.workspaceFolders?.[0]?.uri.fsPath,
             homeDir: process.env.HOME || process.env.USERPROFILE,
             yoloMode,
+            features: {
+                dedicatedRovoDevAuth: featureFlagClient.checkGate(Features.DedicatedRovoDevAuth),
+            },
         });
+
+        // Send existing Jira credentials for autocomplete
+        await this.sendExistingJiraCredentials();
     }
 
     private beginNewSession(sessionId: string | null, manuallyCreated: boolean): void {
@@ -653,6 +668,24 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 await this._chatProvider.executeReplay();
             });
             await sessionsManager.showPicker();
+        }
+    }
+
+    private async sendExistingJiraCredentials(): Promise<void> {
+        if (!this._webView) {
+            return;
+        }
+
+        try {
+            const credentials = await this.extensionApi.auth.getCredentialHints();
+
+            await this._webView.postMessage({
+                type: RovoDevProviderMessageType.SetExistingJiraCredentials,
+                credentials,
+            });
+        } catch (error) {
+            // Silently fail - autocomplete is a nice-to-have feature
+            RovoDevLogger.error(error, 'Failed to fetch credential hints for autocomplete');
         }
     }
 
@@ -777,6 +810,57 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
+    private async handleRovoDevAuth(host: string, email: string, apiToken: string): Promise<void> {
+        const webview = this._webView!;
+
+        try {
+            // Send validating status to UI
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.RovoDevAuthValidating,
+            });
+
+            // Validate credentials and create AuthInfo (will throw on failure)
+            const authInfo = await createValidatedRovoDevAuthInfo(host, email, apiToken);
+
+            // Save to RovoDev credential store
+            await this.extensionApi.auth.saveRovoDevAuthInfo(authInfo);
+
+            // Send success status to UI
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.RovoDevAuthValidationComplete,
+                success: true,
+            });
+
+            // Trigger process restart to use new credentials
+            await RovoDevProcessManager.initializeRovoDev(this._context, true);
+        } catch (error) {
+            RovoDevLogger.error(error, 'Error saving RovoDev auth');
+            const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+
+            // Send error status to UI
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.RovoDevAuthValidationComplete,
+                success: false,
+                error: errorMessage,
+            });
+        }
+    }
+
+    private async handleRovoDevLogout(): Promise<void> {
+        try {
+            // Clear RovoDev auth info from credential store
+            await this.extensionApi.auth.removeRovoDevAuthInfo();
+
+            // Trigger process refresh to reinitialize without credentials
+            await RovoDevProcessManager.initializeRovoDev(this._context, true);
+
+            window.showInformationMessage('Logged out from Rovo Dev');
+        } catch (error) {
+            RovoDevLogger.error(error, 'Error logging out from RovoDev');
+            window.showErrorMessage(`Failed to logout: ${error}`);
+        }
+    }
+
     private async executeOpenFile(
         filePath: string,
         tryShowDiff: boolean,
@@ -885,6 +969,17 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await webview.postMessage({
             type: RovoDevProviderMessageType.ShowFeedbackForm,
         });
+    }
+
+    public async executeRovoDevLogout() {
+        const webview = this._webView!;
+
+        await webview.postMessage({
+            type: RovoDevProviderMessageType.SetInitializing,
+            isPromptPending: false,
+        });
+
+        await this.handleRovoDevLogout();
     }
 
     private async executeFilterModifiedFilesByContent(files: ModifiedFile[]) {

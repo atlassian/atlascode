@@ -1,9 +1,11 @@
 import * as React from 'react';
 import { State } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevFeatures } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
 import { DetailedSiteInfo, MinimalIssue } from '../../api/extensionApiTypes';
 import { McpConsentChoice } from '../rovoDevViewMessages';
 import { DisabledMessage } from './disabled-messages/DisabledMessage';
+import { CredentialHint } from './disabled-messages/RovoDevLoginForm';
 import { RovoDevActions, RovoDevJiraWorkItems } from './RovoDevSuggestions';
 
 const RovoDevImg = () => {
@@ -30,22 +32,28 @@ export const RovoDevLanding: React.FC<{
     currentState: State;
     isHistoryEmpty: boolean;
     onLoginClick: (openApiTokenLogin: boolean) => void;
+    onRovoDevAuthSubmit: (host: string, email: string, apiToken: string) => void;
     onOpenFolder: () => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
     setPromptText: (context: string) => void;
     jiraWorkItems: MinimalIssue<DetailedSiteInfo>[] | undefined;
     onJiraItemClick: (issue: MinimalIssue<DetailedSiteInfo>) => void;
     onLinkClick: (url: string) => void;
+    credentialHints?: CredentialHint[];
+    features?: RovoDevFeatures;
 }> = ({
     currentState,
     isHistoryEmpty,
     onLoginClick,
+    onRovoDevAuthSubmit,
     onOpenFolder,
     onMcpChoice,
     setPromptText,
     jiraWorkItems,
     onJiraItemClick,
     onLinkClick,
+    credentialHints,
+    features,
 }) => {
     const shouldHideSuggestions = React.useMemo(
         () =>
@@ -86,9 +94,12 @@ export const RovoDevLanding: React.FC<{
             <DisabledMessage
                 currentState={currentState}
                 onLoginClick={onLoginClick}
+                onRovoDevAuthSubmit={onRovoDevAuthSubmit}
                 onMcpChoice={onMcpChoice}
                 onOpenFolder={onOpenFolder}
                 onLinkClick={onLinkClick}
+                credentialHints={credentialHints}
+                features={features}
             />
         </div>
     );
