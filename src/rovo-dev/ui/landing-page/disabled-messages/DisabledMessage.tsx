@@ -15,7 +15,7 @@ const loginFormContainerStyles: React.CSSProperties = {
     marginTop: '24px',
     width: '80%',
     maxWidth: '500px',
-    minWidth: '300px',
+    minWidth: '250px',
 };
 
 export const DisabledMessage: React.FC<{
