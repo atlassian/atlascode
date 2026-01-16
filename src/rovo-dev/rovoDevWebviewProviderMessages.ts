@@ -34,6 +34,7 @@ export const enum RovoDevProviderMessageType {
     SetDebugPanel = 'setDebugPanel',
     SetPromptText = 'setPromptText',
     SetJiraWorkItems = 'setJiraWorkItems',
+    SetExistingJiraCredentials = 'setExistingJiraCredentials',
     CheckFileExistsComplete = 'checkFileExistsComplete',
     SetThinkingBlockEnabled = 'setThinkingBlockEnabled',
     RestoreState = 'restoreState',
@@ -99,6 +100,10 @@ export type RovoDevProviderMessage =
     | ReducerAction<
           RovoDevProviderMessageType.SetJiraWorkItems,
           { issues: MinimalIssue<DetailedSiteInfo>[] | undefined }
+      >
+    | ReducerAction<
+          RovoDevProviderMessageType.SetExistingJiraCredentials,
+          { credentials: { host: string; email: string }[] }
       >
     | ReducerAction<
           RovoDevProviderMessageType.CheckFileExistsComplete,

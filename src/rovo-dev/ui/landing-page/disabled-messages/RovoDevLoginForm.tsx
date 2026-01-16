@@ -1,32 +1,25 @@
+import Button from '@atlaskit/button/new';
+import { CreatableSelect } from '@atlaskit/select';
+import Textfield from '@atlaskit/textfield';
 import * as React from 'react';
-
-import { inChatButtonStyles, inChatSecondaryButtonStyles } from '../../rovoDevViewStyles';
 
 const formStyles: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px',
+    gap: '16px',
     marginTop: '16px',
-    maxWidth: '400px',
 };
 
-const inputStyles: React.CSSProperties = {
-    width: '100%',
-    padding: '8px 12px',
-    border: '1px solid var(--vscode-input-border)',
-    backgroundColor: 'var(--vscode-input-background)',
-    color: 'var(--vscode-input-foreground)',
-    borderRadius: '2px',
-    fontSize: '13px',
-    fontFamily: 'var(--vscode-font-family)',
-    boxSizing: 'border-box',
+const fieldRowStyles: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
 };
 
 const labelStyles: React.CSSProperties = {
-    fontSize: '12px',
-    fontWeight: 500,
-    marginBottom: '4px',
-    color: 'var(--vscode-foreground)',
+    fontSize: '11px',
+    fontWeight: 600,
+    textAlign: 'left',
 };
 
 const buttonContainerStyles: React.CSSProperties = {
@@ -35,14 +28,41 @@ const buttonContainerStyles: React.CSSProperties = {
     marginTop: '8px',
 };
 
+// Fix z-index issues with dropdown menus in webview
+const selectStyles = {
+    placeholder: (base: any) => ({
+        ...base,
+        textAlign: 'left',
+    }),
+    input: (base: any) => ({
+        ...base,
+        textAlign: 'left',
+    }),
+    singleValue: (base: any) => ({
+        ...base,
+        textAlign: 'left',
+    }),
+    menu: (base: any) => ({ ...base, zIndex: 9999 }),
+    menuPortal: (base: any) => ({ ...base, zIndex: 9999 }),
+};
+
+export interface CredentialHint {
+    host: string;
+    email: string;
+}
+
 export const RovoDevLoginForm: React.FC<{
     onSubmit: (host: string, email: string, apiToken: string) => void;
     onCancel: () => void;
-}> = ({ onSubmit, onCancel }) => {
+    credentialHints?: CredentialHint[];
+}> = ({ onSubmit, onCancel, credentialHints = [] }) => {
     const [host, setHost] = React.useState('');
     const [email, setEmail] = React.useState('');
     const [apiToken, setApiToken] = React.useState('');
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+    const emailSelectRef = React.useRef<any>(null);
+    const apiTokenInputRef = React.useRef<HTMLInputElement>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -58,75 +78,98 @@ export const RovoDevLoginForm: React.FC<{
         }
     };
 
+    // Create unique host and email options from existing credentials
+    const hostOptions = React.useMemo(
+        () => Array.from(new Set(credentialHints.map((c) => c.host))).map((h) => ({ label: h, value: h })),
+        [credentialHints],
+    );
+    const emailOptions = React.useMemo(
+        () => Array.from(new Set(credentialHints.map((c) => c.email))).map((e) => ({ label: e, value: e })),
+        [credentialHints],
+    );
+
     return (
         <form onSubmit={handleSubmit} style={formStyles}>
-            <div>
-                <label style={labelStyles}>Jira Cloud Site</label>
-                <input
-                    type="text"
-                    value={host}
-                    onChange={(e) => setHost(e.target.value)}
+            <div style={fieldRowStyles}>
+                <label htmlFor="host" style={labelStyles}>
+                    Jira Cloud Site
+                </label>
+                <CreatableSelect
+                    inputId="host"
+                    options={hostOptions}
                     placeholder="yoursite.atlassian.net"
-                    style={inputStyles}
-                    disabled={isSubmitting}
-                    required
+                    isClearable
+                    isDisabled={isSubmitting}
+                    value={host ? { label: host, value: host } : null}
+                    onChange={(option: any) => {
+                        setHost(option?.value || '');
+                        if (option?.value) {
+                            setTimeout(() => emailSelectRef.current?.focus(), 0);
+                        }
+                    }}
+                    formatCreateLabel={(inputValue: any) => `Use "${inputValue}"`}
+                    styles={selectStyles}
+                    menuPortalTarget={document.body}
                 />
             </div>
 
-            <div>
-                <label style={labelStyles}>Email</label>
-                <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+            <div style={fieldRowStyles}>
+                <label htmlFor="email" style={labelStyles}>
+                    Email
+                </label>
+                <CreatableSelect
+                    ref={emailSelectRef}
+                    inputId="email"
+                    options={emailOptions}
                     placeholder="your.email@example.com"
-                    style={inputStyles}
-                    disabled={isSubmitting}
-                    required
+                    isClearable
+                    isDisabled={isSubmitting}
+                    value={email ? { label: email, value: email } : null}
+                    onChange={(option: any) => {
+                        setEmail(option?.value || '');
+                        if (option?.value) {
+                            setTimeout(() => apiTokenInputRef.current?.focus(), 0);
+                        }
+                    }}
+                    formatCreateLabel={(inputValue: any) => `Use "${inputValue}"`}
+                    styles={selectStyles}
+                    menuPortalTarget={document.body}
                 />
             </div>
 
-            <div>
-                <label style={labelStyles}>API Token</label>
-                <input
+            <div style={fieldRowStyles}>
+                <label htmlFor="apiToken" style={labelStyles}>
+                    Rovo Dev API Token (
+                    <a
+                        href="https://id.atlassian.com/manage-profile/security/api-tokens?autofillToken&expiryDays=max&appId=rovodev&selectedScopes=all"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: 'var(--vscode-textLink-foreground)', textDecoration: 'none' }}
+                    >
+                        create <span className="codicon codicon-link-external" style={{ fontSize: '10px' }} />
+                    </a>
+                    )
+                </label>
+                <Textfield
+                    ref={apiTokenInputRef}
+                    name="apiToken"
+                    id="apiToken"
                     type="password"
                     value={apiToken}
-                    onChange={(e) => setApiToken(e.target.value)}
-                    placeholder="Your Jira API token"
-                    style={inputStyles}
-                    disabled={isSubmitting}
-                    required
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setApiToken(e.target.value)}
+                    placeholder="Your Rovo Dev API token"
+                    isDisabled={isSubmitting}
+                    autoComplete="off"
                 />
             </div>
 
             <div style={buttonContainerStyles}>
-                <button
-                    type="submit"
-                    style={inChatButtonStyles}
-                    disabled={isSubmitting || !host || !email || !apiToken}
-                >
+                <Button type="submit" appearance="primary" isDisabled={isSubmitting || !host || !email || !apiToken}>
                     {isSubmitting ? 'Authenticating...' : 'Sign In'}
-                </button>
-                <button type="button" onClick={onCancel} style={inChatSecondaryButtonStyles} disabled={isSubmitting}>
+                </Button>
+                <Button appearance="subtle" onClick={onCancel} isDisabled={isSubmitting}>
                     Cancel
-                </button>
-            </div>
-
-            <div style={{ fontSize: '12px', color: 'var(--vscode-descriptionForeground)', marginTop: '8px' }}>
-                <a
-                    href="#"
-                    onClick={(e) => {
-                        e.preventDefault();
-                        window.open(
-                            'https://id.atlassian.com/manage-profile/security/api-tokens?autofillToken&expiryDays=max&appId=rovodev&selectedScopes=all',
-                            '_blank',
-                        );
-                    }}
-                    style={{ color: 'var(--vscode-textLink-foreground)' }}
-                >
-                    Create an API token
-                </a>{' '}
-                in your Atlassian account
+                </Button>
             </div>
         </form>
     );

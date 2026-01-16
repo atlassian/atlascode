@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import path from 'path';
 import { setCommandContext } from 'src/commandContext';
+import { Container } from 'src/container';
 import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { safeWaitFor } from 'src/rovo-dev/util/waitFor';
@@ -568,6 +569,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             homeDir: process.env.HOME || process.env.USERPROFILE,
             yoloMode,
         });
+
+        // Send existing Jira credentials for autocomplete
+        await this.sendExistingJiraCredentials();
     }
 
     private beginNewSession(sessionId: string | null, manuallyCreated: boolean): void {
@@ -657,6 +661,44 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 await this._chatProvider.executeReplay();
             });
             await sessionsManager.showPicker();
+        }
+    }
+
+    private async sendExistingJiraCredentials(): Promise<void> {
+        if (!this._webView) {
+            return;
+        }
+
+        try {
+            const sites = this.extensionApi.jira.getSites();
+            const credentialsPromises = sites.map(async (site) => {
+                try {
+                    const authInfo = await Container.credentialManager.getAuthInfo(site);
+                    if (!authInfo || !authInfo.user?.email) {
+                        return null;
+                    }
+                    return {
+                        host: site.host,
+                        email: authInfo.user.email,
+                    };
+                } catch {
+                    return null;
+                }
+            });
+
+            const allCredentials = await Promise.all(credentialsPromises);
+            const credentials = allCredentials.filter((c): c is { host: string; email: string } => c !== null);
+
+            // Remove duplicates by creating a unique key
+            const uniqueCredentials = Array.from(new Map(credentials.map((c) => [`${c.host}-${c.email}`, c])).values());
+
+            await this._webView.postMessage({
+                type: RovoDevProviderMessageType.SetExistingJiraCredentials,
+                credentials: uniqueCredentials,
+            });
+        } catch (error) {
+            // Silently fail - autocomplete is a nice-to-have feature
+            RovoDevLogger.error(error, 'Failed to fetch existing Jira credentials for autocomplete');
         }
     }
 
@@ -803,18 +845,34 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 state: 0, // AuthInfoState.Valid
                 username: email,
                 password: apiToken,
+                host: normalizedHost,
             };
 
             // Save to RovoDev credential store
             await this.extensionApi.auth.saveRovoDevAuthInfo(authInfo);
 
             // Trigger process restart to use new credentials
-            await commands.executeCommand('atlascode.rovodev.refresh');
+            await RovoDevProcessManager.initializeRovoDev(this._context, true);
 
             window.showInformationMessage('Successfully authenticated with Rovo Dev');
         } catch (error) {
             RovoDevLogger.error(error, 'Error saving RovoDev auth');
             window.showErrorMessage(`Failed to save credentials: ${error}`);
+        }
+    }
+
+    private async handleRovoDevLogout(): Promise<void> {
+        try {
+            // Clear RovoDev auth info from credential store
+            await this.extensionApi.auth.removeRovoDevAuthInfo();
+
+            // Trigger process refresh to reinitialize without credentials
+            await RovoDevProcessManager.initializeRovoDev(this._context, true);
+
+            window.showInformationMessage('Logged out from Rovo Dev');
+        } catch (error) {
+            RovoDevLogger.error(error, 'Error logging out from RovoDev');
+            window.showErrorMessage(`Failed to logout: ${error}`);
         }
     }
 
@@ -926,6 +984,17 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await webview.postMessage({
             type: RovoDevProviderMessageType.ShowFeedbackForm,
         });
+    }
+
+    public async executeRovoDevLogout() {
+        const webview = this._webView!;
+
+        await webview.postMessage({
+            type: RovoDevProviderMessageType.SetInitializing,
+            isPromptPending: false,
+        });
+
+        await this.handleRovoDevLogout();
     }
 
     private async executeFilterModifiedFilesByContent(files: ModifiedFile[]) {

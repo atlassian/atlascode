@@ -7,6 +7,7 @@ import { DetailedSiteInfo, MinimalIssue } from '../../api/extensionApiTypes';
 import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
 import { PullRequestForm } from '../create-pr/PullRequestForm';
+import { CredentialHint } from '../landing-page/disabled-messages/RovoDevLoginForm';
 import { RovoDevLanding } from '../landing-page/RovoDevLanding';
 import { useMessagingApi } from '../messagingApi';
 import { McpConsentChoice, RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
@@ -47,6 +48,7 @@ interface ChatStreamProps {
     onJiraItemClick: (issue: MinimalIssue<DetailedSiteInfo>) => void;
     onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionDialogChoice | 'enableYolo') => void;
     onLinkClick: (href: string) => void;
+    credentialHints?: CredentialHint[];
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -70,6 +72,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     onJiraItemClick,
     onToolPermissionChoice,
     onLinkClick,
+    credentialHints,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -235,6 +238,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     jiraWorkItems={jiraWorkItems}
                     onJiraItemClick={onJiraItemClick}
                     onLinkClick={onLinkClick}
+                    credentialHints={credentialHints}
                 />
             )}
             {!isChatHistoryDisabled && (

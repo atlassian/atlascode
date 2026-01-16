@@ -4,6 +4,7 @@ import { State } from 'src/rovo-dev/rovoDevTypes';
 import { DetailedSiteInfo, MinimalIssue } from '../../api/extensionApiTypes';
 import { McpConsentChoice } from '../rovoDevViewMessages';
 import { DisabledMessage } from './disabled-messages/DisabledMessage';
+import { CredentialHint } from './disabled-messages/RovoDevLoginForm';
 import { RovoDevActions, RovoDevJiraWorkItems } from './RovoDevSuggestions';
 
 const RovoDevImg = () => {
@@ -37,6 +38,7 @@ export const RovoDevLanding: React.FC<{
     jiraWorkItems: MinimalIssue<DetailedSiteInfo>[] | undefined;
     onJiraItemClick: (issue: MinimalIssue<DetailedSiteInfo>) => void;
     onLinkClick: (url: string) => void;
+    credentialHints?: CredentialHint[];
 }> = ({
     currentState,
     isHistoryEmpty,
@@ -48,6 +50,7 @@ export const RovoDevLanding: React.FC<{
     jiraWorkItems,
     onJiraItemClick,
     onLinkClick,
+    credentialHints,
 }) => {
     const shouldHideSuggestions = React.useMemo(
         () =>
@@ -92,6 +95,7 @@ export const RovoDevLanding: React.FC<{
                 onMcpChoice={onMcpChoice}
                 onOpenFolder={onOpenFolder}
                 onLinkClick={onLinkClick}
+                credentialHints={credentialHints}
             />
         </div>
     );

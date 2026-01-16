@@ -4,6 +4,7 @@ import fs from 'fs';
 import net from 'net';
 import packageJson from 'package.json';
 import path from 'path';
+import { AuthInfoState } from 'src/atlclients/authInfo';
 import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import { downloadAndUnzip } from 'src/rovo-dev/util/downloadFile';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
@@ -11,6 +12,8 @@ import { waitFor } from 'src/rovo-dev/util/waitFor';
 import { v4 } from 'uuid';
 import { Disposable, Event, EventEmitter, ExtensionContext, Uri, workspace } from 'vscode';
 
+import { FeatureFlagClient } from '../util/featureFlags/featureFlagClient';
+import { Features } from '../util/features';
 import { ExtensionApi, ValidBasicAuthSiteData } from './api/extensionApi';
 import { RovoDevDisabledReason, RovoDevEntitlementCheckFailedDetail } from './rovoDevWebviewProviderMessages';
 import { RovoDevLogger } from './util/rovoDevLogger';
@@ -371,7 +374,7 @@ export abstract class RovoDevProcessManager {
                 this.failIfRovoDevInstanceIsRunning();
             }
 
-            const credentials = await this.extensionApi.auth.getCloudPrimaryAuthSite();
+            const credentials = await this.getCredentials();
             await this.internalInitializeRovoDev(context, credentials, forceNewInstance);
         } finally {
             this.asyncLocked = false;
@@ -387,7 +390,7 @@ export abstract class RovoDevProcessManager {
             this.asyncLocked = true;
 
             try {
-                const credentials = await this.extensionApi.auth.getCloudPrimaryAuthSite();
+                const credentials = await this.getCredentials();
                 if (areCredentialsEqual(credentials, this.currentCredentials)) {
                     return;
                 }
@@ -398,6 +401,30 @@ export abstract class RovoDevProcessManager {
             }
         } else {
             await this.initializeRovoDev(context);
+        }
+    }
+
+    private static async getCredentials(): Promise<ValidBasicAuthSiteData | undefined> {
+        // Check if dedicated RovoDev auth feature flag is enabled
+        const featureFlagClient = FeatureFlagClient.getInstance();
+
+        if (featureFlagClient.checkGate(Features.DedicatedRovoDevAuth)) {
+            // Use dedicated RovoDev credentials
+            const rovoDevAuth = await this.extensionApi.auth.getRovoDevAuthInfo();
+            if (rovoDevAuth && rovoDevAuth.host) {
+                // Convert RovoDev auth to ValidBasicAuthSiteData format
+                return {
+                    host: rovoDevAuth.host,
+                    authInfo: rovoDevAuth,
+                    isValid: rovoDevAuth.state === AuthInfoState.Valid,
+                    isStaging: false,
+                    siteCloudId: '',
+                };
+            }
+            return undefined;
+        } else {
+            // Fall back to primary Jira auth
+            return await this.extensionApi.auth.getCloudPrimaryAuthSite();
         }
     }
 

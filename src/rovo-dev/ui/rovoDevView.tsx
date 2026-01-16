@@ -16,6 +16,7 @@ import { RovodevStaticConfig } from '../api/rovodevStaticConfig';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../rovoDevWebviewProviderMessages';
 import { FeedbackConfirmationForm } from './feedback-form/FeedbackConfirmationForm';
 import { FeedbackForm, FeedbackType } from './feedback-form/FeedbackForm';
+import { CredentialHint } from './landing-page/disabled-messages/RovoDevLoginForm';
 import { ChatStream } from './messaging/ChatStream';
 import { useMessagingApi } from './messagingApi';
 import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
@@ -70,6 +71,7 @@ const RovoDevView: React.FC = () => {
     const [promptText, setPromptText] = useState<string | undefined>(undefined);
     const [fileExistenceMap, setFileExistenceMap] = useState<Map<string, boolean>>(new Map());
     const [jiraWorkItems, setJiraWorkItems] = useState<MinimalIssue<DetailedSiteInfo>[] | undefined>(undefined);
+    const [credentialHints, setCredentialHints] = useState<CredentialHint[]>([]);
     const [pendingFilesForFiltering, setPendingFilesForFiltering] = useState<ModifiedFile[] | null>(null);
     const [thinkingBlockEnabled, setThinkingBlockEnabled] = useState(true);
     const [lastCompletedPromptId, setLastCompletedPromptId] = useState<string | undefined>(undefined);
@@ -430,6 +432,10 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.SetJiraWorkItems:
                     setJiraWorkItems(event.issues);
+                    break;
+
+                case RovoDevProviderMessageType.SetExistingJiraCredentials:
+                    setCredentialHints(event.credentials);
                     break;
 
                 case RovoDevProviderMessageType.FilterModifiedFilesByContentComplete: {
@@ -1020,6 +1026,7 @@ const RovoDevView: React.FC = () => {
                     onJiraItemClick={onJiraItemClick}
                     onToolPermissionChoice={onToolPermissionChoice}
                     onLinkClick={onLinkClick}
+                    credentialHints={credentialHints}
                 />
                 {!hidePromptBox && (
                     <div className="input-section-container">
