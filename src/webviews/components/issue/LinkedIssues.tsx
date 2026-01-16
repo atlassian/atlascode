@@ -37,8 +37,10 @@ const LinkedIssueRow: React.FC<RowProps> = ({
     const [isHovered, setIsHovered] = React.useState(false);
     const [isDeleting, setIsDeleting] = React.useState(false);
 
-    const issue = issuelink.inwardIssue || issuelink.outwardIssue;
-    const linkDescription = issuelink.inwardIssue ? issuelink.type.inward : issuelink.type.outward;
+    const { inwardIssue, outwardIssue, type } = issuelink;
+    const isInward = Boolean(inwardIssue);
+    const issue = inwardIssue || outwardIssue;
+    const linkDescription = isInward ? (type?.inward ?? '') : (type?.outward ?? '');
 
     if (!issue) {
         return null;
