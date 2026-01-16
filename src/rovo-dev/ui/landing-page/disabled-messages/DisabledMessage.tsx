@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { State } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevFeatures } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
 import { DialogMessageItem } from '../../common/DialogMessage';
 import { McpConsentChoice } from '../../rovoDevViewMessages';
@@ -18,20 +19,27 @@ export const DisabledMessage: React.FC<{
     onLinkClick: (url: string) => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
     credentialHints?: CredentialHint[];
-}> = ({ currentState, onLoginClick, onRovoDevAuthSubmit, onOpenFolder, onLinkClick, onMcpChoice, credentialHints }) => {
-    const [showInlineLogin, setShowInlineLogin] = React.useState(false);
-
+    features?: RovoDevFeatures;
+}> = ({
+    currentState,
+    onLoginClick,
+    onRovoDevAuthSubmit,
+    onOpenFolder,
+    onLinkClick,
+    onMcpChoice,
+    credentialHints,
+    features,
+}) => {
     if (currentState.state === 'Disabled' && currentState.subState === 'NeedAuth') {
-        if (showInlineLogin) {
+        if (features?.dedicatedRovoDevAuth) {
+            // Show inline login form
             return (
                 <div style={messageOuterStyles}>
                     <div style={{ marginBottom: '12px' }}>Sign in to Rovo Dev with an API token</div>
                     <RovoDevLoginForm
                         onSubmit={(host, email, apiToken) => {
                             onRovoDevAuthSubmit(host, email, apiToken);
-                            setShowInlineLogin(false);
                         }}
-                        onCancel={() => setShowInlineLogin(false)}
                         credentialHints={credentialHints}
                     />
                 </div>
@@ -41,7 +49,7 @@ export const DisabledMessage: React.FC<{
         return (
             <div style={messageOuterStyles}>
                 <div>Create an Atlassian API token and add it here to use Rovo Dev beta</div>
-                <button style={{ ...inChatButtonStyles, marginTop: '8px' }} onClick={() => setShowInlineLogin(true)}>
+                <button style={{ ...inChatButtonStyles, marginTop: '8px' }} onClick={() => onLoginClick(false)}>
                     Add API Token
                 </button>
             </div>

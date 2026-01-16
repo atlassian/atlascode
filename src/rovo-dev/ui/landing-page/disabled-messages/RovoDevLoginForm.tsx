@@ -53,9 +53,8 @@ export interface CredentialHint {
 
 export const RovoDevLoginForm: React.FC<{
     onSubmit: (host: string, email: string, apiToken: string) => void;
-    onCancel: () => void;
     credentialHints?: CredentialHint[];
-}> = ({ onSubmit, onCancel, credentialHints = [] }) => {
+}> = ({ onSubmit, credentialHints = [] }) => {
     const [host, setHost] = React.useState('');
     const [email, setEmail] = React.useState('');
     const [apiToken, setApiToken] = React.useState('');
@@ -166,9 +165,6 @@ export const RovoDevLoginForm: React.FC<{
             <div style={buttonContainerStyles}>
                 <Button type="submit" appearance="primary" isDisabled={isSubmitting || !host || !email || !apiToken}>
                     {isSubmitting ? 'Authenticating...' : 'Sign In'}
-                </Button>
-                <Button appearance="subtle" onClick={onCancel} isDisabled={isSubmitting}>
-                    Cancel
                 </Button>
             </div>
         </form>

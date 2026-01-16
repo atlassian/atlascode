@@ -13,7 +13,7 @@ import { v4 } from 'uuid';
 
 import { DetailedSiteInfo, MinimalIssue } from '../api/extensionApiTypes';
 import { RovodevStaticConfig } from '../api/rovodevStaticConfig';
-import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../rovoDevWebviewProviderMessages';
+import { RovoDevFeatures, RovoDevProviderMessage, RovoDevProviderMessageType } from '../rovoDevWebviewProviderMessages';
 import { FeedbackConfirmationForm } from './feedback-form/FeedbackConfirmationForm';
 import { FeedbackForm, FeedbackType } from './feedback-form/FeedbackForm';
 import { CredentialHint } from './landing-page/disabled-messages/RovoDevLoginForm';
@@ -57,6 +57,7 @@ const RovoDevView: React.FC = () => {
     const [isDeepPlanToggled, setIsDeepPlanToggled] = useState(false);
     const [isYoloModeToggled, setIsYoloModeToggled] = useState(RovodevStaticConfig.isBBY); // Yolo mode is default in Boysenberry
     const [isFullContextModeToggled, setIsFullContextModeToggled] = useState(false);
+    const [features, setFeatures] = useState<RovoDevFeatures>({});
     const [workspacePath, setWorkspacePath] = useState<string>('');
     const [homeDir, setHomeDir] = useState<string>('');
     const [history, setHistory] = useState<Response[]>([]);
@@ -336,6 +337,9 @@ const RovoDevView: React.FC = () => {
                         setIsYoloModeToggled(event.yoloMode);
                     }
                     setIsAtlassianUser(event.isAtlassianUser);
+                    if (event.features) {
+                        setFeatures(event.features);
+                    }
                     break;
 
                 case RovoDevProviderMessageType.SetDebugPanel:
@@ -1027,6 +1031,7 @@ const RovoDevView: React.FC = () => {
                     onToolPermissionChoice={onToolPermissionChoice}
                     onLinkClick={onLinkClick}
                     credentialHints={credentialHints}
+                    features={features}
                 />
                 {!hidePromptBox && (
                     <div className="input-section-container">

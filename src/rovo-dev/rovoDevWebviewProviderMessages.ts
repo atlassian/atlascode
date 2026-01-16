@@ -44,6 +44,10 @@ export type RovoDevDisabledReason = DisabledState['subState'];
 
 export type RovoDevEntitlementCheckFailedDetail = EntitlementCheckRovoDevHealthcheckResponse['detail'];
 
+export interface RovoDevFeatures {
+    dedicatedRovoDevAuth?: boolean;
+}
+
 export type RovoDevResponseMessageType =
     | RovoDevTextResponse
     | RovoDevToolCallResponse
@@ -75,7 +79,13 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.ClearChat>
     | ReducerAction<
           RovoDevProviderMessageType.ProviderReady,
-          { isAtlassianUser: boolean; workspacePath?: string; homeDir?: string; yoloMode?: boolean }
+          {
+              isAtlassianUser: boolean;
+              workspacePath?: string;
+              homeDir?: string;
+              yoloMode?: boolean;
+              features?: RovoDevFeatures;
+          }
       >
     | ReducerAction<RovoDevProviderMessageType.SetInitializing, { isPromptPending: boolean }>
     | ReducerAction<

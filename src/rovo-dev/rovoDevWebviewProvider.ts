@@ -26,10 +26,13 @@ import {
 } from 'vscode';
 
 import { GitErrorCodes } from '../typings/git';
+import { FeatureFlagClient } from '../util/featureFlags/featureFlagClient';
+import { Features } from '../util/features';
 import { RovodevCommandContext, RovodevCommands } from './api/componentApi';
 import { DetailedSiteInfo, ExtensionApi, MinimalIssue } from './api/extensionApi';
 import { RovoDevApiClient, RovoDevApiError, RovoDevHealthcheckResponse } from './client';
 import { buildErrorDetails } from './errorDetailsBuilder';
+import { createValidatedRovoDevAuthInfo } from './rovoDevAuthValidator';
 import { RovoDevChatContextProvider } from './rovoDevChatContextProvider';
 import { RovoDevChatProvider } from './rovoDevChatProvider';
 import { RovoDevContentTracker } from './rovoDevContentTracker';
@@ -562,12 +565,17 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private async sendProviderReadyEvent(userEmail: string | undefined) {
         const yoloMode = await this.loadYoloModeFromStorage();
+        const featureFlagClient = FeatureFlagClient.getInstance();
+
         await this._webView!.postMessage({
             type: RovoDevProviderMessageType.ProviderReady,
             isAtlassianUser: !!userEmail?.endsWith('@atlassian.com'),
             workspacePath: workspace.workspaceFolders?.[0]?.uri.fsPath,
             homeDir: process.env.HOME || process.env.USERPROFILE,
             yoloMode,
+            features: {
+                dedicatedRovoDevAuth: featureFlagClient.checkGate(Features.DedicatedRovoDevAuth),
+            },
         });
 
         // Send existing Jira credentials for autocomplete
@@ -825,28 +833,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private async handleRovoDevAuth(host: string, email: string, apiToken: string): Promise<void> {
         try {
-            // Normalize host to remove protocol and trailing slashes
-            const normalizedHost = host.replace(/^https?:\/\//, '').replace(/\/$/, '');
-
-            // Validate that it's an atlassian.net domain
-            if (!normalizedHost.endsWith('.atlassian.net')) {
-                window.showErrorMessage('Please enter a valid Atlassian Cloud site (*.atlassian.net)');
-                return;
-            }
-
-            // Create AuthInfo for RovoDev
-            const authInfo = {
-                user: {
-                    id: email, // Use email as ID for now
-                    displayName: email.split('@')[0],
-                    email: email,
-                    avatarUrl: '',
-                },
-                state: 0, // AuthInfoState.Valid
-                username: email,
-                password: apiToken,
-                host: normalizedHost,
-            };
+            // Validate credentials and create AuthInfo (will throw on failure)
+            const authInfo = await createValidatedRovoDevAuthInfo(host, email, apiToken);
 
             // Save to RovoDev credential store
             await this.extensionApi.auth.saveRovoDevAuthInfo(authInfo);
@@ -857,7 +845,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             window.showInformationMessage('Successfully authenticated with Rovo Dev');
         } catch (error) {
             RovoDevLogger.error(error, 'Error saving RovoDev auth');
-            window.showErrorMessage(`Failed to save credentials: ${error}`);
+            const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+            window.showErrorMessage(errorMessage);
         }
     }
 
