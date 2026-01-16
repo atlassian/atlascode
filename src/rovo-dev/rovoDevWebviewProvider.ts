@@ -832,21 +832,38 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async handleRovoDevAuth(host: string, email: string, apiToken: string): Promise<void> {
+        const webview = this._webView!;
+
         try {
+            // Send validating status to UI
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.RovoDevAuthValidating,
+            });
+
             // Validate credentials and create AuthInfo (will throw on failure)
             const authInfo = await createValidatedRovoDevAuthInfo(host, email, apiToken);
 
             // Save to RovoDev credential store
             await this.extensionApi.auth.saveRovoDevAuthInfo(authInfo);
 
+            // Send success status to UI
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.RovoDevAuthValidationComplete,
+                success: true,
+            });
+
             // Trigger process restart to use new credentials
             await RovoDevProcessManager.initializeRovoDev(this._context, true);
-
-            window.showInformationMessage('Successfully authenticated with Rovo Dev');
         } catch (error) {
             RovoDevLogger.error(error, 'Error saving RovoDev auth');
             const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-            window.showErrorMessage(errorMessage);
+
+            // Send error status to UI
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.RovoDevAuthValidationComplete,
+                success: false,
+                error: errorMessage,
+            });
         }
     }
 

@@ -38,6 +38,8 @@ export const enum RovoDevProviderMessageType {
     CheckFileExistsComplete = 'checkFileExistsComplete',
     SetThinkingBlockEnabled = 'setThinkingBlockEnabled',
     RestoreState = 'restoreState',
+    RovoDevAuthValidating = 'rovoDevAuthValidating',
+    RovoDevAuthValidationComplete = 'rovoDevAuthValidationComplete',
 }
 
 export type RovoDevDisabledReason = DisabledState['subState'];
@@ -120,4 +122,6 @@ export type RovoDevProviderMessage =
           { requestId: string; filePath: string; exists: boolean }
       >
     | ReducerAction<RovoDevProviderMessageType.SetThinkingBlockEnabled, { enabled: boolean }>
-    | ReducerAction<RovoDevProviderMessageType.RestoreState, { state: RovoDevWebviewState }>;
+    | ReducerAction<RovoDevProviderMessageType.RestoreState, { state: RovoDevWebviewState }>
+    | ReducerAction<RovoDevProviderMessageType.RovoDevAuthValidating>
+    | ReducerAction<RovoDevProviderMessageType.RovoDevAuthValidationComplete, { success: boolean; error?: string }>;

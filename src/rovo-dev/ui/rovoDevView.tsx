@@ -485,6 +485,11 @@ const RovoDevView: React.FC = () => {
                     }
                     break;
 
+                case RovoDevProviderMessageType.RovoDevAuthValidating:
+                case RovoDevProviderMessageType.RovoDevAuthValidationComplete:
+                    // These messages are handled by the login form component directly
+                    break;
+
                 default:
                     // this is never supposed to happen since there aren't other type of messages
                     handleAppendResponse({

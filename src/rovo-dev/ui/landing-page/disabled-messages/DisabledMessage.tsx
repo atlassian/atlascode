@@ -11,6 +11,13 @@ const messageOuterStyles: React.CSSProperties = {
     marginTop: '24px',
 };
 
+const loginFormContainerStyles: React.CSSProperties = {
+    marginTop: '24px',
+    width: '80%',
+    maxWidth: '500px',
+    minWidth: '300px',
+};
+
 export const DisabledMessage: React.FC<{
     currentState: State;
     onLoginClick: (openApiTokenLogin: boolean) => void;
@@ -34,7 +41,7 @@ export const DisabledMessage: React.FC<{
         if (features?.dedicatedRovoDevAuth) {
             // Show inline login form
             return (
-                <div style={messageOuterStyles}>
+                <div style={loginFormContainerStyles}>
                     <div style={{ marginBottom: '12px' }}>Sign in to Rovo Dev with an API token</div>
                     <RovoDevLoginForm
                         onSubmit={(host, email, apiToken) => {

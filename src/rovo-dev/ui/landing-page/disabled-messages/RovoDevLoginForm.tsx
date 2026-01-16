@@ -2,6 +2,7 @@ import Button from '@atlaskit/button/new';
 import { CreatableSelect } from '@atlaskit/select';
 import Textfield from '@atlaskit/textfield';
 import * as React from 'react';
+import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
 const formStyles: React.CSSProperties = {
     display: 'flex',
@@ -33,17 +34,24 @@ const selectStyles = {
     placeholder: (base: any) => ({
         ...base,
         textAlign: 'left',
+        fontSize: '13px',
     }),
     input: (base: any) => ({
         ...base,
         textAlign: 'left',
+        fontSize: '13px',
     }),
     singleValue: (base: any) => ({
         ...base,
         textAlign: 'left',
+        fontSize: '13px',
     }),
     menu: (base: any) => ({ ...base, zIndex: 9999 }),
     menuPortal: (base: any) => ({ ...base, zIndex: 9999 }),
+};
+
+const textFieldStyles: React.CSSProperties = {
+    fontSize: '13px',
 };
 
 export interface CredentialHint {
@@ -58,10 +66,33 @@ export const RovoDevLoginForm: React.FC<{
     const [host, setHost] = React.useState('');
     const [email, setEmail] = React.useState('');
     const [apiToken, setApiToken] = React.useState('');
-    const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [authValidationState, setAuthValidationState] = React.useState<{
+        isValidating: boolean;
+        error?: string;
+    }>({ isValidating: false });
 
     const emailSelectRef = React.useRef<any>(null);
     const apiTokenInputRef = React.useRef<HTMLInputElement>(null);
+
+    // Listen for validation events from the extension
+    React.useEffect(() => {
+        const messageHandler = (event: MessageEvent): void => {
+            const message = event.data as RovoDevProviderMessage;
+            if (message.type === RovoDevProviderMessageType.RovoDevAuthValidating) {
+                setAuthValidationState({ isValidating: true });
+            } else if (message.type === RovoDevProviderMessageType.RovoDevAuthValidationComplete) {
+                setAuthValidationState({
+                    isValidating: false,
+                    error: message.success ? undefined : message.error,
+                });
+            }
+        };
+
+        window.addEventListener('message', messageHandler);
+        return () => {
+            window.removeEventListener('message', messageHandler);
+        };
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -69,12 +100,7 @@ export const RovoDevLoginForm: React.FC<{
             return;
         }
 
-        setIsSubmitting(true);
-        try {
-            onSubmit(host, email, apiToken);
-        } finally {
-            setIsSubmitting(false);
-        }
+        onSubmit(host, email, apiToken);
     };
 
     // Create unique host and email options from existing credentials
@@ -89,6 +115,22 @@ export const RovoDevLoginForm: React.FC<{
 
     return (
         <form onSubmit={handleSubmit} style={formStyles}>
+            {authValidationState.error && (
+                <div
+                    style={{
+                        padding: '8px 12px',
+                        backgroundColor: 'var(--vscode-inputValidation-errorBackground)',
+                        border: '1px solid var(--vscode-inputValidation-errorBorder)',
+                        borderRadius: '4px',
+                        color: 'var(--vscode-inputValidation-errorForeground)',
+                        fontSize: '12px',
+                        wordWrap: 'break-word',
+                        overflowWrap: 'break-word',
+                    }}
+                >
+                    {authValidationState.error}
+                </div>
+            )}
             <div style={fieldRowStyles}>
                 <label htmlFor="host" style={labelStyles}>
                     Jira Cloud Site
@@ -98,7 +140,7 @@ export const RovoDevLoginForm: React.FC<{
                     options={hostOptions}
                     placeholder="yoursite.atlassian.net"
                     isClearable
-                    isDisabled={isSubmitting}
+                    isDisabled={authValidationState.isValidating}
                     value={host ? { label: host, value: host } : null}
                     onChange={(option: any) => {
                         setHost(option?.value || '');
@@ -122,7 +164,7 @@ export const RovoDevLoginForm: React.FC<{
                     options={emailOptions}
                     placeholder="your.email@example.com"
                     isClearable
-                    isDisabled={isSubmitting}
+                    isDisabled={authValidationState.isValidating}
                     value={email ? { label: email, value: email } : null}
                     onChange={(option: any) => {
                         setEmail(option?.value || '');
@@ -157,14 +199,19 @@ export const RovoDevLoginForm: React.FC<{
                     value={apiToken}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setApiToken(e.target.value)}
                     placeholder="Your Rovo Dev API token"
-                    isDisabled={isSubmitting}
+                    isDisabled={authValidationState.isValidating}
                     autoComplete="off"
+                    style={textFieldStyles}
                 />
             </div>
 
             <div style={buttonContainerStyles}>
-                <Button type="submit" appearance="primary" isDisabled={isSubmitting || !host || !email || !apiToken}>
-                    {isSubmitting ? 'Authenticating...' : 'Sign In'}
+                <Button
+                    type="submit"
+                    appearance="primary"
+                    isDisabled={authValidationState.isValidating || !host || !email || !apiToken}
+                >
+                    {authValidationState.isValidating ? 'Authenticating...' : 'Sign In'}
                 </Button>
             </div>
         </form>
