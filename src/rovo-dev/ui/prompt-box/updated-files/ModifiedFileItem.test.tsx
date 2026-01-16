@@ -33,7 +33,7 @@ describe('ModifiedFileItem', () => {
         const msg = createMockMsg('modify', 'path/to/file.ts');
         render(<ModifiedFileItem msg={msg} onUndo={mockOnUndo} onKeep={mockOnKeep} onFileClick={mockOnFileClick} />);
 
-        fireEvent.click(screen.getByLabelText('modified-file-item'));
+        fireEvent.click(screen.getByLabelText('Modified file: path/to/file.ts'));
         expect(mockOnFileClick).toHaveBeenCalledWith('path/to/file.ts');
     });
 
@@ -59,7 +59,7 @@ describe('ModifiedFileItem', () => {
         const msg = createMockMsg('delete', 'path/to/file.ts');
         render(<ModifiedFileItem msg={msg} onUndo={mockOnUndo} onKeep={mockOnKeep} onFileClick={mockOnFileClick} />);
 
-        const container = screen.getByLabelText('modified-file-item').firstElementChild;
+        const container = screen.getByLabelText('Modified file: path/to/file.ts').firstElementChild;
         expect(container?.className).toContain('deleted-file');
     });
 
@@ -67,7 +67,7 @@ describe('ModifiedFileItem', () => {
         const msg = createMockMsg('create', 'path/to/file.ts');
         render(<ModifiedFileItem msg={msg} onUndo={mockOnUndo} onKeep={mockOnKeep} onFileClick={mockOnFileClick} />);
 
-        const container = screen.getByLabelText('modified-file-item').firstElementChild;
+        const container = screen.getByLabelText('Modified file: path/to/file.ts').firstElementChild;
         expect(container?.className).toContain('created-file');
     });
 
@@ -75,7 +75,7 @@ describe('ModifiedFileItem', () => {
         const msg = createMockMsg('modify', 'path/to/file.ts');
         render(<ModifiedFileItem msg={msg} onUndo={mockOnUndo} onKeep={mockOnKeep} onFileClick={mockOnFileClick} />);
 
-        const container = screen.getByLabelText('modified-file-item').firstElementChild;
+        const container = screen.getByLabelText('Modified file: path/to/file.ts').firstElementChild;
         expect(container?.className).not.toContain('deleted-file');
         expect(container?.className).not.toContain('created-file');
     });
