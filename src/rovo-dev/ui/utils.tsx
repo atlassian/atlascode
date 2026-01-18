@@ -1,3 +1,4 @@
+import React from 'react';
 import {
     RovoDevRetryPromptResponse,
     RovoDevTextResponse,
@@ -7,6 +8,19 @@ import {
 } from 'src/rovo-dev/client';
 
 import { RovoDevContextItem, TechnicalPlan } from '../rovoDevTypes';
+
+/**
+ * Creates a keyboard event handler that triggers onClick when Enter or Space is pressed.
+ * Use this to add keyboard accessibility.
+ */
+export const onKeyDownHandler =
+    (onClick: () => void) =>
+    (e: React.KeyboardEvent): void => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick();
+        }
+    };
 
 export enum Time {
     SECONDS = 1000,
