@@ -7,8 +7,7 @@ import { startWorkOnIssue } from 'src/commands/jira/startWorkOnIssue';
 import timer from 'src/util/perf';
 import { commands, ConfigurationTarget, Disposable, Position, Uri, ViewColumn } from 'vscode';
 
-import { issueCreatedEvent, issueOpenRovoDevEvent } from '../analytics';
-import { performanceEvent } from '../analytics';
+import { issueCreatedEvent, issueOpenRovoDevEvent, performanceEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { buildSuggestionSettings, IssueSuggestionManager } from '../commands/jira/issueSuggestionManager';
 import { showIssue } from '../commands/jira/showIssue';
@@ -18,6 +17,7 @@ import {
     IssueSuggestionSettings,
     SimplifiedTodoIssueData,
 } from '../config/configuration';
+import { saveLastCreatePreferences } from '../config/configurationHelpers';
 import { Commands, ProjectsPagination } from '../constants';
 import { Container } from '../container';
 import {
@@ -303,7 +303,7 @@ export class CreateIssueWebview
             }
         }
 
-        await configuration.setLastCreateSiteAndProject({
+        await saveLastCreatePreferences({
             siteId: this._siteDetails.id,
             projectKey: this._currentProject!.key,
             issueTypeId: this._selectedIssueTypeId || '',
@@ -581,7 +581,7 @@ export class CreateIssueWebview
         this._selectedIssueTypeId = issueType.id;
 
         if (this._currentProject) {
-            configuration.setLastCreateSiteAndProject({
+            saveLastCreatePreferences({
                 siteId: this._siteDetails.id,
                 projectKey: this._currentProject.key,
                 issueTypeId: issueType.id,
@@ -813,7 +813,7 @@ export class CreateIssueWebview
                     if (isCreateIssue(msg)) {
                         try {
                             const [payload, worklog, issuelinks, attachments] = this.formatCreatePayload(msg);
-                            await configuration.setLastCreateSiteAndProject({
+                            await saveLastCreatePreferences({
                                 siteId: this._siteDetails.id,
                                 projectKey: this._currentProject!.key,
                                 issueTypeId: payload.issuetype?.id || this._selectedIssueTypeId,

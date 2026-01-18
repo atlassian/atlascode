@@ -5,7 +5,7 @@ import { DetailedSiteInfo, ProductJira } from 'src/atlclients/authInfo';
 import { setCommandContext } from 'src/commandContext';
 import { showIssue } from 'src/commands/jira/showIssue';
 import { startWorkOnIssue } from 'src/commands/jira/startWorkOnIssue';
-import { configuration } from 'src/config/configuration';
+import { saveLastCreatePreferences } from 'src/config/configurationHelpers';
 import { Container } from 'src/container';
 import { fetchCreateIssueUI } from 'src/jira/fetchIssue';
 import {
@@ -451,7 +451,7 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
             { location: ProgressLocation.Notification, title: 'Creating work item...', cancellable: true },
             async (progress, _token) => {
                 try {
-                    await configuration.setLastCreateSiteAndProject({
+                    await saveLastCreatePreferences({
                         siteId: this._selectedSite!.id,
                         projectKey: this._selectedProject!.key,
                         issueTypeId: this._selectedIssueType?.id || '',

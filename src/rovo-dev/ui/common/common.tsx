@@ -5,7 +5,7 @@ import React from 'react';
 import { ChatMessageItem } from '../messaging/ChatMessageItem';
 import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
-import { ChatMessage, parseToolReturnMessage } from '../utils';
+import { ChatMessage, onKeyDownHandler, parseToolReturnMessage } from '../utils';
 import { DialogMessageItem } from './DialogMessage';
 
 const mdParser = new MarkdownIt({
@@ -26,8 +26,13 @@ mdParser.renderer.rules.link_open = function (tokens, idx, options, env, self) {
         const hrefAttr = token.attrs ? token.attrs[hrefIndex] : null;
         if (hrefAttr && hrefAttr[1]) {
             const hrefValue = hrefAttr[1];
-
-            token.attrs!.splice(hrefIndex, 1);
+            if (Array.isArray(token.attrs)) {
+                token.attrs!.splice(hrefIndex, 1);
+            } else {
+                throw new Error(
+                    `Token attrs is not an array. Actual value: ${token.attrs} with type ${typeof token.attrs}`,
+                );
+            }
             token.attrSet('data-href', hrefValue);
             token.attrSet('class', 'rovodev-markdown-link');
         }
@@ -214,7 +219,15 @@ export const FileLozenge: React.FC<{
     };
 
     return (
-        <div onClick={handleClick} className={isDisabled ? 'file-lozenge file-lozenge-disabled' : 'file-lozenge'}>
+        <div
+            onClick={handleClick}
+            onKeyDown={!isDisabled && openFile ? onKeyDownHandler(() => openFile(filePath)) : undefined}
+            tabIndex={isDisabled ? -1 : 0}
+            role="button"
+            aria-label={`Open file: ${filePath}`}
+            aria-disabled={isDisabled}
+            className={isDisabled ? 'file-lozenge file-lozenge-disabled' : 'file-lozenge'}
+        >
             <span className="file-path">{fileTitle || filePath}</span>
         </div>
     );

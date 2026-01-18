@@ -203,9 +203,29 @@ export class JiraProjectManager extends Disposable {
             const projectsSlice = projectsList.slice(cursor, cursor + size);
             await Promise.all(
                 projectsSlice.map(async (project) => {
-                    const hasCreateIssuePermission = await this.checkProjectPermission(site, project.key, permission);
-                    if (hasCreateIssuePermission) {
-                        projectsWithPermission.push(project);
+                    try {
+                        const hasCreateIssuePermission = await this.checkProjectPermission(
+                            site,
+                            project.key,
+                            permission,
+                        );
+                        if (hasCreateIssuePermission) {
+                            projectsWithPermission.push(project);
+                        }
+                    } catch (e: any) {
+                        if (e?.response?.status === 429) {
+                            const batchNumber = cursor / size + 1;
+                            Logger.error(
+                                e,
+                                'Rate limit hit while checking project permissions',
+                                `endpoint=/rest/api/2/mypermissions`,
+                                `context=filterProjectsByPermission`,
+                                `isCloud=${site.isCloud}`,
+                                `batchSize=${size}`,
+                                `batchNumber=${batchNumber}`,
+                            );
+                        }
+                        throw e;
                     }
                 }),
             );

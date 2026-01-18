@@ -827,11 +827,16 @@ export class JiraIssueWebview
                                     msg.restriction,
                                 );
                                 const comments: Comment[] = this._editUIData.fieldValues['comment'].comments;
-                                comments.splice(
-                                    comments.findIndex((value) => value.id === msg.commentId),
-                                    1,
-                                    res,
-                                );
+                                if (Array.isArray(comments)) {
+                                    const idx = comments.findIndex((value) => value.id === msg.commentId);
+                                    if (idx >= 0) {
+                                        comments.splice(idx, 1, res);
+                                    }
+                                } else {
+                                    throw new Error(
+                                        `Comments field is not an array. Actual value: ${comments} with type ${typeof comments}`,
+                                    );
+                                }
                             } else {
                                 const res = await postComment(msg.issue, msg.commentBody, undefined, msg.restriction);
                                 this._editUIData.fieldValues['comment'].comments.push(res);
@@ -859,10 +864,14 @@ export class JiraIssueWebview
                             const client = await Container.clientManager.jiraClient(msg.issue.siteDetails);
                             await client.deleteComment(msg.issue.key, msg.commentId);
                             const comments: Comment[] = this._editUIData.fieldValues['comment'].comments;
-                            comments.splice(
-                                comments.findIndex((value) => value.id === msg.commentId),
-                                1,
-                            );
+                            if (Array.isArray(comments)) {
+                                const idx = comments.findIndex((value) => value.id === msg.commentId);
+                                comments.splice(idx, 1);
+                            } else {
+                                throw new Error(
+                                    `Comments field is not an array. Actual value: ${comments} with type ${typeof comments}`,
+                                );
+                            }
 
                             this.postMessage({
                                 type: 'fieldValueUpdate',
@@ -971,9 +980,19 @@ export class JiraIssueWebview
                         try {
                             const client = await Container.clientManager.jiraClient(msg.site);
 
-                            // We wish we could just call the delete issuelink endpoint, but it doesn't support OAuth 2.0
-                            //await client.deleteIssuelink(msg.objectWithId.id);
+                            // Use direct DELETE request to issueLink endpoint
+                            const apiVersion = client.apiVersion || '3';
+                            const baseApiUrl = msg.site.baseApiUrl.replace(/\/rest$/, '');
+                            const deleteUrl = `${baseApiUrl}/rest/api/${apiVersion}/issueLink/${msg.objectWithId.id}`;
 
+                            await client.transportFactory()(deleteUrl, {
+                                method: 'DELETE',
+                                headers: {
+                                    Authorization: await client.authorizationProvider('DELETE', deleteUrl),
+                                },
+                            });
+
+                            // Update local state after successful deletion
                             if (
                                 !this._editUIData.fieldValues['issuelinks'] ||
                                 !Array.isArray(this._editUIData.fieldValues['issuelinks'])
@@ -984,10 +1003,6 @@ export class JiraIssueWebview
                             this._editUIData.fieldValues['issuelinks'] = this._editUIData.fieldValues[
                                 'issuelinks'
                             ].filter((link: any) => link.id !== msg.objectWithId.id);
-
-                            await client.editIssue(this._issue.key, {
-                                ['issuelinks']: this._editUIData.fieldValues['issuelinks'],
-                            });
 
                             this.postMessage({
                                 type: 'fieldValueUpdate',
