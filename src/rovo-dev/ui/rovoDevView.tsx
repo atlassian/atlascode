@@ -13,9 +13,10 @@ import { v4 } from 'uuid';
 
 import { DetailedSiteInfo, MinimalIssue } from '../api/extensionApiTypes';
 import { RovodevStaticConfig } from '../api/rovodevStaticConfig';
-import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../rovoDevWebviewProviderMessages';
+import { RovoDevFeatures, RovoDevProviderMessage, RovoDevProviderMessageType } from '../rovoDevWebviewProviderMessages';
 import { FeedbackConfirmationForm } from './feedback-form/FeedbackConfirmationForm';
 import { FeedbackForm, FeedbackType } from './feedback-form/FeedbackForm';
+import { CredentialHint } from './landing-page/disabled-messages/RovoDevLoginForm';
 import { ChatStream } from './messaging/ChatStream';
 import { useMessagingApi } from './messagingApi';
 import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
@@ -57,6 +58,7 @@ const RovoDevView: React.FC = () => {
     const [isYoloModeToggled, setIsYoloModeToggled] = useState(RovodevStaticConfig.isBBY); // Yolo mode is default in Boysenberry
     const [isFullContextModeToggled, setIsFullContextModeToggled] = useState(false);
     const [isAskModeToggled, setIsAskModeToggled] = useState(false);
+    const [features, setFeatures] = useState<RovoDevFeatures>({});
     const [workspacePath, setWorkspacePath] = useState<string>('');
     const [homeDir, setHomeDir] = useState<string>('');
     const [history, setHistory] = useState<Response[]>([]);
@@ -71,6 +73,7 @@ const RovoDevView: React.FC = () => {
     const [promptText, setPromptText] = useState<string | undefined>(undefined);
     const [fileExistenceMap, setFileExistenceMap] = useState<Map<string, boolean>>(new Map());
     const [jiraWorkItems, setJiraWorkItems] = useState<MinimalIssue<DetailedSiteInfo>[] | undefined>(undefined);
+    const [credentialHints, setCredentialHints] = useState<CredentialHint[]>([]);
     const [pendingFilesForFiltering, setPendingFilesForFiltering] = useState<ModifiedFile[] | null>(null);
     const [thinkingBlockEnabled, setThinkingBlockEnabled] = useState(true);
     const [lastCompletedPromptId, setLastCompletedPromptId] = useState<string | undefined>(undefined);
@@ -335,6 +338,9 @@ const RovoDevView: React.FC = () => {
                         setIsYoloModeToggled(event.yoloMode);
                     }
                     setIsAtlassianUser(event.isAtlassianUser);
+                    if (event.features) {
+                        setFeatures(event.features);
+                    }
                     break;
 
                 case RovoDevProviderMessageType.SetDebugPanel:
@@ -433,6 +439,10 @@ const RovoDevView: React.FC = () => {
                     setJiraWorkItems(event.issues);
                     break;
 
+                case RovoDevProviderMessageType.SetExistingJiraCredentials:
+                    setCredentialHints(event.credentials);
+                    break;
+
                 case RovoDevProviderMessageType.FilterModifiedFilesByContentComplete: {
                     const convertedFiles: ToolReturnParseResult[] = event.filteredFiles.map((file) => {
                         const content = modifyFileTitleMap[file.type]?.title || modifyFileTitleMap.updated.title;
@@ -477,6 +487,11 @@ const RovoDevView: React.FC = () => {
                     if (event.state.promptContextCollection) {
                         setPromptContextCollection(event.state.promptContextCollection);
                     }
+                    break;
+
+                case RovoDevProviderMessageType.RovoDevAuthValidating:
+                case RovoDevProviderMessageType.RovoDevAuthValidationComplete:
+                    // These messages are handled by the login form component directly
                     break;
 
                 default:
@@ -765,6 +780,18 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
+    const onRovoDevAuthSubmit = useCallback(
+        (host: string, email: string, apiToken: string) => {
+            postMessage({
+                type: RovoDevViewResponseType.SubmitRovoDevAuth,
+                host,
+                email,
+                apiToken,
+            });
+        },
+        [postMessage],
+    );
+
     const onOpenFolder = useCallback(() => {
         postMessage({
             type: RovoDevViewResponseType.OpenFolder,
@@ -1015,6 +1042,7 @@ const RovoDevView: React.FC = () => {
                     onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
                     handleFeedbackTrigger={handleFeedbackTrigger}
                     onLoginClick={onLoginClick}
+                    onRovoDevAuthSubmit={onRovoDevAuthSubmit}
                     onOpenFolder={onOpenFolder}
                     onMcpChoice={onMcpChoice}
                     setPromptText={setPromptTextFromAction}
@@ -1022,6 +1050,8 @@ const RovoDevView: React.FC = () => {
                     onJiraItemClick={onJiraItemClick}
                     onToolPermissionChoice={onToolPermissionChoice}
                     onLinkClick={onLinkClick}
+                    credentialHints={credentialHints}
+                    features={features}
                 />
                 {!hidePromptBox && (
                     <div className="input-section-container">

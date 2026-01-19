@@ -29,6 +29,7 @@ export const enum RovoDevViewResponseType {
     TriggerFeedback = 'triggerFeedback',
     SendFeedback = 'sendFeedback',
     LaunchJiraAuth = 'launchJiraAuth',
+    SubmitRovoDevAuth = 'submitRovoDevAuth',
     McpConsentChoiceSubmit = 'mcpConsentChoiceSubmit',
     CheckFileExists = 'checkFileExists',
     ToolPermissionChoiceSubmit = 'toolPermissionChoiceSubmit',
@@ -81,6 +82,7 @@ export type RovoDevViewResponse =
           { feedbackType: FeedbackType; feedbackMessage: string; lastTenMessages?: string[]; canContact: boolean }
       >
     | ReducerAction<RovoDevViewResponseType.LaunchJiraAuth, { openApiTokenLogin: boolean }>
+    | ReducerAction<RovoDevViewResponseType.SubmitRovoDevAuth, { host: string; email: string; apiToken: string }>
     | ReducerAction<RovoDevViewResponseType.McpConsentChoiceSubmit, { choice: McpConsentChoice; serverName?: string }>
     | ReducerAction<RovoDevViewResponseType.CheckFileExists, { filePath: string; requestId: string }>
     | ReducerAction<
