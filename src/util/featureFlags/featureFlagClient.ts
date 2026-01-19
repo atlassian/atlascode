@@ -6,7 +6,7 @@ import { env } from 'vscode';
 
 import { ClientInitializedErrorType } from '../../analytics';
 import { Logger } from '../../logger';
-import { ExperimentGates, Experiments, Features } from '../features';
+import { defaultFeatureGateValues, ExperimentGates, Experiments, Features } from '../features';
 import { FeatureGateClient } from './utils';
 
 type NewFetcherOptions = FetcherOptions &
@@ -188,7 +188,7 @@ export class FeatureFlagClient {
             }
         }
 
-        let gateValue = false;
+        let gateValue = defaultFeatureGateValues[gate] ?? false;
         if (this.client && this.isInitialized()) {
             // FeatureGates.checkGate returns false if any errors
             gateValue = this.client.checkGate(gate);
