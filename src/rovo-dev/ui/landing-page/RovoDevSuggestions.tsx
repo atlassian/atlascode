@@ -46,7 +46,7 @@ export const RovoDevJiraWorkItems: React.FC<{
     onJiraItemClick: (issue: MinimalIssue<DetailedSiteInfo>) => void;
 }> = ({ jiraWorkItems, onJiraItemClick }) => {
     // hide the entire thing if there are no Jira items to display
-    if (jiraWorkItems !== undefined && jiraWorkItems.length === 0) {
+    if (!jiraWorkItems || jiraWorkItems.length === 0) {
         return null;
     }
 

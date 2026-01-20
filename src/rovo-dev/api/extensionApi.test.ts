@@ -252,6 +252,47 @@ describe('ExtensionApi', () => {
                 );
                 expect(result).toEqual(mockIssues);
             });
+
+            it('should return empty array when API fails with scoped token', async () => {
+                const mockClient = {
+                    searchForIssuesUsingJqlGet: jest
+                        .fn()
+                        .mockRejectedValue(new Error('JQL function currentUser() is not supported')),
+                };
+                const mockEpicFieldInfo = { epicLinkField: 'customfield_10001' };
+                const mockFields = ['summary', 'status'];
+
+                // Mock empty cache
+                SearchJiraHelper.getAssignedIssuesPerSite.mockReturnValue([]);
+
+                // Mock API calls
+                (Container.clientManager.jiraClient as jest.Mock).mockResolvedValue(mockClient);
+                (Container.jiraSettingsManager.getEpicFieldsForSite as jest.Mock).mockResolvedValue(mockEpicFieldInfo);
+                (Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite as jest.Mock).mockReturnValue(mockFields);
+
+                // Mock console.warn to avoid noise in test output
+                jest.spyOn(console, 'warn').mockImplementation();
+
+                const result = await jiraApi.fetchWorkItems(mockSite);
+
+                expect(result).toEqual([]);
+                expect(console.warn).toHaveBeenCalledWith(
+                    'Failed to fetch work items from API:',
+                    'Cannot fetch work items: JQL function currentUser() is not supported',
+                );
+
+                // Verify that only the currentUser() query was attempted (no fallbacks)
+                expect(mockClient.searchForIssuesUsingJqlGet).toHaveBeenCalledTimes(1);
+                expect(mockClient.searchForIssuesUsingJqlGet).toHaveBeenCalledWith(
+                    'assignee = currentUser() AND StatusCategory = "To Do" ORDER BY updated DESC',
+                    mockFields,
+                    30,
+                    0,
+                );
+
+                // Restore console.warn
+                (console.warn as jest.Mock).mockRestore();
+            });
         });
     });
 });

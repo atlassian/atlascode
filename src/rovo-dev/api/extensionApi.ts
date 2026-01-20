@@ -4,6 +4,7 @@ import { showIssueForURL } from 'src/commands/jira/showIssue';
 import { configuration } from 'src/config/configuration';
 import { Commands } from 'src/constants';
 import { Container } from 'src/container';
+import { Logger } from 'src/logger';
 import { SearchJiraHelper } from 'src/views/jira/searchJiraHelper';
 import { getHtmlForView } from 'src/webview/common/getHtmlForView';
 import { commands, ConfigurationChangeEvent, Uri } from 'vscode';
@@ -32,7 +33,14 @@ export class JiraApi {
         // Fetch from cache first
         let assignedIssuesForSite = this.fetchWorkItemsFromCache(site);
         if (assignedIssuesForSite.length === 0) {
-            assignedIssuesForSite = await this.fetchWorkItemsFromApi(site);
+            try {
+                assignedIssuesForSite = await this.fetchWorkItemsFromApi(site);
+            } catch (error) {
+                // If API fails (e.g., scoped token limitations), return empty array
+                // The UI will handle hiding the section when empty
+                Logger.error(error, 'Failed to fetch work items from API:' + error.message);
+                return [];
+            }
         }
         return assignedIssuesForSite;
     };
@@ -43,15 +51,24 @@ export class JiraApi {
     }
 
     private async fetchWorkItemsFromApi(site: DetailedSiteInfo): Promise<MinimalIssue<DetailedSiteInfo>[]> {
-        const jql = 'assignee = currentUser() AND StatusCategory = "To Do" ORDER BY updated DESC';
-
         const client = await Container.clientManager.jiraClient(site);
         const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
         const fields = Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(epicFieldInfo);
 
-        const res = await client.searchForIssuesUsingJqlGet(jql, fields, 30, 0);
-        const searchResults = await readSearchResults(res, site, epicFieldInfo);
-        return searchResults.issues.filter((issue) => isMinimalIssue(issue));
+        const jql = 'assignee = currentUser() AND StatusCategory = "To Do" ORDER BY updated DESC';
+
+        try {
+            const res = await client.searchForIssuesUsingJqlGet(jql, fields, 30, 0);
+            const searchResults = await readSearchResults(res, site, epicFieldInfo);
+            return searchResults.issues.filter((issue) => isMinimalIssue(issue));
+        } catch (error) {
+            // If the query fails (likely due to scoped API token that doesn't support currentUser()),
+            // throw the error to indicate that work items cannot be fetched
+            // This will cause the entire Jira work items section to be hidden
+            throw new Error(
+                `Cannot fetch work items: ${error.message || 'API token may have insufficient permissions'}`,
+            );
+        }
     }
 }
 
