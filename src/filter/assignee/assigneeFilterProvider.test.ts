@@ -149,6 +149,12 @@ describe('AssigneeFilterProvider', () => {
         jest.spyOn(vscode.commands, 'executeCommand').mockResolvedValue(undefined);
 
         jest.mocked(Container.siteManager.getSitesAvailable).mockReturnValue([mockSite1, mockSite2]);
+
+        // Mock jiraClient to return a client with getCurrentUser method
+        // Return null to simulate no current user, so tests can test regular user selection
+        jest.mocked(Container.clientManager.jiraClient).mockResolvedValue({
+            getCurrentUser: jest.fn().mockResolvedValue(null),
+        } as any);
     });
 
     afterEach(() => {

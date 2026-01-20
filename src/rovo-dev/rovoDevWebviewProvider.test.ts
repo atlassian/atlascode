@@ -38,6 +38,16 @@ jest.mock('../../src/commands/jira/showIssue', () => ({
     showIssueForURL: jest.fn(),
 }));
 
+jest.mock('../../src/container', () => ({
+    Container: {
+        credentialManager: {
+            onDidAuthChange: jest.fn().mockReturnValue({
+                dispose: jest.fn(),
+            }),
+        },
+    },
+}));
+
 import { ExtensionContext, workspace } from 'vscode';
 
 import { setCommandContext } from '../../src/commandContext';

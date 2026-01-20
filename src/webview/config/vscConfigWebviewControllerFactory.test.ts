@@ -54,6 +54,13 @@ describe('VSCConfigWebviewControllerFactory', () => {
         };
         (Container as any).siteManager = mockSiteManager;
 
+        // Mock Container.credentialManager
+        (Container as any).credentialManager = {
+            onDidAuthChange: jest.fn().mockReturnValue({
+                dispose: jest.fn(),
+            }),
+        };
+
         // Mock ConfigWebviewController
         mockController = {
             onSitesChanged: jest.fn(),

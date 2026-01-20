@@ -42,6 +42,9 @@ jest.mock('../../../../container', () => ({
         loginManager: {
             initRemoteAuth: jest.fn(),
         },
+        credentialManager: {
+            getRovoDevAuthInfo: jest.fn().mockResolvedValue(undefined),
+        },
     },
 }));
 
@@ -120,7 +123,7 @@ describe('ConfigWebviewController', () => {
         });
 
         test('should have required feature flags and experiments as empty arrays', () => {
-            expect(controller.requiredFeatureFlags).toEqual([Features.UseNewAuthFlow]);
+            expect(controller.requiredFeatureFlags).toEqual([Features.UseNewAuthFlow, Features.DedicatedRovoDevAuth]);
             expect(controller.requiredExperiments).toEqual([]);
         });
 
@@ -145,7 +148,8 @@ describe('ConfigWebviewController', () => {
 
             await controller.onSitesChanged();
 
-            expect(mockApi.getSitesWithAuth).toHaveBeenCalledTimes(1);
+            // getSitesWithAuth is called twice: once in onSitesChanged and once in invalidate
+            expect(mockApi.getSitesWithAuth).toHaveBeenCalledTimes(2);
             expect(mockMessagePoster).toHaveBeenCalledWith({
                 type: ConfigMessageType.SitesUpdate,
                 jiraSites: mockJiraSites,
