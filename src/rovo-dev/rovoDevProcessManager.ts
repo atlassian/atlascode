@@ -533,6 +533,7 @@ class RovoDevSubprocessInstance extends Disposable {
                         stdio: ['ignore', 'pipe', 'pipe'],
                         detached: true,
                         env: {
+                            ...process.env,
                             USER: process.env.USER || process.env.USERNAME,
                             USER_EMAIL: credentials.authInfo.username,
                             ROVODEV_SANDBOX_ID: this.extensionApi.metadata.appInstanceId(),
