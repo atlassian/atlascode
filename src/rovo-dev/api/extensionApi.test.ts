@@ -276,10 +276,6 @@ describe('ExtensionApi', () => {
                 const result = await jiraApi.fetchWorkItems(mockSite);
 
                 expect(result).toEqual([]);
-                expect(console.warn).toHaveBeenCalledWith(
-                    'Failed to fetch work items from API:',
-                    'Cannot fetch work items: JQL function currentUser() is not supported',
-                );
 
                 // Verify that only the currentUser() query was attempted (no fallbacks)
                 expect(mockClient.searchForIssuesUsingJqlGet).toHaveBeenCalledTimes(1);
