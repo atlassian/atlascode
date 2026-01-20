@@ -7,6 +7,7 @@ export enum ConfigTarget {
 export enum ConfigSection {
     Jira = 'jira',
     Bitbucket = 'bitbucket',
+    RovoDev = 'rovodev',
     General = 'general',
     Explore = 'explore',
 }

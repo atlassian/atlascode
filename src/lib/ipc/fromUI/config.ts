@@ -21,6 +21,11 @@ export enum ConfigActionType {
     ViewPullRequest = 'viewPullRequest',
     OpenNativeSettings = 'openNativeSettings',
     StartAuthFlow = 'StartAuthFlow',
+    FocusRovoDevWindow = 'focusRovoDevWindow',
+    OpenRovoDevConfig = 'openRovoDevConfig',
+    OpenRovoDevGlobalMemory = 'openRovoDevGlobalMemory',
+    OpenRovoDevMcpJson = 'openRovoDevMcpJson',
+    LogoutRovoDev = 'logoutRovoDev',
 }
 
 export type ConfigAction =
@@ -40,6 +45,11 @@ export type ConfigAction =
     | ReducerAction<ConfigActionType.ViewPullRequest>
     | ReducerAction<ConfigActionType.OpenNativeSettings>
     | ReducerAction<ConfigActionType.StartAuthFlow>
+    | ReducerAction<ConfigActionType.FocusRovoDevWindow>
+    | ReducerAction<ConfigActionType.OpenRovoDevConfig>
+    | ReducerAction<ConfigActionType.OpenRovoDevGlobalMemory>
+    | ReducerAction<ConfigActionType.OpenRovoDevMcpJson>
+    | ReducerAction<ConfigActionType.LogoutRovoDev>
     | CommonAction;
 
 export interface AuthAction {

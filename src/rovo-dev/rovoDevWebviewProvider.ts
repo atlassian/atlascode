@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import path from 'path';
 import { setCommandContext } from 'src/commandContext';
+import { Container } from 'src/container';
 import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { safeWaitFor } from 'src/rovo-dev/util/waitFor';
@@ -174,6 +175,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 webviewOptions: { retainContextWhenHidden: true },
             }),
             this.extensionApi.config.onDidChange(this.onConfigurationChanged, this),
+            Container.credentialManager.onDidAuthChange(this.onAuthChange, this),
         );
 
         // Register editor listeners
@@ -217,6 +219,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         if (this.extensionApi.config.changed(e, 'rovodev.thinkingBlockEnabled')) {
             this.refreshThinkingBlock();
         }
+    }
+
+    private async onAuthChange(event: any): Promise<void> {
+        // Only handle Rovo Dev auth changes
+        if (event.site?.product?.key !== 'rovodev') {
+            return;
+        }
+
+        // Reinitialize Rovo Dev process with new credentials
+        await RovoDevProcessManager.initializeRovoDev(this._context, true);
     }
 
     private async refreshDebugPanel(force?: boolean) {

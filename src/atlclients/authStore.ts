@@ -17,6 +17,7 @@ import {
     BasicAuthInfo,
     DetailedSiteInfo,
     emptyAuthInfo,
+    emptySiteInfo,
     getSecretForAuthInfo,
     isBasicAuthInfo,
     isOAuthInfo,
@@ -670,6 +671,16 @@ export class CredentialManager implements Disposable {
                 CredentialManager.ROVODEV_CREDENTIAL_ID,
                 info,
             );
+            // Fire event to notify listeners of auth change
+            const updateEvent: UpdateAuthInfoEvent = {
+                type: AuthChangeType.Update,
+                site: {
+                    ...emptySiteInfo,
+                    product: ProductRovoDev,
+                    credentialId: CredentialManager.ROVODEV_CREDENTIAL_ID,
+                },
+            };
+            this._onDidAuthChange.fire(updateEvent);
         } catch (e) {
             Logger.error(e, 'error saving RovoDev auth info to secretstorage');
         }
@@ -677,6 +688,7 @@ export class CredentialManager implements Disposable {
 
     public async removeRovoDevAuthInfo(): Promise<boolean> {
         Logger.debug(`Removing RovoDev auth info`);
+        const authInfo = await this.getRovoDevAuthInfo();
         const wasKeyDeleted = await this.removeSiteInformationFromSecretStorage(
             ProductRovoDev.key,
             CredentialManager.ROVODEV_CREDENTIAL_ID,
@@ -687,6 +699,15 @@ export class CredentialManager implements Disposable {
             if (cmdctx) {
                 setCommandContext(cmdctx, false);
             }
+
+            // Fire event to notify listeners of auth removal
+            const removeEvent: RemoveAuthInfoEvent = {
+                type: AuthChangeType.Remove,
+                product: ProductRovoDev,
+                credentialId: CredentialManager.ROVODEV_CREDENTIAL_ID,
+                userId: authInfo?.user?.id || '',
+            };
+            this._onDidAuthChange.fire(removeEvent);
 
             return true;
         }

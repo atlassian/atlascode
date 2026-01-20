@@ -9,6 +9,7 @@ import * as vscode from 'vscode';
 import { isBasicAuthInfo, isEmptySiteInfo, isPATAuthInfo } from '../../../../atlclients/authInfo';
 import { Commands, ExtensionId } from '../../../../constants';
 import { Container } from '../../../../container';
+import { RovodevCommands } from '../../../../rovo-dev/api/componentApi';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { ConfigAction, ConfigActionType } from '../../../ipc/fromUI/config';
@@ -25,7 +26,7 @@ const AUTH_URI = `${env.uriScheme || 'vscode'}://${ExtensionId}/auth`;
 export const id: string = 'atlascodeSettingsV2'; // Need to change this to 'id_v2' to help with dif versions
 
 export class ConfigWebviewController implements WebviewController<SectionChangeMessage> {
-    public readonly requiredFeatureFlags = [Features.UseNewAuthFlow];
+    public readonly requiredFeatureFlags = [Features.UseNewAuthFlow, Features.DedicatedRovoDevAuth];
     public readonly requiredExperiments = [];
 
     private _messagePoster: MessagePoster;
@@ -76,6 +77,8 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
             jiraSites: jiraSites,
             bitbucketSites: bbSites,
         });
+        // Also update Rovo Dev auth info
+        await this.invalidate();
     }
 
     private async invalidate() {
@@ -89,6 +92,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
             const target = this._api.getConfigTarget();
             const section = this._initialSection ? this._initialSection : {};
             const cfg = this._api.flattenedConfigForTarget(target);
+            const rovoDevAuthInfo = await Container.credentialManager.getRovoDevAuthInfo();
             this.postMessage({
                 type: ConfigMessageType.Init,
                 bitbucketSites: bbSites,
@@ -99,6 +103,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 showTunnelOption: this._api.shouldShowTunnelOption(),
                 config: cfg,
                 machineId: vscode.env.machineId,
+                rovoDevAuthInfo: rovoDevAuthInfo,
                 ...section,
             });
 
@@ -318,6 +323,27 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
             }
             case ConfigActionType.StartAuthFlow: {
                 vscode.commands.executeCommand(Commands.JiraLogin);
+                break;
+            }
+            case ConfigActionType.FocusRovoDevWindow: {
+                vscode.commands.executeCommand(RovodevCommands.FocusRovoDevWindow);
+                break;
+            }
+            case ConfigActionType.OpenRovoDevConfig: {
+                vscode.commands.executeCommand(RovodevCommands.OpenRovoDevConfig);
+                break;
+            }
+            case ConfigActionType.OpenRovoDevGlobalMemory: {
+                vscode.commands.executeCommand(RovodevCommands.OpenRovoDevGlobalMemory);
+                break;
+            }
+            case ConfigActionType.OpenRovoDevMcpJson: {
+                vscode.commands.executeCommand(RovodevCommands.OpenRovoDevMcpJson);
+                break;
+            }
+            case ConfigActionType.LogoutRovoDev: {
+                await Container.rovodevWebviewProvider.executeRovoDevLogout();
+                // Note: invalidate() will be called automatically via onAuthChange event
                 break;
             }
 

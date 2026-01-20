@@ -60,6 +60,7 @@ export interface ConfigInitMessage {
     subSection?: ConfigSubSection;
     initiateApiTokenAuth?: boolean;
     machineId?: string;
+    rovoDevAuthInfo?: AuthInfo;
 }
 export interface ConfigV3InitMessage {
     config: FlattenedConfig;
@@ -84,6 +85,7 @@ export const emptyConfigInitMessage: ConfigInitMessage = {
     showTunnelOption: false,
     target: ConfigTarget.User,
     section: ConfigSection.Jira,
+    rovoDevAuthInfo: undefined,
 };
 
 export const emptyConfigV3InitMessage: ConfigV3InitMessage = {

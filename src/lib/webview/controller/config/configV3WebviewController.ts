@@ -10,6 +10,7 @@ import * as vscode from 'vscode';
 import { isBasicAuthInfo, isEmptySiteInfo, isPATAuthInfo } from '../../../../atlclients/authInfo';
 import { Commands, ExtensionId } from '../../../../constants';
 import { Container } from '../../../../container';
+import { RovodevCommands } from '../../../../rovo-dev/api/componentApi';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { ConfigAction, ConfigActionType } from '../../../ipc/fromUI/config';
@@ -311,6 +312,27 @@ export class ConfigV3WebviewController implements WebviewController<SectionV3Cha
             }
             case ConfigActionType.StartAuthFlow: {
                 vscode.commands.executeCommand(Commands.JiraLogin);
+                break;
+            }
+            case ConfigActionType.FocusRovoDevWindow: {
+                vscode.commands.executeCommand(RovodevCommands.FocusRovoDevWindow);
+                break;
+            }
+            case ConfigActionType.OpenRovoDevConfig: {
+                vscode.commands.executeCommand(RovodevCommands.OpenRovoDevConfig);
+                break;
+            }
+            case ConfigActionType.OpenRovoDevGlobalMemory: {
+                vscode.commands.executeCommand(RovodevCommands.OpenRovoDevGlobalMemory);
+                break;
+            }
+            case ConfigActionType.OpenRovoDevMcpJson: {
+                vscode.commands.executeCommand(RovodevCommands.OpenRovoDevMcpJson);
+                break;
+            }
+            case ConfigActionType.LogoutRovoDev: {
+                await Container.rovodevWebviewProvider.executeRovoDevLogout();
+                // Note: invalidate() will be called automatically via onAuthChange event
                 break;
             }
             case CommonActionType.SendAnalytics:

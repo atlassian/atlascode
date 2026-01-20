@@ -1,5 +1,6 @@
 import { Disposable, Uri } from 'vscode';
 
+import { isRemoveAuthEvent, isUpdateAuthEvent, ProductRovoDev } from '../../atlclients/authInfo';
 import { Container } from '../../container';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { UIWSPort } from '../../lib/ipc/models/ports';
@@ -64,6 +65,18 @@ export class VSCConfigV3WebviewControllerFactory implements VSCWebviewController
 
         const disposables = Disposable.from(
             Container.siteManager.onDidSitesAvailableChange(controller.onSitesChanged, controller),
+            Container.credentialManager.onDidAuthChange((e) => {
+                // Filter out Rovo Dev auth changes to prevent infinite loop with Rovo Dev view
+                const isRovoDev = isUpdateAuthEvent(e)
+                    ? e.site.product.key === ProductRovoDev.key
+                    : isRemoveAuthEvent(e)
+                      ? e.product.key === ProductRovoDev.key
+                      : false;
+
+                if (!isRovoDev) {
+                    controller.onSitesChanged();
+                }
+            }),
         );
 
         return [controller, disposables];

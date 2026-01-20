@@ -25,7 +25,7 @@ import { AnalyticsView } from 'src/analyticsTypes';
 import { ConfigSection, ConfigSubSection, ConfigTarget } from '../../../lib/ipc/models/config';
 import { AtlascodeErrorBoundary } from '../common/ErrorBoundary';
 import { ErrorDisplay } from '../common/ErrorDisplay';
-import { FeatureFlagProvider } from '../common/FeatureFlagContext';
+import { FeatureFlagProvider, Features, useFeatureFlags } from '../common/FeatureFlagContext';
 import { PMFDisplay } from '../common/pmf/PMFDisplay';
 import { AuthDialog } from './auth/dialog/AuthDialog';
 import { AuthDialogControllerContext, useAuthDialog } from './auth/useAuthDialog';
@@ -35,6 +35,7 @@ import { ExplorePanel } from './explore/ExplorePanel';
 import { GeneralPanel } from './general/GeneralPanel';
 import { JiraPanel } from './jira/JiraPanel';
 import { ProductEnabler } from './ProductEnabler';
+import { RovoDevPanel } from './rovodev/RovoDevPanel';
 import { SidebarButtons } from './SidebarButtons';
 
 const useStyles = makeStyles(
@@ -70,6 +71,7 @@ type SectionWithSubsections = {
 const emptySubsections: SectionWithSubsections = {
     [ConfigSection.Jira]: [],
     [ConfigSection.Bitbucket]: [],
+    [ConfigSection.RovoDev]: [],
     [ConfigSection.General]: [],
 };
 
@@ -85,6 +87,7 @@ const ConfigPage: React.FunctionComponent = () => {
 
     const { authDialogController, authDialogOpen, authDialogProduct, authDialogEntry, allSitesWithAuth } =
         useAuthDialog();
+
     const handleTabChange = useCallback((event: React.ChangeEvent<{}>, section: ConfigSection) => {
         setOpenSection(section);
     }, []);
@@ -133,6 +136,12 @@ const ConfigPage: React.FunctionComponent = () => {
         setChanges(changes);
     }, []);
 
+    const handleRovoDevToggle = useCallback((enabled: boolean): void => {
+        const changes = Object.create(null);
+        changes['rovodev.enabled'] = enabled;
+        setChanges(changes);
+    }, []);
+
     const handleTargetChange = useCallback((event: React.MouseEvent<HTMLElement>, newTarget: ConfigTarget) => {
         if (newTarget) {
             setInternalTarget(newTarget);
@@ -174,178 +183,244 @@ const ConfigPage: React.FunctionComponent = () => {
         <ConfigControllerContext.Provider value={controller}>
             <FeatureFlagProvider>
                 <AuthDialogControllerContext.Provider value={authDialogController}>
-                    <AtlascodeErrorBoundary
-                        context={{ view: AnalyticsView.SettingsPage }}
-                        postMessageFunc={controller.postMessage}
-                    >
-                        <Container maxWidth="xl">
-                            <AppBar position="relative">
-                                <Toolbar>
-                                    <Typography variant="h3" className={classes.title}>
-                                        Atlassian Settings
-                                    </Typography>
-                                    <Tabs
-                                        value={openSection}
-                                        onChange={handleTabChange}
-                                        aria-label="simple tabs example"
-                                        indicatorColor="primary"
-                                        variant="scrollable"
-                                        scrollButtons
-                                        allowScrollButtonsMobile
-                                    >
-                                        <Tab
-                                            id="simple-tab-0"
-                                            aria-controls="simple-tabpanel-0"
-                                            value={ConfigSection.Jira}
-                                            label={
-                                                <ProductEnabler
-                                                    label="Jira"
-                                                    enabled={state.config['jira.enabled']}
-                                                    onToggle={handleJiraToggle}
-                                                />
-                                            }
-                                        />
-                                        <Tab
-                                            id="simple-tab-1"
-                                            aria-controls="simple-tabpanel-1"
-                                            value={ConfigSection.Bitbucket}
-                                            label={
-                                                <ProductEnabler
-                                                    label="Bitbucket"
-                                                    enabled={state.config['bitbucket.enabled']}
-                                                    onToggle={handleBitbucketToggle}
-                                                />
-                                            }
-                                        />
-                                        <Tab
-                                            id="simple-tab-2"
-                                            aria-controls="simple-tabpanel-2"
-                                            value={ConfigSection.General}
-                                            label="General"
-                                        />
-                                        <Tab
-                                            id="simple-tab-3"
-                                            aria-controls="simple-tabpanel-3"
-                                            value={ConfigSection.Explore}
-                                            label="Explore"
-                                        />
-                                    </Tabs>
-                                    <div className={classes.grow} />
-                                    <Typography variant="subtitle1" classes={{ root: classes.targetSelectLabel }}>
-                                        Save settings to:{' '}
-                                    </Typography>
-                                    <ToggleButtonGroup
-                                        color="primary"
-                                        size="small"
-                                        value={internalTarget}
-                                        exclusive
-                                        onChange={handleTargetChange}
-                                    >
-                                        <Tooltip title="User settings">
-                                            <ToggleButton
-                                                key={1}
-                                                value={ConfigTarget.User}
-                                                selected={internalTarget !== ConfigTarget.User}
-                                                disableRipple={internalTarget === ConfigTarget.User}
-                                            >
-                                                <Badge
-                                                    color="primary"
-                                                    variant="dot"
-                                                    invisible={internalTarget !== ConfigTarget.User}
-                                                >
-                                                    <PersonIcon />
-                                                </Badge>
-                                            </ToggleButton>
-                                        </Tooltip>
-                                        <Tooltip title="Workspace settings">
-                                            <ToggleButton
-                                                key={2}
-                                                value={ConfigTarget.Workspace}
-                                                selected={internalTarget !== ConfigTarget.Workspace}
-                                                disableRipple={internalTarget === ConfigTarget.Workspace}
-                                            >
-                                                <Badge
-                                                    color="primary"
-                                                    variant="dot"
-                                                    invisible={internalTarget !== ConfigTarget.Workspace}
-                                                >
-                                                    <WorkIcon />
-                                                </Badge>
-                                            </ToggleButton>
-                                        </Tooltip>
-                                    </ToggleButtonGroup>
-                                    <RefreshButton loading={state.isSomethingLoading} onClick={controller.refresh} />
-                                </Toolbar>
-                            </AppBar>
-                            <Grid container spacing={1}>
-                                <Grid item xs={12} md={9} lg={10} xl={10}>
-                                    <Paper className={classes.paper100}>
-                                        <ErrorDisplay />
-                                        <PMFDisplay postMessageFunc={controller.postMessage} />
-                                        <Box margin={2}>
-                                            <JiraPanel
-                                                visible={openSection === ConfigSection.Jira}
-                                                selectedSubSections={openSubsections[ConfigSection.Jira]}
-                                                onSubsectionChange={handleSubsectionChange}
-                                                config={state.config!}
-                                                sites={state.jiraSites}
-                                                isRemote={state.isRemote}
-                                                initiateJiraApiTokenAuth={
-                                                    openSection === ConfigSection.Jira &&
-                                                    openSubsections[ConfigSection.Jira] &&
-                                                    !!state.initiateApiTokenAuth
-                                                }
-                                            />
-                                            <BitbucketPanel
-                                                visible={openSection === ConfigSection.Bitbucket}
-                                                selectedSubSections={openSubsections[ConfigSection.Bitbucket]}
-                                                onSubsectionChange={handleSubsectionChange}
-                                                config={state.config!}
-                                                sites={state.bitbucketSites}
-                                                isRemote={state.isRemote}
-                                                initiateBitbucketApiTokenAuth={
-                                                    openSection === ConfigSection.Bitbucket &&
-                                                    openSubsections[ConfigSection.Bitbucket] &&
-                                                    !!state.initiateApiTokenAuth
-                                                }
-                                            />
-                                            <GeneralPanel
-                                                visible={openSection === ConfigSection.General}
-                                                selectedSubSections={openSubsections[ConfigSection.General]}
-                                                onSubsectionChange={handleSubsectionChange}
-                                                config={state.config!}
-                                                machineId={state.machineId}
-                                            />
-                                            <ExplorePanel
-                                                visible={openSection === ConfigSection.Explore}
-                                                config={state.config!}
-                                                sectionChanger={handleCompleteSectionChange}
-                                            />
-                                        </Box>
-                                    </Paper>
-                                </Grid>
-                                <Grid item xs={12} md={3} lg={2} xl={2}>
-                                    <Paper className={classes.paperOverflow}>
-                                        <Box margin={2}>
-                                            <SidebarButtons feedbackUser={state.feedbackUser} />
-                                        </Box>
-                                    </Paper>
-                                </Grid>
-                            </Grid>
-                        </Container>
-                        <AuthDialog
-                            product={authDialogProduct}
-                            doClose={authDialogController.close}
-                            authEntry={authDialogEntry}
-                            open={authDialogOpen}
-                            save={controller.login}
-                            onExited={authDialogController.onExited}
-                            allSitesWithAuth={allSitesWithAuth}
-                        />
-                    </AtlascodeErrorBoundary>
+                    <ConfigPageContent
+                        state={state}
+                        controller={controller}
+                        classes={classes}
+                        openSection={openSection}
+                        openSubsections={openSubsections}
+                        internalTarget={internalTarget}
+                        handleTabChange={handleTabChange}
+                        handleSubsectionChange={handleSubsectionChange}
+                        handleCompleteSectionChange={handleCompleteSectionChange}
+                        handleTargetChange={handleTargetChange}
+                        handleJiraToggle={handleJiraToggle}
+                        handleBitbucketToggle={handleBitbucketToggle}
+                        handleRovoDevToggle={handleRovoDevToggle}
+                        authDialogController={authDialogController}
+                        authDialogOpen={authDialogOpen}
+                        authDialogProduct={authDialogProduct}
+                        authDialogEntry={authDialogEntry}
+                        allSitesWithAuth={allSitesWithAuth}
+                    />
                 </AuthDialogControllerContext.Provider>
             </FeatureFlagProvider>
         </ConfigControllerContext.Provider>
+    );
+};
+
+const ConfigPageContent: React.FC<any> = ({
+    state,
+    controller,
+    classes,
+    openSection,
+    openSubsections,
+    internalTarget,
+    handleTabChange,
+    handleSubsectionChange,
+    handleCompleteSectionChange,
+    handleTargetChange,
+    handleJiraToggle,
+    handleBitbucketToggle,
+    handleRovoDevToggle,
+    authDialogController,
+    authDialogOpen,
+    authDialogProduct,
+    authDialogEntry,
+    allSitesWithAuth,
+}) => {
+    const { flags } = useFeatureFlags();
+
+    return (
+        <AtlascodeErrorBoundary context={{ view: AnalyticsView.SettingsPage }} postMessageFunc={controller.postMessage}>
+            <Container maxWidth="xl">
+                <AppBar position="relative">
+                    <Toolbar>
+                        <Typography variant="h3" className={classes.title}>
+                            Atlassian Settings
+                        </Typography>
+                        <Tabs
+                            value={openSection}
+                            onChange={handleTabChange}
+                            aria-label="simple tabs example"
+                            indicatorColor="primary"
+                            variant="scrollable"
+                            scrollButtons
+                            allowScrollButtonsMobile
+                        >
+                            <Tab
+                                id="simple-tab-0"
+                                aria-controls="simple-tabpanel-0"
+                                value={ConfigSection.Jira}
+                                label={
+                                    <ProductEnabler
+                                        label="Jira"
+                                        enabled={state.config['jira.enabled']}
+                                        onToggle={handleJiraToggle}
+                                    />
+                                }
+                            />
+                            <Tab
+                                id="simple-tab-1"
+                                aria-controls="simple-tabpanel-1"
+                                value={ConfigSection.Bitbucket}
+                                label={
+                                    <ProductEnabler
+                                        label="Bitbucket"
+                                        enabled={state.config['bitbucket.enabled']}
+                                        onToggle={handleBitbucketToggle}
+                                    />
+                                }
+                            />
+                            {flags[Features.DedicatedRovoDevAuth] && (
+                                <Tab
+                                    id="simple-tab-rovodev"
+                                    aria-controls="simple-tabpanel-rovodev"
+                                    value={ConfigSection.RovoDev}
+                                    label={
+                                        <ProductEnabler
+                                            label="Rovo Dev"
+                                            enabled={state.config['rovodev.enabled']}
+                                            onToggle={handleRovoDevToggle}
+                                        />
+                                    }
+                                />
+                            )}
+                            <Tab
+                                id="simple-tab-2"
+                                aria-controls="simple-tabpanel-2"
+                                value={ConfigSection.General}
+                                label="General"
+                            />
+                            <Tab
+                                id="simple-tab-3"
+                                aria-controls="simple-tabpanel-3"
+                                value={ConfigSection.Explore}
+                                label="Explore"
+                            />
+                        </Tabs>
+                        <div className={classes.grow} />
+                        <Typography variant="subtitle1" classes={{ root: classes.targetSelectLabel }}>
+                            Save settings to:{' '}
+                        </Typography>
+                        <ToggleButtonGroup
+                            color="primary"
+                            size="small"
+                            value={internalTarget}
+                            exclusive
+                            onChange={handleTargetChange}
+                        >
+                            <Tooltip title="User settings">
+                                <ToggleButton
+                                    key={1}
+                                    value={ConfigTarget.User}
+                                    selected={internalTarget !== ConfigTarget.User}
+                                    disableRipple={internalTarget === ConfigTarget.User}
+                                >
+                                    <Badge
+                                        color="primary"
+                                        variant="dot"
+                                        invisible={internalTarget !== ConfigTarget.User}
+                                    >
+                                        <PersonIcon />
+                                    </Badge>
+                                </ToggleButton>
+                            </Tooltip>
+                            <Tooltip title="Workspace settings">
+                                <ToggleButton
+                                    key={2}
+                                    value={ConfigTarget.Workspace}
+                                    selected={internalTarget !== ConfigTarget.Workspace}
+                                    disableRipple={internalTarget === ConfigTarget.Workspace}
+                                >
+                                    <Badge
+                                        color="primary"
+                                        variant="dot"
+                                        invisible={internalTarget !== ConfigTarget.Workspace}
+                                    >
+                                        <WorkIcon />
+                                    </Badge>
+                                </ToggleButton>
+                            </Tooltip>
+                        </ToggleButtonGroup>
+                        <RefreshButton loading={state.isSomethingLoading} onClick={controller.refresh} />
+                    </Toolbar>
+                </AppBar>
+                <Grid container spacing={1}>
+                    <Grid item xs={12} md={9} lg={10} xl={10}>
+                        <Paper className={classes.paper100}>
+                            <ErrorDisplay />
+                            <PMFDisplay postMessageFunc={controller.postMessage} />
+                            <Box margin={2}>
+                                <JiraPanel
+                                    visible={openSection === ConfigSection.Jira}
+                                    selectedSubSections={openSubsections[ConfigSection.Jira]}
+                                    onSubsectionChange={handleSubsectionChange}
+                                    config={state.config!}
+                                    sites={state.jiraSites}
+                                    isRemote={state.isRemote}
+                                    initiateJiraApiTokenAuth={
+                                        openSection === ConfigSection.Jira &&
+                                        openSubsections[ConfigSection.Jira] &&
+                                        !!state.initiateApiTokenAuth
+                                    }
+                                />
+                                <BitbucketPanel
+                                    visible={openSection === ConfigSection.Bitbucket}
+                                    selectedSubSections={openSubsections[ConfigSection.Bitbucket]}
+                                    onSubsectionChange={handleSubsectionChange}
+                                    config={state.config!}
+                                    sites={state.bitbucketSites}
+                                    isRemote={state.isRemote}
+                                    initiateBitbucketApiTokenAuth={
+                                        openSection === ConfigSection.Bitbucket &&
+                                        openSubsections[ConfigSection.Bitbucket] &&
+                                        !!state.initiateApiTokenAuth
+                                    }
+                                />
+                                {flags[Features.DedicatedRovoDevAuth] && (
+                                    <RovoDevPanel
+                                        visible={openSection === ConfigSection.RovoDev}
+                                        selectedSubSections={openSubsections[ConfigSection.RovoDev]}
+                                        onSubsectionChange={handleSubsectionChange}
+                                        config={state.config!}
+                                        rovoDevAuthInfo={state.rovoDevAuthInfo}
+                                    />
+                                )}
+                                <GeneralPanel
+                                    visible={openSection === ConfigSection.General}
+                                    selectedSubSections={openSubsections[ConfigSection.General]}
+                                    onSubsectionChange={handleSubsectionChange}
+                                    config={state.config!}
+                                    machineId={state.machineId}
+                                />
+                                <ExplorePanel
+                                    visible={openSection === ConfigSection.Explore}
+                                    config={state.config!}
+                                    sectionChanger={handleCompleteSectionChange}
+                                />
+                            </Box>
+                        </Paper>
+                    </Grid>
+                    <Grid item xs={12} md={3} lg={2} xl={2}>
+                        <Paper className={classes.paperOverflow}>
+                            <Box margin={2}>
+                                <SidebarButtons feedbackUser={state.feedbackUser} />
+                            </Box>
+                        </Paper>
+                    </Grid>
+                </Grid>
+            </Container>
+            <AuthDialog
+                product={authDialogProduct}
+                doClose={authDialogController.close}
+                authEntry={authDialogEntry}
+                open={authDialogOpen}
+                save={controller.login}
+                onExited={authDialogController.onExited}
+                allSitesWithAuth={allSitesWithAuth}
+            />
+        </AtlascodeErrorBoundary>
     );
 };
 
