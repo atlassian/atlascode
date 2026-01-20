@@ -543,13 +543,13 @@ export class CredentialManager implements Disposable {
                     Logger.debug(
                         `Skipping token refresh for credentialID: ${site.credentialId} due to previous failures.`,
                     );
+                    return undefined;
                 } else {
                     // reset attempts count after delay has passed
                     if (this._failedRefreshCache.has(site.credentialId)) {
                         this._failedRefreshCache.delete(site.credentialId);
                     }
                 }
-                return undefined;
             }
         }
 
