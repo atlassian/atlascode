@@ -1,26 +1,62 @@
 import * as React from 'react';
 import { State } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevFeatures } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
 import { DialogMessageItem } from '../../common/DialogMessage';
 import { McpConsentChoice } from '../../rovoDevViewMessages';
 import { inChatButtonStyles, inChatSecondaryButtonStyles } from '../../rovoDevViewStyles';
+import { CredentialHint, RovoDevLoginForm } from './RovoDevLoginForm';
 
 const messageOuterStyles: React.CSSProperties = {
     marginTop: '24px',
 };
 
+const loginFormContainerStyles: React.CSSProperties = {
+    marginTop: '24px',
+    width: '80%',
+    maxWidth: '500px',
+    minWidth: '250px',
+};
+
 export const DisabledMessage: React.FC<{
     currentState: State;
     onLoginClick: (openApiTokenLogin: boolean) => void;
+    onRovoDevAuthSubmit: (host: string, email: string, apiToken: string) => void;
     onOpenFolder: () => void;
     onLinkClick: (url: string) => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
-}> = ({ currentState, onLoginClick, onOpenFolder, onLinkClick, onMcpChoice }) => {
+    credentialHints?: CredentialHint[];
+    features?: RovoDevFeatures;
+}> = ({
+    currentState,
+    onLoginClick,
+    onRovoDevAuthSubmit,
+    onOpenFolder,
+    onLinkClick,
+    onMcpChoice,
+    credentialHints,
+    features,
+}) => {
     if (currentState.state === 'Disabled' && currentState.subState === 'NeedAuth') {
+        if (features?.dedicatedRovoDevAuth) {
+            // Show inline login form
+            return (
+                <div style={loginFormContainerStyles}>
+                    <div style={{ marginBottom: '12px' }}>Sign in to Rovo Dev with an API token</div>
+                    <RovoDevLoginForm
+                        onSubmit={(host, email, apiToken) => {
+                            onRovoDevAuthSubmit(host, email, apiToken);
+                        }}
+                        credentialHints={credentialHints}
+                    />
+                </div>
+            );
+        }
+
         return (
             <div style={messageOuterStyles}>
-                <div>Create an API token in Jira Cloud and add it here to use Rovo Dev beta</div>
-                <button style={{ ...inChatButtonStyles, marginTop: '8px' }} onClick={() => onLoginClick(true)}>
+                <div>Create an Atlassian API token and add it here to use Rovo Dev beta</div>
+                <button style={{ ...inChatButtonStyles, marginTop: '8px' }} onClick={() => onLoginClick(false)}>
                     Add API Token
                 </button>
             </div>

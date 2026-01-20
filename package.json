@@ -186,6 +186,12 @@
                 "enablement": "atlascode:rovoDevEnabled"
             },
             {
+                "command": "atlascode.rovodev.logout",
+                "title": "Sign out",
+                "category": "Rovo Dev",
+                "enablement": "atlascode:rovoDevEnabled && atlascode:isRovoDevAuthenticated"
+            },
+            {
                 "command": "atlascode.rovodev.restartLsp",
                 "title": "Restart Language Server",
                 "category": "Rovo Dev",
@@ -745,6 +751,11 @@
                     "command": "atlascode.rovodev.restartProcess",
                     "when": "view == atlascode.views.rovoDev.webView",
                     "group": "rovoDevContextMenu3@1"
+                },
+                {
+                    "command": "atlascode.rovodev.logout",
+                    "when": "view == atlascode.views.rovoDev.webView && atlascode:isRovoDevAuthenticated",
+                    "group": "rovoDevContextMenu2@2"
                 },
                 {
                     "command": "atlascode.jira.expandCreateWorkItem",
@@ -1736,7 +1747,7 @@
         "merge-anything": "^6.0.6",
         "monaco-editor": "^0.51.0",
         "mustache": "^4.0.1",
-        "node-ipc": "^9.2.1",
+        "node-ipc": "^12.0.0",
         "p-cancelable": "^2.0.0",
         "p-queue": "^6.3.0",
         "p-settle": "^3.1.0",
