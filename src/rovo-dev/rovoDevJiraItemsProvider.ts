@@ -1,3 +1,4 @@
+import { Logger } from 'src/logger';
 import { Disposable, Event, EventEmitter } from 'vscode';
 
 import { DetailedSiteInfo, ExtensionApi, MinimalIssue } from './api/extensionApi';
@@ -73,14 +74,21 @@ export class RovoDevJiraItemsProvider extends Disposable {
             return;
         }
 
-        // Filter to only include MinimalIssue items (not IssueLinkIssue)
-        const assignedIssuesForSite = await this.extensionApi.jira.fetchWorkItems(this.jiraSiteHostname);
+        try {
+            // Filter to only include MinimalIssue items (not IssueLinkIssue)
+            const assignedIssuesForSite = await this.extensionApi.jira.fetchWorkItems(this.jiraSiteHostname);
 
-        const filteredIssues = assignedIssuesForSite.filter(
-            (issue) => issue.status?.statusCategory?.name.toLowerCase() === 'to do',
-        );
+            const filteredIssues = assignedIssuesForSite.filter(
+                (issue) => issue.status?.statusCategory?.name.toLowerCase() === 'to do',
+            );
 
-        this.pollTimer = setTimeout(() => this.checkForIssues(), 60000);
-        this._onNewJiraItems.fire(filteredIssues.slice(0, 3));
+            this.pollTimer = setTimeout(() => this.checkForIssues(), 60000);
+            this._onNewJiraItems.fire(filteredIssues.slice(0, 3));
+        } catch (error) {
+            // If fetching work items fails (e.g., due to scoped API token limitations),
+            // fire an empty array to hide the entire Jira work items section
+            Logger.error(error, 'Failed to fetch Jira work items:' + error.message);
+            this._onNewJiraItems.fire([]);
+        }
     }
 }
