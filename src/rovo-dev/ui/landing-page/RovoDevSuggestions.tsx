@@ -55,20 +55,6 @@ export const RovoDevJiraWorkItems: React.FC<{
             <div style={titleStyles}>Jira Work Items</div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                {jiraWorkItems === undefined && (
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '8px',
-                            color: 'var(--vscode-descriptionForeground)',
-                        }}
-                    >
-                        <i className="codicon codicon-loading codicon-modifier-spin" />
-                        <span>Loading work items...</span>
-                    </div>
-                )}
                 {jiraWorkItems !== undefined &&
                     jiraWorkItems.map((issue) => (
                         <JiraWorkItem
