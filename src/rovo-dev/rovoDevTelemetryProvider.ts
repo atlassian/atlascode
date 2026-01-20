@@ -27,10 +27,11 @@ export type TelemetryEvent =
     | PartialEvent<Track.GitPushAction>
     | PartialEvent<Track.DetailsExpanded>
     | PartialEvent<Track.CreatePrButtonClicked>
+    | PartialEvent<Track.AiResultViewed>
+    | PartialEvent<Track.RestartProcessAction>
     | PartialEvent<Track.RestoreSessionClicked>
     | PartialEvent<Track.ForkSessionClicked>
     | PartialEvent<Track.DeleteSessionClicked>
-    | PartialEvent<Track.AiResultViewed>
     | PartialEvent<Track.ReplayCompleted>;
 
 export type TelemetryScreenEvent = 'rovoDevSessionHistoryPicker';
@@ -91,6 +92,7 @@ export class RovoDevTelemetryProvider {
             event.subject === 'rovoDevRestoreSession' ||
             event.subject === 'rovoDevForkSession' ||
             event.subject === 'rovoDevDeleteSession' ||
+            event.action === 'rovoDevRestartProcessAction' ||
             !!event.attributes.promptId
         ) {
             return true;
@@ -105,6 +107,7 @@ export class RovoDevTelemetryProvider {
             // Allow multiple firings for these events
             eventId === 'atlascode_rovoDevFileChangedAction' ||
             eventId === 'rovoDevCreatePrButton_clicked' ||
+            eventId === 'atlascode_rovoDevRestartProcessAction' || // We want to log every restart attempt
             // Otherwise, only allow if not fired yet
             !this._firedTelemetryForCurrentPrompt[eventId]
         );
