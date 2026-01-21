@@ -28,7 +28,7 @@ export const FeedbackConfirmationForm: React.FC<FeedbackConfirmationFormProps> =
                     <span style={{ color: 'var(--vscode-testing-iconPassed)' }}>
                         <CheckCircleIcon label="Success" size="small" />
                     </span>
-                    <span style={{ color: 'var(--ds-icon-accent-white)' }}>Thanks</span>
+                    <span style={{ color: 'var(--vscode-editor-foreground)' }}>Thanks</span>
                 </div>
                 <span>
                     <CrossIcon
@@ -38,7 +38,9 @@ export const FeedbackConfirmationForm: React.FC<FeedbackConfirmationFormProps> =
                     />
                 </span>
             </button>
-            <p style={{ padding: '10px 16px' }}>Your valuable feedback helps us continually improve our products.</p>
+            <p style={{ padding: '10px 16px', color: 'var(--vscode-editor-foreground)' }}>
+                Your valuable feedback helps us continually improve our products.
+            </p>
         </div>
     );
 };

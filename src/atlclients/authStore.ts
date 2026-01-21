@@ -536,10 +536,20 @@ export class CredentialManager implements Disposable {
         const failedRefresh = this._failedRefreshCache.get(site.credentialId);
         if (failedRefresh) {
             const RETRY_DELAY = 5 * Time.MINUTES;
-            // if we already had multiple failed attempts recently, don't try again yet until enough time has passed
-            if (failedRefresh.attemptsCount > 5 && Date.now() - failedRefresh.lastAttemptAt.getTime() < RETRY_DELAY) {
-                Logger.debug(`Skipping token refresh for credentialID: ${site.credentialId} due to previous failures.`);
-                return undefined;
+            if (failedRefresh.attemptsCount > 5) {
+                const timeSinceLastAttempt = Date.now() - failedRefresh.lastAttemptAt.getTime();
+                // if we already had multiple failed attempts recently, don't try again yet until enough time has passed
+                if (timeSinceLastAttempt < RETRY_DELAY) {
+                    Logger.debug(
+                        `Skipping token refresh for credentialID: ${site.credentialId} due to previous failures.`,
+                    );
+                    return undefined;
+                } else {
+                    // reset attempts count after delay has passed
+                    if (this._failedRefreshCache.has(site.credentialId)) {
+                        this._failedRefreshCache.delete(site.credentialId);
+                    }
+                }
             }
         }
 
@@ -564,12 +574,14 @@ export class CredentialManager implements Disposable {
                     this._failedRefreshCache.delete(site.credentialId);
                 }
                 Logger.debug(`Successfully saved refreshed tokens for credentialId: ${site.credentialId}`);
-            } else if (tokenResponse.shouldInvalidate) {
+            } else if (tokenResponse.shouldInvalidate || tokenResponse.shouldSlowDown) {
+                if (tokenResponse.shouldSlowDown) {
+                    this._failedRefreshCache.set(site.credentialId, {
+                        attemptsCount: (this._failedRefreshCache.get(site.credentialId)?.attemptsCount ?? 0) + 1,
+                        lastAttemptAt: new Date(),
+                    });
+                }
                 credentials.state = AuthInfoState.Invalid;
-                this._failedRefreshCache.set(site.credentialId, {
-                    attemptsCount: (this._failedRefreshCache.get(site.credentialId)?.attemptsCount ?? 0) + 1,
-                    lastAttemptAt: new Date(),
-                });
                 await this.saveAuthInfo(site, credentials);
             }
         }

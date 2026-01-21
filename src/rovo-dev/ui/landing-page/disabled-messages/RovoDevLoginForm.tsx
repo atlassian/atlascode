@@ -64,13 +64,18 @@ export const RovoDevLoginForm: React.FC<{
     credentialHints?: CredentialHint[];
 }> = ({ onSubmit, credentialHints = [] }) => {
     const [host, setHost] = React.useState('');
+    const [hostInputValue, setHostInputValue] = React.useState('');
+
     const [email, setEmail] = React.useState('');
+    const [emailInputValue, setEmailInputValue] = React.useState('');
+
     const [apiToken, setApiToken] = React.useState('');
     const [authValidationState, setAuthValidationState] = React.useState<{
         isValidating: boolean;
         error?: string;
     }>({ isValidating: false });
 
+    const hostSelectRef = React.useRef<any>(null);
     const emailSelectRef = React.useRef<any>(null);
     const apiTokenInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -136,14 +141,34 @@ export const RovoDevLoginForm: React.FC<{
                     Jira Cloud Site
                 </label>
                 <CreatableSelect
+                    ref={hostSelectRef}
                     inputId="host"
                     options={hostOptions}
                     placeholder="yoursite.atlassian.net"
                     isClearable
                     isDisabled={authValidationState.isValidating}
                     value={host ? { label: host, value: host } : null}
+                    inputValue={hostInputValue}
+                    tabSelectsValue={true}
+                    onInputChange={(newValue: string) => {
+                        setHostInputValue(newValue);
+                    }}
+                    onKeyDown={(e: React.KeyboardEvent) => {
+                        // Move focus to next field on Tab
+                        if (e.key === 'Tab' && !e.shiftKey) {
+                            setTimeout(() => emailSelectRef.current?.focus(), 0);
+                        }
+                    }}
+                    onBlur={() => {
+                        // If the user clicks away, keep what they typed.
+                        if (hostInputValue.trim().length > 0) {
+                            setHost(hostInputValue.trim());
+                            setHostInputValue('');
+                        }
+                    }}
                     onChange={(option: any) => {
                         setHost(option?.value || '');
+                        setHostInputValue('');
                         if (option?.value) {
                             setTimeout(() => emailSelectRef.current?.focus(), 0);
                         }
@@ -166,8 +191,26 @@ export const RovoDevLoginForm: React.FC<{
                     isClearable
                     isDisabled={authValidationState.isValidating}
                     value={email ? { label: email, value: email } : null}
+                    inputValue={emailInputValue}
+                    tabSelectsValue={true}
+                    onInputChange={(newValue: string) => {
+                        setEmailInputValue(newValue);
+                    }}
+                    onKeyDown={(e: React.KeyboardEvent) => {
+                        // Move focus to next field on Tab
+                        if (e.key === 'Tab' && !e.shiftKey) {
+                            setTimeout(() => apiTokenInputRef.current?.focus(), 0);
+                        }
+                    }}
+                    onBlur={() => {
+                        if (emailInputValue.trim().length > 0) {
+                            setEmail(emailInputValue.trim());
+                            setEmailInputValue('');
+                        }
+                    }}
                     onChange={(option: any) => {
                         setEmail(option?.value || '');
+                        setEmailInputValue('');
                         if (option?.value) {
                             setTimeout(() => apiTokenInputRef.current?.focus(), 0);
                         }

@@ -16,6 +16,7 @@ const MockExperimentGates: Record<string, any> = {
 
 jest.mock('../features', () => {
     return {
+        defaultFeatureGateValues: {},
         ExperimentGates: MockExperimentGates,
     };
 });
