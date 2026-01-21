@@ -114,6 +114,14 @@ export class SentryService {
                 const atlascodeVersion = extensions.getExtension(ExtensionId)?.packageJSON.version;
                 scope.setTag('atlascodeVersion', atlascodeVersion);
 
+                // Add tracking tags for atlascode/rovodev transactions
+                if (this.config?.machineId) {
+                    scope.setTag('machineId', this.config.machineId);
+                }
+                if (this.config?.appInstanceId) {
+                    scope.setTag('appInstanceId', this.config.appInstanceId);
+                }
+
                 scope.setTag('rovoDevEnv', RovodevStaticConfig.isBBY ? 'BBY' : 'IDE');
 
                 // Add extra context

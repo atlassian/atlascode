@@ -159,6 +159,7 @@ export class Logger {
                     tags: {
                         productArea: productArea || 'unknown',
                         capturedBy: capturedBy || 'unknown',
+                        ...(sessionId && { sessionId: sessionId }),
                     },
                     extra: {
                         errorMessage,
