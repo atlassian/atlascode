@@ -146,6 +146,12 @@
                 "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive"
             },
             {
+                "command": "atlascode.rovodev.restartProcess",
+                "title": "Restart Rovo Dev Process",
+                "category": "Rovo Dev",
+                "enablement": "atlascode:rovoDevEnabled"
+            },
+            {
                 "command": "atlascode.openRovoDevConfig",
                 "title": "Open Settings File",
                 "category": "Rovo Dev",
@@ -178,6 +184,12 @@
                 "title": "Share feedback",
                 "category": "Rovo Dev",
                 "enablement": "atlascode:rovoDevEnabled"
+            },
+            {
+                "command": "atlascode.rovodev.logout",
+                "title": "Sign out",
+                "category": "Rovo Dev",
+                "enablement": "atlascode:rovoDevEnabled && atlascode:isRovoDevAuthenticated"
             },
             {
                 "command": "atlascode.rovodev.restartLsp",
@@ -734,6 +746,16 @@
                     "command": "atlascode.rovodev.shareFeedback",
                     "when": "view == atlascode.views.rovoDev.webView",
                     "group": "rovoDevContextMenu2@1"
+                },
+                {
+                    "command": "atlascode.rovodev.restartProcess",
+                    "when": "view == atlascode.views.rovoDev.webView",
+                    "group": "rovoDevContextMenu3@1"
+                },
+                {
+                    "command": "atlascode.rovodev.logout",
+                    "when": "view == atlascode.views.rovoDev.webView && atlascode:isRovoDevAuthenticated",
+                    "group": "rovoDevContextMenu2@2"
                 },
                 {
                     "command": "atlascode.jira.expandCreateWorkItem",
