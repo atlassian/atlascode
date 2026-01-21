@@ -10,6 +10,7 @@ import Tooltip from '@atlaskit/tooltip';
 import * as monaco from 'monaco-editor';
 import React from 'react';
 import { RovodevStaticConfig } from 'src/rovo-dev/api/rovodevStaticConfig';
+import { AgentMode, RovoDevModeInfo } from 'src/rovo-dev/client';
 import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
 
 import { rovoDevTextareaStyles } from '../../rovoDevViewStyles';
@@ -35,6 +36,9 @@ interface PromptInputBoxProps {
     isDeepPlanEnabled: boolean;
     isYoloModeEnabled: boolean;
     isFullContextEnabled: boolean;
+    availableAgentModes: RovoDevModeInfo[];
+    currentAgentMode: AgentMode | null;
+    onAgentModeChange: (mode: AgentMode) => void;
     onDeepPlanToggled?: () => void;
     onYoloModeToggled?: () => void;
     onFullContextToggled?: () => void;
@@ -108,6 +112,9 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     isDeepPlanEnabled,
     isYoloModeEnabled,
     isFullContextEnabled,
+    availableAgentModes,
+    currentAgentMode,
+    onAgentModeChange,
     onDeepPlanToggled,
     onYoloModeToggled,
     onFullContextToggled,
@@ -250,6 +257,9 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                             isDeepPlanEnabled={isDeepPlanEnabled}
                             isYoloModeEnabled={isYoloModeEnabled}
                             isFullContextEnabled={isFullContextEnabled}
+                            availableAgentModes={availableAgentModes}
+                            currentAgentMode={currentAgentMode}
+                            onAgentModeChange={onAgentModeChange}
                             onClose={() => {}}
                         />
                     </Tooltip>

@@ -49,6 +49,7 @@ import {
 const DEFAULT_LOADING_MESSAGE: string = 'Rovo dev is working';
 
 const RovoDevView: React.FC = () => {
+    const [isProviderReady, setIsProviderReady] = useState(false);
     const [currentState, setCurrentState] = useState<State>({ state: 'WaitingForPrompt' });
     const [pendingToolCallMessage, setPendingToolCallMessage] = useState('');
     const [retryAfterErrorEnabled, setRetryAfterErrorEnabled] = useState('');
@@ -80,9 +81,6 @@ const RovoDevView: React.FC = () => {
     const [feedbackType, setFeedbackType] = React.useState<'like' | 'dislike' | undefined>(undefined);
     const [availableAgentModes, setAvailableAgentModes] = useState<RovoDevModeInfo[]>([]);
     const [currentAgentMode, setCurrentAgentMode] = useState<AgentMode | null>(null);
-
-    console.log('availableAgentModes', availableAgentModes);
-    console.log('currentAgentMode', currentAgentMode);
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -336,6 +334,7 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.ProviderReady:
+                    setIsProviderReady(true);
                     setWorkspacePath(event.workspacePath || '');
                     setHomeDir(event.homeDir || '');
                     if (!RovodevStaticConfig.isBBY && event.yoloMode !== undefined) {
@@ -955,6 +954,13 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
+    const onAgentModeChange = useCallback(
+        (mode: AgentMode) => {
+            postMessage({ type: RovoDevViewResponseType.SetAgentMode, mode });
+        },
+        [postMessage],
+    );
+
     React.useEffect(() => {
         // the event below (YoloModeToggled) with value true automatically approves any pending confirmation
         if (isYoloModeToggled) {
@@ -973,6 +979,20 @@ const RovoDevView: React.FC = () => {
             value: isFullContextModeToggled,
         });
     }, [postMessage, isFullContextModeToggled]);
+
+    React.useEffect(() => {
+        if (!isProviderReady) {
+            return;
+        }
+
+        if (availableAgentModes.length === 0) {
+            postMessage({ type: RovoDevViewResponseType.GetAvailableAgentModes });
+        }
+
+        if (!currentAgentMode) {
+            postMessage({ type: RovoDevViewResponseType.GetCurrentAgentMode });
+        }
+    }, [isProviderReady, availableAgentModes, currentAgentMode, postMessage]);
 
     const hidePromptBox =
         currentState.state === 'Disabled' ||
@@ -1112,6 +1132,9 @@ const RovoDevView: React.FC = () => {
                                         isDeepPlanEnabled={isDeepPlanToggled}
                                         isYoloModeEnabled={isYoloModeToggled}
                                         isFullContextEnabled={isFullContextModeToggled}
+                                        availableAgentModes={availableAgentModes}
+                                        currentAgentMode={currentAgentMode}
+                                        onAgentModeChange={onAgentModeChange}
                                         onDeepPlanToggled={() => setIsDeepPlanToggled((prev) => !prev)}
                                         onYoloModeToggled={
                                             RovodevStaticConfig.isBBY ? undefined : () => onYoloModeToggled()

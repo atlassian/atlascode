@@ -5,6 +5,7 @@ import LockUnlockedIcon from '@atlaskit/icon/core/lock-unlocked';
 import TelescopeIcon from '@atlaskit/icon-lab/core/telescope';
 import Popup, { PopupComponentProps } from '@atlaskit/popup';
 import React from 'react';
+import { AgentMode, RovoDevModeInfo } from 'src/rovo-dev/client';
 
 import AgentModeSection from './AgentModeSection';
 import PromptSettingsItem from './PromptSettingsItem';
@@ -16,6 +17,9 @@ interface PromptSettingsPopupProps {
     isDeepPlanEnabled: boolean;
     isYoloModeEnabled: boolean;
     isFullContextEnabled: boolean;
+    availableAgentModes: RovoDevModeInfo[];
+    currentAgentMode: AgentMode | null;
+    onAgentModeChange: (mode: AgentMode) => void;
     onClose: () => void;
 }
 
@@ -46,6 +50,9 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
     isDeepPlanEnabled,
     isYoloModeEnabled,
     isFullContextEnabled,
+    availableAgentModes,
+    currentAgentMode,
+    onAgentModeChange,
     onClose,
 }) => {
     const [isOpen, setIsOpen] = React.useState(false);
@@ -114,7 +121,11 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                             toggled={isYoloModeEnabled}
                         />
                     )}
-                    <AgentModeSection enabled={true} />
+                    <AgentModeSection
+                        currentMode={currentAgentMode}
+                        availableModes={availableAgentModes}
+                        setAgentMode={onAgentModeChange}
+                    />
                 </div>
             )}
             placement="top-start"

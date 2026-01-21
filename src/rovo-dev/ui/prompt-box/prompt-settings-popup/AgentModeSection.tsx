@@ -1,11 +1,11 @@
 import { Radio } from '@atlaskit/radio';
-import Spinner from '@atlaskit/spinner';
 import React from 'react';
-import { AgentMode } from 'src/rovo-dev/client';
-import { useAgentModes } from 'src/rovo-dev/hooks/useAgentModes';
+import { AgentMode, RovoDevModeInfo } from 'src/rovo-dev/client';
 
 interface AgentModeSectionProps {
-    enabled?: boolean;
+    currentMode: AgentMode | null;
+    availableModes: RovoDevModeInfo[];
+    setAgentMode: (mode: AgentMode) => void;
 }
 
 // Map agent modes to icons - using similar icons as other settings
@@ -41,12 +41,14 @@ const formatModeLabel = (mode: string): string => {
     }
 };
 
-const AgentModeSection: React.FC<AgentModeSectionProps> = ({ enabled = true }: AgentModeSectionProps) => {
-    const { currentMode, availableModes, loading, setAgentMode } = useAgentModes({ enabled });
-
-    const handleModeSelect = async (mode: AgentMode) => {
+const AgentModeSection: React.FC<AgentModeSectionProps> = ({
+    currentMode,
+    availableModes,
+    setAgentMode,
+}: AgentModeSectionProps) => {
+    const handleModeSelect = (mode: AgentMode) => {
         try {
-            await setAgentMode(mode);
+            setAgentMode(mode);
         } catch (err) {
             console.error(err);
         }
@@ -66,49 +68,43 @@ const AgentModeSection: React.FC<AgentModeSectionProps> = ({ enabled = true }: A
             >
                 Reasoning
             </h3>
-            {loading ? (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100px' }}>
-                    <Spinner size="small" />
-                </div>
-            ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {availableModes.map((modeInfo) => {
-                        const isSelected = currentMode === modeInfo.mode;
-                        const modeIcon = getModeIcon(modeInfo.mode);
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {availableModes.map((modeInfo) => {
+                    const isSelected = currentMode === modeInfo.mode;
+                    const modeIcon = getModeIcon(modeInfo.mode);
 
-                        return (
-                            <div
-                                key={modeInfo.mode}
-                                className="prompt-settings-item"
-                                onClick={() => handleModeSelect(modeInfo.mode as AgentMode)}
-                                style={{ cursor: 'pointer' }}
-                            >
-                                {modeIcon && <div className="prompt-settings-logo">{modeIcon}</div>}
-                                <div id="prompt-settings-context" style={{ flex: 1 }}>
-                                    <p style={{ fontWeight: 'bold', margin: 0 }}>{formatModeLabel(modeInfo.mode)}</p>
-                                    <p
-                                        style={{
-                                            fontSize: '11px',
-                                            margin: '4px 0 0 0',
-                                            color: 'var(--vscode-descriptionForeground)',
-                                        }}
-                                    >
-                                        {modeInfo.description}
-                                    </p>
-                                </div>
-                                <div className="prompt-settings-action">
-                                    <Radio
-                                        isChecked={isSelected}
-                                        onChange={() => handleModeSelect(modeInfo.mode as AgentMode)}
-                                        value={modeInfo.mode}
-                                        name="agentMode"
-                                    />
-                                </div>
+                    return (
+                        <div
+                            key={modeInfo.mode}
+                            className="prompt-settings-item"
+                            onClick={() => handleModeSelect(modeInfo.mode as AgentMode)}
+                            style={{ cursor: 'pointer' }}
+                        >
+                            {modeIcon && <div className="prompt-settings-logo">{modeIcon}</div>}
+                            <div id="prompt-settings-context" style={{ flex: 1 }}>
+                                <p style={{ fontWeight: 'bold', margin: 0 }}>{formatModeLabel(modeInfo.mode)}</p>
+                                <p
+                                    style={{
+                                        fontSize: '11px',
+                                        margin: '4px 0 0 0',
+                                        color: 'var(--vscode-descriptionForeground)',
+                                    }}
+                                >
+                                    {modeInfo.description}
+                                </p>
                             </div>
-                        );
-                    })}
-                </div>
-            )}
+                            <div className="prompt-settings-action">
+                                <Radio
+                                    isChecked={isSelected}
+                                    onChange={() => handleModeSelect(modeInfo.mode as AgentMode)}
+                                    value={modeInfo.mode}
+                                    name="agentMode"
+                                />
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
         </div>
     );
 };
