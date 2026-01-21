@@ -396,6 +396,9 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(RovodevCommands.RovodevShareFeedback, () =>
             Container.rovodevWebviewProvider.executeTriggerFeedback(),
         ),
+        commands.registerCommand(RovodevCommands.RovodevLogout, () => {
+            Container.rovodevWebviewProvider.executeRovoDevLogout();
+        }),
         commands.registerCommand(RovodevCommands.RovodevAddToContext, async () => {
             const context = buildContext(window.activeTextEditor, vscodeContext);
             if (!context || context.length === 0) {
@@ -422,6 +425,10 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(
             RovodevCommands.OpenRovoDevLogFile,
             async () => await openRovoDevConfigFile('rovodev.log'),
+        ),
+        commands.registerCommand(
+            RovodevCommands.RestartProcess,
+            async () => await Container.rovodevWebviewProvider.executeRestartProcess(),
         ),
     );
 }
