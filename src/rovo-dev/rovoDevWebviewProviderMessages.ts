@@ -1,6 +1,8 @@
 import { DetailedSiteInfo, MinimalIssue } from './api/extensionApi';
 import {
+    AgentMode,
     EntitlementCheckRovoDevHealthcheckResponse,
+    RovoDevModeInfo,
     RovoDevRetryPromptResponse,
     RovoDevTextResponse,
     RovoDevToolCallResponse,
@@ -40,6 +42,9 @@ export const enum RovoDevProviderMessageType {
     RestoreState = 'restoreState',
     RovoDevAuthValidating = 'rovoDevAuthValidating',
     RovoDevAuthValidationComplete = 'rovoDevAuthValidationComplete',
+    GetAvailableAgentModesComplete = 'getAvailableAgentModesComplete',
+    GetCurrentAgentModeComplete = 'getCurrentAgentModeComplete',
+    SetAgentModeComplete = 'setAgentModeComplete',
 }
 
 export type RovoDevDisabledReason = DisabledState['subState'];
@@ -62,7 +67,6 @@ export interface RovoDevWebviewState {
     isDeepPlanToggled: boolean;
     isYoloModeToggled: boolean;
     isFullContextModeToggled: boolean;
-    isAskModeToggled: boolean;
     isAtlassianUser: boolean;
     promptContextCollection: RovoDevContextItem[];
 }
@@ -125,4 +129,7 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.SetThinkingBlockEnabled, { enabled: boolean }>
     | ReducerAction<RovoDevProviderMessageType.RestoreState, { state: RovoDevWebviewState }>
     | ReducerAction<RovoDevProviderMessageType.RovoDevAuthValidating>
-    | ReducerAction<RovoDevProviderMessageType.RovoDevAuthValidationComplete, { success: boolean; error?: string }>;
+    | ReducerAction<RovoDevProviderMessageType.RovoDevAuthValidationComplete, { success: boolean; error?: string }>
+    | ReducerAction<RovoDevProviderMessageType.GetAvailableAgentModesComplete, { modes: RovoDevModeInfo[] }>
+    | ReducerAction<RovoDevProviderMessageType.GetCurrentAgentModeComplete, { mode: AgentMode }>
+    | ReducerAction<RovoDevProviderMessageType.SetAgentModeComplete, { mode: AgentMode }>;

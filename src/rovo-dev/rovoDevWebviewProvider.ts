@@ -516,8 +516,28 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         this._chatProvider.fullContextMode = e.value;
                         break;
 
-                    case RovoDevViewResponseType.AskModeToggled:
-                        await this._chatProvider.setAgentMode(e.value ? 'ask' : 'default');
+                    case RovoDevViewResponseType.GetAvailableAgentModes:
+                        const modes = await this._chatProvider.getAvailableAgentModes();
+                        await webview.postMessage({
+                            type: RovoDevProviderMessageType.GetAvailableAgentModesComplete,
+                            modes: modes || [],
+                        });
+                        break;
+
+                    case RovoDevViewResponseType.GetCurrentAgentMode:
+                        const mode = await this._chatProvider.getCurrentAgentMode();
+                        await webview.postMessage({
+                            type: RovoDevProviderMessageType.GetCurrentAgentModeComplete,
+                            mode: mode || 'default',
+                        });
+                        break;
+
+                    case RovoDevViewResponseType.SetAgentMode:
+                        await this._chatProvider.setAgentMode(e.mode);
+                        await webview.postMessage({
+                            type: RovoDevProviderMessageType.SetAgentModeComplete,
+                            mode: e.mode,
+                        });
                         break;
 
                     case RovoDevViewResponseType.OpenExternalLink:
