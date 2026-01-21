@@ -4,6 +4,7 @@ import CustomizeIcon from '@atlaskit/icon/core/customize';
 import LockUnlockedIcon from '@atlaskit/icon/core/lock-unlocked';
 import TelescopeIcon from '@atlaskit/icon-lab/core/telescope';
 import Popup, { PopupComponentProps } from '@atlaskit/popup';
+import { token } from '@atlaskit/tokens';
 import React from 'react';
 import { AgentMode, RovoDevModeInfo } from 'src/rovo-dev/client';
 
@@ -91,6 +92,24 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
             )}
             content={() => (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <AgentModeSection
+                        currentMode={currentAgentMode}
+                        availableModes={availableAgentModes}
+                        setAgentMode={onAgentModeChange}
+                    />
+                    <p
+                        style={{
+                            fontSize: '12px',
+                            fontWeight: token('font.weight.semibold', '600'),
+                            color: 'var(--vscode-descriptionForeground)',
+                            margin: 0,
+                            marginBottom: token('space.100', '8px'),
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                        }}
+                    >
+                        Others
+                    </p>
                     {onDeepPlanToggled && (
                         <PromptSettingsItem
                             icon={<AiGenerativeTextSummaryIcon label="Deep plan" />}
@@ -122,11 +141,6 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                             toggled={isYoloModeEnabled}
                         />
                     )}
-                    <AgentModeSection
-                        currentMode={currentAgentMode}
-                        availableModes={availableAgentModes}
-                        setAgentMode={onAgentModeChange}
-                    />
                 </div>
             )}
             placement="top-start"

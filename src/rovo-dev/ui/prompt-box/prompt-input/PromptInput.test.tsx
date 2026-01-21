@@ -34,6 +34,16 @@ jest.mock('monaco-editor', () => ({
     },
 }));
 
+jest.mock('@atlaskit/css', () => ({
+    cssMap: (styles: any) => {
+        const result: any = {};
+        for (const key in styles) {
+            result[key] = styles[key];
+        }
+        return result;
+    },
+}));
+
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
