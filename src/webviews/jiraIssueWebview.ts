@@ -944,6 +944,9 @@ export class JiraIssueWebview
 
                             this._editUIData.fieldValues['issuelinks'] = resp;
 
+                            // Enhance the linked issues with transitions and assignee data
+                            await this.enhanceChildAndLinkedIssuesWithTransitions();
+
                             this.postMessage({
                                 type: 'fieldValueUpdate',
                                 fieldValues: {
