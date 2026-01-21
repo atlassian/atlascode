@@ -163,6 +163,7 @@ export class Logger {
                         params,
                     },
                 });
+                Logger.debug('Error reported to Sentry successfully', ex);
             } catch (err) {
                 console.error('Error reporting to Sentry:', err);
             }

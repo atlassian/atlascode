@@ -8,8 +8,19 @@ import { ErrorContext, SentryConfig, SentryService } from './sentry';
 jest.mock('@sentry/node');
 
 jest.mock('vscode', () => ({
+    Disposable: class Disposable {
+        constructor() {}
+        dispose() {}
+    },
+    EventEmitter: class EventEmitter {
+        fire() {}
+        event = jest.fn();
+    },
     extensions: {
         getExtension: jest.fn(),
+    },
+    workspace: {
+        onDidChangeConfiguration: jest.fn(),
     },
 }));
 

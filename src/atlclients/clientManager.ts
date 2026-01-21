@@ -198,6 +198,7 @@ export class ClientManager implements Disposable {
                 });
             });
         } catch (e) {
+            Logger.error(e as Error, `${tag}: Error creating Jira client for ${site.baseApiUrl}`);
             throw e;
         }
 
