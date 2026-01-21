@@ -2,21 +2,20 @@ import AiGenerativeTextSummaryIcon from '@atlaskit/icon/core/ai-generative-text-
 import CrossIcon from '@atlaskit/icon/core/cross';
 import CustomizeIcon from '@atlaskit/icon/core/customize';
 import LockUnlockedIcon from '@atlaskit/icon/core/lock-unlocked';
-import AiGenerativeRemoveSilenceIcon from '@atlaskit/icon-lab/core/ai-generative-remove-silence';
 import TelescopeIcon from '@atlaskit/icon-lab/core/telescope';
 import Popup, { PopupComponentProps } from '@atlaskit/popup';
-import Toggle from '@atlaskit/toggle';
 import React from 'react';
+
+import AgentModeSection from './AgentModeSection';
+import PromptSettingsItem from './PromptSettingsItem';
 
 interface PromptSettingsPopupProps {
     onDeepPlanToggled?: () => void;
     onYoloModeToggled?: () => void;
     onFullContextToggled?: () => void;
-    onAskModeToggled?: () => void;
     isDeepPlanEnabled: boolean;
     isYoloModeEnabled: boolean;
     isFullContextEnabled: boolean;
-    isAskModeEnabled: boolean;
     onClose: () => void;
 }
 
@@ -44,16 +43,14 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
     onDeepPlanToggled,
     onYoloModeToggled,
     onFullContextToggled,
-    onAskModeToggled,
     isDeepPlanEnabled,
     isYoloModeEnabled,
     isFullContextEnabled,
-    isAskModeEnabled,
     onClose,
 }) => {
     const [isOpen, setIsOpen] = React.useState(false);
 
-    if (!onDeepPlanToggled && !onYoloModeToggled && !onFullContextToggled && !onAskModeToggled) {
+    if (!onDeepPlanToggled && !onYoloModeToggled && !onFullContextToggled) {
         return null;
     }
 
@@ -117,16 +114,7 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                             toggled={isYoloModeEnabled}
                         />
                     )}
-                    {onAskModeToggled && (
-                        <PromptSettingsItem
-                            icon={<AiGenerativeRemoveSilenceIcon label="Ask mode" />}
-                            label="Ask mode"
-                            description="Ask a question in read-only mode (no file changes or terminal access)."
-                            action={onAskModeToggled}
-                            actionType="toggle"
-                            toggled={isAskModeEnabled}
-                        />
-                    )}
+                    <AgentModeSection enabled={true} />
                 </div>
             )}
             placement="top-start"
@@ -136,42 +124,6 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                 onClose();
             }}
         />
-    );
-};
-
-const PromptSettingsItem: React.FC<{
-    icon: JSX.Element;
-    label: string;
-    description: string;
-    action?: () => void;
-    actionType?: 'toggle' | 'button';
-    toggled?: boolean;
-    isInternalOnly?: boolean;
-}> = ({ icon, label, description, action, actionType, toggled, isInternalOnly }) => {
-    return (
-        <div className="prompt-settings-item">
-            <div className="prompt-settings-logo">{icon}</div>
-            <div id="prompt-settings-context">
-                <p style={{ fontWeight: 'bold' }}>
-                    {label}
-                    {isInternalOnly && (
-                        <span style={{ backgroundColor: 'var(--vscode-badge-background)', marginLeft: '8px' }}>
-                            Internal only
-                        </span>
-                    )}
-                </p>
-                <p style={{ fontSize: '11px' }}>{description}</p>
-            </div>
-            {action && (
-                <div className="prompt-settings-action">
-                    {actionType === 'toggle' ? (
-                        <Toggle isChecked={toggled} onChange={() => action()} label={`${label} toggle`} />
-                    ) : (
-                        <button aria-label="prompt-settings-action" />
-                    )}
-                </div>
-            )}
-        </div>
     );
 };
 

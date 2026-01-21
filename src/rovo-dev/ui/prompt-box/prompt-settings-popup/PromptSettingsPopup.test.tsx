@@ -7,7 +7,6 @@ describe('PromptSettingsPopup', () => {
     const mockOnDeepPlanToggled = jest.fn();
     const mockOnYoloModeToggled = jest.fn();
     const mockOnFullContextToggled = jest.fn();
-    const mockOnAskModeToggled = jest.fn();
     const mockOnClose = jest.fn();
 
     beforeEach(() => {
@@ -20,11 +19,9 @@ describe('PromptSettingsPopup', () => {
                 onDeepPlanToggled={mockOnDeepPlanToggled}
                 onYoloModeToggled={mockOnYoloModeToggled}
                 onFullContextToggled={mockOnFullContextToggled}
-                onAskModeToggled={mockOnAskModeToggled}
                 isDeepPlanEnabled={false}
                 isYoloModeEnabled={false}
                 isFullContextEnabled={false}
-                isAskModeEnabled={false}
                 onClose={mockOnClose}
             />,
         );
@@ -39,11 +36,9 @@ describe('PromptSettingsPopup', () => {
                 onDeepPlanToggled={mockOnDeepPlanToggled}
                 onYoloModeToggled={mockOnYoloModeToggled}
                 onFullContextToggled={mockOnFullContextToggled}
-                onAskModeToggled={mockOnAskModeToggled}
                 isDeepPlanEnabled={false}
                 isYoloModeEnabled={false}
                 isFullContextEnabled={false}
-                isAskModeEnabled={false}
                 onClose={mockOnClose}
             />,
         );
@@ -63,11 +58,9 @@ describe('PromptSettingsPopup', () => {
                 onDeepPlanToggled={mockOnDeepPlanToggled}
                 onYoloModeToggled={mockOnYoloModeToggled}
                 onFullContextToggled={mockOnFullContextToggled}
-                onAskModeToggled={mockOnAskModeToggled}
                 isDeepPlanEnabled={false}
                 isYoloModeEnabled={false}
                 isFullContextEnabled={false}
-                isAskModeEnabled={false}
                 onClose={mockOnClose}
             />,
         );
@@ -87,11 +80,9 @@ describe('PromptSettingsPopup', () => {
                 onDeepPlanToggled={mockOnDeepPlanToggled}
                 onYoloModeToggled={mockOnYoloModeToggled}
                 onFullContextToggled={mockOnFullContextToggled}
-                onAskModeToggled={mockOnAskModeToggled}
                 isDeepPlanEnabled={false}
                 isYoloModeEnabled={false}
                 isFullContextEnabled={false}
-                isAskModeEnabled={false}
                 onClose={mockOnClose}
             />,
         );
