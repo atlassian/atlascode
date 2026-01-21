@@ -1,5 +1,6 @@
 import { RovoDevContextItem, RovoDevPrompt, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 
+import { AgentMode } from '../client';
 import { ReducerAction } from '../messaging';
 import { FeedbackType } from './feedback-form/FeedbackForm';
 
@@ -35,7 +36,9 @@ export const enum RovoDevViewResponseType {
     ToolPermissionChoiceSubmit = 'toolPermissionChoiceSubmit',
     YoloModeToggled = 'yoloModeToggled',
     FullContextModeToggled = 'fullContextModeToggled',
-    AskModeToggled = 'askModeToggled',
+    GetAvailableAgentModes = 'getAvailableAgentModes',
+    SetAgentMode = 'setAgentMode',
+    GetCurrentAgentMode = 'getCurrentAgentMode',
     FilterModifiedFilesByContent = 'filterModifiedFilesByContent',
     OpenExternalLink = 'openExternalLink',
     OpenRovoDevLogFile = 'openRovoDevLogFile',
@@ -91,7 +94,9 @@ export type RovoDevViewResponse =
       >
     | ReducerAction<RovoDevViewResponseType.YoloModeToggled, { value: boolean }>
     | ReducerAction<RovoDevViewResponseType.FullContextModeToggled, { value: boolean }>
-    | ReducerAction<RovoDevViewResponseType.AskModeToggled, { value: boolean }>
+    | ReducerAction<RovoDevViewResponseType.GetAvailableAgentModes>
+    | ReducerAction<RovoDevViewResponseType.SetAgentMode, { mode: AgentMode }>
+    | ReducerAction<RovoDevViewResponseType.GetCurrentAgentMode>
     | ReducerAction<RovoDevViewResponseType.FilterModifiedFilesByContent, { files: ModifiedFile[] }>
     | ReducerAction<RovoDevViewResponseType.OpenExternalLink, { href: string }>
     | ReducerAction<RovoDevViewResponseType.OpenRovoDevLogFile>
