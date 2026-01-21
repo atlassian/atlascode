@@ -1,4 +1,10 @@
-import { Radio } from '@atlaskit/radio';
+import { cssMap } from '@atlaskit/css';
+import CheckMarkIcon from '@atlaskit/icon/core/check-mark';
+import ZoomInIcon from '@atlaskit/icon/core/zoom-in';
+import AiGenerativeRemoveSilenceIcon from '@atlaskit/icon-lab/core/ai-generative-remove-silence';
+import RandomizeIcon from '@atlaskit/icon-lab/core/randomize';
+import { Box } from '@atlaskit/primitives';
+import { token } from '@atlaskit/tokens';
 import React from 'react';
 import { AgentMode, RovoDevModeInfo } from 'src/rovo-dev/client';
 
@@ -8,26 +14,19 @@ interface AgentModeSectionProps {
     setAgentMode: (mode: AgentMode) => void;
 }
 
-// Map agent modes to icons - using similar icons as other settings
 const getModeIcon = (mode: string) => {
-    // You'll need to import appropriate icons from @atlaskit/icon
-    // For now using placeholders - replace with actual Atlaskit icons
     switch (mode) {
         case 'default':
-            // Could use something like SettingsIcon or similar
-            return null; // Replace with actual icon
+            return <RandomizeIcon label={'default mode'} />;
         case 'plan':
-            // Could use AiGenerativeTextSummaryIcon or similar
-            return null; // Replace with actual icon
+            return <ZoomInIcon label={'plan mode'} />;
         case 'ask':
-            // Could use QuestionCircleIcon or similar
-            return null; // Replace with actual icon
+            return <AiGenerativeRemoveSilenceIcon label={'ask mode'} />;
         default:
             return null;
     }
 };
 
-// Format mode label for display
 const formatModeLabel = (mode: string): string => {
     switch (mode) {
         case 'default':
@@ -40,6 +39,35 @@ const formatModeLabel = (mode: string): string => {
             return mode;
     }
 };
+
+const styles = cssMap({
+    section: {
+        marginTop: token('space.100', '8px'),
+    },
+    modesContainer: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: token('space.100', '8px'),
+    },
+    modeItem: {
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: token('space.100', '8px'),
+        padding: token('space.100', '8px'),
+        cursor: 'pointer',
+    },
+    modeLogo: {
+        display: 'flex',
+        paddingTop: token('space.050', '4px'),
+    },
+    modeContext: {
+        flex: 1,
+    },
+    modeAction: {
+        marginLeft: 'auto',
+    },
+});
 
 const AgentModeSection: React.FC<AgentModeSectionProps> = ({
     currentMode,
@@ -55,46 +83,66 @@ const AgentModeSection: React.FC<AgentModeSectionProps> = ({
     };
 
     return (
-        <div style={{ marginTop: '8px' }}>
-            <p style={{ fontStyle: 'normal' }}>Reasoning</p>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <Box xcss={styles.section}>
+            <p
+                style={{
+                    fontSize: '12px',
+                    fontWeight: token('font.weight.semibold', '600'),
+                    color: 'var(--vscode-descriptionForeground)',
+                    margin: 0,
+                    marginBottom: token('space.100', '8px'),
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                }}
+            >
+                Reasoning
+            </p>
+            <Box xcss={styles.modesContainer}>
                 {availableModes.map((modeInfo) => {
                     const isSelected = currentMode === modeInfo.mode;
                     const modeIcon = getModeIcon(modeInfo.mode);
 
                     return (
-                        <div
+                        <Box
                             key={modeInfo.mode}
-                            className="prompt-settings-item"
+                            xcss={styles.modeItem}
                             onClick={() => handleModeSelect(modeInfo.mode as AgentMode)}
-                            style={{ cursor: 'pointer' }}
+                            style={{
+                                backgroundColor: 'var(--vscode-sideBar-background)',
+                                borderRadius: '8px',
+                            }}
                         >
-                            {modeIcon && <div className="prompt-settings-logo">{modeIcon}</div>}
-                            <div id="prompt-settings-context" style={{ flex: 1 }}>
-                                <p style={{ fontWeight: 'bold', margin: 0 }}>{formatModeLabel(modeInfo.mode)}</p>
+                            {modeIcon && <Box xcss={styles.modeLogo}>{modeIcon}</Box>}
+                            <Box id="prompt-settings-context" xcss={styles.modeContext}>
+                                <p
+                                    style={{
+                                        fontWeight: token('font.weight.semibold', '600'),
+                                        margin: 0,
+                                        fontSize: '13px',
+                                    }}
+                                >
+                                    {formatModeLabel(modeInfo.mode)}
+                                </p>
                                 <p
                                     style={{
                                         fontSize: '11px',
-                                        margin: '4px 0 0 0',
+                                        margin: `${token('space.050', '4px')} 0 0 0`,
                                         color: 'var(--vscode-descriptionForeground)',
                                     }}
                                 >
                                     {modeInfo.description}
                                 </p>
-                            </div>
-                            <div className="prompt-settings-action">
-                                <Radio
-                                    isChecked={isSelected}
-                                    onChange={() => handleModeSelect(modeInfo.mode as AgentMode)}
-                                    value={modeInfo.mode}
-                                    name="agentMode"
-                                />
-                            </div>
-                        </div>
+                            </Box>
+                            {isSelected && (
+                                <Box xcss={styles.modeAction}>
+                                    <CheckMarkIcon label="Selected" />
+                                </Box>
+                            )}
+                        </Box>
                     );
                 })}
-            </div>
-        </div>
+            </Box>
+        </Box>
     );
 };
 
