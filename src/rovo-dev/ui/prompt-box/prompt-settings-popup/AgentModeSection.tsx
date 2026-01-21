@@ -56,19 +56,8 @@ const AgentModeSection: React.FC<AgentModeSectionProps> = ({
 
     return (
         <div style={{ marginTop: '8px' }}>
-            <h3
-                style={{
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    color: 'var(--vscode-descriptionForeground)',
-                    margin: '0 0 8px 0',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                }}
-            >
-                Reasoning
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <p style={{ fontStyle: 'normal' }}>Reasoning</p>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
                 {availableModes.map((modeInfo) => {
                     const isSelected = currentMode === modeInfo.mode;
                     const modeIcon = getModeIcon(modeInfo.mode);
