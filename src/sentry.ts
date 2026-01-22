@@ -21,6 +21,7 @@ export interface SentryConfig {
     atlasCodeVersion?: string; // Version tag for events
     machineId?: string; // VS Code machine ID for tracking
     appInstanceId?: string; // Extension instance ID for tracking
+    bbySessionId?: string; // Boysenberry session ID for BBY environment tracking
 }
 
 export interface ErrorContext {
@@ -120,6 +121,9 @@ export class SentryService {
                 }
                 if (this.config?.appInstanceId) {
                     scope.setTag('appInstanceId', this.config.appInstanceId);
+                }
+                if (this.config?.bbySessionId) {
+                    scope.setTag('bbySessionId', this.config.bbySessionId);
                 }
 
                 scope.setTag('rovoDevEnv', RovodevStaticConfig.isBBY ? 'BBY' : 'IDE');

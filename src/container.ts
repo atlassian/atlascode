@@ -275,6 +275,7 @@ export class Container {
             atlasCodeVersion: version,
             machineId: this.machineId,
             appInstanceId: this.appInstanceId,
+            bbySessionId: this.isBoysenberryMode ? process.env.SANDBOX_SESSION_ID : undefined,
         };
         await SentryService.getInstance().initialize(sentryConfig, (error: string) => {
             this.analyticsApi.fireSentryCapturedExceptionFailedEvent({ error });
