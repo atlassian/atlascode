@@ -47,6 +47,13 @@ export class RovoDevTelemetryProvider {
         return this._perfLogger;
     }
 
+    /**
+     * Gets the current RovoDev session ID for tracking purposes
+     */
+    public get sessionId(): string {
+        return this._chatSessionId;
+    }
+
     constructor(
         private readonly rovoDevEnv: RovoDevEnv,
         private readonly appInstanceId: string,
@@ -58,6 +65,9 @@ export class RovoDevTelemetryProvider {
     public startNewSession(chatSessionId: string, manuallyCreated: boolean): Promise<void> {
         this._chatSessionId = chatSessionId;
         this._firedTelemetryForCurrentPrompt = {};
+
+        // Update RovoDevLogger with current session ID for automatic error tracking
+        RovoDevLogger.setSessionId(chatSessionId);
 
         const telemetryPromise = this.fireTelemetryEvent({
             action: 'rovoDevNewSessionAction',
@@ -77,6 +87,9 @@ export class RovoDevTelemetryProvider {
     public shutdown() {
         this._chatSessionId = '';
         this._firedTelemetryForCurrentPrompt = {};
+
+        // Clear session ID from RovoDevLogger
+        RovoDevLogger.setSessionId(undefined);
     }
 
     private hasValidMetadata(event: TelemetryEvent, metadata: CommonSessionAttributes): boolean {
