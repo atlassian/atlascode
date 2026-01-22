@@ -531,7 +531,7 @@ class RovoDevSubprocessInstance extends Disposable {
                     this.rovoDevProcess = spawn(this.rovoDevBinPath, shellArgs, {
                         cwd: this.workspacePath,
                         stdio: ['ignore', 'pipe', 'pipe'],
-                        detached: true,
+                        windowsHide: true,
                         env: {
                             ...process.env,
                             USER: process.env.USER || process.env.USERNAME,
