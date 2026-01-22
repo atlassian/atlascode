@@ -82,10 +82,6 @@ export class RovoDevFeedbackManager {
                 },
             ],
         };
-        RovoDevLogger.error(
-            new Error('Submitting Rovo Dev feedback'),
-            `Feedback Type: submitted ${feedback.feedbackType} feedback`,
-        );
         try {
             await transport(FEEDBACK_ENDPOINT, {
                 method: 'POST',
