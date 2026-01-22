@@ -47,9 +47,8 @@ if [ $? -eq 0 ]; then
     exit
 fi
 
-
-# issue key matched from branch prefix, prepend to commit message
-sed -i -e "1s/^/$ISSUE_KEY /" $1
-
-
-
+# Check if commit message already starts with the issue key
+if ! grep -q "^$ISSUE_KEY " "$1"; then
+    # issue key matched from branch prefix and not already present, prepend to commit message
+    sed -i -e "1s/^/$ISSUE_KEY /" "$1"
+fi
