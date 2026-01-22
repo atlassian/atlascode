@@ -82,7 +82,6 @@ export class RovoDevFeedbackManager {
                 },
             ],
         };
-
         try {
             await transport(FEEDBACK_ENDPOINT, {
                 method: 'POST',
