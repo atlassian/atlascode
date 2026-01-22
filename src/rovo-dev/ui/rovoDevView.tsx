@@ -49,7 +49,6 @@ import {
 const DEFAULT_LOADING_MESSAGE: string = 'Rovo dev is working';
 
 const RovoDevView: React.FC = () => {
-    const [isProviderReady, setIsProviderReady] = useState(false);
     const [currentState, setCurrentState] = useState<State>({ state: 'WaitingForPrompt' });
     const [pendingToolCallMessage, setPendingToolCallMessage] = useState('');
     const [retryAfterErrorEnabled, setRetryAfterErrorEnabled] = useState('');
@@ -334,7 +333,6 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.ProviderReady:
-                    setIsProviderReady(true);
                     setWorkspacePath(event.workspacePath || '');
                     setHomeDir(event.homeDir || '');
                     if (!RovodevStaticConfig.isBBY && event.yoloMode !== undefined) {
@@ -981,10 +979,6 @@ const RovoDevView: React.FC = () => {
     }, [postMessage, isFullContextModeToggled]);
 
     React.useEffect(() => {
-        if (!isProviderReady) {
-            return;
-        }
-
         if (availableAgentModes.length === 0) {
             postMessage({ type: RovoDevViewResponseType.GetAvailableAgentModes });
         }
@@ -992,7 +986,7 @@ const RovoDevView: React.FC = () => {
         if (!currentAgentMode) {
             postMessage({ type: RovoDevViewResponseType.GetCurrentAgentMode });
         }
-    }, [isProviderReady, availableAgentModes, currentAgentMode, postMessage]);
+    }, [availableAgentModes, currentAgentMode, postMessage]);
 
     const hidePromptBox =
         currentState.state === 'Disabled' ||
