@@ -79,14 +79,6 @@ const AgentModeSection: React.FC<AgentModeSectionProps> = ({
     availableModes,
     setAgentMode,
 }: AgentModeSectionProps) => {
-    const handleModeSelect = (mode: AgentMode) => {
-        try {
-            setAgentMode(mode);
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
     return (
         <Box>
             <Box
@@ -108,7 +100,7 @@ const AgentModeSection: React.FC<AgentModeSectionProps> = ({
                         <Box
                             key={modeInfo.mode}
                             xcss={styles.modeItem}
-                            onClick={() => handleModeSelect(modeInfo.mode as AgentMode)}
+                            onClick={() => setAgentMode(modeInfo.mode as AgentMode)}
                             style={{
                                 backgroundColor: 'var(--vscode-sideBar-background)',
                                 borderRadius: '8px',
