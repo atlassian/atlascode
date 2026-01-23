@@ -41,6 +41,7 @@ export const enum RovoDevViewResponseType {
     MessageRendered = 'messageRendered',
     ReportRenderError = 'reportRenderError',
     StartNewSession = 'startNewSession',
+    ShowSessionHistory = 'showSessionHistory',
 }
 
 export type FileOperationType = 'modify' | 'create' | 'delete';
@@ -103,4 +104,5 @@ export type RovoDevViewResponse =
               componentStack?: string;
           }
       >
-    | ReducerAction<RovoDevViewResponseType.StartNewSession>;
+    | ReducerAction<RovoDevViewResponseType.StartNewSession>
+    | ReducerAction<RovoDevViewResponseType.ShowSessionHistory>;
