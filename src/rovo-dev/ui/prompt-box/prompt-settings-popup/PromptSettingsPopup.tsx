@@ -104,8 +104,6 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                             color: 'var(--vscode-descriptionForeground)',
                             margin: 0,
                             marginBottom: token('space.100', '8px'),
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px',
                         }}
                     >
                         Others

@@ -41,9 +41,6 @@ const formatModeLabel = (mode: string): string => {
 };
 
 const styles = cssMap({
-    section: {
-        marginTop: token('space.100', '8px'),
-    },
     modesContainer: {
         display: 'flex',
         flexDirection: 'column',
@@ -52,20 +49,23 @@ const styles = cssMap({
     modeItem: {
         display: 'flex',
         flexDirection: 'row',
-        alignItems: 'flex-start',
+        alignItems: 'center',
         gap: token('space.100', '8px'),
         padding: token('space.100', '8px'),
         cursor: 'pointer',
     },
     modeLogo: {
         display: 'flex',
-        paddingTop: token('space.050', '4px'),
     },
     modeContext: {
         flex: 1,
     },
     modeAction: {
         marginLeft: 'auto',
+    },
+    labelText: {
+        fontWeight: token('font.weight.semibold', '600'),
+        margin: 0,
     },
 });
 
@@ -83,7 +83,7 @@ const AgentModeSection: React.FC<AgentModeSectionProps> = ({
     };
 
     return (
-        <Box xcss={styles.section}>
+        <Box>
             <p
                 style={{
                     fontSize: '12px',
@@ -91,8 +91,6 @@ const AgentModeSection: React.FC<AgentModeSectionProps> = ({
                     color: 'var(--vscode-descriptionForeground)',
                     margin: 0,
                     marginBottom: token('space.100', '8px'),
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
                 }}
             >
                 Reasoning
@@ -114,16 +112,18 @@ const AgentModeSection: React.FC<AgentModeSectionProps> = ({
                         >
                             {modeIcon && <Box xcss={styles.modeLogo}>{modeIcon}</Box>}
                             <Box id="prompt-settings-context" xcss={styles.modeContext}>
-                                <p
+                                <Box
+                                    as="p"
+                                    xcss={styles.labelText}
                                     style={{
-                                        fontWeight: token('font.weight.semibold', '600'),
-                                        margin: 0,
                                         fontSize: '13px',
+                                        color: 'var(--vscode-foreground)',
                                     }}
                                 >
                                     {formatModeLabel(modeInfo.mode)}
-                                </p>
-                                <p
+                                </Box>
+                                <Box
+                                    as="p"
                                     style={{
                                         fontSize: '11px',
                                         margin: `${token('space.050', '4px')} 0 0 0`,
@@ -131,7 +131,7 @@ const AgentModeSection: React.FC<AgentModeSectionProps> = ({
                                     }}
                                 >
                                     {modeInfo.description}
-                                </p>
+                                </Box>
                             </Box>
                             {isSelected && (
                                 <Box xcss={styles.modeAction}>
