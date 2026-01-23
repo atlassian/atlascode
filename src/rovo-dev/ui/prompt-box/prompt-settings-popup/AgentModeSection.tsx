@@ -14,7 +14,7 @@ interface AgentModeSectionProps {
     setAgentMode: (mode: AgentMode) => void;
 }
 
-const getModeIcon = (mode: string) => {
+export const getAgentModeIcon = (mode: string) => {
     switch (mode) {
         case 'default':
             return <RandomizeIcon label={'default mode'} />;
@@ -45,6 +45,11 @@ const styles = cssMap({
         display: 'flex',
         flexDirection: 'column',
         gap: token('space.100', '8px'),
+    },
+    sectionTitle: {
+        fontWeight: token('font.weight.semibold', '600'),
+        margin: 0,
+        marginBottom: token('space.100', '8px'),
     },
     modeItem: {
         display: 'flex',
@@ -84,21 +89,20 @@ const AgentModeSection: React.FC<AgentModeSectionProps> = ({
 
     return (
         <Box>
-            <p
+            <Box
+                as="p"
+                xcss={styles.sectionTitle}
                 style={{
                     fontSize: '12px',
-                    fontWeight: token('font.weight.semibold', '600'),
                     color: 'var(--vscode-descriptionForeground)',
-                    margin: 0,
-                    marginBottom: token('space.100', '8px'),
                 }}
             >
                 Reasoning
-            </p>
+            </Box>
             <Box xcss={styles.modesContainer}>
                 {availableModes.map((modeInfo) => {
                     const isSelected = currentMode === modeInfo.mode;
-                    const modeIcon = getModeIcon(modeInfo.mode);
+                    const modeIcon = getAgentModeIcon(modeInfo.mode);
 
                     return (
                         <Box

@@ -1,15 +1,25 @@
+import { cssMap } from '@atlaskit/css';
 import AiGenerativeTextSummaryIcon from '@atlaskit/icon/core/ai-generative-text-summary';
 import CrossIcon from '@atlaskit/icon/core/cross';
 import CustomizeIcon from '@atlaskit/icon/core/customize';
 import LockUnlockedIcon from '@atlaskit/icon/core/lock-unlocked';
 import TelescopeIcon from '@atlaskit/icon-lab/core/telescope';
 import Popup, { PopupComponentProps } from '@atlaskit/popup';
+import { Box } from '@atlaskit/primitives';
 import { token } from '@atlaskit/tokens';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { AgentMode, RovoDevModeInfo } from 'src/rovo-dev/client';
 
 import AgentModeSection from './AgentModeSection';
 import PromptSettingsItem from './PromptSettingsItem';
+
+const styles = cssMap({
+    sectionTitle: {
+        fontWeight: token('font.weight.semibold', '600'),
+        margin: 0,
+        marginBottom: token('space.100', '8px'),
+    },
+});
 
 interface PromptSettingsPopupProps {
     onDeepPlanToggled?: () => void;
@@ -59,6 +69,15 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
 }) => {
     const [isOpen, setIsOpen] = React.useState(false);
 
+    const handleAgentModeChange = useCallback(
+        (mode: AgentMode) => {
+            onAgentModeChange(mode);
+            setIsOpen(false);
+            onClose();
+        },
+        [onAgentModeChange, onClose],
+    );
+
     if (!onDeepPlanToggled && !onYoloModeToggled && !onFullContextToggled) {
         return null;
     }
@@ -95,19 +114,18 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                     <AgentModeSection
                         currentMode={currentAgentMode}
                         availableModes={availableAgentModes}
-                        setAgentMode={onAgentModeChange}
+                        setAgentMode={handleAgentModeChange}
                     />
-                    <p
+                    <Box
+                        as="p"
+                        xcss={styles.sectionTitle}
                         style={{
                             fontSize: '12px',
-                            fontWeight: token('font.weight.semibold', '600'),
                             color: 'var(--vscode-descriptionForeground)',
-                            margin: 0,
-                            marginBottom: token('space.100', '8px'),
                         }}
                     >
                         Others
-                    </p>
+                    </Box>
                     {onDeepPlanToggled && (
                         <PromptSettingsItem
                             icon={<AiGenerativeTextSummaryIcon label="Deep plan" />}

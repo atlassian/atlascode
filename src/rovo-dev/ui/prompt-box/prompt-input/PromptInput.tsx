@@ -16,6 +16,7 @@ import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
 import { rovoDevTextareaStyles } from '../../rovoDevViewStyles';
 import { onKeyDownHandler } from '../../utils';
 import PromptContextPopup from '../prompt-context-popup/PromptContextPopup';
+import { getAgentModeIcon } from '../prompt-settings-popup/AgentModeSection';
 import PromptSettingsPopup from '../prompt-settings-popup/PromptSettingsPopup';
 import {
     createMonacoPromptEditor,
@@ -319,6 +320,11 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                             </div>
                         </Tooltip>
                     )}{' '}
+                    {currentAgentMode && currentAgentMode !== 'default' && (
+                        <Tooltip content={currentAgentMode}>
+                            <div className="mode-indicator">{getAgentModeIcon(currentAgentMode)}</div>
+                        </Tooltip>
+                    )}
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                     {!showCancelButton && (
