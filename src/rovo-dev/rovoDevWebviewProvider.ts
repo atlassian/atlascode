@@ -124,7 +124,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         return 'yoloMode_global';
     }
 
-    private async loadYoloModeFromStorage(): Promise<boolean> {
+    private loadYoloModeFromStorage(): boolean {
         if (this.isBoysenberry) {
             return true;
         }
@@ -200,10 +200,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._chatProvider = new RovoDevChatProvider(this.isBoysenberry, this._telemetryProvider);
         this._chatContextprovider = new RovoDevChatContextProvider();
 
-        this.loadYoloModeFromStorage().then((yoloMode) => {
-            this._chatProvider.yoloMode = yoloMode;
-            this._yoloMode = yoloMode;
-        });
+        this._yoloMode = this.loadYoloModeFromStorage();
+        this._chatProvider.yoloMode = this._yoloMode;
 
         this._jiraItemsProvider = new RovoDevJiraItemsProvider();
         this._jiraItemsProvider.onNewJiraItems((issues) => this.sendJiraItemsToView(issues));
