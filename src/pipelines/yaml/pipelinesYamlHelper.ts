@@ -1,6 +1,8 @@
+import { Logger } from 'src/logger';
 import { commands, ConfigurationTarget, Extension, extensions, Uri, window, workspace } from 'vscode';
 
 import { Resources } from '../../resources';
+import BBPipelinesSchema from './pipelines-schema.json' with { type: 'json' };
 
 const VSCODE_YAML_EXTENSION_ID = 'redhat.vscode-yaml';
 
@@ -29,14 +31,40 @@ async function addPipelinesSchemaToConfigAtScope(
     if (valueAtScope) {
         newValue = Object.assign({}, valueAtScope);
     }
-    Object.keys(newValue).forEach((configKey) => {
-        const configValue = newValue[configKey];
-        if (value === configValue) {
-            delete newValue[configKey];
+    // AXON-1817
+    // check if user has path to BB pipelines schema previously added by this extension.
+    const outdatedConfigurationKeys = Object.keys(newValue)
+        .map((configKey) => {
+            const isExpectedValue = newValue[configKey] === 'bitbucket-pipelines.yml';
+            if (configKey.includes('atlascode') && isExpectedValue) {
+                return configKey;
+            }
+            return;
+        })
+        .filter((item) => Boolean(item));
+
+    if (outdatedConfigurationKeys.length) {
+        for (const outdatedKey of outdatedConfigurationKeys) {
+            if (outdatedKey) {
+                delete newValue[outdatedKey];
+            }
         }
-    });
-    newValue[key] = value;
-    await workspace.getConfiguration().update(YAML_SCHEMA_CONFIG_NAME_OF_VSCODE_YAML_EXTENSION, newValue, scope);
+        try {
+            if (Object.keys(newValue).length > 0) {
+                // updating configuration with other previously existed values.
+                await workspace
+                    .getConfiguration()
+                    .update(YAML_SCHEMA_CONFIG_NAME_OF_VSCODE_YAML_EXTENSION, newValue, scope);
+            } else {
+                // remove 'yaml.schemas' entirely
+                await workspace
+                    .getConfiguration()
+                    .update(YAML_SCHEMA_CONFIG_NAME_OF_VSCODE_YAML_EXTENSION, undefined, scope);
+            }
+        } catch (error) {
+            Logger.error(error, `Attempt to remove old 'yaml.schemas' configuration failed: ${error.message}`);
+        }
+    }
 }
 
 // Find redhat.vscode-yaml extension and try to activate it
@@ -48,7 +76,7 @@ export async function activateYamlExtension() {
                 "Please install 'YAML Support by Red Hat' via the Extensions pane.",
                 'install yaml extension',
             )
-            .then((sel) => {
+            .then(() => {
                 commands.executeCommand('workbench.extensions.installExtension', VSCODE_YAML_EXTENSION_ID);
             });
         return;
@@ -61,5 +89,29 @@ export async function activateYamlExtension() {
         );
         return;
     }
+
+    // Add new schema for syntax highlighting in bitbucket-pipelines.yml files.
+    // https://github.com/redhat-developer/vscode-yaml/wiki/Extension-API#register-contributor
+    const SCHEMA = 'BitbucketPipelinesAtlascode';
+    const onRequestSchemaURI = (resource: string): string | undefined => {
+        if (resource.endsWith(BB_PIPELINES_FILENAME)) {
+            return `${SCHEMA}://schema/porter`;
+        }
+        return undefined;
+    };
+
+    const onRequestSchemaContent = (schemaUri: string): string | undefined => {
+        const parsedUri = Uri.parse(schemaUri);
+        if (parsedUri.scheme !== SCHEMA) {
+            return undefined;
+        }
+        if (!parsedUri.path || !parsedUri.path.startsWith('/')) {
+            return undefined;
+        }
+        const schema = JSON.stringify(BBPipelinesSchema);
+        return schema;
+    };
+
+    yamlPlugin.registerContributor(SCHEMA, onRequestSchemaURI, onRequestSchemaContent);
     return yamlPlugin;
 }
