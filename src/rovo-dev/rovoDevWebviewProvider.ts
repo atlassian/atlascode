@@ -552,7 +552,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.ShowSessionHistory:
-                        this.showSessionHistory();
+                        await this.showSessionHistory();
                         break;
 
                     default:
