@@ -26,6 +26,7 @@ import {
     Product,
     ProductBitbucket,
     ProductJira,
+    ProductRovoDev,
     RemoveAuthInfoEvent,
     UpdateAuthInfoEvent,
 } from './authInfo';
@@ -43,12 +44,18 @@ function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export type CheckedScopes = {
+    isApiToken?: boolean;
+    checkedScopes: { [key: string]: boolean };
+};
+
 export class CredentialManager implements Disposable {
     private _memStore: Map<string, Map<string, AuthInfo>> = new Map<string, Map<string, AuthInfo>>();
     private _queue = new PQueue({ concurrency: 1 });
     private _refresher = new OAuthRefesher();
     private negotiator: Negotiator;
     private _refreshInFlight = new Map<string, Promise<void>>();
+    private _failedRefreshCache = new Map<string, { attemptsCount: number; lastAttemptAt: Date }>();
 
     constructor(
         context: ExtensionContext,
@@ -76,6 +83,39 @@ export class CredentialManager implements Disposable {
     public async getAuthInfo(site: DetailedSiteInfo, allowCache = true): Promise<AuthInfo | undefined> {
         const authInfo = await this.getAuthInfoForProductAndCredentialId(site, allowCache);
         return this.softRefreshOAuth(site, authInfo);
+    }
+
+    public async checkScopes(site: DetailedSiteInfo, scopes: string[]): Promise<CheckedScopes | undefined> {
+        // Scopes are only applicable to cloud sites
+        if (!site.host.endsWith('.atlassian.net')) {
+            return undefined;
+        }
+
+        const authInfo = await this.getAuthInfo(site, true);
+
+        if (isOAuthInfo(authInfo)) {
+            const allowedScopes = authInfo.scopes || [];
+            const checkedScopes = scopes.reduce(
+                (acc, scope) => {
+                    acc[scope] = allowedScopes.includes(scope);
+                    return acc;
+                },
+                {} as CheckedScopes['checkedScopes'],
+            );
+
+            return {
+                isApiToken: allowedScopes.length === 0,
+                checkedScopes,
+            };
+        }
+        // Basic auth for cloud site means API token
+        if (isBasicAuthInfo(authInfo)) {
+            return {
+                isApiToken: true,
+                checkedScopes: {},
+            };
+        }
+        return undefined;
     }
 
     async getApiTokenIfExists(site: DetailedSiteInfo): Promise<BasicAuthInfo | undefined> {
@@ -127,9 +167,15 @@ export class CredentialManager implements Disposable {
         return results.find((authInfo) => authInfo !== undefined);
     }
 
-    public async getAllValidAuthInfo(product: Product): Promise<AuthInfo[]> {
+    public async getAllValidAuthInfo(
+        product: Product,
+        siteFilter?: (site: DetailedSiteInfo) => boolean,
+    ): Promise<AuthInfo[]> {
         // Get all unique sites by credentialId
-        const sites = Container.siteManager.getSitesAvailable(product);
+        let sites = Container.siteManager.getSitesAvailable(product);
+        if (siteFilter) {
+            sites = sites.filter(siteFilter);
+        }
         const uniquelyCredentialedSites = Array.from(new Map(sites.map((site) => [site.credentialId, site])).values());
 
         const authInfos = await Promise.all(uniquelyCredentialedSites.map((site) => this.getAuthInfo(site, true)));
@@ -137,6 +183,20 @@ export class CredentialManager implements Disposable {
         return authInfos.filter(
             (authInfo): authInfo is AuthInfo => !!authInfo && authInfo.state !== AuthInfoState.Invalid,
         );
+    }
+
+    // Gets valid auth info for cloud sites, deduplicated by user email (used for notifications and handles OAuth + API token for the same user)
+    public async getCloudAuthInfo(product: Product): Promise<AuthInfo[]> {
+        const authInfos = await this.getAllValidAuthInfo(product, (site) => site.isCloud);
+
+        const uniqueByEmail = new Map<string, AuthInfo>();
+        authInfos.forEach((authInfo) => {
+            const email = authInfo.user.email;
+            if (email && !uniqueByEmail.has(email)) {
+                uniqueByEmail.set(email, authInfo);
+            }
+        });
+        return Array.from(uniqueByEmail.values());
     }
 
     /**
@@ -310,7 +370,10 @@ export class CredentialManager implements Disposable {
 
         if (credentials.expirationDate) {
             const diff = credentials.expirationDate - Date.now();
-            Logger.debug(`${Math.floor(diff / 1000)} seconds remaining for auth token.`);
+            Logger.debug(
+                `${Math.floor(diff / 1000)} seconds remaining for ${site.name} refresh token. ${diff > GRACE_PERIOD ? 'No refresh needed yet.' : 'refreshing...'}`,
+            );
+
             if (diff > GRACE_PERIOD) {
                 return credentials; // no need to refresh, we have enough time left
             }
@@ -469,6 +532,27 @@ export class CredentialManager implements Disposable {
         if (!isOAuthInfo(credentials)) {
             return undefined;
         }
+
+        const failedRefresh = this._failedRefreshCache.get(site.credentialId);
+        if (failedRefresh) {
+            const RETRY_DELAY = 5 * Time.MINUTES;
+            if (failedRefresh.attemptsCount > 5) {
+                const timeSinceLastAttempt = Date.now() - failedRefresh.lastAttemptAt.getTime();
+                // if we already had multiple failed attempts recently, don't try again yet until enough time has passed
+                if (timeSinceLastAttempt < RETRY_DELAY) {
+                    Logger.debug(
+                        `Skipping token refresh for credentialID: ${site.credentialId} due to previous failures.`,
+                    );
+                    return undefined;
+                } else {
+                    // reset attempts count after delay has passed
+                    if (this._failedRefreshCache.has(site.credentialId)) {
+                        this._failedRefreshCache.delete(site.credentialId);
+                    }
+                }
+            }
+        }
+
         Logger.debug(`refreshingAccessToken for ${site.baseApiUrl} credentialID: ${site.credentialId}`);
 
         const provider: OAuthProvider | undefined = oauthProviderForSite(site);
@@ -486,8 +570,17 @@ export class CredentialManager implements Disposable {
                 }
 
                 await this.saveAuthInfo(site, credentials);
+                if (this._failedRefreshCache.has(site.credentialId)) {
+                    this._failedRefreshCache.delete(site.credentialId);
+                }
                 Logger.debug(`Successfully saved refreshed tokens for credentialId: ${site.credentialId}`);
-            } else if (tokenResponse.shouldInvalidate) {
+            } else if (tokenResponse.shouldInvalidate || tokenResponse.shouldSlowDown) {
+                if (tokenResponse.shouldSlowDown) {
+                    this._failedRefreshCache.set(site.credentialId, {
+                        attemptsCount: (this._failedRefreshCache.get(site.credentialId)?.attemptsCount ?? 0) + 1,
+                        lastAttemptAt: new Date(),
+                    });
+                }
                 credentials.state = AuthInfoState.Invalid;
                 await this.saveAuthInfo(site, credentials);
             }
@@ -542,11 +635,74 @@ export class CredentialManager implements Disposable {
                 return CommandContext.IsJiraAuthenticated;
             case ProductBitbucket.key:
                 return CommandContext.IsBBAuthenticated;
+            case ProductRovoDev.key:
+                return CommandContext.IsRovoDevAuthenticated;
         }
         return undefined;
     }
 
     public static generateCredentialId(siteId: string, userId: string): string {
         return crypto.createHash('md5').update(`${siteId}::${userId}`).digest('hex');
+    }
+
+    // RovoDev-specific methods (not site-based)
+    private static readonly ROVODEV_CREDENTIAL_ID = 'rovodev-single';
+
+    public async getRovoDevAuthInfo(): Promise<AuthInfo | undefined> {
+        Logger.debug(`Retrieving RovoDev auth info`);
+        try {
+            const authInfo = await this.getAuthInfoFromSecretStorage(
+                ProductRovoDev.key,
+                CredentialManager.ROVODEV_CREDENTIAL_ID,
+            );
+
+            // Set context based on whether credentials exist
+            const cmdctx = this.commandContextFor(ProductRovoDev);
+            if (cmdctx !== undefined) {
+                setCommandContext(cmdctx, authInfo !== undefined && authInfo !== emptyAuthInfo);
+            }
+
+            return authInfo;
+        } catch (e) {
+            Logger.error(e, `secretstorage error for RovoDev: ${e}`);
+            return undefined;
+        }
+    }
+
+    public async saveRovoDevAuthInfo(info: AuthInfo): Promise<void> {
+        Logger.debug(`Saving RovoDev auth info`);
+        const cmdctx = this.commandContextFor(ProductRovoDev);
+        if (cmdctx !== undefined) {
+            setCommandContext(cmdctx, info !== emptyAuthInfo ? true : false);
+        }
+
+        try {
+            await this.addSiteInformationToSecretStorage(
+                ProductRovoDev.key,
+                CredentialManager.ROVODEV_CREDENTIAL_ID,
+                info,
+            );
+        } catch (e) {
+            Logger.error(e, 'error saving RovoDev auth info to secretstorage');
+        }
+    }
+
+    public async removeRovoDevAuthInfo(): Promise<boolean> {
+        Logger.debug(`Removing RovoDev auth info`);
+        const wasKeyDeleted = await this.removeSiteInformationFromSecretStorage(
+            ProductRovoDev.key,
+            CredentialManager.ROVODEV_CREDENTIAL_ID,
+        );
+
+        if (wasKeyDeleted) {
+            const cmdctx = this.commandContextFor(ProductRovoDev);
+            if (cmdctx) {
+                setCommandContext(cmdctx, false);
+            }
+
+            return true;
+        }
+
+        return false;
     }
 }

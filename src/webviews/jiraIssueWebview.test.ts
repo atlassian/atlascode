@@ -1,4 +1,11 @@
-import { createEmptyMinimalIssue, emptyUser, MinimalIssue, User } from '@atlassianlabs/jira-pi-common-models';
+import {
+    createEmptyMinimalIssue,
+    emptyUser,
+    MinimalIssue,
+    readSearchResults,
+    User,
+} from '@atlassianlabs/jira-pi-common-models';
+import { attachAssigneesToIssues, collectAssigneesFromResponse } from 'src/jira/issueAssigneeUtils';
 import { expansionCastTo } from 'testsutil/miscFunctions';
 import { commands, env, WebviewPanel } from 'vscode';
 
@@ -73,12 +80,21 @@ jest.mock('../views/notifications/notificationManager', () => ({
 jest.mock('../logger', () => ({
     Logger: {
         error: jest.fn(),
+        warn: jest.fn(),
+        debug: jest.fn(),
     },
 }));
 jest.mock('form-data', () => ({
     default: jest.fn(() => ({ append: jest.fn() })),
 }));
 jest.mock('base64-arraybuffer-es6');
+jest.mock('../jira/issueAssigneeUtils', () => {
+    const actual = jest.requireActual('../jira/issueAssigneeUtils');
+    return {
+        collectAssigneesFromResponse: jest.fn(actual.collectAssigneesFromResponse),
+        attachAssigneesToIssues: jest.fn(actual.attachAssigneesToIssues),
+    };
+});
 jest.mock('../resources', () => ({
     Resources: {
         icons: {
@@ -254,15 +270,28 @@ describe('JiraIssueWebview', () => {
     });
 
     describe('invalidate', () => {
-        test('should update issue and update status bar', async () => {
+        test('should update issue and update status bar when webview is ready', async () => {
             const forceUpdateSpy = jest.spyOn(jiraIssueWebview as any, 'forceUpdateIssue').mockResolvedValue(undefined);
             jiraIssueWebview['_issue'] = mockIssue;
+            jiraIssueWebview['_webviewReady'] = true;
 
             await jiraIssueWebview.invalidate();
 
             expect(forceUpdateSpy).toHaveBeenCalled();
             expect(Container.jiraActiveIssueStatusBar.handleActiveIssueChange).toHaveBeenCalledWith(mockIssue.key);
             expect(Container.pmfStats.touchActivity).toHaveBeenCalled();
+        });
+
+        test('should defer invalidate when webview is not ready', async () => {
+            const forceUpdateSpy = jest.spyOn(jiraIssueWebview as any, 'forceUpdateIssue').mockResolvedValue(undefined);
+            jiraIssueWebview['_issue'] = mockIssue;
+            jiraIssueWebview['_webviewReady'] = false;
+            jiraIssueWebview['_needsRefresh'] = false;
+
+            await jiraIssueWebview.invalidate();
+
+            expect(forceUpdateSpy).not.toHaveBeenCalled();
+            expect(jiraIssueWebview['_needsRefresh']).toBe(true);
         });
     });
 
@@ -437,6 +466,72 @@ describe('JiraIssueWebview', () => {
             expect(postMessageSpy).toHaveBeenCalledWith({
                 type: 'epicChildrenUpdate',
                 epicChildren: mockSearchResults.issues,
+            });
+        });
+
+        test('updateEpicChildren - should collect and attach assignees to epic children', async () => {
+            const epicIssue = {
+                ...mockIssue,
+                isEpic: true,
+                issuetype: { ...mockIssue.issuetype, name: 'Epic' },
+            };
+            jiraIssueWebview['_issue'] = epicIssue;
+
+            const epicInfo = { epicLink: { id: 'epic-link-field' } };
+            const mockChildIssues = [
+                { key: 'TEST-124', summary: 'Epic child 1', siteDetails: mockSiteDetails },
+                { key: 'TEST-125', summary: 'Epic child 2', siteDetails: mockSiteDetails },
+            ];
+            const mockSearchResults = { issues: mockChildIssues };
+
+            const mockUsers = [
+                {
+                    accountId: 'user-1',
+                    displayName: 'John Doe',
+                    emailAddress: 'john@example.com',
+                },
+                {
+                    accountId: 'user-2',
+                    displayName: 'Jane Smith',
+                    emailAddress: 'jane@example.com',
+                },
+            ];
+
+            const mockResponseWithAssignees = {
+                issues: mockChildIssues.map((issue, index) => ({
+                    key: issue.key,
+                    fields: { assignee: mockUsers[index] },
+                })),
+            };
+
+            const issuesWithAssignees = mockChildIssues.map((issue, index) => ({
+                ...issue,
+                assignee: mockUsers[index],
+            }));
+
+            (Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite as jest.Mock).mockReturnValue([
+                'summary',
+                'status',
+            ]);
+            (Container.jiraSettingsManager.getEpicFieldsForSite as jest.Mock).mockResolvedValue(epicInfo);
+            mockJiraClient.searchForIssuesUsingJqlGet.mockResolvedValue(mockResponseWithAssignees);
+            (readSearchResults as jest.Mock).mockResolvedValue(mockSearchResults);
+            (attachAssigneesToIssues as jest.Mock).mockReturnValue(issuesWithAssignees);
+
+            const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+
+            await jiraIssueWebview.updateEpicChildren();
+
+            expect(collectAssigneesFromResponse).toHaveBeenCalledWith(mockResponseWithAssignees, expect.any(Map));
+            expect(attachAssigneesToIssues).toHaveBeenCalledWith(mockChildIssues, expect.any(Map));
+
+            const assigneeMap = (collectAssigneesFromResponse as jest.Mock).mock.calls[0][1] as Map<string, User>;
+            expect(assigneeMap.get('TEST-124')).toEqual(mockUsers[0]);
+            expect(assigneeMap.get('TEST-125')).toEqual(mockUsers[1]);
+
+            expect(postMessageSpy).toHaveBeenCalledWith({
+                type: 'epicChildrenUpdate',
+                epicChildren: issuesWithAssignees,
             });
         });
 
@@ -833,6 +928,11 @@ describe('JiraIssueWebview', () => {
                 return action === msg;
             });
 
+            // Mock fetchMultipleIssuesWithTransitions to return enhanced issue data
+            const mockFetchMultipleIssuesWithTransitions =
+                require('../jira/fetchIssueWithTransitions').fetchMultipleIssuesWithTransitions;
+            mockFetchMultipleIssuesWithTransitions.mockResolvedValue([]);
+
             const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
 
             await jiraIssueWebview['onMessageReceived'](msg);
@@ -842,6 +942,76 @@ describe('JiraIssueWebview', () => {
             expect(postMessageSpy).toHaveBeenCalledWith({
                 type: 'fieldValueUpdate',
                 fieldValues: { issuelinks: updatedIssueLinks, nonce: 'nonce-123' },
+            });
+        });
+
+        test('should enhance linked issues with assignee data after createIssueLink', async () => {
+            const issueLinkData = { linkType: 'relates-to', issueKey: 'TEST-456' };
+            const issueLinkType = { id: 'relates-to', name: 'Relates to' };
+            const msg = {
+                action: 'createIssueLink',
+                site: mockSiteDetails,
+                issueLinkData,
+                issueLinkType,
+                nonce: 'nonce-123',
+            };
+
+            // Issue links returned from API without assignee data
+            const updatedIssueLinks = [
+                { id: 'link-1', type: { id: '1', name: 'Relates' }, inwardIssue: { key: 'TEST-456' } },
+                { id: 'link-2', type: { id: '2', name: 'Blocks' }, outwardIssue: { key: 'TEST-789' } },
+            ];
+
+            // Enhanced issues with assignee data
+            const enhancedIssues = [
+                {
+                    key: 'TEST-456',
+                    assignee: { displayName: 'John Doe', accountId: 'user-1' },
+                    transitions: [{ id: '1', name: 'Done' }],
+                    status: { name: 'Open' },
+                    priority: { name: 'High' },
+                },
+                {
+                    key: 'TEST-789',
+                    assignee: { displayName: 'Jane Smith', accountId: 'user-2' },
+                    transitions: [{ id: '2', name: 'In Progress' }],
+                    status: { name: 'To Do' },
+                    priority: { name: 'Medium' },
+                },
+            ];
+
+            const createIssueLinkSpy = jest.fn().mockResolvedValue(updatedIssueLinks);
+            mockJiraClient.createIssueLink = createIssueLinkSpy;
+
+            jest.spyOn(require('../ipc/issueActions'), 'isCreateIssueLink').mockImplementation((action) => {
+                return action === msg;
+            });
+
+            // Clear subtasks to avoid collecting extra keys in enhanceChildAndLinkedIssuesWithTransitions
+            jiraIssueWebview['_editUIData'].fieldValues['subtasks'] = [];
+
+            const mockFetchMultipleIssuesWithTransitions =
+                require('../jira/fetchIssueWithTransitions').fetchMultipleIssuesWithTransitions;
+            mockFetchMultipleIssuesWithTransitions.mockClear();
+            mockFetchMultipleIssuesWithTransitions.mockResolvedValue(enhancedIssues);
+
+            await jiraIssueWebview['onMessageReceived'](msg);
+
+            // Verify that fetchMultipleIssuesWithTransitions was called to enhance the linked issues
+            expect(mockFetchMultipleIssuesWithTransitions).toHaveBeenCalledWith(
+                ['TEST-456', 'TEST-789'],
+                mockIssue.siteDetails,
+            );
+
+            // Verify that the linked issues now have assignee data
+            const resultIssueLinks = jiraIssueWebview['_editUIData'].fieldValues['issuelinks'];
+            expect(resultIssueLinks[0].inwardIssue.assignee).toEqual({
+                displayName: 'John Doe',
+                accountId: 'user-1',
+            });
+            expect(resultIssueLinks[1].outwardIssue.assignee).toEqual({
+                displayName: 'Jane Smith',
+                accountId: 'user-2',
             });
         });
 
@@ -861,165 +1031,530 @@ describe('JiraIssueWebview', () => {
                 nonce: 'nonce-123',
             };
 
+            const mockTransport = jest.fn().mockResolvedValue({});
+            mockJiraClient.transportFactory.mockReturnValue(mockTransport);
+            mockJiraClient.authorizationProvider.mockResolvedValue('Bearer test-token');
+            mockJiraClient.apiVersion = '3';
+
             const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
 
             await jiraIssueWebview['onMessageReceived'](msg);
 
-            expect(mockJiraClient.editIssue).toHaveBeenCalledWith(mockIssue.key, { issuelinks: [existingLinks[1]] });
+            const expectedUrl = `${mockSiteDetails.baseApiUrl.replace(/\/rest$/, '')}/rest/api/3/issueLink/${linkId}`;
+            expect(mockTransport).toHaveBeenCalledWith(expectedUrl, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: 'Bearer test-token',
+                },
+            });
             expect(jiraIssueWebview['_editUIData'].fieldValues['issuelinks']).toHaveLength(1);
             expect(jiraIssueWebview['_editUIData'].fieldValues['issuelinks'][0].id).toBe('link-2');
             expect(postMessageSpy).toHaveBeenCalled();
         });
 
-        test('should handle createWorklog action', async () => {
-            const worklogData = {
-                timeSpent: '1h',
-                comment: 'Work done',
-                adjustEstimate: 'new',
-                newEstimate: '2h',
-            };
+        describe('worklog actions', () => {
+            test('should handle createWorklog action', async () => {
+                const worklogData = {
+                    timeSpent: '1h',
+                    comment: 'Work done',
+                    adjustEstimate: 'new',
+                    newEstimate: '2h',
+                };
 
-            const msg = {
-                action: 'createWorklog',
-                site: mockSiteDetails,
-                issueKey: mockIssue.key,
-                worklogData,
-                nonce: 'nonce-123',
-            };
+                const msg = {
+                    action: 'createWorklog',
+                    site: mockSiteDetails,
+                    issueKey: mockIssue.key,
+                    worklogData,
+                    nonce: 'nonce-123',
+                };
 
-            const createdWorklog = {
-                id: 'worklog-1',
-                timeSpent: '1h',
-                comment: 'Work done',
-            };
+                const createdWorklog = {
+                    id: 'worklog-1',
+                    timeSpent: '1h',
+                    comment: 'Work done',
+                };
 
-            mockJiraClient.addWorklog.mockResolvedValue(createdWorklog);
-            jiraIssueWebview['_editUIData'].fieldValues['worklog'] = { worklogs: [] };
+                mockJiraClient.addWorklog.mockResolvedValue(createdWorklog);
+                jiraIssueWebview['_editUIData'].fieldValues['worklog'] = { worklogs: [] };
 
-            const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+                const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
 
-            await jiraIssueWebview['onMessageReceived'](msg);
+                await jiraIssueWebview['onMessageReceived'](msg);
 
-            expect(mockJiraClient.addWorklog).toHaveBeenCalledWith(
-                mockIssue.key,
-                { timeSpent: '1h', comment: 'Work done' },
-                { adjustEstimate: 'new', newEstimate: '2h' },
-            );
-            expect(jiraIssueWebview['_editUIData'].fieldValues['worklog'].worklogs).toContain(createdWorklog);
-            expect(postMessageSpy).toHaveBeenCalledWith({
-                type: 'fieldValueUpdate',
-                fieldValues: { worklog: { worklogs: [createdWorklog] }, nonce: 'nonce-123' },
+                expect(mockJiraClient.addWorklog).toHaveBeenCalledWith(
+                    mockIssue.key,
+                    { timeSpent: '1h', comment: 'Work done' },
+                    { adjustEstimate: 'new', newEstimate: '2h' },
+                );
+                expect(jiraIssueWebview['_editUIData'].fieldValues['worklog'].worklogs).toContain(createdWorklog);
+                expect(postMessageSpy).toHaveBeenCalledWith({
+                    type: 'fieldValueUpdate',
+                    fieldValues: { worklog: { worklogs: [createdWorklog] }, nonce: 'nonce-123' },
+                });
+            });
+
+            test('should handle updateWorklog action', async () => {
+                const worklogData = {
+                    timeSpent: '2h',
+                    comment: 'Updated work done',
+                    adjustEstimate: 'auto',
+                };
+
+                const msg = {
+                    action: 'updateWorklog',
+                    site: mockSiteDetails,
+                    issueKey: mockIssue.key,
+                    worklogId: 'worklog-1',
+                    worklogData,
+                    nonce: 'nonce-123',
+                };
+
+                const updatedWorklog = {
+                    id: 'worklog-1',
+                    timeSpent: '2h',
+                    comment: 'Updated work done',
+                };
+
+                (mockJiraClient as any).putToJira = jest.fn().mockResolvedValue(updatedWorklog);
+                jiraIssueWebview['_editUIData'].fieldValues['worklog'] = {
+                    worklogs: [{ id: 'worklog-1', timeSpent: '1h', comment: 'Old work' }],
+                };
+
+                const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+
+                await jiraIssueWebview['onMessageReceived'](msg);
+
+                expect((mockJiraClient as any).putToJira).toHaveBeenCalledWith(
+                    'issue/TEST-123/worklog/worklog-1',
+                    { timeSpent: '2h', comment: 'Updated work done' },
+                    { adjustEstimate: 'auto' },
+                );
+                expect(jiraIssueWebview['_editUIData'].fieldValues['worklog'].worklogs[0]).toEqual(updatedWorklog);
+                expect(postMessageSpy).toHaveBeenCalledWith({
+                    type: 'fieldValueUpdate',
+                    fieldValues: { worklog: { worklogs: [updatedWorklog] }, nonce: 'nonce-123' },
+                });
+            });
+
+            test('should handle deleteWorklog action', async () => {
+                const msg = {
+                    action: 'deleteWorklog',
+                    site: mockSiteDetails,
+                    issueKey: mockIssue.key,
+                    worklogId: 'worklog-1',
+                    adjustEstimate: 'auto',
+                    nonce: 'nonce-123',
+                };
+
+                (mockJiraClient as any).deleteToJira = jest.fn().mockResolvedValue({});
+                jiraIssueWebview['_editUIData'].fieldValues['worklog'] = {
+                    worklogs: [
+                        { id: 'worklog-1', timeSpent: '1h', comment: 'Work to delete' },
+                        { id: 'worklog-2', timeSpent: '2h', comment: 'Work to keep' },
+                    ],
+                };
+
+                const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+
+                await jiraIssueWebview['onMessageReceived'](msg);
+
+                expect((mockJiraClient as any).deleteToJira).toHaveBeenCalledWith('issue/TEST-123/worklog/worklog-1', {
+                    adjustEstimate: 'auto',
+                });
+                expect(jiraIssueWebview['_editUIData'].fieldValues['worklog'].worklogs).toHaveLength(1);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['worklog'].worklogs[0].id).toBe('worklog-2');
+                expect(postMessageSpy).toHaveBeenCalledWith({
+                    type: 'fieldValueUpdate',
+                    fieldValues: {
+                        worklog: { worklogs: [{ id: 'worklog-2', timeSpent: '2h', comment: 'Work to keep' }] },
+                        nonce: 'nonce-123',
+                    },
+                });
+            });
+
+            test('should handle updateWorklog action with new estimate', async () => {
+                const worklogData = {
+                    timeSpent: '2h',
+                    comment: 'Updated work done',
+                    adjustEstimate: 'new',
+                    newEstimate: '3h',
+                };
+
+                const msg = {
+                    action: 'updateWorklog',
+                    site: mockSiteDetails,
+                    issueKey: mockIssue.key,
+                    worklogId: 'worklog-1',
+                    worklogData,
+                    nonce: 'nonce-123',
+                };
+
+                const updatedWorklog = {
+                    id: 'worklog-1',
+                    timeSpent: '2h',
+                    comment: 'Updated work done',
+                };
+
+                (mockJiraClient as any).putToJira = jest.fn().mockResolvedValue(updatedWorklog);
+                jiraIssueWebview['_editUIData'].fieldValues['worklog'] = {
+                    worklogs: [{ id: 'worklog-1', timeSpent: '1h', comment: 'Old work' }],
+                };
+
+                await jiraIssueWebview['onMessageReceived'](msg);
+
+                expect((mockJiraClient as any).putToJira).toHaveBeenCalledWith(
+                    'issue/TEST-123/worklog/worklog-1',
+                    { timeSpent: '2h', comment: 'Updated work done' },
+                    { adjustEstimate: 'new', newEstimate: '3h' },
+                );
+            });
+
+            test('should handle deleteWorklog action with new estimate', async () => {
+                const msg = {
+                    action: 'deleteWorklog',
+                    site: mockSiteDetails,
+                    issueKey: mockIssue.key,
+                    worklogId: 'worklog-1',
+                    adjustEstimate: 'new',
+                    newEstimate: '4h',
+                    nonce: 'nonce-123',
+                };
+
+                (mockJiraClient as any).deleteToJira = jest.fn().mockResolvedValue({});
+                jiraIssueWebview['_editUIData'].fieldValues['worklog'] = {
+                    worklogs: [{ id: 'worklog-1', timeSpent: '1h', comment: 'Work to delete' }],
+                };
+
+                await jiraIssueWebview['onMessageReceived'](msg);
+
+                expect((mockJiraClient as any).deleteToJira).toHaveBeenCalledWith('issue/TEST-123/worklog/worklog-1', {
+                    adjustEstimate: 'new',
+                    newEstimate: '4h',
+                });
+            });
+
+            test('should handle updateWorklog error', async () => {
+                const worklogData = {
+                    timeSpent: '2h',
+                    comment: 'Updated work done',
+                    adjustEstimate: 'auto',
+                };
+
+                const msg = {
+                    action: 'updateWorklog',
+                    site: mockSiteDetails,
+                    issueKey: mockIssue.key,
+                    worklogId: 'worklog-1',
+                    worklogData,
+                    nonce: 'nonce-123',
+                };
+
+                const error = new Error('Update failed');
+                (mockJiraClient as any).putToJira = jest.fn().mockRejectedValue(error);
+
+                const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+
+                await jiraIssueWebview['onMessageReceived'](msg);
+
+                expect(postMessageSpy).toHaveBeenCalledWith({
+                    type: 'error',
+                    reason: expect.objectContaining({
+                        title: 'Error updating worklog',
+                    }),
+                    nonce: 'nonce-123',
+                });
+            });
+
+            test('should handle deleteWorklog error', async () => {
+                const msg = {
+                    action: 'deleteWorklog',
+                    site: mockSiteDetails,
+                    issueKey: mockIssue.key,
+                    worklogId: 'worklog-1',
+                    adjustEstimate: 'auto',
+                    nonce: 'nonce-123',
+                };
+
+                const error = new Error('Delete failed');
+                (mockJiraClient as any).deleteToJira = jest.fn().mockRejectedValue(error);
+
+                const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+
+                await jiraIssueWebview['onMessageReceived'](msg);
+
+                expect(postMessageSpy).toHaveBeenCalledWith({
+                    type: 'error',
+                    reason: expect.objectContaining({
+                        title: 'Error deleting worklog',
+                    }),
+                    nonce: 'nonce-123',
+                });
             });
         });
 
-        test('should handle addWatcher action', async () => {
-            const watcher = { accountId: 'user-1', displayName: 'Test User' };
-            const msg = {
-                action: 'addWatcher',
-                site: mockSiteDetails,
-                issueKey: mockIssue.key,
-                watcher,
-                nonce: 'nonce-123',
-            };
+        describe('watchers actions', () => {
+            test('should handle addWatcher action', async () => {
+                const watcher = { accountId: 'user-1', displayName: 'Test User' };
+                const msg = {
+                    action: 'addWatcher',
+                    site: mockSiteDetails,
+                    issueKey: mockIssue.key,
+                    watcher,
+                    nonce: 'nonce-123',
+                };
 
-            jiraIssueWebview['_editUIData'].fieldValues['watches'] = {
-                watchCount: 0,
-                watchers: [],
-                isWatching: false,
-            };
-            jiraIssueWebview['_currentUser'] = { accountId: 'user-1' } as any;
+                jiraIssueWebview['_editUIData'].fieldValues['watches'] = {
+                    watchCount: 0,
+                    watchers: [],
+                    isWatching: false,
+                };
+                jiraIssueWebview['_currentUser'] = { accountId: 'user-1' } as any;
 
-            const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+                const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
 
-            await jiraIssueWebview['onMessageReceived'](msg);
+                await jiraIssueWebview['onMessageReceived'](msg);
 
-            expect(mockJiraClient.addWatcher).toHaveBeenCalledWith(mockIssue.key, watcher.accountId);
-            expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchers).toContain(watcher);
-            expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchCount).toBe(1);
-            expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].isWatching).toBe(true);
-            expect(postMessageSpy).toHaveBeenCalled();
+                expect(mockJiraClient.addWatcher).toHaveBeenCalledWith(mockIssue.key, watcher.accountId);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchers).toContain(watcher);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchCount).toBe(1);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].isWatching).toBe(true);
+                expect(postMessageSpy).toHaveBeenCalled();
+            });
+
+            test('should handle removeWatcher action', async () => {
+                const watcher = { accountId: 'user-1', displayName: 'Test User' };
+                const msg = {
+                    action: 'removeWatcher',
+                    site: mockSiteDetails,
+                    issueKey: mockIssue.key,
+                    watcher,
+                    nonce: 'nonce-123',
+                };
+
+                jiraIssueWebview['_editUIData'].fieldValues['watches'] = {
+                    watchCount: 1,
+                    watchers: [watcher],
+                    isWatching: true,
+                };
+                jiraIssueWebview['_currentUser'] = { accountId: 'user-1' } as any;
+
+                const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+
+                await jiraIssueWebview['onMessageReceived'](msg);
+
+                expect(mockJiraClient.removeWatcher).toHaveBeenCalledWith(mockIssue.key, {
+                    accountId: watcher.accountId,
+                });
+                expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchers).not.toContain(watcher);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchCount).toBe(0);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].isWatching).toBe(false);
+                expect(postMessageSpy).toHaveBeenCalled();
+            });
+
+            test('should handle removeWatcher action(Jira DC)', async () => {
+                const watcher = {
+                    key: 'testUserKey',
+                    accountId: 'user-1',
+                    displayName: 'Test User',
+                };
+                const siteDetailsDC = { ...mockSiteDetails, isCloud: false };
+                const msg = {
+                    action: 'removeWatcher',
+                    site: siteDetailsDC,
+                    issueKey: mockIssue.key,
+                    watcher,
+                    nonce: 'nonce-123',
+                };
+
+                jiraIssueWebview['_editUIData'].fieldValues['watches'] = {
+                    watchCount: 1,
+                    watchers: [watcher],
+                    isWatching: true,
+                };
+                jiraIssueWebview['_currentUser'] = { key: 'testUserKey' } as any;
+
+                const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+
+                await jiraIssueWebview['onMessageReceived'](msg);
+
+                expect(mockJiraClient.removeWatcher).toHaveBeenCalledWith(mockIssue.key, { username: watcher.key });
+                expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchers).not.toContain(watcher);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchCount).toBe(0);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].isWatching).toBe(false);
+                expect(postMessageSpy).toHaveBeenCalled();
+            });
+
+            test('should handle removeWatcher action when watchers is undefined', async () => {
+                const watcher = { accountId: 'user-1', displayName: 'Test User' };
+                const msg = {
+                    action: 'removeWatcher',
+                    site: mockSiteDetails,
+                    issueKey: mockIssue.key,
+                    watcher,
+                    nonce: 'nonce-456',
+                };
+
+                jiraIssueWebview['_editUIData'].fieldValues['watches'] = {
+                    watchCount: 1,
+                    isWatching: true,
+                    // watchers is undefined
+                };
+                jiraIssueWebview['_currentUser'] = { accountId: 'user-1' } as any;
+
+                const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+
+                await jiraIssueWebview['onMessageReceived'](msg);
+
+                expect(mockJiraClient.removeWatcher).toHaveBeenCalledWith(mockIssue.key, {
+                    accountId: watcher.accountId,
+                });
+                expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchers).toEqual([]);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchCount).toBe(0);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].isWatching).toBe(false);
+                expect(postMessageSpy).toHaveBeenCalled();
+            });
+
+            test('should handle removeWatcher action when watcher not found', async () => {
+                const watcher = { accountId: 'user-2', displayName: 'Other User' };
+                const msg = {
+                    action: 'removeWatcher',
+                    site: mockSiteDetails,
+                    issueKey: mockIssue.key,
+                    watcher,
+                    nonce: 'nonce-789',
+                };
+
+                jiraIssueWebview['_editUIData'].fieldValues['watches'] = {
+                    watchCount: 1,
+                    // watchers does not contain the watcher
+                    watchers: [{ accountId: 'user-1', displayName: 'Test User' }],
+                    isWatching: true,
+                };
+                jiraIssueWebview['_currentUser'] = { accountId: 'user-2' } as any;
+
+                const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+
+                await jiraIssueWebview['onMessageReceived'](msg);
+
+                expect(mockJiraClient.removeWatcher).toHaveBeenCalledWith(mockIssue.key, {
+                    accountId: watcher.accountId,
+                });
+                expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchers).toHaveLength(1);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchCount).toBe(1);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].isWatching).toBe(false);
+                expect(postMessageSpy).toHaveBeenCalled();
+            });
         });
 
-        test('should handle removeWatcher action', async () => {
-            const watcher = { accountId: 'user-1', displayName: 'Test User' };
-            const msg = {
-                action: 'removeWatcher',
-                site: mockSiteDetails,
-                issueKey: mockIssue.key,
-                watcher,
-                nonce: 'nonce-123',
-            };
+        describe('votes actions', () => {
+            test('should handle addVote action', async () => {
+                const voter = { accountId: 'user-1', displayName: 'Test User' };
+                const msg = {
+                    action: 'addVote',
+                    site: mockSiteDetails,
+                    issueKey: mockIssue.key,
+                    voter,
+                    nonce: 'nonce-123',
+                };
 
-            jiraIssueWebview['_editUIData'].fieldValues['watches'] = {
-                watchCount: 1,
-                watchers: [watcher],
-                isWatching: true,
-            };
-            jiraIssueWebview['_currentUser'] = { accountId: 'user-1' } as any;
+                jiraIssueWebview['_editUIData'].fieldValues['votes'] = {
+                    votes: 0,
+                    voters: [],
+                    hasVoted: false,
+                };
 
-            const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+                const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
 
-            await jiraIssueWebview['onMessageReceived'](msg);
+                await jiraIssueWebview['onMessageReceived'](msg);
 
-            expect(mockJiraClient.removeWatcher).toHaveBeenCalledWith(mockIssue.key, watcher.accountId);
-            expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchers).not.toContain(watcher);
-            expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchCount).toBe(0);
-            expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].isWatching).toBe(false);
-            expect(postMessageSpy).toHaveBeenCalled();
-        });
+                expect(mockJiraClient.addVote).toHaveBeenCalledWith(mockIssue.key);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['votes'].voters).toContain(voter);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['votes'].votes).toBe(1);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['votes'].hasVoted).toBe(true);
+                expect(postMessageSpy).toHaveBeenCalled();
+            });
 
-        test('should handle addVote action', async () => {
-            const voter = { accountId: 'user-1', displayName: 'Test User' };
-            const msg = {
-                action: 'addVote',
-                site: mockSiteDetails,
-                issueKey: mockIssue.key,
-                voter,
-                nonce: 'nonce-123',
-            };
+            test('should handle removeVote action', async () => {
+                const voter = { accountId: 'user-1', displayName: 'Test User' };
+                const msg = {
+                    action: 'removeVote',
+                    site: mockSiteDetails,
+                    issueKey: mockIssue.key,
+                    voter,
+                    nonce: 'nonce-123',
+                };
 
-            jiraIssueWebview['_editUIData'].fieldValues['votes'] = {
-                votes: 0,
-                voters: [],
-                hasVoted: false,
-            };
+                jiraIssueWebview['_editUIData'].fieldValues['votes'] = {
+                    votes: 1,
+                    voters: [voter],
+                    hasVoted: true,
+                };
 
-            const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+                const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
 
-            await jiraIssueWebview['onMessageReceived'](msg);
+                await jiraIssueWebview['onMessageReceived'](msg);
 
-            expect(mockJiraClient.addVote).toHaveBeenCalledWith(mockIssue.key);
-            expect(jiraIssueWebview['_editUIData'].fieldValues['votes'].voters).toContain(voter);
-            expect(jiraIssueWebview['_editUIData'].fieldValues['votes'].votes).toBe(1);
-            expect(jiraIssueWebview['_editUIData'].fieldValues['votes'].hasVoted).toBe(true);
-            expect(postMessageSpy).toHaveBeenCalled();
-        });
+                expect(mockJiraClient.removeVote).toHaveBeenCalledWith(mockIssue.key);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['votes'].voters).not.toContain(voter);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['votes'].votes).toBe(0);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['votes'].hasVoted).toBe(false);
+                expect(postMessageSpy).toHaveBeenCalled();
+            });
 
-        test('should handle removeVote action', async () => {
-            const voter = { accountId: 'user-1', displayName: 'Test User' };
-            const msg = {
-                action: 'removeVote',
-                site: mockSiteDetails,
-                issueKey: mockIssue.key,
-                voter,
-                nonce: 'nonce-123',
-            };
+            test('should handle removeVote action when voters is undefined', async () => {
+                const voter = { accountId: 'user-1', displayName: 'Test User' };
+                const msg = {
+                    action: 'removeVote',
+                    site: mockSiteDetails,
+                    issueKey: mockIssue.key,
+                    voter,
+                    nonce: 'nonce-456',
+                };
 
-            jiraIssueWebview['_editUIData'].fieldValues['votes'] = {
-                votes: 1,
-                voters: [voter],
-                hasVoted: true,
-            };
+                jiraIssueWebview['_editUIData'].fieldValues['votes'] = {
+                    votes: 1,
+                    hasVoted: true,
+                };
 
-            const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+                const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
 
-            await jiraIssueWebview['onMessageReceived'](msg);
+                await jiraIssueWebview['onMessageReceived'](msg);
 
-            expect(mockJiraClient.removeVote).toHaveBeenCalledWith(mockIssue.key);
-            expect(jiraIssueWebview['_editUIData'].fieldValues['votes'].voters).not.toContain(voter);
-            expect(jiraIssueWebview['_editUIData'].fieldValues['votes'].votes).toBe(0);
-            expect(jiraIssueWebview['_editUIData'].fieldValues['votes'].hasVoted).toBe(false);
-            expect(postMessageSpy).toHaveBeenCalled();
+                expect(mockJiraClient.removeVote).toHaveBeenCalledWith(mockIssue.key);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['votes'].voters).toEqual([]);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['votes'].votes).toBe(0);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['votes'].hasVoted).toBe(false);
+                expect(postMessageSpy).toHaveBeenCalled();
+            });
+
+            test('should handle removeVote action when voter not found', async () => {
+                const voter = { accountId: 'user-2', displayName: 'Other User' };
+                const msg = {
+                    action: 'removeVote',
+                    site: mockSiteDetails,
+                    issueKey: mockIssue.key,
+                    voter,
+                    nonce: 'nonce-789',
+                };
+
+                jiraIssueWebview['_editUIData'].fieldValues['votes'] = {
+                    votes: 1,
+                    voters: [{ accountId: 'user-1', displayName: 'Test User' }],
+                    hasVoted: true,
+                };
+                jiraIssueWebview['_currentUser'] = { accountId: 'user-2' } as any;
+
+                const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+
+                await jiraIssueWebview['onMessageReceived'](msg);
+
+                expect(mockJiraClient.removeVote).toHaveBeenCalledWith(mockIssue.key);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['votes'].voters).toHaveLength(1);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['votes'].votes).toBe(1);
+                expect(jiraIssueWebview['_editUIData'].fieldValues['votes'].hasVoted).toBe(false);
+                expect(postMessageSpy).toHaveBeenCalled();
+            });
         });
 
         test('should handle addAttachments action', async () => {
@@ -1684,6 +2219,478 @@ describe('JiraIssueWebview - Additional Method Tests', () => {
 
             expect(subtasks[0].transitions).toEqual(mockEnhancedIssues[0].transitions);
             expect(issuelinks[0].outwardIssue.transitions).toEqual(mockEnhancedIssues[1].transitions);
+        });
+    });
+
+    describe('refreshIssueHistory', () => {
+        beforeEach(() => {
+            (webview as any)._issue = mockIssue;
+            (webview as any)._editUIData = {
+                fields: {
+                    timespent: { key: 'timespent', name: 'Time Spent' },
+                    timeestimate: { key: 'timeestimate', name: 'Remaining Estimate' },
+                    status: { key: 'status', name: 'Status' },
+                },
+            };
+        });
+
+        it('should fetch and process history with changelog and worklogs', async () => {
+            const mockHistoryResponse = {
+                data: {
+                    fields: {
+                        created: '2025-11-05T10:00:00.000Z',
+                        reporter: {
+                            displayName: 'Reporter',
+                            accountId: 'reporter-1',
+                            avatarUrls: { '48x48': 'avatar.png' },
+                        },
+                    },
+                    changelog: {
+                        histories: [
+                            {
+                                id: 'history-1',
+                                created: '2025-11-05T15:58:00.000Z',
+                                author: {
+                                    displayName: 'John Doe',
+                                    accountId: 'user-1',
+                                    avatarUrls: { '48x48': 'avatar.png' },
+                                },
+                                items: [
+                                    {
+                                        field: 'status',
+                                        fieldId: 'status',
+                                        from: 'To Do',
+                                        to: 'In Progress',
+                                        fromString: 'To Do',
+                                        toString: 'In Progress',
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            };
+
+            const mockWorklogResponse = {
+                data: {
+                    worklogs: [
+                        {
+                            id: 'worklog-1',
+                            started: '2025-11-05T15:58:00.000Z',
+                            timeSpent: '1h',
+                            comment: 'Test work',
+                            author: {
+                                displayName: 'John Doe',
+                                accountId: 'user-1',
+                                avatarUrls: { '48x48': 'avatar.png' },
+                            },
+                        },
+                    ],
+                },
+            };
+
+            const mockGet = jest
+                .fn()
+                .mockResolvedValueOnce(mockHistoryResponse)
+                .mockResolvedValueOnce(mockWorklogResponse);
+            const mockTransport = { get: mockGet };
+            const mockClient = {
+                apiVersion: '2',
+                transportFactory: jest.fn(() => mockTransport),
+                authorizationProvider: jest.fn().mockResolvedValue('Bearer token'),
+            };
+
+            (Container.clientManager.jiraClient as jest.Mock).mockResolvedValue(mockClient);
+            (webview as any).postMessage = jest.fn();
+
+            await (webview as any).refreshIssueHistory();
+
+            expect(mockGet).toHaveBeenCalledTimes(2);
+            expect((webview as any).postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: 'historyUpdate',
+                    history: expect.arrayContaining([
+                        expect.objectContaining({
+                            id: '__CREATED__',
+                            field: '__CREATED__',
+                        }),
+                        expect.objectContaining({
+                            id: 'history-1-status',
+                            field: 'status',
+                            fieldDisplayName: 'Status',
+                        }),
+                        expect.objectContaining({
+                            id: 'worklog-worklog-1',
+                            field: 'worklog',
+                            fieldDisplayName: 'Work Log',
+                        }),
+                    ]),
+                }),
+            );
+        });
+
+        it('should filter out worklogid field changes', async () => {
+            const mockHistoryResponse = {
+                data: {
+                    fields: {
+                        created: '2025-11-05T10:00:00.000Z',
+                        reporter: {
+                            displayName: 'Reporter',
+                            accountId: 'reporter-1',
+                        },
+                    },
+                    changelog: {
+                        histories: [
+                            {
+                                id: 'history-1',
+                                created: '2025-11-05T15:58:00.000Z',
+                                author: {
+                                    displayName: 'John Doe',
+                                    accountId: 'user-1',
+                                },
+                                items: [
+                                    {
+                                        field: 'worklogid',
+                                        fieldId: 'worklogid',
+                                        from: null,
+                                        to: 'worklog-123',
+                                    },
+                                    {
+                                        field: 'status',
+                                        fieldId: 'status',
+                                        from: 'To Do',
+                                        to: 'In Progress',
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            };
+
+            const mockWorklogResponse = {
+                data: { worklogs: [] },
+            };
+
+            const mockGet = jest
+                .fn()
+                .mockResolvedValueOnce(mockHistoryResponse)
+                .mockResolvedValueOnce(mockWorklogResponse);
+            const mockTransport = { get: mockGet };
+            const mockClient = {
+                apiVersion: '2',
+                transportFactory: jest.fn(() => mockTransport),
+                authorizationProvider: jest.fn().mockResolvedValue('Bearer token'),
+            };
+
+            (Container.clientManager.jiraClient as jest.Mock).mockResolvedValue(mockClient);
+            (webview as any).postMessage = jest.fn();
+
+            await (webview as any).refreshIssueHistory();
+
+            const postMessageCalls = (webview as any).postMessage.mock.calls;
+            const historyUpdate = postMessageCalls.find((call: any) => call[0].type === 'historyUpdate');
+            expect(historyUpdate).toBeDefined();
+
+            const historyItems = historyUpdate[0].history;
+            const worklogidItems = historyItems.filter((item: any) => item.field === 'worklogid');
+            expect(worklogidItems.length).toBe(0);
+
+            const statusItems = historyItems.filter((item: any) => item.field === 'status');
+            expect(statusItems.length).toBe(1);
+        });
+
+        it('should use fieldNameForKey to get proper display names', async () => {
+            const mockHistoryResponse = {
+                data: {
+                    fields: {
+                        created: '2025-11-05T10:00:00.000Z',
+                        reporter: {
+                            displayName: 'Reporter',
+                            accountId: 'reporter-1',
+                        },
+                    },
+                    changelog: {
+                        histories: [
+                            {
+                                id: 'history-1',
+                                created: '2025-11-05T15:58:00.000Z',
+                                author: {
+                                    displayName: 'John Doe',
+                                    accountId: 'user-1',
+                                },
+                                items: [
+                                    {
+                                        field: 'timespent',
+                                        fieldId: 'timespent',
+                                        from: null,
+                                        to: '3600',
+                                        fromString: null,
+                                        toString: '3600',
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            };
+
+            const mockWorklogResponse = {
+                data: { worklogs: [] },
+            };
+
+            const mockGet = jest
+                .fn()
+                .mockResolvedValueOnce(mockHistoryResponse)
+                .mockResolvedValueOnce(mockWorklogResponse);
+            const mockTransport = { get: mockGet };
+            const mockClient = {
+                apiVersion: '2',
+                transportFactory: jest.fn(() => mockTransport),
+                authorizationProvider: jest.fn().mockResolvedValue('Bearer token'),
+            };
+
+            (Container.clientManager.jiraClient as jest.Mock).mockResolvedValue(mockClient);
+            (webview as any).postMessage = jest.fn();
+
+            await (webview as any).refreshIssueHistory();
+
+            const postMessageCalls = (webview as any).postMessage.mock.calls;
+            const historyUpdate = postMessageCalls.find((call: any) => call[0].type === 'historyUpdate');
+            const historyItems = historyUpdate[0].history;
+            const timeSpentItem = historyItems.find((item: any) => item.field === 'timespent');
+            expect(timeSpentItem).toBeDefined();
+            expect(timeSpentItem.fieldDisplayName).toBe('Time Spent');
+        });
+
+        it('should handle worklog fetch errors gracefully', async () => {
+            const mockHistoryResponse = {
+                data: {
+                    fields: {
+                        created: '2025-11-05T10:00:00.000Z',
+                        reporter: {
+                            displayName: 'Reporter',
+                            accountId: 'reporter-1',
+                        },
+                    },
+                    changelog: {
+                        histories: [],
+                    },
+                },
+            };
+
+            const mockGet = jest
+                .fn()
+                .mockResolvedValueOnce(mockHistoryResponse)
+                .mockRejectedValueOnce(new Error('Worklog fetch failed'));
+            const mockTransport = { get: mockGet };
+            const mockClient = {
+                apiVersion: '2',
+                transportFactory: jest.fn(() => mockTransport),
+                authorizationProvider: jest.fn().mockResolvedValue('Bearer token'),
+            };
+
+            (Container.clientManager.jiraClient as jest.Mock).mockResolvedValue(mockClient);
+            (webview as any).postMessage = jest.fn();
+
+            await (webview as any).refreshIssueHistory();
+
+            expect((webview as any).postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: 'historyUpdate',
+                    history: expect.arrayContaining([
+                        expect.objectContaining({
+                            id: '__CREATED__',
+                        }),
+                    ]),
+                }),
+            );
+        });
+    });
+
+    describe('Development Feature Methods', () => {
+        describe('updateDevelopmentInfo', () => {
+            it('should fetch and merge development info from Jira API and local sources', async () => {
+                const mockJiraDevInfo = {
+                    branches: [{ name: 'jira-branch', url: 'https://bitbucket.org/repo/branch/jira-branch' }],
+                    commits: [{ hash: 'abc123', message: 'Jira commit', url: 'https://bitbucket.org/commits/abc123' }],
+                    pullRequests: [
+                        { id: '1', title: 'PR from Jira', url: 'https://bitbucket.org/pr/1', state: 'OPEN' },
+                    ],
+                    builds: [],
+                };
+
+                const mockLocalBranches = [{ name: 'local-branch', url: undefined }];
+                const mockLocalCommits = [{ hash: 'def456', message: 'Local commit', url: undefined }];
+
+                (webview as any).fetchJiraDevelopmentInfo = jest.fn().mockResolvedValue(mockJiraDevInfo);
+                (webview as any).relatedBranches = jest.fn().mockResolvedValue(mockLocalBranches);
+                (webview as any).relatedCommits = jest.fn().mockResolvedValue(mockLocalCommits);
+                (webview as any).recentPullRequests = jest.fn().mockResolvedValue([]);
+                (webview as any).relatedBuilds = jest.fn().mockResolvedValue([]);
+                (webview as any).deduplicateBranches = jest.fn((branches) => branches);
+                (webview as any).postMessage = jest.fn();
+
+                await (webview as any).updateDevelopmentInfo();
+
+                expect((webview as any).postMessage).toHaveBeenCalledWith({
+                    type: 'developmentInfoUpdate',
+                    developmentInfo: expect.objectContaining({
+                        branches: expect.arrayContaining([{ name: 'jira-branch', url: expect.any(String) }]),
+                        commits: expect.arrayContaining([
+                            { hash: 'abc123', message: 'Jira commit', url: expect.any(String) },
+                        ]),
+                        pullRequests: expect.arrayContaining([expect.objectContaining({ id: '1' })]),
+                    }),
+                });
+            });
+
+            it('should fallback to local data when Jira API returns empty', async () => {
+                const emptyJiraDevInfo = {
+                    branches: [],
+                    commits: [],
+                    pullRequests: [],
+                    builds: [],
+                };
+
+                const mockLocalBranches = [{ name: 'local-branch', url: undefined }];
+                const mockLocalCommits = [{ hash: 'def456', message: 'Local commit', url: undefined }];
+
+                (webview as any).fetchJiraDevelopmentInfo = jest.fn().mockResolvedValue(emptyJiraDevInfo);
+                (webview as any).relatedBranches = jest.fn().mockResolvedValue(mockLocalBranches);
+                (webview as any).relatedCommits = jest.fn().mockResolvedValue(mockLocalCommits);
+                (webview as any).recentPullRequests = jest.fn().mockResolvedValue([]);
+                (webview as any).relatedBuilds = jest.fn().mockResolvedValue([]);
+                (webview as any).deduplicateBranches = jest.fn((branches) => branches);
+                (webview as any).postMessage = jest.fn();
+
+                await (webview as any).updateDevelopmentInfo();
+
+                expect((webview as any).postMessage).toHaveBeenCalledWith({
+                    type: 'developmentInfoUpdate',
+                    developmentInfo: expect.objectContaining({
+                        branches: mockLocalBranches,
+                        commits: mockLocalCommits,
+                    }),
+                });
+            });
+
+            it('should handle errors gracefully', async () => {
+                (webview as any).fetchJiraDevelopmentInfo = jest.fn().mockRejectedValue(new Error('API Error'));
+                (webview as any).relatedBranches = jest.fn().mockResolvedValue([]);
+                (webview as any).relatedCommits = jest.fn().mockResolvedValue([]);
+                (webview as any).recentPullRequests = jest.fn().mockResolvedValue([]);
+                (webview as any).relatedBuilds = jest.fn().mockResolvedValue([]);
+
+                await expect((webview as any).updateDevelopmentInfo()).resolves.not.toThrow();
+            });
+        });
+
+        describe('deduplicateBranches', () => {
+            it('should remove duplicate branches with remote prefixes', () => {
+                const branches = [
+                    { name: 'feature-1', url: 'https://bitbucket.org/branch/feature-1' },
+                    { name: 'origin/feature-1', url: 'https://bitbucket.org/branch/feature-1' },
+                    { name: 'feature-2', url: 'https://bitbucket.org/branch/feature-2' },
+                ];
+
+                const result = (webview as any).deduplicateBranches(branches);
+
+                expect(result).toHaveLength(2);
+                expect(result[0].name).toBe('feature-1');
+                expect(result[1].name).toBe('feature-2');
+            });
+
+            it('should handle branches without remote prefixes', () => {
+                const branches = [
+                    { name: 'main', url: 'https://bitbucket.org/branch/main' },
+                    { name: 'develop', url: 'https://bitbucket.org/branch/develop' },
+                ];
+
+                const result = (webview as any).deduplicateBranches(branches);
+
+                expect(result).toHaveLength(2);
+            });
+
+            it('should handle empty array', () => {
+                const result = (webview as any).deduplicateBranches([]);
+
+                expect(result).toEqual([]);
+            });
+        });
+
+        describe('relatedBuilds', () => {
+            it('should skip PRs without valid repository information', async () => {
+                const mockPRs = [
+                    {
+                        id: '1',
+                        siteDetails: mockSiteDetails,
+                        destination: {
+                            repo: {
+                                fullName: undefined,
+                            },
+                        },
+                    },
+                ];
+
+                (webview as any).recentPullRequests = jest.fn().mockResolvedValue(mockPRs);
+
+                const result = await (webview as any).relatedBuilds();
+
+                expect(result).toEqual([]);
+            });
+
+            it('should skip PRs with invalid repository format', async () => {
+                const mockPRs = [
+                    {
+                        id: '1',
+                        siteDetails: mockSiteDetails,
+                        destination: {
+                            repo: {
+                                fullName: 'invalid-format',
+                            },
+                        },
+                    },
+                ];
+
+                (webview as any).recentPullRequests = jest.fn().mockResolvedValue(mockPRs);
+
+                const result = await (webview as any).relatedBuilds();
+
+                expect(result).toEqual([]);
+            });
+
+            it('should handle errors gracefully and continue with other PRs', async () => {
+                const mockPRs = [
+                    {
+                        id: '1',
+                        siteDetails: mockSiteDetails,
+                        destination: { repo: { fullName: 'owner/repo1' } },
+                    },
+                    {
+                        id: '2',
+                        siteDetails: mockSiteDetails,
+                        destination: { repo: { fullName: 'owner/repo2' } },
+                    },
+                ];
+
+                const mockBbClient = {
+                    pullrequests: {
+                        getBuildStatuses: jest
+                            .fn()
+                            .mockRejectedValueOnce(new Error('Build fetch failed'))
+                            .mockResolvedValueOnce([{ name: 'Build #2', state: 'SUCCESSFUL' }]),
+                    },
+                };
+
+                (webview as any).recentPullRequests = jest.fn().mockResolvedValue(mockPRs);
+                require('../bitbucket/bbUtils').clientForSite = jest.fn().mockResolvedValue(mockBbClient);
+
+                const result = await (webview as any).relatedBuilds();
+
+                expect(result).toHaveLength(1);
+                expect(result[0].name).toBe('Build #2');
+            });
         });
     });
 });

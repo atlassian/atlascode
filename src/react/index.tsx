@@ -27,9 +27,6 @@ const routes: Record<string, any> = {
     atlascodeSettingsV3: React.lazy(
         () => import(/* webpackChunkName: "atlascodeSettingsV3" */ './atlascode/config/ConfigPageV3'),
     ),
-    startWorkPageV2: React.lazy(
-        () => import(/* webpackChunkName: "startWorkPageV2" */ './atlascode/startwork/StartWorkPage'),
-    ),
     startWorkPageV3: React.lazy(
         () => import(/* webpackChunkName: "startWorkPageV3" */ './atlascode/startwork/v3/StartWorkPageV3'),
     ),
@@ -43,9 +40,13 @@ const routes: Record<string, any> = {
     createPullRequestPageV2: React.lazy(
         () => import(/* webpackChunkName: "createPullRequestPageV2" */ './atlascode/pullrequest/CreatePullRequestPage'),
     ),
-    atlascodeRovoDev: React.lazy(
-        () => import(/* webpackChunkName: "atlascodeRovoDev" */ './atlascode/rovo-dev/rovoDevView'),
+    createWorkItemWebview: React.lazy(
+        () =>
+            import(
+                /* webpackChunkName: "createWorkItemWebview" */ './atlascode/create-work-item/createWorkItemWebview'
+            ),
     ),
+    atlascodeRovoDev: React.lazy(() => import(/* webpackChunkName: "atlascodeRovoDev" */ '../rovo-dev/ui/rovoDevView')),
 };
 
 const view = document.getElementById('reactView') as HTMLElement;

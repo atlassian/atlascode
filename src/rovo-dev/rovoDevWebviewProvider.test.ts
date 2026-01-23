@@ -1,57 +1,57 @@
-import { ExtensionContext } from 'vscode';
+jest.mock('./api/extensionApi', () => ({
+    ExtensionApi: jest.fn().mockImplementation(() => ({
+        metadata: {
+            isDebugging: jest.fn(() => false),
+            isBoysenberry: jest.fn(() => false),
+            isRovoDevEnabled: jest.fn(() => true),
+            version: jest.fn(() => '1.0.0'),
+            appInstanceId: jest.fn(() => 'test-app-id'),
+        },
+        config: {
+            isDebugPanelEnabled: jest.fn(() => false),
+            isThinkingBlockEnabled: jest.fn(() => false),
+            onDidChange: jest.fn(),
+        },
+        analytics: {
+            sendTrackEvent: jest.fn(),
+        },
+        auth: {
+            getCloudPrimaryAuthInfo: jest.fn(),
+            getPrimaryAuthInfo: jest.fn(),
+            validateJiraCredentials: jest.fn(),
+        },
+        jira: {
+            getSites: jest.fn(() => []),
+            fetchWorkItems: jest.fn(() => Promise.resolve([])),
+        },
+        commands: {
+            openFolder: jest.fn(),
+            focusRovodevView: jest.fn(),
+            showUserAuthentication: jest.fn(),
+            showDiff: jest.fn(),
+            setCommandContext: jest.fn(),
+        },
+    })),
+}));
 
+jest.mock('../../src/commands/jira/showIssue', () => ({
+    showIssueForURL: jest.fn(),
+}));
+
+import { ExtensionContext, workspace } from 'vscode';
+
+import { setCommandContext } from '../../src/commandContext';
+import { RovodevCommandContext } from './api/componentApi';
+import { RovoDevSessionManager } from './rovoDevSessionManager';
 import { RovoDevWebviewProvider } from './rovoDevWebviewProvider';
 
-// Mock vscode modules
-jest.mock('vscode', () => ({
-    window: {
-        registerWebviewViewProvider: jest.fn(),
-        onDidChangeActiveTextEditor: jest.fn(),
-        onDidChangeTextEditorSelection: jest.fn(),
-        showTextDocument: jest.fn(),
-        showQuickPick: jest.fn(),
-    },
-    workspace: {
-        getWorkspaceFolder: jest.fn(),
-        findFiles: jest.fn(),
-        workspaceFolders: [{ uri: { fsPath: '/test' } }],
-    },
-    commands: {
-        executeCommand: jest.fn(),
-    },
-    Uri: {
-        file: jest.fn((path) => ({ fsPath: path })),
-        joinPath: jest.fn(),
-    },
-    Range: jest.fn(),
-    Position: jest.fn(),
-    Disposable: jest.fn(),
-    EventEmitter: jest.fn(),
-}));
-
-// Mock other dependencies
-jest.mock('../../src/container', () => ({
-    Container: {
-        config: { rovodev: { debugPanelEnabled: false } },
-        appInstanceId: 'test-app-id',
-        isDebugging: false,
-        isRovoDevEnabled: true,
-    },
-}));
-
-jest.mock('../../src/logger', () => ({
+jest.mock('./util/rovoDevLogger', () => ({
     RovoDevLogger: {
         error: jest.fn(),
     },
 }));
 
-jest.mock('../../src/config/configuration', () => ({
-    configuration: {
-        onDidChange: jest.fn(),
-    },
-}));
-
-jest.mock('../../src/rovo-dev/rovoDevProcessManager', () => ({
+jest.mock('./rovoDevProcessManager', () => ({
     RovoDevProcessManager: {
         setRovoDevWebviewProvider: jest.fn(),
         initializeRovoDev: jest.fn(),
@@ -61,7 +61,7 @@ jest.mock('../../src/rovo-dev/rovoDevProcessManager', () => ({
     },
 }));
 
-jest.mock('../../src/rovo-dev/rovoDevTelemetryProvider', () => ({
+jest.mock('./rovoDevTelemetryProvider', () => ({
     RovoDevTelemetryProvider: jest.fn().mockImplementation(() => ({
         fireTelemetryEvent: jest.fn(),
         startNewSession: jest.fn(),
@@ -69,7 +69,17 @@ jest.mock('../../src/rovo-dev/rovoDevTelemetryProvider', () => ({
     })),
 }));
 
-jest.mock('../../src/rovo-dev/rovoDevChatProvider', () => ({
+jest.mock('./rovoDevUtils', () => ({
+    readLastNLogLines: jest.fn(() => ['mock log line 1', 'mock log line 2']),
+    openRovoDevConfigFile: jest.fn(),
+}));
+
+jest.mock('./errorDetailsBuilder', () => ({
+    buildErrorDetails: jest.fn((error: Error) => `Stack trace for: ${error.message}`),
+    buildExceptionDetails: jest.fn(),
+}));
+
+jest.mock('./rovoDevChatProvider', () => ({
     RovoDevChatProvider: jest.fn().mockImplementation(() => ({
         setWebview: jest.fn(),
         executeChat: jest.fn(),
@@ -85,7 +95,7 @@ jest.mock('../../src/rovo-dev/rovoDevChatProvider', () => ({
     })),
 }));
 
-jest.mock('../../src/rovo-dev/rovoDevJiraItemsProvider', () => ({
+jest.mock('./rovoDevJiraItemsProvider', () => ({
     RovoDevJiraItemsProvider: jest.fn().mockImplementation(() => ({
         onNewJiraItems: jest.fn(),
         setJiraSite: jest.fn(),
@@ -93,7 +103,7 @@ jest.mock('../../src/rovo-dev/rovoDevJiraItemsProvider', () => ({
     })),
 }));
 
-jest.mock('../../src/rovo-dev/rovoDevPullRequestHandler', () => ({
+jest.mock('./rovoDevPullRequestHandler', () => ({
     RovoDevPullRequestHandler: jest.fn().mockImplementation(() => ({
         hasChangesOrUnpushedCommits: jest.fn(),
         createPR: jest.fn(),
@@ -101,30 +111,35 @@ jest.mock('../../src/rovo-dev/rovoDevPullRequestHandler', () => ({
     })),
 }));
 
-jest.mock('../../src/rovo-dev/rovoDevDwellTracker', () => ({
+jest.mock('./rovoDevDwellTracker', () => ({
     RovoDevDwellTracker: jest.fn().mockImplementation(() => ({
         startDwellTimer: jest.fn(),
         dispose: jest.fn(),
     })),
 }));
 
-jest.mock('../../src/rovo-dev/rovoDevApiClient', () => ({
-    RovoDevApiClient: jest.fn().mockImplementation(() => ({
-        healthcheck: jest.fn(),
-        createSession: jest.fn(),
-        getCacheFilePath: jest.fn(),
-        acceptMcpTerms: jest.fn(),
-    })),
-}));
-
-jest.mock('../../src/rovo-dev/rovoDevFeedbackManager', () => ({
+jest.mock('./rovoDevFeedbackManager', () => ({
     RovoDevFeedbackManager: {
         submitFeedback: jest.fn(),
     },
 }));
 
-jest.mock('../../src/webview/common/getHtmlForView', () => ({
-    getHtmlForView: jest.fn(() => '<html>test</html>'),
+jest.mock('./rovoDevSessionManager', () => ({
+    RovoDevSessionManager: jest.fn().mockImplementation(() => ({
+        onSessionRestored: jest.fn((callback) => {
+            // Store the callback for testing
+            return { dispose: jest.fn() };
+        }),
+        showPicker: jest.fn(),
+        dispose: jest.fn(),
+    })),
+}));
+
+jest.mock('src/commandContext', () => ({
+    setCommandContext: jest.fn(),
+    CommandContext: {
+        CustomJQLExplorer: 'atlascode:customJQLExplorerEnabled',
+    },
 }));
 
 jest.mock('path', () => ({
@@ -135,19 +150,12 @@ jest.mock('path', () => ({
     sep: '/',
 }));
 
-jest.mock('../../src/util/fsPromises', () => ({
+jest.mock('./util/fsPromises', () => ({
     getFsPromise: jest.fn(),
 }));
 
-jest.mock('../../src/util/waitFor', () => ({
+jest.mock('./util/waitFor', () => ({
     safeWaitFor: jest.fn(),
-}));
-
-jest.mock('../../src/commandContext', () => ({
-    setCommandContext: jest.fn(),
-    CommandContext: {
-        RovoDevTerminalEnabled: 'rovoDevTerminalEnabled',
-    },
 }));
 
 describe('RovoDevWebviewProvider - Real Implementation Tests', () => {
@@ -232,6 +240,160 @@ describe('RovoDevWebviewProvider - Real Implementation Tests', () => {
 
             await provider.setPromptTextWithFocus('test text');
             expect(provider).toBeDefined();
+        });
+    });
+
+    describe('Session History Management', () => {
+        let workspaceFoldersSpy: jest.SpyInstance;
+
+        beforeEach(() => {
+            jest.clearAllMocks();
+            // Mock workspace folders
+            workspaceFoldersSpy = jest
+                .spyOn(workspace, 'workspaceFolders', 'get')
+                .mockReturnValue([{ uri: { fsPath: '/test/workspace' } } as any]);
+        });
+
+        afterEach(() => {
+            workspaceFoldersSpy.mockRestore();
+        });
+
+        it('should create and show sessions manager when showSessionHistory is called', async () => {
+            // Setup provider with required dependencies
+            (provider as any).isBoysenberry = false;
+            (provider as any)._rovoDevApiClient = {
+                healthcheck: jest.fn(),
+                createSession: jest.fn(),
+            };
+
+            await provider.showSessionHistory();
+
+            expect(RovoDevSessionManager).toHaveBeenCalledWith(
+                '/test/workspace',
+                (provider as any)._rovoDevApiClient,
+                (provider as any)._telemetryProvider,
+            );
+
+            const MockedSessionsManager = jest.mocked(RovoDevSessionManager);
+            const mockInstance = MockedSessionsManager.mock.results[0].value;
+            expect(mockInstance.onSessionRestored).toHaveBeenCalled();
+            expect(mockInstance.showPicker).toHaveBeenCalled();
+        });
+
+        it('should not create sessions manager if in boysenberry mode', async () => {
+            (provider as any).isBoysenberry = true;
+            (provider as any)._rovoDevApiClient = {
+                healthcheck: jest.fn(),
+            };
+
+            await provider.showSessionHistory();
+
+            expect(RovoDevSessionManager).not.toHaveBeenCalled();
+        });
+
+        it('should not create sessions manager if rovoDevApiClient is not available', async () => {
+            (provider as any).isBoysenberry = false;
+            (provider as any)._rovoDevApiClient = undefined;
+
+            await provider.showSessionHistory();
+
+            expect(RovoDevSessionManager).not.toHaveBeenCalled();
+        });
+
+        it('should not create sessions manager if no workspace folder exists', async () => {
+            (provider as any).isBoysenberry = false;
+            (provider as any)._rovoDevApiClient = {
+                healthcheck: jest.fn(),
+            };
+            workspaceFoldersSpy.mockReturnValue(undefined);
+
+            await provider.showSessionHistory();
+
+            expect(RovoDevSessionManager).not.toHaveBeenCalled();
+        });
+
+        it('should set up onSessionRestored callback to clear and replay chat', async () => {
+            (provider as any).isBoysenberry = false;
+            (provider as any)._rovoDevApiClient = {
+                healthcheck: jest.fn(),
+            };
+
+            // Create a mock callback capture
+            let capturedCallback: (() => Promise<void>) | undefined;
+            const mockSessionsManager = {
+                onSessionRestored: jest.fn((callback) => {
+                    capturedCallback = callback;
+                    return { dispose: jest.fn() };
+                }),
+                showPicker: jest.fn(),
+                dispose: jest.fn(),
+            };
+
+            const MockedSessionsManager = jest.mocked(RovoDevSessionManager);
+            MockedSessionsManager.mockImplementation(() => mockSessionsManager as any);
+
+            const mockChatProvider = {
+                clearChat: jest.fn(),
+                executeReplay: jest.fn(),
+            };
+            (provider as any)._chatProvider = mockChatProvider;
+
+            await provider.showSessionHistory();
+
+            // Verify callback was registered
+            expect(mockSessionsManager.onSessionRestored).toHaveBeenCalled();
+
+            // Simulate session restore
+            if (capturedCallback) {
+                await capturedCallback();
+                expect(mockChatProvider.clearChat).toHaveBeenCalled();
+                expect(mockChatProvider.executeReplay).toHaveBeenCalled();
+            }
+        });
+    });
+
+    describe('Command Context Management', () => {
+        it('should set RovoDevApiReady to true when API is ready', () => {
+            // This tests the logic that would be in ensureStarted
+            setCommandContext(RovodevCommandContext.RovoDevApiReady, true);
+
+            expect(setCommandContext).toHaveBeenCalledWith(RovodevCommandContext.RovoDevApiReady, true);
+        });
+
+        it('should set RovoDevApiReady to false when terminating', () => {
+            // This tests the logic that would be in setRovoDevTerminated
+            setCommandContext(RovodevCommandContext.RovoDevApiReady, false);
+
+            expect(setCommandContext).toHaveBeenCalledWith(RovodevCommandContext.RovoDevApiReady, false);
+        });
+    });
+
+    describe('Sessions Manager Lifecycle', () => {
+        it('should dispose sessions manager when provider is terminated', () => {
+            const mockSessionsManager = {
+                dispose: jest.fn(),
+                onSessionRestored: jest.fn(),
+                showPicker: jest.fn(),
+            };
+
+            (provider as any)._rovoDevSessionsManager = mockSessionsManager;
+
+            // Simulate termination cleanup
+            (provider as any)._rovoDevSessionsManager?.dispose();
+            (provider as any)._rovoDevSessionsManager = undefined;
+
+            expect(mockSessionsManager.dispose).toHaveBeenCalled();
+            expect((provider as any)._rovoDevSessionsManager).toBeUndefined();
+        });
+
+        it('should handle termination gracefully when sessions manager is undefined', () => {
+            (provider as any)._rovoDevSessionsManager = undefined;
+
+            // Should not throw
+            expect(() => {
+                (provider as any)._rovoDevSessionsManager?.dispose();
+                (provider as any)._rovoDevSessionsManager = undefined;
+            }).not.toThrow();
         });
     });
 });

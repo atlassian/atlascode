@@ -9,8 +9,9 @@ import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } 
 import { StartWorkActionApi } from '../../lib/webview/controller/startwork/startWorkActionApi';
 import { Logger } from '../../logger';
 import { Branch, RefType } from '../../typings/git';
-import { Features } from '../../util/featureFlags';
 import { Experiments } from '../../util/featureFlags';
+
+const startWorkPushBranchToRemote = 'startWorkPushBranchToRemote';
 
 export class VSCStartWorkActionApi implements StartWorkActionApi {
     getWorkspaceRepos(): WorkspaceRepo[] {
@@ -68,17 +69,27 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         // checkout if a branch exists already
         try {
             await scm.fetch(remote, sourceBranch.name);
+        } catch {
+            // Continue anyway as the branch might exist locally
+            Logger.debug(`Fetch failed for ${remote}/${sourceBranch.name}`);
+        }
+
+        try {
             await scm.getBranch(destinationBranch);
             await scm.checkout(destinationBranch);
             return;
-        } catch {}
+        } catch {
+            Logger.debug(`Local branch ${destinationBranch} not found`);
+        }
 
         // checkout if there's a matching remote branch (checkout will track remote branch automatically)
         try {
             await scm.getBranch(`remotes/${remote}/${destinationBranch}`);
             await scm.checkout(destinationBranch);
             return;
-        } catch {}
+        } catch {
+            Logger.debug(`Remote branch ${remote}/${destinationBranch} not found`);
+        }
 
         // no existing branches, create a new one
         await scm.createBranch(
@@ -118,10 +129,7 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
     }
 
     closePage() {
-        const factory = Container.featureFlagClient.checkGate(Features.StartWorkV3)
-            ? Container.startWorkV3WebviewFactory
-            : Container.startWorkWebviewFactory;
-        factory.hide();
+        Container.startWorkWebviewFactory.hide();
     }
 
     async getRovoDevPreference(): Promise<boolean> {
@@ -130,6 +138,14 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
 
     async updateRovoDevPreference(enabled: boolean): Promise<void> {
         await Container.context.globalState.update('startWorkWithRovoDev', enabled);
+    }
+
+    async getPushBranchPreference(): Promise<boolean> {
+        return Container.context.globalState.get<boolean>(startWorkPushBranchToRemote, true);
+    }
+
+    async updatePushBranchPreference(enabled: boolean): Promise<void> {
+        await Container.context.globalState.update(startWorkPushBranchToRemote, enabled);
     }
 
     async openRovoDev(issue: MinimalIssue<DetailedSiteInfo>): Promise<void> {

@@ -4,7 +4,8 @@ import { EventEmitter } from 'vscode';
 import { ErrorProductArea } from './analyticsTypes';
 import { configuration, OutputLevel } from './config/configuration';
 import { extensionOutputChannelName } from './constants';
-import { Container } from './container';
+import { SentryService } from './sentry';
+import { isDebugging } from './util/isDebugging';
 
 function getConsolePrefix(productArea?: string) {
     return productArea ? `[${extensionOutputChannelName} ${productArea}]` : `[${extensionOutputChannelName}]`;
@@ -21,7 +22,7 @@ export type ErrorEvent = {
 /** This function must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
  * If not, the function will return the name of a method inside Logger.
  */
-function retrieveCallerName(): string | undefined {
+export function retrieveCallerName(): string | undefined {
     try {
         const stack = new Error().stack;
         if (!stack) {
@@ -66,7 +67,7 @@ export class Logger {
         const initializing = configuration.initializing(e);
 
         const section = 'outputLevel';
-        if (initializing && Container.isDebugging) {
+        if (initializing && isDebugging()) {
             this.level = OutputLevel.Debug;
         } else if (initializing || configuration.changed(e, section)) {
             this.level = configuration.get<OutputLevel>(section);
@@ -105,7 +106,7 @@ export class Logger {
             return;
         }
 
-        if (Container.isDebugging) {
+        if (isDebugging()) {
             console.log(this.timestamp, getConsolePrefix(), message, ...params);
         }
 
@@ -118,14 +119,14 @@ export class Logger {
         // `retrieveCallerName` must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
         // If not, the function will return the name of a method inside Logger.
         const callerName = retrieveCallerName();
-        this.Instance.errorInternal(undefined, ex, callerName, errorMessage, ...params);
+        this.Instance.errorInternal(undefined, ex, callerName, errorMessage, undefined, ...params);
     }
 
     public error(ex: Error, errorMessage?: string, ...params: string[]): void {
         // `retrieveCallerName` must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
         // If not, the function will return the name of a method inside Logger.
         const callerName = retrieveCallerName();
-        this.errorInternal(undefined, ex, callerName, errorMessage, ...params);
+        this.errorInternal(undefined, ex, callerName, errorMessage, undefined, ...params);
     }
 
     protected static errorInternal(
@@ -133,9 +134,10 @@ export class Logger {
         ex: Error,
         capturedBy?: string,
         errorMessage?: string,
+        sessionId?: string,
         ...params: string[]
     ): void {
-        this.Instance.errorInternal(productArea, ex, capturedBy, errorMessage, ...params);
+        this.Instance.errorInternal(productArea, ex, capturedBy, errorMessage, sessionId, ...params);
     }
 
     protected errorInternal(
@@ -143,15 +145,38 @@ export class Logger {
         ex: Error,
         capturedBy?: string,
         errorMessage?: string,
+        sessionId?: string,
         ...params: string[]
     ): void {
         Logger._onError.fire({ error: ex, errorMessage, capturedBy, params, productArea });
+
+        if (SentryService.getInstance().isInitialized()) {
+            try {
+                // Check if the subclass (e.g., RovoDevLogger) has a sessionId
+                const sessionId = (this.constructor as any)._rovoDevSessionId;
+
+                SentryService.getInstance().captureException(ex, {
+                    tags: {
+                        productArea: productArea || 'unknown',
+                        capturedBy: capturedBy || 'unknown',
+                        ...(sessionId && { sessionId: sessionId }),
+                    },
+                    extra: {
+                        errorMessage,
+                        params,
+                    },
+                });
+                Logger.debug('Error reported to Sentry successfully', ex);
+            } catch (err) {
+                console.error('Error reporting to Sentry:', err);
+            }
+        }
 
         if (this.level === OutputLevel.Silent) {
             return;
         }
 
-        if (Container.isDebugging) {
+        if (isDebugging()) {
             console.error(this.timestamp, getConsolePrefix(productArea), errorMessage, ...params, ex);
         }
 
@@ -169,7 +194,7 @@ export class Logger {
             return;
         }
 
-        if (Container.isDebugging) {
+        if (isDebugging()) {
             console.warn(this.timestamp, getConsolePrefix(), message, ...params);
         }
 
@@ -188,21 +213,5 @@ export class Logger {
         const now = new Date();
         const time = now.toISOString().replace(/T/, ' ').replace(/\..+/, '');
         return `[${time}:${('00' + now.getUTCMilliseconds()).slice(-3)}]`;
-    }
-}
-
-export class RovoDevLogger extends Logger {
-    public static override error(ex: Error, errorMessage?: string, ...params: string[]): void {
-        // `retrieveCallerName` must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
-        // If not, the function will return the name of a method inside Logger.
-        const callerName = retrieveCallerName();
-        this.errorInternal('RovoDev', ex, callerName, errorMessage, ...params);
-    }
-
-    public override error(ex: Error, errorMessage?: string, ...params: string[]): void {
-        // `retrieveCallerName` must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
-        // If not, the function will return the name of a method inside Logger.
-        const callerName = retrieveCallerName();
-        this.errorInternal('RovoDev', ex, callerName, errorMessage, ...params);
     }
 }

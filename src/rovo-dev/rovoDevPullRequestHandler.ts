@@ -1,8 +1,9 @@
 import { exec } from 'child_process';
-import { RovoDevLogger } from 'src/logger';
 import { API, GitExtension, Repository } from 'src/typings/git';
 import { promisify } from 'util';
 import { env, extensions, Uri } from 'vscode';
+
+import { RovoDevLogger } from './util/rovoDevLogger';
 
 const execAsync = promisify(exec);
 
@@ -13,7 +14,9 @@ export class RovoDevPullRequestHandler {
     constructor() {
         const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
         if (!gitExtension) {
-            throw new Error('vscode.git extension not found');
+            const error = new Error('vscode.git extension not found');
+            RovoDevLogger.error(error, 'Git extension not available');
+            throw error;
         }
 
         this.gitExtensionPromise = gitExtension.activate();
@@ -32,7 +35,9 @@ export class RovoDevPullRequestHandler {
         const gitApi = await this.getGitAPI();
 
         if (gitApi.repositories.length === 0) {
-            throw new Error('No Git repositories found');
+            const error = new Error('No Git repositories found');
+            RovoDevLogger.error(error, 'No Git repositories in workspace');
+            throw error;
         }
 
         // TODO: what do we want to do in case of multiple repositories?
@@ -123,7 +128,9 @@ export class RovoDevPullRequestHandler {
         const hasUncommitted = await this.hasUncommittedChanges();
         if (hasUncommitted) {
             if (!commitMessage || commitMessage.trim() === '') {
-                throw new Error('Commit message is required when you have uncommitted changes.');
+                const error = new Error('Commit message is required when you have uncommitted changes.');
+                RovoDevLogger.error(error, 'Cannot create PR without commit message');
+                throw error;
             }
 
             const curBranch = repo.state.HEAD?.name;
@@ -143,7 +150,9 @@ export class RovoDevPullRequestHandler {
         } else {
             const hasUnpushed = await this.hasUnpushedCommits();
             if (!hasUnpushed) {
-                throw new Error('No changes to create PR. Please make changes or commit them first.');
+                const error = new Error('No changes to create PR. Please make changes or commit them first.');
+                RovoDevLogger.error(error, 'No changes available for PR creation');
+                throw error;
             }
 
             const curBranch = repo.state.HEAD?.name;
@@ -169,15 +178,24 @@ export class RovoDevPullRequestHandler {
             const errorMessage = error.stderr || error.message || 'Unknown error';
 
             if (errorMessage.includes('no upstream branch')) {
-                throw new Error(
+                const error = new Error(
                     `Branch "${branchName}" has no upstream. Try: git push --set-upstream origin ${branchName}`,
                 );
+                RovoDevLogger.error(error, 'Git push failed: no upstream branch');
+                throw error;
             } else if (errorMessage.includes('rejected')) {
-                throw new Error('Push was rejected. The remote branch may have changes you need to pull first.');
+                const error = new Error(
+                    'Push was rejected. The remote branch may have changes you need to pull first.',
+                );
+                RovoDevLogger.error(error, 'Git push rejected by remote');
+                throw error;
             } else if (errorMessage.includes('permission denied') || errorMessage.includes('Authentication failed')) {
-                throw new Error('Push failed: Authentication error. Please check your Git credentials.');
+                const error = new Error('Push failed: Authentication error. Please check your Git credentials.');
+                RovoDevLogger.error(error, 'Git push failed: authentication error');
+                throw error;
             }
 
+            RovoDevLogger.error(error, 'Git push failed with unknown error');
             throw new Error(`Failed to push changes: ${errorMessage}`);
         }
 

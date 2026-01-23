@@ -8,6 +8,11 @@ import { BitbucketApi, BitbucketSite, WorkspaceRepo } from './model';
 
 const bbServerRepoRegEx = new RegExp(/(?<type>users|projects)\/(?<owner>.*)\/repos/);
 
+// Override the max input length to support long Bitbucket Server URLs
+// The error is thrown in `parse-url` <- `git-up` <- `git-url-parse`, hence the odd modification here
+const parseUrl = require('parse-url');
+parseUrl.MAX_INPUT_LENGTH = 3000;
+
 export function parseGitUrl(url: string): gitUrlParse.GitUrl {
     const parsed = gitUrlParse(url);
     parsed.owner = parsed.owner.slice(parsed.owner.lastIndexOf('/') + 1);

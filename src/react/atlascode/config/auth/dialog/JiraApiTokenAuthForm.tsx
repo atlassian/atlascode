@@ -26,10 +26,11 @@ export const JiraBasicAuthForm = ({
     preventClickDefault,
     onPasswordKeyDown,
 }: JiraBasicAuthFormProps) => {
-    const defaultSiteUsername = useMemo(
-        () => (defaultSiteWithAuth.auth as BasicAuthInfo).username || defaultSiteWithAuth.auth.user.email,
-        [defaultSiteWithAuth],
-    );
+    const defaultSiteUsername = useMemo(() => {
+        const basicAuth = defaultSiteWithAuth.auth as BasicAuthInfo;
+        // Use username if it's a non-empty string, otherwise fallback to user.email
+        return (basicAuth.username && basicAuth.username.trim()) || defaultSiteWithAuth.auth.user.email || '';
+    }, [defaultSiteWithAuth]);
 
     return (
         <React.Fragment>
@@ -57,7 +58,6 @@ export const JiraBasicAuthForm = ({
                     id="password"
                     name="password"
                     label="API token"
-                    defaultValue={(defaultSiteWithAuth.auth as BasicAuthInfo).password}
                     type={authFormState.showPassword ? 'text' : 'password'}
                     helperText={errors.password ? errors.password : undefined}
                     fullWidth

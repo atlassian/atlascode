@@ -36,7 +36,7 @@ describe('AtlassianNotificationNotifier', () => {
 
         // Mock Container.credentialManager
         (Container as any).credentialManager = {
-            getAllValidAuthInfo: jest.fn(),
+            getCloudAuthInfo: jest.fn(),
             onDidAuthChange: jest.fn(() => ({ dispose: jest.fn() })),
         };
 
@@ -58,8 +58,8 @@ describe('AtlassianNotificationNotifier', () => {
         const authInfo1 = createMockAuthInfo('user1');
         const authInfo2 = createMockAuthInfo('user2');
 
-        // Mock getAllValidAuthInfo to return 2 auth infos
-        (Container.credentialManager.getAllValidAuthInfo as jest.Mock).mockResolvedValue([authInfo1, authInfo2]);
+        // Mock getCloudAuthInfo to return 2 auth infos
+        (Container.credentialManager.getCloudAuthInfo as jest.Mock).mockResolvedValue([authInfo1, authInfo2]);
 
         // Mock unseen notification count responses
         mockGraphqlRequest
@@ -97,7 +97,7 @@ describe('AtlassianNotificationNotifier', () => {
 
     it('should not fetch notifications if rate limit is hit', async () => {
         const authInfo = createMockAuthInfo('user1');
-        (Container.credentialManager.getAllValidAuthInfo as jest.Mock).mockResolvedValue([authInfo]);
+        (Container.credentialManager.getCloudAuthInfo as jest.Mock).mockResolvedValue([authInfo]);
 
         // First call should work
         mockGraphqlRequest.mockResolvedValue({ notifications: { unseenNotificationCount: 1 } });
@@ -113,7 +113,7 @@ describe('AtlassianNotificationNotifier', () => {
 
     it('should not fetch notifications if no new notifications', async () => {
         const authInfo = createMockAuthInfo('user1');
-        (Container.credentialManager.getAllValidAuthInfo as jest.Mock).mockResolvedValue([authInfo]);
+        (Container.credentialManager.getCloudAuthInfo as jest.Mock).mockResolvedValue([authInfo]);
 
         // Mock same unseen count as before
         mockGraphqlRequest.mockResolvedValue({ notifications: { unseenNotificationCount: 5 } });

@@ -100,6 +100,7 @@ const mockFetchImage = jest.fn();
 const mockOnDelete = jest.fn();
 const mockOnCommentTextChange = jest.fn();
 const mockOnEditingCommentChange = jest.fn();
+const mockHandleEditorFocus = jest.fn();
 
 // Mock mention provider
 const mockMentionProvider = AtlascodeMentionProvider.init({ url: '' }, jest.fn().mockResolvedValue([]));
@@ -132,6 +133,7 @@ describe('IssueCommentComponent', () => {
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={false}
                 mentionProvider={mockMentionProvider}
+                handleEditorFocus={mockHandleEditorFocus}
             />,
         );
 
@@ -156,6 +158,7 @@ describe('IssueCommentComponent', () => {
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={false}
                 mentionProvider={mockMentionProvider}
+                handleEditorFocus={mockHandleEditorFocus}
             />,
         );
 
@@ -182,6 +185,7 @@ describe('IssueCommentComponent', () => {
                     onEditingCommentChange={mockOnEditingCommentChange}
                     isAtlaskitEditorEnabled={false}
                     mentionProvider={mockMentionProvider}
+                    handleEditorFocus={mockHandleEditorFocus}
                 />,
             ),
         );
@@ -192,7 +196,16 @@ describe('IssueCommentComponent', () => {
         fireEvent.change(textArea, { target: { value: 'Updated comment' } });
         fireEvent.click(screen.getByText('Save'));
 
-        expect(mockOnSave).toHaveBeenCalledWith('Updated comment', 'comment-2', undefined);
+        // Expect ADF format (WikiMarkup is converted to ADF)
+        expect(mockOnSave).toHaveBeenCalledWith(
+            expect.objectContaining({
+                version: 1,
+                type: 'doc',
+                content: expect.any(Array),
+            }),
+            'comment-2',
+            undefined,
+        );
     }, 100000);
 
     it('allows deleting a comment', () => {
@@ -213,6 +226,7 @@ describe('IssueCommentComponent', () => {
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={false}
                 mentionProvider={mockMentionProvider}
+                handleEditorFocus={mockHandleEditorFocus}
             />,
         );
 
@@ -243,6 +257,7 @@ describe('IssueCommentComponent', () => {
                     onEditingCommentChange={setIsEditingComment}
                     isAtlaskitEditorEnabled={false}
                     mentionProvider={mockMentionProvider}
+                    handleEditorFocus={mockHandleEditorFocus}
                 />
             );
         };
@@ -254,6 +269,14 @@ describe('IssueCommentComponent', () => {
         fireEvent.input(screen.getByRole('textbox'), { target: { value: 'New comment' } });
         fireEvent.click(screen.getByText('Save'));
 
-        expect(mockOnCreate).toHaveBeenCalledWith('New comment', undefined);
+        // Expect ADF format (WikiMarkup is converted to ADF)
+        expect(mockOnCreate).toHaveBeenCalledWith(
+            expect.objectContaining({
+                version: 1,
+                type: 'doc',
+                content: expect.any(Array),
+            }),
+            undefined,
+        );
     });
 });

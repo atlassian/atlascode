@@ -8,7 +8,7 @@ export class JiraNavigation {
     constructor(page: Page) {
         this.page = page;
 
-        this.jiraItemsTree = page.getByRole('tree', { name: 'Assigned Jira Work Items' });
+        this.jiraItemsTree = page.getByRole('tree', { name: 'Jira Work Items' });
     }
 
     async openIssue(name: string) {
@@ -19,9 +19,12 @@ export class JiraNavigation {
 
     async getIssueStatus(name: string) {
         const item = this.jiraItemsTree.getByRole('treeitem', { name });
-        await item.hover();
-        const status = item.getByRole('toolbar');
-        return status.getByRole('button').innerText();
+        const description = item.locator('.label-description');
+        const descriptionText = await description.innerText();
+        // Description format is: "summary | status", extract status after the pipe
+        const parts = descriptionText.split(' | ');
+        const status = parts[parts.length - 1];
+        return status;
     }
 
     async expectIssueStatus(name: string, expectedStatus: string) {
@@ -35,6 +38,6 @@ export class JiraNavigation {
     }
 
     async expectLoginToJiraItemExists() {
-        await expect(this.page.getByRole('button', { name: /^Log in to Jira$/ })).toBeVisible();
+        await expect(this.page.getByRole('button', { name: /^Log in to Jira$/ }).first()).toBeVisible();
     }
 }

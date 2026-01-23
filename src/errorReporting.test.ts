@@ -22,6 +22,15 @@ jest.mock('./analytics', () => ({
     errorEvent: () => Promise.resolve({ userId: 'id', anonymousId: 'anonId' }),
 }));
 
+jest.mock('@sentry/node');
+jest.mock('./container', () => ({
+    Container: {
+        analyticsApi: {
+            fireSentryCapturedExceptionFailedEvent: jest.fn(),
+        },
+    },
+}));
+
 describe('errorReporting', () => {
     beforeEach(() => {
         jest.spyOn(Logger, 'onError').mockImplementation(jest.fn());

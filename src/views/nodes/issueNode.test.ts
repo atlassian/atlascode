@@ -78,7 +78,7 @@ describe('IssueNode', () => {
             const issueNode = new IssueNode(mockIssue);
             const treeItem = issueNode.getTreeItem();
             expect(treeItem.label).toBe(`${mockIssue.key} ${mockIssue.summary}`);
-            expect(treeItem.description).toBeUndefined();
+            expect(treeItem.description).toBe(mockIssue.status.name);
         });
 
         it('should return a TreeItem with a collapsible state of Expanded if the issue has subtasks or epic children', () => {

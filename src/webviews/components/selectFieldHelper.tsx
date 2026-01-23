@@ -6,7 +6,7 @@ import * as React from 'react';
 
 import { colorToLozengeAppearanceMap } from './colors';
 
-type OptionFunc = (option: any) => string;
+export type OptionFunc = (option: any) => string;
 type ComponentFunc = (props: any) => JSX.Element;
 
 const returnOptionOrValueFunc = (option: any): any => {
@@ -326,6 +326,7 @@ export enum SelectComponentType {
     Creatable = 'creatable',
     Async = 'async',
     AsyncCreatable = 'asynccreatable',
+    Cascading = 'cascading',
 }
 
 export function selectComponentType(field: SelectFieldUI): SelectComponentType {
@@ -337,8 +338,12 @@ export function selectComponentType(field: SelectFieldUI): SelectComponentType {
         return SelectComponentType.Creatable;
     }
 
-    if (field.autoCompleteUrl.trim() !== '') {
+    if (field.autoCompleteUrl && field.autoCompleteUrl.trim() !== '') {
         return SelectComponentType.Async;
+    }
+
+    if (field.isCascading) {
+        return SelectComponentType.Cascading;
     }
 
     return SelectComponentType.Select;
@@ -367,6 +372,9 @@ export function labelFuncForValueType(vt: ValueType): OptionFunc {
         case ValueType.User:
         case ValueType.Watches: {
             return returnDisplayNameFunc;
+        }
+        case ValueType.OptionWithChild: {
+            return returnValueFunc;
         }
 
         default: {
@@ -409,8 +417,13 @@ export function valueFuncForValueType(vt: ValueType): OptionFunc {
         }
     }
 }
+export type ComponentsForValueType = {
+    Option: ComponentFunc;
+    SingleValue: (props: any) => React.JSX.Element;
+    MultiValueLabel?: (props: any) => React.JSX.Element;
+};
 
-export function getComponentsForValueType(vt: ValueType): Object {
+export function getComponentsForValueType(vt: ValueType): ComponentsForValueType {
     return {
         ...{ Option: getOptionComponentForValueType(vt) },
         ...getValueComponentForValueType(vt),
@@ -444,7 +457,12 @@ function getOptionComponentForValueType(vt: ValueType): ComponentFunc {
     }
 }
 
-function getValueComponentForValueType(vt: ValueType): Object {
+export type ValueComponentForValueType = {
+    SingleValue: (props: any) => React.JSX.Element;
+    MultiValueLabel?: (props: any) => React.JSX.Element;
+};
+
+function getValueComponentForValueType(vt: ValueType): ValueComponentForValueType {
     switch (vt) {
         case ValueType.Priority:
         case ValueType.IssueType: {

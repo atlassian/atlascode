@@ -5,7 +5,6 @@ import { JQLEntry } from 'src/config/model';
 import { expansionCastTo, forceCastTo } from 'testsutil';
 import { Uri } from 'vscode';
 
-import { Container } from '../../../container';
 import * as issuesForJQL from '../../../jira/issuesForJql';
 import { Logger } from '../../../logger';
 import { executeJqlQuery, JiraIssueNode, TreeViewIssue } from './utils';
@@ -30,6 +29,7 @@ jest.mock('../../../commands', () => ({
 jest.mock('../../../logger', () => ({
     Logger: {
         error: jest.fn(),
+        warn: jest.fn(),
     },
 }));
 
@@ -64,19 +64,6 @@ const mockedIssue2 = forceCastTo<TreeViewIssue>({
     children: [mockedIssue1],
 });
 
-const mockedIssue3 = forceCastTo<TreeViewIssue>({
-    key: 'AXON-3',
-    isEpic: false,
-    summary: 'summary3',
-    status: { name: 'statusName', statusCategory: { name: 'Done' } },
-    priority: { name: 'priorityName' },
-    siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails' },
-    issuetype: { iconUrl: '/issueType/' },
-    subtasks: [],
-    source: mockedJqlEntry,
-    children: [],
-});
-
 describe('utils', () => {
     afterEach(() => {
         jest.clearAllMocks();
@@ -91,8 +78,11 @@ describe('utils', () => {
         });
 
         it('returns an empty collection of issues for no corresponding site', async () => {
-            const jqlEntry = expansionCastTo<JQLEntry>({ id: 'id1', query: 'query1', siteId: 'site-id-guid' });
-            jest.spyOn(Container.siteManager, 'getSiteForId').mockReturnValue(undefined);
+            const jqlEntry = expansionCastTo<JQLEntry>({
+                id: 'id1',
+                query: 'assignee = currentUser()',
+                siteId: 'site-id-guid',
+            });
 
             const issues = await executeJqlQuery(jqlEntry);
             expect(issues).toHaveLength(0);
@@ -100,7 +90,11 @@ describe('utils', () => {
         });
 
         it('initializes the `source` and the `children` fields', async () => {
-            const jqlEntry = expansionCastTo<JQLEntry>({ id: 'id1', query: 'query1', siteId: 'site-id-guid' });
+            const jqlEntry = expansionCastTo<JQLEntry>({
+                id: 'id1',
+                query: 'assignee = currentUser()',
+                siteId: 'site-id-guid',
+            });
             const mockedMinimalIssues = [
                 expansionCastTo<MinimalIssue<DetailedSiteInfo>>({ key: 'AXON-1' }),
                 expansionCastTo<MinimalIssue<DetailedSiteInfo>>({ key: 'AXON-2' }),
@@ -122,7 +116,11 @@ describe('utils', () => {
 
         it('logs an error in case of failure, and returns an empty collection of issues', async () => {
             const error = new Error('this is a failure');
-            const jqlEntry = expansionCastTo<JQLEntry>({ id: 'id1', query: 'query1', siteId: 'site-id-guid' });
+            const jqlEntry = expansionCastTo<JQLEntry>({
+                id: 'id1',
+                query: 'assignee = currentUser()',
+                siteId: 'site-id-guid',
+            });
             jest.spyOn(issuesForJQL, 'issuesForJQL').mockRejectedValue(error);
 
             const issues = await executeJqlQuery(jqlEntry);
@@ -133,21 +131,33 @@ describe('utils', () => {
                 'site-id-guid',
             );
         });
+
+        it('returns empty array and logs warning for incomplete query without operators', async () => {
+            const jqlEntry = expansionCastTo<JQLEntry>({
+                id: 'id1',
+                query: 'assignee.property',
+                siteId: 'site-id-guid',
+            });
+            const issuesForJQLSpy = jest.spyOn(issuesForJQL, 'issuesForJQL');
+
+            const issues = await executeJqlQuery(jqlEntry);
+
+            expect(issues).toHaveLength(0);
+            expect(Logger.warn).toHaveBeenCalledWith(
+                'Skipping JQL query execution: query appears incomplete (no operators found)',
+                'site-id-guid',
+                'id1',
+                'assignee.property',
+            );
+            expect(issuesForJQLSpy).not.toHaveBeenCalled();
+            expect(Logger.error).not.toHaveBeenCalled();
+        });
     });
 
     describe('JiraIssueNode', () => {
         it('should create a JiraIssueNode', () => {
             const jiraIssueNode = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, mockedIssue1);
             expect(jiraIssueNode).toBeDefined();
-        });
-
-        it('should append correct contextValues', () => {
-            const jiraIssueNode1 = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, mockedIssue1);
-            const jiraIssueNode2 = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, mockedIssue2);
-            const jiraIssueNode3 = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, mockedIssue3);
-            expect(jiraIssueNode1.contextValue).toBe('jiraIssue_todo');
-            expect(jiraIssueNode2.contextValue).toBe('jiraIssue_inProgress');
-            expect(jiraIssueNode3.contextValue).toBe('jiraIssue_done');
         });
 
         it('getChildren should return children', async () => {

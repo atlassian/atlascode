@@ -11,11 +11,13 @@ export enum CommandContext {
     JiraLoginTree = 'atlascode:jiraLoginTreeEnabled',
     IsJiraAuthenticated = 'atlascode:isJiraAuthenticated',
     IsBBAuthenticated = 'atlascode:isBBAuthenticated',
-    RovoDevEnabled = 'atlascode:rovoDevEnabled',
-    RovoDevTerminalEnabled = 'atlascode:rovoDevTerminalEnabled',
+    IsRovoDevAuthenticated = 'atlascode:isRovoDevAuthenticated',
     BbyEnvironmentActive = 'atlascode:bbyEnvironmentActive',
     DebugMode = 'atlascode:debugMode',
     UseNewAuthFlow = 'atlascode:useNewAuthFlow',
+    IsEditorFocused = 'atlascode:isEditorFocused',
+    ShowCreateWorkItemWebview = 'atlascode:showCreateWorkItemWebview',
+    IsBitbucketCloudRepo = 'atlascode:isBitbucketCloudRepo',
 }
 
 export function setCommandContext(key: CommandContext | string, value: any) {

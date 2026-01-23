@@ -1,7 +1,7 @@
 import { basename } from 'path';
 import { Disposable, window } from 'vscode';
 
-import { RovoDevApiClient } from './rovoDevApiClient';
+import { RovoDevApiClient } from './client';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 
 /**
@@ -78,7 +78,20 @@ export class RovoDevDwellTracker implements Disposable {
                 await this.rovodevApiClient.getCacheFilePath(filename);
 
                 // Fire analytics: one-per-prompt deduping is handled by telemetry provider
-                this.telemetry.fireTelemetryEvent('rovoDevAiResultViewedEvent', promptId, this.dwellMs);
+                await this.telemetry.fireTelemetryEvent({
+                    subject: 'aiResult',
+                    action: 'viewed',
+                    attributes: {
+                        promptId,
+                        dwellMs: this.dwellMs,
+                        xid: 'rovodev-sessions',
+                        singleInstrumentationID: promptId,
+                        aiFeatureName: 'rovodevSessions',
+                        proactiveGeneratedAI: 0,
+                        userGeneratedAI: 1,
+                        isAIFeature: 1,
+                    },
+                });
             } catch {
                 // Not a Rovo Dev modified file or API not ready; ignore silently
             }

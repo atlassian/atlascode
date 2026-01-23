@@ -1,7 +1,7 @@
 import { request } from 'graphql-request';
 
 import { Logger } from '../../logger';
-import { AuthInfo, isOAuthInfo } from '../authInfo';
+import { AuthInfo, BasicAuthInfo, isBasicAuthInfo, isOAuthInfo } from '../authInfo';
 
 export async function graphqlRequest<T = any>(
     document: string,
@@ -39,9 +39,15 @@ function createHeaders(authInfo: AuthInfo) {
     return headers;
 }
 
+function setBasicAuthHeader(authInfo: BasicAuthInfo): string {
+    return 'Basic ' + Buffer.from(`${authInfo.username}:${authInfo.password}`).toString('base64');
+}
+
 function setAuthorizationHeader(authInfo: AuthInfo, headers: Record<string, string>) {
     if (isOAuthInfo(authInfo)) {
         headers['Authorization'] = `Bearer ${authInfo.access}`;
+    } else if (isBasicAuthInfo(authInfo)) {
+        headers['Authorization'] = setBasicAuthHeader(authInfo);
     } else {
         throw new Error('Unsupported authentication type.');
     }

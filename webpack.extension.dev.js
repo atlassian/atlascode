@@ -1,14 +1,12 @@
 const path = require('path');
 const fs = require('fs');
 const webpack = require('webpack');
-const dotenv = require('dotenv');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
+const { createEnvPlugin } = require('./webpack.env.config');
 
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
 const nodeExternals = require('webpack-node-externals');
-
-dotenv.config();
 
 module.exports = [
     {
@@ -64,6 +62,14 @@ module.exports = [
             devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]',
         },
         externals: ['vscode', nodeExternals()],
+        // Ignore harmless warning from vscode-languageserver-types UMD wrapper
+        // The dynamic require in the UMD boilerplate is never actually called
+        ignoreWarnings: [
+            {
+                module: /vscode-languageserver-types/,
+                message: /Critical dependency/,
+            },
+        ],
         plugins: [
             new webpack.IgnorePlugin({
                 resourceRegExp: /iconv-loader\.js/,
@@ -71,18 +77,7 @@ module.exports = [
             new webpack.WatchIgnorePlugin({
                 paths: [/\.js$/, /\.d\.ts$/],
             }),
-            new webpack.DefinePlugin({
-                'process.env.ATLASCODE_FX3_API_KEY': JSON.stringify(process.env.ATLASCODE_FX3_API_KEY),
-                'process.env.ATLASCODE_FX3_ENVIRONMENT': JSON.stringify(process.env.ATLASCODE_FX3_ENVIRONMENT),
-                'process.env.ATLASCODE_FX3_TARGET_APP': JSON.stringify(process.env.ATLASCODE_FX3_TARGET_APP),
-                'process.env.ATLASCODE_FX3_TIMEOUT': JSON.stringify(process.env.ATLASCODE_FX3_TIMEOUT),
-                'process.env.ATLASCODE_FF_OVERRIDES': JSON.stringify(process.env.ATLASCODE_FF_OVERRIDES),
-                'process.env.ATLASCODE_EXP_OVERRIDES_BOOL': JSON.stringify(process.env.ATLASCODE_EXP_OVERRIDES_BOOL),
-                'process.env.ATLASCODE_EXP_OVERRIDES_STRING': JSON.stringify(
-                    process.env.ATLASCODE_EXP_OVERRIDES_STRING,
-                ),
-                'process.env.ROVODEV_BBY': JSON.stringify(process.env.ROVODEV_BBY),
-            }),
+            createEnvPlugin({ nodeEnv: 'development' }),
         ],
     },
     {

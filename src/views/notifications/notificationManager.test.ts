@@ -23,7 +23,7 @@ jest.mock('../../container', () => ({
         },
         credentialManager: {
             onDidAuthChange: jest.fn(),
-            getAllValidAuthInfo: jest.fn(() => Promise.resolve([])),
+            getCloudAuthInfo: jest.fn(() => Promise.resolve([])),
         },
         config: {
             jira: {
@@ -213,6 +213,53 @@ describe('NotificationManagerImpl', () => {
         const badgeNotifications = notificationManager.getNotificationsByUri(uri, NotificationSurface.Badge);
         expect(badgeNotifications.size).toBe(1);
         expect(badgeNotifications.get(badgeAndBannerNotification.id)).toEqual(badgeAndBannerNotification);
+    });
+
+    it('should exclude notifications from banner surface once marked as banner-shown', async () => {
+        const uri = Uri.parse(generateRandomFileUri());
+        const notification: AtlasCodeNotification = {
+            id: generateRandomString(),
+            message: 'Jira Comment Notification',
+            notificationType: NotificationType.JiraComment,
+            uri: uri,
+            product: ProductJira,
+            timestamp: Date.now(),
+        };
+
+        notificationManager.addNotification(notification);
+
+        // Before marking as banner-shown, notification should appear in both Banner and Badge surfaces
+        let bannerNotifications = notificationManager.getNotificationsByUri(uri, NotificationSurface.Banner);
+        let badgeNotifications = notificationManager.getNotificationsByUri(uri, NotificationSurface.Badge);
+        expect(bannerNotifications.size).toBe(1);
+        expect(badgeNotifications.size).toBe(1);
+
+        // Mark the notification as banner-shown
+        await notificationManager.markBannerShown(notification.id, notification.timestamp);
+
+        // After marking as banner-shown, notification should NOT appear in Banner surface
+        // but should still appear in Badge surface
+        bannerNotifications = notificationManager.getNotificationsByUri(uri, NotificationSurface.Banner);
+        badgeNotifications = notificationManager.getNotificationsByUri(uri, NotificationSurface.Badge);
+        expect(bannerNotifications.size).toBe(0);
+        expect(badgeNotifications.size).toBe(1);
+        expect(badgeNotifications.get(notification.id)).toEqual(notification);
+    });
+
+    it('should track banner-shown state correctly', async () => {
+        const notificationId = generateRandomString();
+        const timestamp = Date.now();
+
+        // Initially, hasBannerBeenShown should return false
+        expect(notificationManager.hasBannerBeenShown(notificationId)).toBe(false);
+
+        // After marking as shown, it should return true
+        await notificationManager.markBannerShown(notificationId, timestamp);
+        expect(notificationManager.hasBannerBeenShown(notificationId)).toBe(true);
+
+        // Marking the same notification again should not cause issues
+        await notificationManager.markBannerShown(notificationId, timestamp);
+        expect(notificationManager.hasBannerBeenShown(notificationId)).toBe(true);
     });
 });
 

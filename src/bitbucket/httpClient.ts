@@ -4,7 +4,6 @@ import { AuthInterceptor } from '../atlclients/authInterceptor';
 import { addCurlLogging } from '../atlclients/interceptors';
 import { AxiosUserAgent } from '../constants';
 import { Container } from '../container';
-import { Logger } from '../logger';
 import { ConnectionTimeout } from '../util/time';
 
 export interface RequestRange {
@@ -68,7 +67,6 @@ export class HTTPClient {
             });
             return { data: res.data, headers: res.headers };
         } catch (e) {
-            Logger.error(e, 'Error getting URL', url);
             if (e.response) {
                 return Promise.reject(await this.errorHandler(e.response));
             } else {

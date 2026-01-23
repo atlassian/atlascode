@@ -36,7 +36,7 @@ export const GeneralPanel: React.FunctionComponent<GeneralPanelProps> = ({
     return (
         <>
             <Fade in={visible}>
-                <div hidden={!visible || !config['bitbucket.enabled']} role="tabpanel">
+                <div hidden={!visible} role="tabpanel">
                     <Grid container spacing={3} direction="column">
                         <Grid item>
                             <GenMiscPanel

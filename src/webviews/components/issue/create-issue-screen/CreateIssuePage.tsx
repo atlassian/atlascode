@@ -1,5 +1,4 @@
 import Button from '@atlaskit/button';
-import LoadingButton from '@atlaskit/button/loading-button';
 import Form, { ErrorMessage, Field, FormFooter, FormHeader, RequiredAsterisk } from '@atlaskit/form';
 import Page from '@atlaskit/page';
 import Select, { components } from '@atlaskit/select';
@@ -27,6 +26,9 @@ import {
     CommonEditorViewState,
     emptyCommonEditorState,
 } from '../AbstractIssueEditorPage';
+import { convertWikimarkupToAdf } from '../common/adfToWikimarkup';
+import { MissingScopesBanner } from '../common/missing-scopes-banner/MissingScopesBanner';
+import { CreateIssueButton } from './actions/CreateIssueButton';
 import { Panel } from './Panel';
 
 type Emit = CommonEditorPageEmit;
@@ -34,6 +36,7 @@ type Accept = CommonEditorPageAccept | CreateIssueData;
 interface ViewState extends CommonEditorViewState, CreateIssueData {
     createdIssue: IssueKeyAndSite<DetailedSiteInfo>;
     formKey: string;
+    onCreateAction: 'createAndView' | 'createAndStartWork' | 'createAndGenerateCode';
 }
 
 const emptyState: ViewState = {
@@ -41,6 +44,7 @@ const emptyState: ViewState = {
     ...emptyCreateIssueData,
     createdIssue: { key: '', siteDetails: emptySiteInfo },
     formKey: v4(),
+    onCreateAction: 'createAndView',
 };
 
 const fallbackTimerDuration = 5000; // 5 seconds
@@ -108,6 +112,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     private attachingInProgress = false;
     private initialFieldValues: FieldValues = {};
     private suggestionFallbackTimer: NodeJS.Timeout | null = null;
+    private formRef = React.createRef<HTMLFormElement>();
 
     getProjectKey(): string {
         return this.state.fieldValues['project'].key;
@@ -216,6 +221,35 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                     }
                     break;
                 }
+                case 'projectsLoaded': {
+                    handled = true;
+                    const { projects, total, hasMore } = e;
+                    const currentProjects = this.state.selectFieldOptions['project'] || [];
+                    const newProjects = [...currentProjects, ...projects];
+
+                    this.setState({
+                        selectFieldOptions: {
+                            ...this.state.selectFieldOptions,
+                            project: newProjects,
+                        },
+                        projectPagination: {
+                            total,
+                            hasMore,
+                            loaded: newProjects.length,
+                            isLoadingMore: false,
+                        },
+                    });
+                    break;
+                }
+                case 'createIssueWithAction': {
+                    handled = true;
+
+                    this.setState({ onCreateAction: e.action }, () => {
+                        this.formRef.current?.requestSubmit();
+                        this.setState({ onCreateAction: 'createAndView' });
+                    });
+                    break;
+                }
             }
         }
 
@@ -238,6 +272,10 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     }
 
     handleSubmit = async (e: any) => {
+        if (this.state.isLoggedOut) {
+            return { _form: 'You have been logged out. Please close this tab and log in again.' };
+        }
+
         const requiredFields = Object.values(this.state.fields).filter((field) => field.required);
 
         const errs: Record<string, string> = {};
@@ -272,25 +310,54 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
             return errs;
         }
 
+        // Convert WikiMarkup fields to ADF if using legacy editor AND site is Cloud
+        // Jira Data Center requires WikiMarkup string, not ADF object
+        const issueData = { ...this.state.fieldValues };
+
+        if (!this.state.showAtlaskitEditor && this.state.siteDetails.isCloud) {
+            // Convert description if it's a string (WikiMarkup)
+            if (issueData.description && typeof issueData.description === 'string') {
+                issueData.description = convertWikimarkupToAdf(issueData.description);
+            }
+            // Convert comment if it's a string (WikiMarkup)
+            if (issueData.comment && typeof issueData.comment === 'string') {
+                issueData.comment = convertWikimarkupToAdf(issueData.comment);
+            }
+        }
+
+        const createAction = {
+            action: 'createIssue',
+            site: this.state.siteDetails,
+            issueData: issueData,
+            onCreateAction: this.state.onCreateAction,
+        };
+
         this.setState({
             isSomethingLoading: true,
             loadingField: 'submitButton',
+            lastFailedAction: createAction,
         });
-        this.postMessage({
-            action: 'createIssue',
-            site: this.state.siteDetails,
-            issueData: this.state.fieldValues,
-        });
+
+        this.postMessage(createAction);
 
         return undefined;
     };
 
     handleSiteChange = (site: DetailedSiteInfo) => {
-        this.setState({ siteDetails: site, loadingField: 'site', isSomethingLoading: true });
-        this.postMessage({
+        const action = {
             action: 'getScreensForSite',
             site: site,
+        };
+
+        this.setState({
+            siteDetails: site,
+            loadingField: 'site',
+            isSomethingLoading: true,
+            lastFailedAction: action,
         });
+
+        this.postMessage(action);
+        this.postMessage({ action: 'fetchMediaToken' });
     };
 
     protected handleInlineAttachments = async (fieldkey: string, newValue: any) => {
@@ -356,19 +423,29 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         this.setState({ fieldValues: { ...this.state.fieldValues, ...{ [fieldkey]: typedVal } } });
 
         if (field.valueType === ValueType.Project) {
-            this.setState({ loadingField: field.key, isSomethingLoading: true });
-            this.postMessage({
+            const action = {
                 action: 'getScreensForProject',
                 project: newValue,
                 fieldValues: this.state.fieldValues,
+            };
+            this.setState({
+                loadingField: field.key,
+                isSomethingLoading: true,
+                lastFailedAction: action,
             });
+            this.postMessage(action);
         } else if (field.valueType === ValueType.IssueType) {
-            this.setState({ loadingField: field.key, isSomethingLoading: true });
-            this.postMessage({
+            const action = {
                 action: 'setIssueType',
                 issueType: newValue,
                 fieldValues: this.state.fieldValues,
+            };
+            this.setState({
+                loadingField: field.key,
+                isSomethingLoading: true,
+                lastFailedAction: action,
             });
+            this.postMessage(action);
         } else {
             this.setState({ isSomethingLoading: false, loadingField: '' });
         }
@@ -442,6 +519,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
 
     override componentDidMount() {
         this.postMessage({ action: 'getFeatureFlags' });
+        this.postMessage({ action: 'fetchMediaToken' });
     }
 
     public override render() {
@@ -449,6 +527,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
             this.postMessage({ action: 'refresh' });
             return <AtlLoader />;
         }
+
         return (
             <Page>
                 <AtlascodeErrorBoundary
@@ -479,14 +558,25 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                 )}
                                 {this.state.isErrorBannerOpen && (
                                     <ErrorBanner
-                                        onDismissError={this.handleDismissError}
+                                        onRetry={this.handleRetryLastAction}
+                                        onSignIn={this.handleSignIn}
                                         errorDetails={this.state.errorDetails}
+                                    />
+                                )}
+                                {this.state.showEditorMissedScopeBanner && (
+                                    <MissingScopesBanner
+                                        onDismiss={() => {
+                                            this.setState({ showEditorMissedScopeBanner: false });
+                                        }}
+                                        onOpen={() => {
+                                            this.postMessage({ action: 'openJiraAuth' });
+                                        }}
                                     />
                                 )}
                                 <Form name="create-issue" key={this.state.formKey} onSubmit={this.handleSubmit}>
                                     {(frmArgs: any) => {
                                         return (
-                                            <form {...frmArgs.formProps}>
+                                            <form {...frmArgs.formProps} ref={this.formRef}>
                                                 <FormHeader title={this.formHeader()}>
                                                     <p>
                                                         Required fields are marked with an asterisk <RequiredAsterisk />
@@ -524,15 +614,20 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                                     </Panel>
                                                 )}
                                                 <FormFooter actions={{}}>
-                                                    <LoadingButton
+                                                    <CreateIssueButton
                                                         type="submit"
-                                                        spacing="compact"
+                                                        name="Create"
                                                         className="ac-button"
-                                                        isDisabled={this.state.isSomethingLoading}
-                                                        isLoading={this.state.loadingField === 'submitButton'}
+                                                        disabled={
+                                                            this.state.isSomethingLoading || this.state.isLoggedOut
+                                                        }
+                                                        isLoading={
+                                                            this.state.isSomethingLoading &&
+                                                            this.state.loadingField === 'submitButton'
+                                                        }
                                                     >
                                                         Create
-                                                    </LoadingButton>
+                                                    </CreateIssueButton>
                                                 </FormFooter>
                                             </form>
                                         );

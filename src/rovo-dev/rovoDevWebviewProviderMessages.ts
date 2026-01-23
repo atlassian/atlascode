@@ -1,12 +1,15 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
-
-import { DetailedSiteInfo } from '../atlclients/authInfo';
-import { ModifiedFile } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
-import { DialogMessage } from '../react/atlascode/rovo-dev/utils';
-import { RovoDevTextResponse, RovoDevToolCallResponse, RovoDevToolReturnResponse } from './responseParserInterfaces';
-import { EntitlementCheckRovoDevHealthcheckResponse } from './rovoDevApiClientInterfaces';
+import { DetailedSiteInfo, MinimalIssue } from './api/extensionApi';
+import {
+    EntitlementCheckRovoDevHealthcheckResponse,
+    RovoDevRetryPromptResponse,
+    RovoDevTextResponse,
+    RovoDevToolCallResponse,
+    RovoDevToolReturnResponse,
+} from './client';
+import { ReducerAction } from './messaging';
 import { DisabledState, RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
+import { ModifiedFile } from './ui/rovoDevViewMessages';
+import { ChatMessage, DialogMessage } from './ui/utils';
 
 export const enum RovoDevProviderMessageType {
     RovoDevDisabled = 'rovoDevDisabled',
@@ -31,16 +34,37 @@ export const enum RovoDevProviderMessageType {
     SetDebugPanel = 'setDebugPanel',
     SetPromptText = 'setPromptText',
     SetJiraWorkItems = 'setJiraWorkItems',
+    SetExistingJiraCredentials = 'setExistingJiraCredentials',
     CheckFileExistsComplete = 'checkFileExistsComplete',
     SetThinkingBlockEnabled = 'setThinkingBlockEnabled',
+    RestoreState = 'restoreState',
+    RovoDevAuthValidating = 'rovoDevAuthValidating',
+    RovoDevAuthValidationComplete = 'rovoDevAuthValidationComplete',
 }
 
 export type RovoDevDisabledReason = DisabledState['subState'];
 
 export type RovoDevEntitlementCheckFailedDetail = EntitlementCheckRovoDevHealthcheckResponse['detail'];
 
-export type RovoDevResponseMessageType = RovoDevTextResponse | RovoDevToolCallResponse | RovoDevToolReturnResponse;
-//| RovoDevRetryPromptResponse;
+export interface RovoDevFeatures {
+    dedicatedRovoDevAuth?: boolean;
+}
+
+export type RovoDevResponseMessageType =
+    | RovoDevTextResponse
+    | RovoDevToolCallResponse
+    | RovoDevToolReturnResponse
+    | RovoDevRetryPromptResponse;
+
+export interface RovoDevWebviewState {
+    history: ChatMessage[];
+    isDeepPlanCreated: boolean;
+    isDeepPlanToggled: boolean;
+    isYoloModeToggled: boolean;
+    isFullContextModeToggled: boolean;
+    isAtlassianUser: boolean;
+    promptContextCollection: RovoDevContextItem[];
+}
 
 export type RovoDevProviderMessage =
     | ReducerAction<
@@ -52,12 +76,18 @@ export type RovoDevProviderMessage =
           RovoDevProviderMessageType.RovoDevResponseMessage,
           { message: RovoDevResponseMessageType | RovoDevResponseMessageType[] }
       >
-    | ReducerAction<RovoDevProviderMessageType.CompleteMessage>
+    | ReducerAction<RovoDevProviderMessageType.CompleteMessage, { promptId: string }>
     | ReducerAction<RovoDevProviderMessageType.ShowDialog, { message: DialogMessage }>
     | ReducerAction<RovoDevProviderMessageType.ClearChat>
     | ReducerAction<
           RovoDevProviderMessageType.ProviderReady,
-          { workspacePath?: string; homeDir?: string; yoloMode?: boolean }
+          {
+              isAtlassianUser: boolean;
+              workspacePath?: string;
+              homeDir?: string;
+              yoloMode?: boolean;
+              features?: RovoDevFeatures;
+          }
       >
     | ReducerAction<RovoDevProviderMessageType.SetInitializing, { isPromptPending: boolean }>
     | ReducerAction<
@@ -84,7 +114,14 @@ export type RovoDevProviderMessage =
           { issues: MinimalIssue<DetailedSiteInfo>[] | undefined }
       >
     | ReducerAction<
+          RovoDevProviderMessageType.SetExistingJiraCredentials,
+          { credentials: { host: string; email: string }[] }
+      >
+    | ReducerAction<
           RovoDevProviderMessageType.CheckFileExistsComplete,
           { requestId: string; filePath: string; exists: boolean }
       >
-    | ReducerAction<RovoDevProviderMessageType.SetThinkingBlockEnabled, { enabled: boolean }>;
+    | ReducerAction<RovoDevProviderMessageType.SetThinkingBlockEnabled, { enabled: boolean }>
+    | ReducerAction<RovoDevProviderMessageType.RestoreState, { state: RovoDevWebviewState }>
+    | ReducerAction<RovoDevProviderMessageType.RovoDevAuthValidating>
+    | ReducerAction<RovoDevProviderMessageType.RovoDevAuthValidationComplete, { success: boolean; error?: string }>;

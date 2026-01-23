@@ -35,6 +35,7 @@ import EdiText, { EdiTextType } from 'react-editext';
 import { v4 } from 'uuid';
 
 import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
+import { ProjectsPagination } from '../../../constants';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import {
     CreatedSelectOption,
@@ -45,7 +46,9 @@ import {
     UserList,
 } from '../../../ipc/issueMessaging';
 import { Action, HostErrorMessage, Message } from '../../../ipc/messaging';
+import { CommonMessageType } from '../../../lib/ipc/toUI/common';
 import { Features } from '../../../util/features';
+import { RovoDevEntitlementType } from '../../../util/rovo-dev-entitlement/rovoDevEntitlementChecker';
 import { ConnectionTimeout } from '../../../util/time';
 import AISuggestionFooter from '../aiCreateIssue/AISuggestionFooter';
 import AISuggestionHeader from '../aiCreateIssue/AISuggestionHeader';
@@ -55,12 +58,15 @@ import { chain } from '../fieldValidators';
 import * as SelectFieldHelper from '../selectFieldHelper';
 import { WebviewComponent } from '../WebviewComponent';
 import { AttachmentForm } from './AttachmentForm';
+import CascadingSelectField, { CascadingSelectOption } from './CascadingSelectField';
+import { convertAdfToWikimarkup } from './common/adfToWikimarkup';
 import { AtlascodeMentionProvider } from './common/AtlaskitEditor/AtlascodeMentionsProvider';
 import AtlaskitEditor from './common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from './common/JiraIssueTextArea';
 import { EditRenderedTextArea } from './EditRenderedTextArea';
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import InlineSubtaskEditor from './InlineSubtaskEditor';
+import { LazyLoadingSelect } from './LazyLoadingSelect';
 import { ParticipantList } from './ParticipantList';
 import { TextAreaEditor } from './TextAreaEditor';
 
@@ -87,12 +93,26 @@ export interface CommonEditorViewState extends Message {
     isOnline: boolean;
     isErrorBannerOpen: boolean;
     showPMF: boolean;
-    errorDetails: any;
+    errorDetails: string | { message?: string; title?: string } | undefined;
     commentInputValue: string;
     isRovoDevEnabled: boolean;
     isGeneratingSuggestions?: boolean;
     summaryKey: string;
     isAtlaskitEditorEnabled: boolean;
+    showRovoDevPromoBanner: boolean;
+    rovoDevEntitlementType?: RovoDevEntitlementType;
+    rovoDevPromoBannerDismissed: boolean;
+    lastFailedAction?: CommonEditorPageEmit;
+    projectPagination?: {
+        total: number;
+        loaded: number;
+        hasMore: boolean;
+        isLoadingMore: boolean;
+    };
+    isLoggedOut: boolean;
+    loggedOutSiteName?: string;
+    showEditorMissedScopeBanner: boolean;
+    showAtlaskitEditor: boolean;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -111,6 +131,13 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     isRovoDevEnabled: false,
     summaryKey: v4(),
     isAtlaskitEditorEnabled: false,
+    showRovoDevPromoBanner: false,
+    rovoDevEntitlementType: undefined,
+    rovoDevPromoBannerDismissed: false,
+    isLoggedOut: false,
+    loggedOutSiteName: undefined,
+    showEditorMissedScopeBanner: false,
+    showAtlaskitEditor: false,
 };
 
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
@@ -239,6 +266,16 @@ export abstract class AbstractIssueEditorPage<
         if (t === 'number' || t === 'boolean') {
             return String(value);
         }
+        // Check if it's an ADF object
+        if (t === 'object' && value.type === 'doc' && value.version === 1) {
+            // For new Atlaskit editor, convert to JSON string
+            if (this.state.showAtlaskitEditor) {
+                return JSON.stringify(value);
+            }
+            // For legacy editor, convert ADF to WikiMarkup
+            // Note: This will gracefully fall back to plain text if conversion fails
+            return convertAdfToWikimarkup(value);
+        }
         // For any other type (objects, symbols, functions), render empty string
         return '';
     }
@@ -297,6 +334,45 @@ export abstract class AbstractIssueEditorPage<
                 this.setState({ isRovoDevEnabled: e.settings.rovoDevEnabled });
                 break;
             }
+            case CommonMessageType.RovoDevEntitlementBanner: {
+                handled = true;
+                this.setState({
+                    showRovoDevPromoBanner: e.enabled || false,
+                    rovoDevEntitlementType: e.enabled ? (e.entitlementType as RovoDevEntitlementType) : undefined,
+                });
+                break;
+            }
+            case 'loggedOut': {
+                handled = true;
+                this.setState({
+                    isLoggedOut: true,
+                    loggedOutSiteName: e.siteName,
+                    isSomethingLoading: false,
+                    loadingField: '',
+                    isErrorBannerOpen: true,
+                    errorDetails: {
+                        title: 'Session Expired',
+                        message: 'You have been logged out. Please close this tab and log in again to continue editing',
+                    },
+                });
+                break;
+            }
+            case 'scopeCheckResult': {
+                if (e.checkedScopes?.mediaRead !== undefined && e.checkedScopes?.mediaWrite !== undefined) {
+                    const showEditorMissedScopeBanner =
+                        this.state.isAtlaskitEditorEnabled &&
+                        !e.isApiToken &&
+                        !e.checkedScopes.mediaRead &&
+                        !e.checkedScopes.mediaWrite;
+                    const showAtlaskitEditor =
+                        this.state.isAtlaskitEditorEnabled && !e.isApiToken && e.checkedScopes.mediaRead;
+                    this.setState({
+                        showEditorMissedScopeBanner,
+                        showAtlaskitEditor,
+                    });
+                }
+                break;
+            }
         }
 
         return handled;
@@ -350,7 +426,18 @@ export abstract class AbstractIssueEditorPage<
     }
 
     protected handleDismissError = () => {
-        this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
+        this.setState({ isErrorBannerOpen: false, errorDetails: undefined, lastFailedAction: undefined });
+    };
+
+    protected handleRetryLastAction = () => {
+        if (this.state.lastFailedAction) {
+            this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
+            this.postMessage(this.state.lastFailedAction);
+        }
+    };
+
+    protected handleSignIn = () => {
+        this.postMessage({ action: 'openJiraAuth' });
     };
 
     protected handleOpenIssue = (issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => {
@@ -409,13 +496,23 @@ export abstract class AbstractIssueEditorPage<
         });
     };
 
-    /**
-     * AXON-49 This is a workaround for the suggested autocomplete URL
-     * (.../user/recommend/...) not being accessible
-     */
-    protected fixAutocompleteUrl(url: string): string {
+    protected fixAutocompleteUrl(field: SelectFieldUI): string {
+        let url = field.autoCompleteUrl;
+
+        /**
+         * AXON-49 This is a workaround for the suggested autocomplete URL
+         * (.../user/recommend/...) not being accessible
+         */
         if (url.includes('user/recommend')) {
             url = url.replace('user/recommend', 'user/search') + '&query=';
+        }
+
+        /**
+         * AXON-75 This is a workaround for the epic link field autocomplete URL
+         * for a case when epic field is renamed
+         */
+        if (field.schema.endsWith('epic-link')) {
+            url = url.split('?')[0] + '?fieldName=Epic Link&fieldValue=';
         }
 
         return url;
@@ -432,7 +529,7 @@ export abstract class AbstractIssueEditorPage<
             return this.loadSelectOptions(input, userSearchUrl);
         }
 
-        return this.loadSelectOptions(input, this.fixAutocompleteUrl(field.autoCompleteUrl), field);
+        return this.loadSelectOptions(input, this.fixAutocompleteUrl(field), field);
     };
 
     protected loadSelectOptions = (input: string, url: string, field?: SelectFieldUI): Promise<any[]> => {
@@ -506,6 +603,13 @@ export abstract class AbstractIssueEditorPage<
             })();
         }
     }, 100);
+
+    handleEditorFocus = (isFocused: boolean) => {
+        this.postMessage({
+            action: 'handleEditorFocus',
+            isFocused,
+        });
+    };
 
     protected getInputMarkup(
         field: FieldUI,
@@ -605,12 +709,13 @@ export abstract class AbstractIssueEditorPage<
                                     />
                                 );
                                 if ((field as InputFieldUI).isMultiline) {
-                                    markup = this.state.isAtlaskitEditorEnabled ? (
+                                    markup = this.state.showAtlaskitEditor ? (
                                         <AtlaskitEditor
                                             defaultValue={this.state.fieldValues[field.key] || ''}
-                                            onBlur={(content: string) => {
-                                                this.handleInlineEdit(field, content);
-                                            }}
+                                            isSaveOnBlur={true}
+                                            onBlur={() => this.handleEditorFocus(false)}
+                                            onFocus={() => this.handleEditorFocus(true)}
+                                            onSave={(content) => this.handleInlineEdit(field, content)}
                                             mentionProvider={Promise.resolve(this.getMentionProvider())}
                                         />
                                     ) : (
@@ -626,6 +731,8 @@ export abstract class AbstractIssueEditorPage<
                                                 this.handleInlineEdit(field, val),
                                             )}
                                             fetchUsers={this.fetchAndTransformUsers}
+                                            onEditorFocus={() => this.handleEditorFocus(true)}
+                                            onEditorBlur={() => this.handleEditorFocus(false)}
                                         />
                                     );
                                 }
@@ -925,6 +1032,8 @@ export abstract class AbstractIssueEditorPage<
                     );
                 } else {
                     const validateFunc = field.required ? FieldValidators.validateSingleSelect : undefined;
+                    const defaultLinkType = this.state.fieldValues[field.key]?.type || undefined;
+
                     return (
                         <React.Fragment>
                             <Field
@@ -944,6 +1053,8 @@ export abstract class AbstractIssueEditorPage<
                                         <div>
                                             <Select
                                                 {...fieldArgs.fieldProps}
+                                                key={`${field.key}.type-${defaultLinkType?.id || 'empty'}`}
+                                                defaultValue={defaultLinkType}
                                                 isMulti={false}
                                                 isClearable={!field.required}
                                                 className="ac-form-select-container"
@@ -978,9 +1089,14 @@ export abstract class AbstractIssueEditorPage<
                             </Field>
                             <Field id={`${field.key}.issue`} name={`${field.key}.issue`}>
                                 {(fieldArgs: any) => {
+                                    const defaultLinkedIssues = this.state.fieldValues[field.key]?.issue || undefined;
+                                    const linkedIssuesKey = `${field.key}.issue-${JSON.stringify(defaultLinkedIssues || [])}`;
+
                                     return (
                                         <AsyncSelect
                                             {...fieldArgs.fieldProps}
+                                            key={linkedIssuesKey}
+                                            defaultValue={defaultLinkedIssues}
                                             isClearable={true}
                                             isMulti={true}
                                             className="ac-form-select-container"
@@ -1056,6 +1172,7 @@ export abstract class AbstractIssueEditorPage<
                     </div>
                 );
             }
+            case UIType.Cascading:
             case UIType.Select: {
                 const selectField = field as SelectFieldUI;
 
@@ -1287,6 +1404,55 @@ export abstract class AbstractIssueEditorPage<
                                     if (fieldArgs.error === 'EMPTY') {
                                         errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
                                     }
+                                    if (field.valueType === ValueType.Project) {
+                                        return (
+                                            <React.Fragment>
+                                                <LazyLoadingSelect
+                                                    {...fieldArgs.fieldProps}
+                                                    {...commonProps}
+                                                    value={defVal}
+                                                    className="ac-form-select-container"
+                                                    classNamePrefix="ac-form-select"
+                                                    placeholder="Type to search"
+                                                    noOptionsMessage={() => 'Type to search'}
+                                                    isClearable={this.isClearableSelect(selectField)}
+                                                    options={this.state.selectFieldOptions[field.key]}
+                                                    isDisabled={
+                                                        this.state.isSomethingLoading &&
+                                                        this.state.loadingField !== field.key
+                                                    }
+                                                    isLoading={this.state.loadingField === field.key}
+                                                    hasMore={this.state.projectPagination?.hasMore || false}
+                                                    isLoadingMore={this.state.projectPagination?.isLoadingMore || false}
+                                                    totalCount={this.state.projectPagination?.total || 0}
+                                                    loadedCount={this.state.projectPagination?.loaded || 0}
+                                                    onLoadMore={this.handleLoadMoreProjects}
+                                                    loadOptions={async (input: any) =>
+                                                        await this.loadSelectOptionsForField(
+                                                            field as SelectFieldUI,
+                                                            input,
+                                                        )
+                                                    }
+                                                    onChange={FieldValidators.chain(
+                                                        fieldArgs.fieldProps.onChange,
+                                                        (selected: any) => {
+                                                            this.handleSelectChange(selectField, selected);
+                                                        },
+                                                    )}
+                                                    onMenuClose={() => {
+                                                        if (this.state.loadingField === field.key) {
+                                                            this.setState({
+                                                                isSomethingLoading: false,
+                                                                loadingField: '',
+                                                            });
+                                                        }
+                                                    }}
+                                                />
+                                                {errDiv}
+                                            </React.Fragment>
+                                        );
+                                    }
+
                                     return (
                                         <React.Fragment>
                                             <AsyncSelect
@@ -1431,6 +1597,61 @@ export abstract class AbstractIssueEditorPage<
                             </Field>
                         );
                     }
+
+                    case SelectFieldHelper.SelectComponentType.Cascading: {
+                        if (editmode) {
+                            return (
+                                <CascadingSelectField
+                                    commonProps={commonProps}
+                                    isClearable={false}
+                                    parentSelectOptions={this.state.selectFieldOptions[field.key]}
+                                    isDisabled={this.state.isSomethingLoading}
+                                    onSave={(selected: CascadingSelectOption) => {
+                                        this.handleSelectChange(selectField, selected);
+                                    }}
+                                    isCreateMode={false}
+                                    initialValue={commonProps.value}
+                                />
+                            );
+                        }
+                        // create mode
+                        return (
+                            <Field
+                                label={<span>{field.name}</span>}
+                                isRequired={field.required}
+                                id={field.key}
+                                name={field.key}
+                                validate={validateFunc}
+                                defaultValue={defVal}
+                            >
+                                {(fieldArgs: any) => {
+                                    let errDiv = <span />;
+                                    if (fieldArgs.error === 'EMPTY') {
+                                        errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                                    }
+                                    return (
+                                        <>
+                                            <CascadingSelectField
+                                                commonProps={commonProps}
+                                                initialValue={defVal}
+                                                isClearable={false}
+                                                parentSelectOptions={this.state.selectFieldOptions[field.key]}
+                                                isDisabled={this.state.isSomethingLoading}
+                                                onSave={FieldValidators.chain(
+                                                    fieldArgs.fieldProps.onChange,
+                                                    (selected: any) => {
+                                                        this.handleSelectChange(selectField, selected);
+                                                    },
+                                                )}
+                                                isCreateMode={true}
+                                            />
+                                            {errDiv}
+                                        </>
+                                    );
+                                }}
+                            </Field>
+                        );
+                    }
                 }
             }
             case UIType.Checkbox: {
@@ -1486,6 +1707,7 @@ export abstract class AbstractIssueEditorPage<
                     this.handleInlineEdit(field, newSelectedValues);
                 };
 
+                const isRequired = currentSelectedValues.length === 0 && field.required;
                 checkField.allowedValues.forEach((value) => {
                     const isChecked = selectedIds.includes(value.id);
 
@@ -1495,7 +1717,7 @@ export abstract class AbstractIssueEditorPage<
                             name={`${field.key}-${value.id}`}
                             id={`${field.key}-${value.id}`}
                             value={value.id}
-                            isRequired={field.required}
+                            isRequired={isRequired}
                         >
                             {(fieldArgs: any) => (
                                 <Checkbox
@@ -2063,4 +2285,22 @@ export abstract class AbstractIssueEditorPage<
                 return 'text';
         }
     }
+
+    protected handleLoadMoreProjects = (startAt: number) => {
+        if (this.state.projectPagination) {
+            this.setState({
+                projectPagination: {
+                    ...this.state.projectPagination,
+                    isLoadingMore: true,
+                },
+            });
+        }
+
+        this.postMessage({
+            action: 'loadMoreProjects',
+            maxResults: ProjectsPagination.pageSize,
+            startAt: startAt,
+            nonce: v4(),
+        });
+    };
 }

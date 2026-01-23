@@ -4,8 +4,22 @@ import Mustache from 'mustache';
 import { BranchType, RepoData } from '../../../../../lib/ipc/toUI/startWork';
 import { Branch } from '../../../../../typings/git';
 
-export const getAllBranches = (repoData: RepoData | undefined) => {
-    return repoData ? [...repoData.localBranches, ...repoData.remoteBranches] : [];
+export const getAllBranches = (repoData: RepoData | undefined): Branch[] => {
+    if (!repoData) {
+        return [];
+    }
+
+    const allBranches = [...repoData.localBranches, ...repoData.remoteBranches];
+
+    const seen = new Set<string>();
+    return allBranches.filter((branch) => {
+        const key = `${branch.type}-${branch.remote || 'local'}-${branch.name}-${branch.commit || ''}`;
+        if (seen.has(key)) {
+            return false;
+        }
+        seen.add(key);
+        return true;
+    });
 };
 
 export const getDefaultSourceBranch = (repoData: RepoData | undefined): Branch => {
@@ -37,7 +51,7 @@ export const generateBranchName = (
     customTemplate: string,
 ): string => {
     // Use branchType if it has a prefix, otherwise use empty prefix
-    const branchTypeToUse = branchType.prefix ? branchType : { kind: '', prefix: '' };
+    const branchTypeToUse = branchType?.prefix ? branchType : { kind: '', prefix: '' };
     const usernameBase = repo.userEmail
         ? repo.userEmail
               .split('@')[0]

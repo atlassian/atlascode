@@ -2,7 +2,12 @@ import * as fs from 'fs';
 import path from 'path';
 import { window, workspace } from 'vscode';
 
-import { RovoDevStatusResponse } from './responseParserInterfaces';
+import {
+    RovoDevMessageWithCtaLink,
+    RovoDevPromptsResponse,
+    RovoDevStatusResponse,
+    RovoDevUsageResponse,
+} from './client';
 
 export type SupportedConfigFiles = 'config.yml' | 'mcp.json' | '.agent.md' | 'rovodev.log';
 
@@ -42,6 +47,29 @@ export async function openRovoDevConfigFile(configFile: SupportedConfigFiles) {
     }
 }
 
+function getRovoDevLogFilePath(): string | undefined {
+    const home = process.env.HOME || process.env.USERPROFILE;
+    if (!home) {
+        return undefined;
+    }
+    return path.join(home, '.rovodev', 'rovodev.log');
+}
+
+export function readLastNLogLines(n: number = 10): string[] {
+    const logFilePath = getRovoDevLogFilePath();
+    if (!logFilePath || !fs.existsSync(logFilePath)) {
+        return ['rovo dev log file could not be found'];
+    }
+
+    try {
+        const content = fs.readFileSync(logFilePath, 'utf-8');
+        const lines = content.split('\n').filter((line) => line.trim() !== '');
+        return lines.slice(-n);
+    } catch (err) {
+        return [`error reading rovo dev log file: ${err}`];
+    }
+}
+
 export function statusJsonResponseToMarkdown(response: RovoDevStatusResponse): string {
     const data = response.data;
 
@@ -70,23 +98,112 @@ export function statusJsonResponseToMarkdown(response: RovoDevStatusResponse): s
     }
 
     buffer += '**Model**\n';
-    buffer += `- ${parseCustomCliTagsForMarkdown(data.model.humanReadableName)}`;
+    buffer += `- ${parseCustomCliTagsForMarkdown(data.model.humanReadableName, [])}`;
 
     return buffer;
 }
 
-function formatText(text: string, cliTags: string[]) {
+export function usageJsonResponseToMarkdown(response: RovoDevUsageResponse): {
+    usage_response: string;
+    alert_message?: RovoDevMessageWithCtaLink;
+} {
+    const data = response.data.content;
+
+    const numberFormatter = new Intl.NumberFormat();
+
+    let buffer = '';
+
+    if (data.isBetaSite) {
+        buffer += `**${data.title}**\n`;
+        buffer += `- Used: ${numberFormatter.format(data.credit_used)}\n`;
+        buffer += `- Remaining: ${numberFormatter.format(data.credit_remaining)}\n`;
+        buffer += `- Resets in: ${formatElapsedTime(data.retry_after_seconds)}\n`;
+        buffer += '\n';
+
+        if (data.model_usage_data && Object.keys(data.model_usage_data.data).length > 0) {
+            const modelData = data.model_usage_data.data;
+
+            buffer += `**${data.model_usage_data.title}**\n`;
+
+            for (const key in modelData) {
+                buffer += `- ${key}: ${numberFormatter.format(modelData[key])}\n`;
+            }
+        }
+    } else {
+        buffer += `**${data.title}**\n`;
+        buffer += `- Used: ${numberFormatter.format(data.credit_used)}\n`;
+        buffer += `- Remaining: ${numberFormatter.format(data.credit_remaining)}\n`;
+        buffer += `- Total: ${numberFormatter.format(data.credit_total)}\n`;
+        buffer += '\n';
+    }
+
+    if (data.view_usage_message) {
+        const view_usage_message = data.view_usage_message.message;
+        if (data.view_usage_message.ctaLink) {
+            buffer += view_usage_message.replace('{ctaLink}', data.view_usage_message.ctaLink.link);
+        } else {
+            buffer += view_usage_message;
+        }
+    }
+
+    return { usage_response: buffer, alert_message: data.exceeded_message };
+}
+
+export function promptsJsonResponseToMarkdown(response: RovoDevPromptsResponse): string {
+    const data = response.data.prompts;
+
+    if (!Array.isArray(data) || data.length === 0) {
+        return '';
+    }
+
+    let buffer = '';
+
+    for (const prompt of data) {
+        buffer += `**${prompt.name}**\n- ${prompt.description}\n- ${prompt.content_file}\n\n`;
+    }
+
+    return buffer;
+}
+
+function formatText(text: string, cliTags: string[], links: { text: string; link: string }[]) {
     if (cliTags.includes('italic')) {
         text = `*${text}*`;
     }
     if (cliTags.includes('bold')) {
         text = `**${text}**`;
     }
+
+    const linkIndex = cliTags.findIndex((x) => x.startsWith('link='));
+    if (linkIndex >= 0) {
+        const link = cliTags[linkIndex].substring('link='.length);
+        links.push({ text, link });
+        text = '{link' + links.length + '}';
+    }
     return text;
 }
 
+function formatElapsedTime(seconds: number) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor((seconds % 3600) % 60);
+
+    if (h === 0 && m === 0 && s === 0) {
+        return '0s';
+    }
+
+    const hDisplay = h > 0 ? h + 'h ' : '';
+    const mDisplay = m > 0 ? m + 'm ' : '';
+
+    if (hDisplay) {
+        return (hDisplay + mDisplay).trim();
+    } else {
+        const sDisplay = s > 0 ? s + 's' : '';
+        return (mDisplay + sDisplay).trim();
+    }
+}
+
 // this function doesn't work well with nested identical tags - hopefully we don't need that
-export function parseCustomCliTagsForMarkdown(text: string): string {
+export function parseCustomCliTagsForMarkdown(text: string, links: { text: string; link: string }[]): string {
     // no valid tags
     if (!text || !text.includes('[/') || !text.includes(']', text.indexOf('['))) {
         return text;
@@ -97,16 +214,22 @@ export function parseCustomCliTagsForMarkdown(text: string): string {
     // handle unopened tags
     if (text[firstTagPosition + 1] === '/') {
         const startingPosition = text.indexOf(']', firstTagPosition) + 1;
-        return text.substring(0, startingPosition) + parseCustomCliTagsForMarkdown(text.substring(startingPosition));
+        return (
+            text.substring(0, startingPosition) + parseCustomCliTagsForMarkdown(text.substring(startingPosition), links)
+        );
     }
 
     const firstTagContent = text.substring(firstTagPosition + 1, text.indexOf(']'));
-    const closingTagPosition = text.indexOf('[/' + firstTagContent + ']');
+    const closingTagPosition = firstTagContent.startsWith('link=')
+        ? text.indexOf('[/link]')
+        : text.indexOf('[/' + firstTagContent + ']');
 
     // handle unclosed tags
     if (closingTagPosition === -1) {
         const startingPosition = text.indexOf(']', firstTagPosition) + 1;
-        return text.substring(0, startingPosition) + parseCustomCliTagsForMarkdown(text.substring(startingPosition));
+        return (
+            text.substring(0, startingPosition) + parseCustomCliTagsForMarkdown(text.substring(startingPosition), links)
+        );
     }
 
     const contentWithinTags = text.substring(text.indexOf(']', firstTagPosition) + 1, closingTagPosition);
@@ -114,7 +237,7 @@ export function parseCustomCliTagsForMarkdown(text: string): string {
 
     return (
         text.substring(0, firstTagPosition) +
-        formatText(parseCustomCliTagsForMarkdown(contentWithinTags), firstTagContent.split(' ')) +
-        parseCustomCliTagsForMarkdown(text.substring(afterTags))
+        formatText(parseCustomCliTagsForMarkdown(contentWithinTags, links), firstTagContent.split(' '), links) +
+        parseCustomCliTagsForMarkdown(text.substring(afterTags), links)
     );
 }

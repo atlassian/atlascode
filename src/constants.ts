@@ -1,7 +1,9 @@
-export const ExtensionId = 'atlassian.atlascode';
+import packageJson from 'package.json';
+
+export const ExtensionId = `${packageJson.publisher}.${packageJson.name}`;
 export const ConfigNamespace = 'atlascode';
 export const extensionOutputChannelName = 'Atlassian';
-export const JiraCreateSiteAndProjectKey = 'jira.lastCreateSiteAndProject';
+export const JiraPreSelectedCreateKey = 'jira.lastCreatePreSelectedValues';
 export const JiraEnabledKey = 'jira.enabled';
 export const BitbucketEnabledKey = 'bitbucket.enabled';
 export const JiraHoverProviderConfigurationKey = 'jira.hover.enabled';
@@ -45,7 +47,10 @@ export const enum Commands {
     BitbucketToggleCommentsVisibility = 'atlascode.bb.toggleCommentsVisibility',
     EditThisFile = 'atlascode.bb.editThisFile',
     CreateIssue = 'atlascode.jira.createIssue',
+    CreateIssueFromSidebar = 'atlascode.jira.createIssue.fromSidebar',
+    CreateIssueFromIssueContext = 'atlascode.jira.createIssue.fromIssueContext',
     RefreshAssignedWorkItemsExplorer = 'atlascode.jira.refreshAssignedWorkItemsExplorer',
+    JiraFilter = 'atlascode.jira.filter',
     RefreshCustomJqlExplorer = 'atlascode.jira.refreshCustomJqlExplorer',
     AddJiraSite = 'atlascode.jira.addJiraSite',
     ShowJiraIssueSettings = 'atlascode.jira.showJiraIssueSettings',
@@ -83,27 +88,28 @@ export const enum Commands {
     DisableHelpExplorer = 'atlascode.disableHelpExplorer',
     CreateNewJql = 'atlascode.jira.createNewJql',
     ToDoIssue = 'atlascode.jira.todoIssue',
-    RovodevAsk = 'atlascode.rovodev.askRovoDev',
-    RovodevAskInteractive = 'atlascode.rovodev.askInteractive',
-    RovodevAddToContext = 'atlascode.rovodev.addToContext',
-    RovodevNewSession = 'atlascode.rovodev.newChatSession',
-    RovodevShowTerminal = 'atlascode.rovodev.showTerminal',
-    RovodevShareFeedback = 'atlascode.rovodev.shareFeedback',
     RovodevOpenHelp = 'atlascode.rovodev.openHelp',
     InProgressIssue = 'atlascode.jira.inProgressIssue',
     DoneIssue = 'atlascode.jira.doneIssue',
     ShowOnboardingFlow = 'atlascode.showOnboardingFlow',
-    OpenRovoDevConfig = 'atlascode.openRovoDevConfig',
-    OpenRovoDevMcpJson = 'atlascode.openRovoDevMcpJson',
-    OpenRovoDevGlobalMemory = 'atlascode.openRovoDevGlobalMemory',
-    OpenRovoDevLogFile = 'atlascode.openRovoDevLogFile',
     OpenNativeSettings = 'atlascode.openNativeSettings',
     QuickAuth = 'atlascode.rovodev.quickAuth',
     JiraLogin = 'atlascode.jira.login',
     JiraAPITokenLogin = 'atlascode.jira.apiTokenLogin',
+    ExpandCreateWorkItemWebview = 'atlascode.jira.expandCreateWorkItem',
+    CopyImageElement = 'atlascode.jira.copyImageElement',
 
     // Debug mode-only commands
     DebugQuickCommand = 'atlascode.debug.quickCommand',
     DebugQuickLogin = 'atlascode.debug.quickLogin',
     DebugQuickLogout = 'atlascode.debug.quickLogout',
+
+    // Extension management commands
+    AddRecommendedExtension = 'atlascode.addRecommendedExtension',
 }
+
+// Jira projects field pagination
+export const ProjectsPagination = {
+    pageSize: 50,
+    startAt: 0,
+} as const;

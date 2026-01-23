@@ -16,6 +16,7 @@ const MockExperimentGates: Record<string, any> = {
 
 jest.mock('../features', () => {
     return {
+        defaultFeatureGateValues: {},
         ExperimentGates: MockExperimentGates,
     };
 });
@@ -43,8 +44,23 @@ jest.mock('vscode', () => {
     };
 });
 
+jest.mock('src/util/staticConfig', () => ({
+    FX3Config: {
+        apiKey: 'some-api-key',
+        environment: 'development' as const,
+        targetApp: 'some-target-app',
+        timeout: 1000,
+    },
+    isFX3ConfigValid: jest.fn(() => true),
+    FeatureFlagOverrides: {
+        gates: {},
+        experiments: {},
+    },
+}));
+
 import { Identifiers } from '@atlaskit/feature-gate-js-client';
 import { it } from '@jest/globals';
+import { FeatureFlagOverrides, isFX3ConfigValid } from 'src/util/staticConfig';
 import { forceCastTo } from 'testsutil';
 
 import { ClientInitializedErrorType } from '../../analytics';
@@ -63,14 +79,13 @@ describe('FeatureFlagClient', () => {
         };
         process.env = {
             ...originalEnv,
-            ATLASCODE_FX3_TARGET_APP: 'some-app',
-            ATLASCODE_FX3_API_KEY: 'some-key',
-            ATLASCODE_FX3_ENVIRONMENT: 'Production',
-            ATLASCODE_FX3_TIMEOUT: '2000',
             ATLASCODE_FF_OVERRIDES: undefined,
             ATLASCODE_EXP_OVERRIDES_BOOL: undefined,
             ATLASCODE_EXP_OVERRIDES_STRING: undefined,
         };
+
+        // Reset the mock to return true by default
+        (isFX3ConfigValid as jest.Mock).mockReturnValue(true);
 
         FeatureFlagClient['singleton'] = undefined;
         featureFlagClient = FeatureFlagClient.getInstance();
@@ -106,7 +121,7 @@ describe('FeatureFlagClient', () => {
 
         it("should catch an error when the feature flag client doesn't have the FX3 data", async () => {
             jest.spyOn(mockClient, 'initialize');
-            process.env.ATLASCODE_FX3_API_KEY = '';
+            (isFX3ConfigValid as jest.Mock).mockReturnValue(false);
 
             let error: FeatureFlagClientInitError = undefined!;
 
@@ -263,7 +278,8 @@ describe('FeatureFlagClient', () => {
 
     describe('overrides', () => {
         it('if overrides are set, checkGate returns the overridden value', async () => {
-            process.env.ATLASCODE_FF_OVERRIDES = `another-very-real-feature=false`;
+            // Set up override directly in the mocked object
+            FeatureFlagOverrides.gates['another-very-real-feature' as Features] = false;
 
             FeatureFlagClient['singleton'] = undefined;
             featureFlagClient = FeatureFlagClient.getInstance();
@@ -277,10 +293,14 @@ describe('FeatureFlagClient', () => {
             expect(featureFlagClient.checkGate(forceCastTo<Features>('some-very-real-feature'))).toBeTruthy();
             expect(featureFlagClient.checkGate(forceCastTo<Features>('another-very-real-feature'))).toBeFalsy();
             expect(featureFlagClient.checkGate(forceCastTo<Features>('some-fake-feature'))).toBeFalsy();
+
+            // Clean up
+            delete FeatureFlagOverrides.gates['another-very-real-feature' as Features];
         });
 
         it('if overrides are set, getExperimentValue returns the overridden value', async () => {
-            process.env.ATLASCODE_EXP_OVERRIDES_STRING = `another-exp-name=another value`;
+            // Set up override directly in the mocked object
+            FeatureFlagOverrides.experiments['another-exp-name' as Experiments] = 'another value';
 
             FeatureFlagClient['singleton'] = undefined;
             featureFlagClient = FeatureFlagClient.getInstance();
@@ -306,6 +326,9 @@ describe('FeatureFlagClient', () => {
             expect(
                 featureFlagClient.checkExperimentValue(forceCastTo<Experiments>('one-more-exp-name')),
             ).toBeUndefined();
+
+            // Clean up
+            delete FeatureFlagOverrides.experiments['another-exp-name' as Experiments];
         });
     });
 });

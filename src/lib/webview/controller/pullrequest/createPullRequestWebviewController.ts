@@ -1,5 +1,5 @@
-import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import Axios from 'axios';
+import { defaultActionGuard } from 'src/ipc/messaging';
 import { Logger } from 'src/logger';
 
 import { Registry } from '../../../../analytics';

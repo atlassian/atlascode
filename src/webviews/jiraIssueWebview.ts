@@ -13,10 +13,20 @@ import {
 import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
+import { RovodevCommands } from 'src/rovo-dev/api/componentApi';
 import timer from 'src/util/perf';
+import { RovoDevEntitlementErrorType } from 'src/util/rovo-dev-entitlement/rovoDevEntitlementError';
+import * as vscode from 'vscode';
 import { commands, env, window } from 'vscode';
 
-import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../analytics';
+import {
+    issueCreatedEvent,
+    issueOpenRovoDevEvent,
+    issueUpdatedEvent,
+    issueUrlCopiedEvent,
+    rovoDevPromoBannerDismissedEvent,
+    rovoDevPromoBannerOpenedEvent,
+} from '../analytics';
 import { performanceEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { clientForSite } from '../bitbucket/bbUtils';
@@ -24,40 +34,60 @@ import { PullRequestData } from '../bitbucket/model';
 import { postComment } from '../commands/jira/postComment';
 import { showIssue } from '../commands/jira/showIssue';
 import { startWorkOnIssue } from '../commands/jira/startWorkOnIssue';
+import { configuration } from '../config/configuration';
 import { Commands } from '../constants';
 import { Container } from '../container';
 import {
     EditChildIssueAction,
     EditIssueAction,
     isAddAttachmentsAction,
+    isCheckRovoDevEntitlement,
     isCloneIssue,
     isCreateIssue,
     isCreateIssueLink,
     isCreateWorklog,
     isDeleteByIDAction,
+    isDeleteWorklog,
+    isDismissRovoDevPromoBanner,
     isGetImage,
+    isHandleEditorFocus,
     isIssueComment,
     isIssueDeleteComment,
+    isOpenRovoDevWithIssueAction,
+    isOpenRovoDevWithPromoBanner,
     isOpenStartWorkPageAction,
+    isShareIssue,
     isTransitionIssue,
     isUpdateVoteAction,
     isUpdateWatcherAction,
+    isUpdateWorklog,
+    ShareIssueAction,
     TransitionChildIssueAction,
 } from '../ipc/issueActions';
-import { EditIssueData, emptyEditIssueData } from '../ipc/issueMessaging';
+import {
+    BranchInfo,
+    BuildInfo,
+    CommitInfo,
+    DevelopmentInfo,
+    EditIssueData,
+    emptyEditIssueData,
+} from '../ipc/issueMessaging';
 import { Action } from '../ipc/messaging';
-import { isOpenPullRequest } from '../ipc/prActions';
+import { isOpenExternalUrl, isOpenPullRequest } from '../ipc/prActions';
 import { fetchEditIssueUI, fetchMinimalIssue } from '../jira/fetchIssue';
 import { fetchMultipleIssuesWithTransitions } from '../jira/fetchIssueWithTransitions';
+import { attachAssigneesToIssues, collectAssigneesFromResponse } from '../jira/issueAssigneeUtils';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
+import { CommonMessageType } from '../lib/ipc/toUI/common';
 import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
+import { RovoDevContextItem } from '../rovo-dev/rovoDevTypes';
 import { OnJiraEditedRefreshDelay } from '../util/time';
 import { getJiraIssueUri } from '../views/jira/treeViews/utils';
 import { NotificationManagerImpl } from '../views/notifications/notificationManager';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
-import { InitializingWebview } from './abstractWebview';
+import { ContextMenuCommandData, InitializingWebview } from './abstractWebview';
 
 const EditJiraIssueUIRenderEventName = 'ui.jira.editJiraIssue.render.lcp';
 const EditJiraIssueUpdatesEventName = 'ui.jira.editJiraIssue.update.lcp';
@@ -69,6 +99,8 @@ export class JiraIssueWebview
     private _issue: MinimalIssue<DetailedSiteInfo>;
     private _editUIData: EditIssueData;
     private _currentUser: User;
+    private _webviewReady: boolean = false;
+    private _needsRefresh: boolean = false;
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -96,6 +128,12 @@ export class JiraIssueWebview
         this._panel!.iconPath = Resources.icons.get(iconSet.JIRAICON);
     }
 
+    public override async createOrShow(column?: vscode.ViewColumn): Promise<void> {
+        this._webviewReady = false;
+        this._needsRefresh = false;
+        await super.createOrShow(column);
+    }
+
     async initialize(issue: MinimalIssue<DetailedSiteInfo>) {
         this._issue = issue;
 
@@ -109,6 +147,11 @@ export class JiraIssueWebview
     }
 
     async invalidate() {
+        if (!this._webviewReady) {
+            this._needsRefresh = true;
+            return;
+        }
+
         // TODO: we might want to also update feature gates here?
         this.fireAdditionalSettings({
             rovoDevEnabled: Container.isRovoDevEnabled,
@@ -236,7 +279,6 @@ export class JiraIssueWebview
             this._editUIData.recentPullRequests = [];
 
             const msg = this._editUIData;
-
             msg.type = 'update';
 
             this.postMessage(msg); // Issue has rendered
@@ -256,6 +298,7 @@ export class JiraIssueWebview
                 this.updateWatchers(),
                 this.updateVoters(),
                 this.updateRelatedPullRequests(),
+                this.updateDevelopmentInfo(),
                 this.fetchFullHierarchy(),
             ]);
 
@@ -292,7 +335,12 @@ export class JiraIssueWebview
             }
             const res = await client.searchForIssuesUsingJqlGet(jqlQuery, fields);
             const searchResults = await readSearchResults(res, site, epicInfo);
-            this.postMessage({ type: 'epicChildrenUpdate', epicChildren: searchResults.issues });
+
+            const assigneeMap = new Map<string, User>();
+            collectAssigneesFromResponse(res, assigneeMap);
+            const issuesWithAssignees = attachAssigneesToIssues(searchResults.issues, assigneeMap);
+
+            this.postMessage({ type: 'epicChildrenUpdate', epicChildren: issuesWithAssignees });
         }
     }
 
@@ -310,6 +358,199 @@ export class JiraIssueWebview
         if (relatedPrs.length > 0) {
             this.postMessage({ type: 'pullRequestUpdate', recentPullRequests: relatedPrs });
         }
+    }
+
+    async updateDevelopmentInfo() {
+        try {
+            const jiraDevInfo = await this.fetchJiraDevelopmentInfo();
+
+            const [localBranches, localCommits, pullRequests, localBuilds] = await Promise.all([
+                this.relatedBranches(),
+                this.relatedCommits(),
+                this.recentPullRequests(),
+                this.relatedBuilds(),
+            ]);
+
+            const branches = jiraDevInfo.branches.length > 0 ? jiraDevInfo.branches : localBranches;
+            const commits = jiraDevInfo.commits.length > 0 ? jiraDevInfo.commits : localCommits;
+            const builds = jiraDevInfo.builds.length > 0 ? jiraDevInfo.builds : localBuilds;
+
+            const deduplicatedBranches = this.deduplicateBranches(branches);
+
+            const finalDevInfo = {
+                branches: deduplicatedBranches,
+                commits,
+                pullRequests: jiraDevInfo.pullRequests.length > 0 ? jiraDevInfo.pullRequests : pullRequests,
+                builds,
+            };
+
+            this.postMessage({
+                type: 'developmentInfoUpdate',
+                developmentInfo: finalDevInfo,
+            });
+        } catch (e) {
+            Logger.error(e, 'Error updating development info');
+        }
+    }
+
+    private normalizeBranchName(branchName: string | undefined): string {
+        if (!branchName) {
+            return '';
+        }
+        return branchName.replace(/^[^/]+\//, '');
+    }
+
+    private deduplicateBranches(branches: any[]): any[] {
+        const seen = new Set<string>();
+        const deduplicated: any[] = [];
+
+        for (const branch of branches) {
+            const branchName = this.normalizeBranchName(branch.name) || branch.name;
+
+            if (!seen.has(branchName)) {
+                seen.add(branchName);
+                deduplicated.push({
+                    ...branch,
+                    name: branchName,
+                });
+            }
+        }
+
+        return deduplicated;
+    }
+
+    private async fetchJiraDevelopmentInfo(): Promise<DevelopmentInfo> {
+        const emptyResult: DevelopmentInfo = { branches: [], commits: [], pullRequests: [], builds: [] };
+
+        try {
+            if (!this._issue.siteDetails.isCloud) {
+                return emptyResult;
+            }
+
+            const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+            const baseApiUrl = this._issue.siteDetails.baseApiUrl.replace(/\/rest$/, '');
+
+            // Query Bitbucket for development information
+            const devStatusUrl = `${baseApiUrl}/rest/dev-status/1.0/issue/detail?issueId=${this._issue.id}&applicationType=bitbucket&dataType=repository`;
+
+            const response = await client.transportFactory().get(devStatusUrl, {
+                method: 'GET',
+                headers: {
+                    Authorization: await client.authorizationProvider('GET', devStatusUrl),
+                },
+                timeout: 5000,
+            });
+
+            const devData = response.data;
+
+            if (devData.detail && devData.detail.length > 0) {
+                return this.parseDevStatusData(devData);
+            }
+
+            return emptyResult;
+        } catch (e) {
+            Logger.error(e, 'Could not fetch Jira development info, falling back to local data');
+            return emptyResult;
+        }
+    }
+
+    private parseDevStatusData(devData: any): DevelopmentInfo {
+        const branches: BranchInfo[] = [];
+        const commits: CommitInfo[] = [];
+        const pullRequests: any[] = [];
+        const builds: BuildInfo[] = [];
+
+        // Parse development data
+        if (devData.detail && devData.detail.length > 0) {
+            for (const app of devData.detail) {
+                // Extract branches
+                if (app.branches) {
+                    for (const branch of app.branches) {
+                        branches.push({
+                            name: branch.name,
+                            url: branch.url,
+                        });
+                    }
+                }
+
+                if (app.pullRequests) {
+                    for (const pr of app.pullRequests) {
+                        pullRequests.push({
+                            id: pr.id,
+                            title: pr.name,
+                            url: pr.url,
+                            state: pr.status,
+                            author: pr.author,
+                        });
+
+                        if (pr.commits) {
+                            for (const commit of pr.commits) {
+                                commits.push({
+                                    hash: commit.id,
+                                    message: commit.message,
+                                    authorName: commit.author?.name || 'Unknown',
+                                    url: commit.url,
+                                });
+                            }
+                        }
+                    }
+                }
+
+                if (app.repositories) {
+                    for (const repo of app.repositories) {
+                        if (repo.branches) {
+                            for (const branch of repo.branches) {
+                                branches.push({
+                                    name: branch.name,
+                                    url: branch.url,
+                                });
+                            }
+                        }
+
+                        if (repo.pullRequests) {
+                            for (const pr of repo.pullRequests) {
+                                const prExists = pullRequests.some((p) => p.id === pr.id);
+                                if (!prExists) {
+                                    pullRequests.push({
+                                        id: pr.id,
+                                        title: pr.name,
+                                        url: pr.url,
+                                        state: pr.status,
+                                        author: pr.author,
+                                    });
+                                }
+                            }
+                        }
+
+                        if (repo.commits) {
+                            for (const commit of repo.commits) {
+                                const commitExists = commits.some((c) => c.hash === commit.id);
+                                if (!commitExists) {
+                                    commits.push({
+                                        hash: commit.id,
+                                        message: commit.message,
+                                        authorName: commit.author?.name || 'Unknown',
+                                        url: commit.url,
+                                    });
+                                }
+
+                                if (commit.builds) {
+                                    for (const build of commit.builds) {
+                                        builds.push({
+                                            name: build.name || build.buildNumber,
+                                            key: build.buildNumber,
+                                            state: build.state,
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return { branches, commits, pullRequests, builds };
     }
 
     async updateWatchers() {
@@ -424,6 +665,15 @@ export class JiraIssueWebview
 
         if (!handled) {
             switch (msg.action) {
+                case 'webviewReady': {
+                    handled = true;
+                    this._webviewReady = true;
+                    if (this._needsRefresh) {
+                        this._needsRefresh = false;
+                        this.invalidate();
+                    }
+                    break;
+                }
                 case 'copyJiraIssueLink': {
                     handled = true;
                     const linkUrl = `${this._issue.siteDetails.baseLinkUrl}/browse/${this._issue.key}`;
@@ -577,11 +827,16 @@ export class JiraIssueWebview
                                     msg.restriction,
                                 );
                                 const comments: Comment[] = this._editUIData.fieldValues['comment'].comments;
-                                comments.splice(
-                                    comments.findIndex((value) => value.id === msg.commentId),
-                                    1,
-                                    res,
-                                );
+                                if (Array.isArray(comments)) {
+                                    const idx = comments.findIndex((value) => value.id === msg.commentId);
+                                    if (idx >= 0) {
+                                        comments.splice(idx, 1, res);
+                                    }
+                                } else {
+                                    throw new Error(
+                                        `Comments field is not an array. Actual value: ${comments} with type ${typeof comments}`,
+                                    );
+                                }
                             } else {
                                 const res = await postComment(msg.issue, msg.commentBody, undefined, msg.restriction);
                                 this._editUIData.fieldValues['comment'].comments.push(res);
@@ -609,10 +864,14 @@ export class JiraIssueWebview
                             const client = await Container.clientManager.jiraClient(msg.issue.siteDetails);
                             await client.deleteComment(msg.issue.key, msg.commentId);
                             const comments: Comment[] = this._editUIData.fieldValues['comment'].comments;
-                            comments.splice(
-                                comments.findIndex((value) => value.id === msg.commentId),
-                                1,
-                            );
+                            if (Array.isArray(comments)) {
+                                const idx = comments.findIndex((value) => value.id === msg.commentId);
+                                comments.splice(idx, 1);
+                            } else {
+                                throw new Error(
+                                    `Comments field is not an array. Actual value: ${comments} with type ${typeof comments}`,
+                                );
+                            }
 
                             this.postMessage({
                                 type: 'fieldValueUpdate',
@@ -685,6 +944,9 @@ export class JiraIssueWebview
 
                             this._editUIData.fieldValues['issuelinks'] = resp;
 
+                            // Enhance the linked issues with transitions and assignee data
+                            await this.enhanceChildAndLinkedIssuesWithTransitions();
+
                             this.postMessage({
                                 type: 'fieldValueUpdate',
                                 fieldValues: {
@@ -721,9 +983,19 @@ export class JiraIssueWebview
                         try {
                             const client = await Container.clientManager.jiraClient(msg.site);
 
-                            // We wish we could just call the delete issuelink endpoint, but it doesn't support OAuth 2.0
-                            //await client.deleteIssuelink(msg.objectWithId.id);
+                            // Use direct DELETE request to issueLink endpoint
+                            const apiVersion = client.apiVersion || '3';
+                            const baseApiUrl = msg.site.baseApiUrl.replace(/\/rest$/, '');
+                            const deleteUrl = `${baseApiUrl}/rest/api/${apiVersion}/issueLink/${msg.objectWithId.id}`;
 
+                            await client.transportFactory()(deleteUrl, {
+                                method: 'DELETE',
+                                headers: {
+                                    Authorization: await client.authorizationProvider('DELETE', deleteUrl),
+                                },
+                            });
+
+                            // Update local state after successful deletion
                             if (
                                 !this._editUIData.fieldValues['issuelinks'] ||
                                 !Array.isArray(this._editUIData.fieldValues['issuelinks'])
@@ -734,10 +1006,6 @@ export class JiraIssueWebview
                             this._editUIData.fieldValues['issuelinks'] = this._editUIData.fieldValues[
                                 'issuelinks'
                             ].filter((link: any) => link.id !== msg.objectWithId.id);
-
-                            await client.editIssue(this._issue.key, {
-                                ['issuelinks']: this._editUIData.fieldValues['issuelinks'],
-                            });
 
                             this.postMessage({
                                 type: 'fieldValueUpdate',
@@ -775,13 +1043,12 @@ export class JiraIssueWebview
                         handled = true;
                         try {
                             const client = await Container.clientManager.jiraClient(msg.site);
-                            let queryParams: any = { adjustEstimate: msg.worklogData.adjustEstimate };
-                            delete msg.worklogData.adjustEstimate;
-                            if (queryParams.adjustEstimate === 'new') {
-                                queryParams = { ...queryParams, newEstimate: msg.worklogData.newEstimate };
-                                delete msg.worklogData.newEstimate;
+                            const { adjustEstimate, newEstimate, ...worklogBody } = msg.worklogData as any;
+                            let queryParams: any = { adjustEstimate };
+                            if (adjustEstimate === 'new' && newEstimate) {
+                                queryParams = { ...queryParams, newEstimate };
                             }
-                            const resp = await client.addWorklog(msg.issueKey, msg.worklogData, queryParams);
+                            const resp = await client.addWorklog(msg.issueKey, worklogBody, queryParams);
 
                             if (!Array.isArray(this._editUIData.fieldValues['worklog']?.worklogs)) {
                                 this._editUIData.fieldValues['worklog'] = { worklogs: [] };
@@ -792,6 +1059,7 @@ export class JiraIssueWebview
                                 type: 'fieldValueUpdate',
                                 fieldValues: { worklog: this._editUIData.fieldValues['worklog'], nonce: msg.nonce },
                             });
+                            this.refreshIssueHistory();
                             issueUpdatedEvent(
                                 this._issue.siteDetails,
                                 this._issue.key,
@@ -805,6 +1073,106 @@ export class JiraIssueWebview
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error creating worklog'),
+                                nonce: msg.nonce,
+                            });
+                        }
+                    }
+                    break;
+                }
+
+                case 'updateWorklog': {
+                    if (isUpdateWorklog(msg)) {
+                        handled = true;
+                        try {
+                            const client = await Container.clientManager.jiraClient(msg.site);
+                            const { adjustEstimate, newEstimate, ...worklogBody } = msg.worklogData as any;
+                            let queryParams: any = { adjustEstimate };
+                            if (adjustEstimate === 'new' && newEstimate) {
+                                queryParams = { ...queryParams, newEstimate };
+                            }
+
+                            const resp = await (client as any).putToJira(
+                                `issue/${msg.issueKey}/worklog/${msg.worklogId}`,
+                                worklogBody,
+                                queryParams,
+                            );
+
+                            if (Array.isArray(this._editUIData.fieldValues['worklog']?.worklogs)) {
+                                const worklogIndex = this._editUIData.fieldValues['worklog'].worklogs.findIndex(
+                                    (w: any) => w.id === msg.worklogId,
+                                );
+                                if (worklogIndex !== -1) {
+                                    this._editUIData.fieldValues['worklog'].worklogs[worklogIndex] = resp;
+                                }
+                            }
+
+                            this.postMessage({
+                                type: 'fieldValueUpdate',
+                                fieldValues: { worklog: this._editUIData.fieldValues['worklog'], nonce: msg.nonce },
+                            });
+                            this.refreshIssueHistory();
+                            issueUpdatedEvent(
+                                this._issue.siteDetails,
+                                this._issue.key,
+                                'worklog',
+                                this.fieldNameForKey('worklog'),
+                            ).then((e) => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
+                        } catch (e) {
+                            Logger.error(e, 'Error updating worklog');
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Error updating worklog'),
+                                nonce: msg.nonce,
+                            });
+                        }
+                    }
+                    break;
+                }
+
+                case 'deleteWorklog': {
+                    if (isDeleteWorklog(msg)) {
+                        handled = true;
+                        try {
+                            const client = await Container.clientManager.jiraClient(msg.site);
+                            const queryParams: any = {};
+                            if (msg.adjustEstimate) {
+                                queryParams.adjustEstimate = msg.adjustEstimate;
+                                if (msg.adjustEstimate === 'new' && msg.newEstimate) {
+                                    queryParams.newEstimate = msg.newEstimate;
+                                }
+                            }
+
+                            await (client as any).deleteToJira(
+                                `issue/${msg.issueKey}/worklog/${msg.worklogId}`,
+                                queryParams,
+                            );
+
+                            if (Array.isArray(this._editUIData.fieldValues['worklog']?.worklogs)) {
+                                this._editUIData.fieldValues['worklog'].worklogs = this._editUIData.fieldValues[
+                                    'worklog'
+                                ].worklogs.filter((w: any) => w.id !== msg.worklogId);
+                            }
+
+                            this.postMessage({
+                                type: 'fieldValueUpdate',
+                                fieldValues: { worklog: this._editUIData.fieldValues['worklog'], nonce: msg.nonce },
+                            });
+                            this.refreshIssueHistory();
+                            issueUpdatedEvent(
+                                this._issue.siteDetails,
+                                this._issue.key,
+                                'worklog',
+                                this.fieldNameForKey('worklog'),
+                            ).then((e) => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
+                        } catch (e) {
+                            Logger.error(e, 'Error deleting worklog');
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Error deleting worklog'),
                                 nonce: msg.nonce,
                             });
                         }
@@ -861,7 +1229,13 @@ export class JiraIssueWebview
                         handled = true;
                         try {
                             const client = await Container.clientManager.jiraClient(msg.site);
-                            await client.removeWatcher(msg.issueKey, msg.watcher.accountId);
+                            const isCloud = msg.site.isCloud;
+                            const msgWatcherAccountId = msg.watcher.accountId; // undefined for Server/Data Center
+                            const msgWatcherKey = msg.watcher.key; // undefined for Cloud
+                            const query = isCloud ? { accountId: msgWatcherAccountId } : { username: msgWatcherKey };
+
+                            await client.removeWatcher(msg.issueKey, query);
+
                             if (
                                 !this._editUIData.fieldValues['watches'] ||
                                 !this._editUIData.fieldValues['watches'].watchers ||
@@ -870,13 +1244,19 @@ export class JiraIssueWebview
                                 this._editUIData.fieldValues['watches'].watchers = [];
                             }
                             const foundIndex: number = this._editUIData.fieldValues['watches'].watchers.findIndex(
-                                (user: User) => user.accountId === msg.watcher.accountId,
+                                (user: User) => {
+                                    const isAccountIdEqual = user.accountId === msgWatcherAccountId;
+                                    const isUsernameEqual = user.key && msgWatcherKey && user.key === msgWatcherKey;
+                                    return isCloud ? isAccountIdEqual : isUsernameEqual;
+                                },
                             );
                             if (foundIndex > -1) {
                                 this._editUIData.fieldValues['watches'].watchers.splice(foundIndex, 1);
                             }
-
-                            if (msg.watcher.accountId === this._currentUser.accountId) {
+                            const isCurrentUserWatcher = isCloud
+                                ? msgWatcherAccountId === this._currentUser.accountId
+                                : msgWatcherKey === this._currentUser.key;
+                            if (isCurrentUserWatcher) {
                                 this._editUIData.fieldValues['watches'].isWatching = false;
                             }
 
@@ -1118,6 +1498,11 @@ export class JiraIssueWebview
                     }
                     break;
                 }
+                case 'openJiraAuth': {
+                    handled = true;
+                    await commands.executeCommand(Commands.ShowJiraAuth);
+                    break;
+                }
                 case 'refreshIssue': {
                     handled = true;
                     try {
@@ -1132,6 +1517,53 @@ export class JiraIssueWebview
                     if (isOpenStartWorkPageAction(msg)) {
                         handled = true;
                         startWorkOnIssue(this._issue);
+                    }
+                    break;
+                }
+                case 'openRovoDevWithIssue': {
+                    if (isOpenRovoDevWithIssueAction(msg)) {
+                        handled = true;
+                        try {
+                            const issueFromMessage = msg.issue;
+
+                            if (!issueFromMessage || !issueFromMessage.key || !issueFromMessage.siteDetails) {
+                                Logger.error(
+                                    new Error('Invalid issue data in openRovoDevWithIssue action'),
+                                    'Missing required issue fields',
+                                );
+                                this.postMessage({
+                                    type: 'error',
+                                    reason: 'Invalid issue data. Please refresh the issue and try again.',
+                                });
+                                break;
+                            }
+
+                            const issue = this._issue.key === issueFromMessage.key ? this._issue : issueFromMessage;
+                            const issueUrl = `${issue.siteDetails.baseLinkUrl}/browse/${issue.key}`;
+                            const promptText = 'Work on the attached Jira work item';
+
+                            Logger.debug(
+                                `Opening Rovo Dev with issue: ${issue.key} from site: ${issue.siteDetails.host}`,
+                            );
+
+                            issueOpenRovoDevEvent(this._issue.siteDetails, this.id).then((e) => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
+
+                            const jiraContext: RovoDevContextItem = {
+                                contextType: 'jiraWorkItem',
+                                name: issue.key,
+                                url: issueUrl,
+                            };
+
+                            await Container.rovodevWebviewProvider.setPromptTextWithFocus(promptText, jiraContext);
+                        } catch (e) {
+                            Logger.error(e, 'Error opening Rovo Dev with issue context');
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Error opening Rovo Dev'),
+                            });
+                        }
                     }
                     break;
                 }
@@ -1303,6 +1735,105 @@ export class JiraIssueWebview
                     Container.rovodevWebviewProvider.setPromptTextWithFocus((msg as any).text);
                     break;
                 }
+                case 'shareIssue': {
+                    if (isShareIssue(msg)) {
+                        handled = true;
+                        try {
+                            const shareMsg: ShareIssueAction = msg;
+                            const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+
+                            const apiVersion = client.apiVersion || '3';
+                            const baseApiUrl = this._issue.siteDetails.baseApiUrl.replace(/\/rest$/, '');
+                            const messageText = shareMsg.shareData.message || '';
+                            const issueTitle = `${this._issue.key} ${shareMsg.issueSummary}`;
+
+                            const currentUserAccountId = this._currentUser.accountId;
+                            const filteredRecipients = shareMsg.shareData.recipients.filter(
+                                (user: User) => user.accountId !== currentUserAccountId,
+                            );
+
+                            if (filteredRecipients.length === 0) {
+                                window.showInformationMessage('Issue shared');
+                                this.postMessage({
+                                    type: 'fieldValueUpdate',
+                                    fieldValues: { loadingField: '' },
+                                    nonce: msg.nonce,
+                                });
+                                break;
+                            }
+
+                            const notifyPayload = {
+                                subject: `Shared with you: ${issueTitle}`,
+                                textBody: messageText
+                                    ? messageText
+                                    : `${this._currentUser.displayName} shared an issue with you.`,
+                                to: {
+                                    users: filteredRecipients.map((user: User) => ({
+                                        accountId: user.accountId,
+                                    })),
+                                },
+                            };
+
+                            if (messageText) {
+                                const escapeHtml = (text: string): string =>
+                                    text
+                                        .replace(/&/g, '&amp;')
+                                        .replace(/</g, '&lt;')
+                                        .replace(/>/g, '&gt;')
+                                        .replace(/"/g, '&quot;')
+                                        .replace(/'/g, '&#039;');
+                                (notifyPayload as any).htmlBody = `<p>${escapeHtml(messageText)}</p>`;
+                            }
+
+                            Logger.debug(`Share issue payload: ${JSON.stringify(notifyPayload)}`);
+
+                            const notifyUrl = `${baseApiUrl}/rest/api/${apiVersion}/issue/${this._issue.key}/notify`;
+                            const authHeader = await client.authorizationProvider('POST', notifyUrl);
+
+                            await client.transportFactory()(notifyUrl, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    Authorization: authHeader,
+                                },
+                                data: JSON.stringify(notifyPayload),
+                            });
+
+                            window.showInformationMessage('Issue shared');
+
+                            this.postMessage({
+                                type: 'fieldValueUpdate',
+                                fieldValues: { loadingField: '' },
+                                nonce: msg.nonce,
+                            });
+                        } catch (e: any) {
+                            const errorMessage =
+                                e?.response?.data?.errorMessages?.join(', ') || e?.response?.data?.errors
+                                    ? JSON.stringify(e?.response?.data?.errors)
+                                    : e?.message || 'Error sharing issue';
+                            Logger.error(e, `Error sharing issue: ${errorMessage}`);
+                            this.postMessage({
+                                type: 'error',
+                                reason: `Error sharing issue: ${errorMessage}`,
+                                nonce: msg.nonce,
+                            });
+                            this.postMessage({
+                                type: 'fieldValueUpdate',
+                                fieldValues: { loadingField: '' },
+                                nonce: msg.nonce,
+                            });
+                        }
+                    }
+                    break;
+                }
+                case 'openExternalUrl': {
+                    // Open URL in external browser
+                    if (isOpenExternalUrl(msg)) {
+                        handled = true;
+                        vscode.env.openExternal(vscode.Uri.parse(msg.url));
+                    }
+                    break;
+                }
                 case 'openPullRequest': {
                     if (isOpenPullRequest(msg)) {
                         handled = true;
@@ -1380,6 +1911,93 @@ export class JiraIssueWebview
                     }
                     break;
                 }
+                case 'fetchIssueHistory': {
+                    handled = true;
+                    try {
+                        await this.refreshIssueHistory();
+                    } catch (e) {
+                        Logger.error(e, 'Error fetching issue history');
+                        this.postMessage({
+                            type: 'historyUpdate',
+                            history: [],
+                        });
+                    }
+                    break;
+                }
+                case 'handleEditorFocus': {
+                    if (isHandleEditorFocus(msg)) {
+                        handled = true;
+                        Container.setIsEditorFocused(msg.isFocused);
+                    }
+                    break;
+                }
+                case 'checkRovoDevEntitlement': {
+                    if (isCheckRovoDevEntitlement(msg)) {
+                        handled = true;
+                        try {
+                            const entitlementResponse = await Container.rovoDevEntitlementChecker.checkEntitlement();
+                            const showEntitlementPromoBanner = Container.config.rovodev.showEntitlementNotifications;
+                            Logger.debug(
+                                `Rovo Dev entitlement check: isEntitled=${entitlementResponse.isEntitled} (${entitlementResponse.type}), showEntitlementPromoBanner=${showEntitlementPromoBanner}`,
+                            );
+                            this.postMessage({
+                                type: CommonMessageType.RovoDevEntitlementBanner,
+                                enabled: entitlementResponse.isEntitled && showEntitlementPromoBanner,
+                                entitlementType: entitlementResponse.type,
+                            });
+                        } catch (e) {
+                            Logger.error(e, 'Error checking Rovo Dev entitlement');
+                            this.postMessage({
+                                type: CommonMessageType.RovoDevEntitlementBanner,
+                                enabled: false,
+                                entitlementType: RovoDevEntitlementErrorType.UNKNOWN_ERROR,
+                            });
+                        }
+                    }
+                    break;
+                }
+                case 'openRovoDevWithPromoBanner': {
+                    if (isOpenRovoDevWithPromoBanner(msg)) {
+                        handled = true;
+
+                        rovoDevPromoBannerOpenedEvent(this._issue.siteDetails, this.id).then((e) => {
+                            Container.analyticsClient.sendTrackEvent(e);
+                        });
+
+                        // Dismiss the promo banner
+                        await configuration.updateEffective('rovodev.showEntitlementNotifications', false, null, true);
+
+                        // Open rovo dev
+                        commands.executeCommand(RovodevCommands.FocusRovoDevWindow);
+
+                        // Update UI to reflect banner dismissal
+                        this.postMessage({
+                            type: CommonMessageType.RovoDevEntitlementBanner,
+                            enabled: false,
+                        });
+                    }
+                    break;
+                }
+                case 'dismissRovoDevPromoBanner': {
+                    if (isDismissRovoDevPromoBanner(msg)) {
+                        handled = true;
+
+                        rovoDevPromoBannerDismissedEvent(this._issue.siteDetails, this.id).then((e) => {
+                            Container.analyticsClient.sendTrackEvent(e);
+                        });
+
+                        // Dismiss the promo banner
+                        await configuration.updateEffective('rovodev.showEntitlementNotifications', false, null, true);
+                        Logger.debug(`Updated rovodev.showEntitlementNotifications to false in configuration`);
+
+                        // Update UI to reflect banner dismissal
+                        this.postMessage({
+                            type: CommonMessageType.RovoDevEntitlementBanner,
+                            enabled: false,
+                        });
+                    }
+                    break;
+                }
             }
         }
 
@@ -1411,6 +2029,148 @@ export class JiraIssueWebview
         return hierarchy;
     }
 
+    private async refreshIssueHistory() {
+        try {
+            const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+            const apiVersion = client.apiVersion || '2';
+            const baseApiUrl = this._issue.siteDetails.baseApiUrl.replace(/\/rest$/, '');
+            const historyUrl = `${baseApiUrl}/rest/api/${apiVersion}/issue/${this._issue.key}?expand=changelog`;
+
+            const [historyResponse, worklogResponse] = await Promise.all([
+                client.transportFactory().get(historyUrl, {
+                    method: 'GET',
+                    headers: {
+                        Authorization: await client.authorizationProvider('GET', historyUrl),
+                    },
+                }),
+                client
+                    .transportFactory()
+                    .get(`${baseApiUrl}/rest/api/${apiVersion}/issue/${this._issue.key}/worklog`, {
+                        method: 'GET',
+                        headers: {
+                            Authorization: await client.authorizationProvider(
+                                'GET',
+                                `${baseApiUrl}/rest/api/${apiVersion}/issue/${this._issue.key}/worklog`,
+                            ),
+                        },
+                    })
+                    .catch((e) => {
+                        Logger.warn(e, 'Error fetching worklogs for history');
+                        return { data: { worklogs: [] } };
+                    }),
+            ]);
+
+            const historyItems: any[] = [];
+            const changelog = historyResponse.data.changelog;
+            const issueData = historyResponse.data;
+            const worklogs = worklogResponse.data.worklogs || [];
+
+            // Add the "Work item created" event
+            if (issueData.fields?.created && issueData.fields?.reporter) {
+                const reporter = issueData.fields.reporter;
+                historyItems.push({
+                    id: '__CREATED__',
+                    timestamp: issueData.fields.created,
+                    author: {
+                        displayName: reporter.displayName || reporter.name,
+                        accountId: reporter.accountId,
+                        avatarUrl: reporter.avatarUrls?.['48x48'] || reporter.avatarUrls?.['32x32'],
+                    },
+                    field: '__CREATED__',
+                    fieldDisplayName: '__CREATED__',
+                    from: null,
+                    to: null,
+                    fromString: undefined,
+                    toString: undefined,
+                });
+            }
+
+            if (changelog && changelog.histories) {
+                changelog.histories.forEach((history: any) => {
+                    history.items.forEach((item: any) => {
+                        let fieldKey = item.fieldId || item.field;
+                        if (fieldKey && fieldKey.toLowerCase() === 'worklogid') {
+                            return;
+                        }
+                        if (fieldKey) {
+                            const lowerFieldKey = fieldKey.toLowerCase();
+                            if (lowerFieldKey === 'assignee' || item.field?.toLowerCase() === 'assignee') {
+                                fieldKey = 'assignee';
+                            }
+                        }
+                        const fieldDisplayName = this.fieldNameForKey(fieldKey) || item.field || fieldKey;
+                        const fromValue =
+                            item.fromString ||
+                            (typeof item.from === 'string'
+                                ? item.from
+                                : item.from?.displayName || item.from?.name || null);
+                        const toValue =
+                            item.toString ||
+                            (typeof item.to === 'string' ? item.to : item.to?.displayName || item.to?.name || null);
+                        historyItems.push({
+                            id: `${history.id}-${fieldKey}`,
+                            timestamp: history.created,
+                            author: {
+                                displayName: history.author.displayName || history.author.name,
+                                accountId: history.author.accountId,
+                                avatarUrl: history.author.avatarUrls?.['48x48'] || history.author.avatarUrls?.['32x32'],
+                            },
+                            field: fieldKey,
+                            fieldDisplayName: fieldDisplayName,
+                            from: fromValue,
+                            to: toValue,
+                            fromString: item.fromString,
+                            toString: item.toString,
+                        });
+                    });
+                });
+            }
+
+            worklogs.forEach((worklog: any) => {
+                if (worklog.started) {
+                    historyItems.push({
+                        id: `worklog-${worklog.id}`,
+                        timestamp: worklog.started,
+                        author: {
+                            displayName: worklog.author?.displayName || worklog.author?.name || 'Unknown',
+                            accountId: worklog.author?.accountId,
+                            avatarUrl: worklog.author?.avatarUrls?.['48x48'] || worklog.author?.avatarUrls?.['32x32'],
+                        },
+                        field: 'worklog',
+                        fieldDisplayName: 'Work Log',
+                        from: null,
+                        to: worklog.timeSpent,
+                        fromString: undefined,
+                        toString: worklog.comment || '',
+                        worklogComment: worklog.comment,
+                        worklogTimeSpent: worklog.timeSpent,
+                    });
+                }
+            });
+
+            historyItems.sort((a, b) => {
+                if (a.id === '__CREATED__') {
+                    return 1;
+                }
+                if (b.id === '__CREATED__') {
+                    return -1;
+                }
+                return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+            });
+
+            this.postMessage({
+                type: 'historyUpdate',
+                history: historyItems,
+            });
+        } catch (e) {
+            Logger.error(e, 'Error refreshing issue history');
+            this.postMessage({
+                type: 'historyUpdate',
+                history: [],
+            });
+        }
+    }
+
     private async recentPullRequests(): Promise<PullRequestData[]> {
         if (!Container.bitbucketContext) {
             return [];
@@ -1427,5 +2187,151 @@ export class JiraIssueWebview
         );
 
         return relatedPrs.filter((pr) => pr !== undefined).map((p) => p!.data);
+    }
+
+    private async relatedBranches(): Promise<any[]> {
+        if (!Container.bitbucketContext) {
+            return [];
+        }
+
+        try {
+            const repos = Container.bitbucketContext.getAllRepositories();
+            const allBranches: any[] = [];
+
+            for (const repo of repos) {
+                const scm = Container.bitbucketContext.getRepositoryScm(repo.rootUri);
+                if (!scm) {
+                    continue;
+                }
+
+                try {
+                    const [localBranches, remoteBranches] = await Promise.all([
+                        scm.getBranches({ remote: false }),
+                        scm.getBranches({ remote: true }),
+                    ]);
+
+                    const issueKeyLower = this._issue.key.toLowerCase();
+                    const relatedBranches = [...localBranches, ...remoteBranches].filter(
+                        (branch) => branch.name && branch.name.toLowerCase().includes(issueKeyLower),
+                    );
+
+                    let repoUrl: string | undefined;
+                    if (repo.mainSiteRemote?.site) {
+                        try {
+                            const bbClient = await clientForSite(repo.mainSiteRemote.site);
+                            const bbRepo = await bbClient.repositories.get(repo.mainSiteRemote.site);
+                            repoUrl = bbRepo?.url;
+                        } catch (e) {
+                            Logger.debug(`Could not fetch repo details for ${repo.rootUri}`, e);
+                        }
+                    }
+
+                    const branchesWithUrls = relatedBranches.map((branch) => {
+                        const branchName = this.normalizeBranchName(branch.name) || branch.name || '';
+                        return {
+                            name: branchName,
+                            url:
+                                repoUrl && branchName
+                                    ? `${repoUrl}/branch/${encodeURIComponent(branchName)}`
+                                    : undefined,
+                        };
+                    });
+
+                    allBranches.push(...branchesWithUrls);
+                } catch (e) {
+                    Logger.debug(`Could not fetch branches for repo ${repo.rootUri}`, e);
+                }
+            }
+
+            return allBranches;
+        } catch (e) {
+            Logger.error(e, 'Error fetching related branches');
+            return [];
+        }
+    }
+
+    private async relatedCommits(): Promise<any[]> {
+        if (!Container.bitbucketContext) {
+            return [];
+        }
+
+        try {
+            const repos = Container.bitbucketContext.getAllRepositories();
+            const allCommits: any[] = [];
+
+            for (const repo of repos) {
+                const scm = Container.bitbucketContext.getRepositoryScm(repo.rootUri);
+                if (!scm) {
+                    continue;
+                }
+
+                try {
+                    // Get log of recent commits
+                    const commits = await scm.log({ maxEntries: 100 });
+                    const issueKeyLower = this._issue.key.toLowerCase();
+
+                    // Filter commits that mention the issue key
+                    const relatedCommits = commits.filter(
+                        (commit) => commit.message && commit.message.toLowerCase().includes(issueKeyLower),
+                    );
+
+                    allCommits.push(...relatedCommits);
+                } catch (e) {
+                    Logger.debug(`Could not fetch commits for repo ${repo.rootUri}`, e);
+                }
+            }
+
+            return allCommits;
+        } catch (e) {
+            Logger.error(e, 'Error fetching related commits');
+            return [];
+        }
+    }
+
+    private async relatedBuilds(): Promise<any[]> {
+        // Get builds from pull requests
+        const prs = await this.recentPullRequests();
+        const allBuilds: any[] = [];
+
+        for (const pr of prs) {
+            try {
+                const site = pr.siteDetails;
+                const fullName = pr.destination?.repo?.fullName;
+
+                if (!fullName || !fullName.includes('/')) {
+                    Logger.debug(`Skipping builds for PR ${pr.id} - missing repository information`);
+                    continue;
+                }
+
+                const [ownerSlug, repoSlug] = fullName.split('/');
+
+                if (!ownerSlug || !repoSlug) {
+                    Logger.debug(`Skipping builds for PR ${pr.id} - invalid repository: ${fullName}`);
+                    continue;
+                }
+
+                const bbApi = await clientForSite({
+                    details: site,
+                    ownerSlug,
+                    repoSlug,
+                });
+
+                const builds = await bbApi.pullrequests.getBuildStatuses({
+                    site: { details: site, ownerSlug, repoSlug },
+                    data: pr,
+                    workspaceRepo: undefined,
+                });
+
+                allBuilds.push(...builds);
+            } catch (e) {
+                Logger.debug(`Could not fetch builds for PR ${pr.id}`, e);
+            }
+        }
+
+        return allBuilds;
+    }
+
+    public handleContextMenuCommand?({ data }: ContextMenuCommandData): void {
+        this.postMessage({ type: 'copyImage', data });
     }
 }

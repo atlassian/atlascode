@@ -11,8 +11,8 @@ import {
     workspace,
 } from 'vscode';
 
-import { ConfigNamespace, JiraCreateSiteAndProjectKey } from '../constants';
-import { SiteIdAndProjectKey } from './model';
+import { ConfigNamespace, JiraPreSelectedCreateKey } from '../constants';
+import { LastCreatePreSelectedValues } from './model';
 
 /*
 Configuration is a helper to manage configuration changes in various parts of the system.
@@ -108,8 +108,8 @@ export class Configuration extends Disposable {
             .update(section, value, target);
     }
 
-    async setLastCreateSiteAndProject(siteAndProject?: SiteIdAndProjectKey) {
-        await this.updateEffective(JiraCreateSiteAndProjectKey, siteAndProject, null, true);
+    async setLastCreateSiteAndProject(siteAndProject?: LastCreatePreSelectedValues) {
+        await this.updateEffective(JiraPreSelectedCreateKey, siteAndProject, null, true);
     }
 
     // this tries to figure out where the current value is set and update it there

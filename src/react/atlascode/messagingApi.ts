@@ -1,6 +1,6 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { useCallback, useContext, useEffect, useMemo } from 'react';
 
+import { ReducerAction } from '../../ipc/messaging';
 import { CommonMessageType } from '../../lib/ipc/toUI/common';
 import { ErrorControllerContext } from './common/errorController';
 import { PMFControllerContext } from './common/pmf/pmfController';
@@ -12,8 +12,8 @@ export type ReceiveMessageFunc<M extends ReducerAction<any, any>> = (message: M)
 
 interface VsCodeApi {
     postMessage<T = {}>(msg: T): void;
-    setState(state: {}): void;
-    getState(): {};
+    setState(state: Record<string, any>): void;
+    getState(): Record<string, any>;
 }
 declare function acquireVsCodeApi(): VsCodeApi;
 export function useMessagingApi<A, M extends ReducerAction<any, any>, R extends ReducerAction<any, any>>(
@@ -100,6 +100,13 @@ export function useMessagingApi<A, M extends ReducerAction<any, any>, R extends 
         [errorController, pmfController, onMessageHandler],
     );
 
+    const setState = useCallback(
+        (state: Record<string, any>): void => {
+            apiRef.setState(state);
+        },
+        [apiRef],
+    );
+
     useEffect(() => {
         window.addEventListener('message', internalMessageHandler);
         apiRef.postMessage({ type: 'refresh' });
@@ -109,5 +116,5 @@ export function useMessagingApi<A, M extends ReducerAction<any, any>, R extends 
         };
     }, [onMessageHandler, internalMessageHandler, apiRef]);
 
-    return { postMessage, postMessagePromise };
+    return { postMessage, postMessagePromise, setState };
 }

@@ -1,0 +1,23 @@
+/* Styles for AI suggestion feedback buttons */
+
+.ai-suggestion-feedback-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 8px;
+}
+
+.ai-suggestion-feedback-action {
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border: none;
+    color: var(--vscode-editor-foreground);
+    cursor: pointer;
+    border-radius: 2px;
+}
+
+.ai-suggestion-feedback-action:hover {
+    background: var(--vscode-button-secondaryHoverBackground);
+}

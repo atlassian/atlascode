@@ -1,12 +1,26 @@
 export enum Features {
     EnableErrorTelemetry = 'atlascode-send-error-telemetry',
     AtlassianNotifications = 'atlascode-atlassian-notifications-v2',
-    StartWorkV3 = 'atlascode-start-work-v3-new',
     RovoDevEnabled = 'rovo_dev_ff',
     UseNewAuthFlow = 'atlascode-use-new-auth-flow',
     EnableAiSuggestions = 'atlascode-enable-ai-suggestions-new',
     AtlaskitEditor = 'atlascode-use-new-atlaskit-editor',
+    CreateWorkItemWebviewV2 = 'atlascode-create-work-item-webview-test',
+    RovoDevEntitlementNotification = 'atlascode-rovodev-entitlement-notification',
+    RovoDevLspEnabled = 'atlascode-enable-rovodev-lsp',
+    SentryLogging = 'atlascode-sentry-logging',
+    DedicatedRovoDevAuth = 'atlascode-use-dedicated-rovodev-auth',
+    RequireDedicatedRovoDevAuth = 'atlascode-require-dedicated-rovodev-auth',
 }
+
+/**
+ * Default values for feature gates when remote config is unavailable.
+ * This might happen during initialization or if there are network issues.
+ */
+export const defaultFeatureGateValues: Partial<FeatureGateValues> = {
+    [Features.DedicatedRovoDevAuth]: true,
+    [Features.RequireDedicatedRovoDevAuth]: false,
+};
 
 export const enum Experiments {
     AtlascodeNewSettingsExperiment = 'atlascode_new_settings_experiment',
