@@ -551,6 +551,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         RovoDevLogger.error(renderError, contextMessage);
                         break;
 
+                    case RovoDevViewResponseType.ShowSessionHistory:
+                        this.showSessionHistory();
+                        break;
+
                     default:
                         // @ts-expect-error ts(2339) - e here should be 'never'
                         this.processError(new Error(`Unknown message type: ${e.type}`));
