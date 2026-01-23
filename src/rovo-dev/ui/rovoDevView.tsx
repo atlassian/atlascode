@@ -959,6 +959,10 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
+    const handleShowSessionsCommand = React.useCallback(() => {
+        postMessage({ type: RovoDevViewResponseType.ShowSessionHistory });
+    }, [postMessage]);
+
     React.useEffect(() => {
         // the event below (YoloModeToggled) with value true automatically approves any pending confirmation
         if (isYoloModeToggled) {
@@ -1146,6 +1150,7 @@ const RovoDevView: React.FC = () => {
                                         handleTriggerFeedbackCommand={handleShowFeedbackForm}
                                         promptText={promptText}
                                         onPromptTextSet={handlePromptTextSet}
+                                        handleSessionCommand={handleShowSessionsCommand}
                                     />
                                 </div>
                             </div>

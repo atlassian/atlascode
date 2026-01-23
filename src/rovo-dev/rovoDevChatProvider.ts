@@ -228,7 +228,9 @@ export class RovoDevChatProvider {
 
     public async executeReplay(): Promise<void> {
         if (!this._rovoDevApiClient) {
-            throw new Error('Unable to replay the previous conversation. Rovo Dev failed to initialize');
+            const error = new Error('Unable to replay the previous conversation. Rovo Dev failed to initialize');
+            RovoDevLogger.error(error, 'Cannot replay conversation - Rovo Dev not initialized');
+            throw error;
         }
 
         this.beginNewPrompt('replay');
@@ -255,7 +257,9 @@ export class RovoDevChatProvider {
         let success: boolean;
         if (this._rovoDevApiClient) {
             if (this._pendingCancellation) {
-                throw new Error('Cancellation already in progress');
+                const error = new Error('Cancellation already in progress');
+                RovoDevLogger.error(error, 'Cannot cancel - cancellation already in progress');
+                throw error;
             }
             this._pendingCancellation = true;
 
@@ -316,7 +320,9 @@ export class RovoDevChatProvider {
 
         const response = await fetchOp;
         if (!response.body) {
-            throw new Error("Error processing the Rovo Dev's response: response is empty.");
+            const error = new Error("Error processing the Rovo Dev's response: response is empty.");
+            RovoDevLogger.error(error, 'Received empty response from Rovo Dev');
+            throw error;
         }
 
         telemetryProvider?.perfLogger.promptStarted(this._currentPromptId);
@@ -658,18 +664,22 @@ export class RovoDevChatProvider {
             default:
                 // this should really never happen, as unknown messages are caugh and wrapped into the
                 // message `_parsing_error`
-
-                // @ts-expect-error ts(2339) - response here should be 'never'
-                throw new Error(`Rovo Dev response error: unknown event kind: ${response.event_kind}`);
+                const error = new Error(`Rovo Dev response error: unknown event kind: ${(response as any).event_kind}`);
+                RovoDevLogger.error(error, 'Unexpected event kind in Rovo Dev response');
+                throw error;
         }
     }
 
     public async signalToolRequestChoiceSubmit(toolCallId: string, choice: ToolPermissionChoice) {
         if (!this._pendingToolConfirmation[toolCallId]) {
-            throw new Error('Received an unexpected tool confirmation: not found.');
+            const error = new Error('Received an unexpected tool confirmation: not found.');
+            RovoDevLogger.error(error, 'Tool confirmation not found', toolCallId);
+            throw error;
         }
         if (this._pendingToolConfirmation[toolCallId] !== 'undecided') {
-            throw new Error('Received an unexpected tool confirmation: already confirmed.');
+            const error = new Error('Received an unexpected tool confirmation: already confirmed.');
+            RovoDevLogger.error(error, 'Tool confirmation already processed', toolCallId);
+            throw error;
         }
 
         this._pendingToolConfirmation[toolCallId] = choice;

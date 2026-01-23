@@ -148,6 +148,12 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         description: 'Ask a question in read-only mode (no file changes or terminal access)',
         command: { title: 'Ask Mode', id: 'rovo-dev.toggleAskMode', tooltip: 'Toggle Ask mode' },
     },
+    {
+        label: '/sessions',
+        insertText: '/sessions',
+        description: 'View and manage your agent sessions',
+        command: { title: 'Sessions', id: 'rovo-dev.triggerSessions', tooltip: 'View and manage your agent sessions' },
+    },
 ];
 
 export const createSlashCommandProvider = (commands: SlashCommand[]): monaco.languages.CompletionItemProvider => {
@@ -214,6 +220,7 @@ export function setupMonacoCommands(
     onCopy: () => void,
     handleMemoryCommand: () => void,
     handleTriggerFeedbackCommand: () => void,
+    handleSessionCommand?: () => void,
     onYoloModeToggled?: () => void,
 ) {
     monaco.editor.registerCommand('rovo-dev.clearChat', () => {
@@ -267,6 +274,13 @@ export function setupMonacoCommands(
         handleTriggerFeedbackCommand();
         editor.setValue('');
     });
+
+    if (handleSessionCommand) {
+        monaco.editor.registerCommand('rovo-dev.triggerSessions', () => {
+            handleSessionCommand();
+            editor.setValue('');
+        });
+    }
 }
 
 export function setupPromptKeyBindings(editor: monaco.editor.IStandaloneCodeEditor, handleSend: () => void) {

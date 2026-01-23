@@ -46,6 +46,10 @@ jobs:
       ATLASCODE_FX3_ENVIRONMENT: ${{ vars.ATLASCODE_FX3_ENVIRONMENT }}
       ATLASCODE_FX3_TARGET_APP: ${{ vars.ATLASCODE_FX3_TARGET_APP }}
       ATLASCODE_FX3_TIMEOUT: ${{ vars.ATLASCODE_FX3_TIMEOUT }}
+      SENTRY_DSN: ${{ vars.SENTRY_DSN }}
+      SENTRY_ENABLED: ${{ vars.SENTRY_ENABLED }}
+      SENTRY_ENVIRONMENT: ${{ vars.SENTRY_ENVIRONMENT }}
+      SENTRY_SAMPLE_RATE: ${{ vars.SENTRY_SAMPLE_RATE }}
 
     steps:
       - uses: actions/checkout@v4

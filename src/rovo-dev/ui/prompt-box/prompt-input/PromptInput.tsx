@@ -48,6 +48,7 @@ interface PromptInputBoxProps {
     onCopy: () => void;
     handleMemoryCommand: () => void;
     handleTriggerFeedbackCommand: () => void;
+    handleSessionCommand?: () => void;
     promptText?: string;
     onPromptTextSet?: () => void;
 }
@@ -75,7 +76,7 @@ function initMonaco(isBBY: boolean) {
     if (!monacoInitialized) {
         let commands = SLASH_COMMANDS;
         if (isBBY) {
-            commands = commands.filter((command) => command.label !== '/yolo');
+            commands = commands.filter((command) => command.label !== '/yolo' && command.label !== '/sessions');
         }
 
         monaco.languages.registerCompletionItemProvider('plaintext', createSlashCommandProvider(commands));
@@ -124,6 +125,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     onCopy,
     handleMemoryCommand,
     handleTriggerFeedbackCommand,
+    handleSessionCommand,
     promptText,
     onPromptTextSet,
 }) => {
@@ -159,10 +161,19 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                 onCopy,
                 handleMemoryCommand,
                 handleTriggerFeedbackCommand,
+                handleSessionCommand,
                 onYoloModeToggled,
             );
         }
-    }, [editor, onSend, onCopy, handleMemoryCommand, handleTriggerFeedbackCommand, onYoloModeToggled]);
+    }, [
+        editor,
+        onSend,
+        onCopy,
+        handleMemoryCommand,
+        handleTriggerFeedbackCommand,
+        onYoloModeToggled,
+        handleSessionCommand,
+    ]);
 
     // Handle setting prompt text from external source
     React.useEffect(() => {

@@ -45,11 +45,10 @@ export class OAuthRefesher implements Disposable {
             return { tokens: undefined, shouldInvalidate: true };
         }
 
-        const strategy = strategyForProvider(provider);
-
         const response: TokenResponse = { tokens: undefined, shouldInvalidate: false };
-
         try {
+            const strategy = strategyForProvider(provider);
+
             const tokenResponse = await this._axios(strategy.tokenUrl(), {
                 method: 'POST',
                 headers: strategy.refreshHeaders(),
