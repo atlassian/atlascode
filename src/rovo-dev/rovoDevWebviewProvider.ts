@@ -92,6 +92,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _disabledReason: RovoDevDisabledReason | 'none' = 'none';
     private _webviewReady = false;
     private _isFirstResolve = true;
+    private _yoloMode = false;
     private _savedState: RovoDevWebviewState | undefined = undefined;
     private _debugPanelEnabled = false;
     private _debugPanelContext: Record<string, string> = {};
@@ -201,6 +202,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         this.loadYoloModeFromStorage().then((yoloMode) => {
             this._chatProvider.yoloMode = yoloMode;
+            this._yoloMode = yoloMode;
         });
 
         this._jiraItemsProvider = new RovoDevJiraItemsProvider();
@@ -509,7 +511,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                     case RovoDevViewResponseType.YoloModeToggled:
                         this._chatProvider.yoloMode = e.value;
-                        this.saveYoloModeToStorage(e.value);
+                        this._yoloMode = e.value;
+                        await this.saveYoloModeToStorage(e.value);
                         break;
 
                     case RovoDevViewResponseType.FullContextModeToggled:
@@ -567,7 +570,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async sendProviderReadyEvent(userEmail: string | undefined) {
-        const yoloMode = await this.loadYoloModeFromStorage();
+        const yoloMode = this._yoloMode;
         const featureFlagClient = FeatureFlagClient.getInstance();
 
         await this._webView!.postMessage({
