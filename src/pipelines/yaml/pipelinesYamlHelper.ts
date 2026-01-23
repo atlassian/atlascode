@@ -2,7 +2,7 @@ import { Logger } from 'src/logger';
 import { commands, ConfigurationTarget, Extension, extensions, Uri, window, workspace } from 'vscode';
 
 import { Resources } from '../../resources';
-import BBPipelinesSchema from './pipelines-schema.json' with { type: 'json' };
+import * as BBPipelinesSchema from './pipelines-schema.json';
 
 const VSCODE_YAML_EXTENSION_ID = 'redhat.vscode-yaml';
 
