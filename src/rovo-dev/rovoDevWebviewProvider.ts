@@ -92,6 +92,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _disabledReason: RovoDevDisabledReason | 'none' = 'none';
     private _webviewReady = false;
     private _isFirstResolve = true;
+    private _yoloMode = false;
     private _savedState: RovoDevWebviewState | undefined = undefined;
     private _debugPanelEnabled = false;
     private _debugPanelContext: Record<string, string> = {};
@@ -123,7 +124,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         return 'yoloMode_global';
     }
 
-    private async loadYoloModeFromStorage(): Promise<boolean> {
+    private loadYoloModeFromStorage(): boolean {
         if (this.isBoysenberry) {
             return true;
         }
@@ -199,9 +200,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._chatProvider = new RovoDevChatProvider(this.isBoysenberry, this._telemetryProvider);
         this._chatContextprovider = new RovoDevChatContextProvider();
 
-        this.loadYoloModeFromStorage().then((yoloMode) => {
-            this._chatProvider.yoloMode = yoloMode;
-        });
+        this._yoloMode = this.loadYoloModeFromStorage();
+        this._chatProvider.yoloMode = this._yoloMode;
 
         this._jiraItemsProvider = new RovoDevJiraItemsProvider();
         this._jiraItemsProvider.onNewJiraItems((issues) => this.sendJiraItemsToView(issues));
@@ -509,7 +509,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                     case RovoDevViewResponseType.YoloModeToggled:
                         this._chatProvider.yoloMode = e.value;
-                        this.saveYoloModeToStorage(e.value);
+                        this._yoloMode = e.value;
+                        await this.saveYoloModeToStorage(e.value);
                         break;
 
                     case RovoDevViewResponseType.FullContextModeToggled:
@@ -567,7 +568,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async sendProviderReadyEvent(userEmail: string | undefined) {
-        const yoloMode = await this.loadYoloModeFromStorage();
+        const yoloMode = this._yoloMode;
         const featureFlagClient = FeatureFlagClient.getInstance();
 
         await this._webView!.postMessage({
