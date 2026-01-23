@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.18
+
+### Bug Fixes
+
+- Fixed Rovo Dev forgetting previous Yolo mode setting
+
 ## What's new in 4.0.17
 
 - Internal changes
