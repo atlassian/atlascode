@@ -912,7 +912,7 @@ const RovoDevView: React.FC = () => {
 
     const onYoloModeToggled = useCallback(() => {
         const yoloModeNewValue = !isYoloModeToggled;
-        setIsYoloModeToggled((prev) => !prev);
+        setIsYoloModeToggled(yoloModeNewValue);
 
         // the event below (YoloModeToggled) with value true automatically approves any pending confirmation
         if (yoloModeNewValue) {
