@@ -73,7 +73,7 @@ export const normalizeLinks = (messageText: string) => {
         (_match, prefix: string, jqlTail: string) => prefix + encodeURIComponent(decodeUriComponentSafely(jqlTail)),
     );
 
-    processed = processed.replace(/https?:\/\/[^\n\r]+/g, (rawUrl) => strictEncodeUrl(rawUrl));
+    processed = processed.replace(/https?:\/\/[^\s]+/g, (rawUrl) => strictEncodeUrl(rawUrl));
 
     return processed;
 };
