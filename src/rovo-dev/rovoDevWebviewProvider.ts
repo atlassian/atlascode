@@ -609,6 +609,35 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await this.sendExistingJiraCredentials();
     }
 
+    /**
+     * Fetches agent modes asynchronously and sends them to the frontend when ready.
+     * This is called during startup to improve initialization performance.
+     */
+    private async fetchAndSendAgentModes(): Promise<void> {
+        if (!this._chatProvider || !this._webView) {
+            return;
+        }
+
+        try {
+            const [availableModes, currentAgentMode] = await Promise.all([
+                this._chatProvider.getAvailableAgentModes(),
+                this._chatProvider.getCurrentAgentMode(),
+            ]);
+
+            await this._webView.postMessage({
+                type: RovoDevProviderMessageType.GetAvailableAgentModesComplete,
+                modes: availableModes || [],
+            });
+
+            await this._webView.postMessage({
+                type: RovoDevProviderMessageType.GetCurrentAgentModeComplete,
+                mode: currentAgentMode || 'default',
+            });
+        } catch (error) {
+            RovoDevLogger.error(error, 'Failed to fetch agent modes');
+        }
+    }
+
     private beginNewSession(sessionId: string | null, manuallyCreated: boolean): void {
         this._telemetryProvider.startNewSession(sessionId ?? v4(), manuallyCreated);
     }
@@ -1463,6 +1492,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
 
         await this._chatProvider.setReady(rovoDevClient);
+
+        this.fetchAndSendAgentModes();
 
         if (this.isBoysenberry) {
             // update the isAtlassianUser flag based on Rovo Dev status response
