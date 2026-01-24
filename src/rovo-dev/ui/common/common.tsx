@@ -68,12 +68,19 @@ export const normalizeLinks = (messageText: string) => {
         return '';
     }
 
+    const match = messageText.match(/https?:\/\/[^\s]+\/(issues|list)\/?\?jql=/gi);
+    if (!match) {
+        // No JQL links, render normally
+        return messageText;
+    }
+
     let processed = messageText.replace(
-        /(https?:\/\/[^\s]+\/issues\/\?jql=)(.*?)(?=$|\n|\r)/gi,
-        (_match, prefix: string, jqlTail: string) => prefix + encodeURIComponent(decodeUriComponentSafely(jqlTail)),
+        /(https?:\/\/[^\n\r]+\/(issues|list)\/\?jql=)(.*?)(?=$|\n|\r)/gi,
+        (_match, prefix: string, _: string, jqlTail: string) =>
+            prefix + encodeURIComponent(decodeUriComponentSafely(jqlTail)),
     );
 
-    processed = processed.replace(/https?:\/\/[^\s]+/g, (rawUrl) => strictEncodeUrl(rawUrl));
+    processed = processed.replace(/https?:\/\/[^\n\r]+/g, (rawUrl) => strictEncodeUrl(rawUrl));
 
     return processed;
 };

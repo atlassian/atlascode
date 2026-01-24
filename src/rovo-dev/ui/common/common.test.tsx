@@ -38,13 +38,6 @@ describe('normalizeLinks', () => {
         expect(result).not.toContain('currentUser()');
     });
 
-    it('should encode parentheses in regular URLs', () => {
-        const input = 'https://example.com/page(with)parentheses';
-        const result = normalizeLinks(input);
-
-        expect(result).toBe('https://example.com/page%28with%29parentheses');
-    });
-
     it('should handle mixed content with JQL and regular URLs', () => {
         const input = `Here is a JQL link: https://site.atlassian.net/issues/?jql=assignee = me()
 And a regular link: https://example.com/page(test)
@@ -68,5 +61,34 @@ https://site2.atlassian.net/issues/?jql=status = "In Progress"`;
         expect(jqlLinks).toHaveLength(2);
         expect(result).not.toContain('assignee = currentUser()');
         expect(result).not.toContain('status = "In Progress"');
+    });
+
+    it('should not encode text after URLs with spaces', () => {
+        const input = 'Check this link: https://example.com and this text should not be encoded';
+        const result = normalizeLinks(input);
+
+        expect(result).toContain('https://example.com');
+        expect(result).toContain('and this text should not be encoded');
+        expect(result).not.toContain('%20this%20text');
+    });
+
+    it('should handle URLs with already encoded spaces correctly', () => {
+        const input = 'Check this: https://example.com/path%20with%20spaces and some text after';
+        const result = normalizeLinks(input);
+
+        expect(result).toContain('https://example.com/path%20with%20spaces');
+        expect(result).toContain('and some text after');
+        expect(result).not.toContain('%20and%20some%20text');
+    });
+
+    it('should handle multiple URLs with text between them', () => {
+        const input = 'First: https://example.com then some text, then https://another.com and more text';
+        const result = normalizeLinks(input);
+
+        expect(result).toContain('https://example.com');
+        expect(result).toContain('https://another.com');
+        expect(result).toContain('then some text, then');
+        expect(result).toContain('and more text');
+        expect(result).not.toContain('%20then%20some');
     });
 });
