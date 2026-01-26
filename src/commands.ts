@@ -396,6 +396,9 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(RovodevCommands.RovodevShareFeedback, () =>
             Container.rovodevWebviewProvider.executeTriggerFeedback(),
         ),
+        commands.registerCommand(Commands.RovodevOpenHelp, () => {
+            env.openExternal(Uri.parse('https://support.atlassian.com/rovo/docs/work-with-rovo-dev-in-the-ide/'));
+        }),
         commands.registerCommand(RovodevCommands.RovodevLogout, () => {
             Container.rovodevWebviewProvider.executeRovoDevLogout();
         }),
