@@ -307,6 +307,28 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         });
 
         if (Object.keys(errs).length > 0) {
+            const missingRequiredFields = Object.keys(errs);
+            const filledFields = Object.entries(this.state.fieldValues)
+                .filter(([_, value]) => {
+                    if (value === undefined || value === null || value === '') {
+                        return false;
+                    }
+                    if (Array.isArray(value) && value.length === 0) {
+                        return false;
+                    }
+                    if (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0) {
+                        return false;
+                    }
+                    return true;
+                })
+                .map(([key]) => key);
+
+            this.postMessage({
+                action: 'createIssueValidationFailed',
+                missingRequiredFields,
+                filledFields,
+            });
+
             return errs;
         }
 

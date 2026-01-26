@@ -24,6 +24,7 @@ import {
     CreateIssueAction,
     isAiSuggestionFeedback,
     isCreateIssue,
+    isCreateIssueValidationFailed,
     isGenerateIssueSuggestions,
     isLoadMoreProjects,
     isScreensForProjects,
@@ -958,8 +959,6 @@ export class CreateIssueWebview
                             }
                         } catch (e) {
                             Logger.error(e, 'Error creating issue');
-
-                            // Track API error for abandoned event analytics
                             this._hadApiError = true;
 
                             this.postMessage({
@@ -976,6 +975,14 @@ export class CreateIssueWebview
                     // Pass delay to allow Jira's indexes to update before refreshing
                     await commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer, OnJiraEditedRefreshDelay);
                     await commands.executeCommand(Commands.RefreshCustomJqlExplorer, OnJiraEditedRefreshDelay);
+                    break;
+                }
+                case 'createIssueValidationFailed': {
+                    handled = true;
+                    if (isCreateIssueValidationFailed(msg)) {
+                        this._hadValidationError = true;
+                        this._lastFilledFields = msg.filledFields;
+                    }
                     break;
                 }
                 case 'openProblemReport': {
