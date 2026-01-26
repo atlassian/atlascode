@@ -7,7 +7,7 @@ import { startWorkOnIssue } from 'src/commands/jira/startWorkOnIssue';
 import timer from 'src/util/perf';
 import { commands, ConfigurationTarget, Disposable, Position, Uri, ViewColumn } from 'vscode';
 
-import { issueCreatedEvent, issueOpenRovoDevEvent, performanceEvent } from '../analytics';
+import { createIssueAbandonedEvent, issueCreatedEvent, issueOpenRovoDevEvent, performanceEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { buildSuggestionSettings, IssueSuggestionManager } from '../commands/jira/issueSuggestionManager';
 import { showIssue } from '../commands/jira/showIssue';
@@ -88,6 +88,12 @@ export class CreateIssueWebview
     private _generatingSuggestions: boolean = false;
     private _disposables: Disposable[] = [];
 
+    // Analytics tracking state
+    private _issueCreatedSuccessfully: boolean = false;
+    private _hadApiError: boolean = false;
+    private _hadValidationError: boolean = false;
+    private _lastFilledFields: string[] = [];
+
     constructor(extensionPath: string) {
         super(extensionPath);
         this._screenData = emptyCreateMetaResult;
@@ -111,8 +117,61 @@ export class CreateIssueWebview
     }
 
     protected override onPanelDisposed() {
+        this.fireAbandonedEventIfNeeded();
         this.reset();
         super.onPanelDisposed();
+    }
+
+    private fireAbandonedEventIfNeeded() {
+        if (!this._issueCreatedSuccessfully && this._siteDetails && this._siteDetails.id) {
+            const exitReason = this._hadApiError ? 'error' : 'closed';
+            const requiredFieldsFilled = this.areRequiredFieldsFilled();
+
+            createIssueAbandonedEvent(
+                this._siteDetails,
+                exitReason,
+                this._lastFilledFields,
+                requiredFieldsFilled,
+                this._hadValidationError,
+                this._hadApiError,
+            ).then((e) => {
+                Container.analyticsClient.sendTrackEvent(e);
+            });
+        }
+    }
+
+    private areRequiredFieldsFilled(): boolean {
+        if (!this._selectedIssueTypeId || !this._screenData.issueTypeUIs[this._selectedIssueTypeId]) {
+            return false;
+        }
+
+        const issueTypeUI = this._screenData.issueTypeUIs[this._selectedIssueTypeId];
+        const requiredFieldKeys = Object.values(issueTypeUI.fields)
+            .filter((field) => field.required)
+            .map((field) => field.key);
+
+        return requiredFieldKeys.every((key) => this._lastFilledFields.includes(key));
+    }
+
+    private updateFilledFieldsTracking(fieldValues: FieldValues) {
+        if (!fieldValues) {
+            return;
+        }
+
+        const filledFields: string[] = [];
+        Object.entries(fieldValues).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+                if (Array.isArray(value) && value.length === 0) {
+                    return;
+                }
+                if (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0) {
+                    return;
+                }
+                filledFields.push(key);
+            }
+        });
+
+        this._lastFilledFields = filledFields;
     }
 
     private reset() {
@@ -120,6 +179,11 @@ export class CreateIssueWebview
         this._siteDetails = emptySiteInfo;
         this._disposables.forEach((d) => d.dispose());
         this._disposables = [];
+        // Reset analytics tracking state
+        this._issueCreatedSuccessfully = false;
+        this._hadApiError = false;
+        this._hadValidationError = false;
+        this._lastFilledFields = [];
     }
 
     override async createOrShow(
@@ -811,6 +875,9 @@ export class CreateIssueWebview
                 case 'createIssue': {
                     handled = true;
                     if (isCreateIssue(msg)) {
+                        // Track filled fields for analytics
+                        this.updateFilledFieldsTracking(msg.issueData);
+
                         try {
                             const [payload, worklog, issuelinks, attachments] = this.formatCreatePayload(msg);
                             await saveLastCreatePreferences({
@@ -829,6 +896,8 @@ export class CreateIssueWebview
 
                             const client = await Container.clientManager.jiraClient(msg.site);
                             const resp = await client.createIssue({ fields: payload, update: worklog });
+
+                            this._issueCreatedSuccessfully = true;
 
                             issueCreatedEvent(msg.site, resp.key).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
@@ -889,6 +958,10 @@ export class CreateIssueWebview
                             }
                         } catch (e) {
                             Logger.error(e, 'Error creating issue');
+
+                            // Track API error for abandoned event analytics
+                            this._hadApiError = true;
+
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error creating issue'),
