@@ -5,6 +5,7 @@
 ### Bug Fixes
 
 - Fixed Rovo Dev forgetting previous Yolo mode setting
+- Fixed worklog creation error for users in UTC timezone
 
 ## What's new in 4.0.17
 

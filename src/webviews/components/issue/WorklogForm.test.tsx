@@ -15,7 +15,7 @@ jest.mock('./WorklogForm', () => {
             onSave({
                 comment,
                 timeSpent,
-                started: '2023-01-01T10:00:00.000Z',
+                started: '2023-01-01T10:00:00.000+0000',
                 adjustEstimate: autoAdjust ? 'auto' : 'new',
                 newEstimate: autoAdjust ? undefined : newEstimate,
                 ...(worklogId && { worklogId }),
@@ -67,8 +67,8 @@ import WorklogForm from './WorklogForm';
 
 jest.mock('date-fns', () => ({
     format: jest.fn((date, formatString) => {
-        if (formatString === "yyyy-MM-dd'T'HH:mm:ss.SSSXX") {
-            return '2023-01-01T10:00:00.000Z';
+        if (formatString === "yyyy-MM-dd'T'HH:mm:ss.SSSxx") {
+            return '2023-01-01T10:00:00.000+0000';
         }
         return '2023-01-01';
     }),
@@ -142,7 +142,7 @@ describe('WorklogForm Component', () => {
 
             expect(defaultProps.onSave).toHaveBeenCalledWith({
                 comment: 'Test work',
-                started: '2023-01-01T10:00:00.000Z',
+                started: '2023-01-01T10:00:00.000+0000',
                 timeSpent: '1h',
                 adjustEstimate: 'auto',
                 newEstimate: undefined,
@@ -205,7 +205,7 @@ describe('WorklogForm Component', () => {
 
             expect(defaultProps.onSave).toHaveBeenCalledWith({
                 comment: '',
-                started: '2023-01-01T10:00:00.000Z',
+                started: '2023-01-01T10:00:00.000+0000',
                 timeSpent: '1h',
                 adjustEstimate: 'new',
                 newEstimate: '3h',
@@ -240,7 +240,7 @@ describe('WorklogForm Component', () => {
 
             expect(editingProps.onSave).toHaveBeenCalledWith({
                 comment: 'Existing work log',
-                started: '2023-01-01T10:00:00.000Z',
+                started: '2023-01-01T10:00:00.000+0000',
                 timeSpent: '2h',
                 adjustEstimate: 'auto',
                 newEstimate: undefined,

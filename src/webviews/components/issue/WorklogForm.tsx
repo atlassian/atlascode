@@ -33,7 +33,7 @@ const emptyForm = {
     autoAdjust: true,
 };
 
-const formatString = "yyyy-MM-dd'T'HH:mm:ss.SSSXX";
+const formatString = "yyyy-MM-dd'T'HH:mm:ss.SSSxx";
 
 export default class WorklogForm extends React.Component<MyProps, MyState> {
     constructor(props: any) {
