@@ -152,14 +152,13 @@ export class Logger {
 
         if (SentryService.getInstance().isInitialized()) {
             try {
-                // Check if the subclass (e.g., RovoDevLogger) has a sessionId
-                const sessionId = (this.constructor as any)._rovoDevSessionId;
+                // Check if the subclass (e.g., RovoDevLogger) has a sessionId if not explicitly passed
 
                 SentryService.getInstance().captureException(ex, {
                     tags: {
                         productArea: productArea || 'unknown',
                         capturedBy: capturedBy || 'unknown',
-                        ...(sessionId && { sessionId: sessionId }),
+                        ...(sessionId && { sessionId }),
                     },
                     extra: {
                         errorMessage,
