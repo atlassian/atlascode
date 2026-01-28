@@ -4,6 +4,7 @@ import { decode } from 'base64-arraybuffer-es6';
 import { format } from 'date-fns';
 import FormData from 'form-data';
 import { startWorkOnIssue } from 'src/commands/jira/startWorkOnIssue';
+import { getFilledFieldKeys } from 'src/util/fieldValues';
 import timer from 'src/util/perf';
 import { commands, ConfigurationTarget, Disposable, Position, Uri, ViewColumn } from 'vscode';
 
@@ -155,24 +156,7 @@ export class CreateIssueWebview
     }
 
     private updateFilledFieldsTracking(fieldValues: FieldValues) {
-        if (!fieldValues) {
-            return;
-        }
-
-        const filledFields: string[] = [];
-        Object.entries(fieldValues).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== '') {
-                if (Array.isArray(value) && value.length === 0) {
-                    return;
-                }
-                if (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0) {
-                    return;
-                }
-                filledFields.push(key);
-            }
-        });
-
-        this._lastFilledFields = filledFields;
+        this._lastFilledFields = getFilledFieldKeys(fieldValues);
     }
 
     private reset() {
