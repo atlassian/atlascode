@@ -1496,6 +1496,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
+    private getRefinedInitializationErrorMessage(errorMessage?: string): string {
+        if (errorMessage?.includes('Number of sites retrieved: 0')) {
+            return 'Sign up for Rovo Dev at https://www.atlassian.com/try/cloud/signup?bundle=devai';
+        }
+
+        return errorMessage
+            ? `${errorMessage}\nPlease start a new chat session to try again.`
+            : 'Please start a new chat session to try again.';
+    }
+
     private async signalProcessFailedToInitialize(errorMessage?: string) {
         if (this._isProviderDisabled) {
             return;
@@ -1505,12 +1515,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this.setRovoDevTerminated();
 
         const title = 'Failed to start Rovo Dev';
+        const refinedErrorMessage = this.getRefinedInitializationErrorMessage(errorMessage);
+        const error = new Error(refinedErrorMessage);
 
-        errorMessage = errorMessage
-            ? `${errorMessage}\nPlease start a new chat session to try again.`
-            : 'Please start a new chat session to try again.';
-
-        const error = new Error(errorMessage);
         // we assume that the real error has been logged somehwere else, so we don't log this one
         await this.processError(error, { title, isProcessTerminated: true, skipLogError: true });
     }
