@@ -79,7 +79,7 @@ export const RovoDevLanding: React.FC<{
             <div>
                 <RovoDevImg />
             </div>
-            <div style={{ fontSize: '15px' }}>Welcome to Rovo Dev Beta</div>
+            <div style={{ fontSize: '15px' }}>Welcome to Rovo Dev</div>
             <div style={{ fontSize: '12px', maxWidth: '270px' }}>
                 Rovo Dev can help you understand context of your repository, suggest and make updates.
             </div>

@@ -55,7 +55,7 @@ export const DisabledMessage: React.FC<{
 
         return (
             <div style={messageOuterStyles}>
-                <div>Create an Atlassian API token and add it here to use Rovo Dev beta</div>
+                <div>Create an Atlassian API token and add it here to use Rovo Dev</div>
                 <button style={{ ...inChatButtonStyles, marginTop: '8px' }} onClick={() => onLoginClick(false)}>
                     Add API Token
                 </button>
