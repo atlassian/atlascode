@@ -252,14 +252,9 @@ export class Container {
         context.subscriptions.push(new CustomJQLViewProvider());
         context.subscriptions.push((this._assignedWorkItemsView = new AssignedWorkItemsViewProvider()));
 
-        if (this.featureFlagClient.checkGate(Features.CreateWorkItemWebviewV2)) {
-            context.subscriptions.push(
-                (this._createWorkItemWebviewProvider = new CreateWorkItemWebviewProvider(
-                    context,
-                    context.extensionPath,
-                )),
-            );
-        }
+        context.subscriptions.push(
+            (this._createWorkItemWebviewProvider = new CreateWorkItemWebviewProvider(context, context.extensionPath)),
+        );
         this._onboardingProvider = new OnboardingProvider();
 
         this.refreshRovoDev(context);
