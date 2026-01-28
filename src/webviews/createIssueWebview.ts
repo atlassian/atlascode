@@ -92,7 +92,7 @@ export class CreateIssueWebview
 
     // Analytics tracking state
     private _issueCreatedSuccessfully: boolean = false;
-    private _hadApiError: boolean = false;
+    private _apiError: unknown = undefined;
     private _hadValidationError: boolean = false;
     private _lastFilledFields: string[] = [];
 
@@ -126,7 +126,8 @@ export class CreateIssueWebview
 
     private fireAbandonedEventIfNeeded() {
         if (!this._issueCreatedSuccessfully && this._siteDetails && this._siteDetails.id) {
-            const exitReason = this._hadApiError ? 'error' : 'closed';
+            const hadApiError = this._apiError !== undefined;
+            const exitReason = hadApiError ? 'error' : 'closed';
             const requiredFieldsFilled = this.areRequiredFieldsFilled();
 
             createIssueAbandonedEvent(
@@ -135,7 +136,7 @@ export class CreateIssueWebview
                 this._lastFilledFields,
                 requiredFieldsFilled,
                 this._hadValidationError,
-                this._hadApiError,
+                hadApiError,
             ).then((e) => {
                 Container.analyticsClient.sendTrackEvent(e);
             });
@@ -166,7 +167,7 @@ export class CreateIssueWebview
         this._disposables = [];
         // Reset analytics tracking state
         this._issueCreatedSuccessfully = false;
-        this._hadApiError = false;
+        this._apiError = undefined;
         this._hadValidationError = false;
         this._lastFilledFields = [];
     }
@@ -943,7 +944,7 @@ export class CreateIssueWebview
                             }
                         } catch (e) {
                             Logger.error(e, 'Error creating issue');
-                            this._hadApiError = true;
+                            this._apiError = e;
 
                             this.postMessage({
                                 type: 'error',
