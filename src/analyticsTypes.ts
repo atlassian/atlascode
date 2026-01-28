@@ -86,5 +86,4 @@ export type CreateIssueSource =
  */
 export type CreateIssueExitReason =
     | 'closed' // user closed the tab without creating issue
-    | 'error' // user left after getting an API error
-    | 'loggedOut'; // user was logged out during the creation process
+    | 'error'; // user left after getting an API error
