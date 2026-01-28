@@ -126,8 +126,7 @@ export class CreateIssueWebview
 
     private fireAbandonedEventIfNeeded() {
         if (!this._issueCreatedSuccessfully && this._siteDetails && this._siteDetails.id) {
-            const hadApiError = this._apiError !== undefined;
-            const exitReason = hadApiError ? 'error' : 'closed';
+            const exitReason = this._apiError ? 'error' : 'closed';
             const requiredFieldsFilled = this.areRequiredFieldsFilled();
 
             createIssueAbandonedEvent(
@@ -136,7 +135,7 @@ export class CreateIssueWebview
                 this._lastFilledFields,
                 requiredFieldsFilled,
                 this._hadValidationError,
-                hadApiError,
+                this._apiError,
             ).then((e) => {
                 Container.analyticsClient.sendTrackEvent(e);
             });

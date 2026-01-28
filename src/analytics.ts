@@ -312,15 +312,17 @@ export async function createIssueAbandonedEvent(
     filledFields: string[],
     requiredFieldsFilled: boolean,
     hadValidationError: boolean,
-    hadApiError: boolean,
+    apiError?: unknown,
 ): Promise<TrackEvent> {
+    const apiErrorMessage = apiError instanceof Error ? apiError.message : apiError ? String(apiError) : undefined;
+
     return instanceTrackEvent(site, 'abandoned', 'createIssue', {
         attributes: {
             exitReason,
             filledFields,
             requiredFieldsFilled,
             hadValidationError,
-            hadApiError,
+            apiErrorMessage,
         },
     });
 }
