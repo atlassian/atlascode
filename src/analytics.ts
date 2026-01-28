@@ -2,6 +2,7 @@ import { Uri } from 'vscode';
 
 import { ScreenEvent, TrackEvent, UIEvent } from './analytics-node-client/src/types';
 import {
+    CreateIssueExitReason,
     CreateIssueSource,
     CreatePrTerminalSelection,
     ErrorProductArea,
@@ -303,6 +304,27 @@ export async function issueUpdatedEvent(
 
 export async function startIssueCreationEvent(source: CreateIssueSource, product: Product): Promise<TrackEvent> {
     return trackEvent('createFromSource', 'issue', { attributes: { source: source, hostProduct: product.name } });
+}
+
+export async function createIssueAbandonedEvent(
+    site: DetailedSiteInfo,
+    exitReason: CreateIssueExitReason,
+    filledFields: string[],
+    requiredFieldsFilled: boolean,
+    hadValidationError: boolean,
+    apiError?: unknown,
+): Promise<TrackEvent> {
+    const apiErrorMessage = apiError instanceof Error ? apiError.message : apiError ? String(apiError) : undefined;
+
+    return instanceTrackEvent(site, 'abandoned', 'createIssue', {
+        attributes: {
+            exitReason,
+            filledFields,
+            requiredFieldsFilled,
+            hadValidationError,
+            apiErrorMessage,
+        },
+    });
 }
 
 export async function searchIssuesEvent(product: Product): Promise<TrackEvent> {

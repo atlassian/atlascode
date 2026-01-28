@@ -267,6 +267,12 @@ export interface MediaTokenFetchAction extends Action {
     action: 'fetchMediaToken';
 }
 
+export interface CreateIssueValidationFailedAction extends Action {
+    action: 'createIssueValidationFailed';
+    missingRequiredFields: string[];
+    filledFields: string[];
+}
+
 export function isGetImage(a: Action): a is GetImageAction {
     return (<GetImageAction>a).action === 'getImage';
 }
@@ -454,4 +460,12 @@ export function isDismissRovoDevPromoBanner(a: Action): a is DismissRovoDevPromo
 
 export function isMediaTokenFetchAction(a: Action): a is MediaTokenFetchAction {
     return (<MediaTokenFetchAction>a).action === 'fetchMediaToken';
+}
+
+export function isCreateIssueValidationFailed(a: Action): a is CreateIssueValidationFailedAction {
+    return (
+        a &&
+        a.action === 'createIssueValidationFailed' &&
+        (<CreateIssueValidationFailedAction>a).missingRequiredFields !== undefined
+    );
 }
