@@ -1496,7 +1496,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    // keeps track of predefined errors based on excepted error messages within the stack trace
+    // keeps track of predefined errors based on retrieved error messages within the stack trace
     private getRefinedInitializationErrorMessage(errorMessage?: string): string | undefined {
         const errorMap: { [key: string]: string } = {
             'Retrieved 0 total sites':
