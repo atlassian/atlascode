@@ -14,12 +14,21 @@ interface VsCodeApi {
 }
 declare function acquireVsCodeApi(): VsCodeApi;
 
+let vscodeApiInstance: VsCodeApi | undefined;
+
+function getVsCodeApi(): VsCodeApi {
+    if (!vscodeApiInstance) {
+        vscodeApiInstance = acquireVsCodeApi();
+    }
+    return vscodeApiInstance;
+}
+
 // This is taken from react/atlascode/messagingApi.ts, with some legacy part removed (pmf, errors)
 // TODO: refactor this whole implementation to make sure we're not dragging legacy code
 export function useMessagingApi<A, M extends ReducerAction<any, any>, R extends ReducerAction<any, any>>(
     onMessageHandler: ReceiveMessageFunc<M>,
 ) {
-    const apiRef = useMemo<VsCodeApi>(acquireVsCodeApi, [acquireVsCodeApi]);
+    const apiRef = useMemo(() => getVsCodeApi(), []);
 
     const postMessage = useCallback(
         (action: A): void => {

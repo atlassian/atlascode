@@ -1,8 +1,13 @@
 import { RovoDevLogger } from '../util/rovoDevLogger';
 import {
+    AgentMode,
+    RovoDevAvailableModesResponse,
     RovoDevCancelResponse,
     RovoDevChatRequest,
+    RovoDevGetAgentModeResponse,
     RovoDevHealthcheckResponse,
+    RovoDevSetAgentModeRequest,
+    RovoDevSetAgentModeResponse,
     RovoDevStatusAPIResponse,
     ToolPermissionChoice,
 } from './rovoDevApiClientInterfaces';
@@ -68,7 +73,12 @@ export class RovoDevApiClient {
     ): Promise<Response>;
     private async fetchApi(
         restApi: string,
-        method: 'GET' | 'DELETE' | 'POST' | 'PATCH',
+        method: 'POST' | 'PATCH' | 'PUT',
+        body?: BodyInit | null,
+    ): Promise<Response>;
+    private async fetchApi(
+        restApi: string,
+        method: 'GET' | 'DELETE' | 'POST' | 'PATCH' | 'PUT',
         body?: BodyInit | null,
         abortSignal?: AbortSignal | null,
     ): Promise<Response> {
@@ -288,5 +298,31 @@ export class RovoDevApiClient {
                   };
 
         await this.fetchApi('/accept-mcp-terms', 'POST', JSON.stringify(message));
+    }
+
+    /** Invokes the GET `/v3/agent-mode` API.
+     * @returns {Promise<RovoDevGetAgentModeResponse>} An object representing the current agent mode.
+     */
+    public async getAgentMode(): Promise<RovoDevGetAgentModeResponse> {
+        const response = await this.fetchApi('/v3/agent-mode', 'GET');
+        return await response.json();
+    }
+
+    /** Invokes the PUT `/v3/agent-mode` API.
+     * @param {AgentMode} mode The agent mode to set ('ask', 'default', or 'plan').
+     * @returns {Promise<RovoDevSetAgentModeResponse>} An object representing the API response.
+     */
+    public async setAgentMode(mode: AgentMode): Promise<RovoDevSetAgentModeResponse> {
+        const request: RovoDevSetAgentModeRequest = { mode };
+        const response = await this.fetchApi('/v3/agent-mode', 'PUT', JSON.stringify(request));
+        return await response.json();
+    }
+
+    /** Invokes the GET `/v3/available-modes` API.
+     * @returns {Promise<RovoDevAvailableModesResponse>} An object representing all available agent modes.
+     */
+    public async getAvailableModes(): Promise<RovoDevAvailableModesResponse> {
+        const response = await this.fetchApi('/v3/available-modes', 'GET');
+        return await response.json();
     }
 }

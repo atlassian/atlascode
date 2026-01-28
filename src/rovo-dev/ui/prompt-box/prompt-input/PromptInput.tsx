@@ -10,11 +10,13 @@ import Tooltip from '@atlaskit/tooltip';
 import * as monaco from 'monaco-editor';
 import React from 'react';
 import { RovodevStaticConfig } from 'src/rovo-dev/api/rovodevStaticConfig';
+import { AgentMode, RovoDevModeInfo } from 'src/rovo-dev/client';
 import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
 
 import { rovoDevTextareaStyles } from '../../rovoDevViewStyles';
 import { onKeyDownHandler } from '../../utils';
 import PromptContextPopup from '../prompt-context-popup/PromptContextPopup';
+import { getAgentModeIcon } from '../prompt-settings-popup/AgentModeSection';
 import PromptSettingsPopup from '../prompt-settings-popup/PromptSettingsPopup';
 import {
     createMonacoPromptEditor,
@@ -35,6 +37,9 @@ interface PromptInputBoxProps {
     isDeepPlanEnabled: boolean;
     isYoloModeEnabled: boolean;
     isFullContextEnabled: boolean;
+    availableAgentModes: RovoDevModeInfo[];
+    currentAgentMode: AgentMode | null;
+    onAgentModeChange: (mode: AgentMode) => void;
     onDeepPlanToggled?: () => void;
     onYoloModeToggled?: () => void;
     onFullContextToggled?: () => void;
@@ -109,6 +114,9 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     isDeepPlanEnabled,
     isYoloModeEnabled,
     isFullContextEnabled,
+    availableAgentModes,
+    currentAgentMode,
+    onAgentModeChange,
     onDeepPlanToggled,
     onYoloModeToggled,
     onFullContextToggled,
@@ -261,13 +269,16 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                             isDeepPlanEnabled={isDeepPlanEnabled}
                             isYoloModeEnabled={isYoloModeEnabled}
                             isFullContextEnabled={isFullContextEnabled}
+                            availableAgentModes={availableAgentModes}
+                            currentAgentMode={currentAgentMode}
+                            onAgentModeChange={onAgentModeChange}
                             onClose={() => {}}
                         />
                     </Tooltip>
                     {isDeepPlanEnabled && onDeepPlanToggled && (
                         <Tooltip content="Disable deep plan">
                             <div
-                                className="deep-plan-indicator"
+                                className="mode-indicator"
                                 onClick={() => onDeepPlanToggled()}
                                 onKeyDown={onKeyDownHandler(onDeepPlanToggled)}
                                 tabIndex={0}
@@ -282,7 +293,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                     {isFullContextEnabled && onFullContextToggled && (
                         <Tooltip content="Disable Full-Context mode">
                             <div
-                                className="deep-plan-indicator"
+                                className="mode-indicator"
                                 onClick={() => onFullContextToggled()}
                                 onKeyDown={onKeyDownHandler(onFullContextToggled)}
                                 tabIndex={0}
@@ -297,7 +308,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                     {isYoloModeEnabled && onYoloModeToggled && (
                         <Tooltip content="Disable YOLO mode">
                             <div
-                                className="deep-plan-indicator"
+                                className="mode-indicator"
                                 onClick={() => onYoloModeToggled()}
                                 onKeyDown={onKeyDownHandler(onYoloModeToggled)}
                                 tabIndex={0}
@@ -309,6 +320,11 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                             </div>
                         </Tooltip>
                     )}{' '}
+                    {currentAgentMode && currentAgentMode !== 'default' && (
+                        <Tooltip content={currentAgentMode}>
+                            <div className="mode-indicator">{getAgentModeIcon(currentAgentMode)}</div>
+                        </Tooltip>
+                    )}
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                     {!showCancelButton && (

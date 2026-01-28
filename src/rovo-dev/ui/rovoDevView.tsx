@@ -7,7 +7,7 @@ import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
 import * as React from 'react';
-import { RovoDevToolReturnResponse } from 'src/rovo-dev/client';
+import { AgentMode, RovoDevModeInfo, RovoDevToolReturnResponse } from 'src/rovo-dev/client';
 import { RovoDevContextItem, State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
@@ -78,6 +78,8 @@ const RovoDevView: React.FC = () => {
     const [lastCompletedPromptId, setLastCompletedPromptId] = useState<string | undefined>(undefined);
     const [isAtlassianUser, setIsAtlassianUser] = useState(false);
     const [feedbackType, setFeedbackType] = React.useState<'like' | 'dislike' | undefined>(undefined);
+    const [availableAgentModes, setAvailableAgentModes] = useState<RovoDevModeInfo[]>([]);
+    const [currentAgentMode, setCurrentAgentMode] = useState<AgentMode | null>(null);
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -488,6 +490,18 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.RovoDevAuthValidating:
                 case RovoDevProviderMessageType.RovoDevAuthValidationComplete:
                     // These messages are handled by the login form component directly
+                    break;
+
+                case RovoDevProviderMessageType.GetAvailableAgentModesComplete:
+                    setAvailableAgentModes(event.modes);
+                    break;
+
+                case RovoDevProviderMessageType.GetCurrentAgentModeComplete:
+                    setCurrentAgentMode(event.mode);
+                    break;
+
+                case RovoDevProviderMessageType.SetAgentModeComplete:
+                    setCurrentAgentMode(event.mode);
                     break;
 
                 default:
@@ -951,6 +965,13 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
+    const onAgentModeChange = useCallback(
+        (mode: AgentMode) => {
+            postMessage({ type: RovoDevViewResponseType.SetAgentMode, mode });
+        },
+        [postMessage],
+    );
+
     const handleShowSessionsCommand = React.useCallback(() => {
         postMessage({ type: RovoDevViewResponseType.ShowSessionHistory });
     }, [postMessage]);
@@ -961,6 +982,16 @@ const RovoDevView: React.FC = () => {
             value: isFullContextModeToggled,
         });
     }, [postMessage, isFullContextModeToggled]);
+
+    React.useEffect(() => {
+        if (availableAgentModes.length === 0) {
+            postMessage({ type: RovoDevViewResponseType.GetAvailableAgentModes });
+        }
+
+        if (!currentAgentMode) {
+            postMessage({ type: RovoDevViewResponseType.GetCurrentAgentMode });
+        }
+    }, [availableAgentModes, currentAgentMode, postMessage]);
 
     const hidePromptBox =
         currentState.state === 'Disabled' ||
@@ -1100,6 +1131,9 @@ const RovoDevView: React.FC = () => {
                                         isDeepPlanEnabled={isDeepPlanToggled}
                                         isYoloModeEnabled={isYoloModeToggled}
                                         isFullContextEnabled={isFullContextModeToggled}
+                                        availableAgentModes={availableAgentModes}
+                                        currentAgentMode={currentAgentMode}
+                                        onAgentModeChange={onAgentModeChange}
                                         onDeepPlanToggled={() => setIsDeepPlanToggled((prev) => !prev)}
                                         onYoloModeToggled={
                                             RovodevStaticConfig.isBBY ? undefined : () => onYoloModeToggled()
