@@ -299,6 +299,9 @@ const RovoDevView: React.FC = () => {
                         }
                         return prev;
                     });
+
+                    const messages = Array.isArray(event.message) ? event.message : [event.message];
+
                     const last = messages.at(-1);
                     if (last?.event_kind === 'tool-call') {
                         setPendingToolCallMessage(parseToolCallMessage(last.tool_name));
