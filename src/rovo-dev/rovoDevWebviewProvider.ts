@@ -1218,7 +1218,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private async handleProcessStateChanged(newState: RovoDevProcessState) {
         if (newState.state === 'Downloading' || newState.state === 'Starting' || newState.state === 'Started') {
             this._userInfo = newState.jiraSiteUserInfo;
-            this._jiraItemsProvider.setJiraSite(newState.jiraSiteHostname);
+            // this._jiraItemsProvider.setJiraSite(newState.jiraSiteHostname);
 
             if (this._webviewReady) {
                 // refresh the isAtlassianUser flag

@@ -4,7 +4,7 @@ import fs from 'fs';
 import net from 'net';
 import packageJson from 'package.json';
 import path from 'path';
-import { AuthInfoState } from 'src/atlclients/authInfo';
+import { AuthInfoState, BasicAuthInfo } from 'src/atlclients/authInfo';
 import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import { downloadAndUnzip } from 'src/rovo-dev/util/downloadFile';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
@@ -14,7 +14,8 @@ import { Disposable, Event, EventEmitter, ExtensionContext, Uri, workspace } fro
 
 import { FeatureFlagClient } from '../util/featureFlags/featureFlagClient';
 import { Features } from '../util/features';
-import { ExtensionApi, ValidBasicAuthSiteData } from './api/extensionApi';
+import { ExtensionApi } from './api/extensionApi';
+import { RovoDevAuthInfo } from './rovoDevAuthValidator';
 import { RovoDevDisabledReason, RovoDevEntitlementCheckFailedDetail } from './rovoDevWebviewProviderMessages';
 import { RovoDevLogger } from './util/rovoDevLogger';
 
@@ -112,7 +113,7 @@ async function getOrAssignPortForWorkspace(): Promise<number> {
     throw new Error('unable to find an available port.');
 }
 
-function areCredentialsEqual(cred1?: ValidBasicAuthSiteData, cred2?: ValidBasicAuthSiteData) {
+function areCredentialsEqual(cred1?: RovoDevAuthInfo, cred2?: RovoDevAuthInfo) {
     if (cred1 === cred2) {
         return true;
     }
@@ -121,11 +122,7 @@ function areCredentialsEqual(cred1?: ValidBasicAuthSiteData, cred2?: ValidBasicA
         return false;
     }
 
-    return (
-        cred1.host === cred2.host &&
-        cred1.authInfo.password === cred2.authInfo.password &&
-        cred1.authInfo.username === cred2.authInfo.username
-    );
+    return cred1.password === cred2.password && cred1.username === cred2.username;
 }
 
 export interface RovoDevProcessNotStartedState {
@@ -134,7 +131,6 @@ export interface RovoDevProcessNotStartedState {
 
 export interface RovoDevProcessDownloadingState {
     state: 'Downloading';
-    jiraSiteHostname: string;
     jiraSiteUserInfo: UserInfo;
     totalBytes: number;
     downloadedBytes: number;
@@ -142,13 +138,11 @@ export interface RovoDevProcessDownloadingState {
 
 export interface RovoDevProcessStartingState {
     state: 'Starting';
-    jiraSiteHostname: string;
     jiraSiteUserInfo: UserInfo;
 }
 
 export interface RovoDevProcessStartedState {
     state: 'Started';
-    jiraSiteHostname: string;
     jiraSiteUserInfo: UserInfo;
     pid: number | undefined;
     hostname: string;
@@ -204,7 +198,7 @@ export abstract class RovoDevProcessManager {
         return this._onStateChanged.event;
     }
 
-    private static currentCredentials: ValidBasicAuthSiteData | undefined;
+    private static currentCredentials: RovoDevAuthInfo | undefined;
     private static extensionApi: ExtensionApi = new ExtensionApi();
 
     /** This lock ensures this class is async-safe, preventing repeated invocations
@@ -242,7 +236,7 @@ export abstract class RovoDevProcessManager {
         this.stopRovoDevInstance();
     }
 
-    private static async downloadBinaryThenInitialize(credentials: ValidBasicAuthSiteData, rovoDevURIs: RovoDevURIs) {
+    private static async downloadBinaryThenInitialize(credentials: RovoDevAuthInfo, rovoDevURIs: RovoDevURIs) {
         const baseDir = rovoDevURIs.RovoDevBaseDir;
         const versionDir = rovoDevURIs.RovoDevVersionDir;
         const zipUrl = rovoDevURIs.RovoDevZipUrl;
@@ -259,8 +253,7 @@ export abstract class RovoDevProcessManager {
         // and we want to show 0% downloaded
         this.setState({
             state: 'Downloading',
-            jiraSiteHostname: credentials.host,
-            jiraSiteUserInfo: credentials.authInfo.user,
+            jiraSiteUserInfo: credentials.user,
             totalBytes: 1,
             downloadedBytes: 0,
         });
@@ -273,8 +266,7 @@ export abstract class RovoDevProcessManager {
             if (totalBytes) {
                 this.setState({
                     state: 'Downloading',
-                    jiraSiteHostname: credentials.host,
-                    jiraSiteUserInfo: credentials.authInfo.user,
+                    jiraSiteUserInfo: credentials.user,
                     totalBytes,
                     downloadedBytes,
                 });
@@ -287,14 +279,13 @@ export abstract class RovoDevProcessManager {
 
         this.setState({
             state: 'Starting',
-            jiraSiteHostname: credentials.host,
-            jiraSiteUserInfo: credentials.authInfo.user,
+            jiraSiteUserInfo: credentials.user,
         });
     }
 
     private static async internalInitializeRovoDev(
         context: ExtensionContext,
-        credentials: ValidBasicAuthSiteData | undefined,
+        credentials: RovoDevAuthInfo | undefined,
         forceNewInstance?: boolean,
     ) {
         if (!workspace.workspaceFolders?.length) {
@@ -319,7 +310,7 @@ export abstract class RovoDevProcessManager {
                 subState: 'NeedAuth',
             });
             return;
-        } else if (!credentials.isValid) {
+        } else if (credentials.state !== AuthInfoState.Valid) {
             this.setState({
                 state: 'Disabled',
                 subState: 'UnauthorizedAuth',
@@ -329,8 +320,7 @@ export abstract class RovoDevProcessManager {
 
         this.setState({
             state: 'Starting',
-            jiraSiteHostname: credentials.host,
-            jiraSiteUserInfo: credentials.authInfo.user,
+            jiraSiteUserInfo: credentials.user,
         });
 
         let rovoDevURIs: ReturnType<typeof GetRovoDevURIs>;
@@ -404,37 +394,58 @@ export abstract class RovoDevProcessManager {
         }
     }
 
-    private static async getCredentials(): Promise<ValidBasicAuthSiteData | undefined> {
+    private static async getCredentials(): Promise<RovoDevAuthInfo | undefined> {
         // Check if dedicated RovoDev auth feature flag is enabled
         const featureFlagClient = FeatureFlagClient.getInstance();
 
         if (featureFlagClient.checkGate(Features.DedicatedRovoDevAuth)) {
             // Use dedicated RovoDev credentials
-            const rovoDevAuth = await RovoDevProcessManager.extensionApi.auth.getRovoDevAuthInfo();
+            const rovoDevAuth = (await RovoDevProcessManager.extensionApi.auth.getRovoDevAuthInfo()) as
+                | BasicAuthInfo
+                | undefined;
 
             // If we have RovoDev credentials, use them
             if (rovoDevAuth) {
                 // Convert RovoDev auth to ValidBasicAuthSiteData format
                 // Use a placeholder host since RovoDev doesn't require it
                 return {
-                    host: 'unused-rovodev-host.atlassian.net',
-                    authInfo: rovoDevAuth,
-                    isValid: rovoDevAuth.state === AuthInfoState.Valid,
-                    isStaging: false,
-                    siteCloudId: rovoDevAuth.cloudId,
+                    user: rovoDevAuth.user,
+                    state: rovoDevAuth.state,
+                    username: rovoDevAuth.username,
+                    password: rovoDevAuth.password,
                 };
             }
 
             // If RequireDedicatedRovoDevAuth is disabled and no RovoDev credentials exist,
             // fall back to Jira credentials for migration
             if (!featureFlagClient.checkGate(Features.RequireDedicatedRovoDevAuth)) {
-                return await RovoDevProcessManager.extensionApi.auth.getCloudPrimaryAuthSite();
+                const creds = await RovoDevProcessManager.extensionApi.auth.getCloudPrimaryAuthSite();
+                if (!creds) {
+                    return undefined;
+                }
+                return {
+                    user: creds.authInfo.user,
+                    state: creds.authInfo.state,
+                    username: creds.authInfo.username,
+                    password: creds.authInfo.password,
+                    isStaging: creds.isStaging,
+                };
             }
 
             return undefined;
         } else {
             // Fall back to primary Jira auth
-            return await RovoDevProcessManager.extensionApi.auth.getCloudPrimaryAuthSite();
+            const creds = await RovoDevProcessManager.extensionApi.auth.getCloudPrimaryAuthSite();
+            if (!creds) {
+                return undefined;
+            }
+            return {
+                user: creds.authInfo.user,
+                state: creds.authInfo.state,
+                username: creds.authInfo.username,
+                password: creds.authInfo.password,
+                isStaging: creds.isStaging,
+            };
         }
     }
 
@@ -456,7 +467,7 @@ export abstract class RovoDevProcessManager {
 
     private static async startRovoDev(
         context: ExtensionContext,
-        credentials: ValidBasicAuthSiteData,
+        credentials: RovoDevAuthInfo,
         rovoDevURIs: RovoDevURIs,
     ) {
         // skip if there is no workspace folder open
@@ -490,10 +501,7 @@ class RovoDevSubprocessInstance extends Disposable {
         super(() => this.stop());
     }
 
-    public async start(
-        credentials: ValidBasicAuthSiteData,
-        setState: (newState: RovoDevProcessState) => void,
-    ): Promise<void> {
+    public async start(credentials: RovoDevAuthInfo, setState: (newState: RovoDevProcessState) => void): Promise<void> {
         if (this.started) {
             throw new Error('Instance already started');
         }
@@ -533,18 +541,17 @@ class RovoDevSubprocessInstance extends Disposable {
                         env: {
                             ...process.env,
                             USER: process.env.USER || process.env.USERNAME,
-                            USER_EMAIL: credentials.authInfo.username,
+                            USER_EMAIL: credentials.username,
                             ROVODEV_SANDBOX_ID: this.extensionApi.metadata.appInstanceId(),
                             ROVODEV_SERVE_SESSION_TOKEN: sessionToken,
-                            ...(credentials.authInfo.password ? { USER_API_TOKEN: credentials.authInfo.password } : {}),
+                            ...(credentials.password ? { USER_API_TOKEN: credentials.password } : {}),
                         },
                     })
                         .on('spawn', () => {
                             const timeStarted = new Date();
                             setState({
                                 state: 'Started',
-                                jiraSiteHostname: credentials.host,
-                                jiraSiteUserInfo: credentials.authInfo.user,
+                                jiraSiteUserInfo: credentials.user,
                                 pid: this.rovoDevProcess?.pid,
                                 hostname: RovoDevInfo.hostname,
                                 httpPort: port,

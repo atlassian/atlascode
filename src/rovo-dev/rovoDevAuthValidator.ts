@@ -1,8 +1,8 @@
-import { AuthInfoState } from 'src/atlclients/authInfo';
+import { AuthInfo, AuthInfoState } from 'src/atlclients/authInfo';
 
 import { RovoDevLogger } from './util/rovoDevLogger';
 
-export interface RovoDevAuthInfo {
+export interface RovoDevAuthInfo extends AuthInfo {
     user: {
         id: string;
         displayName: string;
@@ -12,7 +12,7 @@ export interface RovoDevAuthInfo {
     state: AuthInfoState;
     username: string;
     password: string;
-    cloudId: string;
+    isStaging?: boolean;
 }
 
 interface GraphQLUserInfo {
@@ -33,9 +33,6 @@ export async function createValidatedRovoDevAuthInfo(email: string, apiToken: st
     // Fetch user information (validates credentials implicitly)
     const userInfo = await fetchUserInfo(email, apiToken);
 
-    // Fetch cloud ID for the site
-    const cloudId = await fetchCloudId(email);
-
     // Create and return AuthInfo with validated information
     return {
         user: {
@@ -47,7 +44,6 @@ export async function createValidatedRovoDevAuthInfo(email: string, apiToken: st
         state: AuthInfoState.Valid,
         username: email,
         password: apiToken,
-        cloudId: cloudId,
     };
 }
 
@@ -112,27 +108,5 @@ async function fetchUserInfo(email: string, apiToken: string): Promise<GraphQLUs
         }
         RovoDevLogger.error(error, 'Error validating RovoDev credentials');
         throw new Error('Network error occurred while validating credentials. Please check your connection.');
-    }
-}
-
-/**
- * Fetches the cloud ID using accessible resources API.
- * We can use the basic auth credentials to fetch all accessible resources
- * and extract the cloud ID from the first one.
- */
-async function fetchCloudId(email: string): Promise<string> {
-    // For RovoDev, we'll use a placeholder cloud ID since we don't actually need
-    // to validate against a specific site - the GraphQL API validates credentials
-    // In the future, if we need real cloud IDs, we can use the accessible-resources endpoint
-    try {
-        // Return a placeholder cloud ID
-        // The actual cloud ID will be determined by the backend when needed
-        return 'rovodev-placeholder-cloudid';
-    } catch (error) {
-        if (error instanceof Error && error.message.includes('Site information')) {
-            throw error;
-        }
-        RovoDevLogger.error(error, 'Error fetching cloud ID');
-        throw new Error('Failed to retrieve site information. Please check your connection and try again.');
     }
 }

@@ -154,7 +154,6 @@ describe('RovoDevLanguageServerProvider', () => {
         // Default to Started state so LSP can start
         mockCurrentState = {
             state: 'Started',
-            jiraSiteHostname: 'test.atlassian.net',
             jiraSiteUserInfo: { id: '123', displayName: 'Test User', email: 'test@example.com', avatarUrl: '' },
             pid: 12345,
             hostname: '127.0.0.1',
@@ -199,7 +198,6 @@ describe('RovoDevLanguageServerProvider', () => {
         // Simulate state change to Started
         setMockProcessState({
             state: 'Started',
-            jiraSiteHostname: 'test.atlassian.net',
             jiraSiteUserInfo: { id: '123', displayName: 'Test User', email: 'test@example.com', avatarUrl: '' },
             pid: 12345,
             hostname: '127.0.0.1',
