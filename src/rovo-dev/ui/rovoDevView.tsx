@@ -76,6 +76,7 @@ const RovoDevView: React.FC = () => {
     const [pendingFilesForFiltering, setPendingFilesForFiltering] = useState<ModifiedFile[] | null>(null);
     const [thinkingBlockEnabled, setThinkingBlockEnabled] = useState(true);
     const [lastCompletedPromptId, setLastCompletedPromptId] = useState<string | undefined>(undefined);
+    const [activePromptId, setActivePromptId] = useState<string | undefined>(undefined);
     const [isAtlassianUser, setIsAtlassianUser] = useState(false);
     const [feedbackType, setFeedbackType] = React.useState<'like' | 'dislike' | undefined>(undefined);
 
@@ -268,6 +269,9 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.SignalPromptSent:
                     setIsDeepPlanToggled(event.enable_deep_plan || false);
                     setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE);
+                    if (event.promptId) {
+                        setActivePromptId(event.promptId);
+                    }
                     if (event.echoMessage) {
                         handleAppendResponse({
                             event_kind: '_RovoDevUserPrompt',
@@ -278,12 +282,23 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.RovoDevResponseMessage:
-                    setCurrentState((prev) =>
-                        prev.state === 'WaitingForPrompt' ? { state: 'GeneratingResponse' } : prev,
-                    );
+                    const messagePromptId = event.promptId;
 
-                    const messages = Array.isArray(event.message) ? event.message : [event.message];
-
+                    setCurrentState((prev) => {
+                        // If we are waiting for a prompt, only switch to generating if this is the ACTIVE prompt
+                        if (prev.state === 'WaitingForPrompt') {
+                            if (messagePromptId && activePromptId && messagePromptId === activePromptId) {
+                                return { state: 'GeneratingResponse' };
+                            }
+                            // Legacy fallback: if IDs are missing, assume we should generate
+                            if (!messagePromptId || !activePromptId) {
+                                return { state: 'GeneratingResponse' };
+                            }
+                            // Otherwise (prompt mismatch or cleared active prompt), stay in WaitingForPrompt
+                            return prev;
+                        }
+                        return prev;
+                    });
                     const last = messages.at(-1);
                     if (last?.event_kind === 'tool-call') {
                         setPendingToolCallMessage(parseToolCallMessage(last.tool_name));
@@ -305,6 +320,11 @@ const RovoDevView: React.FC = () => {
                         // Signal that we need to send render acknowledgement after this render completes
                         setLastCompletedPromptId(event.promptId);
                     }
+
+                    if (event.isCancellation) {
+                        setActivePromptId(undefined); // Clear active prompt so late messages don't re-lock UI
+                    }
+
                     setSummaryMessageInHistory();
                     setPendingToolCallMessage('');
                     setModalDialogs([]);
@@ -503,7 +523,7 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [handleAppendResponse, currentState.state, setSummaryMessageInHistory, clearChatHistory],
+        [handleAppendResponse, currentState.state, setSummaryMessageInHistory, clearChatHistory, activePromptId],
     );
 
     const { postMessage, postMessagePromise, setState } = useMessagingApi<

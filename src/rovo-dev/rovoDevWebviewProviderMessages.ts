@@ -71,12 +71,15 @@ export type RovoDevProviderMessage =
           RovoDevProviderMessageType.RovoDevDisabled,
           { reason: RovoDevDisabledReason; detail?: RovoDevEntitlementCheckFailedDetail }
       >
-    | ReducerAction<RovoDevProviderMessageType.SignalPromptSent, RovoDevPrompt & { echoMessage: boolean }>
+    | ReducerAction<
+          RovoDevProviderMessageType.SignalPromptSent,
+          RovoDevPrompt & { echoMessage: boolean; promptId?: string }
+      >
     | ReducerAction<
           RovoDevProviderMessageType.RovoDevResponseMessage,
-          { message: RovoDevResponseMessageType | RovoDevResponseMessageType[] }
+          { message: RovoDevResponseMessageType | RovoDevResponseMessageType[]; promptId?: string }
       >
-    | ReducerAction<RovoDevProviderMessageType.CompleteMessage, { promptId: string }>
+    | ReducerAction<RovoDevProviderMessageType.CompleteMessage, { promptId: string; isCancellation?: boolean }>
     | ReducerAction<RovoDevProviderMessageType.ShowDialog, { message: DialogMessage }>
     | ReducerAction<RovoDevProviderMessageType.ClearChat>
     | ReducerAction<
