@@ -114,6 +114,7 @@ jest.mock('../analytics', () => ({
     loggedOutEvent: jest.fn(),
     issueCreatedEvent: jest.fn().mockResolvedValue({}),
     jiraIssuePerformanceEvent: jest.fn().mockResolvedValue({}),
+    createIssueAbandonedEvent: jest.fn().mockResolvedValue({}),
 }));
 
 const mockWindow = window as jest.Mocked<typeof window>;
