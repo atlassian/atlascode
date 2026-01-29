@@ -581,6 +581,11 @@
                 "command": "atlascode.addRecommendedExtension",
                 "title": "Add as Recommended Extension",
                 "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.rovodev.openHelp",
+                "title": "Documentation",
+                "category": "Atlassian"
             }
         ],
         "viewsContainers": {
@@ -746,6 +751,11 @@
                     "command": "atlascode.rovodev.shareFeedback",
                     "when": "view == atlascode.views.rovoDev.webView",
                     "group": "rovoDevContextMenu2@1"
+                },
+                {
+                    "command": "atlascode.rovodev.openHelp",
+                    "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
+                    "group": "rovoDevContextMenu2@2"
                 },
                 {
                     "command": "atlascode.rovodev.restartProcess",
