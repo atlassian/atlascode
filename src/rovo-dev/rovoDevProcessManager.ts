@@ -413,10 +413,11 @@ export abstract class RovoDevProcessManager {
             const rovoDevAuth = await RovoDevProcessManager.extensionApi.auth.getRovoDevAuthInfo();
 
             // If we have RovoDev credentials, use them
-            if (rovoDevAuth && rovoDevAuth.host) {
+            if (rovoDevAuth) {
                 // Convert RovoDev auth to ValidBasicAuthSiteData format
+                // Use a placeholder host since RovoDev doesn't require it
                 return {
-                    host: rovoDevAuth.host,
+                    host: 'unused-rovodev-host.atlassian.net',
                     authInfo: rovoDevAuth,
                     isValid: rovoDevAuth.state === AuthInfoState.Valid,
                     isStaging: false,
@@ -511,14 +512,11 @@ class RovoDevSubprocessInstance extends Disposable {
                 }
 
                 try {
-                    const siteUrl = `https://${credentials.host}`;
                     const shellArgs = [
                         'serve',
                         `${port}`,
                         '--xid',
                         'rovodev-ide-vscode',
-                        '--site-url',
-                        siteUrl,
                         '--respect-configured-permissions',
                     ];
 

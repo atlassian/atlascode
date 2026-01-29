@@ -55,17 +55,13 @@ const textFieldStyles: React.CSSProperties = {
 };
 
 export interface CredentialHint {
-    host: string;
     email: string;
 }
 
 export const RovoDevLoginForm: React.FC<{
-    onSubmit: (host: string, email: string, apiToken: string) => void;
+    onSubmit: (email: string, apiToken: string) => void;
     credentialHints?: CredentialHint[];
 }> = ({ onSubmit, credentialHints = [] }) => {
-    const [host, setHost] = React.useState('');
-    const [hostInputValue, setHostInputValue] = React.useState('');
-
     const [email, setEmail] = React.useState('');
     const [emailInputValue, setEmailInputValue] = React.useState('');
 
@@ -75,7 +71,6 @@ export const RovoDevLoginForm: React.FC<{
         error?: string;
     }>({ isValidating: false });
 
-    const hostSelectRef = React.useRef<any>(null);
     const emailSelectRef = React.useRef<any>(null);
     const apiTokenInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -101,18 +96,14 @@ export const RovoDevLoginForm: React.FC<{
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!host || !email || !apiToken) {
+        if (!email || !apiToken) {
             return;
         }
 
-        onSubmit(host, email, apiToken);
+        onSubmit(email, apiToken);
     };
 
-    // Create unique host and email options from existing credentials
-    const hostOptions = React.useMemo(
-        () => Array.from(new Set(credentialHints.map((c) => c.host))).map((h) => ({ label: h, value: h })),
-        [credentialHints],
-    );
+    // Create unique email options from existing credentials
     const emailOptions = React.useMemo(
         () => Array.from(new Set(credentialHints.map((c) => c.email))).map((e) => ({ label: e, value: e })),
         [credentialHints],
@@ -136,49 +127,6 @@ export const RovoDevLoginForm: React.FC<{
                     {authValidationState.error}
                 </div>
             )}
-            <div style={fieldRowStyles}>
-                <label htmlFor="host" style={labelStyles}>
-                    Jira Cloud Site
-                </label>
-                <CreatableSelect
-                    ref={hostSelectRef}
-                    inputId="host"
-                    options={hostOptions}
-                    placeholder="yoursite.atlassian.net"
-                    isClearable
-                    isDisabled={authValidationState.isValidating}
-                    value={host ? { label: host, value: host } : null}
-                    inputValue={hostInputValue}
-                    tabSelectsValue={true}
-                    onInputChange={(newValue: string) => {
-                        setHostInputValue(newValue);
-                    }}
-                    onKeyDown={(e: React.KeyboardEvent) => {
-                        // Move focus to next field on Tab
-                        if (e.key === 'Tab' && !e.shiftKey) {
-                            setTimeout(() => emailSelectRef.current?.focus(), 0);
-                        }
-                    }}
-                    onBlur={() => {
-                        // If the user clicks away, keep what they typed.
-                        if (hostInputValue.trim().length > 0) {
-                            setHost(hostInputValue.trim());
-                            setHostInputValue('');
-                        }
-                    }}
-                    onChange={(option: any) => {
-                        setHost(option?.value || '');
-                        setHostInputValue('');
-                        if (option?.value) {
-                            setTimeout(() => emailSelectRef.current?.focus(), 0);
-                        }
-                    }}
-                    formatCreateLabel={(inputValue: any) => `Use "${inputValue}"`}
-                    styles={selectStyles}
-                    menuPortalTarget={document.body}
-                />
-            </div>
-
             <div style={fieldRowStyles}>
                 <label htmlFor="email" style={labelStyles}>
                     Email
@@ -252,7 +200,7 @@ export const RovoDevLoginForm: React.FC<{
                 <Button
                     type="submit"
                     appearance="primary"
-                    isDisabled={authValidationState.isValidating || !host || !email || !apiToken}
+                    isDisabled={authValidationState.isValidating || !email || !apiToken}
                 >
                     {authValidationState.isValidating ? 'Authenticating...' : 'Sign In'}
                 </Button>
