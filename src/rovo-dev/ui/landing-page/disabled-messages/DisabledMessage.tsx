@@ -21,7 +21,7 @@ const loginFormContainerStyles: React.CSSProperties = {
 export const DisabledMessage: React.FC<{
     currentState: State;
     onLoginClick: (openApiTokenLogin: boolean) => void;
-    onRovoDevAuthSubmit: (host: string, email: string, apiToken: string) => void;
+    onRovoDevAuthSubmit: (email: string, apiToken: string) => void;
     onOpenFolder: () => void;
     onLinkClick: (url: string) => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
@@ -44,8 +44,8 @@ export const DisabledMessage: React.FC<{
                 <div style={loginFormContainerStyles}>
                     <div style={{ marginBottom: '12px' }}>Sign in to Rovo Dev with an API token</div>
                     <RovoDevLoginForm
-                        onSubmit={(host, email, apiToken) => {
-                            onRovoDevAuthSubmit(host, email, apiToken);
+                        onSubmit={(email, apiToken) => {
+                            onRovoDevAuthSubmit(email, apiToken);
                         }}
                         credentialHints={credentialHints}
                     />

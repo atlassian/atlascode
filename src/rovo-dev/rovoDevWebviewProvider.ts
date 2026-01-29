@@ -476,7 +476,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.SubmitRovoDevAuth:
-                        await this.handleRovoDevAuth(e.host, e.email, e.apiToken);
+                        await this.handleRovoDevAuth(e.email, e.apiToken);
                         break;
 
                     case RovoDevViewResponseType.OpenFolder:
@@ -845,7 +845,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
-    private async handleRovoDevAuth(host: string, email: string, apiToken: string): Promise<void> {
+    private async handleRovoDevAuth(email: string, apiToken: string): Promise<void> {
         const webview = this._webView!;
 
         try {
@@ -855,7 +855,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             });
 
             // Validate credentials and create AuthInfo (will throw on failure)
-            const authInfo = await createValidatedRovoDevAuthInfo(host, email, apiToken);
+            const authInfo = await createValidatedRovoDevAuthInfo(email, apiToken);
 
             // Save to RovoDev credential store
             await this.extensionApi.auth.saveRovoDevAuthInfo(authInfo);

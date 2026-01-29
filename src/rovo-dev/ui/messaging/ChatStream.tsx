@@ -44,7 +44,7 @@ interface ChatStreamProps {
     onCollapsiblePanelExpanded: () => void;
     handleFeedbackTrigger: (isPositive: boolean) => void;
     onLoginClick: (openApiTokenLogin: boolean) => void;
-    onRovoDevAuthSubmit: (host: string, email: string, apiToken: string) => void;
+    onRovoDevAuthSubmit: (email: string, apiToken: string) => void;
     onOpenFolder: () => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
     setPromptText: (context: string) => void;
