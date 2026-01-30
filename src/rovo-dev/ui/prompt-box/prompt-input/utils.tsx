@@ -142,6 +142,12 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         description: 'Toggle tool confirmations',
         command: { title: 'Yolo Mode', id: 'rovo-dev.toggleYoloMode', tooltip: 'Toggle tool confirmations' },
     },
+    {
+        label: '/sessions',
+        insertText: '/sessions',
+        description: 'View and manage your agent sessions',
+        command: { title: 'Sessions', id: 'rovo-dev.triggerSessions', tooltip: 'View and manage your agent sessions' },
+    },
 ];
 
 export const createSlashCommandProvider = (commands: SlashCommand[]): monaco.languages.CompletionItemProvider => {
@@ -208,6 +214,7 @@ export function setupMonacoCommands(
     onCopy: () => void,
     handleMemoryCommand: () => void,
     handleTriggerFeedbackCommand: () => void,
+    handleSessionCommand?: () => void,
     onYoloModeToggled?: () => void,
 ) {
     monaco.editor.registerCommand('rovo-dev.clearChat', () => {
@@ -261,6 +268,13 @@ export function setupMonacoCommands(
         handleTriggerFeedbackCommand();
         editor.setValue('');
     });
+
+    if (handleSessionCommand) {
+        monaco.editor.registerCommand('rovo-dev.triggerSessions', () => {
+            handleSessionCommand();
+            editor.setValue('');
+        });
+    }
 }
 
 export function setupPromptKeyBindings(editor: monaco.editor.IStandaloneCodeEditor, handleSend: () => void) {

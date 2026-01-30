@@ -14,6 +14,7 @@ import { Tokens, tokensFromResponseData } from './tokens';
 export interface TokenResponse {
     tokens?: Tokens;
     shouldInvalidate: boolean;
+    shouldSlowDown?: boolean;
 }
 
 export class OAuthRefesher implements Disposable {
@@ -44,11 +45,10 @@ export class OAuthRefesher implements Disposable {
             return { tokens: undefined, shouldInvalidate: true };
         }
 
-        const strategy = strategyForProvider(provider);
-
         const response: TokenResponse = { tokens: undefined, shouldInvalidate: false };
-
         try {
+            const strategy = strategyForProvider(provider);
+
             const tokenResponse = await this._axios(strategy.tokenUrl(), {
                 method: 'POST',
                 headers: strategy.refreshHeaders(),
@@ -75,11 +75,16 @@ export class OAuthRefesher implements Disposable {
         } catch (err) {
             const responseStatusDescription = err.response?.status ? ` ${err.response.status}` : '';
             const axiosErrorData = ` (Axios message: ${err?.response?.data?.error}. Axios description: ${err?.response?.data?.error_description})`;
+            if (!err.response && err.code === 'ENOTFOUND') {
+                Logger.error(err, `Network error while refreshing tokens. Hostname: "${err.hostname}"`);
+                response.shouldSlowDown = true;
+            }
 
             Logger.error(err, 'Error while refreshing tokens' + responseStatusDescription + axiosErrorData);
             if (err.response?.status === 401 || err.response?.status === 403) {
                 Logger.debug(`Invalidating credentials due to ${err.response.status} while refreshing tokens`);
                 response.shouldInvalidate = true;
+                response.shouldSlowDown = true;
             }
         }
         return response;

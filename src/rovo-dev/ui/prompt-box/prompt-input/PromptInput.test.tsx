@@ -58,6 +58,7 @@ describe('PromptInputBox', () => {
         onCopy: jest.fn(),
         handleMemoryCommand: jest.fn(),
         handleTriggerFeedbackCommand: jest.fn(),
+        handleSessionCommand: jest.fn(),
     };
 
     beforeEach(() => {

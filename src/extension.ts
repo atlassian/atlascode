@@ -37,26 +37,47 @@ const AnalyticDelay = 5000;
 const PerfStartMarker = 'extension.start';
 
 export async function activate(context: ExtensionContext) {
-    Performance.mark(PerfStartMarker);
-
-    registerErrorReporting();
-
-    const atlascode = extensions.getExtension(ExtensionId)!;
-    const atlascodeVersion = atlascode.packageJSON.version;
-    const previousVersion = context.globalState.get<string>(GlobalStateVersionKey);
-
-    registerResources(context);
-
-    Configuration.configure(context);
-    Logger.configure(context);
-
-    // this disables the main Atlassian activity bar when we are in Boysenberry,
-    setCommandContext(CommandContext.BbyEnvironmentActive, RovodevStaticConfig.isBBY);
-
-    // Mark ourselves as the PID in charge of refreshing credentials and start listening for pings.
-    context.globalState.update('rulingPid', pid);
-
     try {
+        Performance.mark(PerfStartMarker);
+
+        registerErrorReporting();
+
+        // Register global error handlers as last resort to catch any unhandled exceptions
+        const uncaughtExceptionHandler = (error: Error) => {
+            Logger.error(error, 'Uncaught exception in extension');
+        };
+
+        const unhandledRejectionHandler = (reason: any) => {
+            const error = reason instanceof Error ? reason : new Error(String(reason));
+            Logger.error(error, 'Unhandled promise rejection in extension');
+        };
+
+        process.on('uncaughtException', uncaughtExceptionHandler);
+        process.on('unhandledRejection', unhandledRejectionHandler);
+
+        // Ensure cleanup when extension is deactivated
+        context.subscriptions.push({
+            dispose: () => {
+                process.removeListener('uncaughtException', uncaughtExceptionHandler);
+                process.removeListener('unhandledRejection', unhandledRejectionHandler);
+            },
+        });
+
+        const atlascode = extensions.getExtension(ExtensionId)!;
+        const atlascodeVersion = atlascode.packageJSON.version;
+        const previousVersion = context.globalState.get<string>(GlobalStateVersionKey);
+
+        registerResources(context);
+
+        Configuration.configure(context);
+        Logger.configure(context);
+
+        // this disables the main Atlassian activity bar when we are in Boysenberry,
+        setCommandContext(CommandContext.BbyEnvironmentActive, RovodevStaticConfig.isBBY);
+
+        // Mark ourselves as the PID in charge of refreshing credentials and start listening for pings.
+        context.globalState.update('rulingPid', pid);
+
         await Container.initialize(context, atlascodeVersion);
 
         activateErrorReporting();
@@ -77,41 +98,43 @@ export async function activate(context: ExtensionContext) {
 
             NotificationManagerImpl.getInstance().listen();
         }
-    } catch (e) {
-        Logger.error(e, 'Error initializing atlascode!');
-    }
 
-    startListening((site: DetailedSiteInfo) => {
-        Container.clientManager.requestSite(site);
-    });
+        startListening((site: DetailedSiteInfo) => {
+            Container.clientManager.requestSite(site);
+        });
 
-    if (!RovodevStaticConfig.isBBY && !Container.config.disableOnboarding) {
-        if (previousVersion === undefined) {
-            commands.executeCommand(Commands.ShowOnboardingFlow);
-        } else {
-            showWelcomePage(atlascodeVersion, previousVersion);
+        if (!RovodevStaticConfig.isBBY && !Container.config.disableOnboarding) {
+            if (previousVersion === undefined) {
+                commands.executeCommand(Commands.ShowOnboardingFlow);
+            } else {
+                showWelcomePage(atlascodeVersion, previousVersion);
+            }
         }
+
+        const delay = Math.floor(Math.random() * Math.floor(AnalyticDelay));
+        setTimeout(() => {
+            sendAnalytics(atlascodeVersion, context.globalState);
+        }, delay);
+
+        if (!RovodevStaticConfig.isBBY) {
+            context.subscriptions.push(languages.registerCodeLensProvider({ scheme: 'file' }, { provideCodeLenses }));
+
+            // Following are async functions called without await so that they are run
+            // in the background and do not slow down the time taken for the extension
+            // icon to appear in the activity bar
+            activateBitbucketFeatures();
+            activateYamlFeatures(context);
+        } else {
+            commands.executeCommand('workbench.view.extension.atlascode-rovo-dev');
+        }
+
+        const duration = Performance.measureAndClear(PerfStartMarker);
+        Logger.info(`Atlassian for VS Code (v${atlascodeVersion}) activated in ${duration} ms`);
+    } catch (e) {
+        // Catch any unhandled exceptions from VSCode or extension activation
+        Logger.error(e, 'Critical error during extension activation');
+        throw e; // Re-throw to let VSCode know activation failed
     }
-
-    const delay = Math.floor(Math.random() * Math.floor(AnalyticDelay));
-    setTimeout(() => {
-        sendAnalytics(atlascodeVersion, context.globalState);
-    }, delay);
-
-    if (!RovodevStaticConfig.isBBY) {
-        context.subscriptions.push(languages.registerCodeLensProvider({ scheme: 'file' }, { provideCodeLenses }));
-
-        // Following are async functions called without await so that they are run
-        // in the background and do not slow down the time taken for the extension
-        // icon to appear in the activity bar
-        activateBitbucketFeatures();
-        activateYamlFeatures(context);
-    } else {
-        commands.executeCommand('workbench.view.extension.atlascode-rovo-dev');
-    }
-
-    const duration = Performance.measureAndClear(PerfStartMarker);
-    Logger.info(`Atlassian for VS Code (v${atlascodeVersion}) activated in ${duration} ms`);
 }
 
 function activateErrorReporting(): void {
@@ -180,18 +203,22 @@ async function sendAnalytics(version: string, globalState: Memento) {
     globalState.update(GlobalStateVersionKey, version);
 
     if (previousVersion === undefined) {
-        installedEvent(version).then((e) => {
-            Container.analyticsClient.sendTrackEvent(e);
-        });
+        installedEvent(version)
+            .then((e) => Container.analyticsClient.sendTrackEvent(e))
+            .catch((e) => {
+                Logger.error(e, 'Error sending installed event');
+            });
 
         return;
     }
 
     if (semver_gt(version, previousVersion)) {
         Logger.info(`Atlassian for VS Code upgraded from v${previousVersion} to v${version}`);
-        upgradedEvent(version, previousVersion).then((e) => {
-            Container.analyticsClient.sendTrackEvent(e);
-        });
+        upgradedEvent(version, previousVersion)
+            .then((e) => Container.analyticsClient.sendTrackEvent(e))
+            .catch((e) => {
+                Logger.error(e, 'Error sending upgraded event');
+            });
     }
 
     launchedEvent(
@@ -204,9 +231,11 @@ async function sendAnalytics(version: string, globalState: Memento) {
         Container.config.jira.enabled,
         Container.config.bitbucket.enabled,
         Container.config.rovodev.enabled,
-    ).then((e) => {
-        Container.analyticsClient.sendTrackEvent(e);
-    });
+    )
+        .then((e) => Container.analyticsClient.sendTrackEvent(e))
+        .catch((e) => {
+            Logger.error(e, 'Error sending launched event');
+        });
 }
 
 // this method is called when your extension is deactivated

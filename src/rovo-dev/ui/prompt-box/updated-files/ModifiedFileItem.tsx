@@ -4,7 +4,7 @@ import Tooltip from '@atlaskit/tooltip';
 import { isAbsolute, join } from 'path';
 import React from 'react';
 
-import { ToolReturnParseResult } from '../../utils';
+import { onKeyDownHandler, ToolReturnParseResult } from '../../utils';
 
 export const ModifiedFileItem: React.FC<{
     msg: ToolReturnParseResult;
@@ -61,9 +61,12 @@ export const ModifiedFileItem: React.FC<{
 
     return (
         <div
-            aria-label="modified-file-item"
+            aria-label={`Modified file: ${filePath}`}
             className="modified-file-item"
             onClick={() => onFileClick(filePath)}
+            onKeyDown={onKeyDownHandler(() => onFileClick(filePath))}
+            tabIndex={0}
+            role="button"
             title={getDisplayPath()}
         >
             <div className={getClassName(msg)}>

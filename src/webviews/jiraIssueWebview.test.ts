@@ -928,6 +928,11 @@ describe('JiraIssueWebview', () => {
                 return action === msg;
             });
 
+            // Mock fetchMultipleIssuesWithTransitions to return enhanced issue data
+            const mockFetchMultipleIssuesWithTransitions =
+                require('../jira/fetchIssueWithTransitions').fetchMultipleIssuesWithTransitions;
+            mockFetchMultipleIssuesWithTransitions.mockResolvedValue([]);
+
             const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
 
             await jiraIssueWebview['onMessageReceived'](msg);
@@ -937,6 +942,76 @@ describe('JiraIssueWebview', () => {
             expect(postMessageSpy).toHaveBeenCalledWith({
                 type: 'fieldValueUpdate',
                 fieldValues: { issuelinks: updatedIssueLinks, nonce: 'nonce-123' },
+            });
+        });
+
+        test('should enhance linked issues with assignee data after createIssueLink', async () => {
+            const issueLinkData = { linkType: 'relates-to', issueKey: 'TEST-456' };
+            const issueLinkType = { id: 'relates-to', name: 'Relates to' };
+            const msg = {
+                action: 'createIssueLink',
+                site: mockSiteDetails,
+                issueLinkData,
+                issueLinkType,
+                nonce: 'nonce-123',
+            };
+
+            // Issue links returned from API without assignee data
+            const updatedIssueLinks = [
+                { id: 'link-1', type: { id: '1', name: 'Relates' }, inwardIssue: { key: 'TEST-456' } },
+                { id: 'link-2', type: { id: '2', name: 'Blocks' }, outwardIssue: { key: 'TEST-789' } },
+            ];
+
+            // Enhanced issues with assignee data
+            const enhancedIssues = [
+                {
+                    key: 'TEST-456',
+                    assignee: { displayName: 'John Doe', accountId: 'user-1' },
+                    transitions: [{ id: '1', name: 'Done' }],
+                    status: { name: 'Open' },
+                    priority: { name: 'High' },
+                },
+                {
+                    key: 'TEST-789',
+                    assignee: { displayName: 'Jane Smith', accountId: 'user-2' },
+                    transitions: [{ id: '2', name: 'In Progress' }],
+                    status: { name: 'To Do' },
+                    priority: { name: 'Medium' },
+                },
+            ];
+
+            const createIssueLinkSpy = jest.fn().mockResolvedValue(updatedIssueLinks);
+            mockJiraClient.createIssueLink = createIssueLinkSpy;
+
+            jest.spyOn(require('../ipc/issueActions'), 'isCreateIssueLink').mockImplementation((action) => {
+                return action === msg;
+            });
+
+            // Clear subtasks to avoid collecting extra keys in enhanceChildAndLinkedIssuesWithTransitions
+            jiraIssueWebview['_editUIData'].fieldValues['subtasks'] = [];
+
+            const mockFetchMultipleIssuesWithTransitions =
+                require('../jira/fetchIssueWithTransitions').fetchMultipleIssuesWithTransitions;
+            mockFetchMultipleIssuesWithTransitions.mockClear();
+            mockFetchMultipleIssuesWithTransitions.mockResolvedValue(enhancedIssues);
+
+            await jiraIssueWebview['onMessageReceived'](msg);
+
+            // Verify that fetchMultipleIssuesWithTransitions was called to enhance the linked issues
+            expect(mockFetchMultipleIssuesWithTransitions).toHaveBeenCalledWith(
+                ['TEST-456', 'TEST-789'],
+                mockIssue.siteDetails,
+            );
+
+            // Verify that the linked issues now have assignee data
+            const resultIssueLinks = jiraIssueWebview['_editUIData'].fieldValues['issuelinks'];
+            expect(resultIssueLinks[0].inwardIssue.assignee).toEqual({
+                displayName: 'John Doe',
+                accountId: 'user-1',
+            });
+            expect(resultIssueLinks[1].outwardIssue.assignee).toEqual({
+                displayName: 'Jane Smith',
+                accountId: 'user-2',
             });
         });
 
@@ -956,11 +1031,22 @@ describe('JiraIssueWebview', () => {
                 nonce: 'nonce-123',
             };
 
+            const mockTransport = jest.fn().mockResolvedValue({});
+            mockJiraClient.transportFactory.mockReturnValue(mockTransport);
+            mockJiraClient.authorizationProvider.mockResolvedValue('Bearer test-token');
+            mockJiraClient.apiVersion = '3';
+
             const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
 
             await jiraIssueWebview['onMessageReceived'](msg);
 
-            expect(mockJiraClient.editIssue).toHaveBeenCalledWith(mockIssue.key, { issuelinks: [existingLinks[1]] });
+            const expectedUrl = `${mockSiteDetails.baseApiUrl.replace(/\/rest$/, '')}/rest/api/3/issueLink/${linkId}`;
+            expect(mockTransport).toHaveBeenCalledWith(expectedUrl, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: 'Bearer test-token',
+                },
+            });
             expect(jiraIssueWebview['_editUIData'].fieldValues['issuelinks']).toHaveLength(1);
             expect(jiraIssueWebview['_editUIData'].fieldValues['issuelinks'][0].id).toBe('link-2');
             expect(postMessageSpy).toHaveBeenCalled();

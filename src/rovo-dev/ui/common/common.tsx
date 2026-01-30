@@ -5,7 +5,7 @@ import React from 'react';
 import { ChatMessageItem } from '../messaging/ChatMessageItem';
 import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
-import { ChatMessage, parseToolReturnMessage } from '../utils';
+import { ChatMessage, onKeyDownHandler, parseToolReturnMessage } from '../utils';
 import { DialogMessageItem } from './DialogMessage';
 
 const mdParser = new MarkdownIt({
@@ -26,8 +26,13 @@ mdParser.renderer.rules.link_open = function (tokens, idx, options, env, self) {
         const hrefAttr = token.attrs ? token.attrs[hrefIndex] : null;
         if (hrefAttr && hrefAttr[1]) {
             const hrefValue = hrefAttr[1];
-
-            token.attrs!.splice(hrefIndex, 1);
+            if (Array.isArray(token.attrs)) {
+                token.attrs!.splice(hrefIndex, 1);
+            } else {
+                throw new Error(
+                    `Token attrs is not an array. Actual value: ${token.attrs} with type ${typeof token.attrs}`,
+                );
+            }
             token.attrSet('data-href', hrefValue);
             token.attrSet('class', 'rovodev-markdown-link');
         }
@@ -35,50 +40,12 @@ mdParser.renderer.rules.link_open = function (tokens, idx, options, env, self) {
     return self.renderToken(tokens, idx, options);
 };
 
-export const decodeUriComponentSafely = (value: string) => {
-    try {
-        return decodeURIComponent(value);
-    } catch {
-        return value;
-    }
-};
-
-const strictEncodeUrl = (url: string) => {
-    const decoded = decodeUriComponentSafely(url);
-    const encoded = encodeURI(decoded);
-
-    return encoded.replace(/\(/g, '%28').replace(/\)/g, '%29');
-};
-
-// Normalizes URLs before Markdown rendering:
-// 1) Encodes the entire Atlassian JQL query (everything after "jql=" to end of line)
-// so spaces, commas, and parentheses don't break the link.
-// 2) Strict-encodes any http/https URL (encodeURI + () -> %28/%29) to prevent
-// linkify from truncating at closing parentheses.
-// Keep validateLink to allow only http/https.
-export const normalizeLinks = (messageText: string) => {
-    if (typeof messageText !== 'string') {
-        console.warn('normalizeLinks called with non-string messageText', messageText, 'typeof:', typeof messageText);
-        // Silently recover from invalid types
-        return '';
-    }
-
-    let processed = messageText.replace(
-        /(https?:\/\/[^\s]+\/issues\/\?jql=)(.*?)(?=$|\n|\r)/gi,
-        (_match, prefix: string, jqlTail: string) => prefix + encodeURIComponent(decodeUriComponentSafely(jqlTail)),
-    );
-
-    processed = processed.replace(/https?:\/\/[^\n\r]+/g, (rawUrl) => strictEncodeUrl(rawUrl));
-
-    return processed;
-};
-
 export const MarkedDown: React.FC<{ value: string; onLinkClick: (href: string) => void }> = ({
     value,
     onLinkClick,
 }) => {
     const spanRef = React.useRef<HTMLSpanElement>(null);
-    const html = React.useMemo(() => mdParser.render(normalizeLinks(value)), [value]);
+    const html = React.useMemo(() => mdParser.render(value), [value]);
 
     React.useEffect(() => {
         if (!spanRef.current) {
@@ -214,7 +181,15 @@ export const FileLozenge: React.FC<{
     };
 
     return (
-        <div onClick={handleClick} className={isDisabled ? 'file-lozenge file-lozenge-disabled' : 'file-lozenge'}>
+        <div
+            onClick={handleClick}
+            onKeyDown={!isDisabled && openFile ? onKeyDownHandler(() => openFile(filePath)) : undefined}
+            tabIndex={isDisabled ? -1 : 0}
+            role="button"
+            aria-label={`Open file: ${filePath}`}
+            aria-disabled={isDisabled}
+            className={isDisabled ? 'file-lozenge file-lozenge-disabled' : 'file-lozenge'}
+        >
             <span className="file-path">{fileTitle || filePath}</span>
         </div>
     );

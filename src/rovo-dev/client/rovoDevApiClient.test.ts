@@ -736,6 +736,638 @@ describe('RovoDevApiClient', () => {
         });
     });
 
+    describe('status method', () => {
+        it('should return status information successfully', async () => {
+            const mockStatusResponse = {
+                cliVersion: { version: '1.0.0', sessionId: 'session-123' },
+                workingDirectory: '/path/to/working/dir',
+                account: {
+                    email: 'user@example.com',
+                    accountId: 'account-123',
+                    orgId: 'org-123',
+                    isServerAvailable: true,
+                },
+                memory: { memoryPaths: ['/path/to/memory'], hasMemoryFiles: true, errorMessage: null },
+                model: { modelName: 'gpt-4', humanReadableName: 'GPT-4', errorMessage: null },
+            };
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue(mockStatusResponse),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.status();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/status', {
+                method: 'GET',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: undefined,
+            });
+            expect(result).toEqual(mockStatusResponse);
+        });
+
+        it('should handle status with error messages', async () => {
+            const mockStatusResponse = {
+                cliVersion: { version: '1.0.0', sessionId: 'session-123' },
+                workingDirectory: '/path/to/working/dir',
+                account: {
+                    email: 'user@example.com',
+                    accountId: 'account-123',
+                    orgId: 'org-123',
+                    isServerAvailable: false,
+                },
+                memory: { memoryPaths: [], hasMemoryFiles: false, errorMessage: 'Memory error' },
+                model: { modelName: '', humanReadableName: '', errorMessage: 'Model initialization failed' },
+            };
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue(mockStatusResponse),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.status();
+
+            expect(result).toEqual(mockStatusResponse);
+            expect(result.memory.errorMessage).toBe('Memory error');
+            expect(result.model.errorMessage).toBe('Model initialization failed');
+        });
+
+        it('should throw error when status endpoint fails', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.status()).rejects.toThrow("Failed to fetch '/v3/status API: HTTP 500");
+        });
+    });
+
+    describe('getCurrentSession method', () => {
+        it('should return current session successfully', async () => {
+            const mockSession = {
+                id: 'session-123',
+                title: 'My Session',
+                created: '2024-01-01T00:00:00Z',
+                last_saved: '2024-01-01T01:00:00Z',
+                initial_prompt: 'Initial prompt text',
+                prompts: ['prompt1', 'prompt2'],
+                latest_result: 'Latest result text',
+                workspace_path: '/path/to/workspace',
+                parent_session_id: null,
+                num_messages: 5,
+                log_dir: '/path/to/logs',
+            };
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue(mockSession),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.getCurrentSession();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/sessions/current_session', {
+                method: 'GET',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: undefined,
+            });
+            expect(result).toEqual(mockSession);
+        });
+
+        it('should return session with parent_session_id', async () => {
+            const mockSession = {
+                id: 'session-456',
+                title: 'Child Session',
+                created: '2024-01-02T00:00:00Z',
+                last_saved: '2024-01-02T01:00:00Z',
+                initial_prompt: 'Child prompt',
+                prompts: ['prompt1'],
+                latest_result: 'Result',
+                workspace_path: '/path/to/workspace',
+                parent_session_id: 'session-123',
+                num_messages: 2,
+                log_dir: '/path/to/logs',
+            };
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue(mockSession),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.getCurrentSession();
+
+            expect(result.parent_session_id).toBe('session-123');
+        });
+
+        it('should throw error when API call fails', async () => {
+            const mockResponse = {
+                status: 404,
+                statusText: 'Not Found',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.getCurrentSession()).rejects.toThrow(
+                "Failed to fetch '/v3/sessions/current_session API: HTTP 404",
+            );
+        });
+    });
+
+    describe('listSessions method', () => {
+        it('should return list of sessions', async () => {
+            const mockSessions = [
+                {
+                    id: 'session-1',
+                    title: 'Session 1',
+                    created: '2024-01-01T00:00:00Z',
+                    last_saved: '2024-01-01T01:00:00Z',
+                    initial_prompt: 'Prompt 1',
+                    prompts: ['prompt1'],
+                    latest_result: 'Result 1',
+                    workspace_path: '/path/to/workspace1',
+                    parent_session_id: null,
+                    num_messages: 3,
+                    log_dir: '/path/to/logs1',
+                },
+                {
+                    id: 'session-2',
+                    title: 'Session 2',
+                    created: '2024-01-02T00:00:00Z',
+                    last_saved: '2024-01-02T01:00:00Z',
+                    initial_prompt: 'Prompt 2',
+                    prompts: ['prompt2'],
+                    latest_result: 'Result 2',
+                    workspace_path: '/path/to/workspace2',
+                    parent_session_id: null,
+                    num_messages: 5,
+                    log_dir: '/path/to/logs2',
+                },
+            ];
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ sessions: mockSessions }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.listSessions();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/sessions/list', {
+                method: 'GET',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: undefined,
+            });
+            expect(result).toEqual(mockSessions);
+            expect(result).toHaveLength(2);
+        });
+
+        it('should return empty array when no sessions exist', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ sessions: [] }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.listSessions();
+
+            expect(result).toEqual([]);
+        });
+
+        it('should return empty array when sessions property is missing', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({}),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.listSessions();
+
+            expect(result).toEqual([]);
+        });
+
+        it('should throw error when API call fails', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.listSessions()).rejects.toThrow("Failed to fetch '/v3/sessions/list API: HTTP 500");
+        });
+    });
+
+    describe('restoreSession method', () => {
+        it('should restore session successfully', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ message: 'Session restored' }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.restoreSession('session-123')).resolves.toBeUndefined();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/sessions/session-123/restore', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: undefined,
+            });
+        });
+
+        it('should handle session IDs with special characters', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ message: 'Session restored' }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.restoreSession('session-with-special_chars.123')).resolves.toBeUndefined();
+
+            expect(mockFetch).toHaveBeenCalledWith(
+                'http://localhost:8080/v3/sessions/session-with-special_chars.123/restore',
+                expect.any(Object),
+            );
+        });
+
+        it('should throw error when session does not exist', async () => {
+            const mockResponse = {
+                status: 404,
+                statusText: 'Not Found',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.restoreSession('non-existent-session')).rejects.toThrow(
+                "Failed to fetch '/v3/sessions/non-existent-session/restore API: HTTP 404",
+            );
+        });
+
+        it('should throw error when API call fails', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.restoreSession('session-123')).rejects.toThrow(
+                "Failed to fetch '/v3/sessions/session-123/restore API: HTTP 500",
+            );
+        });
+    });
+
+    describe('forkSession method', () => {
+        it('should fork session and return new session id', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ session_id: 'new-session-456' }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.forkSession('session-123');
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/sessions/session-123/fork', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: undefined,
+            });
+            expect(result).toBe('new-session-456');
+        });
+
+        it('should handle forking session with special characters', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ session_id: 'forked-session-789' }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.forkSession('session-with_special.chars');
+
+            expect(mockFetch).toHaveBeenCalledWith(
+                'http://localhost:8080/v3/sessions/session-with_special.chars/fork',
+                expect.any(Object),
+            );
+            expect(result).toBe('forked-session-789');
+        });
+
+        it('should throw error when session does not exist', async () => {
+            const mockResponse = {
+                status: 404,
+                statusText: 'Not Found',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.forkSession('non-existent-session')).rejects.toThrow(
+                "Failed to fetch '/v3/sessions/non-existent-session/fork API: HTTP 404",
+            );
+        });
+
+        it('should throw error when API call fails', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.forkSession('session-123')).rejects.toThrow(
+                "Failed to fetch '/v3/sessions/session-123/fork API: HTTP 500",
+            );
+        });
+    });
+
+    describe('deleteSession method', () => {
+        it('should delete session successfully', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ message: 'Session deleted' }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.deleteSession('session-123')).resolves.toBeUndefined();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/sessions/session-123', {
+                method: 'DELETE',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: undefined,
+            });
+        });
+
+        it('should handle deleting session with special characters', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ message: 'Session deleted' }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.deleteSession('session-with_special.chars')).resolves.toBeUndefined();
+
+            expect(mockFetch).toHaveBeenCalledWith(
+                'http://localhost:8080/v3/sessions/session-with_special.chars',
+                expect.any(Object),
+            );
+        });
+
+        it('should throw error when session does not exist', async () => {
+            const mockResponse = {
+                status: 404,
+                statusText: 'Not Found',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.deleteSession('non-existent-session')).rejects.toThrow(
+                "Failed to fetch '/v3/sessions/non-existent-session API: HTTP 404",
+            );
+        });
+
+        it('should throw error when API call fails', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.deleteSession('session-123')).rejects.toThrow(
+                "Failed to fetch '/v3/sessions/session-123 API: HTTP 500",
+            );
+        });
+    });
+
+    describe('chat method with context', () => {
+        it('should send chat message with file context', async () => {
+            const mockResponse = {
+                status: 200,
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const chatRequest = {
+                message: 'Explain this file',
+                context: [
+                    {
+                        type: 'file' as const,
+                        file_path: '/path/to/file.ts',
+                    },
+                ],
+            };
+
+            const response = await client.chat(chatRequest);
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/set_chat_message', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: JSON.stringify(chatRequest),
+            });
+            expect(response).toBe(mockResponse);
+        });
+
+        it('should send chat message with file context and selection', async () => {
+            const mockResponse = {
+                status: 200,
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const chatRequest = {
+                message: 'Explain this code',
+                context: [
+                    {
+                        type: 'file' as const,
+                        file_path: '/path/to/file.ts',
+                        selection: {
+                            start: 10,
+                            end: 20,
+                        },
+                        note: 'Focus on this function',
+                    },
+                ],
+            };
+
+            const response = await client.chat(chatRequest);
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/set_chat_message', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: JSON.stringify(chatRequest),
+            });
+            expect(response).toBe(mockResponse);
+        });
+
+        it('should send chat message with multiple context items', async () => {
+            const mockResponse = {
+                status: 200,
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const chatRequest = {
+                message: 'Review these changes',
+                context: [
+                    {
+                        type: 'file' as const,
+                        file_path: '/path/to/file1.ts',
+                    },
+                    {
+                        type: 'file' as const,
+                        file_path: '/path/to/file2.ts',
+                        selection: {
+                            start: 5,
+                            end: 15,
+                        },
+                    },
+                    {
+                        type: 'other',
+                        content: 'Additional context information',
+                    },
+                ],
+            };
+
+            const response = await client.chat(chatRequest);
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/set_chat_message', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: JSON.stringify(chatRequest),
+            });
+            expect(response).toBe(mockResponse);
+        });
+    });
+
+    describe('constructor without session token', () => {
+        it('should create instance without authentication header when session token is empty', () => {
+            const testClient = new RovoDevApiClient('localhost', 8080, '');
+            expect(testClient.baseApiUrl).toBe('http://localhost:8080');
+            // The auth header should be undefined, but we can't directly test private properties
+            // We can verify by making a request and checking the headers
+        });
+
+        it('should not include Authorization header when session token is empty', async () => {
+            const testClient = new RovoDevApiClient('localhost', 8080, '');
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ status: 'healthy', version: '1.0.0' }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await testClient.healthcheck();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/healthcheck', {
+                method: 'GET',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    // No Authorization header
+                },
+                body: undefined,
+            });
+        });
+    });
+
+    describe('fetchApi network error handling', () => {
+        it('should handle network error with error.cause.code', async () => {
+            const networkError = {
+                message: 'Network request failed',
+                cause: { code: 'ECONNREFUSED' },
+            };
+            mockFetch.mockRejectedValue(networkError);
+
+            await expect(client.healthcheck()).rejects.toThrow("Failed to fetch '/healthcheck API: ECONNREFUSED");
+        });
+
+        it('should handle network error with only error.message', async () => {
+            const networkError = new Error('Connection timeout');
+            mockFetch.mockRejectedValue(networkError);
+
+            await expect(client.healthcheck()).rejects.toThrow("Failed to fetch '/healthcheck API: Connection timeout");
+        });
+
+        it('should handle network error with neither cause nor message', async () => {
+            const networkError = { toString: () => 'Unknown error' };
+            mockFetch.mockRejectedValue(networkError);
+
+            await expect(client.healthcheck()).rejects.toThrow("Failed to fetch '/healthcheck API: Unknown error");
+        });
+    });
+
     describe('resumeToolCall method', () => {
         it('should send allow decision for single tool call', async () => {
             const mockResponse = {

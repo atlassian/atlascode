@@ -40,15 +40,21 @@ export class UIWebsocket implements Disposable {
                         const json = JSON.parse(message.utf8Data);
                         messageHandler(json);
                     } catch (e) {
-                        console.log('error parsing message', e);
+                        console.error('error parsing message', e);
                     }
                 }
             });
 
             connection.on('close', (code: number, desc: string) => {
                 console.log(new Date() + ` Peer ${connection.remoteAddress} disconnected.`);
-                // remove user from the list of connected clients
-                clients.splice(index, 1);
+                if (Array.isArray(clients) && index >= 0 && index < clients.length) {
+                    // remove user from the list of connected clients
+                    clients.splice(index, 1);
+                } else {
+                    throw new Error(
+                        `Websocket clients array or index is invalid. Actual clients: ${clients} with type: ${typeof clients}`,
+                    );
+                }
             });
         });
     }

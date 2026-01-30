@@ -80,3 +80,10 @@ export type CreateIssueSource =
     | 'issueContextMenu' // Issue right-click context menu
     | 'settingsPage' // Settings Explore page
     | 'explorer'; // Default/legacy fallback
+
+/**
+ * Exit reason for tracking why users abandon the Create Jira Issue page
+ */
+export type CreateIssueExitReason =
+    | 'closed' // user closed the tab without creating issue
+    | 'error'; // user left after getting an API error

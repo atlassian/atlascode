@@ -9,6 +9,8 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - main
+    paths-ignore:
+      - '**.md'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -38,9 +40,9 @@ jobs:
         run: npm ci
 
       - name: Run vulnerability audit
-        # "There is no Vulnerability in Media Viewer after 48.5.4. since it was fixed by patching, but npm audit still reports it.",
-        # So that switched to audit-ci with allowlist
-        run: npm run audit-ci
+        # We allow low severity vulnerabilities to not block the build, 
+        # but we should be diligent and fix them when they are discovered
+        run: npm audit --audit-level=moderate 
 
       - name: Compress node_modules
         run: tar -czf node_modules.tar.gz node_modules
@@ -139,6 +141,10 @@ jobs:
       ATLASCODE_FX3_ENVIRONMENT: ${{ vars.ATLASCODE_FX3_ENVIRONMENT }}
       ATLASCODE_FX3_TARGET_APP: ${{ vars.ATLASCODE_FX3_TARGET_APP }}
       ATLASCODE_FX3_TIMEOUT: ${{ vars.ATLASCODE_FX3_TIMEOUT }}
+      SENTRY_DSN: ${{ vars.SENTRY_DSN }}
+      SENTRY_ENABLED: ${{ vars.SENTRY_ENABLED }}
+      SENTRY_ENVIRONMENT: ${{ vars.SENTRY_ENVIRONMENT }}
+      SENTRY_SAMPLE_RATE: ${{ vars.SENTRY_SAMPLE_RATE }}
 
     steps:
       - uses: actions/checkout@v4

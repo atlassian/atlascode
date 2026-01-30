@@ -2,6 +2,8 @@ import './JiraWorkItem.css';
 
 import * as React from 'react';
 
+import { onKeyDownHandler } from '../../utils';
+
 export interface JiraWorkItemProps {
     issueKey: string;
     summary: string;
@@ -43,7 +45,15 @@ export const JiraWorkItem: React.FC<JiraWorkItemProps> = ({
     const displayText = `${issueKey}: ${summary}`;
 
     return (
-        <div className="jira-work-item" onClick={onClick} title={displayText}>
+        <div
+            className="jira-work-item"
+            onClick={onClick}
+            onKeyDown={onKeyDownHandler(onClick)}
+            tabIndex={0}
+            role="button"
+            title={displayText}
+            aria-label={displayText}
+        >
             {isBrokenImage || hasImageError ? (
                 // Show transparent placeholder to maintain layout
                 <div className="jira-work-item-icon" />

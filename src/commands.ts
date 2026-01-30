@@ -387,12 +387,21 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(RovodevCommands.RovodevAsk, (prompt: string, context?: RovoDevContextItem[]) => {
             Container.rovodevWebviewProvider.invokeRovoDevAskCommand(prompt, context);
         }),
+        commands.registerCommand(RovodevCommands.RovodevSessionHistory, () => {
+            Container.rovodevWebviewProvider.showSessionHistory();
+        }),
         commands.registerCommand(RovodevCommands.RovodevNewSession, () => {
             Container.rovodevWebviewProvider.executeNewSession();
         }),
         commands.registerCommand(RovodevCommands.RovodevShareFeedback, () =>
             Container.rovodevWebviewProvider.executeTriggerFeedback(),
         ),
+        commands.registerCommand(Commands.RovodevOpenHelp, () => {
+            env.openExternal(Uri.parse('https://support.atlassian.com/rovo/docs/work-with-rovo-dev-in-the-ide/'));
+        }),
+        commands.registerCommand(RovodevCommands.RovodevLogout, () => {
+            Container.rovodevWebviewProvider.executeRovoDevLogout();
+        }),
         commands.registerCommand(RovodevCommands.RovodevAddToContext, async () => {
             const context = buildContext(window.activeTextEditor, vscodeContext);
             if (!context || context.length === 0) {
@@ -423,6 +432,10 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(Commands.AuthenticateWithBitbucketToken, () => {
             Container.authenticateWithBitbucketToken();
         }),
+        commands.registerCommand(
+            RovodevCommands.RestartProcess,
+            async () => await Container.rovodevWebviewProvider.executeRestartProcess(),
+        ),
     );
 }
 

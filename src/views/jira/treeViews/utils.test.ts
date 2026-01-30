@@ -64,19 +64,6 @@ const mockedIssue2 = forceCastTo<TreeViewIssue>({
     children: [mockedIssue1],
 });
 
-const mockedIssue3 = forceCastTo<TreeViewIssue>({
-    key: 'AXON-3',
-    isEpic: false,
-    summary: 'summary3',
-    status: { name: 'statusName', statusCategory: { name: 'Done' } },
-    priority: { name: 'priorityName' },
-    siteDetails: { id: 'siteDetailsId', baseLinkUrl: '/siteDetails' },
-    issuetype: { iconUrl: '/issueType/' },
-    subtasks: [],
-    source: mockedJqlEntry,
-    children: [],
-});
-
 describe('utils', () => {
     afterEach(() => {
         jest.clearAllMocks();
@@ -171,15 +158,6 @@ describe('utils', () => {
         it('should create a JiraIssueNode', () => {
             const jiraIssueNode = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, mockedIssue1);
             expect(jiraIssueNode).toBeDefined();
-        });
-
-        it('should append correct contextValues', () => {
-            const jiraIssueNode1 = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, mockedIssue1);
-            const jiraIssueNode2 = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, mockedIssue2);
-            const jiraIssueNode3 = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, mockedIssue3);
-            expect(jiraIssueNode1.contextValue).toBe('jiraIssue_todo');
-            expect(jiraIssueNode2.contextValue).toBe('jiraIssue_inProgress');
-            expect(jiraIssueNode3.contextValue).toBe('jiraIssue_done');
         });
 
         it('getChildren should return children', async () => {

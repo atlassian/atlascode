@@ -1,12 +1,34 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
-## What's new in 4.0.15
+## What's new in 4.0.18
+
+### Bug Fixes
+
+- Fixed Rovo Dev forgetting previous Yolo mode setting
+- Fixed worklog creation error for users in UTC timezone
+
+## What's new in 4.0.17
+
+- Internal changes
+
+## What's new in 4.0.16
+
+### Features
+
+- Rovo Dev sessions management: restore a previous session, fork session, delete session
+
+### Improvements
+
+- Updated Rovo Dev to v0.13.27
 
 ### Bug Fixes
 
 - Added missing labels for PR merge strategies(AXON-1733)
 - Fixed authentication error
 - Fixed user mentions not working in Jira issue comments when using editor
+- Fixed settings write failures blocking issue creation and site removal
+- Fixed dismiss button handling for 'Credentials refused...' popup
+- Added more meaningful error message in case of expired access token usage
 
 ## What's new in 4.0.14
 

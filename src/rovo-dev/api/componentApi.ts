@@ -5,13 +5,16 @@ export const RovodevCommands = {
     RovodevAsk: 'atlascode.rovodev.askRovoDev',
     RovodevAskInteractive: 'atlascode.rovodev.askInteractive',
     RovodevAddToContext: 'atlascode.rovodev.addToContext',
+    RovodevSessionHistory: 'atlascode.rovodev.sessionHistory',
     RovodevNewSession: 'atlascode.rovodev.newChatSession',
     RovodevShareFeedback: 'atlascode.rovodev.shareFeedback',
+    RovodevLogout: 'atlascode.rovodev.logout',
     OpenRovoDevConfig: 'atlascode.openRovoDevConfig',
     OpenRovoDevMcpJson: 'atlascode.openRovoDevMcpJson',
     OpenRovoDevGlobalMemory: 'atlascode.openRovoDevGlobalMemory',
     OpenRovoDevLogFile: 'atlascode.openRovoDevLogFile',
     FocusRovoDevWindow: 'atlascode.views.rovoDev.webView.focus',
+    RestartProcess: 'atlascode.rovodev.restartProcess',
 } as const;
 
 /**
@@ -20,6 +23,7 @@ export const RovodevCommands = {
 export const RovodevCommandContext = {
     RovoDevEnabled: 'atlascode:rovoDevEnabled',
     RovoDevTerminalEnabled: 'atlascode:rovoDevTerminalEnabled',
+    RovoDevApiReady: 'atlascode:rovoDevApiReady',
 } as const;
 
 // Type safety in case we need to refer to these elsewhere

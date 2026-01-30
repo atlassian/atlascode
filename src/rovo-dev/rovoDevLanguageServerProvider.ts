@@ -142,6 +142,7 @@ export class RovoDevLanguageServerProvider extends Disposable {
                 this.serverProcess = spawn(binPath, ['lsp'], {
                     cwd: workspaceFolder,
                     env,
+                    windowsHide: true,
                 });
 
                 this.serverProcess.on('error', (error) => {

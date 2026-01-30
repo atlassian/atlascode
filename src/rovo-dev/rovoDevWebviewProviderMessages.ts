@@ -34,14 +34,21 @@ export const enum RovoDevProviderMessageType {
     SetDebugPanel = 'setDebugPanel',
     SetPromptText = 'setPromptText',
     SetJiraWorkItems = 'setJiraWorkItems',
+    SetExistingJiraCredentials = 'setExistingJiraCredentials',
     CheckFileExistsComplete = 'checkFileExistsComplete',
     SetThinkingBlockEnabled = 'setThinkingBlockEnabled',
     RestoreState = 'restoreState',
+    RovoDevAuthValidating = 'rovoDevAuthValidating',
+    RovoDevAuthValidationComplete = 'rovoDevAuthValidationComplete',
 }
 
 export type RovoDevDisabledReason = DisabledState['subState'];
 
 export type RovoDevEntitlementCheckFailedDetail = EntitlementCheckRovoDevHealthcheckResponse['detail'];
+
+export interface RovoDevFeatures {
+    dedicatedRovoDevAuth?: boolean;
+}
 
 export type RovoDevResponseMessageType =
     | RovoDevTextResponse
@@ -74,7 +81,13 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.ClearChat>
     | ReducerAction<
           RovoDevProviderMessageType.ProviderReady,
-          { isAtlassianUser: boolean; workspacePath?: string; homeDir?: string; yoloMode?: boolean }
+          {
+              isAtlassianUser: boolean;
+              workspacePath?: string;
+              homeDir?: string;
+              yoloMode?: boolean;
+              features?: RovoDevFeatures;
+          }
       >
     | ReducerAction<RovoDevProviderMessageType.SetInitializing, { isPromptPending: boolean }>
     | ReducerAction<
@@ -101,8 +114,14 @@ export type RovoDevProviderMessage =
           { issues: MinimalIssue<DetailedSiteInfo>[] | undefined }
       >
     | ReducerAction<
+          RovoDevProviderMessageType.SetExistingJiraCredentials,
+          { credentials: { host: string; email: string }[] }
+      >
+    | ReducerAction<
           RovoDevProviderMessageType.CheckFileExistsComplete,
           { requestId: string; filePath: string; exists: boolean }
       >
     | ReducerAction<RovoDevProviderMessageType.SetThinkingBlockEnabled, { enabled: boolean }>
-    | ReducerAction<RovoDevProviderMessageType.RestoreState, { state: RovoDevWebviewState }>;
+    | ReducerAction<RovoDevProviderMessageType.RestoreState, { state: RovoDevWebviewState }>
+    | ReducerAction<RovoDevProviderMessageType.RovoDevAuthValidating>
+    | ReducerAction<RovoDevProviderMessageType.RovoDevAuthValidationComplete, { success: boolean; error?: string }>;

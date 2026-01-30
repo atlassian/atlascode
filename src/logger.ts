@@ -119,14 +119,14 @@ export class Logger {
         // `retrieveCallerName` must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
         // If not, the function will return the name of a method inside Logger.
         const callerName = retrieveCallerName();
-        this.Instance.errorInternal(undefined, ex, callerName, errorMessage, ...params);
+        this.Instance.errorInternal(undefined, ex, callerName, errorMessage, undefined, ...params);
     }
 
     public error(ex: Error, errorMessage?: string, ...params: string[]): void {
         // `retrieveCallerName` must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
         // If not, the function will return the name of a method inside Logger.
         const callerName = retrieveCallerName();
-        this.errorInternal(undefined, ex, callerName, errorMessage, ...params);
+        this.errorInternal(undefined, ex, callerName, errorMessage, undefined, ...params);
     }
 
     protected static errorInternal(
@@ -134,9 +134,10 @@ export class Logger {
         ex: Error,
         capturedBy?: string,
         errorMessage?: string,
+        sessionId?: string,
         ...params: string[]
     ): void {
-        this.Instance.errorInternal(productArea, ex, capturedBy, errorMessage, ...params);
+        this.Instance.errorInternal(productArea, ex, capturedBy, errorMessage, sessionId, ...params);
     }
 
     protected errorInternal(
@@ -144,6 +145,7 @@ export class Logger {
         ex: Error,
         capturedBy?: string,
         errorMessage?: string,
+        sessionId?: string,
         ...params: string[]
     ): void {
         Logger._onError.fire({ error: ex, errorMessage, capturedBy, params, productArea });
@@ -154,12 +156,14 @@ export class Logger {
                     tags: {
                         productArea: productArea || 'unknown',
                         capturedBy: capturedBy || 'unknown',
+                        ...(sessionId && { sessionId }),
                     },
                     extra: {
                         errorMessage,
                         params,
                     },
                 });
+                Logger.debug('Error reported to Sentry successfully', ex);
             } catch (err) {
                 console.error('Error reporting to Sentry:', err);
             }

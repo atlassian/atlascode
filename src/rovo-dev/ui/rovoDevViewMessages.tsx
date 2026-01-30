@@ -29,6 +29,7 @@ export const enum RovoDevViewResponseType {
     TriggerFeedback = 'triggerFeedback',
     SendFeedback = 'sendFeedback',
     LaunchJiraAuth = 'launchJiraAuth',
+    SubmitRovoDevAuth = 'submitRovoDevAuth',
     McpConsentChoiceSubmit = 'mcpConsentChoiceSubmit',
     CheckFileExists = 'checkFileExists',
     ToolPermissionChoiceSubmit = 'toolPermissionChoiceSubmit',
@@ -40,6 +41,7 @@ export const enum RovoDevViewResponseType {
     MessageRendered = 'messageRendered',
     ReportRenderError = 'reportRenderError',
     StartNewSession = 'startNewSession',
+    ShowSessionHistory = 'showSessionHistory',
 }
 
 export type FileOperationType = 'modify' | 'create' | 'delete';
@@ -80,6 +82,7 @@ export type RovoDevViewResponse =
           { feedbackType: FeedbackType; feedbackMessage: string; lastTenMessages?: string[]; canContact: boolean }
       >
     | ReducerAction<RovoDevViewResponseType.LaunchJiraAuth, { openApiTokenLogin: boolean }>
+    | ReducerAction<RovoDevViewResponseType.SubmitRovoDevAuth, { host: string; email: string; apiToken: string }>
     | ReducerAction<RovoDevViewResponseType.McpConsentChoiceSubmit, { choice: McpConsentChoice; serverName?: string }>
     | ReducerAction<RovoDevViewResponseType.CheckFileExists, { filePath: string; requestId: string }>
     | ReducerAction<
@@ -101,4 +104,5 @@ export type RovoDevViewResponse =
               componentStack?: string;
           }
       >
-    | ReducerAction<RovoDevViewResponseType.StartNewSession>;
+    | ReducerAction<RovoDevViewResponseType.StartNewSession>
+    | ReducerAction<RovoDevViewResponseType.ShowSessionHistory>;

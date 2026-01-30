@@ -9,6 +9,8 @@ import * as Sentry from '@sentry/node';
 import { extensions } from 'vscode';
 
 import { ExtensionId } from './constants';
+import { Logger } from './logger';
+import { RovodevStaticConfig } from './rovo-dev/api/rovodevStaticConfig';
 
 export interface SentryConfig {
     enabled?: boolean; // Enable/disable Sentry (default: false)
@@ -17,6 +19,9 @@ export interface SentryConfig {
     environment?: string; // Environment name (default: 'development')
     sampleRate?: number; // Sample rate 0.0-1.0 (default: 1.0)
     atlasCodeVersion?: string; // Version tag for events
+    machineId?: string; // VS Code machine ID for tracking
+    appInstanceId?: string; // Extension instance ID for tracking
+    sandboxSessionId?: string; // Boysenberry session ID for BBY environment tracking
 }
 
 export interface ErrorContext {
@@ -48,11 +53,16 @@ export class SentryService {
      * @param config - Sentry configuration
      */
     public async initialize(config: SentryConfig, analyticsCallback?: (error: string) => void): Promise<void> {
+        Logger.info('Sentry trying to be initialized for Node.js environment.');
+
         // If not enabled, silently return without initializing
         if (!config.enabled || !config.dsn || !config.featureFlagEnabled) {
+            Logger.debug(
+                'Sentry not enabled or missing configuration, skipping initialization.',
+                JSON.stringify(config),
+            );
             return;
         }
-
         this.analyticsCallback = analyticsCallback;
 
         try {
@@ -66,10 +76,12 @@ export class SentryService {
                 tracesSampleRate: 0, // Disable transaction tracing
             });
             this.sentryClient = Sentry;
+            Logger.debug('Sentry initialized for Node.js environment.');
 
             this.initialized = true;
         } catch (error) {
             // Silently fail - don't break extension startup
+            Logger.debug(new Error('Failed to initialize Sentry:'), error);
             console.error('Failed to initialize Sentry:', error);
             this.initialized = false;
         }
@@ -102,6 +114,19 @@ export class SentryService {
                 // Add version tag
                 const atlascodeVersion = extensions.getExtension(ExtensionId)?.packageJSON.version;
                 scope.setTag('atlascodeVersion', atlascodeVersion);
+
+                // Add tracking tags for atlascode/rovodev transactions
+                if (this.config?.machineId) {
+                    scope.setTag('machineId', this.config.machineId);
+                }
+                if (this.config?.appInstanceId) {
+                    scope.setTag('appInstanceId', this.config.appInstanceId);
+                }
+                if (this.config?.sandboxSessionId) {
+                    scope.setTag('sandboxSessionId', this.config.sandboxSessionId);
+                }
+
+                scope.setTag('rovoDevEnv', RovodevStaticConfig.isBBY ? 'BBY' : 'IDE');
 
                 // Add extra context
                 if (context?.extra) {
