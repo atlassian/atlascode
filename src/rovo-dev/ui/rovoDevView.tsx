@@ -294,8 +294,6 @@ const RovoDevView: React.FC = () => {
                             if (!messagePromptId || !activePromptId) {
                                 return { state: 'GeneratingResponse' };
                             }
-                            // Otherwise (prompt mismatch or cleared active prompt), stay in WaitingForPrompt
-                            return prev;
                         }
                         return prev;
                     });
