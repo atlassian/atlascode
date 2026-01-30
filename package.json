@@ -759,7 +759,7 @@
                 },
                 {
                     "command": "atlascode.rovodev.restartProcess",
-                    "when": "view == atlascode.views.rovoDev.webView && atlascode:bbyEnvironmentActive",
+                    "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
                     "group": "rovoDevContextMenu3@1"
                 },
                 {
