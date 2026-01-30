@@ -40,50 +40,12 @@ mdParser.renderer.rules.link_open = function (tokens, idx, options, env, self) {
     return self.renderToken(tokens, idx, options);
 };
 
-export const decodeUriComponentSafely = (value: string) => {
-    try {
-        return decodeURIComponent(value);
-    } catch {
-        return value;
-    }
-};
-
-const strictEncodeUrl = (url: string) => {
-    const decoded = decodeUriComponentSafely(url);
-    const encoded = encodeURI(decoded);
-
-    return encoded.replace(/\(/g, '%28').replace(/\)/g, '%29');
-};
-
-// Normalizes URLs before Markdown rendering:
-// 1) Encodes the entire Atlassian JQL query (everything after "jql=" to end of line)
-// so spaces, commas, and parentheses don't break the link.
-// 2) Strict-encodes any http/https URL (encodeURI + () -> %28/%29) to prevent
-// linkify from truncating at closing parentheses.
-// Keep validateLink to allow only http/https.
-export const normalizeLinks = (messageText: string) => {
-    if (typeof messageText !== 'string') {
-        console.warn('normalizeLinks called with non-string messageText', messageText, 'typeof:', typeof messageText);
-        // Silently recover from invalid types
-        return '';
-    }
-
-    let processed = messageText.replace(
-        /(https?:\/\/[^\s]+\/issues\/\?jql=)(.*?)(?=$|\n|\r)/gi,
-        (_match, prefix: string, jqlTail: string) => prefix + encodeURIComponent(decodeUriComponentSafely(jqlTail)),
-    );
-
-    processed = processed.replace(/https?:\/\/[^\n\r]+/g, (rawUrl) => strictEncodeUrl(rawUrl));
-
-    return processed;
-};
-
 export const MarkedDown: React.FC<{ value: string; onLinkClick: (href: string) => void }> = ({
     value,
     onLinkClick,
 }) => {
     const spanRef = React.useRef<HTMLSpanElement>(null);
-    const html = React.useMemo(() => mdParser.render(normalizeLinks(value)), [value]);
+    const html = React.useMemo(() => mdParser.render(value), [value]);
 
     React.useEffect(() => {
         if (!spanRef.current) {
