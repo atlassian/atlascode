@@ -32,11 +32,6 @@ AtlasCode VSCode extension - Atlassian integration (Jira, Bitbucket, RovoDev)
 - Standard IDE: Users control their own process
 - Features conditionally shown based on process control model
 
-## Common Gotchas
-- Test menu `when` clauses thoroughly
-- RovoDev requires auth checks
-- E2E tests need Docker setup
-
 # Updating this doc
 
 **When:** After significant code changes, bug fixes, or discovering new patterns/gotchas.
