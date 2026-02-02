@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.19
+
+### Improvements
+
+- Onboarding panel enables/disables Jira and Bitbucket based on user selections
+
 ## What's new in 4.0.18
 
 ### Bug Fixes
