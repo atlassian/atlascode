@@ -32,9 +32,12 @@ AtlasCode VSCode extension - Atlassian integration (Jira, Bitbucket, RovoDev)
 - Standard IDE: Users control their own process
 - Features conditionally shown based on process control model
 
+## Readme updates
+- If authentication flow is changed, ensure that the readme is updated in a user-friendly way
+
 # Updating this doc
 
-**When:** After significant code changes, bug fixes, or discovering new patterns/gotchas.
+**When:** After significant code changes, bug fixes, or discovering new patterns/gotchas. 
 
 **How:** 
 1. Ask user: "Would you like me to update AGENTS.md with learnings from this work?"
