@@ -6,6 +6,10 @@
 
 - Onboarding panel enables/disables Jira and Bitbucket based on user selections
 
+### Bug Fixes
+
+- Fixed Stop button not appearing when executing Deep Plan
+
 ## What's new in 4.0.18
 
 ### Bug Fixes
