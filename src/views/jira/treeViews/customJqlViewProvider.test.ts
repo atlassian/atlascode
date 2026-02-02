@@ -187,34 +187,41 @@ describe('CustomJqlViewProvider', () => {
 
                     expect(issues[0].label).toBe(mockedIssue2.key);
                     expect(issues[0].description).toBe(`${mockedIssue2.summary} | ${mockedIssue2.status.name}`);
+                    expect(issues[0].contextValue).toBe('jiraIssue');
 
                     expect(await provider.getChildren(issues[0])).toHaveLength(0);
 
                     expect(issues[1].label).toBe(parentKey);
+                    expect(issues[1].contextValue).toBe('jiraIssue');
 
                     const childrenIssues = await provider.getChildren(issues[1]);
                     expect(childrenIssues).toHaveLength(2);
 
                     expect(childrenIssues[0].label).toBe(mockedIssue1.key);
                     expect(childrenIssues[0].description).toBe(`${mockedIssue1.summary} | ${mockedIssue1.status.name}`);
+                    expect(childrenIssues[0].contextValue).toBe('jiraIssue');
 
                     expect(childrenIssues[1].label).toBe(mockedIssue3.key);
                     expect(childrenIssues[1].description).toBe(`${mockedIssue3.summary} | ${mockedIssue3.status.name}`);
+                    expect(childrenIssues[1].contextValue).toBe('jiraIssue');
                 } else {
                     expect(issues).toHaveLength(3);
 
                     expect(issues[0].label).toBe(mockedIssue1.key);
                     expect(issues[0].description).toBe(`${mockedIssue1.summary} | ${mockedIssue1.status.name}`);
+                    expect(issues[0].contextValue).toBe('jiraIssue');
 
                     expect(await provider.getChildren(issues[0])).toHaveLength(0);
 
                     expect(issues[1].label).toBe(mockedIssue2.key);
                     expect(issues[1].description).toBe(`${mockedIssue2.summary} | ${mockedIssue2.status.name}`);
+                    expect(issues[1].contextValue).toBe('jiraIssue');
 
                     expect(await provider.getChildren(issues[1])).toHaveLength(0);
 
                     expect(issues[2].label).toBe(mockedIssue3.key);
                     expect(issues[2].description).toBe(`${mockedIssue3.summary} | ${mockedIssue3.status.name}`);
+                    expect(issues[2].contextValue).toBe('jiraIssue');
 
                     expect(await provider.getChildren(issues[2])).toHaveLength(0);
                 }

@@ -160,6 +160,13 @@ describe('utils', () => {
             expect(jiraIssueNode).toBeDefined();
         });
 
+        it('should set contextValue to nodeType', () => {
+            const jiraIssueNode1 = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, mockedIssue1);
+            const jiraIssueNode2 = new JiraIssueNode(JiraIssueNode.NodeType.JiraAssignedIssuesNode, mockedIssue1);
+            expect(jiraIssueNode1.contextValue).toBe('jiraIssue');
+            expect(jiraIssueNode2.contextValue).toBe('assignedJiraIssue');
+        });
+
         it('getChildren should return children', async () => {
             const jiraIssueNode = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, mockedIssue2);
             const children = await jiraIssueNode.getChildren();
