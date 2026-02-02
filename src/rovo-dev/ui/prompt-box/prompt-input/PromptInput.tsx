@@ -225,6 +225,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         () =>
             currentState.state === 'GeneratingResponse' ||
             currentState.state === 'CancellingResponse' ||
+            currentState.state === 'ExecutingPlan' ||
             (currentState.state === 'Initializing' && currentState.isPromptPending),
         [currentState],
     );
