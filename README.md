@@ -79,12 +79,32 @@ https://support.atlassian.com/bitbucket-cloud/docs/use-the-atlassian-for-vs-code
 
 
 
-# For Contibutors 
-
+# For Contributors
 
 [![Atlassian license](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=flat-square)](LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](CONTRIBUTING.md)
 
+## Repository structure
 
+```text
+.
+├── src/                        Extension source (TypeScript)
+│   ├── extension.ts            Extension entrypoint
+│   ├── atlclients/             Jira/Bitbucket auth + HTTP clients
+│   ├── jira/                   Jira domain logic
+│   ├── bitbucket/              Bitbucket domain logic
+│   ├── webview/                Webview controllers + message handling (extension side)
+│   ├── webviews/               React components rendered in webviews
+│   ├── react/                  Additional React UI (settings/config pages)
+│   └── rovo-dev/               Rovo Dev integration (providers, client, UI)
+├── e2e/                        Playwright E2E test suite + docker/wiremock
+├── __tests__/                  Jest setup files
+├── __mocks__/                  Jest mocks
+├── resources/                  Extension resources (icons, html templates, etc.)
+├── images/                     Marketplace/README images
+├── webpack.*.js                Webpack configs (extension vs react, dev vs prod)
+├── jest.*.config.ts            Jest configs (unit vs react)
+└── scripts/                    Release/build helper scripts
+```
 
 ## Installation
 
