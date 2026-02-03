@@ -1044,6 +1044,7 @@ describe('CloudPullRequestApi', () => {
                 destinationBranchName: 'main',
                 reviewerAccountIds: ['reviewer1', 'reviewer2'],
                 closeSourceBranch: true,
+                draft: false,
             };
 
             const mockApiResponse = {
@@ -1085,6 +1086,7 @@ describe('CloudPullRequestApi', () => {
                     { type: 'user', account_id: 'reviewer2' },
                 ],
                 close_source_branch: true,
+                draft: false,
             });
             expect(result.data.id).toBe('123');
         });
