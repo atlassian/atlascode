@@ -35,6 +35,12 @@ AtlasCode VSCode extension - Atlassian integration (Jira, Bitbucket, RovoDev)
 ## Readme updates
 - If authentication flow is changed, ensure that the readme is updated in a user-friendly way
 
+## Changelog updates 
+- After a code change is made, add a line to the changelog 
+
+## Linting
+- After code changes are finalized, run `npm run lint:fix`
+
 # Updating this doc
 
 **When:** After significant code changes, bug fixes, or discovering new patterns/gotchas. 
