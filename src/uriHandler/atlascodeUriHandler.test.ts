@@ -80,7 +80,6 @@ jest.mock('./actions/uriHandlerNotFoundHandler', () => ({
 }));
 
 import { RovodevCommands } from 'src/rovo-dev/api/componentApi';
-import { RovodevCommands } from 'src/rovo-dev/api/componentApi';
 import * as vscode from 'vscode';
 import { commands, Uri, window } from 'vscode';
 
