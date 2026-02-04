@@ -79,6 +79,15 @@ export const RovoDevLoginForm: React.FC<{
     const emailSelectRef = React.useRef<any>(null);
     const apiTokenInputRef = React.useRef<HTMLInputElement>(null);
 
+    // Pre-fill host and email if there's exactly one credential hint (expired credentials case)
+    React.useEffect(() => {
+        if (credentialHints.length === 1 && !host && !email) {
+            const hint = credentialHints[0];
+            setHost(hint.host);
+            setEmail(hint.email);
+        }
+    }, [credentialHints, host, email]);
+
     // Listen for validation events from the extension
     React.useEffect(() => {
         const messageHandler = (event: MessageEvent): void => {

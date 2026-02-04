@@ -762,6 +762,26 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
+    private async sendExpiredRovoDevCredentials(): Promise<void> {
+        if (!this._webView) {
+            return;
+        }
+
+        try {
+            const expiredCreds = await this.extensionApi.auth.getExpiredRovoDevCredentials();
+
+            if (expiredCreds) {
+                await this._webView.postMessage({
+                    type: RovoDevProviderMessageType.SetExistingJiraCredentials,
+                    credentials: [expiredCreds],
+                });
+            }
+        } catch (error) {
+            // Silently fail - pre-filling is a nice-to-have feature
+            RovoDevLogger.error(error, 'Failed to fetch expired RovoDev credentials for pre-fill');
+        }
+    }
+
     public async executeNewSession(): Promise<void> {
         const webview = this._webView!;
 
@@ -1564,6 +1584,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._isProviderDisabled = true;
 
         this.setRovoDevTerminated();
+
+        // If the reason is UnauthorizedAuth, send expired credentials for pre-filling the form
+        if (reason === 'UnauthorizedAuth') {
+            await this.sendExpiredRovoDevCredentials();
+        }
 
         const webView = this._webView!;
         await webView.postMessage({
