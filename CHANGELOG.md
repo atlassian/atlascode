@@ -5,6 +5,8 @@
 ### Improvements
 
 - Onboarding panel enables/disables Jira and Bitbucket based on user selections
+- Added "Enable Rovo Dev" command and URI handler support for programmatically enabling Rovo Dev
+
 
 ### Bug Fixes
 
