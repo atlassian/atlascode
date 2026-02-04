@@ -710,6 +710,7 @@ export class CloudPullRequestApi implements PullRequestApi {
                 account_id: accountId,
             })),
             close_source_branch: createPrData.closeSourceBranch,
+            draft: createPrData.draft || false,
         };
 
         const { ownerSlug, repoSlug } = site;
