@@ -80,6 +80,7 @@ jest.mock('./actions/uriHandlerNotFoundHandler', () => ({
 }));
 
 import { RovodevCommands } from 'src/rovo-dev/api/componentApi';
+import { RovodevCommands } from 'src/rovo-dev/api/componentApi';
 import * as vscode from 'vscode';
 import { commands, Uri, window } from 'vscode';
 
@@ -233,6 +234,19 @@ describe('AtlascodeUriHandler', () => {
 
             expect(window.showErrorMessage).not.toHaveBeenCalled();
             expect(commands.executeCommand).toHaveBeenCalledWith(RovodevCommands.RovodevEnable);
+        });
+
+        it('should execute rovoDev action', async () => {
+            // Test that the rovoDev action executes the rovodev command
+            const rovoDevUri = Uri.parse('vscode://atlassian.atlascode/rovoDev');
+
+            jest.spyOn(window, 'showErrorMessage');
+            jest.spyOn(vscode.commands, 'executeCommand').mockResolvedValue(undefined);
+
+            await handler.handleUri(rovoDevUri);
+
+            expect(window.showErrorMessage).not.toHaveBeenCalled();
+            expect(vscode.commands.executeCommand).toHaveBeenCalledWith(RovodevCommands.RovodevAsk);
         });
     });
 

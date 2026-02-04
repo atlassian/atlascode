@@ -22,6 +22,9 @@ export class AtlascodeUriHandler extends Disposable implements UriHandler {
             this.singleton = new AtlascodeUriHandler(analyticsApi, [
                 new BasicUriHandler('openSettings', () => Container.settingsWebviewFactory.createOrShow()),
                 new BasicUriHandler('extension', () => Promise.resolve(Container.focus())),
+                new BasicUriHandler('rovoDev', async () => {
+                    await commands.executeCommand(RovodevCommands.RovodevAsk);
+                }),
                 new BasicUriHandler('rovoDev/enable', async () => {
                     await commands.executeCommand(RovodevCommands.RovodevEnable);
                 }),

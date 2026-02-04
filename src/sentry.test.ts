@@ -90,12 +90,15 @@ describe('SentryService', () => {
 
             await sentryService.initialize(config);
 
-            expect(mockSentryInit).toHaveBeenCalledWith({
-                dsn: 'https://test@sentry.io/123456',
-                environment: 'test',
-                sampleRate: 0.5,
-                tracesSampleRate: 0,
-            });
+            expect(mockSentryInit).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    dsn: 'https://test@sentry.io/123456',
+                    environment: 'test',
+                    sampleRate: 0.5,
+                    tracesSampleRate: 0,
+                    beforeSend: expect.any(Function),
+                }),
+            );
             expect(sentryService.isInitialized()).toBe(true);
             expect(sentryService.getConfig()).toEqual(config);
         });
@@ -412,6 +415,154 @@ describe('SentryService', () => {
                     tracesSampleRate: 0,
                 }),
             );
+        });
+    });
+
+    describe('shouldSendEvent (beforeSend filter)', () => {
+        let beforeSendCallback:
+            | ((event: Sentry.Event, hint: Sentry.EventHint) => Sentry.Event | PromiseLike<Sentry.Event | null> | null)
+            | undefined;
+
+        beforeEach(async () => {
+            // Initialize Sentry and capture the beforeSend callback
+            await sentryService.initialize({
+                enabled: true,
+                featureFlagEnabled: true,
+                dsn: 'https://test@sentry.io/123456',
+            });
+
+            // Extract the beforeSend function from the init call
+            const initCall = mockSentryInit.mock.calls[0][0] as Sentry.NodeOptions;
+            beforeSendCallback = initCall.beforeSend;
+        });
+
+        it('should allow events without blocked tags', () => {
+            const event: Sentry.Event = {
+                tags: {
+                    someTag: 'someValue',
+                },
+            };
+            const hint = {} as Sentry.EventHint;
+
+            const result = beforeSendCallback!(event, hint);
+
+            expect(result).toEqual(event);
+        });
+
+        it('should block events with capturedBy: process.unhandledRejectionHandler', () => {
+            const event: Sentry.Event = {
+                tags: {
+                    capturedBy: 'process.unhandledRejectionHandler',
+                },
+            };
+            const hint = {} as Sentry.EventHint;
+
+            const result = beforeSendCallback!(event, hint);
+
+            expect(result).toBeNull();
+        });
+
+        it('should block events with capturedBy: uncaughtExceptionHandler', () => {
+            const event: Sentry.Event = {
+                tags: {
+                    capturedBy: 'uncaughtExceptionHandler',
+                },
+            };
+            const hint = {} as Sentry.EventHint;
+
+            const result = beforeSendCallback!(event, hint);
+
+            expect(result).toBeNull();
+        });
+
+        it('should block events with handled: no', () => {
+            const event: Sentry.Event = {
+                tags: {
+                    handled: 'no',
+                },
+            };
+            const hint = {} as Sentry.EventHint;
+
+            const result = beforeSendCallback!(event, hint);
+
+            expect(result).toBeNull();
+        });
+
+        it('should allow events with handled: yes', () => {
+            const event: Sentry.Event = {
+                tags: {
+                    handled: 'yes',
+                },
+            };
+            const hint = {} as Sentry.EventHint;
+
+            const result = beforeSendCallback!(event, hint);
+
+            expect(result).toEqual(event);
+        });
+
+        it('should allow events with different capturedBy values', () => {
+            const event: Sentry.Event = {
+                tags: {
+                    capturedBy: 'manualCapture',
+                },
+            };
+            const hint = {} as Sentry.EventHint;
+
+            const result = beforeSendCallback!(event, hint);
+
+            expect(result).toEqual(event);
+        });
+
+        it('should block events even when they have other tags', () => {
+            const event: Sentry.Event = {
+                tags: {
+                    module: 'test',
+                    severity: 'high',
+                    capturedBy: 'process.unhandledRejectionHandler',
+                },
+            };
+            const hint = {} as Sentry.EventHint;
+
+            const result = beforeSendCallback!(event, hint);
+
+            expect(result).toBeNull();
+        });
+
+        it('should allow events with no tags', () => {
+            const event: Sentry.Event = {};
+            const hint = {} as Sentry.EventHint;
+
+            const result = beforeSendCallback!(event, hint);
+
+            expect(result).toEqual(event);
+        });
+
+        it('should allow events with undefined tags', () => {
+            const event: Sentry.Event = {
+                tags: undefined,
+            };
+            const hint = {} as Sentry.EventHint;
+
+            const result = beforeSendCallback!(event, hint);
+
+            expect(result).toEqual(event);
+        });
+
+        it('should block only one matching filter is sufficient', () => {
+            // Test each filter independently
+            const filters = [
+                { capturedBy: 'process.unhandledRejectionHandler' },
+                { capturedBy: 'uncaughtExceptionHandler' },
+                { handled: 'no' },
+            ];
+
+            filters.forEach((tags) => {
+                const event: Sentry.Event = { tags };
+                const hint = {} as Sentry.EventHint;
+                const result = beforeSendCallback!(event, hint);
+                expect(result).toBeNull();
+            });
         });
     });
 });
