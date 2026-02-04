@@ -5,6 +5,7 @@
 ### Improvements
 
 - Onboarding panel enables/disables Jira and Bitbucket based on user selections
+- URI handler for Rovo Dev - vscode://atlassian.atlascode/rovoDev will bring the user directly to Rovo Dev part of the extension 
 
 ### Bug Fixes
 
