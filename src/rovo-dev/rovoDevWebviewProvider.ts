@@ -1570,6 +1570,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         if (this._isProviderDisabled) {
             return;
         }
+
+        // Check if this is an unauthorized error (expired/invalid credentials)
+        if (stderr && stderr.includes('UnauthorizedError')) {
+            await this.signalRovoDevDisabled('UnauthorizedAuth');
+            return;
+        }
+
         this._isProviderDisabled = true;
 
         this.setRovoDevTerminated();
