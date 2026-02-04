@@ -79,6 +79,7 @@ jest.mock('./actions/uriHandlerNotFoundHandler', () => ({
     UriHandlerNotFoundHandler: UriHandlerNotFoundHandlerMock,
 }));
 
+import { RovodevCommands } from 'src/rovo-dev/api/componentApi';
 import * as vscode from 'vscode';
 import { Uri, window } from 'vscode';
 
@@ -231,7 +232,7 @@ describe('AtlascodeUriHandler', () => {
             await handler.handleUri(rovoDevUri);
 
             expect(window.showErrorMessage).not.toHaveBeenCalled();
-            expect(vscode.commands.executeCommand).toHaveBeenCalledWith('atlascode.rovodev.askRovoDev');
+            expect(vscode.commands.executeCommand).toHaveBeenCalledWith(RovodevCommands.RovodevAsk);
         });
     });
 

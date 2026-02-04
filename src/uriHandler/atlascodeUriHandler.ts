@@ -1,3 +1,4 @@
+import { RovodevCommands } from 'src/rovo-dev/api/componentApi';
 import { commands, Disposable, env, Uri, UriHandler, window } from 'vscode';
 
 import { CheckoutHelper } from '../bitbucket/interfaces';
@@ -22,7 +23,7 @@ export class AtlascodeUriHandler extends Disposable implements UriHandler {
                 new BasicUriHandler('openSettings', () => Container.settingsWebviewFactory.createOrShow()),
                 new BasicUriHandler('extension', () => Promise.resolve(Container.focus())),
                 new BasicUriHandler('rovoDev', async () => {
-                    await commands.executeCommand('atlascode.rovodev.askRovoDev');
+                    await commands.executeCommand(RovodevCommands.RovodevAsk);
                 }),
                 new OpenPullRequestUriHandler(bitbucketHelper),
                 new CloneRepositoryUriHandler(bitbucketHelper),
