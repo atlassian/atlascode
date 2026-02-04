@@ -812,6 +812,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                         name: accountId,
                     },
                 })),
+                draft: createPrData.draft || false,
             },
             {
                 markup: true,

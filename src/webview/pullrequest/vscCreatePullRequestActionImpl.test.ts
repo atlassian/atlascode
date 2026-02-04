@@ -605,6 +605,7 @@ describe('VSCCreatePullRequestActionApi', () => {
             reviewers: [mockUser],
             closeSourceBranch: false,
             pushLocalChanges: true,
+            isDraft: false,
         };
 
         it('should create pull request successfully', async () => {
