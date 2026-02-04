@@ -225,6 +225,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         () =>
             currentState.state === 'GeneratingResponse' ||
             currentState.state === 'CancellingResponse' ||
+            currentState.state === 'ExecutingPlan' ||
             (currentState.state === 'Initializing' && currentState.isPromptPending),
         [currentState],
     );
@@ -311,17 +312,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                     )}{' '}
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                    {!showCancelButton && (
-                        <button
-                            className="prompt-button-primary"
-                            aria-label="send"
-                            onClick={() => handleSend()}
-                            disabled={disabled || !isWaitingForPrompt || isEmpty}
-                        >
-                            <SendIcon label="Send prompt" />
-                        </button>
-                    )}
-                    {showCancelButton && (
+                    {showCancelButton ? (
                         <Tooltip content="Stop generating" position="top">
                             <button
                                 className="prompt-button-secondary"
@@ -333,6 +324,15 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                 <VideoStopOverlayIcon color={token('color.icon.danger')} label="Stop" />
                             </button>
                         </Tooltip>
+                    ) : (
+                        <button
+                            className="prompt-button-primary"
+                            aria-label="send"
+                            onClick={() => handleSend()}
+                            disabled={disabled || !isWaitingForPrompt || isEmpty}
+                        >
+                            <SendIcon label="Send prompt" />
+                        </button>
                     )}
                 </div>
             </div>
