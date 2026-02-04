@@ -188,7 +188,10 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
 
     async findForkPoint(wsRepo: WorkspaceRepo, sourceBranch: Branch, destinationBranch: Branch): Promise<string> {
         const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri)!;
-
+        // In create PR flow destinationBranch.remote may be empty
+        if (!destinationBranch.remote) {
+            throw new Error('Cannot find fork point: destination branch remote is undefined');
+        }
         //When fetching the destination branch, we need to slice the remote off the branch name because the branch isn't actually called {remoteName}/{branchName}
         await scm.fetch(destinationBranch.remote, destinationBranch.name!.slice(destinationBranch.remote!.length + 1));
         const commonCommit = await scm.getMergeBase(destinationBranch.name!, sourceBranch.name!);
@@ -308,6 +311,7 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
             summary: data.summary,
             closeSourceBranch: data.closeSourceBranch,
             reviewerAccountIds: data.reviewers.map((r) => r.accountId),
+            draft: data.isDraft || false,
         });
 
         if (data.issue && data.transition) {
