@@ -64,6 +64,23 @@ export const DisabledMessage: React.FC<{
     }
 
     if (currentState.state === 'Disabled' && currentState.subState === 'UnauthorizedAuth') {
+        if (features?.dedicatedRovoDevAuth) {
+            // Show inline login form with expired credentials pre-filled
+            return (
+                <div style={loginFormContainerStyles}>
+                    <div style={{ marginBottom: '12px' }}>
+                        Your API token has expired. Please sign in again with a new API token.
+                    </div>
+                    <RovoDevLoginForm
+                        onSubmit={(host, email, apiToken) => {
+                            onRovoDevAuthSubmit(host, email, apiToken);
+                        }}
+                        credentialHints={credentialHints}
+                    />
+                </div>
+            );
+        }
+
         return (
             <div style={messageOuterStyles}>
                 <div>
