@@ -1,10 +1,11 @@
 import { Logger } from 'src/logger';
-import { commands, env, InputBox, UIKind, window } from 'vscode';
+import { commands, ConfigurationTarget, env, InputBox, UIKind, window } from 'vscode';
 
 import { authenticateButtonEvent, viewScreenEvent } from '../analytics';
 import { type AnalyticsClient } from '../analytics-node-client/src/client.min';
 import { BasicAuthInfo, Product, ProductBitbucket, ProductJira, SiteInfo } from '../atlclients/authInfo';
-import { Commands } from '../constants';
+import { configuration } from '../config/configuration';
+import { BitbucketEnabledKey, Commands, JiraEnabledKey } from '../constants';
 import { Container } from '../container';
 import { EXTENSION_URL } from '../uriHandler/atlascodeUriHandler';
 import OnboardingQuickInputManager from './onboardingQuickInputManager';
@@ -138,16 +139,26 @@ class OnboardingProvider {
         return env.uiKind === UIKind.Web;
     }
 
+    private async _setProductEnabled(product: Product, enabled: boolean) {
+        try {
+            const configKey = product.key === ProductJira.key ? JiraEnabledKey : BitbucketEnabledKey;
+            await configuration.update(configKey, enabled, ConfigurationTarget.Global);
+        } catch (e) {
+            Logger.warn(`Failed to ${enabled ? 'enable' : 'disable'} ${product.name}`, e);
+        }
+    }
+
     private _handleError(message: string, error: Error) {
         window.showErrorMessage(message);
         Logger.error(error, message);
     }
 
-    private _handleSkip(product: Product) {
+    private async _handleSkip(product: Product) {
         const host = product.key === ProductJira.key ? 'atlassian.net' : 'bitbucket.org';
         const siteInfo = { product, host };
 
         const step = product.key === ProductJira.key ? OnboardingStep.Jira : OnboardingStep.Bitbucket;
+        await this._setProductEnabled(product, false);
 
         this._fireAuthenticateButtonEvent(siteInfo, false, true);
 
@@ -180,6 +191,7 @@ class OnboardingProvider {
             this._fireAuthenticateButtonEvent(siteInfo, true);
 
             await Container.loginManager.userInitiatedOAuthLogin(siteInfo, EXTENSION_URL, true, this.id);
+            await this._setProductEnabled(product, true);
             this._handleNext(step);
             this._setBusy(product, false);
         } catch (e) {
@@ -214,6 +226,7 @@ class OnboardingProvider {
             this._fireAuthenticateButtonEvent(siteInfo, false);
 
             await Container.loginManager.userInitiatedServerLogin(siteInfo, authInfo, true, this.id);
+            await this._setProductEnabled(product, true);
         } catch (e) {
             throw Error(`Failed to authenticate with ${product.name} server: ${e.message || e}`);
         }

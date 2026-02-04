@@ -130,10 +130,14 @@ export function usageJsonResponseToMarkdown(response: RovoDevUsageResponse): {
             }
         }
     } else {
+        // If credit_total returns -1, it means unlimited credits
+        const remaining = data.credit_total === -1 ? 'Unlimited' : numberFormatter.format(data.credit_remaining);
+        const total = data.credit_total === -1 ? 'Unlimited' : numberFormatter.format(data.credit_total);
+
         buffer += `**${data.title}**\n`;
         buffer += `- Used: ${numberFormatter.format(data.credit_used)}\n`;
-        buffer += `- Remaining: ${numberFormatter.format(data.credit_remaining)}\n`;
-        buffer += `- Total: ${numberFormatter.format(data.credit_total)}\n`;
+        buffer += `- Remaining: ${remaining}\n`;
+        buffer += `- Total: ${total}\n`;
         buffer += '\n';
     }
 
