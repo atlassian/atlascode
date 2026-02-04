@@ -77,6 +77,7 @@ const RovoDevView: React.FC = () => {
     const [thinkingBlockEnabled, setThinkingBlockEnabled] = useState(true);
     const [lastCompletedPromptId, setLastCompletedPromptId] = useState<string | undefined>(undefined);
     const [activePromptId, setActivePromptId] = useState<string | undefined>(undefined);
+    const [queuedPrompt, setQueuedPrompt] = useState<string | undefined>(undefined);
     const [isAtlassianUser, setIsAtlassianUser] = useState(false);
     const [feedbackType, setFeedbackType] = React.useState<'like' | 'dislike' | undefined>(undefined);
 
@@ -324,6 +325,7 @@ const RovoDevView: React.FC = () => {
 
                     if (event.isCancellation) {
                         setActivePromptId(undefined); // Clear active prompt so late messages don't re-lock UI
+                        // Queued prompt will be sent via useEffect below after state updates
                     }
 
                     setSummaryMessageInHistory();
@@ -582,6 +584,19 @@ const RovoDevView: React.FC = () => {
                 return false;
             }
 
+            // If there's an active prompt (cancellation in progress), queue this prompt
+            if (activePromptId && currentState.state === 'CancellingResponse') {
+                setQueuedPrompt(text);
+                // Show a message to the user that cancellation is still being processed
+                handleAppendResponse({
+                    event_kind: '_RovoDevDialog',
+                    type: 'info',
+                    title: 'Cancellation in progress',
+                    text: 'Your previous prompt is being cancelled. Your new prompt will be sent once cancellation completes.',
+                });
+                return false;
+            }
+
             const isWaitingForPrompt =
                 currentState.state === 'WaitingForPrompt' ||
                 (currentState.state === 'Initializing' && !currentState.isPromptPending);
@@ -610,7 +625,7 @@ const RovoDevView: React.FC = () => {
 
             return true;
         },
-        [currentState, isDeepPlanToggled, promptContextCollection, postMessage],
+        [currentState, isDeepPlanToggled, promptContextCollection, postMessage, activePromptId, handleAppendResponse],
     );
 
     React.useEffect(() => {
@@ -637,6 +652,18 @@ const RovoDevView: React.FC = () => {
             setLastCompletedPromptId(undefined);
         }
     }, [lastCompletedPromptId, currentState.state, postMessage]);
+
+    // Send queued prompt after cancellation completes
+    React.useEffect(() => {
+        if (queuedPrompt && !activePromptId && currentState.state === 'WaitingForPrompt') {
+            const promptToSend = queuedPrompt;
+            setQueuedPrompt(undefined);
+            // Send on next tick to ensure state updates have propagated
+            setTimeout(() => {
+                sendPrompt(promptToSend);
+            }, 0);
+        }
+    }, [queuedPrompt, activePromptId, currentState.state, sendPrompt]);
 
     const executeCodePlan = useCallback(() => {
         if (currentState.state !== 'WaitingForPrompt') {
