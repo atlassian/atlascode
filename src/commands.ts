@@ -396,10 +396,10 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(RovodevCommands.RovodevShareFeedback, () =>
             Container.rovodevWebviewProvider.executeTriggerFeedback(),
         ),
-        commands.registerCommand(Commands.RovodevOpenHelp, () => {
+        commands.registerCommand(RovodevCommands.RovodevOpenHelp, () => {
             env.openExternal(Uri.parse('https://support.atlassian.com/rovo/docs/work-with-rovo-dev-in-the-ide/'));
         }),
-        commands.registerCommand(Commands.RovodevEnable, async () => {
+        commands.registerCommand(RovodevCommands.RovodevEnable, async () => {
             try {
                 await configuration.updateEffective('rovodev.enabled', true);
                 window.showInformationMessage('Rovo Dev has been enabled successfully!');
