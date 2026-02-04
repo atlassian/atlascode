@@ -7,6 +7,7 @@ import {
     Autocomplete,
     Box,
     Button,
+    ButtonGroup,
     Card,
     CardContent,
     CircularProgress,
@@ -77,6 +78,8 @@ const useStyles = makeStyles((theme: Theme) => ({
     },
 }));
 
+type submittingState = 'initial' | 'submitting' | 'submittingDraft';
+
 const CreatePullRequestPage: React.FunctionComponent = () => {
     const theme = useTheme<Theme>();
     const vscStyles = useContext(VSCodeStylesContext);
@@ -93,7 +96,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
     const [closeSourceBranch, setCloseSourceBranch] = useState(false);
     const [transitionIssueEnabled, setTransitionIssueEnabled] = useState(false);
     const [transition, setTransition] = useState<Transition>(emptyTransition);
-    const [submitState, setSubmitState] = useState<'initial' | 'submitting'>('initial');
+    const [submitState, setSubmitState] = useState<submittingState>('initial');
 
     const handleTitleChange = useCallback(
         (event: React.ChangeEvent<HTMLInputElement>) => setTitle(event.target.value),
@@ -139,43 +142,47 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
         [setTransition],
     );
 
-    const handleSubmit = useCallback(async () => {
-        try {
-            setSubmitState('submitting');
-            await controller.submit({
-                workspaceRepo: state.repoData.workspaceRepo,
-                sourceSiteRemote: state.repoData.workspaceRepo.mainSiteRemote,
-                sourceBranch: sourceBranch,
-                sourceRemoteName: sourceRemoteName,
-                destinationBranch: destinationBranch,
-                title: title,
-                summary: summary,
-                reviewers: reviewers,
-                pushLocalChanges,
-                closeSourceBranch,
-                issue: transitionIssueEnabled ? state.issue : undefined,
-                transition,
-            });
-        } finally {
-            // Resetting back to inital state both in error and success case
-            // (ok to do for success case as the webview is hidden automatically if the request succeeds)
-            setSubmitState('initial');
-        }
-    }, [
-        controller,
-        state.repoData,
-        sourceBranch,
-        sourceRemoteName,
-        destinationBranch,
-        title,
-        summary,
-        reviewers,
-        pushLocalChanges,
-        closeSourceBranch,
-        state.issue,
-        transitionIssueEnabled,
-        transition,
-    ]);
+    const handleSubmit = useCallback(
+        async (submitType: 'submitting' | 'submittingDraft' = 'submitting') => {
+            try {
+                setSubmitState(submitType);
+                await controller.submit({
+                    workspaceRepo: state.repoData.workspaceRepo,
+                    sourceSiteRemote: state.repoData.workspaceRepo.mainSiteRemote,
+                    sourceBranch: sourceBranch,
+                    sourceRemoteName: sourceRemoteName,
+                    destinationBranch: destinationBranch,
+                    title: title,
+                    summary: summary,
+                    reviewers: reviewers,
+                    pushLocalChanges,
+                    closeSourceBranch,
+                    issue: transitionIssueEnabled ? state.issue : undefined,
+                    transition,
+                    isDraft: submitType === 'submittingDraft',
+                });
+            } finally {
+                // Resetting back to inital state both in error and success case
+                // (ok to do for success case as the webview is hidden automatically if the request succeeds)
+                setSubmitState('initial');
+            }
+        },
+        [
+            controller,
+            state.repoData,
+            sourceBranch,
+            sourceRemoteName,
+            destinationBranch,
+            title,
+            summary,
+            reviewers,
+            pushLocalChanges,
+            closeSourceBranch,
+            state.issue,
+            transitionIssueEnabled,
+            transition,
+        ],
+    );
 
     useEffect(() => {
         if (state.repoData.localBranches.length > 0) {
@@ -447,7 +454,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                                 className={classes.leftBorder}
                                                 sx={{ maxWidth: '50%' }}
                                             >
-                                                <Grid item direction="row">
+                                                <Grid item>
                                                     <Typography>
                                                         <Box display="inline-flex" fontWeight="fontWeightBold">
                                                             {state.issue?.key}
@@ -485,21 +492,38 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                             </Grid>
                                         </Grid>
                                         <Grid item>
-                                            <Button
-                                                variant="contained"
-                                                color="primary"
-                                                onClick={handleSubmit}
-                                                endIcon={
-                                                    submitState === 'submitting' ? (
-                                                        <CircularProgress
-                                                            color="inherit"
-                                                            size={theme.typography.fontSize}
-                                                        />
-                                                    ) : null
-                                                }
-                                            >
-                                                Create pull request
-                                            </Button>
+                                            <ButtonGroup variant="contained">
+                                                <Button
+                                                    variant="contained"
+                                                    color="primary"
+                                                    onClick={() => handleSubmit('submitting')}
+                                                    endIcon={
+                                                        submitState === 'submitting' ? (
+                                                            <CircularProgress
+                                                                color="inherit"
+                                                                size={theme.typography.fontSize}
+                                                            />
+                                                        ) : null
+                                                    }
+                                                >
+                                                    Create pull request
+                                                </Button>
+                                                <Button
+                                                    variant="outlined"
+                                                    color="secondary"
+                                                    onClick={() => handleSubmit('submittingDraft')}
+                                                    endIcon={
+                                                        submitState === 'submittingDraft' ? (
+                                                            <CircularProgress
+                                                                color="inherit"
+                                                                size={theme.typography.fontSize}
+                                                            />
+                                                        ) : null
+                                                    }
+                                                >
+                                                    Create draft
+                                                </Button>
+                                            </ButtonGroup>
                                         </Grid>
                                         <Grid item />
                                         <Grid item hidden={state.commits.length === 0 && state.fileDiffs.length === 0}>
