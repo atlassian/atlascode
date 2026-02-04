@@ -350,6 +350,7 @@ export interface PullRequestApi {
         createPrData: CreatePullRequestData,
     ): Promise<PullRequest>;
     update(pr: PullRequest, title: string, summary: string, reviewerAccountIds: string[]): Promise<PullRequest>;
+    updateDraftStatus(pr: PullRequest, isDraft: boolean): Promise<PullRequest>;
     updateApproval(pr: PullRequest, status: ApprovalStatus): Promise<ApprovalStatus>;
     merge(
         pr: PullRequest,
