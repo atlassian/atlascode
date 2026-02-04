@@ -489,6 +489,8 @@ export class Container {
             )),
         );
         this._context.subscriptions.push((this._jiraActiveIssueStatusBar = new JiraActiveIssueStatusBar(bbCtx)));
+        // Authenticate with Bitbucket when the extension opens; safely no-ops if no token is found
+        Container.authenticateWithBitbucketToken();
 
         this._context.subscriptions.push(new BitbucketCloudPullRequestLinkProvider());
         // It seems to take a bit of time for VS Code to initialize git, if we try and find repos before that completes
@@ -590,6 +592,10 @@ export class Container {
     private static _settingsWebviewFactory: SingleWebview<SectionChangeMessage | SectionV3ChangeMessage, ConfigAction>;
     public static get settingsWebviewFactory() {
         return this._settingsWebviewFactory;
+    }
+
+    static async authenticateWithBitbucketToken() {
+        Container.loginManager.authenticateWithBitbucketToken();
     }
 
     private static _pullRequestDetailsWebviewFactory: MultiWebview<any, PullRequestDetailsAction>;
