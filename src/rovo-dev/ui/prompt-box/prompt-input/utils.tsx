@@ -144,9 +144,9 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     },
     {
         label: '/ask',
-        insertText: '/ask',
+        insertText: '/ask ',
         description: 'Ask a question in read-only mode (no file changes or terminal access)',
-        command: { title: 'Ask Mode', id: 'rovo-dev.toggleAskMode', tooltip: 'Toggle Ask mode' },
+        command: { title: 'Ask Mode', id: 'rovo-dev.invokeAskMode', tooltip: 'Invoke Ask mode' },
     },
     {
         label: '/sessions',

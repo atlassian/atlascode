@@ -47,7 +47,7 @@
     ],
     "main": "./build/extension/extension",
     "rovoDev": {
-        "version": "0.13.34"
+        "version": "0.13.40"
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
@@ -581,6 +581,16 @@
                 "command": "atlascode.addRecommendedExtension",
                 "title": "Add as Recommended Extension",
                 "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.rovodev.openHelp",
+                "title": "Documentation",
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.rovodev.enable",
+                "title": "Enable Rovo Dev",
+                "category": "Rovo Dev"
             }
         ],
         "viewsContainers": {
@@ -748,14 +758,19 @@
                     "group": "rovoDevContextMenu2@1"
                 },
                 {
-                    "command": "atlascode.rovodev.restartProcess",
+                    "command": "atlascode.rovodev.openHelp",
                     "when": "view == atlascode.views.rovoDev.webView",
+                    "group": "rovoDevContextMenu2@2"
+                },
+                {
+                    "command": "atlascode.rovodev.restartProcess",
+                    "when": "view == atlascode.views.rovoDev.webView && !atlascode:bbyEnvironmentActive",
                     "group": "rovoDevContextMenu3@1"
                 },
                 {
                     "command": "atlascode.rovodev.logout",
                     "when": "view == atlascode.views.rovoDev.webView && atlascode:isRovoDevAuthenticated",
-                    "group": "rovoDevContextMenu2@2"
+                    "group": "rovoDevContextMenu3@2"
                 },
                 {
                     "command": "atlascode.jira.expandCreateWorkItem",

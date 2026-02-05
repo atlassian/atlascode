@@ -92,6 +92,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _disabledReason: RovoDevDisabledReason | 'none' = 'none';
     private _webviewReady = false;
     private _isFirstResolve = true;
+    private _yoloMode = false;
     private _savedState: RovoDevWebviewState | undefined = undefined;
     private _debugPanelEnabled = false;
     private _debugPanelContext: Record<string, string> = {};
@@ -123,7 +124,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         return 'yoloMode_global';
     }
 
-    private async loadYoloModeFromStorage(): Promise<boolean> {
+    private loadYoloModeFromStorage(): boolean {
         if (this.isBoysenberry) {
             return true;
         }
@@ -199,9 +200,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._chatProvider = new RovoDevChatProvider(this.isBoysenberry, this._telemetryProvider);
         this._chatContextprovider = new RovoDevChatContextProvider();
 
-        this.loadYoloModeFromStorage().then((yoloMode) => {
-            this._chatProvider.yoloMode = yoloMode;
-        });
+        this._yoloMode = this.loadYoloModeFromStorage();
+        this._chatProvider.yoloMode = this._yoloMode;
 
         this._jiraItemsProvider = new RovoDevJiraItemsProvider();
         this._jiraItemsProvider.onNewJiraItems((issues) => this.sendJiraItemsToView(issues));
@@ -509,7 +509,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                     case RovoDevViewResponseType.YoloModeToggled:
                         this._chatProvider.yoloMode = e.value;
-                        this.saveYoloModeToStorage(e.value);
+                        this._yoloMode = e.value;
+                        await this.saveYoloModeToStorage(e.value);
                         break;
 
                     case RovoDevViewResponseType.FullContextModeToggled:
@@ -591,7 +592,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async sendProviderReadyEvent(userEmail: string | undefined) {
-        const yoloMode = await this.loadYoloModeFromStorage();
+        const yoloMode = this._yoloMode;
         const featureFlagClient = FeatureFlagClient.getInstance();
 
         await this._webView!.postMessage({
@@ -1550,6 +1551,28 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
+    // keeps track of predefined errors based on retrieved error messages within the stack trace
+    private getRefinedInitializationErrorMessage(errorMessage?: string): string | undefined {
+        const errorMap: { [key: string]: string } = {
+            'Retrieved 0 total sites':
+                'Sign up for Rovo Dev at https://www.atlassian.com/try/cloud/signup?bundle=devai',
+            'Found 0 sites with active Rovo Dev SKU':
+                'No Atlassian sites with active Rovo Dev found. Please contact your administrator or sign up for Rovo Dev at https://www.atlassian.com/try/cloud/signup?bundle=devai',
+            'Entitlement Check Failed':
+                'To use Rovo Dev in IDE, ask your administrator to add Rovo Dev to your organization.',
+        };
+
+        if (errorMessage) {
+            for (const [key, value] of Object.entries(errorMap)) {
+                if (errorMessage.includes(key)) {
+                    return value;
+                }
+            }
+        }
+
+        return undefined;
+    }
+
     private async signalProcessFailedToInitialize(errorMessage?: string) {
         if (this._isProviderDisabled) {
             return;
@@ -1559,12 +1582,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this.setRovoDevTerminated();
 
         const title = 'Failed to start Rovo Dev';
-
-        errorMessage = errorMessage
-            ? `${errorMessage}\nPlease start a new chat session to try again.`
-            : 'Please start a new chat session to try again.';
-
+        const refinedErrorMessage = this.getRefinedInitializationErrorMessage(errorMessage);
+        if (!refinedErrorMessage) {
+            errorMessage = errorMessage
+                ? `${errorMessage}\nPlease start a new chat session to try again.`
+                : 'Please start a new chat session to try again.';
+        } else {
+            errorMessage = refinedErrorMessage;
+        }
         const error = new Error(errorMessage);
+
         // we assume that the real error has been logged somehwere else, so we don't log this one
         await this.processError(error, { title, isProcessTerminated: true, skipLogError: true });
     }
@@ -1578,11 +1605,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this.setRovoDevTerminated();
 
         const title = 'Agent process terminated';
-        const errorMessage =
-            typeof code === 'number'
-                ? `Rovo Dev process terminated with exit code ${code}.\nPlease start a new chat session to continue.`
-                : 'Please start a new chat session to continue.';
 
+        let errorMessage = this.getRefinedInitializationErrorMessage(stderr);
+        if (!errorMessage) {
+            errorMessage =
+                typeof code === 'number'
+                    ? `Rovo Dev process terminated with exit code ${code}.\nPlease start a new chat session to continue.`
+                    : 'Please start a new chat session to continue.';
+        }
         const error = new Error(errorMessage);
 
         // Include stderr if available

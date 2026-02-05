@@ -924,7 +924,20 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
-    const onYoloModeToggled = useCallback(() => setIsYoloModeToggled((prev) => !prev), [setIsYoloModeToggled]);
+    const onYoloModeToggled = useCallback(() => {
+        const yoloModeNewValue = !isYoloModeToggled;
+        setIsYoloModeToggled(yoloModeNewValue);
+
+        // the event below (YoloModeToggled) with value true automatically approves any pending confirmation
+        if (yoloModeNewValue) {
+            setModalDialogs([]);
+        }
+
+        postMessage({
+            type: RovoDevViewResponseType.YoloModeToggled,
+            value: yoloModeNewValue,
+        });
+    }, [postMessage, isYoloModeToggled]);
 
     const onFullContextModeToggled = useCallback(
         () => setIsFullContextModeToggled((prev) => !prev),
@@ -962,18 +975,6 @@ const RovoDevView: React.FC = () => {
     const handleShowSessionsCommand = React.useCallback(() => {
         postMessage({ type: RovoDevViewResponseType.ShowSessionHistory });
     }, [postMessage]);
-
-    React.useEffect(() => {
-        // the event below (YoloModeToggled) with value true automatically approves any pending confirmation
-        if (isYoloModeToggled) {
-            setModalDialogs([]);
-        }
-
-        postMessage({
-            type: RovoDevViewResponseType.YoloModeToggled,
-            value: isYoloModeToggled,
-        });
-    }, [postMessage, isYoloModeToggled]);
 
     React.useEffect(() => {
         postMessage({

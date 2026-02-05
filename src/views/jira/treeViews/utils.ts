@@ -85,6 +85,7 @@ export class JiraIssueNode extends TreeItem implements AbstractBaseNode {
         this.description = `${summary} | ${issue.status.name}`;
         this.command = { command: Commands.ShowIssue, title: 'Show Issue', arguments: [issue] };
         this.iconPath = Uri.parse(issue.issuetype.iconUrl);
+        this.contextValue = nodeType;
         this.tooltip = `${issue.key} - ${issue.summary}\n\n${issue.priority.name}    |    ${issue.status.name}`;
         this.resourceUri = getJiraIssueUri(issue);
         this.children = issue.children.map((x) => new JiraIssueNode(nodeType, x));

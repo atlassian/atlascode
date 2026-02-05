@@ -1,4 +1,5 @@
-import { Disposable, env, Uri, UriHandler, window } from 'vscode';
+import { RovodevCommands } from 'src/rovo-dev/api/componentApi';
+import { commands, Disposable, env, Uri, UriHandler, window } from 'vscode';
 
 import { CheckoutHelper } from '../bitbucket/interfaces';
 import { ExtensionId } from '../constants';
@@ -21,6 +22,12 @@ export class AtlascodeUriHandler extends Disposable implements UriHandler {
             this.singleton = new AtlascodeUriHandler(analyticsApi, [
                 new BasicUriHandler('openSettings', () => Container.settingsWebviewFactory.createOrShow()),
                 new BasicUriHandler('extension', () => Promise.resolve(Container.focus())),
+                new BasicUriHandler('rovoDev/enable', async () => {
+                    await commands.executeCommand(RovodevCommands.RovodevEnable);
+                }),
+                new BasicUriHandler('rovoDev', async () => {
+                    await commands.executeCommand(RovodevCommands.RovodevAsk);
+                }),
                 new OpenPullRequestUriHandler(bitbucketHelper),
                 new CloneRepositoryUriHandler(bitbucketHelper),
                 new OpenOrWorkOnJiraIssueUriHandler('openJiraIssue'),
