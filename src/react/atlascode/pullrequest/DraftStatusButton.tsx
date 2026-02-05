@@ -1,14 +1,14 @@
 import { Button, Chip, CircularProgress, Tooltip } from '@mui/material';
 import React from 'react';
 
-interface DraftStatusToggleProps {
+interface DraftStatusButtonProps {
     isDraft: boolean;
     isAuthor: boolean;
     isLoading: boolean;
     onToggle: (isDraft: boolean) => void;
 }
 
-export const DraftStatusToggle: React.FC<DraftStatusToggleProps> = ({ isDraft, isAuthor, isLoading, onToggle }) => {
+export const DraftStatusButton: React.FC<DraftStatusButtonProps> = ({ isDraft, isAuthor, isLoading, onToggle }) => {
     if (!isAuthor) {
         // Non authors can only see the status, not change it
         if (isDraft) {
@@ -36,7 +36,7 @@ export const DraftStatusToggle: React.FC<DraftStatusToggleProps> = ({ isDraft, i
                     disabled={isLoading}
                     startIcon={isLoading ? <CircularProgress size={16} /> : null}
                 >
-                    Draft - Mark Ready
+                    Mark as ready
                 </Button>
             </Tooltip>
         );
@@ -52,7 +52,7 @@ export const DraftStatusToggle: React.FC<DraftStatusToggleProps> = ({ isDraft, i
                 disabled={isLoading}
                 startIcon={isLoading ? <CircularProgress size={16} /> : null}
             >
-                Convert to Draft
+                Mark as draft
             </Button>
         </Tooltip>
     );

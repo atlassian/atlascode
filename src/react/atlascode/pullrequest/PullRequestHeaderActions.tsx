@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ApprovalStatus } from '../../../bitbucket/model';
 import { CopyLinkButton } from '../common/CopyLinkButton';
 import { ApproveButton } from './ApproveButton';
-import { DraftStatusToggle } from './DraftStatusToggle';
+import { DraftStatusButton } from './DraftStatusButton';
 import { MergeDialog } from './MergeDialog';
 import { PullRequestDetailsControllerApi } from './pullRequestDetailsController';
 import { PullRequestDetailsState } from './pullRequestDetailsController';
@@ -38,7 +38,7 @@ export const PullRequestHeaderActions: React.FC<PullRequestHeaderActionsProps> =
         <>
             <CopyLinkButton tooltip="Copy link to pull request" url={state.pr.data.url} onClick={controller.copyLink} />
             <Box marginLeft={1} hidden={state.loadState.basicData}>
-                <DraftStatusToggle
+                <DraftStatusButton
                     isDraft={state.pr.data.draft}
                     isAuthor={state.currentUser.accountId === state.pr.data.author.accountId}
                     isLoading={isSomethingLoading}
