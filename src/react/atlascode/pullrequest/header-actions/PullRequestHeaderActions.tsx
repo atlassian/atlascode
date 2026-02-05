@@ -2,13 +2,13 @@ import { RefreshButton } from '@atlassianlabs/guipi-core-components';
 import { Box } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { ApprovalStatus } from '../../../bitbucket/model';
-import { CopyLinkButton } from '../common/CopyLinkButton';
+import { ApprovalStatus } from '../../../../bitbucket/model';
+import { CopyLinkButton } from '../../common/CopyLinkButton';
+import { PullRequestDetailsControllerApi } from '../pullRequestDetailsController';
+import { PullRequestDetailsState } from '../pullRequestDetailsController';
 import { ApproveButton } from './ApproveButton';
 import { DraftStatusButton } from './DraftStatusButton';
 import { MergeDialog } from './MergeDialog';
-import { PullRequestDetailsControllerApi } from './pullRequestDetailsController';
-import { PullRequestDetailsState } from './pullRequestDetailsController';
 import { RequestChangesButton } from './RequestChangesButton';
 
 export interface PullRequestHeaderActionsProps {

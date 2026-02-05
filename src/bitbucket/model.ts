@@ -221,6 +221,7 @@ export type CreatePullRequestData = {
     sourceSite: BitbucketSite;
     destinationBranchName: string;
     closeSourceBranch: boolean;
+    draft: boolean;
 };
 
 // This is used to handle both bitbucket cloud and bitbucket server
