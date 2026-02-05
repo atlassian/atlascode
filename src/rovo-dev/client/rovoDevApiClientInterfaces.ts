@@ -78,3 +78,13 @@ export interface RovoDevStatusAPIResponse {
 }
 
 export type ToolPermissionChoice = 'allow' | 'deny';
+
+export interface RovoDevSavedPromptsResponse {
+    prompts: [
+        {
+            name: string;
+            description: string;
+            content_file: string;
+        },
+    ];
+}

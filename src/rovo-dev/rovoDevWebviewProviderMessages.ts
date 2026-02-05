@@ -40,6 +40,7 @@ export const enum RovoDevProviderMessageType {
     RestoreState = 'restoreState',
     RovoDevAuthValidating = 'rovoDevAuthValidating',
     RovoDevAuthValidationComplete = 'rovoDevAuthValidationComplete',
+    UpdateSavedPrompts = 'updateSavedPrompts',
 }
 
 export type RovoDevDisabledReason = DisabledState['subState'];
@@ -124,4 +125,8 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.SetThinkingBlockEnabled, { enabled: boolean }>
     | ReducerAction<RovoDevProviderMessageType.RestoreState, { state: RovoDevWebviewState }>
     | ReducerAction<RovoDevProviderMessageType.RovoDevAuthValidating>
-    | ReducerAction<RovoDevProviderMessageType.RovoDevAuthValidationComplete, { success: boolean; error?: string }>;
+    | ReducerAction<RovoDevProviderMessageType.RovoDevAuthValidationComplete, { success: boolean; error?: string }>
+    | ReducerAction<
+          RovoDevProviderMessageType.UpdateSavedPrompts,
+          { savedPrompts: { name: string; description: string; content_file: string }[] | undefined }
+      >;
