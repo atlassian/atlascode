@@ -233,7 +233,7 @@ export function createPromptCompletionProvider(
                 prompts = await fetch();
             }
             const suggestions: monaco.languages.CompletionItem[] = prompts.map((prompt, index) => ({
-                label: `!${prompt.name}`,
+                label: prompt.name === 'Initializing...' ? 'Initializing...' : `!${prompt.name} `,
                 kind: monaco.languages.CompletionItemKind.File,
                 insertText: prompt.name === 'Initializing...' ? '' : `!${prompt.name} `,
                 documentation: prompt.description,
@@ -297,7 +297,7 @@ export function setupMonacoCommands(
     });
 
     monaco.editor.registerCommand('rovo-dev.triggerPrompts', () => {
-        // editor.setValue('!');
+        // Trigger suggestions for saved prompts
         editor.trigger('keyboard', 'editor.action.triggerSuggest', { auto: true });
     });
 
