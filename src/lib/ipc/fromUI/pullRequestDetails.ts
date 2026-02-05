@@ -18,6 +18,7 @@ export enum PullRequestDetailsActionType {
     FetchUsersRequest = 'fetchUsersRequest',
     UpdateSummaryRequest = 'updateSummaryRequest',
     UpdateTitleRequest = 'updateTitleRequest',
+    UpdateDraftStatusRequest = 'updateDraftStatusRequest',
     UpdateReviewers = 'updateReviewers',
     UpdateApprovalStatus = 'updateApprovalStatus',
     CheckoutBranch = 'checkoutBranch',
@@ -38,6 +39,7 @@ export type PullRequestDetailsAction =
     | ReducerAction<PullRequestDetailsActionType.FetchUsersRequest, FetchUsersRequestAction>
     | ReducerAction<PullRequestDetailsActionType.UpdateSummaryRequest, UpdateSummaryAction>
     | ReducerAction<PullRequestDetailsActionType.UpdateTitleRequest, UpdateTitleAction>
+    | ReducerAction<PullRequestDetailsActionType.UpdateDraftStatusRequest, UpdateDraftStatusAction>
     | ReducerAction<PullRequestDetailsActionType.UpdateReviewers, UpdateReviewersAction>
     | ReducerAction<PullRequestDetailsActionType.UpdateApprovalStatus, UpdateApprovalStatusAction>
     | ReducerAction<PullRequestDetailsActionType.PostComment, PostCommentAction>
@@ -66,6 +68,10 @@ export interface UpdateSummaryAction {
 
 export interface UpdateTitleAction {
     text: string;
+}
+
+export interface UpdateDraftStatusAction {
+    isDraft: boolean;
 }
 
 export interface UpdateReviewersAction {

@@ -119,6 +119,7 @@ describe('PullRequestDetailsWebviewController', () => {
             fetchUsers: jest.fn(),
             updateSummary: jest.fn(),
             updateTitle: jest.fn(),
+            updateDraftStatus: jest.fn(),
             getCurrentUser: jest.fn(),
             getPR: jest.fn(),
             updateCommits: jest.fn(),
