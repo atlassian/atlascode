@@ -737,6 +737,22 @@ export class RovoDevChatProvider {
     ) {
         RovoDevLogger.error(error);
 
+        // Send error analytics event for Boysenberry only
+        if (this._isBoysenberry) {
+            this._telemetryProvider.fireTelemetryEvent({
+                action: 'rovoDevError',
+                subject: 'atlascode',
+                attributes: {
+                    promptId: this._currentPromptId,
+                    errorType: error.name || 'Error',
+                    errorMessage: error.message,
+                    errorContext: 'chatProvider',
+                    isRetriable,
+                    isProcessTerminated,
+                },
+            });
+        }
+
         if (!showOnlyInDebug || this.isDebugging || this.isDebugPanelEnabled) {
             const webview = this._webView!;
             await webview.postMessage({

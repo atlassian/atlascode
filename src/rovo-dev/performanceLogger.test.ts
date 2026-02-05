@@ -27,6 +27,7 @@ describe('PerformanceLogger', () => {
         mockAnalyticsClient = {
             sendTrackEvent: jest.fn().mockResolvedValue(undefined),
             sendScreenEvent: jest.fn().mockResolvedValue(undefined),
+            sendErrorEvent: jest.fn().mockResolvedValue(undefined),
         };
 
         // Mock ExtensionApi constructor to return an instance with analytics

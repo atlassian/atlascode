@@ -211,10 +211,27 @@ export namespace Track {
             rovoDevPromptId: string;
         };
     };
+
+    export type ErrorEvent = {
+        action: 'rovoDevError';
+        subject: 'atlascode';
+        attributes: {
+            rovoDevEnv: RovoDevEnv;
+            appInstanceId: string;
+            sessionId: string;
+            promptId?: string;
+            errorType: string;
+            errorMessage?: string;
+            errorContext?: string;
+            isRetriable?: boolean;
+            isProcessTerminated?: boolean;
+        };
+    };
 }
 
 export type TrackEvent =
     | Track.NewSessionAction
+    | Track.RestartProcessAction
     | Track.PromptSent
     | Track.TechnicalPlanningShown
     | Track.FilesSummaryShown
@@ -223,7 +240,10 @@ export type TrackEvent =
     | Track.GitPushAction
     | Track.DetailsExpanded
     | Track.CreatePrButtonClicked
+    | Track.RestoreSessionClicked
+    | Track.ForkSessionClicked
+    | Track.DeleteSessionClicked
     | Track.AiResultViewed
-    | Track.RestartProcessAction
     | Track.ReplayCompleted
-    | Track.PerformanceEvent;
+    | Track.PerformanceEvent
+    | Track.ErrorEvent;

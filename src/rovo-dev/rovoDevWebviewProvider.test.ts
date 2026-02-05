@@ -14,6 +14,7 @@ jest.mock('./api/extensionApi', () => ({
         },
         analytics: {
             sendTrackEvent: jest.fn(),
+            sendErrorEvent: jest.fn(),
         },
         auth: {
             getCloudPrimaryAuthInfo: jest.fn(),

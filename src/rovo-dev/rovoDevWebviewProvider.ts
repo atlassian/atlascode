@@ -550,6 +550,20 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                                 : `Type: ${e.errorType}`;
 
                         RovoDevLogger.error(renderError, contextMessage);
+
+                        // Send render error analytics event for Boysenberry only
+                        if (this.isBoysenberry) {
+                            this._telemetryProvider.fireTelemetryEvent({
+                                action: 'rovoDevError',
+                                subject: 'atlascode',
+                                attributes: {
+                                    promptId: this._chatProvider.currentPromptId,
+                                    errorType: e.errorType || 'RenderError',
+                                    errorMessage: e.errorMessage,
+                                    errorContext: 'UIRender',
+                                },
+                            });
+                        }
                         break;
 
                     case RovoDevViewResponseType.ShowSessionHistory:
@@ -628,6 +642,22 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     ) {
         if (!skipLogError) {
             RovoDevLogger.error(error);
+        }
+
+        // Send error analytics event for Boysenberry only
+        if (this.isBoysenberry) {
+            this._telemetryProvider.fireTelemetryEvent({
+                action: 'rovoDevError',
+                subject: 'atlascode',
+                attributes: {
+                    promptId: this._chatProvider.currentPromptId,
+                    errorType: error.name || 'Error',
+                    errorMessage: error.message,
+                    errorContext: title,
+                    isRetriable,
+                    isProcessTerminated,
+                },
+            });
         }
 
         const webview = this._webView!;

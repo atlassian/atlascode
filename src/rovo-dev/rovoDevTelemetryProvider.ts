@@ -32,7 +32,8 @@ export type TelemetryEvent =
     | PartialEvent<Track.RestoreSessionClicked>
     | PartialEvent<Track.ForkSessionClicked>
     | PartialEvent<Track.DeleteSessionClicked>
-    | PartialEvent<Track.ReplayCompleted>;
+    | PartialEvent<Track.ReplayCompleted>
+    | PartialEvent<Track.ErrorEvent>;
 
 export type TelemetryScreenEvent = 'rovoDevSessionHistoryPicker';
 
@@ -93,6 +94,11 @@ export class RovoDevTelemetryProvider {
     }
 
     private hasValidMetadata(event: TelemetryEvent, metadata: CommonSessionAttributes): boolean {
+        // Allow rovoDevError to be sent even without sessionId, as errors can occur during initialization
+        if (event.action === 'rovoDevError') {
+            return true;
+        }
+
         if (!metadata.sessionId) {
             this.onError(new Error('Unable to send Rovo Dev telemetry: ChatSessionId not initialized'));
             return false;
@@ -121,6 +127,7 @@ export class RovoDevTelemetryProvider {
             eventId === 'atlascode_rovoDevFileChangedAction' ||
             eventId === 'rovoDevCreatePrButton_clicked' ||
             eventId === 'atlascode_rovoDevRestartProcessAction' || // We want to log every restart attempt
+            eventId === 'atlascode_rovoDevError' || // We want to log every error
             // Otherwise, only allow if not fired yet
             !this._firedTelemetryForCurrentPrompt[eventId]
         );

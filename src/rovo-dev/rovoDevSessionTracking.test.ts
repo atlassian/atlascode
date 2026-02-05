@@ -6,6 +6,7 @@ jest.mock('./api/extensionApi', () => ({
         analytics: {
             sendTrackEvent: jest.fn(() => Promise.resolve()),
             sendScreenEvent: jest.fn(() => Promise.resolve()),
+            sendErrorEvent: jest.fn(() => Promise.resolve()),
         },
     })),
 }));

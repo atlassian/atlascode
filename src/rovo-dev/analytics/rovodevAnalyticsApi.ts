@@ -14,4 +14,9 @@ export class RovodevAnalyticsApi {
         const finalizedEvent = await viewScreenEvent(screenName, undefined, ProductRovoDev);
         await Container.analyticsClient.sendScreenEvent(finalizedEvent);
     };
+
+    sendErrorEvent = async (event: TrackEvent & { action: 'rovoDevError' }) => {
+        const finalizedEvent = await trackEvent(event.action, event.subject, { attributes: event.attributes });
+        await Container.analyticsClient.sendTrackEvent(finalizedEvent);
+    };
 }
