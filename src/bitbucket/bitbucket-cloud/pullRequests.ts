@@ -741,6 +741,15 @@ export class CloudPullRequestApi implements PullRequestApi {
         return CloudPullRequestApi.toPullRequestData(data, pr.site, pr.workspaceRepo);
     }
 
+    async updateDraftStatus(pr: PullRequest, isDraft: boolean): Promise<PullRequest> {
+        const { ownerSlug, repoSlug } = pr.site;
+
+        const { data } = await this.client.put(`/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}`, {
+            draft: isDraft,
+        });
+        return CloudPullRequestApi.toPullRequestData(data, pr.site, pr.workspaceRepo);
+    }
+
     async updateApproval(pr: PullRequest, status: string): Promise<ApprovalStatus> {
         const { ownerSlug, repoSlug } = pr.site;
         switch (status) {
