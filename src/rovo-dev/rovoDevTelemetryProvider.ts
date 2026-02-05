@@ -94,11 +94,6 @@ export class RovoDevTelemetryProvider {
     }
 
     private hasValidMetadata(event: TelemetryEvent, metadata: CommonSessionAttributes): boolean {
-        // Allow rovoDevError to be sent even without sessionId, as errors can occur during initialization
-        if (event.action === 'rovoDevError') {
-            return true;
-        }
-
         if (!metadata.sessionId) {
             this.onError(new Error('Unable to send Rovo Dev telemetry: ChatSessionId not initialized'));
             return false;
