@@ -110,15 +110,6 @@ export class RovoDevChatProvider {
     public async setReady(rovoDevApiClient: RovoDevApiClient) {
         this._rovoDevApiClient = rovoDevApiClient;
 
-        // Initialize agent mode from API
-        try {
-            const agentModeResp = await this._rovoDevApiClient!.getAgentMode();
-            this.agentMode = agentModeResp.mode;
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            RovoDevLogger.error(new Error(`Failed to initialize agent mode: ${errorMessage}`));
-        }
-
         if (this._pendingPrompt) {
             const pendingPrompt = this._pendingPrompt;
             this._pendingPrompt = undefined;
