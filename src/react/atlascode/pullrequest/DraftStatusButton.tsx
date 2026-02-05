@@ -31,7 +31,7 @@ export const DraftStatusButton: React.FC<DraftStatusButtonProps> = ({ isDraft, i
                 <Button
                     variant="outlined"
                     size="small"
-                    color="warning"
+                    color="success"
                     onClick={handleClick}
                     disabled={isLoading}
                     startIcon={isLoading ? <CircularProgress size={16} /> : null}
@@ -45,9 +45,9 @@ export const DraftStatusButton: React.FC<DraftStatusButtonProps> = ({ isDraft, i
     return (
         <Tooltip title="Convert this pull request to a draft">
             <Button
-                variant="text"
+                variant="outlined"
                 size="small"
-                color="inherit"
+                color="warning"
                 onClick={handleClick}
                 disabled={isLoading}
                 startIcon={isLoading ? <CircularProgress size={16} /> : null}
