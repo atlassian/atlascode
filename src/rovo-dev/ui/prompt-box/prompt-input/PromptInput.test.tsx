@@ -1,3 +1,10 @@
+const model = {
+    getValueLength: jest.fn(() => 0),
+    getValue: jest.fn(() => ''),
+    getLineCount: jest.fn(() => 1),
+    getLineLength: jest.fn(() => 0),
+};
+
 const editor = {
     addCommand: jest.fn(),
     dispose: jest.fn(),
@@ -7,7 +14,7 @@ const editor = {
     onDidContentSizeChange: jest.fn(),
     getContentHeight: jest.fn(() => 100),
     getContainerDomNode: jest.fn(() => ({ style: { height: '' } })),
-    getModel: jest.fn(),
+    getModel: jest.fn(() => model),
     focus: jest.fn(),
     layout: jest.fn(),
     updateOptions: jest.fn(),
@@ -77,7 +84,12 @@ describe('PromptInputBox', () => {
 
     it('calls onSend when Send button is clicked', () => {
         jest.spyOn(editor, 'getValue').mockReturnValue('text prompt');
-        jest.spyOn(editor, 'onDidChangeModelContent').mockImplementation((cb) => cb());
+        // Make the editor appear non-empty so the Send button is enabled.
+        model.getValueLength.mockReturnValue(11);
+        jest.spyOn(editor, 'onDidChangeModelContent').mockImplementation((cb) =>
+            cb({ changes: [{ text: 'text prompt' }] } as any),
+        );
+
         render(<PromptInputBox {...defaultProps} />);
         fireEvent.click(screen.getByLabelText('Send prompt'));
         expect(defaultProps.onSend).toHaveBeenCalledWith('text prompt');

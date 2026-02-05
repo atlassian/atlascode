@@ -384,13 +384,32 @@ export function setupPromptKeyBindings(editor: monaco.editor.IStandaloneCodeEdit
 
 // Auto-resize functionality
 export function setupAutoResize(editor: monaco.editor.IStandaloneCodeEditor, maxHeight = 200) {
-    const updateHeight = () => {
+    let rafId: number | undefined;
+    let lastHeight: number | undefined;
+
+    const updateHeightNow = () => {
+        rafId = undefined;
         const contentHeight = Math.min(maxHeight, editor.getContentHeight());
+
+        // Avoid unnecessary style writes + layouts if nothing changed.
+        if (lastHeight === contentHeight) {
+            return;
+        }
+        lastHeight = contentHeight;
+
         const container = editor.getContainerDomNode();
         container.style.height = `${contentHeight}px`;
         editor.layout();
     };
 
-    editor.onDidContentSizeChange(updateHeight);
-    updateHeight();
+    const scheduleUpdate = () => {
+        if (rafId !== undefined) {
+            return;
+        }
+        rafId = window.requestAnimationFrame(updateHeightNow);
+    };
+
+    editor.onDidContentSizeChange(scheduleUpdate);
+    // Initial size
+    updateHeightNow();
 }

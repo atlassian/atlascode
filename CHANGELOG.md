@@ -11,6 +11,7 @@
 
 ### Bug Fixes
 
+- Improved Rovo Dev prompt input box performance by reducing per-keystroke work and throttling Monaco auto-resize (AXON-1841)
 - Fixed Stop button not appearing when executing Deep Plan
 
 ## What's new in 4.0.18

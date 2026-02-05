@@ -94,13 +94,56 @@ function createEditor(setIsEmpty: (isEmpty: boolean) => void) {
 
     const editor = createMonacoPromptEditor(container);
 
-    editor.onDidChangeModelContent(() => {
-        if (editor.getValue().trim().length === 0) {
-            setIsEmpty(true);
-        } else {
-            setIsEmpty(false);
+    // Keep isEmpty updated without doing an O(n) trim on every keystroke.
+    // We optimistically set non-empty if user inserts any non-whitespace.
+    // For deletions/whitespace-only edits we fall back to a debounced full scan.
+    let pendingEmptyCheck: number | undefined;
+    const scheduleFullEmptyCheck = () => {
+        if (pendingEmptyCheck) {
+            window.clearTimeout(pendingEmptyCheck);
         }
+        pendingEmptyCheck = window.setTimeout(() => {
+            const model = editor.getModel();
+            if (!model) {
+                return;
+            }
+            const value = model.getValue();
+            setIsEmpty(!/\S/.test(value));
+        }, 120);
+    };
+
+    const changeDisposable = editor.onDidChangeModelContent((e) => {
+        const model = editor.getModel();
+        if (!model) {
+            return;
+        }
+
+        // Fast-path: truly empty
+        if (model.getValueLength() === 0) {
+            setIsEmpty(true);
+            return;
+        }
+
+        // Fast-path: user inserted any non-whitespace => definitely non-empty
+        if (e.changes.some((c) => /\S/.test(c.text))) {
+            setIsEmpty(false);
+            return;
+        }
+
+        // Otherwise do a debounced full scan (covers deletions + whitespace-only edits)
+        scheduleFullEmptyCheck();
     });
+
+    // Ensure we don't keep timers running after editor disposal.
+    const originalDispose = editor.dispose.bind(editor);
+    editor.dispose = () => {
+        if (pendingEmptyCheck) {
+            window.clearTimeout(pendingEmptyCheck);
+            pendingEmptyCheck = undefined;
+        }
+        changeDisposable?.dispose?.();
+        originalDispose();
+    };
 
     setupAutoResize(editor);
     return editor;
