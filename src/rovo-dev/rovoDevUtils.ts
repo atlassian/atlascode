@@ -52,7 +52,7 @@ function getRovoDevLogFilePath(): string | undefined {
     if (!home) {
         return undefined;
     }
-    return path.join(home, '.rovodev', 'rovodev.log');
+    return path.join(home, '.rovodev', 'logs', 'rovodev.log');
 }
 
 export function readLastNLogLines(n: number = 10): string[] {
