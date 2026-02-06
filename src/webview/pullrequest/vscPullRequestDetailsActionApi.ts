@@ -89,6 +89,13 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         return newPr;
     }
 
+    async updateDraftStatus(pr: PullRequest, isDraft: boolean): Promise<PullRequest> {
+        const bbApi = await clientForSite(pr.site);
+        const newPr = await bbApi.pullrequests.updateDraftStatus(pr, isDraft);
+        vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
+        return newPr;
+    }
+
     async updateCommits(pr: PullRequest): Promise<Commit[]> {
         const bbApi = await clientForSite(pr.site);
         return await bbApi.pullrequests.getCommits(pr);

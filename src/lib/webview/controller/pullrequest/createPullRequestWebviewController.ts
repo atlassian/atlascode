@@ -68,7 +68,7 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                 repoData: repoData,
             });
         } catch (e) {
-            this.logger.error(e, 'Error updating start work page');
+            this.logger.error(e, 'Error updating start work page or creating pull request', 'invalidate');
             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
         } finally {
             this.isRefreshing = false;
@@ -86,10 +86,14 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                 try {
                     await this.invalidate();
                 } catch (e) {
-                    this.logger.error(e, 'Error refeshing start work page');
+                    this.logger.error(
+                        e,
+                        'Error refreshing start work page or creating pull request',
+                        'onMessageReceived Refresh',
+                    );
                     this.postMessage({
                         type: CommonMessageType.Error,
-                        reason: formatError(e, 'Error refeshing start work page'),
+                        reason: formatError(e, 'Error refreshing start work page or creating pull request'),
                     });
                 }
                 break;
