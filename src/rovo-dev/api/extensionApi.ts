@@ -155,11 +155,11 @@ export class ExtensionApi {
             }
         },
 
-        saveRovoDevAuthInfo: async (authInfo: any): Promise<void> => {
+        saveRovoDevAuthInfo: async (authInfo: AuthInfo): Promise<void> => {
             await Container.credentialManager.saveRovoDevAuthInfo(authInfo);
         },
 
-        getRovoDevAuthInfo: async (): Promise<any | undefined> => {
+        getRovoDevAuthInfo: async (): Promise<AuthInfo | undefined> => {
             return await Container.credentialManager.getRovoDevAuthInfo();
         },
 
@@ -168,12 +168,12 @@ export class ExtensionApi {
         },
 
         /**
-         * Get credential hints (host + email) from all configured Jira sites.
+         * Get credential hints (email) from all configured Jira sites.
          * Used for autocomplete suggestions in credential forms.
          *
-         * @returns Array of unique {host, email} combinations from all sites
+         * @returns Array of unique {email} objects from all sites
          */
-        getCredentialHints: async (): Promise<{ host: string; email: string }[]> => {
+        getCredentialHints: async (): Promise<{ email: string }[]> => {
             const sites = Container.siteManager.getSitesAvailable(ProductJira);
             const credentialsPromises = sites.map(async (site) => {
                 try {
@@ -182,7 +182,6 @@ export class ExtensionApi {
                         return null;
                     }
                     return {
-                        host: site.host,
                         email: authInfo.user.email,
                     };
                 } catch {
@@ -191,10 +190,10 @@ export class ExtensionApi {
             });
 
             const allCredentials = await Promise.all(credentialsPromises);
-            const credentials = allCredentials.filter((c): c is { host: string; email: string } => c !== null);
+            const credentials = allCredentials.filter((c): c is { email: string } => c !== null);
 
-            // Remove duplicates by creating a unique key
-            return Array.from(new Map(credentials.map((c) => [`${c.host}-${c.email}`, c])).values());
+            // Remove duplicates by email
+            return Array.from(new Map(credentials.map((c) => [c.email, c])).values());
         },
     };
 
