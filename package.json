@@ -586,6 +586,11 @@
                 "command": "atlascode.rovodev.openHelp",
                 "title": "Documentation",
                 "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.rovodev.enable",
+                "title": "Enable Rovo Dev",
+                "category": "Rovo Dev"
             }
         ],
         "viewsContainers": {

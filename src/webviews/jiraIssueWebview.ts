@@ -1882,6 +1882,7 @@ export class JiraIssueWebview
                                     imgData: '',
                                     nonce: msg.nonce,
                                 });
+                                break;
                             }
 
                             const url = href.toString();

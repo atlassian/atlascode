@@ -440,15 +440,7 @@ describe('StartWorkWebviewController', () => {
 
                 await controller.onMessageReceived(externalImageAction);
 
-                // Note: The implementation has a bug - it should return after posting the empty response,
-                // but it continues and tries to fetch the external URL
-                expect(mockTransportFactory.get).toHaveBeenCalledWith('https://external.com/image.png', {
-                    method: 'GET',
-                    headers: {
-                        Authorization: undefined,
-                    },
-                    responseType: 'arraybuffer',
-                });
+                expect(mockTransportFactory.get).not.toHaveBeenCalled();
                 expect(mockMessagePoster).toHaveBeenCalledWith({
                     type: 'getImageDone',
                     imgData: '',
