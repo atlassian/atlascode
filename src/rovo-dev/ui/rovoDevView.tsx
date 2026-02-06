@@ -79,7 +79,7 @@ const RovoDevView: React.FC = () => {
     const [lastCompletedPromptId, setLastCompletedPromptId] = useState<string | undefined>(undefined);
     const [isAtlassianUser, setIsAtlassianUser] = useState(false);
     const [feedbackType, setFeedbackType] = React.useState<'like' | 'dislike' | undefined>(undefined);
-    const [canRequest, setCanRequest] = React.useState(false);
+    const [canFetchSavedPrompts, setCanFetchSavedPrompts] = React.useState(false);
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -383,7 +383,7 @@ const RovoDevView: React.FC = () => {
                     setCurrentState({
                         state: event.isPromptPending ? 'GeneratingResponse' : 'WaitingForPrompt',
                     });
-                    setCanRequest(true);
+                    setCanFetchSavedPrompts(true);
                     break;
 
                 case RovoDevProviderMessageType.CancelFailed:
@@ -1134,7 +1134,7 @@ const RovoDevView: React.FC = () => {
                                         onPromptTextSet={handlePromptTextSet}
                                         handleSessionCommand={handleShowSessionsCommand}
                                         handleFetchSavedPrompts={handleFetchSavedPrompts}
-                                        canFetchSavedPrompts={canRequest}
+                                        canFetchSavedPrompts={canFetchSavedPrompts}
                                     />
                                 </div>
                             </div>
