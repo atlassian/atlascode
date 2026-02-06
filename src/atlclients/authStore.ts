@@ -33,6 +33,10 @@ import {
 import { Negotiator } from './negotiate';
 import { OAuthRefesher } from './oauthRefresher';
 
+function isAtlassianCloud(site: DetailedSiteInfo): boolean {
+    return site.host.endsWith('.atlassian.net') || site.host.endsWith('.jira.com');
+}
+
 const keychainServiceNameV3 = version.endsWith('-insider') ? 'atlascode-insiders-authinfoV3' : 'atlascode-authinfoV3';
 
 enum Priority {
@@ -87,7 +91,7 @@ export class CredentialManager implements Disposable {
 
     public async checkScopes(site: DetailedSiteInfo, scopes: string[]): Promise<CheckedScopes | undefined> {
         // Scopes are only applicable to cloud sites
-        if (!site.host.endsWith('.atlassian.net')) {
+        if (!isAtlassianCloud(site)) {
             return undefined;
         }
 
@@ -120,7 +124,7 @@ export class CredentialManager implements Disposable {
 
     async getApiTokenIfExists(site: DetailedSiteInfo): Promise<BasicAuthInfo | undefined> {
         // Only applicable to cloud sites
-        if (!site.host.endsWith('.atlassian.net')) {
+        if (!isAtlassianCloud(site)) {
             return undefined;
         }
 
@@ -144,7 +148,7 @@ export class CredentialManager implements Disposable {
     async findApiTokenForSite(site?: DetailedSiteInfo | string): Promise<BasicAuthInfo | undefined> {
         const siteToCheck = typeof site === 'string' ? Container.siteManager.getSiteForId(ProductJira, site) : site;
 
-        if (!siteToCheck || !siteToCheck.host.endsWith('.atlassian.net')) {
+        if (!siteToCheck || !isAtlassianCloud(siteToCheck)) {
             return undefined;
         }
 
@@ -152,16 +156,14 @@ export class CredentialManager implements Disposable {
         const selectedSiteEmail = (await this.getAuthInfo(siteToCheck))?.user.email;
 
         // For a cloud site - check if we have another cloud site with the same user and API key
-        const promises = sites
-            .filter((site) => site.host.endsWith('.atlassian.net'))
-            .map(async (site) => {
-                const authInfo = await this.getAuthInfo(site);
-                if (authInfo?.user.email === selectedSiteEmail && isBasicAuthInfo(authInfo)) {
-                    // There's another site with the same user and cloud, so we can use that API key for suggestions
-                    return authInfo as BasicAuthInfo;
-                }
-                return undefined;
-            });
+        const promises = sites.filter(isAtlassianCloud).map(async (site) => {
+            const authInfo = await this.getAuthInfo(site);
+            if (authInfo?.user.email === selectedSiteEmail && isBasicAuthInfo(authInfo)) {
+                // There's another site with the same user and cloud, so we can use that API key for suggestions
+                return authInfo as BasicAuthInfo;
+            }
+            return undefined;
+        });
 
         const results = await Promise.all(promises);
         return results.find((authInfo) => authInfo !== undefined);
