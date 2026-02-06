@@ -7,6 +7,7 @@ import CommentForm from '../common/CommentForm';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { Commits } from './Commits';
 import { DiffList } from './DiffList';
+import { DraftBanner } from './DraftBanner';
 import { NestedCommentList } from './NestedCommentList';
 import { PullRequestDetailsControllerApi, PullRequestDetailsState } from './pullRequestDetailsController';
 import { RelatedJiraIssues } from './RelatedJiraIssues';
@@ -27,6 +28,15 @@ export const PullRequestMainContent: React.FC<PullRequestMainContentProps> = ({
         <Box margin={2}>
             <Grid container spacing={3} direction="column" justifyContent="center">
                 <ErrorDisplay />
+
+                {state.pr.data.draft && (
+                    <Grid item>
+                        <DraftBanner
+                            isAuthor={state.currentUser.accountId === state.pr.data.author.accountId}
+                            onMarkReady={() => controller.updateDraftStatus(false)}
+                        />
+                    </Grid>
+                )}
 
                 <Grid item>
                     <SummaryPanel
