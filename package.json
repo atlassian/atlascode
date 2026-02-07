@@ -1869,7 +1869,7 @@
         "tsconfig-paths-webpack-plugin": "^4.2.0",
         "typescript": "^5.8.3",
         "typescript-eslint": "^8.33.0",
-        "webpack": "^5.99.9",
+        "webpack": "^5.104.1",
         "webpack-cli": "^6.0.1",
         "webpack-manifest-plugin": "^5.0.0",
         "webpack-node-externals": "^3.0.0"
