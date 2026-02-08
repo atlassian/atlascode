@@ -45,6 +45,7 @@ export const enum RovoDevProviderMessageType {
     GetAvailableAgentModesComplete = 'getAvailableAgentModesComplete',
     GetCurrentAgentModeComplete = 'getCurrentAgentModeComplete',
     SetAgentModeComplete = 'setAgentModeComplete',
+    UpdateSavedPrompts = 'updateSavedPrompts',
 }
 
 export type RovoDevDisabledReason = DisabledState['subState'];
@@ -132,4 +133,8 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.RovoDevAuthValidationComplete, { success: boolean; error?: string }>
     | ReducerAction<RovoDevProviderMessageType.GetAvailableAgentModesComplete, { modes: RovoDevModeInfo[] }>
     | ReducerAction<RovoDevProviderMessageType.GetCurrentAgentModeComplete, { mode: AgentMode }>
-    | ReducerAction<RovoDevProviderMessageType.SetAgentModeComplete, { mode: AgentMode }>;
+    | ReducerAction<RovoDevProviderMessageType.SetAgentModeComplete, { mode: AgentMode }>
+    | ReducerAction<
+          RovoDevProviderMessageType.UpdateSavedPrompts,
+          { savedPrompts: { name: string; description: string; content_file: string }[] | undefined }
+      >;

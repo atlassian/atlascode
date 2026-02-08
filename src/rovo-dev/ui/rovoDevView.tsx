@@ -35,6 +35,7 @@ import { parseToolCallMessage } from './tools/ToolCallItem';
 import {
     appendResponse,
     CODE_PLAN_EXECUTE_PROMPT,
+    ConnectionTimeout,
     DialogMessage,
     extractLastNMessages,
     isCodeChangeTool,
@@ -80,6 +81,7 @@ const RovoDevView: React.FC = () => {
     const [feedbackType, setFeedbackType] = React.useState<'like' | 'dislike' | undefined>(undefined);
     const [availableAgentModes, setAvailableAgentModes] = useState<RovoDevModeInfo[]>([]);
     const [currentAgentMode, setCurrentAgentMode] = useState<AgentMode | null>(null);
+    const [canFetchSavedPrompts, setCanFetchSavedPrompts] = React.useState(false);
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -383,6 +385,7 @@ const RovoDevView: React.FC = () => {
                     setCurrentState({
                         state: event.isPromptPending ? 'GeneratingResponse' : 'WaitingForPrompt',
                     });
+                    setCanFetchSavedPrompts(true);
                     break;
 
                 case RovoDevProviderMessageType.CancelFailed:
@@ -415,6 +418,7 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.CreatePRComplete:
                 case RovoDevProviderMessageType.GetCurrentBranchNameComplete:
                 case RovoDevProviderMessageType.CheckGitChangesComplete:
+                case RovoDevProviderMessageType.UpdateSavedPrompts:
                     break; // This is handled elsewhere
 
                 case RovoDevProviderMessageType.CheckFileExistsComplete:
@@ -976,6 +980,17 @@ const RovoDevView: React.FC = () => {
         postMessage({ type: RovoDevViewResponseType.ShowSessionHistory });
     }, [postMessage]);
 
+    const handleFetchSavedPrompts = React.useCallback(async () => {
+        const response = await postMessagePromise(
+            {
+                type: RovoDevViewResponseType.FetchSavedPrompts,
+            },
+            RovoDevProviderMessageType.UpdateSavedPrompts,
+            ConnectionTimeout,
+        );
+        return response.savedPrompts || [];
+    }, [postMessagePromise]);
+
     React.useEffect(() => {
         postMessage({
             type: RovoDevViewResponseType.FullContextModeToggled,
@@ -1152,6 +1167,8 @@ const RovoDevView: React.FC = () => {
                                         promptText={promptText}
                                         onPromptTextSet={handlePromptTextSet}
                                         handleSessionCommand={handleShowSessionsCommand}
+                                        handleFetchSavedPrompts={handleFetchSavedPrompts}
+                                        canFetchSavedPrompts={canFetchSavedPrompts}
                                     />
                                 </div>
                             </div>

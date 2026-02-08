@@ -103,3 +103,11 @@ export interface RovoDevModeInfo {
 export interface RovoDevAvailableModesResponse {
     modes: RovoDevModeInfo[];
 }
+
+export interface RovoDevSavedPromptsResponse {
+    prompts: {
+        name: string;
+        description: string;
+        content_file: string;
+    }[];
+}

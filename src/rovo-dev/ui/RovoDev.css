@@ -803,13 +803,15 @@ body {
     background-color: var(--vscode-input-background) !important;
 }
 
-.monaco-list .monaco-list-row .codicon {
-    display: none !important;
+.monaco-list .codicon-suggest-more-info::before {
+    content: '\eab6';
 }
 
-.monaco-list .monaco-list-row {
-    padding-left: 4px;
+.monaco-list .readMore {
+    display: flex !important;
+    align-items: center;
 }
+
 .prompt-container:focus-within {
     outline: var(--vscode-focusBorder) solid 1px;
 }

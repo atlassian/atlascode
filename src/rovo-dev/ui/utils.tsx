@@ -100,6 +100,15 @@ export interface ToolReturnParseResult {
 
 export type Response = ChatMessage | ChatMessage[] | null;
 
+export interface SavedPrompt {
+    name: string;
+    description: string;
+    content_file: string;
+}
+
+export interface SavedPromptsResponse {
+    prompts: SavedPrompt[];
+}
 interface ToolReturnInfo {
     title: string;
     type: 'modify' | 'create' | 'delete' | 'open' | 'bash';

@@ -192,6 +192,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                             imgData: '',
                             nonce: msg.nonce,
                         } as any);
+                        break;
                     }
 
                     const url = href.toString();

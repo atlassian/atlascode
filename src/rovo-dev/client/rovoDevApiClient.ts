@@ -6,6 +6,7 @@ import {
     RovoDevChatRequest,
     RovoDevGetAgentModeResponse,
     RovoDevHealthcheckResponse,
+    RovoDevSavedPromptsResponse,
     RovoDevSetAgentModeRequest,
     RovoDevSetAgentModeResponse,
     RovoDevStatusAPIResponse,
@@ -324,5 +325,12 @@ export class RovoDevApiClient {
     public async getAvailableModes(): Promise<RovoDevAvailableModesResponse> {
         const response = await this.fetchApi('/v3/available-modes', 'GET');
         return await response.json();
+    }
+
+    public async getSavedPrompts(): Promise<RovoDevSavedPromptsResponse> {
+        const response = await this.fetchApi(`/v3/prompts`, 'GET');
+
+        const jsonResponse = (await response.json()) as RovoDevSavedPromptsResponse;
+        return jsonResponse;
     }
 }

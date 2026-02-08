@@ -14,12 +14,13 @@ import { AgentMode, RovoDevModeInfo } from 'src/rovo-dev/client';
 import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
 
 import { rovoDevTextareaStyles } from '../../rovoDevViewStyles';
-import { onKeyDownHandler } from '../../utils';
+import { onKeyDownHandler, SavedPrompt } from '../../utils';
 import PromptContextPopup from '../prompt-context-popup/PromptContextPopup';
 import { getAgentModeIcon } from '../prompt-settings-popup/AgentModeSection';
 import PromptSettingsPopup from '../prompt-settings-popup/PromptSettingsPopup';
 import {
     createMonacoPromptEditor,
+    createPromptCompletionProvider,
     createSlashCommandProvider,
     removeMonacoStyles,
     setupAutoResize,
@@ -52,6 +53,8 @@ interface PromptInputBoxProps {
     handleSessionCommand?: () => void;
     promptText?: string;
     onPromptTextSet?: () => void;
+    handleFetchSavedPrompts?: () => Promise<SavedPrompt[]>;
+    canFetchSavedPrompts?: boolean;
 }
 
 const TextAreaMessages: Record<NonDisabledState['state'], string> = {
@@ -129,12 +132,33 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     handleSessionCommand,
     promptText,
     onPromptTextSet,
+    handleFetchSavedPrompts,
+    canFetchSavedPrompts = false,
 }) => {
     const [editor, setEditor] = React.useState<ReturnType<typeof createEditor>>(undefined);
     const [isEmpty, setIsEmpty] = React.useState(true);
-
+    const promptCompletionProviderRef = React.useRef<monaco.IDisposable | null>(null);
     // create the editor only once - use onAddContext hook to retry
     React.useEffect(() => setEditor((prev) => prev ?? createEditor(setIsEmpty)), [onAddContext]);
+
+    React.useEffect(() => {
+        if (editor && handleFetchSavedPrompts) {
+            if (promptCompletionProviderRef.current) {
+                promptCompletionProviderRef.current.dispose();
+            }
+            promptCompletionProviderRef.current = monaco.languages.registerCompletionItemProvider(
+                'plaintext',
+                createPromptCompletionProvider(handleFetchSavedPrompts, canFetchSavedPrompts),
+            );
+        }
+
+        return () => {
+            if (promptCompletionProviderRef.current) {
+                promptCompletionProviderRef.current.dispose();
+                promptCompletionProviderRef.current = null;
+            }
+        };
+    }, [canFetchSavedPrompts, editor, handleFetchSavedPrompts]);
 
     React.useEffect(() => {
         // Remove Monaco's color stylesheet
