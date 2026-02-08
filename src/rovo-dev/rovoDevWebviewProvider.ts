@@ -622,7 +622,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
      * Fetches agent modes asynchronously and sends them to the frontend when ready.
      * This is called during startup to improve initialization performance.
      */
-    private async fetchAndSendAgentModes(): Promise<void> {
+    private async fetchAgentModes(): Promise<void> {
         if (!this._chatProvider || !this._webView) {
             return;
         }
@@ -1502,7 +1502,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         await this._chatProvider.setReady(rovoDevClient);
 
-        this.fetchAndSendAgentModes();
+        await this.fetchAgentModes();
 
         if (this.isBoysenberry) {
             // update the isAtlassianUser flag based on Rovo Dev status response

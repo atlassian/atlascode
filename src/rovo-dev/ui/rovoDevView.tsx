@@ -998,16 +998,6 @@ const RovoDevView: React.FC = () => {
         });
     }, [postMessage, isFullContextModeToggled]);
 
-    React.useEffect(() => {
-        if (availableAgentModes.length === 0) {
-            postMessage({ type: RovoDevViewResponseType.GetAvailableAgentModes });
-        }
-
-        if (!currentAgentMode) {
-            postMessage({ type: RovoDevViewResponseType.GetCurrentAgentMode });
-        }
-    }, [availableAgentModes, currentAgentMode, postMessage]);
-
     const hidePromptBox =
         currentState.state === 'Disabled' ||
         (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance');
