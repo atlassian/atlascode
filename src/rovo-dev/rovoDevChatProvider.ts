@@ -107,8 +107,16 @@ export class RovoDevChatProvider {
         this._webView = webView;
     }
 
-    public async setReady(rovoDevApiClient: RovoDevApiClient) {
+    public isReady(): boolean {
+        return !!this._rovoDevApiClient;
+    }
+
+    public async setReady(rovoDevApiClient: RovoDevApiClient, pendingAgentMode?: AgentMode) {
         this._rovoDevApiClient = rovoDevApiClient;
+
+        if (pendingAgentMode) {
+            await this.setAgentMode(pendingAgentMode);
+        }
 
         if (this._pendingPrompt) {
             const pendingPrompt = this._pendingPrompt;
