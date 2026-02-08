@@ -497,7 +497,9 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.GetAvailableAgentModesComplete:
-                    setAvailableAgentModes(event.modes);
+                    setAvailableAgentModes(
+                        [...event.modes].sort((a, b) => (a.mode === 'default' ? -1 : b.mode === 'default' ? 1 : 0)),
+                    );
                     break;
 
                 case RovoDevProviderMessageType.GetCurrentAgentModeComplete:
