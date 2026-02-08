@@ -80,7 +80,7 @@ const RovoDevView: React.FC = () => {
     const [isAtlassianUser, setIsAtlassianUser] = useState(false);
     const [feedbackType, setFeedbackType] = React.useState<'like' | 'dislike' | undefined>(undefined);
     const [availableAgentModes, setAvailableAgentModes] = useState<RovoDevModeInfo[]>([]);
-    const [currentAgentMode, setCurrentAgentMode] = useState<AgentMode | null>(null);
+    const [currentAgentMode, setCurrentAgentMode] = useState<AgentMode | null>('default');
     const [canFetchSavedPrompts, setCanFetchSavedPrompts] = React.useState(false);
 
     // Initialize atlaskit theme for proper token support

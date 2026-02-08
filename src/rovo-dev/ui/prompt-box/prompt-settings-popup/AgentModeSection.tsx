@@ -47,6 +47,8 @@ const formatModeLabel = (mode: string): string => {
     }
 };
 
+const capitalizeFirst = (s: string): string => (s.length === 0 ? s : s.charAt(0).toUpperCase() + s.slice(1));
+
 const styles = cssMap({
     modesContainer: {
         display: 'flex',
@@ -87,7 +89,7 @@ const AgentModeSection: React.FC<AgentModeSectionProps> = ({
     setAgentMode,
 }: AgentModeSectionProps) => {
     return (
-        <Box>
+        <Box style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <Box
                 as="p"
                 xcss={styles.sectionTitle}
@@ -133,7 +135,7 @@ const AgentModeSection: React.FC<AgentModeSectionProps> = ({
                                         color: 'var(--vscode-descriptionForeground)',
                                     }}
                                 >
-                                    {modeInfo.description}
+                                    {capitalizeFirst(modeInfo.description)}
                                 </Box>
                             </Box>
                             {isSelected && (
