@@ -353,7 +353,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                 onKeyDown={onKeyDownHandler(() => onAgentModeChange('default'))}
                                 tabIndex={0}
                                 role="button"
-                                aria-label={`Switch to default (disable ${currentAgentMode} mode)`}
+                                aria-label={'Switch to default'}
                             >
                                 {getAgentModeIcon(currentAgentMode)}
                                 <CrossIcon size="small" label={`disable ${currentAgentMode} mode`} />
