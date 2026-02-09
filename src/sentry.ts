@@ -175,13 +175,16 @@ export class SentryService {
 
         // Define filters that should block events from being sent
         const blockedFilters = [
-            { key: 'capturedBy', value: 'process.unhandledRejectionHandler' },
+            { key: 'capturedBy', value: 'unhandledRejection' },
             { key: 'capturedBy', value: 'uncaughtExceptionHandler' },
             { key: 'handled', value: 'no' },
         ];
 
         // Check if any filter matches
-        const shouldBlock = blockedFilters.some((filter) => tags?.[filter.key] === filter.value);
+        const shouldBlock = blockedFilters.some((filter) => {
+            const tagValue = tags?.[filter.key] as string;
+            return tagValue?.includes(filter.value);
+        });
 
         return shouldBlock ? null : event;
     }

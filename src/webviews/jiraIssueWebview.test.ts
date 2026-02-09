@@ -1716,6 +1716,28 @@ describe('JiraIssueWebview', () => {
             });
         });
 
+        test('should skip external images and not fetch', async () => {
+            const mockGet = jest.fn().mockResolvedValue({ data: Buffer.from('image-data') });
+            mockJiraClient.transportFactory.mockReturnValue({ get: mockGet });
+
+            const msg = {
+                action: 'getImage',
+                url: 'https://external.com/image.png',
+                nonce: 'nonce-123',
+            };
+
+            const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+
+            await jiraIssueWebview['onMessageReceived'](msg);
+
+            expect(mockGet).not.toHaveBeenCalled();
+            expect(postMessageSpy).toHaveBeenCalledWith({
+                type: 'getImageDone',
+                imgData: '',
+                nonce: 'nonce-123',
+            });
+        });
+
         test('should handle refreshIssue action', async () => {
             const msg = { action: 'refreshIssue' };
 
