@@ -1,14 +1,18 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.20
+
+### Improvements
+
+- Added warning message when no git repository selected on Start Work page
+
 ## What's new in 4.0.19
 
 ### Improvements
 
 - Onboarding panel enables/disables Jira and Bitbucket based on user selections
-- Added warning message when no git repository selected on Start Work page
-- URI handler for Rovo Dev - vscode://atlassian.atlascode/rovoDev will bring the user directly to Rovo Dev part of the extension 
+- URI handler for Rovo Dev - vscode://atlassian.atlascode/rovoDev will bring the user directly to Rovo Dev part of the extension
 - Added "Enable Rovo Dev" command and URI handler support for programmatically enabling Rovo Dev
-
 
 ### Bug Fixes
 
