@@ -147,7 +147,7 @@
             },
             {
                 "command": "atlascode.rovodev.restartProcess",
-                "title": "Restart Rovo Dev Process",
+                "title": "Restart this Rovo Dev Process",
                 "category": "Rovo Dev",
                 "enablement": "atlascode:rovoDevEnabled"
             },
