@@ -114,10 +114,7 @@ export type RovoDevProviderMessage =
           RovoDevProviderMessageType.SetJiraWorkItems,
           { issues: MinimalIssue<DetailedSiteInfo>[] | undefined }
       >
-    | ReducerAction<
-          RovoDevProviderMessageType.SetExistingJiraCredentials,
-          { credentials: { host: string; email: string }[] }
-      >
+    | ReducerAction<RovoDevProviderMessageType.SetExistingJiraCredentials, { credentials: { email: string }[] }>
     | ReducerAction<
           RovoDevProviderMessageType.CheckFileExistsComplete,
           { requestId: string; filePath: string; exists: boolean }

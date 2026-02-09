@@ -779,10 +779,9 @@ const RovoDevView: React.FC = () => {
     );
 
     const onRovoDevAuthSubmit = useCallback(
-        (host: string, email: string, apiToken: string) => {
+        (email: string, apiToken: string) => {
             postMessage({
                 type: RovoDevViewResponseType.SubmitRovoDevAuth,
-                host,
                 email,
                 apiToken,
             });
