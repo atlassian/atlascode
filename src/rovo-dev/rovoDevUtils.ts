@@ -19,13 +19,9 @@ const FriendlyName: Record<SupportedConfigFiles, string> = {
     'rovodev.log': 'Rovo Dev log file',
 };
 
-function getRovoDevFilePath(home: string, configFile: SupportedConfigFiles): string {
-    return path.join(home, '.rovodev', configFile);
-}
-
 // Read logging.path from ~/.rovodev/config.yml if present.
 function getLogPathFromConfig(home: string): string | undefined {
-    const configPath = getRovoDevFilePath(home, 'config.yml');
+    const configPath = path.join(home, '.rovodev', 'config.yml');
     if (!fs.existsSync(configPath)) {
         return undefined;
     }
@@ -51,7 +47,7 @@ export async function openRovoDevConfigFile(configFile: SupportedConfigFiles) {
         return;
     }
 
-    const filePath = getRovoDevFilePath(home, configFile);
+    const filePath = path.join(home, '.rovodev', configFile);
 
     // create the file if it doesn't exist
     if (!fs.existsSync(filePath)) {
