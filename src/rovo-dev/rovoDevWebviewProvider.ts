@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import path from 'path';
 import { setCommandContext } from 'src/commandContext';
+import { Logger } from 'src/logger';
 import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
 import { safeWaitFor } from 'src/rovo-dev/util/waitFor';
@@ -53,7 +54,6 @@ import {
 } from './rovoDevWebviewProviderMessages';
 import { ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './ui/rovoDevViewMessages';
 import { modifyFileTitleMap } from './ui/utils';
-import { RovoDevLogger } from './util/rovoDevLogger';
 
 export interface TypedWebview<MessageOut, MessageIn> extends Webview {
     readonly onDidReceiveMessage: Event<MessageIn>;
@@ -187,14 +187,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             this.appInstanceId = this.extensionApi.metadata.appInstanceId();
         }
 
-        const onTelemetryError = this.extensionApi.metadata.isDebugging()
-            ? (error: Error) => this.processError(error)
-            : (error: Error) => RovoDevLogger.error(error);
-
         this._telemetryProvider = new RovoDevTelemetryProvider(
             this.isBoysenberry ? 'Boysenberry' : 'IDE',
             this.appInstanceId,
-            onTelemetryError,
         );
 
         this._chatProvider = new RovoDevChatProvider(this.isBoysenberry, this._telemetryProvider);
@@ -549,7 +544,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                                 ? `Type: ${e.errorType}\n${errorDetails.join('\n\n')}`
                                 : `Type: ${e.errorType}`;
 
-                        RovoDevLogger.error(renderError, contextMessage);
+                        RovoDevTelemetryProvider.logError(renderError, contextMessage);
                         break;
 
                     case RovoDevViewResponseType.ShowSessionHistory:
@@ -586,8 +581,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await this.sendExistingJiraCredentials();
     }
 
-    private beginNewSession(sessionId: string | null, manuallyCreated: boolean): void {
-        this._telemetryProvider.startNewSession(sessionId ?? v4(), manuallyCreated);
+    private beginNewSession(sessionId: string | null, source: 'init' | 'manuallyCreated' | 'restored'): void {
+        this._telemetryProvider.startNewSession(sessionId ?? v4(), source);
     }
 
     // Listen to active editor and selection changes
@@ -627,7 +622,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         } = {},
     ) {
         if (!skipLogError) {
-            RovoDevLogger.error(error);
+            RovoDevTelemetryProvider.logError(error);
         }
 
         const webview = this._webView!;
@@ -668,8 +663,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 this.rovoDevApiClient,
                 this._telemetryProvider,
             );
-            sessionsManager.onSessionRestored(async () => {
+            sessionsManager.onSessionRestored(async (sessionId) => {
                 await this._chatProvider.clearChat();
+                this.beginNewSession(sessionId, 'restored');
                 await this._chatProvider.executeReplay();
             });
             await sessionsManager.showPicker();
@@ -690,7 +686,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             });
         } catch (error) {
             // Silently fail - autocomplete is a nice-to-have feature
-            RovoDevLogger.error(error, 'Failed to fetch credential hints for autocomplete');
+            RovoDevTelemetryProvider.logError(error, 'Failed to fetch credential hints for autocomplete');
         }
     }
 
@@ -748,7 +744,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 type: RovoDevProviderMessageType.ClearChat,
             });
 
-            return this.beginNewSession(sessionId, true);
+            return this.beginNewSession(sessionId, 'manuallyCreated');
         }, false);
     }
 
@@ -869,7 +865,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             // Trigger process restart to use new credentials
             await RovoDevProcessManager.initializeRovoDev(this._context, true);
         } catch (error) {
-            RovoDevLogger.error(error, 'Error saving RovoDev auth');
+            RovoDevTelemetryProvider.logError(error, 'Error saving RovoDev auth');
             const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
 
             // Send error status to UI
@@ -891,7 +887,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
             window.showInformationMessage('Logged out from Rovo Dev');
         } catch (error) {
-            RovoDevLogger.error(error, 'Error logging out from RovoDev');
+            RovoDevTelemetryProvider.logError(error, 'Error logging out from RovoDev');
             window.showErrorMessage(`Failed to logout: ${error}`);
         }
     }
@@ -1046,7 +1042,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             });
         } catch (error) {
             // On error, return all files
-            RovoDevLogger.debug('Error filtering files by content:', error);
+            Logger.debug('Error filtering files by content:', error);
             await webview.postMessage({
                 type: RovoDevProviderMessageType.FilterModifiedFilesByContentComplete,
                 filteredFiles: files,
@@ -1346,7 +1342,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 msg += ` HTTP status code ${healthcheckResult?.httpStatus}.`;
             }
 
-            RovoDevLogger.error(new Error(msg));
+            RovoDevTelemetryProvider.logError(new Error(msg));
 
             if (this.isBoysenberry) {
                 await this.signalRovoDevDisabled('Other');
@@ -1364,7 +1360,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // we can't continue - shutdown and set the process as terminated so the user can try again.
         if (result.status === 'unhealthy') {
             const msg = 'Rovo Dev service is unhealthy.';
-            RovoDevLogger.error(new Error(msg));
+            RovoDevTelemetryProvider.logError(new Error(msg));
 
             if (this.isBoysenberry) {
                 await this.signalRovoDevDisabled('Other');
@@ -1430,7 +1426,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
 
         setCommandContext(RovodevCommandContext.RovoDevApiReady, true);
-        this.beginNewSession(result.sessionId || null, false);
+        this.beginNewSession(result.sessionId || null, 'init');
 
         this.refreshDebugPanel();
 

@@ -1,5 +1,11 @@
 import { RovoDevApiClient } from './rovoDevApiClient';
 
+jest.mock('../rovoDevTelemetryProvider', () => ({
+    RovoDevTelemetryProvider: {
+        logError: jest.fn(),
+    },
+}));
+
 // Mock fetch globally
 global.fetch = jest.fn();
 
