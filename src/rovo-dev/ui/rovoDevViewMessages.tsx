@@ -42,6 +42,7 @@ export const enum RovoDevViewResponseType {
     ReportRenderError = 'reportRenderError',
     StartNewSession = 'startNewSession',
     ShowSessionHistory = 'showSessionHistory',
+    FetchSavedPrompts = 'fetchSavedPrompts',
 }
 
 export type FileOperationType = 'modify' | 'create' | 'delete';
@@ -105,4 +106,5 @@ export type RovoDevViewResponse =
           }
       >
     | ReducerAction<RovoDevViewResponseType.StartNewSession>
-    | ReducerAction<RovoDevViewResponseType.ShowSessionHistory>;
+    | ReducerAction<RovoDevViewResponseType.ShowSessionHistory>
+    | ReducerAction<RovoDevViewResponseType.FetchSavedPrompts>;

@@ -551,6 +551,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await this.showSessionHistory();
                         break;
 
+                    case RovoDevViewResponseType.FetchSavedPrompts:
+                        const prompts = await this.fetchSavedPrompts();
+
+                        await webview.postMessage({
+                            type: RovoDevProviderMessageType.UpdateSavedPrompts,
+                            savedPrompts: prompts,
+                        });
+                        break;
                     default:
                         // @ts-expect-error ts(2339) - e here should be 'never'
                         this.processError(new Error(`Unknown message type: ${e.type}`));
@@ -1490,6 +1498,23 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             reason,
             detail,
         });
+    }
+
+    private async fetchSavedPrompts(): Promise<
+        { name: string; description: string; content_file: string }[] | undefined
+    > {
+        try {
+            const response = await this.rovoDevApiClient?.getSavedPrompts();
+
+            if (!response) {
+                return;
+            }
+
+            return response.prompts;
+        } catch (error) {
+            RovoDevLogger.error(error, 'Failed to fetch saved prompts');
+            return undefined;
+        }
     }
 
     // keeps track of predefined errors based on retrieved error messages within the stack trace

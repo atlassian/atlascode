@@ -3,6 +3,7 @@ import {
     RovoDevCancelResponse,
     RovoDevChatRequest,
     RovoDevHealthcheckResponse,
+    RovoDevSavedPromptsResponse,
     RovoDevStatusAPIResponse,
     ToolPermissionChoice,
 } from './rovoDevApiClientInterfaces';
@@ -288,5 +289,12 @@ export class RovoDevApiClient {
                   };
 
         await this.fetchApi('/accept-mcp-terms', 'POST', JSON.stringify(message));
+    }
+
+    public async getSavedPrompts(): Promise<RovoDevSavedPromptsResponse> {
+        const response = await this.fetchApi(`/v3/prompts`, 'GET');
+
+        const jsonResponse = (await response.json()) as RovoDevSavedPromptsResponse;
+        return jsonResponse;
     }
 }
