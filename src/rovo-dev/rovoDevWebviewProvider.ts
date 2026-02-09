@@ -1512,7 +1512,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
             return response.prompts;
         } catch (error) {
-            RovoDevLogger.error(error, 'Failed to fetch saved prompts');
+            RovoDevTelemetryProvider.logError(error, 'Failed to fetch saved prompts');
             return undefined;
         }
     }
