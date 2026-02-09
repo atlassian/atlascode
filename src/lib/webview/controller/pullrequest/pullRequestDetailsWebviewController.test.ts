@@ -467,6 +467,71 @@ describe('PullRequestDetailsWebviewController', () => {
             });
         });
 
+        describe('PullRequestDetailsActionType.UpdateDraftStatusRequest', () => {
+            it('should update draft status to true successfully', async () => {
+                const updatedPr = {
+                    ...mockPr,
+                    data: { ...mockPr.data, draft: true },
+                };
+                mockApi.updateDraftStatus.mockResolvedValue(updatedPr);
+
+                const action: PullRequestDetailsAction = {
+                    type: PullRequestDetailsActionType.UpdateDraftStatusRequest,
+                    isDraft: true,
+                };
+
+                await controller.onMessageReceived(action);
+
+                expect(mockApi.updateDraftStatus).toHaveBeenCalledWith(mockPr, true);
+                expect(mockMessagePoster).toHaveBeenCalledWith({
+                    type: PullRequestDetailsMessageType.UpdateDraftStatus,
+                    isDraft: true,
+                });
+            });
+
+            it('should update draft status to false successfully', async () => {
+                const updatedPr = {
+                    ...mockPr,
+                    data: { ...mockPr.data, draft: false },
+                };
+                mockApi.updateDraftStatus.mockResolvedValue(updatedPr);
+
+                const action: PullRequestDetailsAction = {
+                    type: PullRequestDetailsActionType.UpdateDraftStatusRequest,
+                    isDraft: false,
+                };
+
+                await controller.onMessageReceived(action);
+
+                expect(mockApi.updateDraftStatus).toHaveBeenCalledWith(mockPr, false);
+                expect(mockMessagePoster).toHaveBeenCalledWith({
+                    type: PullRequestDetailsMessageType.UpdateDraftStatus,
+                    isDraft: false,
+                });
+            });
+
+            it('should handle errors when updating draft status', async () => {
+                const error = new Error('Failed to update draft status');
+                mockApi.updateDraftStatus.mockRejectedValue(error);
+
+                const action: PullRequestDetailsAction = {
+                    type: PullRequestDetailsActionType.UpdateDraftStatusRequest,
+                    isDraft: true,
+                };
+
+                await controller.onMessageReceived(action);
+
+                expect(mockApi.updateDraftStatus).toHaveBeenCalledWith(mockPr, true);
+                expect(mockMessagePoster).toHaveBeenCalledWith({
+                    type: CommonMessageType.Error,
+                    reason: {
+                        errorMessages: ['Failed to update draft status'],
+                        title: 'Error updating draft status',
+                    },
+                });
+            });
+        });
+
         describe('PullRequestDetailsActionType.UpdateApprovalStatus', () => {
             it('should update approval status and fire analytics event', async () => {
                 const mockStatus = 'APPROVED' as const;

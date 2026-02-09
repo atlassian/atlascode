@@ -28,32 +28,36 @@ export const DraftStatusButton: React.FC<DraftStatusButtonProps> = ({ isDraft, i
     if (isDraft) {
         return (
             <Tooltip title="Mark this pull request as ready for review">
-                <Button
-                    variant="outlined"
-                    size="small"
-                    color="success"
-                    onClick={handleClick}
-                    disabled={isLoading}
-                    startIcon={isLoading ? <CircularProgress size={16} /> : null}
-                >
-                    Mark as ready
-                </Button>
+                <div>
+                    <Button
+                        variant="outlined"
+                        size="small"
+                        color="success"
+                        onClick={handleClick}
+                        disabled={isLoading}
+                        startIcon={isLoading ? <CircularProgress size={16} /> : null}
+                    >
+                        Mark as ready
+                    </Button>
+                </div>
             </Tooltip>
         );
     }
 
     return (
         <Tooltip title="Convert this pull request to a draft">
-            <Button
-                variant="outlined"
-                size="small"
-                color="warning"
-                onClick={handleClick}
-                disabled={isLoading}
-                startIcon={isLoading ? <CircularProgress size={16} /> : null}
-            >
-                Mark as draft
-            </Button>
+            <div>
+                <Button
+                    variant="outlined"
+                    size="small"
+                    color="warning"
+                    onClick={handleClick}
+                    disabled={isLoading}
+                    startIcon={isLoading ? <CircularProgress size={16} /> : null}
+                >
+                    Mark as draft
+                </Button>
+            </div>
         </Tooltip>
     );
 };
