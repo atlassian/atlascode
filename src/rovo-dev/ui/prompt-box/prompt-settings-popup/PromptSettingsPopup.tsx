@@ -13,6 +13,9 @@ import { AgentMode, RovoDevModeInfo } from 'src/rovo-dev/client';
 import AgentModeSection from './AgentModeSection';
 import PromptSettingsItem from './PromptSettingsItem';
 
+/** Disabled temporarily to match the agent mode design. Remove the Deep plan feature entirely once we confirm it is no longer needed. */
+const SHOW_DEEP_PLAN = false;
+
 const styles = cssMap({
     sectionTitle: {
         fontWeight: token('font.weight.semibold', '600'),
@@ -125,7 +128,7 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                     >
                         Others
                     </Box>
-                    {onDeepPlanToggled && (
+                    {SHOW_DEEP_PLAN && onDeepPlanToggled && (
                         <PromptSettingsItem
                             icon={<AiGenerativeTextSummaryIcon label="Deep plan" />}
                             label="Plan"
