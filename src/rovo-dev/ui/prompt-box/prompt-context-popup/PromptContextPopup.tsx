@@ -97,7 +97,10 @@ const PromptContextPopup: React.FC<PromptContextPopupProps> = ({
                                 <PromptContextPopupItem
                                     icon={<AngleBracketsIcon label="Add repository file" />}
                                     label="Reference file from repository"
-                                    onClick={onAddRepositoryFile}
+                                    onClick={() => {
+                                        onAddRepositoryFile?.();
+                                        setIsOpen(false);
+                                    }}
                                 />
                             )}
                         </div>
