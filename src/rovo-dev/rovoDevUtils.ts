@@ -75,7 +75,7 @@ function getRovoDevLogFilePath(): string | undefined {
         return undefined;
     }
     const configPath = getLogPathFromConfig(home);
-    if (configPath && fs.existsSync(configPath)) {
+    if (configPath) {
         return configPath;
     }
 
