@@ -412,23 +412,228 @@ describe('Logger', () => {
             // Should still log to output channel
             expect(mockOutputChannel.appendLine).toHaveBeenCalled();
         });
+    });
 
-        it('should call Sentry before logging to output channel', () => {
-            mockSentryService.isInitialized.mockReturnValue(true);
-            const callOrder: string[] = [];
+    describe('rovoDevErrorInternal', () => {
+        let mockSentryService: any;
 
-            mockSentryService.captureException.mockImplementation(() => {
-                callOrder.push('sentry');
-            });
+        beforeEach(() => {
+            // Set up Logger with Error level
+            (configuration.initializing as jest.Mock).mockReturnValue(true);
+            (configuration.get as jest.Mock).mockReturnValue(OutputLevel.Errors);
+            Logger.configure(expansionCastTo<ExtensionContext>({ subscriptions: [] }));
 
-            (mockOutputChannel.appendLine as jest.Mock).mockImplementation(() => {
-                callOrder.push('output');
-            });
+            // Setup the mocked Sentry service
+            mockSentryService = {
+                isInitialized: jest.fn().mockReturnValue(true),
+                captureException: jest.fn(),
+            };
+            const { SentryService } = require('./sentry');
+            (SentryService.getInstance as jest.Mock).mockReturnValue(mockSentryService);
+        });
 
-            const testError = new Error('test error');
-            Logger.error(testError, 'Error message');
+        it('should log error with RovoDev product area', () => {
+            const testError = new Error('RovoDev error');
+            const metadata = {
+                rovoDevEnv: 'IDE' as const,
+                appInstanceId: 'test-instance-123',
+                sessionId: 'test-session-456',
+            };
 
-            expect(callOrder).toEqual(['sentry', 'output']);
+            Logger.rovoDevErrorInternal(testError, 'testFunction', 'RovoDev failed', metadata, 'prompt-789');
+
+            expect(mockOutputChannel.appendLine).toHaveBeenCalled();
+            const call = (mockOutputChannel.appendLine as jest.Mock).mock.calls[0][0];
+            expect(call).toContain('RovoDev failed');
+            expect(call).toContain('Error: RovoDev error');
+        });
+
+        it('should send error to Sentry with RovoDev metadata tags', () => {
+            const testError = new Error('RovoDev error');
+            const metadata = {
+                rovoDevEnv: 'IDE' as const,
+                appInstanceId: 'test-instance-123',
+                sessionId: 'test-session-456',
+            };
+
+            Logger.rovoDevErrorInternal(testError, 'testFunction', 'RovoDev failed', metadata, 'prompt-789');
+
+            expect(mockSentryService.captureException).toHaveBeenCalledWith(
+                testError,
+                expect.objectContaining({
+                    tags: expect.objectContaining({
+                        productArea: 'RovoDev',
+                        capturedBy: 'testFunction',
+                        rovoDevEnv: 'IDE' as const,
+                        appInstanceId: 'test-instance-123',
+                        sessionId: 'test-session-456',
+                    }),
+                }),
+            );
+        });
+
+        it('should include promptId and params in Sentry extra context', () => {
+            const testError = new Error('RovoDev error');
+            const metadata = {
+                rovoDevEnv: 'Boysenberry' as const,
+                appInstanceId: 'test-instance-123',
+                sessionId: 'test-session-456',
+            };
+
+            Logger.rovoDevErrorInternal(
+                testError,
+                'testFunction',
+                'RovoDev failed',
+                metadata,
+                'prompt-789',
+                'param1',
+                'param2',
+            );
+
+            expect(mockSentryService.captureException).toHaveBeenCalledWith(
+                testError,
+                expect.objectContaining({
+                    extra: expect.objectContaining({
+                        errorMessage: 'RovoDev failed',
+                        promptId: 'prompt-789',
+                        params: ['param1', 'param2'],
+                    }),
+                }),
+            );
+        });
+
+        it('should handle undefined promptId gracefully', () => {
+            const testError = new Error('RovoDev error');
+            const metadata = {
+                rovoDevEnv: 'IDE' as const,
+                appInstanceId: 'test-instance-123',
+                sessionId: 'test-session-456',
+            };
+
+            Logger.rovoDevErrorInternal(testError, 'testFunction', 'RovoDev failed', metadata, undefined);
+
+            expect(mockSentryService.captureException).toHaveBeenCalledWith(
+                testError,
+                expect.objectContaining({
+                    extra: expect.objectContaining({
+                        errorMessage: 'RovoDev failed',
+                        promptId: undefined,
+                    }),
+                }),
+            );
+        });
+
+        it('should handle empty metadata object', () => {
+            const testError = new Error('RovoDev error');
+            const metadata = {} as any;
+
+            Logger.rovoDevErrorInternal(testError, 'testFunction', 'RovoDev failed', metadata, 'prompt-789');
+
+            expect(mockSentryService.captureException).toHaveBeenCalledWith(
+                testError,
+                expect.objectContaining({
+                    tags: expect.objectContaining({
+                        productArea: 'RovoDev',
+                        capturedBy: 'testFunction',
+                    }),
+                    extra: expect.objectContaining({
+                        errorMessage: 'RovoDev failed',
+                        promptId: 'prompt-789',
+                    }),
+                }),
+            );
+        });
+
+        it('should fire error event with RovoDev product area', () => {
+            const errorHandlerSpy = jest.fn();
+            const eventRegistration = Logger.onError(errorHandlerSpy);
+
+            try {
+                const testError = new Error('RovoDev error');
+                const metadata = {
+                    rovoDevEnv: 'IDE' as const,
+                    appInstanceId: 'test-instance-123',
+                    sessionId: 'test-session-456',
+                };
+
+                Logger.rovoDevErrorInternal(testError, 'testFunction', 'RovoDev failed', metadata, 'prompt-789');
+
+                expect(errorHandlerSpy).toHaveBeenCalled();
+                const errorEvent = errorHandlerSpy.mock.calls[0][0];
+                expect(errorEvent.error).toBe(testError);
+                expect(errorEvent.errorMessage).toBe('RovoDev failed');
+                expect(errorEvent.capturedBy).toBe('testFunction');
+                expect(errorEvent.productArea).toBe('RovoDev');
+            } finally {
+                eventRegistration.dispose();
+            }
+        });
+
+        it('should not send to Sentry when not initialized', () => {
+            mockSentryService.isInitialized.mockReturnValue(false);
+
+            const testError = new Error('RovoDev error');
+            const metadata = {
+                rovoDevEnv: 'IDE' as const,
+                appInstanceId: 'test-instance-123',
+                sessionId: 'test-session-456',
+            };
+
+            Logger.rovoDevErrorInternal(testError, 'testFunction', 'RovoDev failed', metadata, 'prompt-789');
+
+            expect(mockSentryService.captureException).not.toHaveBeenCalled();
+            // Should still log to output channel
+            expect(mockOutputChannel.appendLine).toHaveBeenCalled();
+        });
+    });
+
+    describe('bitBucketErrorInternal', () => {
+        let mockSentryService: any;
+
+        beforeEach(() => {
+            // Set up Logger with Error level
+            (configuration.initializing as jest.Mock).mockReturnValue(true);
+            (configuration.get as jest.Mock).mockReturnValue(OutputLevel.Errors);
+            Logger.configure(expansionCastTo<ExtensionContext>({ subscriptions: [] }));
+
+            // Setup the mocked Sentry service
+            mockSentryService = {
+                isInitialized: jest.fn().mockReturnValue(true),
+                captureException: jest.fn(),
+            };
+            const { SentryService } = require('./sentry');
+            (SentryService.getInstance as jest.Mock).mockReturnValue(mockSentryService);
+        });
+
+        it('should log error with Bitbucket product area', () => {
+            const testError = new Error('Bitbucket error');
+
+            Logger.bitBucketErrorInternal(testError, 'testFunction', 'Bitbucket failed');
+
+            expect(mockOutputChannel.appendLine).toHaveBeenCalled();
+            const call = (mockOutputChannel.appendLine as jest.Mock).mock.calls[0][0];
+            expect(call).toContain('Bitbucket failed');
+            expect(call).toContain('Error: Bitbucket error');
+        });
+
+        it('should send error to Sentry with Bitbucket product area', () => {
+            const testError = new Error('Bitbucket error');
+
+            Logger.bitBucketErrorInternal(testError, 'testFunction', 'Bitbucket failed', 'param1');
+
+            expect(mockSentryService.captureException).toHaveBeenCalledWith(
+                testError,
+                expect.objectContaining({
+                    tags: expect.objectContaining({
+                        productArea: 'Bitbucket',
+                        capturedBy: 'testFunction',
+                    }),
+                    extra: expect.objectContaining({
+                        errorMessage: 'Bitbucket failed',
+                        params: ['param1'],
+                    }),
+                }),
+            );
         });
     });
 });

@@ -43,13 +43,8 @@ import { ExtensionContext, workspace } from 'vscode';
 import { setCommandContext } from '../../src/commandContext';
 import { RovodevCommandContext } from './api/componentApi';
 import { RovoDevSessionManager } from './rovoDevSessionManager';
+import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import { RovoDevWebviewProvider } from './rovoDevWebviewProvider';
-
-jest.mock('./util/rovoDevLogger', () => ({
-    RovoDevLogger: {
-        error: jest.fn(),
-    },
-}));
 
 jest.mock('./rovoDevProcessManager', () => ({
     RovoDevProcessManager: {
@@ -68,6 +63,9 @@ jest.mock('./rovoDevTelemetryProvider', () => ({
         shutdown: jest.fn(),
     })),
 }));
+
+// mock extra static methods in the already-mocked class
+Object.assign(RovoDevTelemetryProvider, { logError: jest.fn() });
 
 jest.mock('./rovoDevUtils', () => ({
     readLastNLogLines: jest.fn(() => ['mock log line 1', 'mock log line 2']),

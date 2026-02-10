@@ -20,6 +20,7 @@ import {
 import { IssueSuggestionSettings } from './config/configuration';
 import { BitbucketIssuesTreeViewId, PullRequestTreeViewId } from './constants';
 import { Container } from './container';
+import { RovoDevTelemetryParams } from './logger';
 import { QuickFlowAnalyticsEvent } from './onboarding/quickFlow/types';
 import { RovoDevCommonParams, RovodevPerformanceTag } from './rovo-dev/analytics/events';
 import { NotificationSurface, NotificationType } from './views/notifications/notificationManager';
@@ -174,8 +175,9 @@ export async function errorEvent(
     error?: Error,
     capturedBy?: string,
     additionalParams?: string,
+    rovoDevParams?: RovoDevTelemetryParams,
 ): Promise<TrackEvent> {
-    const attributes: ErrorEventPayload = {
+    const attributes: ErrorEventPayload & Partial<RovoDevTelemetryParams> = {
         productArea,
         message: sanitazeErrorMessage(errorMessage),
         name: error?.name || 'Error',
@@ -183,6 +185,13 @@ export async function errorEvent(
         stack: error?.stack ? sanitizeStackTrace(error.stack) : undefined,
         additionalParams,
     };
+
+    if (rovoDevParams) {
+        attributes.rovoDevEnv = rovoDevParams.rovoDevEnv;
+        attributes.appInstanceId = rovoDevParams.appInstanceId;
+        attributes.sessionId = rovoDevParams.sessionId;
+        attributes.promptId = rovoDevParams.promptId;
+    }
 
     return trackEvent('errorEvent_v2', 'atlascode', { attributes });
 }

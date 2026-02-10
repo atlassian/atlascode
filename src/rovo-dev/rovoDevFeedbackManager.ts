@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 
 import { ExtensionApi, getAxiosInstance } from './api/extensionApi';
 import { MIN_SUPPORTED_ROVODEV_VERSION } from './rovoDevProcessManager';
-import { RovoDevLogger } from './util/rovoDevLogger';
+import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 
 interface FeedbackObject {
     feedbackType: 'bug' | 'reportContent' | 'general';
@@ -91,7 +91,7 @@ export class RovoDevFeedbackManager {
                 data: payload,
             });
         } catch (error) {
-            RovoDevLogger.error(error, 'Error submitting Rovo Dev feedback');
+            RovoDevTelemetryProvider.logError(error, 'Error submitting Rovo Dev feedback');
             vscode.window.showErrorMessage('There was an error submitting your feedback. Please try again later.');
             return;
         }
