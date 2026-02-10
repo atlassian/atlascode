@@ -34,6 +34,7 @@ jest.mock('../../common/ErrorDisplay', () => ({
 // Mock all components used in StartWorkPageV3
 jest.mock('./components', () => ({
     CreateBranchSection: () => <div data-testid="create-branch-section">Create Branch Section</div>,
+    NoRepositoryWarning: () => <div data-testid="no-repository-warning">No Repository Warning</div>,
     RovoDevToggle: () => <div data-testid="rovo-dev-toggle">Rovo Dev Toggle</div>,
     SnackbarNotification: () => <div data-testid="snackbar-notification">Snackbar</div>,
     SuccessAlert: () => <div data-testid="success-alert">Success Alert</div>,
@@ -73,6 +74,7 @@ const mockState = {
     customTemplate: '{{prefix}}/{{issueKey}}-{{summary}}',
     customPrefixes: [],
     isSomethingLoading: false,
+    isInitialized: true,
     isRovoDevEnabled: true,
     rovoDevPreference: false,
     pushBranchPreference: true,
