@@ -73,6 +73,7 @@
     cursor: pointer;
     border-radius: 4px;
     padding: 4px;
+    color: var(--vscode-button-secondaryForeground);
 }
 
 .saved-prompt-menu-back-button:hover {
@@ -95,7 +96,7 @@
 
 .saved-prompt-menu-search-input {
     width: 100%;
-    border-color: var(--vscode-input-border) !important;
+    border-color: transparent !important;
     background-color: var(--vscode-input-background) !important;
     max-height: fit-content;
 }
@@ -145,6 +146,7 @@
     justify-content: center;
     padding: 4px;
     border-radius: 4px;
+    color: var(--vscode-button-secondaryForeground);
 }
 
 .saved-prompt-menu-inject-button:hover {
@@ -156,6 +158,7 @@
     display: flex;
     flex-direction: column;
     height: 200px;
+    gap: 8px;
 }
 
 .saved-prompt-menu-prompt-description {
