@@ -283,7 +283,11 @@ describe('CreatePullRequestWebviewController', () => {
 
             await controller.update();
 
-            expect(mockLogger.error).toHaveBeenCalledWith(error, 'Error updating start work page');
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                error,
+                'Error updating start work page or creating pull request',
+                'invalidate',
+            );
             expect(mockMessagePoster).toHaveBeenCalledWith({
                 type: CommonMessageType.Error,
                 reason: expect.any(String),
@@ -327,7 +331,11 @@ describe('CreatePullRequestWebviewController', () => {
 
                 await controller.onMessageReceived({ type: CommonActionType.Refresh });
 
-                expect(mockLogger.error).toHaveBeenCalledWith(error, 'Error updating start work page');
+                expect(mockLogger.error).toHaveBeenCalledWith(
+                    error,
+                    'Error updating start work page or creating pull request',
+                    'invalidate',
+                );
                 expect(mockMessagePoster).toHaveBeenCalledWith({
                     type: CommonMessageType.Error,
                     reason: expect.any(String),
@@ -538,6 +546,7 @@ describe('CreatePullRequestWebviewController', () => {
                     reviewers: [],
                     pushLocalChanges: false,
                     closeSourceBranch: false,
+                    isDraft: false,
                 };
 
                 await controller.onMessageReceived({
@@ -573,6 +582,7 @@ describe('CreatePullRequestWebviewController', () => {
                     reviewers: [],
                     pushLocalChanges: false,
                     closeSourceBranch: false,
+                    isDraft: false,
                 };
 
                 await controller.onMessageReceived({
