@@ -1675,10 +1675,14 @@
         "@atlaskit/datetime-picker": "^17.0.13",
         "@atlaskit/dropdown-menu": "^16.3.8",
         "@atlaskit/editor-common": "^110.8.0",
-        "@atlaskit/editor-core": "^214.2.2",
+        "@atlaskit/editor-core": "^214.2.4",
         "@atlaskit/editor-json-transformer": "^8.27.2",
+        "@atlaskit/editor-plugin-content-insertion": "^6.0.0",
+        "@atlaskit/editor-plugin-editor-disabled": "^6.1.0",
+        "@atlaskit/editor-plugin-grid": "^6.0.2",
         "@atlaskit/editor-plugin-insert-block": "^7.0.1",
         "@atlaskit/editor-plugin-list": "^8.0.0",
+        "@atlaskit/editor-plugin-media": "^8.1.2",
         "@atlaskit/editor-plugin-mentions": "^8.0.0",
         "@atlaskit/editor-plugin-tasks-and-decisions": "^9.0.0",
         "@atlaskit/editor-plugin-text-color": "^6.0.1",
@@ -1906,7 +1910,13 @@
             "react": "^18.3.1"
         },
         "@loomhq/record-sdk": {
-            "@atlaskit/icon": "^28.3.0"
+            "@atlaskit/icon": "^28.5.0",
+            "@atlaskit/icon-lab": {
+                "@atlaskit/icon": "^28.5.0"
+            }
+        },
+        "@atlaskit/editor-plugin-editor-disabled": {
+            "@atlaskit/platform-feature-flags": "0.3.0"
         },
         "transition-hook@1.5.2": {
             "react-dom": "^18.3.1",

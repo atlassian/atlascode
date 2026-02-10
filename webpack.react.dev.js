@@ -102,6 +102,7 @@ module.exports = {
         createEnvPlugin({ nodeEnv: 'development', isBrowser: true }),
         new webpack.ProvidePlugin({
             process: 'process/browser',
+            Buffer: ['buffer', 'Buffer'],
         }),
     ],
     module: {
