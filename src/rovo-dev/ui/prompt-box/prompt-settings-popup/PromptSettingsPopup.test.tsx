@@ -63,13 +63,12 @@ describe('PromptSettingsPopup', () => {
         const settingsButton = screen.getByRole('button', { name: 'Prompt settings' });
         fireEvent.click(settingsButton);
 
-        expect(screen.getByText('Plan')).toBeTruthy();
-        expect(
-            screen.getByText('Tackle complex, multi-step code by first generating a plan before coding.'),
-        ).toBeTruthy();
+        expect(screen.getByText('Reasoning')).toBeTruthy();
+        expect(screen.getByText('Others')).toBeTruthy();
+        expect(screen.getByText('YOLO')).toBeTruthy();
     });
 
-    it('calls onToggleDeepPlan when toggle is clicked', () => {
+    it.skip('calls onToggleDeepPlan when toggle is clicked (skipped while SHOW_DEEP_PLAN is false)', () => {
         render(
             <PromptSettingsPopup
                 onDeepPlanToggled={mockOnDeepPlanToggled}
