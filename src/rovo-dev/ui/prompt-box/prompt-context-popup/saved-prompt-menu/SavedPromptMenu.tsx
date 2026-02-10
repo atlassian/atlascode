@@ -82,13 +82,7 @@ export const SavedPromptMenu: React.FC<SavedPromptMenuProps> = ({
     return (
         <div className="saved-prompt-menu-container">
             <div className="saved-prompt-menu-header">
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                    }}
-                >
+                <div className="saved-prompt-menu-header-info">
                     <button onClick={handleBackButton} className="saved-prompt-menu-back-button">
                         <ChevronLeftIcon label="Back" />
                     </button>
@@ -129,8 +123,8 @@ export const SavedPromptMenu: React.FC<SavedPromptMenuProps> = ({
                                     className="saved-prompt-menu-search-result"
                                     onClick={() => handleOpenPrompt(prompt)}
                                 >
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <AngleBracketsIcon label="Prompt file" size="small" />
+                                    <div className="saved-prompt-menu-result-info">
+                                        <AngleBracketsIcon label="Prompt file" />
                                         {prompt.name}
                                     </div>
                                     <button
