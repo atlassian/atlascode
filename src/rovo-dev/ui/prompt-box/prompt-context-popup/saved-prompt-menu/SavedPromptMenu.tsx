@@ -106,57 +106,57 @@ export const SavedPromptMenu: React.FC<SavedPromptMenuProps> = ({
                     </Tooltip>
                 )}
             </div>
-            <div className="saved-prompt-menu-divider" />
-            {menuState === MenuState.SearchForPrompt && (
-                <div className="saved-prompt-menu-search-container">
-                    <Textfield
-                        className="saved-prompt-menu-search-input"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.currentTarget.value)}
-                        placeholder="Search for a prompt..."
-                        isCompact={true}
-                        elemBeforeInput={<SearchIcon label="Search" />}
-                    />
-                    <div className="saved-prompt-menu-search-results">
-                        {filteredPrompts.map((prompt, idx) => (
-                            <div
-                                key={`${prompt.content_file}-${idx}`}
-                                className="saved-prompt-menu-search-result"
-                                onClick={() => handleOpenPrompt(prompt)}
-                            >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <AngleBracketsIcon label="Prompt file" size="small" />
-                                    {prompt.name}
-                                </div>
-                                <button
-                                    className="saved-prompt-menu-inject-button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleInjectPrompt(prompt);
-                                    }}
+
+            <div className="saved-prompt-menu-prompt-details">
+                {menuState === MenuState.SearchForPrompt && (
+                    <>
+                        <Textfield
+                            className="saved-prompt-menu-search-input"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.currentTarget.value)}
+                            placeholder="Search for a prompt..."
+                            isCompact={true}
+                            elemBeforeInput={<SearchIcon label="Search" />}
+                        />
+                        <div className="saved-prompt-menu-search-results">
+                            {filteredPrompts.map((prompt, idx) => (
+                                <div
+                                    key={`${prompt.content_file}-${idx}`}
+                                    className="saved-prompt-menu-search-result"
+                                    onClick={() => handleOpenPrompt(prompt)}
                                 >
-                                    <AddIcon label="Inject prompt" />
-                                </button>
-                            </div>
-                        ))}
-                        {!canFetchSavedPrompts && (
-                            <div className="saved-prompt-menu-no-results">
-                                <Spinner /> Initializing Rovo Dev process...
-                            </div>
-                        )}
-                        {filteredPrompts.length === 0 && canFetchSavedPrompts && (
-                            <div className="saved-prompt-menu-no-results">No prompts found.</div>
-                        )}
-                    </div>
-                </div>
-            )}
-            {menuState === MenuState.ExplorePrompt && selectedPrompt && (
-                <div className="saved-prompt-menu-prompt-details">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <AngleBracketsIcon label="Prompt file" size="small" />
+                                        {prompt.name}
+                                    </div>
+                                    <button
+                                        className="saved-prompt-menu-inject-button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleInjectPrompt(prompt);
+                                        }}
+                                    >
+                                        <AddIcon label="Inject prompt" />
+                                    </button>
+                                </div>
+                            ))}
+                            {!canFetchSavedPrompts && (
+                                <div className="saved-prompt-menu-no-results">
+                                    <Spinner /> Initializing Rovo Dev process...
+                                </div>
+                            )}
+                            {filteredPrompts.length === 0 && canFetchSavedPrompts && (
+                                <div className="saved-prompt-menu-no-results">No prompts found.</div>
+                            )}
+                        </div>
+                    </>
+                )}
+                {menuState === MenuState.ExplorePrompt && selectedPrompt && (
                     <div className="saved-prompt-menu-prompt-description">
                         <p>{selectedPrompt.description || 'No description available.'}</p>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 };

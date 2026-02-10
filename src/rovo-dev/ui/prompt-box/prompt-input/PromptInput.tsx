@@ -254,10 +254,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         forceMoveMarkers: true,
                     },
                 ]);
-                const lineNumber = editor.getModel()!.getLineCount();
-                const column = editor.getModel()!.getLineLength(lineNumber) + 1;
                 editor.focus();
-                editor.setPosition({ lineNumber, column }); // move cursor to end
             }
         },
         [editor],

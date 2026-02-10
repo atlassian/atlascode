@@ -16,6 +16,7 @@ interface PromptContextPopupProps {
     fetchSavedPrompts?: () => Promise<SavedPrompt[]>;
     canFetchSavedPrompts?: boolean;
     onSelectedSavedPrompt?: (prompt: SavedPrompt) => void;
+    onClose?: () => void;
 }
 
 const PopupContainer = React.forwardRef<HTMLDivElement, PopupComponentProps>(
@@ -31,6 +32,7 @@ const PromptContextPopup: React.FC<PromptContextPopupProps> = ({
     fetchSavedPrompts,
     canFetchSavedPrompts,
     onSelectedSavedPrompt,
+    onClose,
 }) => {
     const [isOpen, setIsOpen] = React.useState(false);
     const [isSavedPromptsMenuOpen, setIsSavedPromptsMenuOpen] = React.useState(false);
@@ -107,6 +109,7 @@ const PromptContextPopup: React.FC<PromptContextPopupProps> = ({
             onClose={() => {
                 setIsOpen(false);
                 setIsSavedPromptsMenuOpen(false);
+                onClose?.();
             }}
         />
     );
