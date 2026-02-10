@@ -346,17 +346,17 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         </Tooltip>
                     )}{' '}
                     {currentAgentMode && currentAgentMode !== 'default' && (
-                        <Tooltip content={'Switch to default'}>
+                        <Tooltip content={`${currentAgentMode} mode`}>
                             <div
                                 className="mode-indicator"
                                 onClick={() => onAgentModeChange('default')}
                                 onKeyDown={onKeyDownHandler(() => onAgentModeChange('default'))}
                                 tabIndex={0}
                                 role="button"
-                                aria-label={'Switch to default'}
+                                aria-label={`${currentAgentMode} mode`}
                             >
                                 {getAgentModeIcon(currentAgentMode)}
-                                <CrossIcon size="small" label={`disable ${currentAgentMode} mode`} />
+                                <CrossIcon size="small" label={`${currentAgentMode} mode`} />
                             </div>
                         </Tooltip>
                     )}
