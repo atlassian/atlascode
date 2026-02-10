@@ -46,7 +46,7 @@ jest.mock('./api/extensionApi', () => ({
         },
     })),
 }));
-jest.mock('./util/rovoDevLogger');
+jest.mock('src/logger');
 jest.mock('./rovoDevUtils');
 
 describe('RovoDevChatProvider', () => {

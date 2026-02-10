@@ -1,4 +1,4 @@
-jest.mock('./util/rovoDevLogger');
+jest.mock('src/logger');
 jest.mock('vscode');
 
 const mockExtensionApiInstance = {
@@ -12,6 +12,12 @@ jest.mock('./api/extensionApi', () => ({
     ExtensionApi: jest.fn().mockImplementation(() => mockExtensionApiInstance),
 }));
 
+jest.mock('./rovoDevTelemetryProvider', () => ({
+    RovoDevTelemetryProvider: {
+        logError: jest.fn(),
+    },
+}));
+
 jest.mock('lodash', () => ({
     ...jest.requireActual('lodash'),
     truncate: jest.fn((str, options) => str),
@@ -22,7 +28,7 @@ import * as vscode from 'vscode';
 
 import { getAxiosInstance } from './api/extensionApi';
 import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
-import { RovoDevLogger } from './util/rovoDevLogger';
+import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 
 describe('RovoDevFeedbackManager', () => {
     const mockTransport = jest.fn();
@@ -164,7 +170,7 @@ describe('RovoDevFeedbackManager', () => {
 
             await RovoDevFeedbackManager.submitFeedback(feedback);
 
-            expect(RovoDevLogger.error).toHaveBeenCalledWith(error, 'Error submitting Rovo Dev feedback');
+            expect(RovoDevTelemetryProvider.logError).toHaveBeenCalledWith(error, 'Error submitting Rovo Dev feedback');
             expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
                 'There was an error submitting your feedback. Please try again later.',
             );

@@ -1,7 +1,8 @@
+import { Logger } from 'src/logger';
+
 import Perf from '../util/perf';
 import { RovoDevEnv, RovodevPerformanceTag } from './analytics/events';
 import { ExtensionApi } from './api/extensionApi';
-import { RovoDevLogger } from './util/rovoDevLogger';
 
 export class PerformanceLogger {
     private currentSessionId: string = '';
@@ -37,7 +38,7 @@ export class PerformanceLogger {
                 rovoDevPromptId: promptId,
             },
         });
-        RovoDevLogger.debug(`Event fired: ${tag} ${measure} ms`);
+        Logger.debug(`Event fired: ${tag} ${measure} ms`);
     }
 
     public async promptFirstByteReceived(promptId: string) {

@@ -1,5 +1,6 @@
 import { ChildProcess, spawn } from 'child_process';
 import { access, constants } from 'fs';
+import { Logger } from 'src/logger';
 import { commands, Disposable, ExtensionContext, OutputChannel, window, workspace } from 'vscode';
 import {
     CloseAction,
@@ -11,7 +12,7 @@ import {
 
 import { ExtensionApi } from './api/extensionApi';
 import { GetRovoDevURIs, RovoDevProcessManager, RovoDevProcessState } from './rovoDevProcessManager';
-import { RovoDevLogger } from './util/rovoDevLogger';
+import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 
 /** Command ID for restarting the Rovo Dev Language Server */
 export const RESTART_LSP_COMMAND = 'atlascode.rovodev.restartLsp';
@@ -117,7 +118,7 @@ export class RovoDevLanguageServerProvider extends Disposable {
             // Check if the binary exists before trying to start the server
             const binaryExists = await checkBinaryExists(binPath);
             if (!binaryExists) {
-                RovoDevLogger.warn(`Rovo Dev LSP: Binary at ${binPath} is not found, skipping language server start`);
+                Logger.warn(`Rovo Dev LSP: Binary at ${binPath} is not found, skipping language server start`);
                 this.outputChannel.appendLine('Binary not found, skipping language server start');
                 return;
             }
@@ -147,7 +148,7 @@ export class RovoDevLanguageServerProvider extends Disposable {
 
                 this.serverProcess.on('error', (error) => {
                     this.outputChannel.appendLine(`Server process error: ${error.message}`);
-                    RovoDevLogger.error(error, 'Rovo Dev LSP process error');
+                    RovoDevTelemetryProvider.logError(error, 'Rovo Dev LSP process error');
                 });
 
                 this.serverProcess.on('exit', (code, signal) => {
@@ -174,7 +175,7 @@ export class RovoDevLanguageServerProvider extends Disposable {
                 errorHandler: {
                     error: (error, message, count) => {
                         this.outputChannel.appendLine(`Language server error: ${error?.message || error}`);
-                        RovoDevLogger.error(error, 'Rovo Dev LSP error');
+                        RovoDevTelemetryProvider.logError(error, 'Rovo Dev LSP error');
                         // Continue running after errors (up to a point)
                         if (count && count < 3) {
                             return { action: ErrorAction.Continue };
@@ -221,11 +222,11 @@ export class RovoDevLanguageServerProvider extends Disposable {
             await this.client.start();
 
             this.outputChannel.appendLine('Rovo Dev Language Server started successfully');
-            RovoDevLogger.info('Rovo Dev Language Server started successfully');
+            Logger.info('Rovo Dev Language Server started successfully');
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
             this.outputChannel.appendLine(`Failed to start Rovo Dev Language Server: ${errorMessage}`);
-            RovoDevLogger.error(error, 'Failed to start Rovo Dev Language Server');
+            RovoDevTelemetryProvider.logError(error, 'Failed to start Rovo Dev Language Server');
             // Don't show error to user - LSP may not be available in all versions of the binary
             this.client = undefined;
         } finally {
@@ -250,7 +251,7 @@ export class RovoDevLanguageServerProvider extends Disposable {
             if (client.isRunning()) {
                 await client.stop();
                 this.outputChannel.appendLine('Rovo Dev Language Server stopped');
-                RovoDevLogger.info('Rovo Dev Language Server stopped');
+                Logger.info('Rovo Dev Language Server stopped');
             } else {
                 this.outputChannel.appendLine('Language server was not running, skipping stop');
             }
