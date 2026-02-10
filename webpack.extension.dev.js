@@ -3,6 +3,7 @@ const fs = require('fs');
 const webpack = require('webpack');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const { createEnvPlugin } = require('./webpack.env.config');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
@@ -15,6 +16,12 @@ module.exports = [
         mode: 'development',
         target: 'node',
         devtool: 'cheap-module-source-map',
+        cache: {
+            type: 'filesystem',
+            buildDependencies: {
+                config: [__filename],
+            },
+        },
         entry: {
             extension: './src/extension.ts',
         },
@@ -36,7 +43,13 @@ module.exports = [
                 },
                 {
                     test: /\.(ts|js)x?$/,
-                    use: [{ loader: 'ts-loader' }],
+                    use: [{ 
+                        loader: 'ts-loader',
+                        options: {
+                            transpileOnly: true,
+                            onlyCompileBundledFiles: true
+                        }
+                    }],
                     exclude: [/node_modules/, /\.test\.ts$/, /\.spec\.ts$/],
                 },
                 {
@@ -53,7 +66,9 @@ module.exports = [
             alias: {
                 parse5$: 'parse5/dist/cjs/index.js',
                 axios: path.resolve(__dirname, 'node_modules/axios/lib/axios.js'),
+                'typings/git': path.resolve(__dirname, 'src/typings/git.d.ts'),
             },
+            modules: [path.resolve(__dirname, 'src'), 'node_modules'],
         },
         output: {
             filename: '[name].js',
@@ -78,6 +93,14 @@ module.exports = [
                 paths: [/\.js$/, /\.d\.ts$/],
             }),
             createEnvPlugin({ nodeEnv: 'development' }),
+            // TypeScript checking disabled temporarily to focus on build performance
+            // new ForkTsCheckerWebpackPlugin({
+            //     typescript: {
+            //         configFile: resolveApp('./tsconfig.json'),
+            //         memoryLimit: 4096,
+            //     },
+            //     async: true,
+            // }),
         ],
     },
     {
