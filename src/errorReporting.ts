@@ -5,7 +5,7 @@ import { AnalyticsClient } from './analytics-node-client/src/client.min';
 import { TrackEvent } from './analytics-node-client/src/types';
 import { ErrorProductArea } from './analyticsTypes';
 import { ExtensionId } from './constants';
-import { Logger } from './logger';
+import { Logger, RovoDevTelemetryParams } from './logger';
 
 const AtlascodeStackTraceHint = `/.vscode/extensions/${ExtensionId}-`;
 
@@ -48,7 +48,7 @@ function unhandledRejectionHandler(error: Error | string): void {
 function errorHandlerWithFilter(productArea: ErrorProductArea, error: Error | string, capturedBy: string): void {
     safeExecute(() => {
         if (error instanceof Error && error.stack && error.stack.includes(AtlascodeStackTraceHint)) {
-            errorHandler(productArea, error, undefined, undefined, capturedBy);
+            errorHandler(productArea, error, undefined, undefined, undefined, capturedBy);
         }
     });
 }
@@ -58,6 +58,7 @@ function errorHandler(
     error: Error | string,
     errorMessage?: string,
     params?: string[],
+    rovoDevParams?: RovoDevTelemetryParams,
     capturedBy?: string,
 ): void {
     safeExecute(() => {
@@ -69,10 +70,10 @@ function errorHandler(
         let event: Promise<TrackEvent>;
         if (typeof error === 'string') {
             errorMessage = errorMessage ? `${errorMessage}: ${error}` : error;
-            event = errorEvent(productArea, errorMessage, undefined, capturedBy, formattedParams);
+            event = errorEvent(productArea, errorMessage, undefined, capturedBy, formattedParams, rovoDevParams);
         } else {
             errorMessage = errorMessage || error.message;
-            event = errorEvent(productArea, errorMessage, error, capturedBy, formattedParams);
+            event = errorEvent(productArea, errorMessage, error, capturedBy, formattedParams, rovoDevParams);
         }
 
         if (analyticsClient) {
@@ -95,7 +96,15 @@ export function registerErrorReporting(): void {
         process.addListener('unhandledRejection', unhandledRejectionHandler);
 
         _logger_onError_eventRegistration = Logger.onError(
-            (data) => errorHandler(data.productArea, data.error, data.errorMessage, data.params, data.capturedBy),
+            (data) =>
+                errorHandler(
+                    data.productArea,
+                    data.error,
+                    data.errorMessage,
+                    data.params,
+                    data.rovoDevParams,
+                    data.capturedBy,
+                ),
             undefined,
         );
     });

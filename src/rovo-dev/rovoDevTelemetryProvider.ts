@@ -1,10 +1,11 @@
+import { Logger, retrieveCallerName } from 'src/logger';
+
 import { Track, TrackEvent } from './analytics/events';
 import { ExtensionApi, RovoDevEnv } from './api/extensionApi';
 import { PerformanceLogger } from './performanceLogger';
-import { RovoDevLogger } from './util/rovoDevLogger';
 
 // Common attributes that appear in most events
-export type CommonSessionAttributes = {
+export type RovoDevCommonSessionAttributes = {
     rovoDevEnv: RovoDevEnv;
     appInstanceId: string;
     sessionId: string;
@@ -13,7 +14,7 @@ export type CommonSessionAttributes = {
 export type PartialEvent<T extends { action: string; subject: string; attributes: object }> = Pick<
     T,
     'action' | 'subject'
-> & { attributes: Omit<T['attributes'], keyof CommonSessionAttributes> };
+> & { attributes: Omit<T['attributes'], keyof RovoDevCommonSessionAttributes> };
 
 // Events supported by RovoDevTelemetryProvider
 // (these have common attributes: rovoDevEnv, appInstanceId, sessionId)
@@ -37,6 +38,20 @@ export type TelemetryEvent =
 export type TelemetryScreenEvent = 'rovoDevSessionHistoryPicker';
 
 export class RovoDevTelemetryProvider {
+    private static Instance: RovoDevTelemetryProvider | undefined = undefined;
+
+    public static logError(ex: Error, errorMessage?: string, ...params: string[]): void {
+        if (this.Instance) {
+            // `retrieveCallerName` must be called from the VERY FIRST entrypoint for error logging.
+            // If not, the function will return the name of a method inside Logger.
+            const callerName = retrieveCallerName();
+            this.Instance.logErrorInternal(ex, callerName, errorMessage, ...params);
+        }
+    }
+
+    //-------------
+
+    private _chatPromptId: string = '';
     private _chatSessionId: string = '';
 
     private _firedTelemetryForCurrentPrompt: Record<string, boolean> = {};
@@ -57,22 +72,21 @@ export class RovoDevTelemetryProvider {
     constructor(
         private readonly rovoDevEnv: RovoDevEnv,
         private readonly appInstanceId: string,
-        private readonly onError: (error: Error) => void,
     ) {
+        RovoDevTelemetryProvider.Instance = this;
+
         this._perfLogger = new PerformanceLogger(this.rovoDevEnv, this.appInstanceId);
     }
 
-    public startNewSession(chatSessionId: string, manuallyCreated: boolean): Promise<void> {
+    public startNewSession(chatSessionId: string, source: 'init' | 'manuallyCreated' | 'restored'): Promise<void> {
+        this._chatPromptId = '';
         this._chatSessionId = chatSessionId;
         this._firedTelemetryForCurrentPrompt = {};
-
-        // Update RovoDevLogger with current session ID for automatic error tracking
-        RovoDevLogger.setSessionId(chatSessionId);
 
         const telemetryPromise = this.fireTelemetryEvent({
             action: 'rovoDevNewSessionAction',
             subject: 'atlascode',
-            attributes: { isManuallyCreated: manuallyCreated },
+            attributes: { source },
         });
 
         this.perfLogger.sessionStarted(this._chatSessionId);
@@ -81,20 +95,19 @@ export class RovoDevTelemetryProvider {
     }
 
     public startNewPrompt(promptId: string) {
+        this._chatPromptId = promptId;
         this._firedTelemetryForCurrentPrompt = {};
     }
 
     public shutdown() {
+        this._chatPromptId = '';
         this._chatSessionId = '';
         this._firedTelemetryForCurrentPrompt = {};
-
-        // Clear session ID from RovoDevLogger
-        RovoDevLogger.setSessionId(undefined);
     }
 
-    private hasValidMetadata(event: TelemetryEvent, metadata: CommonSessionAttributes): boolean {
+    private hasValidMetadata(event: TelemetryEvent, metadata: RovoDevCommonSessionAttributes): boolean {
         if (!metadata.sessionId) {
-            this.onError(new Error('Unable to send Rovo Dev telemetry: ChatSessionId not initialized'));
+            this.logError(new Error('Unable to send Rovo Dev telemetry: ChatSessionId not initialized'));
             return false;
         }
 
@@ -111,7 +124,7 @@ export class RovoDevTelemetryProvider {
             return true;
         }
 
-        this.onError(new Error('Unable to send Rovo Dev telemetry: PromptId not initialized'));
+        this.logError(new Error('Unable to send Rovo Dev telemetry: PromptId not initialized'));
         return false;
     }
 
@@ -127,7 +140,7 @@ export class RovoDevTelemetryProvider {
     }
 
     // This function ensures that the same telemetry event is not sent twice for the same prompt
-    async fireTelemetryEvent(event: TelemetryEvent): Promise<void> {
+    public async fireTelemetryEvent(event: TelemetryEvent): Promise<void> {
         const eventId = `${event.subject}_${event.action}`;
 
         if (!this.hasValidMetadata(event, this.metadata) || !this.canFire(eventId)) {
@@ -144,14 +157,30 @@ export class RovoDevTelemetryProvider {
             },
         } as TrackEvent);
 
-        RovoDevLogger.debug(`Event fired: ${event.subject} ${event.action} (${JSON.stringify(event.attributes)})`);
+        Logger.debug(`Event fired: ${event.subject} ${event.action} (${JSON.stringify(event.attributes)})`);
     }
 
-    async fireScreenTelemetryEvent(screenName: TelemetryScreenEvent): Promise<void> {
+    public async fireScreenTelemetryEvent(screenName: TelemetryScreenEvent): Promise<void> {
         await this._extensionApi.analytics.sendScreenEvent(screenName);
     }
 
-    private get metadata(): CommonSessionAttributes {
+    public logError(ex: Error, errorMessage?: string, ...params: string[]): void {
+        // `retrieveCallerName` must be called from the VERY FIRST entrypoint for error logging.
+        // If not, the function will return the name of a method inside Logger.
+        const callerName = retrieveCallerName();
+        this.logErrorInternal(ex, callerName, errorMessage, ...params);
+    }
+
+    private logErrorInternal(
+        ex: Error,
+        callerName: string | undefined,
+        errorMessage?: string,
+        ...params: string[]
+    ): void {
+        Logger.rovoDevErrorInternal(ex, callerName, errorMessage, this.metadata, this._chatPromptId, ...params);
+    }
+
+    private get metadata(): RovoDevCommonSessionAttributes {
         return {
             rovoDevEnv: this.rovoDevEnv,
             appInstanceId: this.appInstanceId,

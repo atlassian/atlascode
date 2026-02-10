@@ -1,6 +1,6 @@
 import { AuthInfoState } from 'src/atlclients/authInfo';
 
-import { RovoDevLogger } from './util/rovoDevLogger';
+import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 
 export interface RovoDevAuthInfo {
     user: {
@@ -92,7 +92,7 @@ async function fetchUserInfo(host: string, email: string, apiToken: string): Pro
         });
 
         if (!response.ok) {
-            RovoDevLogger.error(
+            RovoDevTelemetryProvider.logError(
                 new Error(`HTTP ${response.status}`),
                 'Failed to validate credentials',
                 response.statusText,
@@ -105,7 +105,7 @@ async function fetchUserInfo(host: string, email: string, apiToken: string): Pro
         const data = await response.json();
 
         if (data.errors) {
-            RovoDevLogger.error(
+            RovoDevTelemetryProvider.logError(
                 new Error('GraphQL validation failed'),
                 'GraphQL errors during validation',
                 JSON.stringify(data.errors),
@@ -114,7 +114,7 @@ async function fetchUserInfo(host: string, email: string, apiToken: string): Pro
         }
 
         if (!data.data?.me?.user) {
-            RovoDevLogger.error(new Error('Invalid response structure'), 'No user data in response');
+            RovoDevTelemetryProvider.logError(new Error('Invalid response structure'), 'No user data in response');
             throw new Error('Received invalid response from server. Please try again.');
         }
 
@@ -123,7 +123,7 @@ async function fetchUserInfo(host: string, email: string, apiToken: string): Pro
         if (error instanceof Error && error.message.startsWith('Failed to authenticate')) {
             throw error;
         }
-        RovoDevLogger.error(error, 'Error validating RovoDev credentials');
+        RovoDevTelemetryProvider.logError(error, 'Error validating RovoDev credentials');
         throw new Error('Network error occurred while validating credentials. Please check your connection.');
     }
 }
@@ -135,7 +135,7 @@ async function fetchCloudId(host: string): Promise<string> {
     try {
         const response = await fetch(`https://${host}/_edge/tenant_info`);
         if (!response.ok) {
-            RovoDevLogger.error(new Error(`HTTP ${response.status}`), 'Failed to fetch cloud ID');
+            RovoDevTelemetryProvider.logError(new Error(`HTTP ${response.status}`), 'Failed to fetch cloud ID');
             throw new Error('Failed to retrieve site information. Please try again.');
         }
         const data = await response.json();
@@ -147,7 +147,7 @@ async function fetchCloudId(host: string): Promise<string> {
         if (error instanceof Error && error.message.includes('Site information')) {
             throw error;
         }
-        RovoDevLogger.error(error, 'Error fetching cloud ID');
+        RovoDevTelemetryProvider.logError(error, 'Error fetching cloud ID');
         throw new Error('Failed to retrieve site information. Please check your connection and try again.');
     }
 }

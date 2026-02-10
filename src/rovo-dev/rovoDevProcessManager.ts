@@ -5,6 +5,7 @@ import net from 'net';
 import packageJson from 'package.json';
 import path from 'path';
 import { AuthInfoState } from 'src/atlclients/authInfo';
+import { Logger } from 'src/logger';
 import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import { downloadAndUnzip } from 'src/rovo-dev/util/downloadFile';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
@@ -15,8 +16,8 @@ import { Disposable, Event, EventEmitter, ExtensionContext, Uri, workspace } fro
 import { FeatureFlagClient } from '../util/featureFlags/featureFlagClient';
 import { Features } from '../util/features';
 import { ExtensionApi, ValidBasicAuthSiteData } from './api/extensionApi';
+import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import { RovoDevDisabledReason, RovoDevEntitlementCheckFailedDetail } from './rovoDevWebviewProviderMessages';
-import { RovoDevLogger } from './util/rovoDevLogger';
 
 export const MIN_SUPPORTED_ROVODEV_VERSION = packageJson.rovoDev.version;
 
@@ -342,7 +343,7 @@ export abstract class RovoDevProcessManager {
                 await this.downloadBinaryThenInitialize(credentials, rovoDevURIs);
             }
         } catch (error) {
-            RovoDevLogger.error(error, 'Error downloading Rovo Dev');
+            RovoDevTelemetryProvider.logError(error, 'Error downloading Rovo Dev');
             this.setState({
                 state: 'DownloadingFailed',
                 error,
@@ -353,7 +354,7 @@ export abstract class RovoDevProcessManager {
         try {
             await this.startRovoDev(context, credentials, rovoDevURIs);
         } catch (error) {
-            RovoDevLogger.error(error, 'Error executing Rovo Dev');
+            RovoDevTelemetryProvider.logError(error, 'Error executing Rovo Dev');
             this.setState({
                 state: 'StartingFailed',
                 error,
@@ -564,7 +565,7 @@ class RovoDevSubprocessInstance extends Disposable {
 
                             // Log stderr if there's any when process exits
                             if (code !== 0 && stderrData.trim()) {
-                                RovoDevLogger.error(
+                                RovoDevTelemetryProvider.logError(
                                     new Error(`RovoDev Stderr`),
                                     `RovoDev process exited with stderr and code: ${code}: ${stderrData.trim()}`,
                                 );
@@ -582,7 +583,7 @@ class RovoDevSubprocessInstance extends Disposable {
                         this.rovoDevProcess.stderr.on('data', (data) => {
                             const stderrOutput = data.toString();
                             stderrData += stderrOutput;
-                            RovoDevLogger.warn(`RovoDev stderr: ${stderrOutput.trim()}`);
+                            Logger.warn(`RovoDev stderr: ${stderrOutput.trim()}`);
                         });
                     }
 

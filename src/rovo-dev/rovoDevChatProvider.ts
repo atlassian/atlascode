@@ -1,3 +1,4 @@
+import { Logger } from 'src/logger';
 import { RovoDevViewResponse } from 'src/rovo-dev/ui/rovoDevViewMessages';
 import { v4 } from 'uuid';
 
@@ -34,7 +35,6 @@ import {
     RovoDevProviderMessageType,
     RovoDevResponseMessageType,
 } from './rovoDevWebviewProviderMessages';
-import { RovoDevLogger } from './util/rovoDevLogger';
 
 type StreamingApi = 'chat' | 'replay';
 
@@ -211,7 +211,7 @@ export class RovoDevChatProvider {
     public async executeReplay(): Promise<void> {
         if (!this._rovoDevApiClient) {
             const error = new Error('Unable to replay the previous conversation. Rovo Dev failed to initialize');
-            RovoDevLogger.error(error, 'Cannot replay conversation - Rovo Dev not initialized');
+            RovoDevTelemetryProvider.logError(error, 'Cannot replay conversation - Rovo Dev not initialized');
             throw error;
         }
 
@@ -240,7 +240,7 @@ export class RovoDevChatProvider {
         if (this._rovoDevApiClient) {
             if (this._pendingCancellation) {
                 const error = new Error('Cancellation already in progress');
-                RovoDevLogger.error(error, 'Cannot cancel - cancellation already in progress');
+                RovoDevTelemetryProvider.logError(error, 'Cannot cancel - cancellation already in progress');
                 throw error;
             }
             this._pendingCancellation = true;
@@ -303,7 +303,7 @@ export class RovoDevChatProvider {
         const response = await fetchOp;
         if (!response.body) {
             const error = new Error("Error processing the Rovo Dev's response: response is empty.");
-            RovoDevLogger.error(error, 'Received empty response from Rovo Dev');
+            RovoDevTelemetryProvider.logError(error, 'Received empty response from Rovo Dev');
             throw error;
         }
 
@@ -489,7 +489,10 @@ export class RovoDevChatProvider {
                 break;
 
             case 'exception': {
-                RovoDevLogger.error(new Error(`${response.type} ${response.message}`), response.title || undefined);
+                RovoDevTelemetryProvider.logError(
+                    new Error(`${response.type} ${response.message}`),
+                    response.title || undefined,
+                );
 
                 const { text, link } = this.parseExceptionMessage(response.message);
                 await webview.postMessage({
@@ -647,7 +650,7 @@ export class RovoDevChatProvider {
                 // this should really never happen, as unknown messages are caugh and wrapped into the
                 // message `_parsing_error`
                 const error = new Error(`Rovo Dev response error: unknown event kind: ${(response as any).event_kind}`);
-                RovoDevLogger.error(error, 'Unexpected event kind in Rovo Dev response');
+                RovoDevTelemetryProvider.logError(error, 'Unexpected event kind in Rovo Dev response');
                 throw error;
         }
     }
@@ -655,12 +658,12 @@ export class RovoDevChatProvider {
     public async signalToolRequestChoiceSubmit(toolCallId: string, choice: ToolPermissionChoice) {
         if (!this._pendingToolConfirmation[toolCallId]) {
             const error = new Error('Received an unexpected tool confirmation: not found.');
-            RovoDevLogger.error(error, 'Tool confirmation not found', toolCallId);
+            RovoDevTelemetryProvider.logError(error, 'Tool confirmation not found', toolCallId);
             throw error;
         }
         if (this._pendingToolConfirmation[toolCallId] !== 'undecided') {
             const error = new Error('Received an unexpected tool confirmation: already confirmed.');
-            RovoDevLogger.error(error, 'Tool confirmation already processed', toolCallId);
+            RovoDevTelemetryProvider.logError(error, 'Tool confirmation already processed', toolCallId);
             throw error;
         }
 
@@ -709,7 +712,7 @@ export class RovoDevChatProvider {
                         type: RovoDevProviderMessageType.CompleteMessage,
                         promptId: this._currentPromptId,
                     });
-                    RovoDevLogger.info('Rovo Dev API request aborted by user');
+                    Logger.info('Rovo Dev API request aborted by user');
                     return;
                 }
                 // the error is retriable only when it happens during the streaming of a 'chat' response
@@ -735,7 +738,7 @@ export class RovoDevChatProvider {
             showOnlyInDebug,
         }: { isRetriable?: boolean; isProcessTerminated?: boolean; showOnlyInDebug?: boolean } = {},
     ) {
-        RovoDevLogger.error(error);
+        RovoDevTelemetryProvider.logError(error);
 
         if (!showOnlyInDebug || this.isDebugging || this.isDebugPanelEnabled) {
             const webview = this._webView!;
