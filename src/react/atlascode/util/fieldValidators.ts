@@ -8,12 +8,25 @@ export function validateUrl(name: string, value?: string): string | undefined {
 }
 
 function tryParseURL(url: string | undefined): URL | null {
-    if (url) {
-        try {
-            return URL.parse(url) || URL.parse('https://' + url);
-        } catch {}
+    if (!url) {
+        return null;
     }
-    return null;
+
+    // Use URL.parse() if available
+    if (typeof URL.parse === 'function') {
+        return URL.parse(url) || URL.parse('https://' + url);
+    }
+
+    // Fallback for older environments where URL.parse doesn't exist
+    try {
+        return new URL(url);
+    } catch {
+        try {
+            return new URL('https://' + url);
+        } catch {
+            return null;
+        }
+    }
 }
 
 export function validateRequiredString(name: string, value?: string): string | undefined {
