@@ -35,7 +35,11 @@ export const SavedPromptMenu: React.FC<SavedPromptMenuProps> = ({
 
     React.useEffect(() => {
         if (canFetchSavedPrompts) {
-            fetchSavedPrompts().then(setPrompts);
+            fetchSavedPrompts()
+                .then(setPrompts)
+                .catch(() => {
+                    setPrompts([]);
+                });
         }
     }, [fetchSavedPrompts, canFetchSavedPrompts]);
 
