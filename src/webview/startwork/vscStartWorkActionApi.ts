@@ -18,6 +18,15 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         return Container.bitbucketContext?.getAllRepositories() || [];
     }
 
+    private getScm(wsRepo: WorkspaceRepo) {
+        const scm = Container.bitbucketContext?.getRepositoryScm(wsRepo.rootUri);
+        if (!scm) {
+            Logger.debug(`Git repository not found for ${wsRepo.rootUri}`);
+            throw new Error(`Git repository not found for ${wsRepo.rootUri}`);
+        }
+        return scm;
+    }
+
     async getRepoDetails(wsRepo: WorkspaceRepo): Promise<Repo> {
         const site = wsRepo.mainSiteRemote.site;
         if (!site) {
@@ -37,7 +46,7 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         hasSubmodules: boolean;
         currentBranch: string | undefined;
     }> {
-        const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri)!;
+        const scm = this.getScm(wsRepo);
 
         return {
             userName: (await scm.getConfig('user.name')) || (await scm.getGlobalConfig('user.name')),
@@ -64,9 +73,9 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         remote: string,
         pushBranchToRemote: boolean,
     ): Promise<void> {
-        const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri)!;
+        const scm = this.getScm(wsRepo);
 
-        // checkout if a branch exists already
+        // Try to fetch the latest from remote
         try {
             await scm.fetch(remote, sourceBranch.name);
         } catch {
@@ -74,6 +83,7 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
             Logger.debug(`Fetch failed for ${remote}/${sourceBranch.name}`);
         }
 
+        // Checkout if a local branch exists already
         try {
             await scm.getBranch(destinationBranch);
             await scm.checkout(destinationBranch);
@@ -82,7 +92,7 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
             Logger.debug(`Local branch ${destinationBranch} not found`);
         }
 
-        // checkout if there's a matching remote branch (checkout will track remote branch automatically)
+        // Checkout if there's a matching remote branch (checkout will track remote branch automatically)
         try {
             await scm.getBranch(`remotes/${remote}/${destinationBranch}`);
             await scm.checkout(destinationBranch);
@@ -91,7 +101,7 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
             Logger.debug(`Remote branch ${remote}/${destinationBranch} not found`);
         }
 
-        // no existing branches, create a new one
+        // No existing branches, create a new one
         await scm.createBranch(
             destinationBranch,
             true,

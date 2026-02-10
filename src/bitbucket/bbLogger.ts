@@ -5,13 +5,13 @@ export class BitbucketLogger extends Logger {
         // `retrieveCallerName` must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
         // If not, the function will return the name of a method inside Logger.
         const callerName = retrieveCallerName();
-        this.errorInternal('Bitbucket', ex, callerName, errorMessage, ...params);
+        this.bitBucketErrorInternal(ex, callerName, errorMessage, ...params);
     }
 
     public override error(ex: Error, errorMessage?: string, ...params: string[]): void {
         // `retrieveCallerName` must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
         // If not, the function will return the name of a method inside Logger.
         const callerName = retrieveCallerName();
-        this.errorInternal('Bitbucket', ex, callerName, errorMessage, ...params);
+        Logger.bitBucketErrorInternal(ex, callerName, errorMessage, ...params);
     }
 }

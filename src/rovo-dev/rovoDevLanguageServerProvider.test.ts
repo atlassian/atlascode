@@ -1,3 +1,4 @@
+import { Logger } from 'src/logger';
 import { ExtensionContext } from 'vscode';
 
 import { RovoDevLanguageServerProvider } from './rovoDevLanguageServerProvider';
@@ -91,12 +92,19 @@ function resetMockProcessManager() {
     mockStateChangedHandlers.length = 0;
 }
 
-// Mock RovoDevLogger
-jest.mock('./util/rovoDevLogger', () => ({
-    RovoDevLogger: {
+// Mock Logger
+jest.mock('src/logger', () => ({
+    Logger: {
         info: jest.fn(),
         warn: jest.fn(),
         error: jest.fn(),
+    },
+}));
+
+// Mock RovoDevTelemetryProvider
+jest.mock('./rovoDevTelemetryProvider', () => ({
+    RovoDevTelemetryProvider: {
+        logError: jest.fn(),
     },
 }));
 
@@ -246,7 +254,6 @@ describe('RovoDevLanguageServerProvider', () => {
     it('should not start language server if binary does not exist', async () => {
         const { LanguageClient } = require('vscode-languageclient/node');
         const fs = require('fs');
-        const { RovoDevLogger } = require('./util/rovoDevLogger');
 
         // Make binary check fail
         fs.access.mockImplementation((path: string, mode: number, callback: (err: Error | null) => void) =>
@@ -258,7 +265,7 @@ describe('RovoDevLanguageServerProvider', () => {
         await new Promise((resolve) => setTimeout(resolve, 10));
 
         expect(LanguageClient).not.toHaveBeenCalled();
-        expect(RovoDevLogger.warn).toHaveBeenCalledWith(
+        expect(Logger.warn).toHaveBeenCalledWith(
             'Rovo Dev LSP: Binary at /mock/bin/path/atlassian_cli_rovodev is not found, skipping language server start',
         );
     });

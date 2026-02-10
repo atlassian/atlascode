@@ -1,8 +1,8 @@
 import { Box, Button, Typography } from '@mui/material';
 import React, { useCallback } from 'react';
 
-import { ApprovalStatus } from '../../../bitbucket/model';
-import StoppedIcon from '../icons/StoppedIcon';
+import { ApprovalStatus } from '../../../../bitbucket/model';
+import StoppedIcon from '../../icons/StoppedIcon';
 type RequestChangesButtonProps = {
     hidden?: boolean;
     status: ApprovalStatus;

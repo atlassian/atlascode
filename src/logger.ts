@@ -4,6 +4,7 @@ import { EventEmitter } from 'vscode';
 import { ErrorProductArea } from './analyticsTypes';
 import { configuration, OutputLevel } from './config/configuration';
 import { extensionOutputChannelName } from './constants';
+import { RovoDevCommonSessionAttributes } from './rovo-dev/rovoDevTelemetryProvider';
 import { SentryService } from './sentry';
 import { isDebugging } from './util/isDebugging';
 
@@ -11,12 +12,15 @@ function getConsolePrefix(productArea?: string) {
     return productArea ? `[${extensionOutputChannelName} ${productArea}]` : `[${extensionOutputChannelName}]`;
 }
 
+export type RovoDevTelemetryParams = RovoDevCommonSessionAttributes & { promptId?: string };
+
 export type ErrorEvent = {
     error: Error;
     errorMessage?: string;
     capturedBy?: string;
     params?: string[];
     productArea?: ErrorProductArea;
+    rovoDevParams?: RovoDevTelemetryParams;
 };
 
 /** This function must be called from the VERY FIRST FUNCTION that the called invoked from Logger.
@@ -31,8 +35,8 @@ export function retrieveCallerName(): string | undefined {
 
         // first line is the error message
         // second line is the latest function in the stack, which is this one
-        // third line is the second-last function in the stack, which is the Logger.error entrypoint
-        // fourth line is the called we are looking for
+        // third line is the second-last function in the stack, which is the Logger.error / logError entrypoint
+        // fourth line is the called function we are looking for
         const line = stack.split('\n')[3];
 
         return line.trim().split(' ')[1];
@@ -120,6 +124,7 @@ export class Logger {
         // If not, the function will return the name of a method inside Logger.
         const callerName = retrieveCallerName();
         this.Instance.errorInternal(undefined, ex, callerName, errorMessage, undefined, ...params);
+        this.Instance.logSentry(undefined, ex, callerName, errorMessage, {}, { params });
     }
 
     public error(ex: Error, errorMessage?: string, ...params: string[]): void {
@@ -127,47 +132,18 @@ export class Logger {
         // If not, the function will return the name of a method inside Logger.
         const callerName = retrieveCallerName();
         this.errorInternal(undefined, ex, callerName, errorMessage, undefined, ...params);
+        this.logSentry(undefined, ex, callerName, errorMessage, {}, { params });
     }
 
-    protected static errorInternal(
+    private errorInternal(
         productArea: ErrorProductArea,
         ex: Error,
         capturedBy?: string,
         errorMessage?: string,
-        sessionId?: string,
+        rovoDevParams?: RovoDevTelemetryParams,
         ...params: string[]
     ): void {
-        this.Instance.errorInternal(productArea, ex, capturedBy, errorMessage, sessionId, ...params);
-    }
-
-    protected errorInternal(
-        productArea: ErrorProductArea,
-        ex: Error,
-        capturedBy?: string,
-        errorMessage?: string,
-        sessionId?: string,
-        ...params: string[]
-    ): void {
-        Logger._onError.fire({ error: ex, errorMessage, capturedBy, params, productArea });
-
-        if (SentryService.getInstance().isInitialized()) {
-            try {
-                SentryService.getInstance().captureException(ex, {
-                    tags: {
-                        productArea: productArea || 'unknown',
-                        capturedBy: capturedBy || 'unknown',
-                        ...(sessionId && { sessionId }),
-                    },
-                    extra: {
-                        errorMessage,
-                        params,
-                    },
-                });
-                Logger.debug('Error reported to Sentry successfully', ex);
-            } catch (err) {
-                console.error('Error reporting to Sentry:', err);
-            }
-        }
+        Logger._onError.fire({ error: ex, errorMessage, capturedBy, params, rovoDevParams, productArea });
 
         if (this.level === OutputLevel.Silent) {
             return;
@@ -180,6 +156,37 @@ export class Logger {
         if (this.output !== undefined) {
             this.output.appendLine([this.timestamp, errorMessage, ex, ...params].join(' '));
         }
+    }
+
+    /** DO NOT CALL this function directly. It's meant to be called only by `RovoDevTelemetryProvider.logError`. */
+    public static rovoDevErrorInternal(
+        ex: Error,
+        capturedBy: string | undefined,
+        errorMessage: string | undefined,
+        metadata: RovoDevCommonSessionAttributes,
+        promptId: string | undefined,
+        ...params: string[]
+    ): void {
+        const rovoDevParams: RovoDevTelemetryParams = {
+            rovoDevEnv: metadata.rovoDevEnv,
+            appInstanceId: metadata.appInstanceId,
+            sessionId: metadata.sessionId,
+            promptId: promptId,
+        };
+
+        this.Instance.errorInternal('RovoDev', ex, capturedBy, errorMessage, rovoDevParams, ...params);
+        this.Instance.logSentry('RovoDev', ex, capturedBy, errorMessage, metadata, { promptId, params });
+    }
+
+    /** DO NOT CALL this function directly. It's meant to be called only by `BitbucketLogger`. */
+    public static bitBucketErrorInternal(
+        ex: Error,
+        capturedBy: string | undefined,
+        errorMessage: string | undefined,
+        ...params: string[]
+    ): void {
+        this.Instance.errorInternal('Bitbucket', ex, capturedBy, errorMessage, undefined, ...params);
+        this.Instance.logSentry('Bitbucket', ex, capturedBy, errorMessage, {}, { params });
     }
 
     public static warn(message?: any, ...params: any[]): void {
@@ -203,6 +210,34 @@ export class Logger {
     static show(): void {
         if (this.Instance.output !== undefined) {
             this.Instance.output.show();
+        }
+    }
+
+    private logSentry(
+        productArea: ErrorProductArea,
+        ex: Error,
+        capturedBy?: string,
+        errorMessage?: string,
+        extraTags: Record<string, string> = {},
+        extraExtra: Record<string, any> = {},
+    ) {
+        if (SentryService.getInstance().isInitialized()) {
+            try {
+                SentryService.getInstance().captureException(ex, {
+                    tags: {
+                        productArea: productArea || 'unknown',
+                        capturedBy: capturedBy || 'unknown',
+                        ...extraTags,
+                    },
+                    extra: {
+                        errorMessage,
+                        ...extraExtra,
+                    },
+                });
+                Logger.debug('Error reported to Sentry successfully', ex);
+            } catch (err) {
+                console.error('Error reporting to Sentry:', err);
+            }
         }
     }
 

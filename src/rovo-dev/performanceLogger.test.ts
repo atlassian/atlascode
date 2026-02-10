@@ -1,11 +1,12 @@
+import { Logger } from 'src/logger';
+
 import Perf from '../util/perf';
 import { RovodevAnalyticsApi } from './analytics/rovodevAnalyticsApi';
 import { ExtensionApi, Track } from './api/extensionApi';
 import { PerformanceLogger } from './performanceLogger';
-import { RovoDevLogger } from './util/rovoDevLogger';
 
 // Mock dependencies
-jest.mock('./util/rovoDevLogger');
+jest.mock('src/logger');
 jest.mock('../util/perf');
 jest.mock('./api/extensionApi', () => {
     return {
@@ -13,7 +14,7 @@ jest.mock('./api/extensionApi', () => {
     };
 });
 
-const mockLogger = RovoDevLogger as jest.Mocked<typeof RovoDevLogger>;
+const mockLogger = Logger as jest.Mocked<typeof Logger>;
 const mockPerf = Perf as jest.Mocked<typeof Perf>;
 
 describe('PerformanceLogger', () => {

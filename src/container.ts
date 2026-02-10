@@ -40,8 +40,8 @@ import { RovodevStaticConfig } from './rovo-dev/api/rovodevStaticConfig';
 import { RovoDevCodeActionProvider } from './rovo-dev/rovoDevCodeActionProvider';
 import { RovoDevLanguageServerProvider } from './rovo-dev/rovoDevLanguageServerProvider';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
+import { RovoDevTelemetryProvider } from './rovo-dev/rovoDevTelemetryProvider';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
-import { RovoDevLogger } from './rovo-dev/util/rovoDevLogger';
 import { SentryConfig, SentryService } from './sentry';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, SETTINGS_URL } from './uriHandler';
@@ -349,7 +349,7 @@ export class Container {
                 // The process should be already running, so we signal that the credentials may have changed
                 await RovoDevProcessManager.refreshRovoDevCredentials(context);
             } catch (error) {
-                RovoDevLogger.error(error, 'Refreshing Rovo Dev credentials');
+                RovoDevTelemetryProvider.logError(error, 'Refreshing Rovo Dev credentials');
                 return;
             }
         } else {
@@ -383,7 +383,7 @@ export class Container {
                     await RovoDevProcessManager.initializeRovoDev(context);
                 }
             } catch (error) {
-                RovoDevLogger.error(error, 'Enabling Rovo Dev');
+                RovoDevTelemetryProvider.logError(error, 'Enabling Rovo Dev');
             }
         }
 
@@ -391,14 +391,14 @@ export class Container {
             // Refresh all issue views to show the secret button
             this.jiraIssueViewManager.refreshAll();
         } catch (error) {
-            RovoDevLogger.error(error, 'Refreshing Jira issue views');
+            RovoDevTelemetryProvider.logError(error, 'Refreshing Jira issue views');
             return;
         }
     }
 
     private static async disableRovoDev() {
         if (this.isBoysenberryMode) {
-            RovoDevLogger.error(new Error('disableRovoDev called in Boysenberry mode'));
+            RovoDevTelemetryProvider.logError(new Error('disableRovoDev called in Boysenberry mode'));
             return;
         }
 
@@ -420,14 +420,14 @@ export class Container {
             await setCommandContext(RovodevCommandContext.RovoDevEnabled, false);
             await RovoDevProcessManager.deactivateRovoDevProcessManager();
         } catch (error) {
-            RovoDevLogger.error(error, 'Disabling Rovo Dev');
+            RovoDevTelemetryProvider.logError(error, 'Disabling Rovo Dev');
         }
 
         try {
             // Refresh all issue views to show the secret button
             this.jiraIssueViewManager.refreshAll();
         } catch (error) {
-            RovoDevLogger.error(error, 'Refreshing Jira issue views');
+            RovoDevTelemetryProvider.logError(error, 'Refreshing Jira issue views');
             return;
         }
     }
