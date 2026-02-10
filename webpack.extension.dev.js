@@ -42,15 +42,24 @@ module.exports = [
                     ],
                 },
                 {
+                    test: /\.d\.ts$/,
+                    type: 'javascript/auto',
+                    use: 'raw-loader',
+                },
+                {
                     test: /\.(ts|js)x?$/,
                     use: [{ 
                         loader: 'ts-loader',
                         options: {
                             transpileOnly: true,
-                            onlyCompileBundledFiles: true
+                            onlyCompileBundledFiles: true,
+                            compilerOptions: {
+                                skipLibCheck: true,
+                                moduleResolution: 'node'
+                            }
                         }
                     }],
-                    exclude: [/node_modules/, /\.test\.ts$/, /\.spec\.ts$/],
+                    exclude: [/node_modules/, /\.test\.ts$/, /\.spec\.ts$/, /\.d\.ts$/],
                 },
                 {
                     test: /\.js$/,
@@ -61,12 +70,11 @@ module.exports = [
             ],
         },
         resolve: {
-            extensions: ['.tsx', '.ts', '.js', '.json'],
+            extensions: ['.tsx', '.ts', '.js', '.json', '.d.ts'],
             plugins: [new TsconfigPathsPlugin({ configFile: resolveApp('./tsconfig.json') })],
             alias: {
                 parse5$: 'parse5/dist/cjs/index.js',
                 axios: path.resolve(__dirname, 'node_modules/axios/lib/axios.js'),
-                'typings/git': path.resolve(__dirname, 'src/typings/git.d.ts'),
             },
             modules: [path.resolve(__dirname, 'src'), 'node_modules'],
         },
@@ -93,13 +101,15 @@ module.exports = [
                 paths: [/\.js$/, /\.d\.ts$/],
             }),
             createEnvPlugin({ nodeEnv: 'development' }),
-            // TypeScript checking disabled temporarily to focus on build performance
+            // TypeScript checking temporarily disabled to resolve git typings import issue
             // new ForkTsCheckerWebpackPlugin({
             //     typescript: {
             //         configFile: resolveApp('./tsconfig.json'),
-            //         memoryLimit: 4096,
             //     },
             //     async: true,
+            //     logger: {
+            //         infrastructure: 'silent',
+            //     },
             // }),
         ],
     },

@@ -1,5 +1,4 @@
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
-import { Remote } from 'src/typings/git';
 import { expansionCastTo } from 'testsutil';
 import * as vscode from 'vscode';
 
@@ -17,6 +16,7 @@ import {
 } from '../../bitbucket/model';
 import { configuration } from '../../config/configuration';
 import { Container } from '../../container';
+import { Remote } from '../../typings/git';
 import { addTasksToCommentHierarchy } from '../../webview/common/pullRequestHelperActions';
 import { PullRequestFilesNode } from '../nodes/pullRequestFilesNode';
 import * as diffViewHelper from './diffViewHelper';
