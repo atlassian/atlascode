@@ -3,7 +3,6 @@ const fs = require('fs');
 const webpack = require('webpack');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const { createEnvPlugin } = require('./webpack.env.config');
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
@@ -42,24 +41,9 @@ module.exports = [
                     ],
                 },
                 {
-                    test: /\.d\.ts$/,
-                    type: 'javascript/auto',
-                    use: 'raw-loader',
-                },
-                {
                     test: /\.(ts|js)x?$/,
-                    use: [{ 
-                        loader: 'ts-loader',
-                        options: {
-                            transpileOnly: true,
-                            onlyCompileBundledFiles: true,
-                            compilerOptions: {
-                                skipLibCheck: true,
-                                moduleResolution: 'node'
-                            }
-                        }
-                    }],
-                    exclude: [/node_modules/, /\.test\.ts$/, /\.spec\.ts$/, /\.d\.ts$/],
+                    use: [{ loader: 'ts-loader' }],
+                    exclude: [/node_modules/, /\.test\.ts$/, /\.spec\.ts$/],
                 },
                 {
                     test: /\.js$/,
@@ -70,13 +54,12 @@ module.exports = [
             ],
         },
         resolve: {
-            extensions: ['.tsx', '.ts', '.js', '.json', '.d.ts'],
+            extensions: ['.tsx', '.ts', '.js', '.json'],
             plugins: [new TsconfigPathsPlugin({ configFile: resolveApp('./tsconfig.json') })],
             alias: {
                 parse5$: 'parse5/dist/cjs/index.js',
                 axios: path.resolve(__dirname, 'node_modules/axios/lib/axios.js'),
             },
-            modules: [path.resolve(__dirname, 'src'), 'node_modules'],
         },
         output: {
             filename: '[name].js',
@@ -101,16 +84,6 @@ module.exports = [
                 paths: [/\.js$/, /\.d\.ts$/],
             }),
             createEnvPlugin({ nodeEnv: 'development' }),
-            // TypeScript checking temporarily disabled to resolve git typings import issue
-            // new ForkTsCheckerWebpackPlugin({
-            //     typescript: {
-            //         configFile: resolveApp('./tsconfig.json'),
-            //     },
-            //     async: true,
-            //     logger: {
-            //         infrastructure: 'silent',
-            //     },
-            // }),
         ],
     },
     {
