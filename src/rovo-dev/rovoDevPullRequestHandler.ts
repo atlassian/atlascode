@@ -1,9 +1,10 @@
 import { exec } from 'child_process';
+import { Logger } from 'src/logger';
 import { API, GitExtension, Repository } from 'src/typings/git';
 import { promisify } from 'util';
 import { env, extensions, Uri } from 'vscode';
 
-import { RovoDevLogger } from './util/rovoDevLogger';
+import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 
 const execAsync = promisify(exec);
 
@@ -15,7 +16,7 @@ export class RovoDevPullRequestHandler {
         const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
         if (!gitExtension) {
             const error = new Error('vscode.git extension not found');
-            RovoDevLogger.error(error, 'Git extension not available');
+            RovoDevTelemetryProvider.logError(error, 'Git extension not available');
             throw error;
         }
 
@@ -36,7 +37,7 @@ export class RovoDevPullRequestHandler {
 
         if (gitApi.repositories.length === 0) {
             const error = new Error('No Git repositories found');
-            RovoDevLogger.error(error, 'No Git repositories in workspace');
+            RovoDevTelemetryProvider.logError(error, 'No Git repositories in workspace');
             throw error;
         }
 
@@ -65,13 +66,13 @@ export class RovoDevPullRequestHandler {
         for (const matcher of linkMatchers) {
             const match = output.match(matcher);
             if (match && match[0]) {
-                RovoDevLogger.info(`Create PR: ${match[0]}`);
+                Logger.info(`Create PR: ${match[0]}`);
                 return match[0];
             }
         }
 
-        RovoDevLogger.info(`Could not find PR link in push output.`);
-        RovoDevLogger.info(`Push warnings: ${output}`);
+        Logger.info(`Could not find PR link in push output.`);
+        Logger.info(`Push warnings: ${output}`);
         return undefined;
     }
 
@@ -111,7 +112,7 @@ export class RovoDevPullRequestHandler {
                         continue;
                 }
 
-                RovoDevLogger.info(`Create PR from git remote: ${prLink}`);
+                Logger.info(`Create PR from git remote: ${prLink}`);
                 return prLink;
             }
         }
@@ -129,7 +130,7 @@ export class RovoDevPullRequestHandler {
         if (hasUncommitted) {
             if (!commitMessage || commitMessage.trim() === '') {
                 const error = new Error('Commit message is required when you have uncommitted changes.');
-                RovoDevLogger.error(error, 'Cannot create PR without commit message');
+                RovoDevTelemetryProvider.logError(error, 'Cannot create PR without commit message');
                 throw error;
             }
 
@@ -142,16 +143,16 @@ export class RovoDevPullRequestHandler {
                 await repo.commit(commitMessage, {
                     all: true,
                 });
-                RovoDevLogger.info(`Successfully committed changes with message: "${commitMessage}"`);
+                Logger.info(`Successfully committed changes with message: "${commitMessage}"`);
             } catch (error) {
-                RovoDevLogger.error(error, 'Failed to commit changes');
+                RovoDevTelemetryProvider.logError(error, 'Failed to commit changes');
                 throw new Error(`Failed to commit changes: ${error.message || 'Unknown error'}`);
             }
         } else {
             const hasUnpushed = await this.hasUnpushedCommits();
             if (!hasUnpushed) {
                 const error = new Error('No changes to create PR. Please make changes or commit them first.');
-                RovoDevLogger.error(error, 'No changes available for PR creation');
+                RovoDevTelemetryProvider.logError(error, 'No changes available for PR creation');
                 throw error;
             }
 
@@ -160,7 +161,7 @@ export class RovoDevPullRequestHandler {
                 try {
                     await repo.createBranch(branchName, true);
                 } catch (error) {
-                    RovoDevLogger.error(error, `Failed to create/switch to branch: ${branchName}`);
+                    RovoDevTelemetryProvider.logError(error, `Failed to create/switch to branch: ${branchName}`);
                     throw new Error(`Failed to switch to branch "${branchName}": ${error.message || 'Unknown error'}`);
                 }
             }
@@ -172,43 +173,43 @@ export class RovoDevPullRequestHandler {
                 cwd: repo.rootUri.fsPath,
             });
             stderr = result.stderr;
-            RovoDevLogger.info(`Successfully pushed to origin/${branchName}`);
+            Logger.info(`Successfully pushed to origin/${branchName}`);
         } catch (error) {
-            RovoDevLogger.error(error, 'Failed to push changes');
+            RovoDevTelemetryProvider.logError(error, 'Failed to push changes');
             const errorMessage = error.stderr || error.message || 'Unknown error';
 
             if (errorMessage.includes('no upstream branch')) {
                 const error = new Error(
                     `Branch "${branchName}" has no upstream. Try: git push --set-upstream origin ${branchName}`,
                 );
-                RovoDevLogger.error(error, 'Git push failed: no upstream branch');
+                RovoDevTelemetryProvider.logError(error, 'Git push failed: no upstream branch');
                 throw error;
             } else if (errorMessage.includes('rejected')) {
                 const error = new Error(
                     'Push was rejected. The remote branch may have changes you need to pull first.',
                 );
-                RovoDevLogger.error(error, 'Git push rejected by remote');
+                RovoDevTelemetryProvider.logError(error, 'Git push rejected by remote');
                 throw error;
             } else if (errorMessage.includes('permission denied') || errorMessage.includes('Authentication failed')) {
                 const error = new Error('Push failed: Authentication error. Please check your Git credentials.');
-                RovoDevLogger.error(error, 'Git push failed: authentication error');
+                RovoDevTelemetryProvider.logError(error, 'Git push failed: authentication error');
                 throw error;
             }
 
-            RovoDevLogger.error(error, 'Git push failed with unknown error');
+            RovoDevTelemetryProvider.logError(error, 'Git push failed with unknown error');
             throw new Error(`Failed to push changes: ${errorMessage}`);
         }
 
         const prLink = this.findPRLink(stderr) || this.buildCreatePrLinkFromGitOutput(stderr, branchName);
         if (prLink) {
-            RovoDevLogger.info(`Found PR link: ${prLink}`);
+            Logger.info(`Found PR link: ${prLink}`);
             try {
                 await env.openExternal(Uri.parse(prLink));
             } catch (ex) {
-                RovoDevLogger.info('Failed to open PR link.', ex);
+                Logger.info('Failed to open PR link.', ex);
             }
         } else {
-            RovoDevLogger.info('No PR link found in push output. Changes pushed successfully.');
+            Logger.info('No PR link found in push output. Changes pushed successfully.');
         }
 
         return prLink;
@@ -228,7 +229,7 @@ export class RovoDevPullRequestHandler {
                 repo.state.mergeChanges.length > 0
             );
         } catch (error) {
-            RovoDevLogger.error(error, 'Error checking for uncommitted changes');
+            RovoDevTelemetryProvider.logError(error, 'Error checking for uncommitted changes');
             return false;
         }
     }
@@ -238,7 +239,7 @@ export class RovoDevPullRequestHandler {
             const repo = await this.getGitRepository();
             return !!repo.state.HEAD?.ahead && repo.state.HEAD.ahead > 0;
         } catch (error) {
-            RovoDevLogger.error(error, 'Error checking for unpushed commits');
+            RovoDevTelemetryProvider.logError(error, 'Error checking for unpushed commits');
             return false;
         }
     }
@@ -250,7 +251,7 @@ export class RovoDevPullRequestHandler {
 
             return (await this.hasUncommittedChanges()) || (await this.hasUnpushedCommits());
         } catch (error) {
-            RovoDevLogger.error(error, 'Error checking git changes and unpushed commits');
+            RovoDevTelemetryProvider.logError(error, 'Error checking git changes and unpushed commits');
             return false;
         }
     }
