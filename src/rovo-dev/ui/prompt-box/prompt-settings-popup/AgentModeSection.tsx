@@ -34,22 +34,14 @@ export const getAgentModeIcon = (mode: string) => {
     }
 };
 
-const formatModeLabel = (mode: string): string => {
-    switch (mode) {
-        case 'default':
-            return 'Default';
-        case 'plan':
-            return 'Deep plan mode';
-        case 'ask':
-            return 'Ask mode';
-        default:
-            return mode;
-    }
-};
-
 const capitalizeFirst = (s: string): string => (s.length === 0 ? s : s.charAt(0).toUpperCase() + s.slice(1));
 
 const styles = cssMap({
+    sectionWrapper: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: token('space.100', '8px'),
+    },
     modesContainer: {
         display: 'flex',
         flexDirection: 'column',
@@ -89,15 +81,8 @@ const AgentModeSection: React.FC<AgentModeSectionProps> = ({
     setAgentMode,
 }: AgentModeSectionProps) => {
     return (
-        <Box style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <Box
-                as="p"
-                xcss={styles.sectionTitle}
-                style={{
-                    fontSize: '12px',
-                    color: 'var(--vscode-descriptionForeground)',
-                }}
-            >
+        <Box xcss={styles.sectionWrapper}>
+            <Box as="p" xcss={styles.sectionTitle} style={{ fontSize: '12px' }}>
                 Reasoning
             </Box>
             <Box xcss={styles.modesContainer}>
@@ -120,19 +105,15 @@ const AgentModeSection: React.FC<AgentModeSectionProps> = ({
                                 <Box
                                     as="p"
                                     xcss={styles.labelText}
-                                    style={{
-                                        fontSize: '13px',
-                                        color: 'var(--vscode-foreground)',
-                                    }}
+                                    style={{ fontSize: '13px', color: 'var(--vscode-foreground)' }}
                                 >
-                                    {formatModeLabel(modeInfo.mode)}
+                                    {capitalizeFirst(modeInfo.mode)}
                                 </Box>
                                 <Box
                                     as="p"
                                     style={{
                                         fontSize: '11px',
                                         margin: `${token('space.050', '4px')} 0 0 0`,
-                                        color: 'var(--vscode-descriptionForeground)',
                                     }}
                                 >
                                     {capitalizeFirst(modeInfo.description)}

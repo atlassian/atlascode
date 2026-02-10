@@ -121,7 +121,6 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                         xcss={styles.sectionTitle}
                         style={{
                             fontSize: '12px',
-                            color: 'var(--vscode-descriptionForeground)',
                         }}
                     >
                         Others
