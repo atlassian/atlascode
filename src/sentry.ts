@@ -74,6 +74,7 @@ export class SentryService {
                 environment: config.environment || 'development',
                 sampleRate: config.sampleRate ?? 1.0,
                 tracesSampleRate: 0, // Disable transaction tracing
+                beforeSend: this.shouldSendEvent.bind(this),
             });
             this.sentryClient = Sentry;
             Logger.debug('Sentry initialized for Node.js environment.');
@@ -158,6 +159,34 @@ export class SentryService {
      */
     public getConfig(): SentryConfig | null {
         return this.config;
+    }
+
+    /**
+     * Filter function to determine if an event should be sent to Sentry.
+     * Returns null to block the event, or the event to allow it.
+     *
+     * Blocked events:
+     * - Unhandled rejections captured by Node.js process handler
+     * - Uncaught exceptions captured by Node.js process handler
+     * - Events explicitly marked as unhandled
+     */
+    private shouldSendEvent(event: Sentry.Event, hint: Sentry.EventHint): Sentry.Event | null {
+        const tags = event.tags;
+
+        // Define filters that should block events from being sent
+        const blockedFilters = [
+            { key: 'capturedBy', value: 'unhandledRejection' },
+            { key: 'capturedBy', value: 'uncaughtExceptionHandler' },
+            { key: 'handled', value: 'no' },
+        ];
+
+        // Check if any filter matches
+        const shouldBlock = blockedFilters.some((filter) => {
+            const tagValue = tags?.[filter.key] as string;
+            return tagValue?.includes(filter.value);
+        });
+
+        return shouldBlock ? null : event;
     }
 }
 

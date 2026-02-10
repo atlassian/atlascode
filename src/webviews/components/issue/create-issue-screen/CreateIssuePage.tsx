@@ -13,6 +13,7 @@ import { DetailedSiteInfo, emptySiteInfo } from '../../../../atlclients/authInfo
 import { CreateIssueData, emptyCreateIssueData, isIssueCreated } from '../../../../ipc/issueMessaging';
 import { LegacyPMFData } from '../../../../ipc/messaging';
 import { AtlascodeErrorBoundary } from '../../../../react/atlascode/common/ErrorBoundary';
+import { getFilledFieldKeys } from '../../../../util/fieldValues';
 import { readFilesContentAsync } from '../../../../util/files';
 import { AtlLoader } from '../../AtlLoader';
 import ErrorBanner from '../../ErrorBanner';
@@ -307,6 +308,15 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         });
 
         if (Object.keys(errs).length > 0) {
+            const missingRequiredFields = Object.keys(errs);
+            const filledFields = getFilledFieldKeys(this.state.fieldValues);
+
+            this.postMessage({
+                action: 'createIssueValidationFailed',
+                missingRequiredFields,
+                filledFields,
+            });
+
             return errs;
         }
 

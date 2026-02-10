@@ -1,5 +1,18 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.19
+
+### Improvements
+
+- Onboarding panel enables/disables Jira and Bitbucket based on user selections
+- URI handler for Rovo Dev - vscode://atlassian.atlascode/rovoDev will bring the user directly to Rovo Dev part of the extension 
+- Added "Enable Rovo Dev" command and URI handler support for programmatically enabling Rovo Dev
+
+
+### Bug Fixes
+
+- Fixed Stop button not appearing when executing Deep Plan
+
 ## What's new in 4.0.18
 
 ### Bug Fixes

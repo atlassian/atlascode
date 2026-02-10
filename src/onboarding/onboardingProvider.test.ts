@@ -26,6 +26,11 @@ jest.mock('vscode', () => {
             Web: 2,
             Remote: 3,
         },
+        ConfigurationTarget: {
+            Global: 1,
+            Workspace: 2,
+            WorkspaceFolder: 3,
+        },
     };
 });
 
@@ -42,9 +47,11 @@ jest.mock('../uriHandler/atlascodeUriHandler', () => ({
     AtlascodeUriHandler: jest.fn(),
 }));
 
-import { window } from 'vscode';
+import { ConfigurationTarget, window } from 'vscode';
 
-import { ProductJira } from '../atlclients/authInfo';
+import { ProductBitbucket, ProductJira } from '../atlclients/authInfo';
+import { configuration } from '../config/configuration';
+import { BitbucketEnabledKey, JiraEnabledKey } from '../constants';
 import { Container } from '../container';
 import { EXTENSION_URL } from '../uriHandler/atlascodeUriHandler';
 import OnboardingProvider from './onboardingProvider';
@@ -69,6 +76,12 @@ jest.mock('../analytics', () => ({
     authenticateButtonEvent: jest.fn(() => Promise.resolve({})),
     errorEvent: jest.fn(() => Promise.resolve({})),
     viewScreenEvent: jest.fn((id) => Promise.resolve(id)),
+}));
+
+jest.mock('../config/configuration', () => ({
+    configuration: {
+        update: jest.fn(() => Promise.resolve()),
+    },
 }));
 
 jest.mock('./utils', () => ({
@@ -153,11 +166,45 @@ describe('OnboardingProvider', () => {
         expect(skipSpy).toHaveBeenCalledWith(ProductJira);
     });
 
+    it('should disable Jira when user skips Jira onboarding', async () => {
+        const item = { onboardingId: 'onboarding:skip' };
+        await provider._quickPickOnDidAccept(item, ProductJira);
+
+        expect(configuration.update).toHaveBeenCalledWith(JiraEnabledKey, false, ConfigurationTarget.Global);
+    });
+
+    it('should disable Bitbucket when user skips Bitbucket onboarding', async () => {
+        const item = { onboardingId: 'onboarding:skip' };
+        await provider._quickPickOnDidAccept(item, ProductBitbucket);
+
+        expect(configuration.update).toHaveBeenCalledWith(BitbucketEnabledKey, false, ConfigurationTarget.Global);
+    });
+
+    it('should enable Jira when user successfully logs in to Jira Cloud', async () => {
+        const item = { onboardingId: 'onboarding:cloud' };
+        provider._quickPickOnDidAccept(item, ProductJira);
+
+        await new Promise(process.nextTick);
+
+        expect(configuration.update).toHaveBeenCalledWith(JiraEnabledKey, true, ConfigurationTarget.Global);
+    });
+
+    it('should enable Bitbucket when user successfully logs in to Bitbucket Cloud', async () => {
+        const item = { onboardingId: 'onboarding:cloud' };
+        provider._quickPickOnDidAccept(item, ProductBitbucket);
+
+        await new Promise(process.nextTick);
+
+        expect(configuration.update).toHaveBeenCalledWith(BitbucketEnabledKey, true, ConfigurationTarget.Global);
+    });
+
     it('should envoke userInitiatedOAuthLogin on Jira cloud onboarding', async () => {
         const item = { onboardingId: 'onboarding:cloud' };
         const siteInfo = { product: ProductJira, host: 'atlassian.net' };
         const nextSpy = jest.spyOn(provider, '_handleNext');
-        await provider._quickPickOnDidAccept(item, ProductJira);
+        provider._quickPickOnDidAccept(item, ProductJira);
+
+        await new Promise(process.nextTick);
 
         expect(Container.loginManager.userInitiatedOAuthLogin).toHaveBeenCalledWith(
             siteInfo,

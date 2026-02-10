@@ -28,7 +28,7 @@ export namespace Track {
             rovoDevEnv: RovoDevEnv;
             appInstanceId: string;
             sessionId: string;
-            isManuallyCreated: boolean;
+            source: 'init' | 'manuallyCreated' | 'restored';
         };
     };
 

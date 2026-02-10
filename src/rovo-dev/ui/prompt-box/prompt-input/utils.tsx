@@ -1,5 +1,7 @@
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
+import { SavedPrompt } from '../../utils';
+
 export const createMonacoPromptEditor = (container: HTMLElement) => {
     /* Disable web workers in Monaco by providing a dummy implementation 
         Monaco web workers cannot be instantiated in vscode webview */
@@ -49,6 +51,9 @@ export const createMonacoPromptEditor = (container: HTMLElement) => {
         acceptSuggestionOnEnter: 'on',
         tabCompletion: 'off',
         wordBasedSuggestions: 'off',
+        suggest: {
+            showIcons: false,
+        },
 
         accessibilitySupport: 'auto',
 
@@ -102,7 +107,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     },
     {
         label: '/prompts',
-        insertText: '/prompts',
+        insertText: '!',
         description: 'Show saved prompts',
         command: {
             title: 'Prompts',
@@ -141,6 +146,12 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         insertText: '/yolo',
         description: 'Toggle tool confirmations',
         command: { title: 'Yolo Mode', id: 'rovo-dev.toggleYoloMode', tooltip: 'Toggle tool confirmations' },
+    },
+    {
+        label: '/ask',
+        insertText: '/ask ',
+        description: 'Ask a question in read-only mode (no file changes or terminal access)',
+        command: { title: 'Ask Mode', id: 'rovo-dev.invokeAskMode', tooltip: 'Invoke Ask mode' },
     },
     {
         label: '/sessions',
@@ -195,6 +206,52 @@ export const createSlashCommandProvider = (commands: SlashCommand[]): monaco.lan
     };
 };
 
+export function createPromptCompletionProvider(
+    fetch: () => Promise<SavedPrompt[]>,
+    canFetch: boolean,
+): monaco.languages.CompletionItemProvider {
+    return {
+        triggerCharacters: ['!'],
+        provideCompletionItems: async (model, position) => {
+            const textUntilPosition = model.getValueInRange({
+                startLineNumber: 1,
+                startColumn: 1,
+                endLineNumber: position.lineNumber,
+                endColumn: position.column,
+            });
+
+            const match = textUntilPosition.match(/(?:^|\s)!\w*$/);
+            if (!match) {
+                return { suggestions: [] };
+            }
+
+            const startColumn = position.column - match[0].trimStart().length;
+            let prompts: SavedPrompt[] = [];
+            if (!canFetch) {
+                prompts = [{ name: 'Initializing...', description: '', content_file: '' }];
+            } else {
+                prompts = await fetch();
+            }
+            const suggestions: monaco.languages.CompletionItem[] = prompts.map((prompt, index) => ({
+                label: prompt.name === 'Initializing...' ? 'Initializing...' : `!${prompt.name} `,
+                kind: monaco.languages.CompletionItemKind.File,
+                insertText: prompt.name === 'Initializing...' ? '' : `!${prompt.name} `,
+                documentation: prompt.description,
+                range: {
+                    startLineNumber: position.lineNumber,
+                    endLineNumber: position.lineNumber,
+                    startColumn: startColumn,
+                    endColumn: position.column,
+                },
+                sortText: `0${index}`,
+                filterText: `!${prompt.name}`,
+            }));
+
+            return { suggestions };
+        },
+    };
+}
+
 export function removeMonacoStyles() {
     Array.from(document.styleSheets).forEach((stylesheet) => {
         try {
@@ -240,9 +297,8 @@ export function setupMonacoCommands(
     });
 
     monaco.editor.registerCommand('rovo-dev.triggerPrompts', () => {
-        if (onSend('/prompts')) {
-            editor.setValue('');
-        }
+        // Trigger suggestions for saved prompts
+        editor.trigger('keyboard', 'editor.action.triggerSuggest', { auto: true });
     });
 
     monaco.editor.registerCommand('rovo-dev.triggerStatus', () => {
