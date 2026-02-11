@@ -406,36 +406,29 @@ export abstract class RovoDevProcessManager {
     }
 
     private static async getCredentials(): Promise<ValidBasicAuthSiteData | undefined> {
-        // Check if dedicated RovoDev auth feature flag is enabled
+        // Use dedicated RovoDev credentials
         const featureFlagClient = FeatureFlagClient.getInstance();
+        const rovoDevAuth = await RovoDevProcessManager.extensionApi.auth.getRovoDevAuthInfo();
 
-        if (featureFlagClient.checkGate(Features.DedicatedRovoDevAuth)) {
-            // Use dedicated RovoDev credentials
-            const rovoDevAuth = await RovoDevProcessManager.extensionApi.auth.getRovoDevAuthInfo();
+        // If we have RovoDev credentials, use them
+        if (rovoDevAuth && rovoDevAuth.host) {
+            // Convert RovoDev auth to ValidBasicAuthSiteData format
+            return {
+                host: rovoDevAuth.host,
+                authInfo: rovoDevAuth,
+                isValid: rovoDevAuth.state === AuthInfoState.Valid,
+                isStaging: false,
+                siteCloudId: rovoDevAuth.cloudId,
+            };
+        }
 
-            // If we have RovoDev credentials, use them
-            if (rovoDevAuth && rovoDevAuth.host) {
-                // Convert RovoDev auth to ValidBasicAuthSiteData format
-                return {
-                    host: rovoDevAuth.host,
-                    authInfo: rovoDevAuth,
-                    isValid: rovoDevAuth.state === AuthInfoState.Valid,
-                    isStaging: false,
-                    siteCloudId: rovoDevAuth.cloudId,
-                };
-            }
-
-            // If RequireDedicatedRovoDevAuth is disabled and no RovoDev credentials exist,
-            // fall back to Jira credentials for migration
-            if (!featureFlagClient.checkGate(Features.RequireDedicatedRovoDevAuth)) {
-                return await RovoDevProcessManager.extensionApi.auth.getCloudPrimaryAuthSite();
-            }
-
-            return undefined;
-        } else {
-            // Fall back to primary Jira auth
+        // If RequireDedicatedRovoDevAuth is disabled and no RovoDev credentials exist,
+        // fall back to Jira credentials for migration
+        if (!featureFlagClient.checkGate(Features.RequireDedicatedRovoDevAuth)) {
             return await RovoDevProcessManager.extensionApi.auth.getCloudPrimaryAuthSite();
         }
+
+        return undefined;
     }
 
     public static async deactivateRovoDevProcessManager() {

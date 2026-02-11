@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## Unreleased
+
+### Improvements
+
+- Removed feature flag 'atlascode-use-dedicated-rovodev-auth' references
+
 ## What's new in 4.0.20
 ### Features
 
