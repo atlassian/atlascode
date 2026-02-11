@@ -1,5 +1,4 @@
 import AiGenerativeTextSummaryIcon from '@atlaskit/icon/core/ai-generative-text-summary';
-import AngleBracketsIcon from '@atlaskit/icon/core/angle-brackets';
 import SendIcon from '@atlaskit/icon/core/arrow-up';
 import CrossIcon from '@atlaskit/icon/core/cross';
 import LockUnlockedIcon from '@atlaskit/icon/core/lock-unlocked';
@@ -238,6 +237,29 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         return () => io.disconnect();
     }, [editor]);
 
+    const handleSelectSavedPrompt = React.useCallback(
+        (prompt: SavedPrompt) => {
+            if (editor) {
+                const text = `!${prompt.name} `;
+                const position = editor.getPosition();
+                editor.executeEdits('', [
+                    {
+                        range: new monaco.Range(
+                            position!.lineNumber,
+                            position!.column,
+                            position!.lineNumber,
+                            position!.column,
+                        ),
+                        text: text,
+                        forceMoveMarkers: true,
+                    },
+                ]);
+                editor.focus();
+            }
+        },
+        [editor],
+    );
+
     const isWaitingForPrompt = React.useMemo(
         () =>
             currentState.state === 'WaitingForPrompt' ||
@@ -267,17 +289,12 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                 }}
             >
                 <div style={{ display: 'flex', flexDirection: 'row', alignContent: 'center', gap: 4 }}>
-                    <Tooltip content="Add">
-                        <PromptContextPopup
-                            items={[
-                                {
-                                    icon: <AngleBracketsIcon label="Add context icon" />,
-                                    label: 'Reference file from repository',
-                                    action: onAddContext,
-                                },
-                            ]}
-                        />
-                    </Tooltip>
+                    <PromptContextPopup
+                        fetchSavedPrompts={handleFetchSavedPrompts}
+                        canFetchSavedPrompts={canFetchSavedPrompts}
+                        onSelectedSavedPrompt={handleSelectSavedPrompt}
+                        onAddRepositoryFile={onAddContext}
+                    />
                     <Tooltip content="Preferences">
                         <PromptSettingsPopup
                             onDeepPlanToggled={onDeepPlanToggled}
