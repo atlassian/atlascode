@@ -15,6 +15,12 @@ module.exports = [
         mode: 'development',
         target: 'node',
         devtool: 'cheap-module-source-map',
+        cache: {
+            type: 'filesystem',
+            buildDependencies: {
+                config: [__filename],
+            },
+        },
         entry: {
             extension: './src/extension.ts',
         },
