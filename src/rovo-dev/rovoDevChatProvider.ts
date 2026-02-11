@@ -109,7 +109,6 @@ export class RovoDevChatProvider {
         this._webView = webView;
     }
 
-
     public setOnUnauthorizedCallback(callback: (() => Promise<void>) | undefined) {
         this._onUnauthorizedCallback = callback;
     }
@@ -787,7 +786,7 @@ export class RovoDevChatProvider {
                     (error instanceof RovoDevApiError && (error.httpStatus === 401 || error.httpStatus === 403)) ||
                     (error instanceof Error && error.stack?.includes('UnauthorizedError'));
                 if (isUnauthorizedError) {
-                    RovoDevLogger.info('Detected unauthorized error - triggering login UI');
+                    Logger.info('Detected unauthorized error - triggering login UI');
                     if (this._onUnauthorizedCallback) {
                         await this._onUnauthorizedCallback();
                         return;
