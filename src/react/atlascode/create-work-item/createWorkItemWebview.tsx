@@ -298,7 +298,7 @@ const CreateWorkItemWebview: React.FC = () => {
                                     data-vscode-context='{"webviewSection": "createButton", "preventDefaultContextMenuItems": true}'
                                     onClick={(e) => {
                                         e.preventDefault();
-                                        (e.target as HTMLElement).dispatchEvent(
+                                        (e.target as HTMLButtonElement).dispatchEvent(
                                             new MouseEvent('contextmenu', {
                                                 bubbles: true,
                                                 clientX: e.clientX,
