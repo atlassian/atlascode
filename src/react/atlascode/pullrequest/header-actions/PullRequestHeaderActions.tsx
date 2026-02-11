@@ -2,12 +2,13 @@ import { RefreshButton } from '@atlassianlabs/guipi-core-components';
 import { Box } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { ApprovalStatus } from '../../../bitbucket/model';
-import { CopyLinkButton } from '../common/CopyLinkButton';
+import { ApprovalStatus } from '../../../../bitbucket/model';
+import { CopyLinkButton } from '../../common/CopyLinkButton';
+import { PullRequestDetailsControllerApi } from '../pullRequestDetailsController';
+import { PullRequestDetailsState } from '../pullRequestDetailsController';
 import { ApproveButton } from './ApproveButton';
+import { DraftStatusButton } from './DraftStatusButton';
 import { MergeDialog } from './MergeDialog';
-import { PullRequestDetailsControllerApi } from './pullRequestDetailsController';
-import { PullRequestDetailsState } from './pullRequestDetailsController';
 import { RequestChangesButton } from './RequestChangesButton';
 
 export interface PullRequestHeaderActionsProps {
@@ -36,6 +37,14 @@ export const PullRequestHeaderActions: React.FC<PullRequestHeaderActionsProps> =
     return (
         <>
             <CopyLinkButton tooltip="Copy link to pull request" url={state.pr.data.url} onClick={controller.copyLink} />
+            <Box marginLeft={1} hidden={state.loadState.basicData}>
+                <DraftStatusButton
+                    isDraft={state.pr.data.draft}
+                    isAuthor={state.currentUser.accountId === state.pr.data.author.accountId}
+                    isLoading={isSomethingLoading}
+                    onToggle={controller.updateDraftStatus}
+                />
+            </Box>
             <Box marginLeft={1} hidden={state.loadState.basicData}>
                 <RequestChangesButton
                     hidden={

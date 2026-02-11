@@ -4,6 +4,13 @@
     flex-direction: row;
     gap: 8px;
     color: var(--vscode-editor-foreground);
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.prompt-context-popup-item:hover {
+    background-color: var(--vscode-list-hoverBackground);
+    cursor: pointer;
 }
 
 .prompt-context-icon {
@@ -33,8 +40,7 @@
     background-color: var(--vscode-editor-background);
     border: 1px solid var(--vscode-editorWidget-border);
     border-radius: 8px;
-    padding-top: 4px;
-    padding-bottom: 4px;
+    max-width: 85%;
 }
 
 .popup-item-container > button {
@@ -42,4 +48,140 @@
 }
 .popup-item-container > button:hover {
     background-color: var(--vscode-list-hoverBackground);
+}
+
+.saved-prompt-menu-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.saved-prompt-menu-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--vscode-editorWidget-border);
+    padding: 8px;
+}
+
+.saved-prompt-menu-header-info {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.saved-prompt-menu-back-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 4px;
+    color: var(--vscode-button-secondaryForeground);
+}
+
+.saved-prompt-menu-back-button:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+.saved-prompt-menu-header-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 6px;
+    color: var(--vscode-editor-foreground);
+}
+
+.saved-prompt-menu-header-text {
+    font-size: var(--vscode-font-size);
+    font-weight: 600;
+    color: var(--vscode-editor-foreground);
+}
+
+
+.saved-prompt-menu-search-input {
+    width: 100%;
+    border-color: transparent !important;
+    background-color: var(--vscode-input-background) !important;
+    max-height: fit-content;
+}
+
+.saved-prompt-menu-search-input > span {
+    color: var(--vscode-input-foreground) !important;
+    padding-left: 8px;
+}
+
+.saved-prompt-menu-search-input > input {
+    font-size: 14px;
+    color: var(--vscode-input-foreground);
+}
+.saved-prompt-menu-search-input > input::placeholder {
+    color: var(--vscode-input-placeholderForeground);
+}
+.saved-prompt-menu-search-results {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+}
+
+.saved-prompt-menu-search-result {
+    display: flex;
+    flex-direction: row;
+    gap: 2px;
+    padding: 4px 2px;
+    border-radius: 4px;
+    align-items: center;
+    align-content: center;
+    justify-content: space-between;
+    color: var(--vscode-editor-foreground);
+    font-size: 14px;
+}
+
+.saved-prompt-menu-search-result:hover {
+    cursor: pointer;
+}
+
+.saved-prompt-menu-inject-button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 4px;
+    color: var(--vscode-button-secondaryForeground);
+}
+
+.saved-prompt-menu-inject-button:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+.saved-prompt-menu-prompt-details {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    height: 200px;
+    gap: 8px;
+}
+
+.saved-prompt-menu-prompt-description {
+    padding: 4px;
+    font-size: 14px;
+    color: var(--vscode-input-foreground);
+    opacity: 0.9;
+    background-color: var(--vscode-input-background);
+    border-radius: 4px;
+    overflow-y: auto;
+    height: 100%;
+}
+
+.saved-prompt-menu-result-info {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
 }

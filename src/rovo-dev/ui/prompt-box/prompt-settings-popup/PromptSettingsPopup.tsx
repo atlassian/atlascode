@@ -1,11 +1,25 @@
+import { cssMap } from '@atlaskit/css';
 import AiGenerativeTextSummaryIcon from '@atlaskit/icon/core/ai-generative-text-summary';
 import CrossIcon from '@atlaskit/icon/core/cross';
 import CustomizeIcon from '@atlaskit/icon/core/customize';
 import LockUnlockedIcon from '@atlaskit/icon/core/lock-unlocked';
 import TelescopeIcon from '@atlaskit/icon-lab/core/telescope';
 import Popup, { PopupComponentProps } from '@atlaskit/popup';
-import Toggle from '@atlaskit/toggle';
-import React from 'react';
+import { Box } from '@atlaskit/primitives';
+import { token } from '@atlaskit/tokens';
+import React, { useCallback } from 'react';
+import { AgentMode, RovoDevModeInfo } from 'src/rovo-dev/client';
+
+import AgentModeSection from './AgentModeSection';
+import PromptSettingsItem from './PromptSettingsItem';
+
+const styles = cssMap({
+    sectionTitle: {
+        fontWeight: token('font.weight.semibold', '600'),
+        margin: 0,
+        marginBottom: token('space.100', '8px'),
+    },
+});
 
 interface PromptSettingsPopupProps {
     onDeepPlanToggled?: () => void;
@@ -14,6 +28,9 @@ interface PromptSettingsPopupProps {
     isDeepPlanEnabled: boolean;
     isYoloModeEnabled: boolean;
     isFullContextEnabled: boolean;
+    availableAgentModes: RovoDevModeInfo[];
+    currentAgentMode: AgentMode | null;
+    onAgentModeChange: (mode: AgentMode) => void;
     onClose: () => void;
 }
 
@@ -28,6 +45,7 @@ const PopupContainer = React.forwardRef<HTMLDivElement, PopupComponentProps>(
                 borderRadius: '8px',
                 padding: '16px',
                 marginRight: '16px',
+                maxWidth: '350px',
                 ...props.style,
             }}
             ref={ref}
@@ -44,12 +62,24 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
     isDeepPlanEnabled,
     isYoloModeEnabled,
     isFullContextEnabled,
+    availableAgentModes,
+    currentAgentMode,
+    onAgentModeChange,
     onClose,
 }) => {
     const [isOpen, setIsOpen] = React.useState(false);
 
-    if (!onDeepPlanToggled && !onYoloModeToggled) {
-        return false;
+    const handleAgentModeChange = useCallback(
+        (mode: AgentMode) => {
+            onAgentModeChange(mode);
+            setIsOpen(false);
+            onClose();
+        },
+        [onAgentModeChange, onClose],
+    );
+
+    if (!onDeepPlanToggled && !onYoloModeToggled && !onFullContextToggled) {
+        return null;
     }
 
     return (
@@ -81,6 +111,20 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
             )}
             content={() => (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <AgentModeSection
+                        currentMode={currentAgentMode}
+                        availableModes={availableAgentModes}
+                        setAgentMode={handleAgentModeChange}
+                    />
+                    <Box
+                        as="p"
+                        xcss={styles.sectionTitle}
+                        style={{
+                            fontSize: '12px',
+                        }}
+                    >
+                        Others
+                    </Box>
                     {onDeepPlanToggled && (
                         <PromptSettingsItem
                             icon={<AiGenerativeTextSummaryIcon label="Deep plan" />}
@@ -121,42 +165,6 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                 onClose();
             }}
         />
-    );
-};
-
-const PromptSettingsItem: React.FC<{
-    icon: JSX.Element;
-    label: string;
-    description: string;
-    action?: () => void;
-    actionType?: 'toggle' | 'button';
-    toggled?: boolean;
-    isInternalOnly?: boolean;
-}> = ({ icon, label, description, action, actionType, toggled, isInternalOnly }) => {
-    return (
-        <div className="prompt-settings-item">
-            <div className="prompt-settings-logo">{icon}</div>
-            <div id="prompt-settings-context">
-                <p style={{ fontWeight: 'bold' }}>
-                    {label}
-                    {isInternalOnly && (
-                        <span style={{ backgroundColor: 'var(--vscode-badge-background)', marginLeft: '8px' }}>
-                            Internal only
-                        </span>
-                    )}
-                </p>
-                <p style={{ fontSize: '11px' }}>{description}</p>
-            </div>
-            {action && (
-                <div className="prompt-settings-action">
-                    {actionType === 'toggle' ? (
-                        <Toggle isChecked={toggled} onChange={() => action()} label={`${label} toggle`} />
-                    ) : (
-                        <button aria-label="prompt-settings-action" />
-                    )}
-                </div>
-            )}
-        </div>
     );
 };
 

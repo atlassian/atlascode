@@ -211,6 +211,7 @@ export function useStartWorkFormState(
             upstream,
             branchSetupEnabled,
             startWithRovoDev,
+            isInitialized: state.isInitialized,
         },
         formActions: {
             onPushBranchChange: handlePushBranchChange,

@@ -57,6 +57,7 @@ export const StartWorkControllerContext = React.createContext(emptyApi);
 
 export interface StartWorkState extends StartWorkInitMessage {
     isSomethingLoading: boolean;
+    isInitialized: boolean;
     rovoDevPreference?: boolean;
     pushBranchPreference: boolean;
 }
@@ -64,6 +65,7 @@ export interface StartWorkState extends StartWorkInitMessage {
 const emptyState: StartWorkState = {
     ...emptyStartWorkInitMessage,
     isSomethingLoading: false,
+    isInitialized: false,
     customTemplate: '{{prefix}}/{{issueKey}}-{{summary}}',
     customPrefixes: [],
     rovoDevPreference: false,
@@ -91,6 +93,7 @@ function reducer(state: StartWorkState, action: StartWorkUIAction): StartWorkSta
                 ...state,
                 ...action.data,
                 isSomethingLoading: false,
+                isInitialized: true,
                 isErrorBannerOpen: false,
                 errorDetails: undefined,
             };

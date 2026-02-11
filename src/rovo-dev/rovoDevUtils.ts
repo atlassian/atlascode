@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import yaml from 'js-yaml';
 import path from 'path';
 import { window, workspace } from 'vscode';
 
@@ -17,6 +18,27 @@ const FriendlyName: Record<SupportedConfigFiles, string> = {
     '.agent.md': 'Rovo Dev Global Memory file',
     'rovodev.log': 'Rovo Dev log file',
 };
+
+// Read logging.path from ~/.rovodev/config.yml if present.
+function getLogPathFromConfig(home: string): string | undefined {
+    const configPath = path.join(home, '.rovodev', 'config.yml');
+    if (!fs.existsSync(configPath)) {
+        return undefined;
+    }
+    try {
+        const raw = fs.readFileSync(configPath, 'utf-8');
+        const config = yaml.load(raw) as { logging?: { path?: string } } | undefined;
+        const logPath = config?.logging?.path;
+        if (typeof logPath !== 'string' || !logPath.trim()) {
+            return undefined;
+        }
+        const trimmed = logPath.trim();
+        const expanded = trimmed.startsWith('~') ? path.join(home, trimmed.slice(1).replace(/^[/\\]+/, '')) : trimmed;
+        return path.normalize(expanded);
+    } catch {
+        return undefined;
+    }
+}
 
 export async function openRovoDevConfigFile(configFile: SupportedConfigFiles) {
     const home = process.env.HOME || process.env.USERPROFILE;
@@ -52,7 +74,15 @@ function getRovoDevLogFilePath(): string | undefined {
     if (!home) {
         return undefined;
     }
-    return path.join(home, '.rovodev', 'rovodev.log');
+    const configPath = getLogPathFromConfig(home);
+    if (configPath) {
+        return configPath;
+    }
+
+    // Fallback to old log file location if log path is not set in config.yml
+    const rovoDevDir = path.join(home, '.rovodev');
+    const candidates = [path.join(rovoDevDir, 'logs', 'rovodev.log'), path.join(rovoDevDir, 'rovodev.log')];
+    return candidates.find((p) => fs.existsSync(p));
 }
 
 export function readLastNLogLines(n: number = 10): string[] {

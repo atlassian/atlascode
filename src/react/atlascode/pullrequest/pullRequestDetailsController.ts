@@ -25,6 +25,7 @@ import {
     PullRequestDetailsCommentsMessage,
     PullRequestDetailsCommitsMessage,
     PullRequestDetailsConflictedFilesMessage,
+    PullRequestDetailsDraftStatusMessage,
     PullRequestDetailsFileDiffsMessage,
     PullRequestDetailsInitMessage,
     PullRequestDetailsMergeStrategiesMessage,
@@ -47,6 +48,7 @@ export interface PullRequestDetailsControllerApi {
     fetchUsers: (site: BitbucketSite, query: string, abortSignal?: AbortSignal) => Promise<User[]>;
     updateSummary: (text: string) => void;
     updateTitle: (text: string) => void;
+    updateDraftStatus: (isDraft: boolean) => void;
     updateReviewers: (newReviewers: User[]) => Promise<void>;
     updateApprovalStatus: (status: ApprovalStatus) => void;
     checkoutBranch: () => void;
@@ -82,6 +84,7 @@ const emptyApi: PullRequestDetailsControllerApi = {
         return;
     },
     updateTitle: async (text: string) => {},
+    updateDraftStatus: (isDraft: boolean) => {},
     updateReviewers: async (newReviewers: User[]) => {},
     updateApprovalStatus: (status: ApprovalStatus) => {},
     checkoutBranch: () => {},
@@ -121,6 +124,7 @@ enum PullRequestDetailsUIActionType {
     Loading = 'loading',
     UpdateSummary = 'updateSummary',
     UpdateTitle = 'updateTitle',
+    UpdateDraftStatus = 'updateDraftStatus',
     UpdateCommits = 'updateCommits',
     UpdateReviewers = 'updateReviewers',
     UpdateApprovalStatus = 'updateApprovalStatus',
@@ -140,6 +144,7 @@ type PullRequestDetailsUIAction =
     | ReducerAction<PullRequestDetailsUIActionType.Init, { data: PullRequestDetailsInitMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateSummary, { data: PullRequestDetailsSummaryMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateTitle, { data: PullRequestDetailsTitleMessage }>
+    | ReducerAction<PullRequestDetailsUIActionType.UpdateDraftStatus, { data: PullRequestDetailsDraftStatusMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateCommits, { data: PullRequestDetailsCommitsMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateReviewers, { data: PullRequestDetailsReviewersMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateApprovalStatus, { data: PullRequestDetailsApprovalMessage }>
@@ -201,6 +206,12 @@ function pullRequestDetailsReducer(
             return {
                 ...state,
                 pr: { ...state.pr, data: { ...state.pr.data, title: action.data.title } },
+            };
+        }
+        case PullRequestDetailsUIActionType.UpdateDraftStatus: {
+            return {
+                ...state,
+                pr: { ...state.pr, data: { ...state.pr.data, draft: action.data.isDraft } },
             };
         }
         case PullRequestDetailsUIActionType.UpdateReviewers: {
@@ -313,6 +324,10 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             }
             case PullRequestDetailsMessageType.UpdateTitle: {
                 dispatch({ type: PullRequestDetailsUIActionType.UpdateTitle, data: message });
+                break;
+            }
+            case PullRequestDetailsMessageType.UpdateDraftStatus: {
+                dispatch({ type: PullRequestDetailsUIActionType.UpdateDraftStatus, data: message });
                 break;
             }
             case PullRequestDetailsMessageType.UpdateCommits: {
@@ -432,6 +447,14 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         (text: string) => {
             dispatch({ type: PullRequestDetailsUIActionType.Loading });
             postMessage({ type: PullRequestDetailsActionType.UpdateTitleRequest, text: text });
+        },
+        [postMessage],
+    );
+
+    const updateDraftStatus = useCallback(
+        (isDraft: boolean) => {
+            dispatch({ type: PullRequestDetailsUIActionType.Loading });
+            postMessage({ type: PullRequestDetailsActionType.UpdateDraftStatusRequest, isDraft: isDraft });
         },
         [postMessage],
     );
@@ -683,6 +706,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             fetchUsers: fetchUsers,
             updateSummary: updateSummary,
             updateTitle: updateTitle,
+            updateDraftStatus: updateDraftStatus,
             updateReviewers: updateReviewers,
             updateApprovalStatus: updateApprovalStatus,
             checkoutBranch: checkoutBranch,
@@ -705,6 +729,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         fetchUsers,
         updateSummary,
         updateTitle,
+        updateDraftStatus,
         updateReviewers,
         updateApprovalStatus,
         checkoutBranch,

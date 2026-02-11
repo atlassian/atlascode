@@ -4,6 +4,7 @@ import { v4 } from 'uuid';
 
 import { ExtensionApi } from './api/extensionApi';
 import {
+    AgentMode,
     RovoDevApiClient,
     RovoDevChatRequest,
     RovoDevChatRequestContext,
@@ -71,6 +72,14 @@ export class RovoDevChatProvider {
         }
     }
 
+    private _agentMode: AgentMode = 'default';
+    public get agentMode() {
+        return this._agentMode;
+    }
+    public set agentMode(value: AgentMode) {
+        this._agentMode = value;
+    }
+
     public fullContextMode = false;
 
     private _currentPromptId: string = '';
@@ -98,8 +107,16 @@ export class RovoDevChatProvider {
         this._webView = webView;
     }
 
-    public async setReady(rovoDevApiClient: RovoDevApiClient) {
+    public isReady(): boolean {
+        return !!this._rovoDevApiClient;
+    }
+
+    public async setReady(rovoDevApiClient: RovoDevApiClient, pendingAgentMode?: AgentMode) {
         this._rovoDevApiClient = rovoDevApiClient;
+
+        if (pendingAgentMode) {
+            await this.setAgentMode(pendingAgentMode);
+        }
 
         if (this._pendingPrompt) {
             const pendingPrompt = this._pendingPrompt;
@@ -694,6 +711,48 @@ export class RovoDevChatProvider {
             const renderTime = performance.now() - this._lastMessageSentTime;
             this._telemetryProvider.perfLogger.promptLastMessageRendered(promptId, renderTime);
             this._lastMessageSentTime = undefined;
+        }
+    }
+
+    public async setAgentMode(mode: AgentMode) {
+        if (!this._rovoDevApiClient) {
+            return;
+        }
+
+        try {
+            await this._rovoDevApiClient.setAgentMode(mode);
+            this._agentMode = mode;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            throw new Error(`Failed to set agent mode: ${errorMessage}`);
+        }
+    }
+
+    public async getAvailableAgentModes() {
+        if (!this._rovoDevApiClient) {
+            return;
+        }
+
+        try {
+            const response = await this._rovoDevApiClient.getAvailableModes();
+            return response.modes;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            throw new Error(`Failed to get available agent modes: ${errorMessage}`);
+        }
+    }
+
+    public async getCurrentAgentMode() {
+        if (!this._rovoDevApiClient) {
+            return;
+        }
+
+        try {
+            const response = await this._rovoDevApiClient.getAgentMode();
+            return response.mode;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            throw new Error(`Failed to get current agent mode: ${errorMessage}`);
         }
     }
 

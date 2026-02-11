@@ -54,4 +54,5 @@ export interface SubmitCreateRequestAction {
     closeSourceBranch: boolean;
     issue?: MinimalIssue<DetailedSiteInfo>;
     transition?: Transition;
+    isDraft: boolean;
 }

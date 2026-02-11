@@ -30,7 +30,7 @@ import { FeatureFlagClient } from '../util/featureFlags/featureFlagClient';
 import { Features } from '../util/features';
 import { RovodevCommandContext, RovodevCommands } from './api/componentApi';
 import { DetailedSiteInfo, ExtensionApi, MinimalIssue } from './api/extensionApi';
-import { RovoDevApiClient, RovoDevApiError, RovoDevHealthcheckResponse } from './client';
+import { AgentMode, RovoDevApiClient, RovoDevApiError, RovoDevHealthcheckResponse } from './client';
 import { buildErrorDetails } from './errorDetailsBuilder';
 import { createValidatedRovoDevAuthInfo } from './rovoDevAuthValidator';
 import { RovoDevChatContextProvider } from './rovoDevChatContextProvider';
@@ -104,6 +104,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     // we keep the data in this collection so we can attach some metadata to the next
     // prompt informing Rovo Dev that those files has been reverted
     private _revertedChanges: string[] = [];
+
+    /** Agent mode selected by the user before healthcheck completed; applied after setReady. */
+    private _pendingAgentMode?: AgentMode;
 
     private _disposables: Disposable[] = [];
 
@@ -512,6 +515,38 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         this._chatProvider.fullContextMode = e.value;
                         break;
 
+                    case RovoDevViewResponseType.GetAvailableAgentModes:
+                        const modes = await this._chatProvider.getAvailableAgentModes();
+                        await webview.postMessage({
+                            type: RovoDevProviderMessageType.GetAvailableAgentModesComplete,
+                            modes: modes || [],
+                        });
+                        break;
+
+                    case RovoDevViewResponseType.GetCurrentAgentMode:
+                        const mode = await this._chatProvider.getCurrentAgentMode();
+                        await webview.postMessage({
+                            type: RovoDevProviderMessageType.GetCurrentAgentModeComplete,
+                            mode: mode || 'default',
+                        });
+                        break;
+
+                    case RovoDevViewResponseType.SetAgentMode:
+                        if (!this._chatProvider.isReady()) {
+                            this._pendingAgentMode = e.mode;
+                            await webview.postMessage({
+                                type: RovoDevProviderMessageType.SetAgentModeComplete,
+                                mode: e.mode,
+                            });
+                        } else {
+                            await this._chatProvider.setAgentMode(e.mode);
+                            await webview.postMessage({
+                                type: RovoDevProviderMessageType.SetAgentModeComplete,
+                                mode: e.mode,
+                            });
+                        }
+                        break;
+
                     case RovoDevViewResponseType.OpenExternalLink:
                         await env.openExternal(Uri.parse(e.href));
                         break;
@@ -587,6 +622,35 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         // Send existing Jira credentials for autocomplete
         await this.sendExistingJiraCredentials();
+    }
+
+    /**
+     * Fetches agent modes asynchronously and sends them to the frontend when ready.
+     * This is called during startup to improve initialization performance.
+     */
+    private async fetchAgentModes(): Promise<void> {
+        if (!this._chatProvider || !this._webView) {
+            return;
+        }
+
+        try {
+            const [availableModes, currentAgentMode] = await Promise.all([
+                this._chatProvider.getAvailableAgentModes(),
+                this._chatProvider.getCurrentAgentMode(),
+            ]);
+
+            await this._webView.postMessage({
+                type: RovoDevProviderMessageType.GetAvailableAgentModesComplete,
+                modes: availableModes || [],
+            });
+
+            await this._webView.postMessage({
+                type: RovoDevProviderMessageType.GetCurrentAgentModeComplete,
+                mode: currentAgentMode || 'default',
+            });
+        } catch (error) {
+            Logger.error(error, 'Failed to fetch agent modes');
+        }
     }
 
     private beginNewSession(sessionId: string | null, source: 'init' | 'manuallyCreated' | 'restored'): void {
@@ -1443,7 +1507,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             isPromptPending: this._chatProvider.isPromptPending,
         });
 
-        await this._chatProvider.setReady(rovoDevClient);
+        await this._chatProvider.setReady(rovoDevClient, this._pendingAgentMode);
+        if (this._pendingAgentMode) {
+            await webView.postMessage({
+                type: RovoDevProviderMessageType.SetAgentModeComplete,
+                mode: this._pendingAgentMode,
+            });
+            this._pendingAgentMode = undefined;
+        }
+
+        await this.fetchAgentModes();
 
         if (this.isBoysenberry) {
             // update the isAtlassianUser flag based on Rovo Dev status response
@@ -1595,6 +1668,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     // and with Disabled you can't.
     private setRovoDevTerminated(): Promise<void> {
         this._rovoDevApiClient = undefined;
+        this._pendingAgentMode = undefined;
         setCommandContext(RovodevCommandContext.RovoDevApiReady, false);
 
         this._chatProvider.shutdown();
