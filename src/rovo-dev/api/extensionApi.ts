@@ -196,33 +196,6 @@ export class ExtensionApi {
             // Remove duplicates by creating a unique key
             return Array.from(new Map(credentials.map((c) => [`${c.host}-${c.email}`, c])).values());
         },
-
-        /**
-         * Get expired RovoDev credential info (host + email) from stored credentials.
-         * Does NOT include the API token for security reasons.
-         * Used to pre-fill the login form when credentials have expired.
-         *
-         * @returns Object with host and email if expired credentials exist, undefined otherwise
-         */
-        getExpiredRovoDevCredentials: async (): Promise<{ host: string; email: string } | undefined> => {
-            try {
-                const rovoDevAuth = await Container.credentialManager.getRovoDevAuthInfo();
-                if (!rovoDevAuth || !rovoDevAuth.user?.email) {
-                    return undefined;
-                }
-                // RovoDev auth info includes extra fields like 'host' and 'cloudId'
-                const rovoDevAuthWithHost = rovoDevAuth as any;
-                if (rovoDevAuthWithHost.host) {
-                    return {
-                        host: rovoDevAuthWithHost.host,
-                        email: rovoDevAuth.user.email,
-                    };
-                }
-                return undefined;
-            } catch {
-                return undefined;
-            }
-        },
     };
 
     commands = {

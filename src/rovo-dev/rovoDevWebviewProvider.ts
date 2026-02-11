@@ -768,12 +768,17 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
 
         try {
-            const expiredCreds = await this.extensionApi.auth.getExpiredRovoDevCredentials();
+            const primarySite = await this.extensionApi.auth.getCloudPrimaryAuthSite();
 
-            if (expiredCreds) {
+            if (primarySite && primarySite.authInfo.user?.email) {
                 await this._webView.postMessage({
                     type: RovoDevProviderMessageType.SetExistingJiraCredentials,
-                    credentials: [expiredCreds],
+                    credentials: [
+                        {
+                            host: primarySite.host,
+                            email: primarySite.authInfo.user.email,
+                        },
+                    ],
                 });
             }
         } catch (error) {
