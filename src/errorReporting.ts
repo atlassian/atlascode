@@ -47,6 +47,16 @@ function unhandledRejectionHandler(error: Error | string): void {
 
 function errorHandlerWithFilter(productArea: ErrorProductArea, error: Error | string, capturedBy: string): void {
     safeExecute(() => {
+        // Don't send uncaughtException or unhandledRejection errors to Amplitude
+        // These are handled by extension.ts and logged via Logger.error
+        const filteredExceptions = ['uncaughtexception', 'unhandledrejection'];
+        const capturedByLower = capturedBy.toLowerCase();
+        const isNodeJsGlobalError = filteredExceptions.some((exception) => capturedByLower.includes(exception));
+
+        if (isNodeJsGlobalError) {
+            return;
+        }
+
         if (error instanceof Error && error.stack && error.stack.includes(AtlascodeStackTraceHint)) {
             errorHandler(productArea, error, undefined, undefined, undefined, capturedBy);
         }
