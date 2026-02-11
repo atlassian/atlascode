@@ -50,6 +50,10 @@ export interface PartialIssue {
     onCreated?: (data: CommentData | BBData) => void;
     summary?: string;
     description?: string;
+    // Fields for expanding from sidebar panel with pre-selected values
+    siteId?: string;
+    projectKey?: string;
+    issueTypeId?: string;
 }
 
 export interface CommentData {
@@ -310,7 +314,8 @@ export class CreateIssueWebview
         if (inputSite) {
             this._siteDetails = inputSite;
         } else {
-            let siteId = Container.config.jira.lastCreatePreSelectedValues.siteId;
+            // Check for partial issue siteId first (from sidebar expansion)
+            let siteId = this._partialIssue?.siteId || Container.config.jira.lastCreatePreSelectedValues.siteId;
             if (!siteId) {
                 siteId = '';
             }
@@ -332,7 +337,9 @@ export class CreateIssueWebview
         } else if (inputProject) {
             this._currentProject = inputProject;
         } else {
-            let projectKey = Container.config.jira.lastCreatePreSelectedValues.projectKey;
+            // Check for partial issue projectKey first (from sidebar expansion)
+            let projectKey =
+                this._partialIssue?.projectKey || Container.config.jira.lastCreatePreSelectedValues.projectKey;
             if (!projectKey) {
                 projectKey = '';
             }
@@ -350,6 +357,11 @@ export class CreateIssueWebview
                     this._currentProject = await Container.jiraProjectManager.getFirstProject(this._siteDetails);
                 }
             }
+        }
+
+        // Check for partial issue issueTypeId (from sidebar expansion)
+        if (this._partialIssue?.issueTypeId) {
+            this._selectedIssueTypeId = this._partialIssue.issueTypeId;
         }
 
         await saveLastCreatePreferences({
@@ -535,9 +547,11 @@ export class CreateIssueWebview
             this._selectedIssueTypeId = this._screenData.selectedIssueType.id;
 
             if (this._currentProject) {
-                const savedIssueTypeId = Container.config.jira.lastCreatePreSelectedValues.issueTypeId;
-                if (savedIssueTypeId && this._screenData.issueTypeUIs[savedIssueTypeId]) {
-                    this._selectedIssueTypeId = savedIssueTypeId;
+                // Check for partial issue issueTypeId first (from sidebar expansion), then saved preferences
+                const issueTypeIdToUse =
+                    this._partialIssue?.issueTypeId || Container.config.jira.lastCreatePreSelectedValues.issueTypeId;
+                if (issueTypeIdToUse && this._screenData.issueTypeUIs[issueTypeIdToUse]) {
+                    this._selectedIssueTypeId = issueTypeIdToUse;
                 }
             }
 
