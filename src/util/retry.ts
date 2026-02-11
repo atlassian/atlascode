@@ -44,8 +44,8 @@ function isRetryableError(error: any, retryableErrors: string[]): boolean {
     const errorMessage = error.message ?? '';
     const errorCode = error.code ?? '';
 
-    const hasRetryableErrorCode = retryableErrors.includes(errorCode);
-    const hasRetryableErrorInMessage = retryableErrors.some((code) => errorMessage.includes(code));
+    const hasRetryableErrorCode = retryableErrors?.includes(errorCode);
+    const hasRetryableErrorInMessage = retryableErrors?.some((code) => errorMessage.includes(code));
     const hasTimeoutInMessage = errorMessage.includes('timeout');
     const isAbortedWithTimeout = errorCode === 'ECONNABORTED' && errorMessage.includes('timeout');
 
