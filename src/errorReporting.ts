@@ -49,10 +49,9 @@ function errorHandlerWithFilter(productArea: ErrorProductArea, error: Error | st
     safeExecute(() => {
         // Don't send uncaughtException or unhandledRejection errors to Amplitude
         // These are handled by extension.ts and logged via Logger.error
+        const capturedByLower = capturedBy.toLowerCase();
         const isNodeJsGlobalError =
-            capturedBy === 'NodeJS.uncaughtException' ||
-            capturedBy === 'NodeJS.uncaughtExceptionMonitor' ||
-            capturedBy === 'NodeJS.unhandledRejection';
+            capturedByLower.includes('uncaughtexception') || capturedByLower.includes('unhandledrejection');
 
         if (isNodeJsGlobalError) {
             return;
