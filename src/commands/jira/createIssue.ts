@@ -7,6 +7,7 @@ import { WorkspaceRepo } from '../../bitbucket/model';
 import { SimplifiedTodoIssueData } from '../../config/model';
 import { Container } from '../../container';
 import { Logger } from '../../logger';
+import { Features } from '../../util/featureFlags';
 import { CommentData } from '../../webviews/createIssueWebview';
 import { buildSuggestionSettings, IssueSuggestionManager } from './issueSuggestionManager';
 
@@ -76,7 +77,11 @@ export async function createIssue(data: Uri | TodoIssueData | undefined, source?
         });
         return;
     }
-    Container.createWorkItemWebviewProvider.createOrShow();
+    if (Container.featureFlagClient.checkGate(Features.CreateWorkItemWebviewV2)) {
+        Container.createWorkItemWebviewProvider.createOrShow();
+    } else {
+        Container.createIssueWebview.createOrShow();
+    }
 
     startIssueCreationEvent(source || 'explorer', ProductJira).then((e) => {
         Container.analyticsClient.sendTrackEvent(e);
