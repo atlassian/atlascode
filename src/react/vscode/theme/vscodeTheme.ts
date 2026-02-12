@@ -77,11 +77,11 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                     outlinedSecondary: ({ theme }) => ({
                         backgroundColor: theme.palette.background.default,
                         boxShadow: theme.shadows[2],
-                        '&:hover': {
-                            color: vscStyles.buttonForeground,
-                            backgroundColor: theme.palette.secondary.main,
-                        },
                         color: theme.palette.text.primary,
+                        '&:hover': {
+                            backgroundColor: 'var(--vscode-button-secondaryHoverBackground)',
+                            color: 'var(--vscode-button-secondaryForeground)',
+                        },
                     }),
                     textSecondary: {
                         color: buttonBackground,
