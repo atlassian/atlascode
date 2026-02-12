@@ -340,6 +340,10 @@ export function setupPromptKeyBindings(editor: monaco.editor.IStandaloneCodeEdit
         editor.trigger('keyboard', 'type', { text: '\n' });
     });
 
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyF, () => {
+        // disable default find action and trigger our own if needed
+    });
+
     // Tab key moves focus to the next focusable element (for keyboard accessibility)
     editor.addCommand(
         monaco.KeyCode.Tab,
