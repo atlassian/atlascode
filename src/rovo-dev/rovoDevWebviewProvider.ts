@@ -1678,6 +1678,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         // Check if this is an unauthorized error (expired/invalid credentials)
         if (stderr && stderr.includes('UnauthorizedError')) {
+            // First check if user has valid Jira credentials - these can be used seamlessly
+            const primarySite = await this.extensionApi.auth.getCloudPrimaryAuthSite();
+            if (primarySite && primarySite.authInfo.user?.email) {
+                // User has valid Jira credentials with API token - RovoDev can use them
+                // Don't disable RovoDev, let it continue with these credentials
+                return;
+            }
+
+            // No valid Jira credentials, show login UI
             await this.signalRovoDevDisabled('UnauthorizedAuth');
             return;
         }
