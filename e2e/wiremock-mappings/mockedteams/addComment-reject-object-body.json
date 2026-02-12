@@ -1,0 +1,17 @@
+{
+    "priority": 2,
+    "request": {
+        "method": "POST",
+        "urlPath": "/rest/api/2/issue/BTS-1/comment",
+        "bodyPatterns": [
+            {
+                "matches": ".*\"body\":\\s*\\{.*"
+            }
+        ]
+    },
+    "response": {
+        "status": 400,
+        "body": "Comment body must be a string (wiki markup or plain text), not an ADF object",
+        "headers": { "Content-Type": "text/plain" }
+    }
+}

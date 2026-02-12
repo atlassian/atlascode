@@ -1,4 +1,5 @@
 {
+  "priority": 1,
   "request": {
     "method": "POST",
     "urlPath": "/rest/api/2/issue/BTS-1/comment"
