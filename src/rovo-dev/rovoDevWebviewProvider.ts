@@ -786,10 +786,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             }
         } catch (error) {
             // Silently fail - pre-filling is a nice-to-have feature
-            this._telemetryProvider.logError(
-                error as Error,
-                'Failed to fetch expired RovoDev credentials for pre-fill',
-            );
+            Logger.warn(error, 'Failed to fetch expired RovoDev credentials for pre-fill');
         }
     }
 
