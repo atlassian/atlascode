@@ -520,6 +520,13 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                                             />
                                                         ) : null
                                                     }
+                                                    sx={{
+                                                        '&:hover': {
+                                                            backgroundColor:
+                                                                'var(--vscode-button-secondaryHoverBackground)',
+                                                            color: 'var(--vscode-button-secondaryForeground)',
+                                                        },
+                                                    }}
                                                 >
                                                     Create draft
                                                 </Button>
