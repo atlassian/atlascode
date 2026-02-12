@@ -577,7 +577,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             workspacePath: workspace.workspaceFolders?.[0]?.uri.fsPath,
             homeDir: process.env.HOME || process.env.USERPROFILE,
             yoloMode,
-            features: {},
         });
 
         // Send existing Jira credentials for autocomplete
