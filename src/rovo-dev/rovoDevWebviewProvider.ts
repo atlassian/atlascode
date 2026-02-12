@@ -768,18 +768,21 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
 
         try {
-            const primarySite = await this.extensionApi.auth.getCloudPrimaryAuthSite();
+            const rovoDevAuth = await this.extensionApi.auth.getRovoDevAuthInfo();
+            if (rovoDevAuth && rovoDevAuth.user?.email) {
+                const rovoDevAuthWithHost = rovoDevAuth as any;
 
-            if (primarySite && primarySite.authInfo.user?.email) {
-                await this._webView.postMessage({
-                    type: RovoDevProviderMessageType.SetExistingJiraCredentials,
-                    credentials: [
-                        {
-                            host: primarySite.host,
-                            email: primarySite.authInfo.user.email,
-                        },
-                    ],
-                });
+                if (rovoDevAuthWithHost.host) {
+                    await this._webView.postMessage({
+                        type: RovoDevProviderMessageType.SetExistingJiraCredentials,
+                        credentials: [
+                            {
+                                host: rovoDevAuthWithHost.host,
+                                email: rovoDevAuth.user.email,
+                            },
+                        ],
+                    });
+                }
             }
         } catch (error) {
             // Silently fail - pre-filling is a nice-to-have feature
