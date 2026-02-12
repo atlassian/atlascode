@@ -52,9 +52,7 @@ export type RovoDevDisabledReason = DisabledState['subState'];
 
 export type RovoDevEntitlementCheckFailedDetail = EntitlementCheckRovoDevHealthcheckResponse['detail'];
 
-export interface RovoDevFeatures {
-    dedicatedRovoDevAuth?: boolean;
-}
+export interface RovoDevFeatures {}
 
 export type RovoDevResponseMessageType =
     | RovoDevTextResponse
@@ -92,7 +90,6 @@ export type RovoDevProviderMessage =
               workspacePath?: string;
               homeDir?: string;
               yoloMode?: boolean;
-              features?: RovoDevFeatures;
           }
       >
     | ReducerAction<RovoDevProviderMessageType.SetInitializing, { isPromptPending: boolean }>
