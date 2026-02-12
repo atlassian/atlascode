@@ -10,7 +10,6 @@ import { AdfAwareContent } from '../../../AdfAwareContent';
 import { RenderedContent } from '../../../RenderedContent';
 import { AttachmentList } from '../../AttachmentList';
 import { AttachmentsModal } from '../../AttachmentsModal';
-import { convertAdfToWikimarkup, convertWikimarkupToAdf } from '../../common/adfToWikimarkup';
 import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
 import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
@@ -92,22 +91,17 @@ const IssueMainPanel: React.FC<Props> = ({
 
     // Use centralized editor state
     const { openEditor, closeEditor, isEditorActive } = useEditorState();
-    // Handle descriptionText - convert ADF object to appropriate format for editor
+    // Handle descriptionText - convert ADF object to JSON string for editor input
     const getDescriptionTextForEditor = React.useCallback(() => {
         if (
             typeof defaultDescription === 'object' &&
             defaultDescription.version === 1 &&
             defaultDescription.type === 'doc'
         ) {
-            // For new Atlaskit editor: convert ADF to JSON string
-            if (isAtlaskitEditorEnabled) {
-                return JSON.stringify(defaultDescription);
-            }
-            // For legacy editor: convert ADF to WikiMarkup
-            return convertAdfToWikimarkup(defaultDescription);
+            return JSON.stringify(defaultDescription);
         }
         return defaultDescription || '';
-    }, [defaultDescription, isAtlaskitEditorEnabled]);
+    }, [defaultDescription]);
 
     const [descriptionText, setDescriptionText] = React.useState(() => getDescriptionTextForEditor());
     const [localIsEditingDescription, setLocalIsEditingDescription] = React.useState(false);
@@ -260,9 +254,7 @@ const IssueMainPanel: React.FC<Props> = ({
                                     setDescriptionText(e);
                                 }}
                                 onSave={(i: string) => {
-                                    // Convert WikiMarkup to ADF before saving (API v3 requires ADF)
-                                    const adfContent = convertWikimarkupToAdf(i);
-                                    handleInlineEdit(fields['description'], adfContent);
+                                    handleInlineEdit(fields['description'], i);
                                     closeEditorHandler();
                                 }}
                                 onCancel={() => {

@@ -27,7 +27,6 @@ import {
     CommonEditorViewState,
     emptyCommonEditorState,
 } from '../AbstractIssueEditorPage';
-import { convertWikimarkupToAdf } from '../common/adfToWikimarkup';
 import { MissingScopesBanner } from '../common/missing-scopes-banner/MissingScopesBanner';
 import { CreateIssueButton } from './actions/CreateIssueButton';
 import { Panel } from './Panel';
@@ -320,25 +319,10 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
             return errs;
         }
 
-        // Convert WikiMarkup fields to ADF if using legacy editor AND site is Cloud
-        // Jira Data Center requires WikiMarkup string, not ADF object
-        const issueData = { ...this.state.fieldValues };
-
-        if (!this.state.showAtlaskitEditor && this.state.siteDetails.isCloud) {
-            // Convert description if it's a string (WikiMarkup)
-            if (issueData.description && typeof issueData.description === 'string') {
-                issueData.description = convertWikimarkupToAdf(issueData.description);
-            }
-            // Convert comment if it's a string (WikiMarkup)
-            if (issueData.comment && typeof issueData.comment === 'string') {
-                issueData.comment = convertWikimarkupToAdf(issueData.comment);
-            }
-        }
-
         const createAction = {
             action: 'createIssue',
             site: this.state.siteDetails,
-            issueData: issueData,
+            issueData: this.state.fieldValues,
             onCreateAction: this.state.onCreateAction,
         };
 
