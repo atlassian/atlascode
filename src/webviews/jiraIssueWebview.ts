@@ -982,18 +982,7 @@ export class JiraIssueWebview
                         handled = true;
                         try {
                             const client = await Container.clientManager.jiraClient(msg.site);
-
-                            // Use direct DELETE request to issueLink endpoint
-                            const apiVersion = client.apiVersion || '3';
-                            const baseApiUrl = msg.site.baseApiUrl.replace(/\/rest$/, '');
-                            const deleteUrl = `${baseApiUrl}/rest/api/${apiVersion}/issueLink/${msg.objectWithId.id}`;
-
-                            await client.transportFactory()(deleteUrl, {
-                                method: 'DELETE',
-                                headers: {
-                                    Authorization: await client.authorizationProvider('DELETE', deleteUrl),
-                                },
-                            });
+                            await client.deleteIssuelink(msg.objectWithId.id);
 
                             // Update local state after successful deletion
                             if (
