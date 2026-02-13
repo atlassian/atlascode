@@ -30,6 +30,7 @@ interface ChatStreamProps {
         checkFileExists: CheckFileExistsFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
+        onRestartProcess: () => void;
         onOpenLogFile: () => void;
         onError: (error: Error, errorMessage: string) => void;
     };
@@ -274,6 +275,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             msg={dialog}
                             isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
                             retryAfterError={renderProps.retryPromptAfterError}
+                            onRestartProcess={renderProps.onRestartProcess}
                             onToolPermissionChoice={onToolPermissionChoice}
                             onOpenLogFile={renderProps.onOpenLogFile}
                             onLinkClick={onLinkClick}
