@@ -907,5 +907,92 @@ describe('RovoDevChatProvider', () => {
                 expect.any(AbortSignal),
             );
         });
+
+        it('should trigger unauthorized callback on 401 error', async () => {
+            const mockUnauthorizedCallback = jest.fn();
+            chatProvider.setOnUnauthorizedCallback(mockUnauthorizedCallback);
+
+            const mockPrompt: RovoDevPrompt = {
+                text: 'test prompt',
+                enable_deep_plan: false,
+                context: [],
+            };
+
+            // Import RovoDevApiError properly
+            const { RovoDevApiError } = await import('./client/rovoDevApiClient');
+            const unauthorizedError = new RovoDevApiError('Unauthorized', 401, undefined);
+            mockApiClient.chat.mockRejectedValue(unauthorizedError);
+
+            await chatProvider.executeChat(mockPrompt, []);
+
+            expect(mockUnauthorizedCallback).toHaveBeenCalled();
+        });
+
+        it('should trigger unauthorized callback on 403 error', async () => {
+            const mockUnauthorizedCallback = jest.fn();
+            chatProvider.setOnUnauthorizedCallback(mockUnauthorizedCallback);
+
+            const mockPrompt: RovoDevPrompt = {
+                text: 'test prompt',
+                enable_deep_plan: false,
+                context: [],
+            };
+
+            // Import RovoDevApiError properly
+            const { RovoDevApiError } = await import('./client/rovoDevApiClient');
+            const forbiddenError = new RovoDevApiError('Forbidden', 403, undefined);
+            mockApiClient.chat.mockRejectedValue(forbiddenError);
+
+            await chatProvider.executeChat(mockPrompt, []);
+
+            expect(mockUnauthorizedCallback).toHaveBeenCalled();
+        });
+
+        it('should trigger unauthorized callback when stack trace contains UnauthorizedError', async () => {
+            const mockUnauthorizedCallback = jest.fn();
+            chatProvider.setOnUnauthorizedCallback(mockUnauthorizedCallback);
+
+            const mockPrompt: RovoDevPrompt = {
+                text: 'test prompt',
+                enable_deep_plan: false,
+                context: [],
+            };
+
+            // Create an error with "UnauthorizedError" in the stack trace
+            const errorWithUnauthorizedInStack = new Error('Some error message');
+            errorWithUnauthorizedInStack.stack = `Error: Some error message
+    at Object.<anonymous> (/path/to/file.ts:123:45)
+    at UnauthorizedError: Token expired
+    at processError (/path/to/process.ts:67:89)`;
+            mockApiClient.chat.mockRejectedValue(errorWithUnauthorizedInStack);
+
+            await chatProvider.executeChat(mockPrompt, []);
+
+            expect(mockUnauthorizedCallback).toHaveBeenCalled();
+        });
+
+        it('should not trigger unauthorized callback on other errors', async () => {
+            const mockUnauthorizedCallback = jest.fn();
+            chatProvider.setOnUnauthorizedCallback(mockUnauthorizedCallback);
+
+            const mockPrompt: RovoDevPrompt = {
+                text: 'test prompt',
+                enable_deep_plan: false,
+                context: [],
+            };
+
+            const genericError = new Error('Generic error');
+            mockApiClient.chat.mockRejectedValue(genericError);
+
+            await chatProvider.executeChat(mockPrompt, []);
+
+            expect(mockUnauthorizedCallback).not.toHaveBeenCalled();
+            // Should still show error dialog
+            expect(mockWebview.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: RovoDevProviderMessageType.ShowDialog,
+                }),
+            );
+        });
     });
 });

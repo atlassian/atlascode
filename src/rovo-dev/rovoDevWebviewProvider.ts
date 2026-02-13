@@ -762,6 +762,34 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
+    private async sendExpiredRovoDevCredentials(): Promise<void> {
+        if (!this._webView) {
+            return;
+        }
+
+        try {
+            const rovoDevAuth = await this.extensionApi.auth.getRovoDevAuthInfo();
+            if (rovoDevAuth && rovoDevAuth.user?.email) {
+                const rovoDevAuthWithHost = rovoDevAuth as any;
+
+                if (rovoDevAuthWithHost.host) {
+                    await this._webView.postMessage({
+                        type: RovoDevProviderMessageType.SetExistingJiraCredentials,
+                        credentials: [
+                            {
+                                host: rovoDevAuthWithHost.host,
+                                email: rovoDevAuth.user.email,
+                            },
+                        ],
+                    });
+                }
+            }
+        } catch (error) {
+            // Silently fail - pre-filling is a nice-to-have feature
+            Logger.warn(error, 'Failed to fetch expired RovoDev credentials for pre-fill');
+        }
+    }
+
     public async executeNewSession(): Promise<void> {
         const webview = this._webView!;
 
@@ -1565,6 +1593,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         this.setRovoDevTerminated();
 
+        // If the reason is UnauthorizedAuth, send expired credentials for pre-filling the form
+        if (reason === 'UnauthorizedAuth') {
+            await this.sendExpiredRovoDevCredentials();
+        }
+
         const webView = this._webView!;
         await webView.postMessage({
             type: RovoDevProviderMessageType.RovoDevDisabled,
@@ -1639,6 +1672,22 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         if (this._isProviderDisabled) {
             return;
         }
+
+        // Check if this is an unauthorized error (expired/invalid credentials)
+        if (stderr && stderr.includes('UnauthorizedError')) {
+            // First check if user has valid Jira credentials - these can be used seamlessly
+            const primarySite = await this.extensionApi.auth.getCloudPrimaryAuthSite();
+            if (primarySite && primarySite.authInfo.user?.email) {
+                // User has valid Jira credentials with API token - RovoDev can use them
+                // Don't disable RovoDev, let it continue with these credentials
+                return;
+            }
+
+            // No valid Jira credentials, show login UI
+            await this.signalRovoDevDisabled('UnauthorizedAuth');
+            return;
+        }
+
         this._isProviderDisabled = true;
 
         this.setRovoDevTerminated();
