@@ -12,4 +12,5 @@ export {
     setupPullrequestsDC,
     setupPRComments,
     setupPRCommentPost,
+    getLastCommentPostBody,
 } from './setup-mock';

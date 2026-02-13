@@ -73,6 +73,46 @@ export const cleanupWireMockMapping = async (request: APIRequestContext, mapping
     await request.delete(`http://wiremock-mockedteams:8080/__admin/mappings/${mappingId}`);
 };
 
+const WIREMOCK_JIRA = 'http://wiremock-mockedteams:8080';
+
+/**
+ * Returns the parsed request body of the most recent POST to .../issue/.../comment from Wiremock journal.
+ * Used by the add-comment E2E for Jira DC only: DC expects body.body to be a string (wiki markup), not ADF.
+ * Cloud accepts ADF. Requires Wiremock to run with --max-request-journal-entries (see e2e/compose.yml).
+ */
+export async function getLastCommentPostBody(
+    request: APIRequestContext,
+): Promise<{ body: unknown; rawRequest?: { method: string; url: string } } | null> {
+    const res = await request.get(`${WIREMOCK_JIRA}/__admin/requests`);
+    if (!res.ok) {
+        return null;
+    }
+    const data = (await res.json()) as {
+        requests?: Array<{ request: { method: string; url?: string; body?: string } }>;
+    };
+    const requests = data?.requests ?? [];
+    const commentPost = requests
+        .filter(
+            (r) =>
+                r.request?.method === 'POST' &&
+                r.request?.url?.includes('/issue/') &&
+                r.request?.url?.includes('/comment'),
+        )
+        .pop();
+    if (!commentPost?.request?.body) {
+        return null;
+    }
+    try {
+        const parsed = JSON.parse(commentPost.request.body) as { body?: unknown };
+        return {
+            body: parsed.body,
+            rawRequest: { method: commentPost.request.method, url: commentPost.request.url ?? '' },
+        };
+    } catch {
+        return null;
+    }
+}
+
 export async function setupSearchMock(request: APIRequestContext, status: string, type: JiraTypes) {
     const file = type === JiraTypes.DC ? 'search-dc.json' : 'search.json';
     const searchJSON = JSON.parse(fs.readFileSync(`e2e/wiremock-mappings/mockedteams/${file}`, 'utf-8'));
