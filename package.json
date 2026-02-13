@@ -1759,7 +1759,7 @@
         "lodash.orderby": "^4.6.0",
         "lodash.truncate": "^4.4.2",
         "macaddress": "^0.5.3",
-        "markdown-it": "^14.1.0",
+        "markdown-it": "^14.1.1",
         "merge-anything": "^6.0.6",
         "monaco-editor": "^0.51.0",
         "mustache": "^4.0.1",
