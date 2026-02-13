@@ -24,6 +24,31 @@ export const onboardingQuickPickItems = (product: Product) => {
     ];
 };
 
+export interface OnboardingQuickPickItem extends QuickPickItem {
+    onboardingId: string;
+}
+
+export const mainMenuQuickPickItems = (): OnboardingQuickPickItem[] => [
+    {
+        iconPath: new ThemeIcon('cloud'),
+        label: `Use Rovo Dev AI`,
+        detail: `Connect Atlassian’s AI coding tool so you can use it in VS Code`,
+        onboardingId: 'onboarding:rovo',
+    },
+    {
+        iconPath: new ThemeIcon('server'),
+        label: `Connect Jira`,
+        detail: `Connect Jira to VS Code to edit, create and delete your work items directly`,
+        onboardingId: 'onboarding:jira',
+    },
+    {
+        iconPath: new ThemeIcon('server'),
+        label: `Connect Bitbucket`,
+        detail: `Access your pull requests directly alongside your code`,
+        onboardingId: 'onboarding:bitbucket',
+    },
+];
+
 export const onboardingHelperText = (product: Product, env: string) => {
     if (product !== ProductJira && product !== ProductBitbucket) {
         return '';
@@ -41,10 +66,6 @@ export const onboardingHelperText = (product: Product, env: string) => {
     return `You can enter a ${site} url like ${baseUrl}\n`;
 };
 
-export interface OnboardingQuickPickItem extends QuickPickItem {
-    onboardingId: string;
-}
-
 export const OnboardingButtons: Record<string, QuickInputButton> = {
     settings: {
         iconPath: new ThemeIcon('gear'),
@@ -61,6 +82,7 @@ export const OnboardingButtons: Record<string, QuickInputButton> = {
 };
 
 export enum OnboardingStep {
+    MainMenu = 0,
     Jira = 1,
     Bitbucket = 2,
 }
