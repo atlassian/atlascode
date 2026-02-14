@@ -1741,7 +1741,7 @@
         "base64-arraybuffer-es6": "^3.1.0",
         "clsx": "^2.1.1",
         "date-fns": "^4.1.0",
-        "diff": "^8.0.2",
+        "diff": "^8.0.3",
         "eventemitter3": "^5.0.1",
         "express": "^5.1.0",
         "fast-deep-equal": "^3.1.1",
@@ -1759,7 +1759,7 @@
         "lodash.orderby": "^4.6.0",
         "lodash.truncate": "^4.4.2",
         "macaddress": "^0.5.3",
-        "markdown-it": "^14.1.0",
+        "markdown-it": "^14.1.1",
         "merge-anything": "^6.0.6",
         "monaco-editor": "^0.51.0",
         "mustache": "^4.0.1",
@@ -1896,7 +1896,8 @@
             "@sentry/browser": "^7.119.2"
         },
         "@atlaskit/editor-common": {
-            "@sentry/browser": "^7.119.2"
+            "@sentry/browser": "^7.119.2",
+            "markdown-it": "^14.1.1"
         },
         "fetch-mock": {
             "path-to-regexp": "^3.2.0"
@@ -1929,6 +1930,12 @@
         },
         "express": {
             "body-parser": "^2.2.1"
+        },
+        "prosemirror-markdown": {
+            "markdown-it": "^14.1.1"
+        },
+        "@atlaskit/editor-markdown-transformer": {
+            "markdown-it": "^14.1.1"
         },
         "jws": "^4.0.1"
     }
