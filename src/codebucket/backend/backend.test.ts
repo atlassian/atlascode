@@ -115,6 +115,7 @@ describe('Backend', () => {
         mockBitbucketApi = {
             repositories: {
                 getPullRequestIdsForCommit: jest.fn(),
+                get: jest.fn(),
             },
         };
 
@@ -357,6 +358,71 @@ describe('Backend', () => {
             mockClientForSite.mockRejectedValue(new Error('API call failed'));
 
             await expect(backend.getPullRequestId('abc123')).rejects.toThrow('API call failed');
+        });
+    });
+
+    describe('findMainBranch', () => {
+        it('should return the repository main branch when available', async () => {
+            mockGetBitbucketRepositories.mockReturnValue([mockWorkspaceRepo]);
+            mockClientForSite.mockResolvedValue(mockBitbucketApi);
+            mockBitbucketApi.repositories.get.mockResolvedValue({
+                mainbranch: 'main',
+            });
+
+            const result = await backend.findMainBranch();
+
+            expect(result).toBe('main');
+            expect(mockClientForSite).toHaveBeenCalledWith(mockWorkspaceRepo.mainSiteRemote.site);
+            expect(mockBitbucketApi.repositories.get).toHaveBeenCalledWith(mockWorkspaceRepo.mainSiteRemote.site);
+        });
+
+        it('should handle null site and return master', async () => {
+            mockGetBitbucketRepositories.mockReturnValue([
+                {
+                    ...mockWorkspaceRepo,
+                    mainSiteRemote: {
+                        ...mockWorkspaceRepo.mainSiteRemote,
+                        site: null,
+                    },
+                },
+            ]);
+
+            const result = await backend.findMainBranch();
+
+            expect(result).toBe('master');
+        });
+
+        it('should return master as fallback when mainbranch is not set', async () => {
+            mockGetBitbucketRepositories.mockReturnValue([mockWorkspaceRepo]);
+            mockClientForSite.mockResolvedValue(mockBitbucketApi);
+            mockBitbucketApi.repositories.get.mockResolvedValue({
+                mainbranch: undefined,
+            });
+
+            const result = await backend.findMainBranch();
+
+            expect(result).toBe('master');
+        });
+
+        it('should return master as fallback when API call fails', async () => {
+            mockGetBitbucketRepositories.mockReturnValue([mockWorkspaceRepo]);
+            mockClientForSite.mockRejectedValue(new Error('API call failed'));
+
+            const result = await backend.findMainBranch();
+
+            expect(result).toBe('master');
+        });
+
+        it('should handle different branch names like develop or release', async () => {
+            mockGetBitbucketRepositories.mockReturnValue([mockWorkspaceRepo]);
+            mockClientForSite.mockResolvedValue(mockBitbucketApi);
+            mockBitbucketApi.repositories.get.mockResolvedValue({
+                mainbranch: 'develop',
+            });
+
+            const result = await backend.findMainBranch();
+
+            expect(result).toBe('develop');
         });
     });
 

@@ -417,6 +417,10 @@ export async function prUrlCopiedEvent(): Promise<TrackEvent> {
     return trackEvent('copied', 'pullRequestUrl');
 }
 
+export async function sourceLinkCopiedEvent(): Promise<TrackEvent> {
+    return trackEvent('copied', 'sourceUrl');
+}
+
 // Misc Track Events
 
 export async function customJQLCreatedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
