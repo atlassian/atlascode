@@ -138,7 +138,11 @@ export async function activate(context: ExtensionContext) {
 }
 
 function activateErrorReporting(): void {
-    if (Container.isDebugging || Container.featureFlagClient.checkGate(Features.EnableErrorTelemetry)) {
+    if (
+        Container.isDebugging ||
+        RovodevStaticConfig.isBBY ||
+        Container.featureFlagClient.checkGate(Features.EnableErrorTelemetry)
+    ) {
         registerAnalyticsClient(Container.analyticsClient);
     } else {
         unregisterErrorReporting();
