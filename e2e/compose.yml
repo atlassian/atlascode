@@ -7,6 +7,7 @@ services:
         command: >
             --https-port 443
             --verbose
+            --max-request-journal-entries 50
             --https-keystore /home/wiremock_ssl_certs/wiremock-mockedteams.p12
         volumes:
             - ./wiremock-mappings/mockedteams:/home/wiremock/mappings
@@ -47,6 +48,9 @@ services:
             - ONLYSERVER
             - TARGET
             - DISABLE_ANALYTICS=1
+            # Enable Atlaskit editor so add-comment E2E uses same path as when bug occurs (sends ADF);
+            # test catches "body must be string" if postComment normalization is removed.
+            - ATLASCODE_FF_OVERRIDES=atlascode-use-new-atlaskit-editor=true
         depends_on:
             - wiremock-mockedteams
             - wiremock-bitbucket
