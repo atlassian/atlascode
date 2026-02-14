@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { State } from 'src/rovo-dev/rovoDevTypes';
-import { RovoDevFeatures } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
 import { DetailedSiteInfo, MinimalIssue } from '../../api/extensionApiTypes';
 import { McpConsentChoice } from '../rovoDevViewMessages';
@@ -40,7 +39,6 @@ export const RovoDevLanding: React.FC<{
     onJiraItemClick: (issue: MinimalIssue<DetailedSiteInfo>) => void;
     onLinkClick: (url: string) => void;
     credentialHints?: CredentialHint[];
-    features?: RovoDevFeatures;
 }> = ({
     currentState,
     isHistoryEmpty,
@@ -53,7 +51,6 @@ export const RovoDevLanding: React.FC<{
     onJiraItemClick,
     onLinkClick,
     credentialHints,
-    features,
 }) => {
     const shouldHideSuggestions = React.useMemo(
         () =>
@@ -99,7 +96,6 @@ export const RovoDevLanding: React.FC<{
                 onOpenFolder={onOpenFolder}
                 onLinkClick={onLinkClick}
                 credentialHints={credentialHints}
-                features={features}
             />
         </div>
     );
