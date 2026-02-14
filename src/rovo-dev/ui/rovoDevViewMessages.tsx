@@ -45,6 +45,7 @@ export const enum RovoDevViewResponseType {
     MessageRendered = 'messageRendered',
     ReportRenderError = 'reportRenderError',
     StartNewSession = 'startNewSession',
+    RestartProcess = 'restartProcess',
     ShowSessionHistory = 'showSessionHistory',
     FetchSavedPrompts = 'fetchSavedPrompts',
 }
@@ -113,5 +114,6 @@ export type RovoDevViewResponse =
           }
       >
     | ReducerAction<RovoDevViewResponseType.StartNewSession>
+    | ReducerAction<RovoDevViewResponseType.RestartProcess>
     | ReducerAction<RovoDevViewResponseType.ShowSessionHistory>
     | ReducerAction<RovoDevViewResponseType.FetchSavedPrompts>;

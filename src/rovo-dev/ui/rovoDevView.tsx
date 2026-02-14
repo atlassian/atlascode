@@ -714,6 +714,12 @@ const RovoDevView: React.FC = () => {
         [retryAfterErrorEnabled],
     );
 
+    const handleRestartProcess = useCallback(() => {
+        postMessage({
+            type: RovoDevViewResponseType.RestartProcess,
+        });
+    }, [postMessage]);
+
     const onChangesGitPushed = useCallback(
         (msg: PullRequestMessage, pullRequestCreated: boolean) => {
             if (totalModifiedFiles.length > 0) {
@@ -1054,6 +1060,7 @@ const RovoDevView: React.FC = () => {
                         checkFileExists,
                         isRetryAfterErrorButtonEnabled,
                         retryPromptAfterError,
+                        onRestartProcess: handleRestartProcess,
                         onOpenLogFile: () => postMessage({ type: RovoDevViewResponseType.OpenRovoDevLogFile }),
                         onError,
                     }}
