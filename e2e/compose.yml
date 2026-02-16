@@ -7,7 +7,6 @@ services:
         command: >
             --https-port 443
             --verbose
-            --max-request-journal-entries 50
             --https-keystore /home/wiremock_ssl_certs/wiremock-mockedteams.p12
         volumes:
             - ./wiremock-mappings/mockedteams:/home/wiremock/mappings

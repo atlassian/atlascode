@@ -60,7 +60,7 @@ export class IssueComments {
      */
     async hasCommentBodyTypeError(): Promise<boolean> {
         const bodyTypeErrorPattern =
-            /Error posting comment|START_OBJECT|Can not deserialize|Cannot deserialize|JsonToken\.START_OBJECT|java\.lang\.String/;
+            /Error posting comment|START_OBJECT|Can not deserialize|Cannot deserialize|JsonToken\.START_OBJECT|java\.lang\.String|Comment body must be a string/;
         const errorEl = this.frame.getByText(bodyTypeErrorPattern);
         return errorEl
             .first()
@@ -70,7 +70,7 @@ export class IssueComments {
 
     async getCommentBodyTypeErrorText(): Promise<string> {
         const bodyTypeErrorPattern =
-            /Error posting comment|START_OBJECT|Can not deserialize|Cannot deserialize|JsonToken\.START_OBJECT|java\.lang\.String/;
+            /Error posting comment|START_OBJECT|Can not deserialize|Cannot deserialize|JsonToken\.START_OBJECT|java\.lang\.String|Comment body must be a string/;
         const errorEl = this.frame.getByText(bodyTypeErrorPattern).first();
         if (await errorEl.isVisible().catch(() => false)) {
             return (await errorEl.textContent()) ?? '';
