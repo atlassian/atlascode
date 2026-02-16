@@ -42,6 +42,12 @@ export async function addComment(page: Page, request: APIRequestContext, type: J
                     'Keep commentBodyToString() in postComment.ts to convert ADF to string before calling the API.',
             );
         }
+        if (!body.includes(COMMENT_TEXT)) {
+            throw new Error(
+                `Comment request body does not contain expected text "${COMMENT_TEXT.slice(0, 40)}...". ` +
+                    'Wrong request in journal? Ensure we read the most recent POST to .../issue/.../comment.',
+            );
+        }
 
         if (await issuePage.comments.hasCommentBodyTypeError()) {
             const errText = await issuePage.comments.getCommentBodyTypeErrorText();

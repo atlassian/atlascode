@@ -91,14 +91,11 @@ export async function getLastCommentPostBody(
         requests?: Array<{ request: { method: string; url?: string; body?: string } }>;
     };
     const requests = data?.requests ?? [];
-    const commentPost = requests
-        .filter(
-            (r) =>
-                r.request?.method === 'POST' &&
-                r.request?.url?.includes('/issue/') &&
-                r.request?.url?.includes('/comment'),
-        )
-        .pop();
+    // Wiremock returns requests most recent first; take the first matching so we get our comment POST.
+    const commentPost = requests.find(
+        (r) =>
+            r.request?.method === 'POST' && r.request?.url?.includes('/issue/') && r.request?.url?.includes('/comment'),
+    );
     if (!commentPost?.request?.body) {
         return null;
     }
