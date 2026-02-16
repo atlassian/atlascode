@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import debounce from 'lodash.debounce';
 import path from 'path';
 import { RovoDevViewResponse } from 'src/rovo-dev/ui/rovoDevViewMessages';
 import { Range, TextEditor, Uri, window, workspace } from 'vscode';
@@ -15,6 +16,14 @@ interface DropResourceBlob {
     languageId: string;
 }
 
+interface FileContextQuickPickItem {
+    label: string;
+    description: string;
+    uri: Uri;
+    absolutePath: string;
+    relativePath: string;
+    name: string;
+}
 export class RovoDevChatContextProvider {
     private _webview: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse> | undefined;
 
@@ -109,16 +118,15 @@ export class RovoDevChatContextProvider {
         }
     }
 
-    private async selectContextItem(): Promise<RovoDevContextItem | undefined> {
-        // Get all workspace files
-        const files = await workspace.findFiles('**/*', '**/node_modules/**');
+    private async fetchFileContextItems(pattern: string, fetchLimit?: number) {
+        const files = await workspace.findFiles(pattern, '**/node_modules/**', fetchLimit);
+
         if (!files.length) {
-            console.log('No files found in workspace.'); // bwieger, look at this more
-            return;
+            console.log('No files found in workspace for pattern:', pattern);
+            return [];
         }
 
-        // Show QuickPick to select a file
-        const items = files.map((uri) => {
+        return files.map((uri) => {
             const workspaceFolder = workspace.getWorkspaceFolder(uri);
             const absolutePath = uri.fsPath;
             const relativePath = workspaceFolder ? path.relative(workspaceFolder.uri.fsPath, uri.fsPath) : uri.fsPath;
@@ -132,12 +140,52 @@ export class RovoDevChatContextProvider {
                 name,
             };
         });
+    }
 
-        const picked = await window.showQuickPick(items, {
-            placeHolder: 'Select a file to add as context',
+    private async selectContextItem(): Promise<RovoDevContextItem | undefined> {
+        const initItems = await this.fetchFileContextItems('**/*', 100);
+
+        if (!initItems.length) {
+            window.showInformationMessage('No files found in workspace to add as context.');
+            return;
+        }
+
+        const contextQuickPick = window.createQuickPick<FileContextQuickPickItem>();
+        contextQuickPick.placeholder = 'Select a file to add to the chat context';
+        contextQuickPick.items = initItems;
+        contextQuickPick.matchOnDescription = true;
+
+        const debouncedFetch = debounce(async (value: string) => {
+            contextQuickPick.busy = true;
+            const filteredItems = await this.fetchFileContextItems(`**/*${value}*`, 100);
+
+            contextQuickPick.items = filteredItems;
+            contextQuickPick.busy = false;
+        }, 300);
+
+        contextQuickPick.onDidChangeValue(async (value) => {
+            if (value === '') {
+                contextQuickPick.items = initItems;
+                return;
+            }
+
+            debouncedFetch(value);
         });
 
-        if (!picked) {
+        contextQuickPick.show();
+
+        const pickedItem = await new Promise<FileContextQuickPickItem | undefined>((resolve) => {
+            contextQuickPick.onDidAccept(() => {
+                resolve(contextQuickPick.selectedItems[0]);
+                contextQuickPick.dispose();
+            });
+            contextQuickPick.onDidHide(() => {
+                resolve(undefined);
+                contextQuickPick.dispose();
+            });
+        });
+
+        if (!pickedItem) {
             return;
         }
 
@@ -145,8 +193,8 @@ export class RovoDevChatContextProvider {
             contextType: 'file',
             isFocus: false,
             file: {
-                name: picked.name,
-                absolutePath: picked.absolutePath,
+                name: pickedItem.name,
+                absolutePath: pickedItem.absolutePath,
             },
             selection: undefined,
             enabled: true,

@@ -23,6 +23,7 @@ interface ChatItemProps {
         checkFileExists: CheckFileExistsFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
+        onRestartProcess: () => void;
         onOpenLogFile: () => void;
         onError: (error: Error, errorMessage: string) => void;
     };
@@ -98,6 +99,7 @@ export const ChatItem = React.memo<ChatItemProps>(
                     msg={block}
                     isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
                     retryAfterError={renderProps.retryPromptAfterError}
+                    onRestartProcess={renderProps.onRestartProcess}
                     onToolPermissionChoice={onToolPermissionChoice}
                     customButton={customButton}
                     onOpenLogFile={renderProps.onOpenLogFile}

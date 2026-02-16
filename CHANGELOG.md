@@ -4,6 +4,7 @@
 ### Features
 
 - Added Draft pull requests
+- Rovo Dev: Added "Restart Process" button to error dialogs when the Rovo Dev process terminates unexpectedly
 
 ### Improvements
 

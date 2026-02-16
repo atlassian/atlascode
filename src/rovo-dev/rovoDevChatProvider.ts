@@ -6,6 +6,7 @@ import { ExtensionApi } from './api/extensionApi';
 import {
     AgentMode,
     RovoDevApiClient,
+    RovoDevApiError,
     RovoDevChatRequest,
     RovoDevChatRequestContext,
     RovoDevChatRequestContextFileEntry,
@@ -49,6 +50,7 @@ export class RovoDevChatProvider {
     private _currentPrompt: RovoDevPrompt | undefined;
     private _rovoDevApiClient: RovoDevApiClient | undefined;
     private _webView: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse> | undefined;
+    private _onUnauthorizedCallback: (() => Promise<void>) | undefined;
 
     private _replayInProgress = false;
     private _lastMessageSentTime: number | undefined;
@@ -105,6 +107,10 @@ export class RovoDevChatProvider {
 
     public setWebview(webView: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse> | undefined) {
         this._webView = webView;
+    }
+
+    public setOnUnauthorizedCallback(callback: (() => Promise<void>) | undefined) {
+        this._onUnauthorizedCallback = callback;
     }
 
     public isReady(): boolean {
@@ -773,6 +779,18 @@ export class RovoDevChatProvider {
                     });
                     Logger.info('Rovo Dev API request aborted by user');
                     return;
+                }
+                // Check if this is a 401 or 403 error indicating expired/invalid credentials
+                // Also check if the stack trace contains "UnauthorizedError"
+                const isUnauthorizedError =
+                    (error instanceof RovoDevApiError && (error.httpStatus === 401 || error.httpStatus === 403)) ||
+                    (error instanceof Error && error.stack?.includes('UnauthorizedError'));
+                if (isUnauthorizedError) {
+                    Logger.info('Detected unauthorized error - triggering login UI');
+                    if (this._onUnauthorizedCallback) {
+                        await this._onUnauthorizedCallback();
+                        return;
+                    }
                 }
                 // the error is retriable only when it happens during the streaming of a 'chat' response
                 await this.processError(error, { isRetriable: sourceApi === 'chat' });
