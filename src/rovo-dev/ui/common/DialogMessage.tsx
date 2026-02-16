@@ -115,7 +115,7 @@ export const DialogMessageItem: React.FC<{
                     {msg.text && (
                         <div style={messageContentStyles}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <MarkedDown value={msg.text} onLinkClick={onLinkClick} />
+                                <MarkedDown value={msg.text ?? ''} onLinkClick={onLinkClick} />
                             </div>
                         </div>
                     )}
