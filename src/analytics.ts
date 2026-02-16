@@ -2,6 +2,7 @@ import { Uri } from 'vscode';
 
 import { ScreenEvent, TrackEvent, UIEvent } from './analytics-node-client/src/types';
 import {
+    AnalyticRequiredFieldInfo,
     CreateIssueExitReason,
     CreateIssueSource,
     CreatePrTerminalSelection,
@@ -319,9 +320,11 @@ export async function createIssueAbandonedEvent(
     site: DetailedSiteInfo,
     exitReason: CreateIssueExitReason,
     filledFields: string[],
-    requiredFieldsFilled: boolean,
+    missedRequiredFields: AnalyticRequiredFieldInfo[],
     hadValidationError: boolean,
     apiError?: unknown,
+    submitAttempt?: number,
+    errorBannerDetails?: string | { message?: string; title?: string } | undefined,
 ): Promise<TrackEvent> {
     const apiErrorMessage = apiError instanceof Error ? apiError.message : apiError ? String(apiError) : undefined;
 
@@ -329,9 +332,11 @@ export async function createIssueAbandonedEvent(
         attributes: {
             exitReason,
             filledFields,
-            requiredFieldsFilled,
+            missedRequiredFields,
             hadValidationError,
             apiErrorMessage,
+            submitAttempt: submitAttempt ?? 0,
+            errorBannerDetails,
         },
     });
 }

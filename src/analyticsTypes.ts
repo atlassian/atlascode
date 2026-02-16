@@ -1,6 +1,8 @@
 // TODO: move this with other analytics stuff into a separate folder
 // not doing it now to prevent too many import changes
 
+import { FieldUI } from '@atlassianlabs/jira-pi-meta-models';
+
 /**
  * Names of the channels used for routing analytics events in UI
  */
@@ -87,3 +89,5 @@ export type CreateIssueSource =
 export type CreateIssueExitReason =
     | 'closed' // user closed the tab without creating issue
     | 'error'; // user left after getting an API error
+
+export type AnalyticRequiredFieldInfo = Pick<FieldUI, 'name' | 'uiType' | 'advanced' | 'valueType' | 'isArray'>;
