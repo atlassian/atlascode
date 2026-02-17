@@ -13,7 +13,7 @@ import { v4 } from 'uuid';
 
 import { DetailedSiteInfo, MinimalIssue } from '../api/extensionApiTypes';
 import { RovodevStaticConfig } from '../api/rovodevStaticConfig';
-import { RovoDevFeatures, RovoDevProviderMessage, RovoDevProviderMessageType } from '../rovoDevWebviewProviderMessages';
+import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../rovoDevWebviewProviderMessages';
 import { RovoDevErrorContext } from './common/common';
 import { FeedbackConfirmationForm } from './feedback-form/FeedbackConfirmationForm';
 import { FeedbackForm, FeedbackType } from './feedback-form/FeedbackForm';
