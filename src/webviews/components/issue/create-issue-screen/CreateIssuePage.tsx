@@ -271,11 +271,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         });
     }
 
-    handleSubmit = async (e: any) => {
-        if (this.state.isLoggedOut) {
-            return { _form: 'You have been logged out. Please close this tab and log in again.' };
-        }
-
+    checkRequiredFields(): Record<string, string> {
         const requiredFields = Object.values(this.state.fields).filter((field) => field.required);
 
         const errs: Record<string, string> = {};
@@ -305,17 +301,29 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                 errs[field.key] = 'EMPTY';
             }
         });
+        return errs;
+    }
 
+    handleSubmitButtonClick = () => {
+        const errs = this.checkRequiredFields();
         if (Object.keys(errs).length > 0) {
             const missingRequiredFields = Object.keys(errs);
             const filledFields = getFilledFieldKeys(this.state.fieldValues);
-
             this.postMessage({
                 action: 'createIssueValidationFailed',
                 missingRequiredFields,
                 filledFields,
             });
+        }
+    };
 
+    handleSubmit = async (e: any) => {
+        if (this.state.isLoggedOut) {
+            return { _form: 'You have been logged out. Please close this tab and log in again.' };
+        }
+
+        const errs = this.checkRequiredFields();
+        if (Object.keys(errs).length > 0) {
             return errs;
         }
 
@@ -516,6 +524,12 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         this.postMessage({ action: 'fetchMediaToken' });
     }
 
+    override componentDidUpdate(_: Readonly<{}>, prevState: Readonly<ViewState>): void {
+        if (prevState.isErrorBannerOpen === false && prevState.isErrorBannerOpen !== this.state.isErrorBannerOpen) {
+            this.postMessage({ action: 'createIssueErrorDisplayed', errorDetails: this.state.errorDetails });
+        }
+    }
+
     public override render() {
         if (!this.state.fieldValues['issuetype']?.id && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refresh' });
@@ -619,6 +633,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                                             this.state.isSomethingLoading &&
                                                             this.state.loadingField === 'submitButton'
                                                         }
+                                                        onClick={this.handleSubmitButtonClick}
                                                     >
                                                         Create
                                                     </CreateIssueButton>
