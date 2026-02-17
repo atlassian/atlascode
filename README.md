@@ -1,6 +1,13 @@
 
 # Atlassian: Jira, Rovo Dev, Bitbucket
 
+```
+    /\_/\  
+   ( o.o ) 
+    > ^ <
+   /|   |\
+  (_|   |_)
+```
 
 Stay in your IDE; don't switch contexts. 
 
