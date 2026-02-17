@@ -1,6 +1,15 @@
 
 # Atlassian: Jira, Rovo Dev, Bitbucket
 
+```
+    ___
+   (o o)
+  (  >  )
+   /   \
+  / | | \
+ /  | |  \
+```
+*Honk! Welcome to Atlassian for VS Code!*
 
 Stay in your IDE; don't switch contexts. 
 
