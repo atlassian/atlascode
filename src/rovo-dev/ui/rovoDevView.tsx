@@ -1097,7 +1097,6 @@ const RovoDevView: React.FC = () => {
                         onToolPermissionChoice={onToolPermissionChoice}
                         onLinkClick={onLinkClick}
                         credentialHints={credentialHints}
-                        features={features}
                     />
                     {!hidePromptBox && (
                         <div className="input-section-container">
