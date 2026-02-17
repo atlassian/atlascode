@@ -52,8 +52,6 @@ export type RovoDevDisabledReason = DisabledState['subState'];
 
 export type RovoDevEntitlementCheckFailedDetail = EntitlementCheckRovoDevHealthcheckResponse['detail'];
 
-export interface RovoDevFeatures {}
-
 export type RovoDevResponseMessageType =
     | RovoDevTextResponse
     | RovoDevToolCallResponse
