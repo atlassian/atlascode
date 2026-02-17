@@ -1892,6 +1892,9 @@
         "@atlaskit/code": {
             "refractor": "^4.6.1"
         },
+        "@atlaskit/teams-client": {
+            "@sentry/browser": "^7.119.2"
+        },        
         "@atlaskit/editor-common": {
             "@sentry/browser": "^7.119.2",
             "markdown-it": "^14.1.1"
