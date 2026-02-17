@@ -91,3 +91,11 @@ export type CreateIssueExitReason =
     | 'error'; // user left after getting an API error
 
 export type AnalyticRequiredFieldInfo = Pick<FieldUI, 'name' | 'uiType' | 'advanced' | 'valueType' | 'isArray'>;
+
+export type CreatePRAttributes = {
+    isDraft: boolean;
+};
+
+export type CreatePRButtonClickedEventAttributes = {
+    isDraft: boolean;
+};

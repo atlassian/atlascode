@@ -5,6 +5,8 @@ import {
     AnalyticRequiredFieldInfo,
     CreateIssueExitReason,
     CreateIssueSource,
+    CreatePRAttributes,
+    CreatePRButtonClickedEventAttributes,
     CreatePrTerminalSelection,
     ErrorProductArea,
     FeedbackSentEvent,
@@ -388,8 +390,10 @@ export async function createPrTerminalLinkDetectedEvent(isNotifEnabled: boolean)
     });
 }
 
-export async function prCreatedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'created', 'pullRequest');
+export async function prCreatedEvent(site: DetailedSiteInfo, attributes: CreatePRAttributes): Promise<TrackEvent> {
+    return instanceTrackEvent(site, 'created', 'pullRequest', {
+        attributes,
+    });
 }
 
 export async function prCommentEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
@@ -655,6 +659,8 @@ export async function focusPullRequestEvent(source: string): Promise<UIEvent> {
 
     return appendUserInfo<UIEvent>(e);
 }
+
+// seems unused, consider removing if not needed anymore
 export async function doneButtonEvent(source: string): Promise<UIEvent> {
     const e = {
         tenantIdType: null,
@@ -665,6 +671,26 @@ export async function doneButtonEvent(source: string): Promise<UIEvent> {
             actionSubject: 'button',
             actionSubjectId: 'doneButton',
             source: source,
+        },
+    };
+
+    return appendUserInfo<UIEvent>(e);
+}
+
+export async function createPullRequestButtonEvent(
+    source: string,
+    attributes: CreatePRButtonClickedEventAttributes,
+): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'createPullRequestButton',
+            source: source,
+            attributes: attributes,
         },
     };
 
