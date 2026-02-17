@@ -27,7 +27,6 @@ export const DisabledMessage: React.FC<{
     credentialHints?: CredentialHint[];
 }> = ({ currentState, onLoginClick, onRovoDevAuthSubmit, onOpenFolder, onLinkClick, onMcpChoice, credentialHints }) => {
     if (currentState.state === 'Disabled' && currentState.subState === 'NeedAuth') {
-        // Always show inline login form (dedicatedRovoDevAuth feature flag removed)
         return (
             <div style={loginFormContainerStyles}>
                 <div style={{ marginBottom: '12px' }}>Sign in to Rovo Dev with an API token</div>
@@ -42,33 +41,18 @@ export const DisabledMessage: React.FC<{
     }
 
     if (currentState.state === 'Disabled' && currentState.subState === 'UnauthorizedAuth') {
-        if (features?.dedicatedRovoDevAuth) {
-            // Show inline login form with expired credentials pre-filled
-            return (
-                <div style={loginFormContainerStyles}>
-                    <div style={{ marginBottom: '12px' }}>
-                        Your API token has expired. Please sign in again with a new API token.
-                    </div>
-                    <RovoDevLoginForm
-                        onSubmit={(host, email, apiToken) => {
-                            onRovoDevAuthSubmit(host, email, apiToken);
-                        }}
-                        credentialHints={credentialHints}
-                    />
-                </div>
-            );
-        }
-
+        // Always show inline login form with expired credentials pre-filled
         return (
-            <div style={messageOuterStyles}>
-                <div>
-                    It looks like the API token you used for authentication has expired.
-                    <br />
-                    Please fix the authentication to continue.
+            <div style={loginFormContainerStyles}>
+                <div style={{ marginBottom: '12px' }}>
+                    Your API token has expired. Please sign in again with a new API token.
                 </div>
-                <button style={{ ...inChatButtonStyles, marginTop: '8px' }} onClick={() => onLoginClick(false)}>
-                    Auth settings
-                </button>
+                <RovoDevLoginForm
+                    onSubmit={(host, email, apiToken) => {
+                        onRovoDevAuthSubmit(host, email, apiToken);
+                    }}
+                    credentialHints={credentialHints}
+                />
             </div>
         );
     }
