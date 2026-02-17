@@ -41,7 +41,6 @@ export const DisabledMessage: React.FC<{
     }
 
     if (currentState.state === 'Disabled' && currentState.subState === 'UnauthorizedAuth') {
-        // Always show inline login form with expired credentials pre-filled
         return (
             <div style={loginFormContainerStyles}>
                 <div style={{ marginBottom: '12px' }}>
