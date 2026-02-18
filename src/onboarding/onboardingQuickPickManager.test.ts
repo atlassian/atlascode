@@ -76,8 +76,12 @@ describe('OnboardingQuickPickManager', () => {
         expect(quickPickMock.totalSteps).toBe(2);
         expect(quickPickMock.activeItems).toEqual([items[0]]);
         expect(quickPickMock.step).toBe(OnboardingStep.Jira);
-        expect(quickPickMock.buttons).toEqual([OnboardingButtons.settings, OnboardingButtons.dismiss]);
-        expect(quickPickMock.placeholder).toBe('Type to search. Select settings for advanced options.');
+        expect(quickPickMock.buttons).toEqual([
+            QuickInputButtons.Back,
+            OnboardingButtons.settings,
+            OnboardingButtons.dismiss,
+        ]);
+        expect(quickPickMock.placeholder).toBe('What would you like to do first');
         expect(quickPickMock.show).toHaveBeenCalled();
     });
 
@@ -91,7 +95,7 @@ describe('OnboardingQuickPickManager', () => {
             OnboardingButtons.settings,
             OnboardingButtons.dismiss,
         ]);
-        expect(quickPickMock.placeholder).toBe('Type to search. Select settings for advanced options.');
+        expect(quickPickMock.placeholder).toBe('What would you like to do first');
         expect(quickPickMock.show).toHaveBeenCalled();
     });
 

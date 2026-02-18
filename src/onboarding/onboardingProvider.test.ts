@@ -86,9 +86,12 @@ jest.mock('../config/configuration', () => ({
 
 jest.mock('./utils', () => ({
     OnboardingStep: {
+        MainMenu: 0,
         Jira: 1,
         Bitbucket: 2,
+        RovoDev: 3,
     },
+    mainMenuQuickPickItems: jest.fn(() => []),
     onboardingQuickPickItems: jest.fn(),
 }));
 
@@ -106,6 +109,16 @@ jest.mock('./onboardingQuickInputManager', () => {
     return {
         default: jest.fn().mockImplementation(() => ({
             start: jest.fn(),
+            hide: jest.fn(),
+        })),
+    };
+});
+
+jest.mock('./rovoDevOnboardingInputManager', () => {
+    return {
+        default: jest.fn().mockImplementation(() => ({
+            start: jest.fn(),
+            hide: jest.fn(),
         })),
     };
 });
@@ -129,16 +142,18 @@ describe('OnboardingProvider', () => {
     it('should initialize with correct objects', () => {
         expect(provider).toBeDefined();
         expect(provider._analyticsClient).toBeDefined();
+        expect(provider._mainMenuQuickPickManager).toBeDefined();
         expect(provider._jiraQuickPickManager).toBeDefined();
         expect(provider._bitbucketQuickPickManager).toBeDefined();
         expect(provider._quickInputManager).toBeDefined();
+        expect(provider._rovoDevInputManager).toBeDefined();
     });
 
-    it('should show Jira onboarding quick pick on start', () => {
+    it('should show main menu onboarding quick pick on start', () => {
         provider.start();
 
         expect(Container.focus).toHaveBeenCalled();
-        expect(provider._jiraQuickPickManager.show).toHaveBeenCalled();
+        expect(provider._mainMenuQuickPickManager.show).toHaveBeenCalled();
     });
 
     it('should handle Jira quick pick accept for cloud', async () => {
