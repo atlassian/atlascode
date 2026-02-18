@@ -38,11 +38,14 @@ class OnboardingQuickPickManager {
     }
 
     private _initialize() {
+        if (!this._quickPick) {
+            return;
+        }
         this._quickPick.onDidAccept(() => {
-            if (!this._quickPick.activeItems || this._quickPick.activeItems.length === 0) {
+            if (!this._quickPick!.activeItems || this._quickPick!.activeItems.length === 0) {
                 return;
             }
-            const selected = this._quickPick.activeItems[0];
+            const selected = this._quickPick!.activeItems[0];
             this._onAccept(selected, this._product);
         });
         this._quickPick.onDidTriggerButton(this._quickPickOnDidTriggerButton.bind(this));
@@ -51,6 +54,9 @@ class OnboardingQuickPickManager {
     }
 
     private _resetItems() {
+        if (!this._quickPick) {
+            return;
+        }
         this._quickPick.ignoreFocusOut = true;
         this._quickPick.items = this._items;
         this._quickPick.totalSteps = 2;
