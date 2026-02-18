@@ -1,8 +1,6 @@
-import { ProductBitbucket } from '../../atlclients/authInfo';
 import { BitbucketContext } from '../../bitbucket/bbContext';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketSite, PaginatedPullRequests, WorkspaceRepo } from '../../bitbucket/model';
-import { Container } from '../../container';
 import { Logger } from '../../logger';
 import { categorizeNetworkError, retryWithBackoff } from '../../util/retry';
 import { PullRequestCreatedMonitor } from './pullRequestCreatedMonitor';
@@ -18,13 +16,6 @@ jest.mock('../../logger', () => ({
     },
 }));
 jest.mock('../../bitbucket/bbLogger');
-jest.mock('../../container', () => ({
-    Container: {
-        siteManager: {
-            productHasAtLeastOneSite: jest.fn(),
-        },
-    },
-}));
 
 const flushPromises = () => new Promise((resolve) => setImmediate(resolve));
 
@@ -62,41 +53,7 @@ describe('PullRequestCreatedMonitor', () => {
 
         (retryWithBackoff as jest.Mock).mockImplementation((operation) => operation());
 
-        // Mock authenticated sites by default
-        (Container.siteManager.productHasAtLeastOneSite as jest.Mock).mockReturnValue(true);
-
         monitor = new PullRequestCreatedMonitor(mockBbContext);
-    });
-
-    describe('authentication check', () => {
-        it('should return early if no authenticated Bitbucket sites', async () => {
-            // Mock no authenticated sites
-            (Container.siteManager.productHasAtLeastOneSite as jest.Mock).mockReturnValue(false);
-
-            monitor.checkForNewActivity();
-            await flushPromises();
-
-            // Should not have tried to get the client
-            expect(clientForSite).not.toHaveBeenCalled();
-            expect(Container.siteManager.productHasAtLeastOneSite).toHaveBeenCalledWith(ProductBitbucket);
-        });
-
-        it('should proceed with activity check when authenticated', async () => {
-            const mockPRData: PaginatedPullRequests = {
-                workspaceRepo: mockRepo,
-                site: mockSite,
-                data: [],
-            };
-
-            mockPullRequestApi.getLatest.mockResolvedValue(mockPRData);
-
-            monitor.checkForNewActivity();
-            await flushPromises();
-
-            // Should have proceeded with the check
-            expect(Container.siteManager.productHasAtLeastOneSite).toHaveBeenCalledWith(ProductBitbucket);
-            expect(clientForSite).toHaveBeenCalledWith(mockSite);
-        });
     });
 
     describe('retry mechanism', () => {

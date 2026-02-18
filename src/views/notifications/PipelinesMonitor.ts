@@ -1,13 +1,11 @@
 import { commands, window } from 'vscode';
 
 import { notificationBannerClickedEvent, notificationChangeEvent } from '../../analytics';
-import { ProductBitbucket } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { WorkspaceRepo } from '../../bitbucket/model';
 import { configuration } from '../../config/configuration';
 import { Commands } from '../../constants';
 import { Container } from '../../container';
-import { Logger } from '../../logger';
 import { Pipeline, PipelineTarget } from '../../pipelines/model';
 import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 import { descriptionForState, generatePipelineTitle, shouldDisplay } from '../pipelines/Helpers';
@@ -23,12 +21,6 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
 
     async checkForNewActivity() {
         if (!Container.config.bitbucket.pipelines.monitorEnabled) {
-            return;
-        }
-
-        // Skip if no authenticated Bitbucket sites
-        if (!Container.siteManager.productHasAtLeastOneSite(ProductBitbucket)) {
-            Logger.debug('Skipping pipelines activity check - no authenticated Bitbucket sites');
             return;
         }
 

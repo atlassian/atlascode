@@ -1,12 +1,10 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-import { ProductBitbucket } from '../../atlclients/authInfo';
 import { BitbucketContext } from '../../bitbucket/bbContext';
 import { BitbucketLogger } from '../../bitbucket/bbLogger';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { Commands } from '../../constants';
-import { Container } from '../../container';
 import { Logger } from '../../logger';
 import { categorizeNetworkError, retryWithBackoff } from '../../util/retry';
 import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
@@ -25,12 +23,6 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
     }
 
     checkForNewActivity() {
-        // Skip if no authenticated Bitbucket sites
-        if (!Container.siteManager.productHasAtLeastOneSite(ProductBitbucket)) {
-            Logger.debug('Skipping pull request activity check - no authenticated Bitbucket sites');
-            return;
-        }
-
         const promises = this._bbCtx.getBitbucketRepositories().map(async (wsRepo) => {
             const site = wsRepo.mainSiteRemote.site;
             if (!site) {

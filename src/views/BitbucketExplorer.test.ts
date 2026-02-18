@@ -97,6 +97,9 @@ describe('BitbucketExplorer', () => {
         (Container as any).siteManager = {
             productHasAtLeastOneSite: jest.fn(),
         };
+        (Container as any).credentialManager = {
+            getAllValidAuthInfo: jest.fn(),
+        };
 
         mockRefreshTimer = {
             dispose: jest.fn(),
@@ -173,16 +176,18 @@ describe('BitbucketExplorer', () => {
             explorer = new TestBitbucketExplorer(mockContext);
         });
 
-        it('should return early if no sites available', async () => {
-            (Container as any).siteManager.productHasAtLeastOneSite.mockReturnValue(false);
+        it('should return early if no authenticated sites available', async () => {
+            (Container as any).credentialManager.getAllValidAuthInfo.mockResolvedValue([]);
 
             await explorer.refresh();
 
-            expect((Container as any).siteManager.productHasAtLeastOneSite).toHaveBeenCalledWith(ProductBitbucket);
+            expect((Container as any).credentialManager.getAllValidAuthInfo).toHaveBeenCalledWith(ProductBitbucket);
+            // Should not call refresh or checkForNewActivity when no authenticated sites
+            expect(mockTreeDataProvider.refresh).not.toHaveBeenCalled();
         });
 
-        it('should refresh tree data provider when available', async () => {
-            (Container as any).siteManager.productHasAtLeastOneSite.mockReturnValue(true);
+        it('should refresh tree data provider when authenticated sites exist', async () => {
+            (Container as any).credentialManager.getAllValidAuthInfo.mockResolvedValue([{ user: { id: 'user1' } }]);
             explorer['treeDataProvider'] = mockTreeDataProvider;
 
             await explorer.refresh();
@@ -191,7 +196,7 @@ describe('BitbucketExplorer', () => {
         });
 
         it('should check for new activity when monitor is available and enabled', async () => {
-            (Container as any).siteManager.productHasAtLeastOneSite.mockReturnValue(true);
+            (Container as any).credentialManager.getAllValidAuthInfo.mockResolvedValue([{ user: { id: 'user1' } }]);
             (configuration as any).get.mockReturnValue(true);
             explorer['monitor'] = mockActivityMonitor;
 
@@ -201,8 +206,18 @@ describe('BitbucketExplorer', () => {
         });
 
         it('should not check for activity when bitbucket is disabled', async () => {
-            (Container as any).siteManager.productHasAtLeastOneSite.mockReturnValue(true);
+            (Container as any).credentialManager.getAllValidAuthInfo.mockResolvedValue([{ user: { id: 'user1' } }]);
             (configuration as any).get.mockReturnValue(false);
+            explorer['monitor'] = mockActivityMonitor;
+
+            await explorer.refresh();
+
+            expect(mockActivityMonitor.checkForNewActivity).not.toHaveBeenCalled();
+        });
+
+        it('should not check for activity when no authenticated sites', async () => {
+            (Container as any).credentialManager.getAllValidAuthInfo.mockResolvedValue([]);
+            (configuration as any).get.mockReturnValue(true);
             explorer['monitor'] = mockActivityMonitor;
 
             await explorer.refresh();

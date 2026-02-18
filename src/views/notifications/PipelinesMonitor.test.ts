@@ -1,6 +1,5 @@
 import { commands, window } from 'vscode';
 
-import { ProductBitbucket } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketSite, WorkspaceRepo } from '../../bitbucket/model';
 import { configuration } from '../../config/configuration';
@@ -12,25 +11,14 @@ import { PipelinesMonitor } from './PipelinesMonitor';
 
 // Mock the vscode APIs we're using
 jest.mock('../../bitbucket/bbUtils');
+jest.mock('../../container');
 jest.mock('../pipelines/Helpers');
 jest.mock('../../config/configuration');
-jest.mock('../../logger', () => ({
-    Logger: class {
-        static debug = jest.fn();
-        static error = jest.fn();
-        static info = jest.fn();
-        static warn = jest.fn();
-    },
-}));
 jest.mock('../../container', () => ({
     Container: {
         analyticsClient: {
             sendUIEvent: jest.fn(),
             sendTrackEvent: jest.fn(),
-        },
-        siteManager: {
-            productHasAtLeastOneSite: jest.fn(),
-            getFirstAAID: jest.fn(),
         },
     },
 }));
@@ -74,9 +62,6 @@ describe('PipelinesMonitor', () => {
             },
         };
 
-        // Mock authenticated sites by default
-        (Container.siteManager.productHasAtLeastOneSite as jest.Mock).mockReturnValue(true);
-
         // Create the monitor with our mock repo
         monitor = new PipelinesMonitor([mockRepo]);
     });
@@ -90,17 +75,6 @@ describe('PipelinesMonitor', () => {
 
             // Should not have tried to get the client
             expect(clientForSite).not.toHaveBeenCalled();
-        });
-
-        it('should return early if no authenticated Bitbucket sites', async () => {
-            // Mock no authenticated sites
-            (Container.siteManager.productHasAtLeastOneSite as jest.Mock).mockReturnValue(false);
-
-            await monitor.checkForNewActivity();
-
-            // Should not have tried to get the client
-            expect(clientForSite).not.toHaveBeenCalled();
-            expect(Container.siteManager.productHasAtLeastOneSite).toHaveBeenCalledWith(ProductBitbucket);
         });
 
         it('should return early if site is undefined', async () => {
