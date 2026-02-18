@@ -85,6 +85,7 @@ export enum OnboardingStep {
     MainMenu = 0,
     Jira = 1,
     Bitbucket = 2,
+    RovoDev = 3,
 }
 
 export enum OnboardingInputBoxStep {

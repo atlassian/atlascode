@@ -10,6 +10,7 @@ import { Container } from '../container';
 import { EXTENSION_URL } from '../uriHandler/atlascodeUriHandler';
 import OnboardingQuickInputManager from './onboardingQuickInputManager';
 import OnboardingQuickPickManager from './onboardingQuickPickManager';
+import RovoDevOnboardingInputManager from './rovoDevOnboardingInputManager';
 import {
     mainMenuQuickPickItems,
     OnboardingInputBoxStep,
@@ -28,6 +29,7 @@ class OnboardingProvider {
     private _bitbucketQuickPickManager: OnboardingQuickPickManager;
 
     private _quickInputManager: OnboardingQuickInputManager;
+    private _rovoDevInputManager: RovoDevOnboardingInputManager;
 
     constructor() {
         this._analyticsClient = Container.analyticsClient;
@@ -37,6 +39,11 @@ class OnboardingProvider {
             this._handleNext.bind(this),
             this._handleError.bind(this),
             this._handleServerLogin.bind(this),
+        );
+
+        this._rovoDevInputManager = new RovoDevOnboardingInputManager(
+            () => this._handleBack(OnboardingStep.RovoDev),
+            (token, siteUrl) => this._onRovoTokenSubmit(token, siteUrl),
         );
 
         this._mainMenuQuickPickManager = new OnboardingQuickPickManager(
@@ -66,6 +73,10 @@ class OnboardingProvider {
         );
     }
 
+    private _onRovoTokenSubmit(_token: string, _siteUrl?: string) {
+        this.show(OnboardingStep.MainMenu);
+    }
+
     // --- Handle Main Menu Accept ---
     private _onMainMenuAccept(item: OnboardingQuickPickItem) {
         const onboardingId = item.onboardingId;
@@ -74,7 +85,7 @@ class OnboardingProvider {
         }
         switch (onboardingId) {
             case 'onboarding:rovo':
-                // Rovo Dev AI flow - to be implemented later
+                this.show(OnboardingStep.RovoDev);
                 break;
             case 'onboarding:jira':
                 this.show(OnboardingStep.Jira);
@@ -85,6 +96,11 @@ class OnboardingProvider {
             default:
                 break;
         }
+    }
+
+    private _showRovoDevTokenSetup() {
+        this._mainMenuQuickPickManager.hide();
+        this._rovoDevInputManager.start();
     }
 
     // --- Handle Quick Pick Accept ---
@@ -146,6 +162,8 @@ class OnboardingProvider {
             this._jiraQuickPickManager.show();
         } else if (step === OnboardingStep.Bitbucket) {
             this._bitbucketQuickPickManager.show();
+        } else if (step === OnboardingStep.RovoDev) {
+            this._showRovoDevTokenSetup();
         }
     }
 
@@ -156,6 +174,8 @@ class OnboardingProvider {
             this._jiraQuickPickManager.hide();
         } else if (step === OnboardingStep.Bitbucket) {
             this._bitbucketQuickPickManager.hide();
+        } else if (step === OnboardingStep.RovoDev) {
+            this._rovoDevInputManager.hide();
         }
     }
 
