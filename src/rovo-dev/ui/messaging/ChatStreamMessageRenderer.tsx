@@ -17,6 +17,7 @@ interface ChatStreamMessageRendererProps {
         checkFileExists: CheckFileExistsFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
+        onRestartProcess: () => void;
         onOpenLogFile: () => void;
         onError: (error: Error, errorMessage: string) => void;
     };

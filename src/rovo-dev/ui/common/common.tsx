@@ -45,7 +45,7 @@ export const MarkedDown: React.FC<{ value: string; onLinkClick: (href: string) =
     onLinkClick,
 }) => {
     const spanRef = React.useRef<HTMLSpanElement>(null);
-    const html = React.useMemo(() => mdParser.render(value), [value]);
+    const html = React.useMemo(() => mdParser.render(value ?? ''), [value]);
 
     React.useEffect(() => {
         if (!spanRef.current) {

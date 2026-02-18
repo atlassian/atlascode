@@ -268,7 +268,7 @@ export class Container {
 
         const sentryConfig: SentryConfig = {
             enabled: SentryConfigs.enabled === 'true',
-            featureFlagEnabled: this.featureFlagClient.checkGate(Features.SentryLogging),
+            featureFlagEnabled: RovodevStaticConfig.isBBY || this.featureFlagClient.checkGate(Features.SentryLogging),
             dsn: SentryConfigs.dsn,
             environment: SentryConfigs.environment || 'development',
             sampleRate: SentryConfigs.sampleRate || 1.0,

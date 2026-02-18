@@ -559,6 +559,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await this.executeNewSession();
                         break;
 
+                    case RovoDevViewResponseType.RestartProcess:
+                        await this.executeRestartProcess();
+                        break;
+
                     case RovoDevViewResponseType.MessageRendered:
                         this._chatProvider.signalMessageRendered(e.promptId);
                         break;

@@ -100,4 +100,28 @@ describe('ToolReturnParsedItem', () => {
         // No icon should be rendered
         expect(container.querySelector('svg')).toBeNull();
     });
+
+    test('handles null content without crashing', () => {
+        const msg: ToolReturnParseResult = {
+            content: null as any,
+            type: 'modify',
+            filePath: '/path/to/file.ts',
+        };
+
+        expect(() => {
+            render(<ToolReturnParsedItem msg={msg} openFile={mockOpenFile} onLinkClick={mockOnLinkClick} />);
+        }).not.toThrow();
+    });
+
+    test('handles undefined content without crashing', () => {
+        const msg: ToolReturnParseResult = {
+            content: undefined as any,
+            type: 'open',
+            filePath: '/path/to/file.ts',
+        };
+
+        expect(() => {
+            render(<ToolReturnParsedItem msg={msg} openFile={mockOpenFile} onLinkClick={mockOnLinkClick} />);
+        }).not.toThrow();
+    });
 });

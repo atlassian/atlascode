@@ -48,4 +48,42 @@ describe('ChatMessageItem', () => {
         );
         expect(screen.getByText('Bold text')).toBeTruthy();
     });
+
+    it('handles null content without crashing', () => {
+        const rovoDevMessage = {
+            event_kind: 'text' as const,
+            content: null as any,
+            index: 0,
+        };
+
+        expect(() => {
+            render(
+                <ChatMessageItem
+                    msg={rovoDevMessage}
+                    openFile={jest.fn()}
+                    openJira={jest.fn()}
+                    onLinkClick={jest.fn()}
+                />,
+            );
+        }).not.toThrow();
+    });
+
+    it('handles undefined content without crashing', () => {
+        const rovoDevMessage = {
+            event_kind: 'text' as const,
+            content: undefined as any,
+            index: 0,
+        };
+
+        expect(() => {
+            render(
+                <ChatMessageItem
+                    msg={rovoDevMessage}
+                    openFile={jest.fn()}
+                    openJira={jest.fn()}
+                    onLinkClick={jest.fn()}
+                />,
+            );
+        }).not.toThrow();
+    });
 });
