@@ -1,8 +1,11 @@
-import { commands, InputBox, QuickInputButton, QuickInputButtons, window } from 'vscode';
+import { commands, env, InputBox, QuickInputButton, QuickInputButtons, Uri, window } from 'vscode';
 
 import { Commands } from '../constants';
 import { isValidUrl } from '../webviews/components/fieldValidators';
 import { OnboardingButtons } from './utils';
+
+const TOKEN_URL =
+    'https://id.atlassian.com/manage-profile/security/api-tokens?autofillToken&expiryDays=max&appId=rovodev&selectedScopes=all';
 
 class RovoDevOnboardingInputManager {
     private _tokenInput: InputBox;
@@ -21,7 +24,12 @@ class RovoDevOnboardingInputManager {
         this._siteUrlInput = window.createInputBox();
 
         this._tokenInput.ignoreFocusOut = true;
-        this._tokenInput.buttons = [QuickInputButtons.Back, OnboardingButtons.settings, OnboardingButtons.dismiss];
+        this._tokenInput.buttons = [
+            QuickInputButtons.Back,
+            OnboardingButtons.createApiToken,
+            OnboardingButtons.settings,
+            OnboardingButtons.dismiss,
+        ];
         this._tokenInput.onDidAccept(() => this._onTokenAccept());
         this._tokenInput.onDidTriggerButton((e) => this._onTokenButton(e));
         this._tokenInput.onDidHide(() => {
@@ -52,8 +60,7 @@ class RovoDevOnboardingInputManager {
         this._tokenInput.validationMessage = undefined;
         this._tokenInput.title = 'Setup Atlascode';
         this._tokenInput.placeholder = 'Enter your token';
-        this._tokenInput.prompt =
-            'Create a token at atlassian.token.com to get the full power of Atlassian complete with Rovo Dev AI coding capabilities and MCP connections.';
+        this._tokenInput.prompt = `Create a token at [id.atlassian.com](${TOKEN_URL}) to get the full power of Atlassian complete with Rovo Dev AI coding capabilities and MCP connections.`;
         this._tokenInput.password = false;
         this._tokenInput.show();
     }
@@ -100,6 +107,8 @@ class RovoDevOnboardingInputManager {
             this._tokenInput.hide();
             this._tokenValue = '';
             this._onBack();
+        } else if (e === OnboardingButtons.createApiToken) {
+            env.openExternal(Uri.parse(TOKEN_URL));
         } else if (e === OnboardingButtons.settings) {
             this._tokenInput.hide();
             this._tokenValue = '';
