@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## Unreleased
+
+### Bug Fixes
+
+- Fixed source repository selection in PR creation UI for forked repositories - selecting a different remote in the dropdown now correctly uses that remote's repository information in the API call
+
 ## What's new in 4.0.20
 ### Features
 
