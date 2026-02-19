@@ -58,7 +58,8 @@ export class RovoDevJiraItemsProvider extends Disposable {
         this.stop();
 
         if (this.jiraSiteHostname && !this.pollTimer) {
-            this.checkForIssues();
+            // Schedule first check after 60 seconds instead of immediately
+            this.pollTimer = setTimeout(() => this.checkForIssues(), 60000);
         }
     }
 
@@ -85,8 +86,8 @@ export class RovoDevJiraItemsProvider extends Disposable {
             this.pollTimer = setTimeout(() => this.checkForIssues(), 60000);
             this._onNewJiraItems.fire(filteredIssues.slice(0, 3));
         } catch (error) {
-            // If fetching work items fails (e.g., due to scoped API token limitations),
-            // fire an empty array to hide the entire Jira work items section
+            // If fetching work items fails, fire an empty array to hide the section
+            // Don't schedule another poll - ClientManager tracks failed sites
             Logger.error(error, 'Failed to fetch Jira work items:' + error.message);
             this._onNewJiraItems.fire([]);
         }
