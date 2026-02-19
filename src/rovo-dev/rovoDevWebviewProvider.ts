@@ -1412,6 +1412,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     // timeout defaulted to 1 minute.
     // yes, 1 minute is huge, but Rovo Dev has been acting weird with extremely delayed start-ups recently.
     private async initializeWithHealthcheck(timeout = 60000) {
+        // Suppress error logging during polling to avoid spam
+        if (this._rovoDevApiClient) {
+            this._rovoDevApiClient.suppressErrorLogging = true;
+        }
+
         const healthcheckResult = await safeWaitFor({
             check: () => this.executeHealthcheckInfo(),
             condition: (response) =>
@@ -1423,6 +1428,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             interval: 500,
             abortIf: () => !this.rovoDevApiClient,
         });
+
+        // Re-enable error logging after polling completes
+        if (this._rovoDevApiClient) {
+            this._rovoDevApiClient.suppressErrorLogging = false;
+        }
 
         const webView = this._webView!;
         const rovoDevClient = this._rovoDevApiClient;

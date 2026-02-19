@@ -51,6 +51,8 @@ export class RovoDevApiClient {
         return this._baseApiUrl;
     }
 
+    public suppressErrorLogging: boolean = false;
+
     /** Constructs a new instance for the Rovo Dev API client.
      * @param {string} hostnameOrIp The hostname or IP address for the Rovo Dev service.
      * @param {number} port The http port for the Rovo Dev service.
@@ -103,7 +105,9 @@ export class RovoDevApiClient {
         } catch (err) {
             const reason = err.cause?.code || err.message || err;
             const error = new RovoDevApiError(`Failed to fetch '${restApi} API: ${reason}'`, 0, undefined);
-            RovoDevTelemetryProvider.logError(error, String(reason));
+            if (!this.suppressErrorLogging) {
+                RovoDevTelemetryProvider.logError(error, String(reason));
+            }
             throw error;
         }
 
@@ -112,7 +116,9 @@ export class RovoDevApiClient {
         } else {
             const message = `Failed to fetch '${restApi} API: HTTP ${response.status}'`;
             const error = new RovoDevApiError(message, response.status, response);
-            RovoDevTelemetryProvider.logError(error, message);
+            if (!this.suppressErrorLogging) {
+                RovoDevTelemetryProvider.logError(error, message);
+            }
             throw error;
         }
     }
