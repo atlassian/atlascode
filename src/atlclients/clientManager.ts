@@ -161,11 +161,12 @@ export class ClientManager implements Disposable {
     public async jiraClient(site: DetailedSiteInfo): Promise<JiraClient<DetailedSiteInfo>> {
         const tag = Math.floor(Math.random() * 1000);
 
-        // If this site has failed before, don't retry
+        // If this site has failed before, don't retry - silently reject to avoid spam
         const siteKey = this.keyForSite(site);
         if (this._failedSites.has(siteKey)) {
             Logger.debug(`Skipping jiraClient for ${site.host} - previously failed`);
-            throw new Error(`Unable to connect to ${site.product.name}. Please sign in again to continue.`);
+            // Return rejected promise without logging error - caller's catch block will handle it
+            return Promise.reject(new Error(`Site previously failed authentication`));
         }
 
         let newClient: JiraClient<DetailedSiteInfo> | undefined = undefined;

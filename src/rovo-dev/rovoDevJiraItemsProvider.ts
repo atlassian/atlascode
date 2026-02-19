@@ -87,8 +87,11 @@ export class RovoDevJiraItemsProvider extends Disposable {
             this._onNewJiraItems.fire(filteredIssues.slice(0, 3));
         } catch (error) {
             // If fetching work items fails, fire an empty array to hide the section
-            // Don't schedule another poll - ClientManager tracks failed sites
-            Logger.error(error, 'Failed to fetch Jira work items:' + error.message);
+            // Don't schedule another poll - ClientManager tracks failed sites and will prevent retries
+            // Only log if it's not a "previously failed" error to avoid spam
+            if (error.message !== 'Site previously failed authentication') {
+                Logger.error(error, 'Failed to fetch Jira work items: ' + error.message);
+            }
             this._onNewJiraItems.fire([]);
         }
     }
