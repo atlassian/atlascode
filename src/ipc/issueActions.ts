@@ -273,6 +273,11 @@ export interface CreateIssueValidationFailedAction extends Action {
     filledFields: string[];
 }
 
+export interface CreateIssueErrorDisplayedAction extends Action {
+    action: 'createIssueErrorDisplayed';
+    errorDetails: string | { message?: string; title?: string } | undefined;
+}
+
 export function isGetImage(a: Action): a is GetImageAction {
     return (<GetImageAction>a).action === 'getImage';
 }
@@ -467,5 +472,11 @@ export function isCreateIssueValidationFailed(a: Action): a is CreateIssueValida
         a &&
         a.action === 'createIssueValidationFailed' &&
         (<CreateIssueValidationFailedAction>a).missingRequiredFields !== undefined
+    );
+}
+
+export function isCreateIssueErrorDisplayed(a: Action): a is CreateIssueErrorDisplayedAction {
+    return (
+        a && a.action === 'createIssueErrorDisplayed' && (<CreateIssueErrorDisplayedAction>a).errorDetails !== undefined
     );
 }

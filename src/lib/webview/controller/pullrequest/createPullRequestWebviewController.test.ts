@@ -564,6 +564,7 @@ describe('CreatePullRequestWebviewController', () => {
                 });
                 expect(mockAnalytics.firePrCreatedEvent).toHaveBeenCalledWith(
                     mockWorkspaceRepo.mainSiteRemote.site!.details,
+                    { isDraft: false },
                 );
             });
 

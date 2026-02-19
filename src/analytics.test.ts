@@ -369,7 +369,7 @@ describe('analytics', () => {
         });
 
         it('should create prCreatedEvent with site information', async () => {
-            const event = await analytics.prCreatedEvent(mockSite as any);
+            const event = await analytics.prCreatedEvent(mockSite as any, { isDraft: false });
 
             expect(event.trackEvent.action).toEqual('created');
             expect(event.trackEvent.actionSubject).toEqual('pullRequest');

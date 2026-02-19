@@ -5,6 +5,7 @@ import {
     authenticateButtonEvent,
     authenticatedEvent,
     bbIssuesPaginationEvent,
+    createPullRequestButtonEvent,
     customJQLCreatedEvent,
     deepLinkEvent,
     DeepLinkEventErrorType,
@@ -55,7 +56,13 @@ import {
     viewScreenEvent,
 } from './analytics';
 import { AnalyticsClient } from './analytics-node-client/src/client.min.js';
-import { CreateIssueSource, FeedbackSentEvent, UIErrorInfo } from './analyticsTypes';
+import {
+    CreateIssueSource,
+    CreatePRAttributes,
+    CreatePRButtonClickedEventAttributes,
+    FeedbackSentEvent,
+    UIErrorInfo,
+} from './analyticsTypes';
 import { DetailedSiteInfo, Product, SiteInfo } from './atlclients/authInfo';
 import { IssueSuggestionSettings } from './config/model';
 import { AnalyticsApi } from './lib/analyticsApi';
@@ -187,8 +194,8 @@ export class VSCAnalyticsApi implements AnalyticsApi {
         });
     }
 
-    public async firePrCreatedEvent(site: DetailedSiteInfo): Promise<void> {
-        return prCreatedEvent(site).then((e) => {
+    public async firePrCreatedEvent(site: DetailedSiteInfo, attributes: CreatePRAttributes): Promise<void> {
+        return prCreatedEvent(site, attributes).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }
@@ -297,6 +304,15 @@ export class VSCAnalyticsApi implements AnalyticsApi {
 
     public async fireDoneButtonEvent(source: string): Promise<void> {
         return doneButtonEvent(source).then((e) => {
+            this._analyticsClient.sendUIEvent(e);
+        });
+    }
+
+    public async fireCreatePullRequestButtonClickedEvent(
+        source: string,
+        attributes: CreatePRButtonClickedEventAttributes,
+    ): Promise<void> {
+        return createPullRequestButtonEvent(source, attributes).then((e) => {
             this._analyticsClient.sendUIEvent(e);
         });
     }
