@@ -767,5 +767,105 @@ describe('VSCCreatePullRequestActionApi', () => {
 
             expect(mockScm.push).not.toHaveBeenCalled();
         });
+
+        it('should use correct source site when sourceSiteRemote differs from mainSiteRemote (Bitbucket Cloud)', async () => {
+            // Setup: Create a fork scenario with origin (fork) and upstream (parent) on Bitbucket Cloud
+            const forkSiteRemote = {
+                site: {
+                    details: {
+                        isCloud: true,
+                        baseApiUrl: 'https://api.bitbucket.org',
+                    } as DetailedSiteInfo,
+                    ownerSlug: 'forkowner',
+                    repoSlug: 'forkrepo',
+                } as BitbucketSite,
+                remote: {
+                    name: 'origin',
+                    isReadOnly: false,
+                },
+            };
+
+            const dataWithFork = {
+                ...mockCreateData,
+                sourceSiteRemote: forkSiteRemote,
+                sourceRemoteName: 'origin',
+            };
+
+            mockClient.pullrequests.create.mockResolvedValue(mockPRResponse);
+
+            await api.create(dataWithFork);
+
+            // Verify the PR was created with the fork's owner/repo as the source
+            // This ensures Cloud's source.repository.full_name is set correctly
+            expect(mockClient.pullrequests.create).toHaveBeenCalledWith(
+                mockWorkspaceRepo.mainSiteRemote.site,
+                mockWorkspaceRepo,
+                expect.objectContaining({
+                    sourceBranchName: 'feature/branch',
+                    sourceSite: forkSiteRemote.site,
+                }),
+            );
+        });
+
+        it('should use correct source site when sourceSiteRemote differs from mainSiteRemote (Bitbucket Server)', async () => {
+            // Setup: Create a fork scenario with origin (fork) and upstream (parent) on Bitbucket Server
+            const forkSiteRemote = {
+                site: {
+                    details: {
+                        isCloud: false,
+                        baseApiUrl: 'https://bitbucket.company.com',
+                    } as DetailedSiteInfo,
+                    ownerSlug: 'FORKPROJECT',
+                    repoSlug: 'forkrepo',
+                } as BitbucketSite,
+                remote: {
+                    name: 'origin',
+                    isReadOnly: false,
+                },
+            };
+
+            const upstreamSiteRemote = {
+                site: {
+                    details: {
+                        isCloud: false,
+                        baseApiUrl: 'https://bitbucket.company.com',
+                    } as DetailedSiteInfo,
+                    ownerSlug: 'PARENTPROJECT',
+                    repoSlug: 'parentrepo',
+                } as BitbucketSite,
+                remote: {
+                    name: 'upstream',
+                    isReadOnly: false,
+                },
+            };
+
+            const serverMockWorkspaceRepo = {
+                ...mockWorkspaceRepo,
+                mainSiteRemote: upstreamSiteRemote,
+            };
+
+            const dataWithServerFork = {
+                ...mockCreateData,
+                workspaceRepo: serverMockWorkspaceRepo,
+                sourceSiteRemote: forkSiteRemote,
+                sourceRemoteName: 'origin',
+                destinationBranch: { type: 0, name: 'upstream/main', remote: 'upstream' } as Branch,
+            };
+
+            mockClient.pullrequests.create.mockResolvedValue(mockPRResponse);
+
+            await api.create(dataWithServerFork);
+
+            // Verify the PR was created with the fork's project/repo as the source
+            // This ensures Server's fromRef.repository with project.key and slug is set correctly
+            expect(mockClient.pullrequests.create).toHaveBeenCalledWith(
+                upstreamSiteRemote.site,
+                serverMockWorkspaceRepo,
+                expect.objectContaining({
+                    sourceBranchName: 'feature/branch',
+                    sourceSite: forkSiteRemote.site,
+                }),
+            );
+        });
     });
 });
