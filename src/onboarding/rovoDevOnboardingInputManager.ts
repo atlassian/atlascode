@@ -7,21 +7,29 @@ import { OnboardingButtons } from './utils';
 const TOKEN_URL =
     'https://id.atlassian.com/manage-profile/security/api-tokens?autofillToken&expiryDays=max&appId=rovodev&selectedScopes=all';
 
+export type RovoDevOnboardingSubmitArgs = { token: string; siteUrl: string; email: string };
+
 class RovoDevOnboardingInputManager {
     private _tokenInput: InputBox;
     private _siteUrlInput: InputBox;
+    private _emailInput: InputBox;
     private _tokenValue: string = '';
+    private _emailValue: string = '';
+    private _siteUrlValue: string = '';
+    private _transitioningToEmail: boolean = false;
     private _transitioningToSiteUrl: boolean = false;
     private _transitioningToToken: boolean = false;
+    private _submitting: boolean = false;
     private _onBack: () => void;
-    private _onSubmit: (token: string, siteUrl: string) => void;
+    private _onSubmit: (args: RovoDevOnboardingSubmitArgs) => void;
 
-    constructor(onBack: () => void, onSubmit: (token: string, siteUrl: string) => void) {
+    constructor(onBack: () => void, onSubmit: (args: RovoDevOnboardingSubmitArgs) => void) {
         this._onBack = onBack;
         this._onSubmit = onSubmit;
 
         this._tokenInput = window.createInputBox();
         this._siteUrlInput = window.createInputBox();
+        this._emailInput = window.createInputBox();
 
         this._tokenInput.ignoreFocusOut = true;
         this._tokenInput.buttons = [
@@ -33,29 +41,51 @@ class RovoDevOnboardingInputManager {
         this._tokenInput.onDidAccept(() => this._onTokenAccept());
         this._tokenInput.onDidTriggerButton((e) => this._onTokenButton(e));
         this._tokenInput.onDidHide(() => {
-            if (!this._transitioningToSiteUrl) {
+            if (!this._transitioningToEmail) {
+                this._onBack();
+            }
+            this._transitioningToEmail = false;
+        });
+
+        this._emailInput.ignoreFocusOut = true;
+        this._emailInput.totalSteps = 3;
+        this._emailInput.step = 2;
+        this._emailInput.buttons = [QuickInputButtons.Back, OnboardingButtons.settings, OnboardingButtons.dismiss];
+        this._emailInput.onDidAccept(() => this._onEmailAccept());
+        this._emailInput.onDidTriggerButton((e) => this._onEmailButton(e));
+        this._emailInput.onDidHide(() => {
+            if (!this._transitioningToSiteUrl && !this._transitioningToToken) {
+                this._tokenValue = '';
+                this._emailValue = '';
+                this._siteUrlValue = '';
                 this._onBack();
             }
             this._transitioningToSiteUrl = false;
+            this._transitioningToToken = false;
         });
 
         this._siteUrlInput.ignoreFocusOut = true;
-        this._siteUrlInput.totalSteps = 2;
-        this._siteUrlInput.step = 2;
+        this._siteUrlInput.totalSteps = 3;
+        this._siteUrlInput.step = 3;
         this._siteUrlInput.buttons = [QuickInputButtons.Back, OnboardingButtons.settings, OnboardingButtons.dismiss];
         this._siteUrlInput.onDidAccept(() => this._onSiteUrlAccept());
         this._siteUrlInput.onDidTriggerButton((e) => this._onSiteUrlButton(e));
         this._siteUrlInput.onDidHide(() => {
-            if (!this._transitioningToToken) {
+            if (!this._transitioningToEmail && !this._submitting) {
                 this._tokenValue = '';
+                this._emailValue = '';
+                this._siteUrlValue = '';
                 this._onBack();
             }
-            this._transitioningToToken = false;
+            this._transitioningToEmail = false;
+            this._submitting = false;
         });
     }
 
     start() {
         this._tokenValue = '';
+        this._emailValue = '';
+        this._siteUrlValue = '';
         this._tokenInput.value = '';
         this._tokenInput.validationMessage = undefined;
         this._tokenInput.title = 'Setup Atlascode';
@@ -67,20 +97,38 @@ class RovoDevOnboardingInputManager {
 
     hide() {
         this._tokenInput.hide();
+        this._emailInput.hide();
         this._siteUrlInput.hide();
         this._tokenValue = '';
+        this._emailValue = '';
+        this._siteUrlValue = '';
     }
 
     private _showTokenStep() {
+        this._emailInput.hide();
         this._siteUrlInput.hide();
+        this._emailInput.value = '';
         this._siteUrlInput.value = '';
         this._tokenInput.value = this._tokenValue;
         this._tokenInput.show();
     }
 
+    private _showEmailStep() {
+        this._tokenInput.hide();
+        this._siteUrlInput.hide();
+        this._emailInput.value = this._emailValue;
+        this._emailInput.validationMessage = undefined;
+        this._emailInput.title = 'Setup Atlascode';
+        this._emailInput.placeholder = 'Enter your email';
+        this._emailInput.prompt = 'Enter the email address for your Atlassian account.';
+        this._emailInput.password = false;
+        this._emailInput.show();
+    }
+
     private _showSiteUrlStep() {
         this._tokenInput.hide();
-        this._siteUrlInput.value = '';
+        this._emailInput.hide();
+        this._siteUrlInput.value = this._siteUrlValue;
         this._siteUrlInput.validationMessage = undefined;
         this._siteUrlInput.title = 'Setup Atlascode';
         this._siteUrlInput.placeholder = 'Enter your site URL';
@@ -97,9 +145,9 @@ class RovoDevOnboardingInputManager {
             return;
         }
         this._tokenValue = token;
-        this._transitioningToSiteUrl = true;
+        this._transitioningToEmail = true;
         this._tokenInput.hide();
-        this._showSiteUrlStep();
+        this._showEmailStep();
     }
 
     private _onTokenButton(e: QuickInputButton) {
@@ -117,28 +165,76 @@ class RovoDevOnboardingInputManager {
         }
     }
 
+    private _onEmailAccept() {
+        const email = this._emailInput.value?.trim();
+        if (!email) {
+            this._emailInput.validationMessage = 'Please enter your email';
+            return;
+        }
+        this._emailValue = email;
+        this._transitioningToSiteUrl = true;
+        this._emailInput.hide();
+        this._showSiteUrlStep();
+    }
+
+    private _onEmailButton(e: QuickInputButton) {
+        if (e === QuickInputButtons.Back) {
+            this._transitioningToToken = true;
+            this._emailInput.hide();
+            this._showTokenStep();
+        } else if (e === OnboardingButtons.dismiss || e === OnboardingButtons.settings) {
+            this._emailInput.hide();
+            this._tokenValue = '';
+            this._emailValue = '';
+            this._siteUrlValue = '';
+            if (e === OnboardingButtons.settings) {
+                commands.executeCommand(Commands.OpenNativeSettings);
+            }
+            this._onBack();
+        }
+    }
+
     private _onSiteUrlAccept() {
         if (!isValidUrl(this._siteUrlInput.value)) {
             this._siteUrlInput.validationMessage = 'Please enter a valid URL';
             return;
         }
         const siteUrl = this._siteUrlInput.value?.trim() ?? '';
-        this._siteUrlInput.hide();
-        if (this._tokenValue) {
-            this._onSubmit(this._tokenValue, siteUrl);
+        const normalized = siteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+        if (!normalized.endsWith('.atlassian.net')) {
+            this._siteUrlInput.validationMessage = 'Site must be an Atlassian Cloud URL (*.atlassian.net)';
+            return;
+        }
+        this._siteUrlValue = normalized;
+        if (this._tokenValue && this._emailValue) {
+            this._submitting = true;
+            this._siteUrlInput.hide();
+            this._onSubmit({
+                token: this._tokenValue,
+                siteUrl: this._siteUrlValue,
+                email: this._emailValue,
+            });
+            this._tokenValue = '';
+            this._emailValue = '';
+            this._siteUrlValue = '';
+            return;
         }
         this._tokenValue = '';
+        this._emailValue = '';
+        this._siteUrlValue = '';
         this._onBack();
     }
 
     private _onSiteUrlButton(e: QuickInputButton) {
         if (e === QuickInputButtons.Back) {
-            this._transitioningToToken = true;
+            this._transitioningToEmail = true;
             this._siteUrlInput.hide();
-            this._showTokenStep();
+            this._showEmailStep();
         } else if (e === OnboardingButtons.dismiss || e === OnboardingButtons.settings) {
             this._siteUrlInput.hide();
             this._tokenValue = '';
+            this._emailValue = '';
+            this._siteUrlValue = '';
             if (e === OnboardingButtons.settings) {
                 commands.executeCommand(Commands.OpenNativeSettings);
             }

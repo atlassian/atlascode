@@ -10,7 +10,7 @@ import { Container } from '../container';
 import { EXTENSION_URL } from '../uriHandler/atlascodeUriHandler';
 import OnboardingQuickInputManager from './onboardingQuickInputManager';
 import OnboardingQuickPickManager from './onboardingQuickPickManager';
-import RovoDevOnboardingInputManager from './rovoDevOnboardingInputManager';
+import RovoDevOnboardingInputManager, { RovoDevOnboardingSubmitArgs } from './rovoDevOnboardingInputManager';
 import {
     mainMenuQuickPickItems,
     OnboardingInputBoxStep,
@@ -43,7 +43,7 @@ class OnboardingProvider {
 
         this._rovoDevInputManager = new RovoDevOnboardingInputManager(
             () => this._handleBack(OnboardingStep.RovoDev),
-            (token, siteUrl) => this._onRovoTokenSubmit(token, siteUrl),
+            (args) => void this._onRovoTokenSubmit(args),
         );
 
         this._mainMenuQuickPickManager = new OnboardingQuickPickManager(
@@ -73,8 +73,22 @@ class OnboardingProvider {
         );
     }
 
-    private _onRovoTokenSubmit(_token: string, _siteUrl?: string) {
-        this.show(OnboardingStep.MainMenu);
+    private async _onRovoTokenSubmit(args: RovoDevOnboardingSubmitArgs): Promise<void> {
+        const { createValidatedRovoDevAuthInfo } = await import('../rovo-dev/rovoDevAuthValidator');
+        const { RovoDevProcessManager } = await import('../rovo-dev/rovoDevProcessManager');
+
+        try {
+            const host = args.siteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+            const authInfo = await createValidatedRovoDevAuthInfo(host, args.email, args.token);
+            await Container.credentialManager.saveRovoDevAuthInfo(authInfo);
+            await RovoDevProcessManager.initializeRovoDev(Container.context, true);
+            await commands.executeCommand('atlascode.views.rovoDev.webView.focus');
+        } catch (error) {
+            Logger.error(error, 'Rovo Dev onboarding: failed to save credentials');
+            const message = error instanceof Error ? error.message : 'Failed to configure Rovo Dev. Please try again.';
+            window.showErrorMessage(message);
+            this.show(OnboardingStep.MainMenu);
+        }
     }
 
     // --- Handle Main Menu Accept ---
