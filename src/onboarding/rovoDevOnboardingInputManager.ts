@@ -1,7 +1,6 @@
 import { commands, env, InputBox, QuickInputButton, QuickInputButtons, Uri, window } from 'vscode';
 
 import { Commands } from '../constants';
-import { isValidUrl } from '../webviews/components/fieldValidators';
 import { OnboardingButtons } from './utils';
 
 const TOKEN_URL =
@@ -195,12 +194,15 @@ class RovoDevOnboardingInputManager {
     }
 
     private _onSiteUrlAccept() {
-        if (!isValidUrl(this._siteUrlInput.value)) {
-            this._siteUrlInput.validationMessage = 'Please enter a valid URL';
+        const raw = this._siteUrlInput.value?.trim() ?? '';
+        const normalized = raw
+            .replace(/^https?:\/\//, '')
+            .replace(/\/$/, '')
+            .trim();
+        if (!normalized) {
+            this._siteUrlInput.validationMessage = 'Please enter your site (e.g. yoursite.atlassian.net)';
             return;
         }
-        const siteUrl = this._siteUrlInput.value?.trim() ?? '';
-        const normalized = siteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
         if (!normalized.endsWith('.atlassian.net')) {
             this._siteUrlInput.validationMessage = 'Site must be an Atlassian Cloud URL (*.atlassian.net)';
             return;
