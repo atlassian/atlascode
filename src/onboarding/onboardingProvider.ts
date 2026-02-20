@@ -81,7 +81,10 @@ class OnboardingProvider {
             const host = args.siteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
             const authInfo = await createValidatedRovoDevAuthInfo(host, args.email, args.token);
             await Container.credentialManager.saveRovoDevAuthInfo(authInfo);
+            await configuration.updateEffective('rovodev.enabled', true, null, true);
             await RovoDevProcessManager.initializeRovoDev(Container.context, true);
+            Container.focus();
+            this.hideQuickPick(OnboardingStep.RovoDev);
             await commands.executeCommand('atlascode.views.rovoDev.webView.focus');
         } catch (error) {
             Logger.error(error, 'Rovo Dev onboarding: failed to save credentials');
