@@ -4,7 +4,7 @@
 
 ### Bug Fixes
 
-- Fixed source repository selection in PR creation UI for forked repositories - selecting a different remote in the dropdown now correctly uses that remote's repository information in the API call
+- Fixed duplicate remote creation when checking out PR branches from forked repositories - the extension now reuses existing remotes that point to the same repository
 
 ## What's new in 4.0.20
 ### Features
