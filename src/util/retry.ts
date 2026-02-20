@@ -83,16 +83,24 @@ function isNetworkError(errorCode: string): boolean {
 /**
  * Retries an async operation with exponential backoff.
  *
+ * NOTE: This function does NOT log errors to avoid duplicate Sentry reports.
+ * Callers are responsible for catching and logging errors with appropriate context.
+ *
  * @param operation - The async function to retry
  * @param options - Retry configuration options
  * @returns Promise that resolves with the result of the operation
+ * @throws The last error encountered if all retry attempts fail or if error is non-retryable
  *
  * @example
  * ```typescript
- * const result = await retryWithBackoff(
- *   () => api.fetchData(),
- *   { maxAttempts: 3, initialDelayMs: 1000 }
- * );
+ * try {
+ *   const result = await retryWithBackoff(
+ *     () => api.fetchData(),
+ *     { maxAttempts: 3, initialDelayMs: 1000 }
+ *   );
+ * } catch (error) {
+ *   Logger.error(error, 'Failed to fetch data after retries');
+ * }
  * ```
  */
 export async function retryWithBackoff<T>(operation: () => Promise<T>, options: RetryOptions = {}): Promise<T> {
@@ -116,7 +124,8 @@ export async function retryWithBackoff<T>(operation: () => Promise<T>, options: 
             const shouldRetry = isRetryableError(error, config.retryableErrors);
 
             if (isLastAttempt || !shouldRetry) {
-                Logger.error(error, 'Retry exhausted or error not retryable');
+                // Don't log here - let the caller decide how to handle and log the error
+                // Logging here causes duplicate Sentry reports when caller also logs
                 throw error;
             }
 
