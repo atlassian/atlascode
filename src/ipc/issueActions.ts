@@ -47,7 +47,7 @@ export interface TransitionIssueAction extends Action {
 export interface IssueCommentAction extends Action {
     action: 'comment';
     issue: IssueKeyAndSite<DetailedSiteInfo>;
-    commentBody: string;
+    commentBody: string | Record<string, unknown>; // Cloud: ADF; DC: string (normalized in postComment)
     commentId?: string;
     restriction?: CommentVisibility;
 }

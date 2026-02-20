@@ -47,9 +47,15 @@ function extractPlainTextFromAdf(adf: AdfNode): string {
                 return text;
             }
 
-            // Handle mentions
+            // Handle mentions: prefer display text; else Jira DC wiki format [~id] so server resolves to username
             if (node.type === 'mention') {
-                return node.attrs?.text || '@unknown';
+                if (node.attrs?.text) {
+                    return node.attrs.text;
+                }
+                if (node.attrs?.id) {
+                    return `[~${node.attrs.id}]`;
+                }
+                return '@unknown';
             }
 
             return '';
@@ -108,7 +114,8 @@ export function convertAdfToWikimarkup(adf: AdfNode | string | null | undefined)
 
 /**
  * Sanitizes ADF by removing invalid attributes that Jira API doesn't accept
- * Removes null localId values - Jira API v3 requires either a valid UUID or no localId at all
+ * Removes null/undefined values from attrs - Jira API v3 doesn't accept them
+ * Also fixes mention id format - removes 'accountid:' prefix that WikiMarkupTransformer adds
  */
 function sanitizeAdf(node: AdfNode): AdfNode {
     if (!node || typeof node !== 'object') {
@@ -117,16 +124,27 @@ function sanitizeAdf(node: AdfNode): AdfNode {
 
     const sanitized: AdfNode = { ...node };
 
-    // Remove null or undefined localId attributes - Jira API doesn't accept them
+    // Remove null/undefined attributes - Jira API doesn't accept them
     if (sanitized.attrs) {
-        if (sanitized.attrs.localId === null || sanitized.attrs.localId === undefined) {
-            // eslint-disable-next-line no-unused-vars
-            const { localId, ...restAttrs } = sanitized.attrs;
-            sanitized.attrs = restAttrs;
+        const cleanedAttrs = Object.entries(sanitized.attrs).reduce(
+            (acc, [key, value]) => {
+                if (value !== null && value !== undefined) {
+                    acc[key] = value;
+                }
+                return acc;
+            },
+            {} as Record<string, any>,
+        );
+
+        // Strip 'accountid:' prefix from mention id (WikiMarkupTransformer adds it, but API expects plain id)
+        if (sanitized.type === 'mention' && cleanedAttrs.id && typeof cleanedAttrs.id === 'string') {
+            cleanedAttrs.id = cleanedAttrs.id.replace(/^accountid:/, '');
         }
         // If attrs is now empty, remove it entirely
-        if (Object.keys(sanitized.attrs).length === 0) {
+        if (Object.keys(cleanedAttrs).length === 0) {
             delete sanitized.attrs;
+        } else {
+            sanitized.attrs = cleanedAttrs;
         }
     }
 
