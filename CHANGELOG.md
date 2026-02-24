@@ -1,6 +1,7 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
 ## What's new in 4.0.20
+
 ### Features
 
 - Added Draft pull requests
@@ -9,6 +10,7 @@
 ### Improvements
 
 - Added warning message when no git repository selected on Start Work page
+- Bumped Rovo Dev version to v0.13.47
 
 ## What's new in 4.0.19
 
