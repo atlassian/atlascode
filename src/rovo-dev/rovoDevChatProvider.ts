@@ -524,7 +524,7 @@ export class RovoDevChatProvider {
                             event_kind: '_RovoDevDialog',
                             type: 'warning',
                             title: 'Unsupported Command',
-                            text: `The command ${command} is not supported. Type /help to see a list of available commands.`,
+                            text: `The command ${command} is not supported.`,
                         },
                     });
                     break;

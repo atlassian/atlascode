@@ -1027,7 +1027,7 @@ describe('RovoDevChatProvider', () => {
                         event_kind: '_RovoDevDialog',
                         type: 'warning',
                         title: 'Unsupported Command',
-                        text: expect.stringContaining('/model is not supported'),
+                        text: 'The command /model is not supported.',
                     }),
                 }),
             );
@@ -1060,7 +1060,7 @@ describe('RovoDevChatProvider', () => {
                 expect.objectContaining({
                     type: RovoDevProviderMessageType.ShowDialog,
                     message: expect.objectContaining({
-                        text: expect.stringContaining('/unknowncommand is not supported'),
+                        text: 'The command /unknowncommand is not supported.',
                     }),
                 }),
             );
