@@ -383,7 +383,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             await webview.postMessage({
                                 type: RovoDevProviderMessageType.CheckGitChangesComplete,
                                 hasChanges: false,
-                                gitAvailable: false,
                             });
                             break;
                         }
@@ -391,7 +390,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await webview.postMessage({
                             type: RovoDevProviderMessageType.CheckGitChangesComplete,
                             hasChanges: hasChanges,
-                            gitAvailable: true,
                         });
                         break;
 

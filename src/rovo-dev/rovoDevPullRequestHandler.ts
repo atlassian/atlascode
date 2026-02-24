@@ -33,7 +33,6 @@ export class RovoDevPullRequestHandler {
 
         if (gitApi.repositories.length === 0) {
             const error = new Error('No Git repositories in workspace');
-            RovoDevTelemetryProvider.logError(error, 'No Git repositories in workspace');
             throw error;
         }
 
