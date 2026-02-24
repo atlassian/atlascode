@@ -1877,6 +1877,12 @@
         "webpack-node-externals": "^3.0.0"
     },
     "overrides": {
+        "@sentry/node": {
+            "minimatch": "10.2.2"
+        },
+        "vscode-languageclient": {
+            "minimatch": "10.2.2"
+        },
         "@atlaskit/analytics-next-stable-react-context": {
             "react": "^18.3.1"
         },
