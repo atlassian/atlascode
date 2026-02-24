@@ -86,6 +86,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     const prevChatHistoryLengthRef = React.useRef(chatHistory.length);
     const [canCreatePR, setCanCreatePR] = React.useState(false);
     const [hasChangesInGit, setHasChangesInGit] = React.useState(false);
+    const [isGitAvailable, setIsGitAvailable] = React.useState(true);
     const [isFormVisible, setIsFormVisible] = React.useState(false);
 
     const checkGitChanges = React.useCallback(async () => {
@@ -95,6 +96,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
             ConnectionTimeout,
         );
         setHasChangesInGit(response.hasChanges);
+        setIsGitAvailable(response.gitAvailable);
     }, [messagingApi]);
     const [autoScrollEnabled, setAutoScrollEnabled] = React.useState(true);
 
@@ -305,7 +307,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
             {!isChatHistoryDisabled && currentState.state === 'WaitingForPrompt' && (
                 <FollowUpActionFooter>
                     {deepPlanCreated && <CodePlanButton execute={executeCodePlan} />}
-                    {canCreatePR && !deepPlanCreated && hasChangesInGit && (
+                    {isGitAvailable && canCreatePR && !deepPlanCreated && hasChangesInGit && (
                         <PullRequestForm
                             onCancel={() => {
                                 setCanCreatePR(false);
