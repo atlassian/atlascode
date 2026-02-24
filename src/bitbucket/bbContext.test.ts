@@ -516,6 +516,93 @@ describe('BitbucketContext', () => {
 
             expect(Logger.debug).toHaveBeenCalledWith('Failed to fetch mirror sites');
         });
+
+        it('should skip repositories with null/undefined state', async () => {
+            const repoWithNullState = {
+                ...mockRepository,
+                state: null,
+            };
+            Object.defineProperty(mockGitApi, 'repositories', { value: [repoWithNullState], writable: true });
+
+            bitbucketContext = new BitbucketContext(mockGitApi);
+
+            // Wait for async operations to complete
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            expect(Logger.debug).toHaveBeenCalledWith(
+                expect.stringContaining('Skipping repository with uninitialized state'),
+            );
+            expect(repoWithNullState.status).not.toHaveBeenCalled();
+        });
+
+        it('should skip repositories with undefined state', async () => {
+            const repoWithUndefinedState = {
+                ...mockRepository,
+                state: undefined,
+            };
+            Object.defineProperty(mockGitApi, 'repositories', { value: [repoWithUndefinedState], writable: true });
+
+            bitbucketContext = new BitbucketContext(mockGitApi);
+
+            // Wait for async operations to complete
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            expect(Logger.debug).toHaveBeenCalledWith(
+                expect.stringContaining('Skipping repository with uninitialized state'),
+            );
+        });
+
+        it('should handle status() call failures gracefully', async () => {
+            const repoWithFailingStatus = {
+                ...mockRepository,
+                state: { HEAD: undefined, remotes: [] },
+                status: jest.fn().mockRejectedValue(new Error('Repository not initialized')),
+            };
+            Object.defineProperty(mockGitApi, 'repositories', {
+                value: [repoWithFailingStatus],
+                writable: true,
+            });
+
+            bitbucketContext = new BitbucketContext(mockGitApi);
+
+            // Wait for async operations to complete
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            expect(Logger.debug).toHaveBeenCalledWith(expect.stringContaining('Failed to get status for'));
+            expect(Logger.debug).toHaveBeenCalledWith(expect.stringContaining('Repository not initialized'));
+        });
+
+        it('should continue processing other repos when one has uninitialized state', async () => {
+            const repoWithNullState = {
+                ...mockRepository,
+                rootUri: Uri.file('/test/bad-repo'),
+                state: null,
+            };
+            const goodRepo = {
+                ...mockRepository,
+                rootUri: Uri.file('/test/good-repo'),
+                state: {
+                    HEAD: { name: 'main' },
+                    remotes: [{ name: 'origin', fetchUrl: 'https://bitbucket.org/test/good.git' }],
+                },
+                status: jest.fn().mockResolvedValue(undefined),
+            };
+
+            Object.defineProperty(mockGitApi, 'repositories', {
+                value: [repoWithNullState, goodRepo],
+                writable: true,
+            });
+
+            bitbucketContext = new BitbucketContext(mockGitApi);
+
+            // Wait for async operations to complete
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            expect(Logger.debug).toHaveBeenCalledWith(
+                expect.stringContaining('Skipping repository with uninitialized state'),
+            );
+            expect(workspaceRepoFor).toHaveBeenCalledWith(goodRepo);
+        });
     });
 
     describe('updateUsers', () => {
