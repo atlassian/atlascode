@@ -11,6 +11,13 @@
 
 - Added warning message when no git repository selected on Start Work page
 - Bumped Rovo Dev version to v0.13.47
+- Added ADF ↔ WikiMarkup conversion for Jira Data Center: transform description and comments to/from WikiMarkup so DC (string-based API) and Cloud (ADF) both work correctly
+
+### Bug Fixes
+
+- Jira Data Center: fixed errors when adding or updating comments (comment body is now sent as string for DC, ADF for Cloud)
+- Jira DC: fixed updating issue description (description is sent as WikiMarkup string for DC, ADF for Cloud)
+- Jira DC: user mentions in comments and description now show the correct username instead of @unknown
 
 ## What's new in 4.0.19
 

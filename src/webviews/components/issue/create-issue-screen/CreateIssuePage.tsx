@@ -329,9 +329,9 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         }
 
         // Convert WikiMarkup fields to ADF if using legacy editor AND site is Cloud
-        // Jira Data Center requires WikiMarkup string, not ADF object
+        // When showAtlaskitEditor is false we use the legacy editor, which stores description/comment as WikiMarkup.
+        // Cloud API expects ADF, so we convert here. DC keeps WikiMarkup (no conversion).
         const issueData = { ...this.state.fieldValues };
-        //TODO: why we use ! and maybe change isAtlaskitEditorEnabled to showAtlasKitEditor
         if (!this.state.showAtlaskitEditor && this.state.siteDetails.isCloud) {
             // Convert description if it's a string (WikiMarkup)
             if (issueData.description && typeof issueData.description === 'string') {
