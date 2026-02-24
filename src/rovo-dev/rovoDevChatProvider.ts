@@ -333,7 +333,7 @@ export class RovoDevChatProvider {
         telemetryProvider?.perfLogger.promptStarted(this._currentPromptId);
 
         const reader = response.body.getReader();
-        const decoder = new TextDecoder();
+        const decoder = new TextDecoder('utf-8', { fatal: false, ignoreBOM: true });
         const parser = new RovoDevResponseParser();
 
         let isFirstByte = true;

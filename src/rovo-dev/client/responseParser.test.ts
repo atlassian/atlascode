@@ -701,4 +701,120 @@ describe('RovoDevResponseParser', () => {
             expect(toolReturnEvent.toolCallMessage.tool_name).toBe('get_weather');
         });
     });
+
+    describe('handling malformed JSON from UTF-8 chunking issues', () => {
+        it('should buffer incomplete JSON data and retry on next chunk', () => {
+            const parser = new RovoDevResponseParser();
+
+            // Simulate a chunk split mid-JSON due to UTF-8 byte boundary
+            // First chunk has incomplete JSON (missing closing brace) - note no \n\n at end means it stays in buffer
+            const chunk1 = 'event: tool-call\ndata: {"tool_name": "bash", "args": "{\\"command\\": \\"te';
+            const results1 = Array.from(parser.parse(chunk1));
+
+            // Should buffer and wait for more data, not yield anything
+            expect(results1).toHaveLength(0);
+
+            // Second chunk completes the JSON - completes the data field
+            const chunk2 = 'st\\"}", "tool_call_id": "call_123"}\n\n';
+            const results2 = Array.from(parser.parse(chunk2));
+
+            // Now should successfully parse the complete message
+            expect(results2).toHaveLength(1);
+            expect(results2[0].event_kind).toBe('tool-call');
+            expect((results2[0] as any).tool_name).toBe('bash');
+        });
+
+        it('should handle JSON split across multi-byte UTF-8 character boundaries', () => {
+            const parser = new RovoDevResponseParser();
+
+            // Simulate emoji or multi-byte character split across chunks
+            // "👍" is 4 bytes: F0 9F 91 8D
+            // First chunk ends mid-emoji (only F0 9F bytes)
+            const chunk1 = 'event: tool-call\ndata: {"tool_name": "bash", "args": "{\\"msg\\": \\"test';
+            const results1 = Array.from(parser.parse(chunk1));
+
+            // Should buffer incomplete chunk
+            expect(results1).toHaveLength(0);
+
+            // Second chunk completes the emoji and rest of JSON
+            const chunk2 = '👍\\"}", "tool_call_id": "call_456"}\n\n';
+            const results2 = Array.from(parser.parse(chunk2));
+
+            // Should parse successfully with complete UTF-8 character
+            expect(results2).toHaveLength(1);
+            expect(results2[0].event_kind).toBe('tool-call');
+        });
+
+        it('should handle truncated JSON with missing opening brace', () => {
+            const parser = new RovoDevResponseParser();
+
+            // Simulate chunk that lost the opening brace (like "ool_name" instead of "tool_name")
+            const chunk =
+                'event: tool-call\ndata: "tool_name": "bash", "args": "test", "tool_call_id": "call_789"}\n\n';
+            const results = Array.from(parser.parse(chunk));
+
+            // Should buffer and wait, not crash
+            expect(results).toHaveLength(0);
+
+            // Even with next valid chunk, the buffered invalid JSON should eventually be discarded
+            // or handled gracefully when buffer grows too large
+            const chunk2 = 'event: text\ndata: {"index": 0, "content": "Hello"}\n\n';
+            const results2 = Array.from(parser.parse(chunk2));
+
+            // The invalid buffered chunk remains buffered, new valid chunk is processed
+            expect(results2).toHaveLength(1);
+            expect(results2[0].event_kind).toBe('text');
+        });
+
+        it('should handle multiple incomplete chunks before completion', () => {
+            const parser = new RovoDevResponseParser();
+
+            // First chunk - event line only
+            const chunk1 = 'event: tool-call\n';
+            expect(Array.from(parser.parse(chunk1))).toHaveLength(0);
+
+            // Second chunk - partial data line
+            const chunk2 = 'data: {"tool_name": "bash"';
+            expect(Array.from(parser.parse(chunk2))).toHaveLength(0);
+
+            // Third chunk - rest of data line
+            const chunk3 = ', "args": "test", "tool_call_id": "call_999"}\n\n';
+            const results3 = Array.from(parser.parse(chunk3));
+
+            expect(results3).toHaveLength(1);
+            expect(results3[0].event_kind).toBe('tool-call');
+            expect((results3[0] as any).tool_name).toBe('bash');
+        });
+
+        it('should handle valid chunk after invalid buffered chunk', () => {
+            const parser = new RovoDevResponseParser();
+
+            // Invalid incomplete chunk that will be buffered
+            const invalidChunk = 'event: tool-call\ndata: {"invalid": "json\n\n';
+            expect(Array.from(parser.parse(invalidChunk))).toHaveLength(0);
+
+            // Valid complete chunk - should process independently
+            // The double \n\n acts as separator
+            const validChunk = 'event: text\ndata: {"index": 0, "content": "Valid"}\n\n';
+            const results = Array.from(parser.parse(validChunk));
+
+            // The buffered invalid chunk should still be in buffer waiting
+            // But the new valid chunk should be processed
+            expect(results).toHaveLength(1);
+            expect(results[0].event_kind).toBe('text');
+        });
+
+        it('should handle JSON with special characters that could cause encoding issues', () => {
+            const parser = new RovoDevResponseParser();
+
+            // Test with various special characters: emoji, CJK, accented chars
+            const specialChars = '{"command": "echo \\\"Hello 👋 世界 café\\\""}';
+            const chunk = `event: tool-call\ndata: {"tool_name": "bash", "args": ${JSON.stringify(specialChars)}, "tool_call_id": "call_special"}\n\n`;
+            const results = Array.from(parser.parse(chunk));
+
+            expect(results).toHaveLength(1);
+            expect(results[0].event_kind).toBe('tool-call');
+            expect((results[0] as any).tool_name).toBe('bash');
+        });
+    });
 });

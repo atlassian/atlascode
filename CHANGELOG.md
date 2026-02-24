@@ -12,6 +12,12 @@
 - Added warning message when no git repository selected on Start Work page
 - Bumped Rovo Dev version to v0.13.47
 
+### Bug Fixes
+
+- Rovo Dev: Fixed JSON parsing errors caused by multi-byte UTF-8 characters being split across HTTP chunk boundaries
+    - Added safe JSON parsing in `parseToolReturnMessage` for all tool arguments
+    - Added buffering logic in SSE response parser to handle incomplete UTF-8 sequences
+
 ## What's new in 4.0.19
 
 ### Improvements

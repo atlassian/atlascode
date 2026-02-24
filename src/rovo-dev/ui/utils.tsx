@@ -125,6 +125,22 @@ export const modifyFileTitleMap: Record<string, ToolReturnInfo> = {
 };
 
 /**
+ * Safely parses a JSON string, returning undefined if parsing fails.
+ * @param jsonString - The JSON string to parse.
+ * @returns The parsed object or undefined if parsing fails.
+ */
+function safeJSONParse<T = any>(jsonString: string | undefined): T | undefined {
+    if (!jsonString) {
+        return undefined;
+    }
+    try {
+        return JSON.parse(jsonString);
+    } catch {
+        return undefined;
+    }
+}
+
+/**
  * Parses the content of a ToolReturnMessage and extracts relevant information.
  * The function handles different tool names and formats the output accordingly.
  *
@@ -182,7 +198,7 @@ export function parseToolReturnMessage(
                 break;
 
             case 'expand_folder':
-                const folder = msg.toolCallMessage.args && JSON.parse(msg.toolCallMessage.args);
+                const folder = safeJSONParse<{ folder_path?: string }>(msg.toolCallMessage.args);
                 if (folder?.folder_path) {
                     resp.push({
                         title: folder.folder_path,
@@ -198,7 +214,7 @@ export function parseToolReturnMessage(
                 break;
 
             case 'bash':
-                const args = msg.toolCallMessage.args && JSON.parse(msg.toolCallMessage.args);
+                const args = safeJSONParse<{ command?: string }>(msg.toolCallMessage.args);
                 if (args?.command) {
                     resp.push({
                         title: args.command,
@@ -209,9 +225,11 @@ export function parseToolReturnMessage(
                 break;
 
             case 'grep':
-                const toolCallArgs = msg.toolCallMessage.args;
-                const searchPattern = toolCallArgs ? JSON.parse(toolCallArgs).content_pattern : undefined;
-                const pathGlob = toolCallArgs ? JSON.parse(toolCallArgs).path_glob : undefined;
+                const toolCallArgs = safeJSONParse<{ content_pattern?: string; path_glob?: string }>(
+                    msg.toolCallMessage.args,
+                );
+                const searchPattern = toolCallArgs?.content_pattern;
+                const pathGlob = toolCallArgs?.path_glob;
                 const matches = (msg.content ?? '').split('\n').filter((line) => line.trim() !== '');
                 let content = 'Searched files';
                 if (searchPattern && pathGlob) {
@@ -235,19 +253,23 @@ export function parseToolReturnMessage(
 
             case 'create_technical_plan':
                 // Use parsedContent if available (it's the parsed object), otherwise parse msg.content (string)
-                const planData: TechnicalPlan = msg.parsedContent ?? (msg.content ? JSON.parse(msg.content) : null);
+                let planData: TechnicalPlan | null = null;
+                if (msg.parsedContent) {
+                    planData = msg.parsedContent as TechnicalPlan;
+                } else if (msg.content) {
+                    planData = safeJSONParse<TechnicalPlan>(msg.content) ?? null;
+                }
 
                 resp.push({
                     content: '',
-                    technicalPlan: planData,
+                    technicalPlan: planData ?? undefined,
                 });
                 break;
 
             case 'mcp__atlassian__invoke_tool':
             case 'mcp__atlassian__get_tool_schema':
             case 'mcp__scout__invoke_tool':
-                const mcpToolCallArgs = msg.toolCallMessage.args;
-                const mcpToolData = mcpToolCallArgs ? JSON.parse(mcpToolCallArgs) : undefined;
+                const mcpToolData = safeJSONParse<{ tool_name?: string }>(msg.toolCallMessage.args);
                 resp.push({
                     content: `Invoked MCP tool: \`${mcpToolData?.tool_name || 'unknown tool'}\``,
                     type: 'bash',
