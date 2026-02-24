@@ -9,6 +9,7 @@
 ### Improvements
 
 - Added warning message when no git repository selected on Start Work page
+- Added ASCII monkey to README
 
 ## What's new in 4.0.19
 
