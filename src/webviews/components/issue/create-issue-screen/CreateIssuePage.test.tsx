@@ -371,4 +371,128 @@ describe('CreateIssuePage', () => {
             expect(postMessageSpy).toHaveBeenCalledWith({ action: 'openJiraAuth' });
         });
     });
+
+    describe('handleSubmit description conversion', () => {
+        const mockDcSiteDetails: DetailedSiteInfo = {
+            ...mockSiteDetails,
+            isCloud: false,
+            name: 'DC Site',
+            host: 'jira.example.com',
+        };
+
+        it('should convert description to ADF for Cloud site with legacy editor', async () => {
+            const component = new CreateIssuePage({});
+            const postMessageSpy = jest.spyOn(component, 'postMessage');
+
+            component.state = {
+                ...component.state,
+                siteDetails: mockSiteDetails, // isCloud: true
+                showAtlaskitEditor: false, // legacy editor
+                fieldValues: {
+                    issuetype: { id: '1', name: 'Task' },
+                    project: { key: 'TEST', name: 'Test Project' },
+                    summary: 'Test Summary',
+                    description: 'Simple description text',
+                },
+                fields: {
+                    summary: {
+                        key: 'summary',
+                        name: 'Summary',
+                        required: true,
+                        uiType: UIType.Input,
+                        displayOrder: 1,
+                        valueType: ValueType.String,
+                        advanced: false,
+                        isArray: false,
+                        schema: 'summary',
+                    },
+                    description: {
+                        key: 'description',
+                        name: 'Description',
+                        required: false,
+                        uiType: UIType.Input,
+                        displayOrder: 2,
+                        valueType: ValueType.String,
+                        advanced: false,
+                        isArray: false,
+                        schema: 'description',
+                    },
+                },
+                selectFieldOptions: {
+                    site: [mockSiteDetails],
+                },
+            };
+
+            await component.handleSubmit({} as any);
+
+            expect(postMessageSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    action: 'createIssue',
+                    issueData: expect.objectContaining({
+                        // Description should be converted to ADF object for Cloud
+                        description: expect.objectContaining({
+                            type: 'doc',
+                            version: 1,
+                        }),
+                    }),
+                }),
+            );
+        });
+
+        it('should NOT convert description to ADF for Data Center site with legacy editor', async () => {
+            const component = new CreateIssuePage({});
+            const postMessageSpy = jest.spyOn(component, 'postMessage');
+
+            component.state = {
+                ...component.state,
+                siteDetails: mockDcSiteDetails, // isCloud: false
+                showAtlaskitEditor: false, // legacy editor
+                fieldValues: {
+                    issuetype: { id: '1', name: 'Task' },
+                    project: { key: 'TEST', name: 'Test Project' },
+                    summary: 'Test Summary',
+                    description: 'Simple description text',
+                },
+                fields: {
+                    summary: {
+                        key: 'summary',
+                        name: 'Summary',
+                        required: true,
+                        uiType: UIType.Input,
+                        displayOrder: 1,
+                        valueType: ValueType.String,
+                        advanced: false,
+                        isArray: false,
+                        schema: 'summary',
+                    },
+                    description: {
+                        key: 'description',
+                        name: 'Description',
+                        required: false,
+                        uiType: UIType.Input,
+                        displayOrder: 2,
+                        valueType: ValueType.String,
+                        advanced: false,
+                        isArray: false,
+                        schema: 'description',
+                    },
+                },
+                selectFieldOptions: {
+                    site: [mockDcSiteDetails],
+                },
+            };
+
+            await component.handleSubmit({} as any);
+
+            expect(postMessageSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    action: 'createIssue',
+                    issueData: expect.objectContaining({
+                        // Description should remain as string for DC
+                        description: 'Simple description text',
+                    }),
+                }),
+            );
+        });
+    });
 });

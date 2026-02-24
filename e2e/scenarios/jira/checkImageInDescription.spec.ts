@@ -10,9 +10,14 @@ const IMAGE_TEST_ID = 'description-image';
 export async function checkImageInDescription(page: Page, request: APIRequestContext, type: JiraTypes) {
     await new AtlassianSettings(page).closeSettingsPage();
 
-    const cleanupIssueMock = await setupIssueMock(request, {
-        description: type === JiraTypes.DC ? description.dc : description.cloud,
-    });
+    const cleanupIssueMock = await setupIssueMock(
+        request,
+        {
+            description: type === JiraTypes.DC ? description.dc : description.cloud,
+        },
+        'GET',
+        type,
+    );
 
     await new AtlascodeDrawer(page).jira.openIssue(ISSUE_NAME);
 

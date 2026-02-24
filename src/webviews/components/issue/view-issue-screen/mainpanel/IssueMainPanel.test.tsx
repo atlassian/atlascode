@@ -155,9 +155,14 @@ describe('IssueMainPanel', () => {
         fireEvent.change(textArea, { target: { value: 'Updated description' } });
         fireEvent.click(screen.getByText('Save'));
 
+        // Expect ADF format (WikiMarkup is converted to ADF)
         expect(mockHandleInlineEdit).toHaveBeenCalledWith(
             expect.objectContaining({ key: 'description', name: 'Description' }),
-            'Updated description',
+            expect.objectContaining({
+                version: 1,
+                type: 'doc',
+                content: expect.any(Array),
+            }),
         );
     });
 

@@ -92,15 +92,13 @@ export async function setupIssueMock(
     request: APIRequestContext,
     updates: Record<string, any>,
     method: 'GET' | 'PUT' = 'GET',
+    type: JiraTypes = JiraTypes.Cloud,
 ) {
-    const issueJSON = JSON.parse(fs.readFileSync('e2e/wiremock-mappings/mockedteams/BTS-1/bts1.json', 'utf-8'));
+    const file = type === JiraTypes.DC ? 'BTS-1/bts1-dc.json' : 'BTS-1/bts1.json';
+    const issueJSON = JSON.parse(fs.readFileSync(`e2e/wiremock-mappings/mockedteams/${file}`, 'utf-8'));
 
-    const { id } = await setupWireMockMapping(
-        request,
-        method,
-        updateIssueField(issueJSON, updates),
-        '/rest/api/2/issue/BTS-1',
-    );
+    const urlPath = type === JiraTypes.DC ? '/rest/api/2/issue/BTS-1' : '/rest/api/3/issue/BTS-1';
+    const { id } = await setupWireMockMapping(request, method, updateIssueField(issueJSON, updates), urlPath);
     return () => cleanupWireMockMapping(request, id);
 }
 
