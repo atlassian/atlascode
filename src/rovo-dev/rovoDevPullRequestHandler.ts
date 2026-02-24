@@ -129,9 +129,7 @@ export class RovoDevPullRequestHandler {
         const hasUncommitted = await this.hasUncommittedChanges();
         if (hasUncommitted) {
             if (!commitMessage || commitMessage.trim() === '') {
-                const error = new Error('Commit message is required when you have uncommitted changes.');
-                RovoDevTelemetryProvider.logError(error, 'Cannot create PR without commit message');
-                throw error;
+                throw new Error('Commit message is required when you have uncommitted changes.');
             }
 
             const curBranch = repo.state.HEAD?.name;

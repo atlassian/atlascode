@@ -1175,10 +1175,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         } catch (e) {
             const gitErrorCode = e.gitErrorCode;
 
-            // Don't log user configuration errors - these are expected and user needs to fix them
+            // Don't log user configuration/input errors - these are expected and user needs to fix them
             const isUserConfigError =
                 gitErrorCode === GitErrorCodes.NoUserNameConfigured ||
-                gitErrorCode === GitErrorCodes.NoUserEmailConfigured;
+                gitErrorCode === GitErrorCodes.NoUserEmailConfigured ||
+                e.message?.includes('Commit message is required') ||
+                e.message?.includes('Branch name is required');
 
             await this.processError(e, { skipLogError: isUserConfigError });
 
