@@ -1728,7 +1728,7 @@
         "@mui/lab": "^5.0.0-alpha",
         "@mui/material": "^5.18.0",
         "@mui/styles": "^5.18.0",
-        "@mui/utils": "^5.17.1",
+        "@mui/utils": "^7.3.5",
         "@segment/analytics-node": "^2.1.3",
         "@sentry/node": "^9.40.0",
         "@speed-highlight/core": "^1.2.7",
