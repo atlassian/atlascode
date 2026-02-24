@@ -12,6 +12,10 @@
 - Added warning message when no git repository selected on Start Work page
 - Bumped Rovo Dev version to v0.13.47
 
+### Bug Fixes
+
+- Fixed 'No Git repositories in workspace' error in Boysenberry chat by waiting for Git API initialization and repository discovery before accessing repositories
+
 ## What's new in 4.0.19
 
 ### Improvements

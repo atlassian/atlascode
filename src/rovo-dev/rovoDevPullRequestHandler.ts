@@ -8,6 +8,9 @@ import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 
 const execAsync = promisify(exec);
 
+// Maximum time to wait for git repositories to be discovered (in milliseconds)
+const GIT_REPOSITORY_DISCOVERY_TIMEOUT_MS = 10000;
+
 export class RovoDevPullRequestHandler {
     private readonly gitExtensionPromise: Thenable<GitExtension>;
     private gitApiCache: API | undefined;
@@ -32,17 +35,68 @@ export class RovoDevPullRequestHandler {
         return this.gitApiCache;
     }
 
+    /**
+     * Waits for the Git API to be fully initialized.
+     * The Git API may be in 'uninitialized' state immediately after activation.
+     */
+    private async waitForGitApiInitialized(gitApi: API): Promise<void> {
+        if (gitApi.state === 'initialized') {
+            return;
+        }
+
+        return new Promise<void>((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                disposable.dispose();
+                reject(new Error('Timed out waiting for Git API to initialize'));
+            }, GIT_REPOSITORY_DISCOVERY_TIMEOUT_MS);
+
+            const disposable = gitApi.onDidChangeState((state) => {
+                if (state === 'initialized') {
+                    clearTimeout(timeout);
+                    disposable.dispose();
+                    resolve();
+                }
+            });
+        });
+    }
+
+    /**
+     * Waits for at least one Git repository to be discovered.
+     * Repository discovery happens asynchronously after workspace is opened.
+     */
+    private async waitForRepository(gitApi: API): Promise<Repository> {
+        // If repositories are already available, return the first one
+        if (gitApi.repositories.length > 0) {
+            return gitApi.repositories[0];
+        }
+
+        return new Promise<Repository>((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                disposable.dispose();
+                const error = new Error('No Git repositories found');
+                RovoDevTelemetryProvider.logError(error, 'No Git repositories in workspace after timeout');
+                reject(error);
+            }, GIT_REPOSITORY_DISCOVERY_TIMEOUT_MS);
+
+            const disposable = gitApi.onDidOpenRepository((repo) => {
+                clearTimeout(timeout);
+                disposable.dispose();
+                resolve(repo);
+            });
+        });
+    }
+
     private async getGitRepository(): Promise<Repository> {
         const gitApi = await this.getGitAPI();
 
-        if (gitApi.repositories.length === 0) {
-            const error = new Error('No Git repositories found');
-            RovoDevTelemetryProvider.logError(error, 'No Git repositories in workspace');
-            throw error;
-        }
+        // Wait for Git API to be fully initialized before checking repositories
+        await this.waitForGitApiInitialized(gitApi);
+
+        // Wait for repository discovery if none are available yet
+        const repository = await this.waitForRepository(gitApi);
 
         // TODO: what do we want to do in case of multiple repositories?
-        return gitApi.repositories[0];
+        return repository;
     }
 
     private findPRLink(output: string): string | undefined {

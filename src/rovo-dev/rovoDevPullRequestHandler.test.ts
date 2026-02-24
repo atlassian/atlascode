@@ -21,8 +21,14 @@ jest.mock('./rovoDevTelemetryProvider', () => ({
 jest.mock('child_process');
 const mockExec = exec as jest.MockedFunction<typeof exec>;
 
+const mockOnDidChangeState = jest.fn();
+const mockOnDidOpenRepository = jest.fn();
+
 const mockGitApi = jest.fn().mockReturnValue({
     repositories: [],
+    state: 'initialized',
+    onDidChangeState: mockOnDidChangeState,
+    onDidOpenRepository: mockOnDidOpenRepository,
 });
 
 jest.mock('vscode', () => {
@@ -52,6 +58,14 @@ describe('RovoDevPullRequestHandler', () => {
     let findPRLink: (output: string) => string | undefined;
 
     beforeEach(() => {
+        jest.clearAllMocks();
+        // Reset mockGitApi to default state
+        mockGitApi.mockReturnValue({
+            repositories: [],
+            state: 'initialized',
+            onDidChangeState: mockOnDidChangeState.mockReturnValue({ dispose: jest.fn() }),
+            onDidOpenRepository: mockOnDidOpenRepository.mockReturnValue({ dispose: jest.fn() }),
+        });
         handler = new RovoDevPullRequestHandler();
         findPRLink = (output) => handler['findPRLink'](output);
     });
@@ -159,6 +173,89 @@ To unknown-host.com:atlassian/atlascode.git
         });
     });
 
+    describe('getGitRepository (via getCurrentBranchName)', () => {
+        it('Should return repository immediately when API is initialized and repositories exist', async () => {
+            const mockRepo = {
+                state: { HEAD: { name: 'main' } },
+                rootUri: { fsPath: '/mock/path' },
+            };
+
+            mockGitApi.mockReturnValue({
+                repositories: [mockRepo],
+                state: 'initialized',
+                onDidChangeState: mockOnDidChangeState.mockReturnValue({ dispose: jest.fn() }),
+                onDidOpenRepository: mockOnDidOpenRepository.mockReturnValue({ dispose: jest.fn() }),
+            });
+
+            const branchName = await handler.getCurrentBranchName();
+            expect(branchName).toBe('main');
+        });
+
+        it('Should wait for repository when API is initialized but no repositories exist yet', async () => {
+            const mockRepo = {
+                state: { HEAD: { name: 'feature-branch' } },
+                rootUri: { fsPath: '/mock/path' },
+            };
+
+            let onDidOpenRepoCallback: (repo: any) => void;
+            mockOnDidOpenRepository.mockImplementation((callback: (repo: any) => void) => {
+                onDidOpenRepoCallback = callback;
+                return { dispose: jest.fn() };
+            });
+
+            mockGitApi.mockReturnValue({
+                repositories: [],
+                state: 'initialized',
+                onDidChangeState: mockOnDidChangeState.mockReturnValue({ dispose: jest.fn() }),
+                onDidOpenRepository: mockOnDidOpenRepository,
+            });
+
+            // Start the async operation
+            const branchNamePromise = handler.getCurrentBranchName();
+
+            // Simulate repository being discovered after a delay
+            setTimeout(() => {
+                onDidOpenRepoCallback(mockRepo);
+            }, 10);
+
+            const branchName = await branchNamePromise;
+            expect(branchName).toBe('feature-branch');
+            expect(mockOnDidOpenRepository).toHaveBeenCalled();
+        });
+
+        it('Should wait for API initialization when state is uninitialized', async () => {
+            const mockRepo = {
+                state: { HEAD: { name: 'develop' } },
+                rootUri: { fsPath: '/mock/path' },
+            };
+
+            let onDidChangeStateCallback: (state: string) => void;
+            mockOnDidChangeState.mockImplementation((callback: (state: string) => void) => {
+                onDidChangeStateCallback = callback;
+                return { dispose: jest.fn() };
+            });
+
+            mockGitApi.mockReturnValue({
+                repositories: [mockRepo],
+                state: 'uninitialized',
+                onDidChangeState: mockOnDidChangeState,
+                onDidOpenRepository: mockOnDidOpenRepository.mockReturnValue({ dispose: jest.fn() }),
+            });
+
+            // Start the async operation
+            const branchNamePromise = handler.getCurrentBranchName();
+
+            // Simulate API becoming initialized after a delay
+            setTimeout(() => {
+                onDidChangeStateCallback('initialized');
+            }, 10);
+
+            const branchName = await branchNamePromise;
+            expect(branchName).toBe('develop');
+            expect(mockOnDidChangeState).toHaveBeenCalled();
+        });
+    });
+
     describe('createPR', () => {
         const setupCreatePRMocks = ({
             branchName,
@@ -201,6 +298,9 @@ To unknown-host.com:atlassian/atlascode.git
 
             mockGitApi.mockReturnValue({
                 repositories: [mockRepo],
+                state: 'initialized',
+                onDidChangeState: mockOnDidChangeState.mockReturnValue({ dispose: jest.fn() }),
+                onDidOpenRepository: mockOnDidOpenRepository.mockReturnValue({ dispose: jest.fn() }),
             });
 
             (mockExec as any).mockImplementation((command: string, options: any, callback: any) => {
