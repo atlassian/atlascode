@@ -25,7 +25,6 @@
 
 ### Bug Fixes
 
-- Fixed JSON parsing errors caused by multi-byte UTF-8 characters being split across HTTP chunk boundaries in Rovo Dev streaming responses
 - Improved error messages when git user.name or user.email is not configured, providing helpful setup instructions
 
 ## What's new in 4.0.19
