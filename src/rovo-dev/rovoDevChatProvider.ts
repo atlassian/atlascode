@@ -513,7 +513,10 @@ export class RovoDevChatProvider {
 
             case 'exception': {
                 // Handle InvalidPromptError for unsupported slash commands as a warning instead of an error
-                if (response.type === 'InvalidPromptError' && response.message.includes('Unknown command:')) {
+                if (
+                    response.type.toLowerCase().includes('invalidprompt') &&
+                    response.message.includes('Unknown command:')
+                ) {
                     // Extract the command name from the message (e.g., "Unknown command: /model" -> "/model")
                     const commandMatch = response.message.match(/Unknown command:\s*(\S+)/);
                     const command = commandMatch ? commandMatch[1] : 'the command you entered';
