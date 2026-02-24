@@ -373,7 +373,7 @@ export class RovoDevResponseParser {
         this.buffer = responseChunks.pop() || '';
 
         for (const chunkRaw of responseChunks) {
-            // it seems sometimes RovoDev sends a ping back - we just ignore it
+            // test it seems sometimes RovoDev sends a ping back - we just ignore it
             if (chunkRaw.startsWith(': ping - ')) {
                 continue;
             }
