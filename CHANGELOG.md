@@ -21,10 +21,7 @@
 
 ### Bug Fixes
 
-- Fixed JSON parsing errors caused by multi-byte UTF-8 characters being split across HTTP chunk boundaries in Rovo Dev streaming responses
-- Improved error messages when git user.name or user.email is not configured, providing helpful setup instructions
 - Fixed Rovo Dev UI crashes when markdown content fails to parse
-- Reduced telemetry noise by not logging user configuration/validation errors (git credentials, commit message required, etc.)
 
 ## What's new in 4.0.19
 
