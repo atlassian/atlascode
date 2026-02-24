@@ -11,6 +11,7 @@
 
 - Added warning message when no git repository selected on Start Work page
 - Bumped Rovo Dev version to v0.13.47
+- Rovo Dev: Unsupported slash commands now show a helpful warning instead of an error dialog
 
 ## What's new in 4.0.19
 
