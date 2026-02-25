@@ -3,6 +3,7 @@ import { RovoDevContextItem, RovoDevPrompt, ToolPermissionDialogChoice } from 's
 import { AgentMode } from '../client';
 import { ReducerAction } from '../messaging';
 import { FeedbackType } from './feedback-form/FeedbackForm';
+import { AskUserQuestionsResult } from './utils';
 
 export const enum RovoDevViewResponseType {
     Refresh = 'refresh',
@@ -48,6 +49,7 @@ export const enum RovoDevViewResponseType {
     RestartProcess = 'restartProcess',
     ShowSessionHistory = 'showSessionHistory',
     FetchSavedPrompts = 'fetchSavedPrompts',
+    AskUserQuestionsSubmit = 'askUserQuestionsSubmit',
 }
 
 export type FileOperationType = 'modify' | 'create' | 'delete';
@@ -116,4 +118,5 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.StartNewSession>
     | ReducerAction<RovoDevViewResponseType.RestartProcess>
     | ReducerAction<RovoDevViewResponseType.ShowSessionHistory>
-    | ReducerAction<RovoDevViewResponseType.FetchSavedPrompts>;
+    | ReducerAction<RovoDevViewResponseType.FetchSavedPrompts>
+    | ReducerAction<RovoDevViewResponseType.AskUserQuestionsSubmit, AskUserQuestionsResult>;

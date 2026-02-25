@@ -8,7 +8,7 @@ import { token } from '@atlaskit/tokens';
 import React from 'react';
 import { AgentMode, RovoDevModeInfo } from 'src/rovo-dev/client';
 
-const DISABLED_AGENT_MODES: readonly string[] = ['plan'];
+// const DISABLED_AGENT_MODES: readonly string[] = ['plan'];
 
 /** Shown when the available modes list hasn't loaded yet, so the UI is never empty. */
 const DEFAULT_AGENT_MODES: RovoDevModeInfo[] = [
@@ -83,7 +83,7 @@ const AgentModeSection: React.FC<AgentModeSectionProps> = ({
     setAgentMode,
 }: AgentModeSectionProps) => {
     const sourceModes = availableModes.length > 0 ? availableModes : DEFAULT_AGENT_MODES;
-    const agentModes = sourceModes.filter((mode) => !DISABLED_AGENT_MODES.includes(mode.mode));
+    const agentModes = sourceModes;
 
     return (
         <Box xcss={styles.sectionWrapper}>

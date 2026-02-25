@@ -109,6 +109,11 @@ export interface SavedPrompt {
 export interface SavedPromptsResponse {
     prompts: SavedPrompt[];
 }
+
+export interface AskUserQuestionsResult {
+    toolCallId: string;
+    result: { question: string; answer: string }[];
+}
 interface ToolReturnInfo {
     title: string;
     type: 'modify' | 'create' | 'delete' | 'open' | 'bash';

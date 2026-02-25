@@ -7,12 +7,15 @@ import {
     AgentMode,
     RovoDevApiClient,
     RovoDevApiError,
+    RovoDevAskUserQuestionsToolArgs,
     RovoDevChatRequest,
     RovoDevChatRequestContext,
     RovoDevChatRequestContextFileEntry,
     RovoDevChatRequestContextOtherEntry,
+    RovoDevDeferredToolCallResult,
     RovoDevResponse,
     RovoDevResponseParser,
+    RovoDevToolCallResponse,
     ToolPermissionChoice,
 } from './client';
 import { buildErrorDetails, buildExceptionDetails } from './errorDetailsBuilder';
@@ -46,6 +49,7 @@ export class RovoDevChatProvider {
 
     private _pendingToolConfirmation: Record<string, ToolPermissionChoice | 'undecided'> = {};
     private _pendingToolConfirmationLeft = 0;
+    private _pendingDeferredToolCall: Record<string, RovoDevDeferredToolCallResult | 'empty'> = {};
     private _pendingPrompt: RovoDevPrompt | undefined;
     private _currentPrompt: RovoDevPrompt | undefined;
     private _rovoDevApiClient: RovoDevApiClient | undefined;
@@ -444,6 +448,23 @@ export class RovoDevChatProvider {
         await flush();
     }
 
+    private async processDeferredToolCallResponse(deferredTools: RovoDevToolCallResponse): Promise<void> {
+        const webview = this._webView!;
+
+        try {
+            if (deferredTools.tool_name === 'ask_user_questions') {
+                const args = JSON.parse(deferredTools.args) as RovoDevAskUserQuestionsToolArgs;
+                await webview.postMessage({
+                    type: RovoDevProviderMessageType.ShowDeferredAskUserQuestions,
+                    toolCallId: deferredTools.tool_call_id,
+                    args,
+                });
+            }
+        } catch (error) {
+            console.log('Failed to parse deferred tool call arguments', error);
+        }
+    }
+
     private async processRovoDevResponse(sourceApi: StreamingApi, response: RovoDevResponse): Promise<void> {
         const fireTelemetry = sourceApi === 'chat';
         const webview = this._webView!;
@@ -568,6 +589,15 @@ export class RovoDevChatProvider {
             case 'on_call_tools_start':
                 this._pendingToolConfirmation = {};
                 this._pendingToolConfirmationLeft = 0;
+                this._pendingDeferredToolCall = {};
+                const deferredTools = response.tools.filter((tool) => tool.tool_name === 'ask_user_questions');
+
+                if (deferredTools.length > 0) {
+                    deferredTools.forEach(async (tool) => {
+                        this._pendingDeferredToolCall[tool.tool_call_id] = 'empty';
+                        await this.processDeferredToolCallResponse(tool);
+                    });
+                }
 
                 if (!response.permission_required) {
                     break;

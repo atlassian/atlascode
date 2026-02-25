@@ -1,5 +1,5 @@
 import { cssMap } from '@atlaskit/css';
-import AiGenerativeTextSummaryIcon from '@atlaskit/icon/core/ai-generative-text-summary';
+// import AiGenerativeTextSummaryIcon from '@atlaskit/icon/core/ai-generative-text-summary';
 import CrossIcon from '@atlaskit/icon/core/cross';
 import CustomizeIcon from '@atlaskit/icon/core/customize';
 import LockUnlockedIcon from '@atlaskit/icon/core/lock-unlocked';
@@ -125,7 +125,7 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                     >
                         Others
                     </Box>
-                    {onDeepPlanToggled && (
+                    {/* {onDeepPlanToggled && (
                         <PromptSettingsItem
                             icon={<AiGenerativeTextSummaryIcon label="Deep plan" />}
                             label="Plan"
@@ -134,7 +134,7 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                             actionType="toggle"
                             toggled={isDeepPlanEnabled}
                         />
-                    )}
+                    )} */}
                     {onFullContextToggled && (
                         <PromptSettingsItem
                             icon={<TelescopeIcon label="Full-Context mode" />}

@@ -330,6 +330,8 @@ const friendlyToolName: Record<RovoDevToolName, string> = {
     mcp__atlassian__invoke_tool: "Invoke an Atlassian MCP server's tool",
     mcp__atlassian__get_tool_schema: "Get an Atlassian MCP server's tool schema",
     mcp__scout__invoke_tool: "Invoke an MCP server's tool",
+    ask_user_questions: 'Ask user questions',
+    confirm_plan: 'Confirm plan with user',
 };
 
 const ToolCall: React.FC<{

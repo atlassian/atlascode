@@ -7,7 +7,12 @@ import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
 import * as React from 'react';
-import { AgentMode, RovoDevModeInfo, RovoDevToolReturnResponse } from 'src/rovo-dev/client';
+import {
+    AgentMode,
+    RovoDevAskUserQuestionsToolArgs,
+    RovoDevModeInfo,
+    RovoDevToolReturnResponse,
+} from 'src/rovo-dev/client';
 import { RovoDevContextItem, State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
@@ -30,10 +35,12 @@ import {
     RovoDevViewResponse,
     RovoDevViewResponseType,
 } from './rovoDevViewMessages';
+import { AskUserQuestionsComponent } from './technical-plan/AskUserQuestionsComponent';
 import { DebugPanel } from './tools/DebugPanel';
 import { parseToolCallMessage } from './tools/ToolCallItem';
 import {
     appendResponse,
+    AskUserQuestionsResult,
     CODE_PLAN_EXECUTE_PROMPT,
     ConnectionTimeout,
     DialogMessage,
@@ -82,6 +89,10 @@ const RovoDevView: React.FC = () => {
     const [availableAgentModes, setAvailableAgentModes] = useState<RovoDevModeInfo[]>([]);
     const [currentAgentMode, setCurrentAgentMode] = useState<AgentMode | null>('default');
     const [canFetchSavedPrompts, setCanFetchSavedPrompts] = React.useState(false);
+    const [askUserQuestionsToolArgs, setAskUserQuestionsToolArgs] = React.useState<{
+        toolCallId: string;
+        args: RovoDevAskUserQuestionsToolArgs;
+    } | null>(null);
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -510,6 +521,9 @@ const RovoDevView: React.FC = () => {
                     setCurrentAgentMode(event.mode);
                     break;
 
+                case RovoDevProviderMessageType.ShowDeferredAskUserQuestions:
+                    setAskUserQuestionsToolArgs({ toolCallId: event.toolCallId, args: event.args });
+                    break;
                 default:
                     // this is never supposed to happen since there aren't other type of messages
                     handleAppendResponse({
@@ -999,6 +1013,17 @@ const RovoDevView: React.FC = () => {
         return response.savedPrompts || [];
     }, [postMessagePromise]);
 
+    const handleSubmitAskUserQuestions = React.useCallback(
+        (result: AskUserQuestionsResult) => {
+            postMessage({
+                type: RovoDevViewResponseType.AskUserQuestionsSubmit,
+                ...result,
+            });
+            setAskUserQuestionsToolArgs(null);
+        },
+        [postMessage],
+    );
+
     React.useEffect(() => {
         postMessage({
             type: RovoDevViewResponseType.FullContextModeToggled,
@@ -1119,6 +1144,13 @@ const RovoDevView: React.FC = () => {
                                 <FeedbackConfirmationForm onClose={() => setIsFeedbackConfirmationFormVisible(false)} />
                             )}
                         </div>
+                        {askUserQuestionsToolArgs && (
+                            <AskUserQuestionsComponent
+                                toolCallId={askUserQuestionsToolArgs.toolCallId}
+                                args={askUserQuestionsToolArgs.args}
+                                onSubmit={handleSubmitAskUserQuestions}
+                            />
+                        )}
                         <div className="input-section-container">
                             <UpdatedFilesComponent
                                 modifiedFiles={totalModifiedFiles}

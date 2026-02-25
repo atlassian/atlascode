@@ -170,6 +170,28 @@ export type RovoDevToolName =
     | 'mcp_invoke_tool'
     | 'mcp__atlassian__invoke_tool'
     | 'mcp__atlassian__get_tool_schema'
-    | 'mcp__scout__invoke_tool';
+    | 'mcp__scout__invoke_tool'
+    | RovoDevDeferredToolCallName;
 
 export type RovoDevToolPemissionScenario = 'ASK' | 'ALLOWED' | 'DENIED';
+
+export type RovoDevDeferredToolCallName = 'ask_user_questions' | 'confirm_plan';
+
+export interface RovoDevDeferredToolCallResult {
+    tool_name: RovoDevDeferredToolCallName;
+    result: {
+        question_answers?: { [question: string]: string };
+        plan_approval?: boolean;
+    };
+}
+
+export interface RovoDevAskUserQuestionsToolArgs {
+    questions: {
+        header: string;
+        question: string;
+        options: {
+            label: string;
+            description: string;
+        }[];
+    }[];
+}

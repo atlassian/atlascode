@@ -2,6 +2,7 @@ import { DetailedSiteInfo, MinimalIssue } from './api/extensionApi';
 import {
     AgentMode,
     EntitlementCheckRovoDevHealthcheckResponse,
+    RovoDevAskUserQuestionsToolArgs,
     RovoDevModeInfo,
     RovoDevRetryPromptResponse,
     RovoDevTextResponse,
@@ -46,6 +47,7 @@ export const enum RovoDevProviderMessageType {
     GetCurrentAgentModeComplete = 'getCurrentAgentModeComplete',
     SetAgentModeComplete = 'setAgentModeComplete',
     UpdateSavedPrompts = 'updateSavedPrompts',
+    ShowDeferredAskUserQuestions = 'showDeferredAskUserQuestions',
 }
 
 export type RovoDevDisabledReason = DisabledState['subState'];
@@ -137,4 +139,8 @@ export type RovoDevProviderMessage =
     | ReducerAction<
           RovoDevProviderMessageType.UpdateSavedPrompts,
           { savedPrompts: { name: string; description: string; content_file: string }[] | undefined }
+      >
+    | ReducerAction<
+          RovoDevProviderMessageType.ShowDeferredAskUserQuestions,
+          { toolCallId: string; args: RovoDevAskUserQuestionsToolArgs }
       >;

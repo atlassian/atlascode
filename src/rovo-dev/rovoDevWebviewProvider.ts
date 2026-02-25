@@ -43,7 +43,7 @@ import { RovoDevProcessManager, RovoDevProcessState } from './rovoDevProcessMana
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevSessionManager } from './rovoDevSessionManager';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
-import { RovoDevContextItem } from './rovoDevTypes';
+import { RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 import { readLastNLogLines } from './rovoDevUtils';
 import {
     RovoDevDisabledReason,
@@ -598,6 +598,22 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             savedPrompts: prompts,
                         });
                         break;
+
+                    case RovoDevViewResponseType.AskUserQuestionsSubmit:
+                        const revertedFiles = this._revertedChanges;
+                        this._revertedChanges = [];
+                        const deferredToolResponse = {
+                            toolCallId: e.toolCallId,
+                            result: e.result,
+                        };
+                        const prompt: RovoDevPrompt = {
+                            text: JSON.stringify(deferredToolResponse),
+                            context: [],
+                            enable_deep_plan: false,
+                        };
+                        await this._chatProvider.executeChat(prompt, revertedFiles);
+                        break;
+
                     default:
                         // @ts-expect-error ts(2339) - e here should be 'never'
                         this.processError(new Error(`Unknown message type: ${e.type}`));
