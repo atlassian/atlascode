@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 import { Logger } from 'src/logger';
-import { API, GitExtension, Repository } from 'src/typings/git';
+import { API, GitErrorCodes, GitExtension, Repository } from 'src/typings/git';
 import { promisify } from 'util';
 import { env, extensions, Uri } from 'vscode';
 
@@ -129,9 +129,7 @@ export class RovoDevPullRequestHandler {
         const hasUncommitted = await this.hasUncommittedChanges();
         if (hasUncommitted) {
             if (!commitMessage || commitMessage.trim() === '') {
-                const error = new Error('Commit message is required when you have uncommitted changes.');
-                RovoDevTelemetryProvider.logError(error, 'Cannot create PR without commit message');
-                throw error;
+                throw new Error('Commit message is required when you have uncommitted changes.');
             }
 
             const curBranch = repo.state.HEAD?.name;
@@ -146,6 +144,23 @@ export class RovoDevPullRequestHandler {
                 Logger.info(`Successfully committed changes with message: "${commitMessage}"`);
             } catch (error) {
                 RovoDevTelemetryProvider.logError(error, 'Failed to commit changes');
+
+                // Check for specific git configuration errors
+                const gitError = error as any;
+                if (gitError.gitErrorCode === GitErrorCodes.NoUserNameConfigured) {
+                    throw new Error(
+                        'Failed to commit changes: Git user.name is not configured.\n\n' +
+                            'Please run:\n' +
+                            '  git config --global user.name "Your Name"',
+                    );
+                } else if (gitError.gitErrorCode === GitErrorCodes.NoUserEmailConfigured) {
+                    throw new Error(
+                        'Failed to commit changes: Git user.email is not configured.\n\n' +
+                            'Please run:\n' +
+                            '  git config --global user.email "your.email@example.com"',
+                    );
+                }
+
                 throw new Error(`Failed to commit changes: ${error.message || 'Unknown error'}`);
             }
         } else {

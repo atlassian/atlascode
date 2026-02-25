@@ -27,6 +27,7 @@ import {
     CommonEditorViewState,
     emptyCommonEditorState,
 } from '../AbstractIssueEditorPage';
+import { convertWikimarkupToAdf } from '../common/adfToWikimarkup';
 import { MissingScopesBanner } from '../common/missing-scopes-banner/MissingScopesBanner';
 import { CreateIssueButton } from './actions/CreateIssueButton';
 import { Panel } from './Panel';
@@ -327,10 +328,25 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
             return errs;
         }
 
+        // Convert WikiMarkup fields to ADF if using legacy editor AND site is Cloud
+        // When showAtlaskitEditor is false we use the legacy editor, which stores description/comment as WikiMarkup.
+        // Cloud API expects ADF, so we convert here. DC keeps WikiMarkup (no conversion).
+        const issueData = { ...this.state.fieldValues };
+        if (!this.state.showAtlaskitEditor && this.state.siteDetails.isCloud) {
+            // Convert description if it's a string (WikiMarkup)
+            if (issueData.description && typeof issueData.description === 'string') {
+                issueData.description = convertWikimarkupToAdf(issueData.description);
+            }
+            // Convert comment if it's a string (WikiMarkup)
+            if (issueData.comment && typeof issueData.comment === 'string') {
+                issueData.comment = convertWikimarkupToAdf(issueData.comment);
+            }
+        }
+
         const createAction = {
             action: 'createIssue',
             site: this.state.siteDetails,
-            issueData: this.state.fieldValues,
+            issueData: issueData,
             onCreateAction: this.state.onCreateAction,
         };
 

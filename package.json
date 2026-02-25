@@ -47,7 +47,7 @@
     ],
     "main": "./build/extension/extension",
     "rovoDev": {
-        "version": "0.13.40"
+        "version": "0.13.47"
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
@@ -1680,6 +1680,7 @@
         "@atlaskit/editor-plugin-insert-block": "^7.0.1",
         "@atlaskit/editor-plugin-list": "^8.0.0",
         "@atlaskit/editor-plugin-mentions": "^8.0.0",
+        "@atlaskit/editor-plugin-tasks-and-decisions": "^9.0.0",
         "@atlaskit/editor-plugin-text-color": "^6.0.1",
         "@atlaskit/editor-plugin-toolbar-lists-indentation": "^7.0.1",
         "@atlaskit/editor-wikimarkup-transformer": "^11.16.4",
@@ -1718,7 +1719,7 @@
         "@atlassianlabs/guipi-jira-components": "^3.2.0",
         "@atlassianlabs/jira-metaui-client": "^2.0.0",
         "@atlassianlabs/jira-metaui-transformer": "^2.0.0",
-        "@atlassianlabs/jira-pi-client": "2.0.0",
+        "@atlassianlabs/jira-pi-client": "2.0.1",
         "@atlassianlabs/jira-pi-common-models": "^2.0.0",
         "@atlassianlabs/jira-pi-meta-models": "^2.0.0",
         "@atlassianlabs/pi-client-common": "^2.0.0",
@@ -1877,6 +1878,12 @@
         "webpack-node-externals": "^3.0.0"
     },
     "overrides": {
+        "@sentry/node": {
+            "minimatch": "10.2.2"
+        },
+        "vscode-languageclient": {
+            "minimatch": "10.2.2"
+        },
         "@atlaskit/analytics-next-stable-react-context": {
             "react": "^18.3.1"
         },

@@ -70,7 +70,7 @@ export class RovoDevEntitlementChecker extends Disposable {
                     RovoDevEntitlementErrorType.CREDENTIAL_ERROR,
                     'No valid Rovo Dev credentials found',
                 );
-                Logger.error(error, 'Failed to get credentials for Rovo Dev entitlement check');
+                Logger.debug('No credentials found for Rovo Dev entitlement check');
                 throw error;
             }
 
@@ -84,7 +84,7 @@ export class RovoDevEntitlementChecker extends Disposable {
                     RovoDevEntitlementErrorType.FETCH_FAILED,
                     `Failed to fetch Rovo Dev entitlement: ${err.message}`,
                 );
-                Logger.error(error, 'Rovo Dev entitlement fetch failed', credentials.host);
+                Logger.debug(`Rovo Dev entitlement fetch failed for ${credentials.host}: ${err.message}`);
                 throw error;
             });
 
@@ -95,7 +95,7 @@ export class RovoDevEntitlementChecker extends Disposable {
                     `Failed to fetch Rovo Dev entitlement: ${message}`,
                     response.status,
                 );
-                Logger.error(error, String(response.status));
+                Logger.debug(`Rovo Dev entitlement check returned status ${response.status}`);
                 throw error;
             }
 
@@ -107,7 +107,7 @@ export class RovoDevEntitlementChecker extends Disposable {
                     RovoDevEntitlementErrorType.NO_ACTIVE_PRODUCT,
                     'No active Rovo Dev product found for the provided credentials',
                 );
-                Logger.error(error, 'Invalid Rovo Dev entitlement type');
+                Logger.debug(`No active Rovo Dev product found, received: ${value.trim()}`);
                 throw error;
             }
 
@@ -121,7 +121,9 @@ export class RovoDevEntitlementChecker extends Disposable {
             };
             return this._cachedEntitlement;
         } catch (err) {
-            Logger.error(err, 'Unable to check Rovo Dev entitlement');
+            Logger.debug(
+                `Rovo Dev entitlement check result: ${err instanceof RovoDevEntitlementError ? err.errorType : 'unknown'}`,
+            );
             const errType: string =
                 err instanceof RovoDevEntitlementError ? err.errorType : RovoDevEntitlementErrorType.UNKNOWN_ERROR;
             let errTypeFinal = errType;

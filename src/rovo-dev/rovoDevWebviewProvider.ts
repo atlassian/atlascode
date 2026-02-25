@@ -1173,10 +1173,18 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 },
             });
         } catch (e) {
-            await this.processError(e);
+            const gitErrorCode = e.gitErrorCode;
+
+            // Don't log user configuration/input errors - these are expected and user needs to fix them
+            const isUserConfigError =
+                gitErrorCode === GitErrorCodes.NoUserNameConfigured ||
+                gitErrorCode === GitErrorCodes.NoUserEmailConfigured ||
+                e.message?.includes('Commit message is required') ||
+                e.message?.includes('Branch name is required');
+
+            await this.processError(e, { skipLogError: isUserConfigError });
 
             const errorMessage = e.message;
-            const gitErrorCode = e.gitErrorCode;
 
             await webview.postMessage({
                 type: RovoDevProviderMessageType.CreatePRComplete,
