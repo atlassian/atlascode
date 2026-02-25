@@ -21,7 +21,6 @@
 
 ### Bug Fixes
 
-- **RovoDev**: Fixed MCP permission race condition - users can now type their prompts while MCP permission dialogs are displayed. The send button is disabled during MCP acceptance, but the input remains editable to prevent loss of user input.
 - Jira Data Center: fixed errors when adding or updating comments (comment body is now sent as string for DC, ADF for Cloud)
 - Jira DC: fixed updating issue description (description is sent as WikiMarkup string for DC, ADF for Cloud)
 - Jira DC: user mentions in comments and description now show the correct username instead of @unknown
