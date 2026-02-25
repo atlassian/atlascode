@@ -945,4 +945,144 @@ describe('CredentialManager', () => {
             expect(result).toEqual(basicAuthInfo);
         });
     });
+
+    describe('refreshAccessToken', () => {
+        let mockRefresher: any;
+        const mockOAuthInfo: OAuthInfo = {
+            ...mockAuthInfo,
+            access: 'old-access-token',
+            refresh: 'refresh-token',
+            expirationDate: Date.now() + 1000,
+            recievedAt: Date.now(),
+        };
+
+        beforeEach(() => {
+            mockRefresher = {
+                getNewTokens: jest.fn(),
+            };
+            (credentialManager as any)._refresher = mockRefresher;
+        });
+
+        it('should log error only after 5 failed attempts', async () => {
+            const Logger = require('../logger').Logger;
+            const site = { ...mockJiraSite, isCloud: true };
+
+            mockRefresher.getNewTokens.mockResolvedValue({
+                tokens: undefined,
+                shouldSlowDown: true,
+                shouldInvalidate: false,
+            });
+
+            // Mock getAuthInfoForProductAndCredentialId to return OAuth credentials
+            const getAuthInfoSpy = jest.spyOn(credentialManager as any, 'getAuthInfoForProductAndCredentialId');
+            getAuthInfoSpy.mockResolvedValue(mockOAuthInfo);
+            const saveAuthInfoSpy = jest.spyOn(credentialManager as any, 'saveAuthInfo');
+            saveAuthInfoSpy.mockResolvedValue(true);
+
+            // First 4 attempts should only log debug
+            for (let i = 1; i <= 4; i++) {
+                Logger.error.mockClear();
+                await (credentialManager as any).refreshAccessToken(site);
+                expect(Logger.error).not.toHaveBeenCalled();
+            }
+
+            // 5th attempt should log error
+            Logger.error.mockClear();
+            await (credentialManager as any).refreshAccessToken(site);
+            expect(Logger.error).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    message: expect.stringContaining('Token refresh failed after 5 attempts'),
+                }),
+            );
+        });
+
+        it('should log error immediately when credentials are invalidated', async () => {
+            const Logger = require('../logger').Logger;
+            const site = { ...mockJiraSite, isCloud: true };
+
+            mockRefresher.getNewTokens.mockResolvedValue({
+                tokens: undefined,
+                shouldInvalidate: true,
+                shouldSlowDown: false,
+            });
+
+            const getAuthInfoSpy = jest.spyOn(credentialManager as any, 'getAuthInfoForProductAndCredentialId');
+            getAuthInfoSpy.mockResolvedValue(mockOAuthInfo);
+            const saveAuthInfoSpy = jest.spyOn(credentialManager as any, 'saveAuthInfo');
+            saveAuthInfoSpy.mockResolvedValue(true);
+
+            Logger.error.mockClear();
+            await (credentialManager as any).refreshAccessToken(site);
+
+            expect(Logger.error).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    message: expect.stringContaining('credentials invalidated'),
+                }),
+            );
+        });
+
+        it('should skip refresh after 5 failures within retry delay', async () => {
+            const Logger = require('../logger').Logger;
+            const site = { ...mockJiraSite, isCloud: true };
+
+            mockRefresher.getNewTokens.mockResolvedValue({
+                tokens: undefined,
+                shouldSlowDown: true,
+                shouldInvalidate: false,
+            });
+
+            const getAuthInfoSpy = jest.spyOn(credentialManager as any, 'getAuthInfoForProductAndCredentialId');
+            getAuthInfoSpy.mockResolvedValue(mockOAuthInfo);
+            const saveAuthInfoSpy = jest.spyOn(credentialManager as any, 'saveAuthInfo');
+            saveAuthInfoSpy.mockResolvedValue(true);
+
+            // Perform 6 failures (> 5 to trigger skip logic)
+            for (let i = 0; i < 6; i++) {
+                await (credentialManager as any).refreshAccessToken(site);
+            }
+
+            // Next attempt within delay should be skipped
+            mockRefresher.getNewTokens.mockClear();
+            Logger.debug.mockClear();
+            const result = await (credentialManager as any).refreshAccessToken(site);
+
+            expect(result).toBeUndefined();
+            expect(mockRefresher.getNewTokens).not.toHaveBeenCalled();
+            expect(Logger.debug).toHaveBeenCalledWith(expect.stringContaining('Skipping token refresh'));
+        });
+
+        it('should clear failed refresh cache on success', async () => {
+            const site = { ...mockJiraSite, isCloud: true };
+
+            const getAuthInfoSpy = jest.spyOn(credentialManager as any, 'getAuthInfoForProductAndCredentialId');
+            getAuthInfoSpy.mockResolvedValue(mockOAuthInfo);
+            const saveAuthInfoSpy = jest.spyOn(credentialManager as any, 'saveAuthInfo');
+            saveAuthInfoSpy.mockResolvedValue(true);
+
+            // First fail
+            mockRefresher.getNewTokens.mockResolvedValueOnce({
+                tokens: undefined,
+                shouldSlowDown: true,
+                shouldInvalidate: false,
+            });
+
+            await (credentialManager as any).refreshAccessToken(site);
+            expect((credentialManager as any)._failedRefreshCache.has(site.credentialId)).toBe(true);
+
+            // Then succeed
+            mockRefresher.getNewTokens.mockResolvedValueOnce({
+                tokens: {
+                    accessToken: 'new-access-token',
+                    refreshToken: 'new-refresh-token',
+                    expiration: Date.now() + 3600000,
+                    receivedAt: Date.now(),
+                },
+                shouldSlowDown: false,
+                shouldInvalidate: false,
+            });
+
+            await (credentialManager as any).refreshAccessToken(site);
+            expect((credentialManager as any)._failedRefreshCache.has(site.credentialId)).toBe(false);
+        });
+    });
 });

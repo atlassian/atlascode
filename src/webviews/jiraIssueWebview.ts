@@ -1248,7 +1248,13 @@ export class JiraIssueWebview
                         handled = true;
                         try {
                             const client = await Container.clientManager.jiraClient(msg.site);
-                            await client.removeWatcher(msg.issueKey, msg.watcher.accountId);
+                            const isCloud = msg.site.isCloud;
+                            const msgWatcherAccountId = msg.watcher.accountId; // undefined for Server/Data Center
+                            const msgWatcherKey = msg.watcher.key; // undefined for Cloud
+                            const query = isCloud ? { accountId: msgWatcherAccountId } : { username: msgWatcherKey };
+
+                            await client.removeWatcher(msg.issueKey, query);
+
                             if (
                                 !this._editUIData.fieldValues['watches'] ||
                                 !this._editUIData.fieldValues['watches'].watchers ||
@@ -1257,13 +1263,19 @@ export class JiraIssueWebview
                                 this._editUIData.fieldValues['watches'].watchers = [];
                             }
                             const foundIndex: number = this._editUIData.fieldValues['watches'].watchers.findIndex(
-                                (user: User) => user.accountId === msg.watcher.accountId,
+                                (user: User) => {
+                                    const isAccountIdEqual = user.accountId === msgWatcherAccountId;
+                                    const isUsernameEqual = user.key && msgWatcherKey && user.key === msgWatcherKey;
+                                    return isCloud ? isAccountIdEqual : isUsernameEqual;
+                                },
                             );
                             if (foundIndex > -1) {
                                 this._editUIData.fieldValues['watches'].watchers.splice(foundIndex, 1);
                             }
-
-                            if (msg.watcher.accountId === this._currentUser.accountId) {
+                            const isCurrentUserWatcher = isCloud
+                                ? msgWatcherAccountId === this._currentUser.accountId
+                                : msgWatcherKey === this._currentUser.key;
+                            if (isCurrentUserWatcher) {
                                 this._editUIData.fieldValues['watches'].isWatching = false;
                             }
 
