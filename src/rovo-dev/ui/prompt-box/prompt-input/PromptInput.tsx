@@ -223,7 +223,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             readOnly: readOnly ?? false,
             placeholder: getTextAreaPlaceholder(isGeneratingResponse, currentState),
         });
-    }, [currentState, editor, disableSendButton, readOnly]);
+    }, [currentState, editor, readOnly]);
 
     // Focus the editor when it becomes visible in the viewport - helps with opening Rovo Dev panel already focused
     React.useEffect(() => {
