@@ -8,6 +8,11 @@ import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
 import { ChatMessage, onKeyDownHandler, parseToolReturnMessage } from '../utils';
 import { DialogMessageItem } from './DialogMessage';
 
+// Context for error reporting in RovoDev
+export const RovoDevErrorContext = React.createContext<{
+    reportError?: (error: Error, component: string) => void;
+}>({});
+
 const mdParser = new MarkdownIt({
     html: false,
     breaks: true,
@@ -40,12 +45,29 @@ mdParser.renderer.rules.link_open = function (tokens, idx, options, env, self) {
     return self.renderToken(tokens, idx, options);
 };
 
-export const MarkedDown: React.FC<{ value: string; onLinkClick: (href: string) => void }> = ({
-    value,
-    onLinkClick,
-}) => {
+export const MarkedDown: React.FC<{
+    value: string;
+    onLinkClick: (href: string) => void;
+}> = ({ value, onLinkClick }) => {
     const spanRef = React.useRef<HTMLSpanElement>(null);
-    const html = React.useMemo(() => mdParser.render(value ?? ''), [value]);
+    const { reportError } = React.useContext(RovoDevErrorContext);
+
+    const html = React.useMemo(() => {
+        try {
+            return mdParser.render(value ?? '');
+        } catch (error) {
+            // If markdown parsing fails, report error to backend and return plain text
+            console.error('Markdown parsing error:', error);
+
+            // Report to telemetry if reportError is available
+            if (reportError && error instanceof Error) {
+                reportError(error, 'MarkedDown');
+            }
+
+            // Fallback to plain text instead of crashing
+            return value ?? '';
+        }
+    }, [value, reportError]);
 
     React.useEffect(() => {
         if (!spanRef.current) {

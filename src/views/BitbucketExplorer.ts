@@ -7,6 +7,7 @@ import { configuration } from '../config/configuration';
 import { Commands } from '../constants';
 import { BitbucketEnabledKey } from '../constants';
 import { Container } from '../container';
+import { Logger } from '../logger';
 import { FocusEvent, FocusEventActions } from '../webview/ExplorerFocusManager';
 import { BitbucketActivityMonitor } from './BitbucketActivityMonitor';
 import { BaseTreeDataProvider, Explorer } from './Explorer';
@@ -61,7 +62,11 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
     }
 
     async refresh() {
-        if (!Container.siteManager.productHasAtLeastOneSite(ProductBitbucket)) {
+        // Only refresh if user has authenticated Bitbucket sites
+        // This prevents API calls with bad/missing credentials
+        const validAuthInfos = await Container.credentialManager.getAllValidAuthInfo(ProductBitbucket);
+        if (validAuthInfos.length === 0) {
+            Logger.debug('Skipping Bitbucket refresh - no authenticated Bitbucket sites');
             return;
         }
 
