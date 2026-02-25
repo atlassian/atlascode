@@ -220,7 +220,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             (currentState.state === 'Initializing' && currentState.isPromptPending);
 
         editor.updateOptions({
-            readOnly: readOnly ?? false,
+            readOnly: readOnly,
             placeholder: getTextAreaPlaceholder(isGeneratingResponse, currentState),
         });
     }, [currentState, editor, readOnly]);
