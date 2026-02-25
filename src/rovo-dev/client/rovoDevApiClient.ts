@@ -215,7 +215,7 @@ export class RovoDevApiClient {
 
         await this.fetchApi('/v3/set_chat_message', 'POST', JSON.stringify(message));
 
-        const qs = `pause_on_call_tools_start=${pause_on_call_tools_start ? 'true' : 'false'}`;
+        const qs = `pause_on_call_tools_start=${pause_on_call_tools_start ? 'true' : 'false'}&enable_deferred_tools=true`;
         return await this.fetchApi(`/v3/stream_chat?${qs}`, 'GET', undefined, abortSignal);
     }
 

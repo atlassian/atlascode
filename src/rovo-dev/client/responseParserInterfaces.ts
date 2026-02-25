@@ -175,15 +175,7 @@ export type RovoDevToolName =
 
 export type RovoDevToolPemissionScenario = 'ASK' | 'ALLOWED' | 'DENIED';
 
-export type RovoDevDeferredToolCallName = 'ask_user_questions' | 'confirm_plan';
-
-export interface RovoDevDeferredToolCallResult {
-    tool_name: RovoDevDeferredToolCallName;
-    result: {
-        question_answers?: { [question: string]: string };
-        plan_approval?: boolean;
-    };
-}
+export type RovoDevDeferredToolCallName = 'ask_user_questions' | 'exit_plan_mode';
 
 export interface RovoDevAskUserQuestionsToolArgs {
     questions: {
@@ -194,4 +186,8 @@ export interface RovoDevAskUserQuestionsToolArgs {
             description: string;
         }[];
     }[];
+}
+
+export interface RovoDevExitPlanModeToolArgs {
+    plan: string;
 }

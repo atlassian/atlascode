@@ -12,7 +12,8 @@ import {
     RovoDevChatRequestContext,
     RovoDevChatRequestContextFileEntry,
     RovoDevChatRequestContextOtherEntry,
-    RovoDevDeferredToolCallResult,
+    RovoDevDeferredToolCallResponse,
+    RovoDevExitPlanModeToolArgs,
     RovoDevResponse,
     RovoDevResponseParser,
     RovoDevToolCallResponse,
@@ -49,7 +50,7 @@ export class RovoDevChatProvider {
 
     private _pendingToolConfirmation: Record<string, ToolPermissionChoice | 'undecided'> = {};
     private _pendingToolConfirmationLeft = 0;
-    private _pendingDeferredToolCall: Record<string, RovoDevDeferredToolCallResult | 'empty'> = {};
+    private _pendingDeferredToolCall: Record<string, 'incomplete' | 'complete'> = {};
     private _pendingPrompt: RovoDevPrompt | undefined;
     private _currentPrompt: RovoDevPrompt | undefined;
     private _rovoDevApiClient: RovoDevApiClient | undefined;
@@ -208,6 +209,22 @@ export class RovoDevChatProvider {
         this.addRetryAfterErrorContextToPrompt(requestPayload);
 
         await this.sendPromptToRovoDev(requestPayload);
+    }
+
+    public async executeDeferredToolCall(payload: RovoDevDeferredToolCallResponse) {
+        if (
+            !this._pendingDeferredToolCall[payload.tool_call_id] ||
+            this._pendingDeferredToolCall[payload.tool_call_id] !== 'incomplete'
+        ) {
+            return;
+        }
+        const chatRequestPayload: RovoDevChatRequest = {
+            message: payload,
+            context: [],
+        };
+
+        await this.sendPromptToRovoDev(chatRequestPayload);
+        this._pendingDeferredToolCall[payload.tool_call_id] = 'complete';
     }
 
     private async sendPromptToRovoDev(requestPayload: RovoDevChatRequest) {
@@ -459,6 +476,13 @@ export class RovoDevChatProvider {
                     toolCallId: deferredTools.tool_call_id,
                     args,
                 });
+            } else if (deferredTools.tool_name === 'exit_plan_mode') {
+                const args = JSON.parse(deferredTools.args) as RovoDevExitPlanModeToolArgs;
+                await webview.postMessage({
+                    type: RovoDevProviderMessageType.ShowDeferredExitPlanMode,
+                    toolCallId: deferredTools.tool_call_id,
+                    args,
+                });
             }
         } catch (error) {
             console.log('Failed to parse deferred tool call arguments', error);
@@ -589,12 +613,15 @@ export class RovoDevChatProvider {
             case 'on_call_tools_start':
                 this._pendingToolConfirmation = {};
                 this._pendingToolConfirmationLeft = 0;
-                this._pendingDeferredToolCall = {};
-                const deferredTools = response.tools.filter((tool) => tool.tool_name === 'ask_user_questions');
+                const deferredTools = response.tools.filter(
+                    (tool) =>
+                        (tool.tool_name === 'ask_user_questions' || tool.tool_name === 'exit_plan_mode') &&
+                        this._pendingDeferredToolCall[tool.tool_call_id] === undefined, // only process deferred tool calls that are not yet marked as 'incomplete' or 'complete'
+                );
 
                 if (deferredTools.length > 0) {
                     deferredTools.forEach(async (tool) => {
-                        this._pendingDeferredToolCall[tool.tool_call_id] = 'empty';
+                        this._pendingDeferredToolCall[tool.tool_call_id] = 'incomplete';
                         await this.processDeferredToolCallResponse(tool);
                     });
                 }

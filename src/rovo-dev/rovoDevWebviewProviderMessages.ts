@@ -3,6 +3,7 @@ import {
     AgentMode,
     EntitlementCheckRovoDevHealthcheckResponse,
     RovoDevAskUserQuestionsToolArgs,
+    RovoDevExitPlanModeToolArgs,
     RovoDevModeInfo,
     RovoDevRetryPromptResponse,
     RovoDevTextResponse,
@@ -48,6 +49,7 @@ export const enum RovoDevProviderMessageType {
     SetAgentModeComplete = 'setAgentModeComplete',
     UpdateSavedPrompts = 'updateSavedPrompts',
     ShowDeferredAskUserQuestions = 'showDeferredAskUserQuestions',
+    ShowDeferredExitPlanMode = 'showDeferredExitPlanMode',
 }
 
 export type RovoDevDisabledReason = DisabledState['subState'];
@@ -143,4 +145,8 @@ export type RovoDevProviderMessage =
     | ReducerAction<
           RovoDevProviderMessageType.ShowDeferredAskUserQuestions,
           { toolCallId: string; args: RovoDevAskUserQuestionsToolArgs }
+      >
+    | ReducerAction<
+          RovoDevProviderMessageType.ShowDeferredExitPlanMode,
+          { toolCallId: string; args: RovoDevExitPlanModeToolArgs }
       >;

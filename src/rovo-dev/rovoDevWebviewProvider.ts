@@ -30,7 +30,13 @@ import { FeatureFlagClient } from '../util/featureFlags/featureFlagClient';
 import { Features } from '../util/features';
 import { RovodevCommandContext, RovodevCommands } from './api/componentApi';
 import { DetailedSiteInfo, ExtensionApi, MinimalIssue } from './api/extensionApi';
-import { AgentMode, RovoDevApiClient, RovoDevApiError, RovoDevHealthcheckResponse } from './client';
+import {
+    AgentMode,
+    RovoDevApiClient,
+    RovoDevApiError,
+    RovoDevDeferredToolCallResponse,
+    RovoDevHealthcheckResponse,
+} from './client';
 import { buildErrorDetails } from './errorDetailsBuilder';
 import { createValidatedRovoDevAuthInfo } from './rovoDevAuthValidator';
 import { RovoDevChatContextProvider } from './rovoDevChatContextProvider';
@@ -43,7 +49,7 @@ import { RovoDevProcessManager, RovoDevProcessState } from './rovoDevProcessMana
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevSessionManager } from './rovoDevSessionManager';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
-import { RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
+import { RovoDevContextItem } from './rovoDevTypes';
 import { readLastNLogLines } from './rovoDevUtils';
 import {
     RovoDevDisabledReason,
@@ -600,18 +606,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.AskUserQuestionsSubmit:
-                        const revertedFiles = this._revertedChanges;
-                        this._revertedChanges = [];
-                        const deferredToolResponse = {
-                            toolCallId: e.toolCallId,
+                        const deferredToolResponse: RovoDevDeferredToolCallResponse = {
+                            tool_call_id: e.toolCallId,
                             result: e.result,
                         };
-                        const prompt: RovoDevPrompt = {
-                            text: JSON.stringify(deferredToolResponse),
-                            context: [],
-                            enable_deep_plan: false,
-                        };
-                        await this._chatProvider.executeChat(prompt, revertedFiles);
+                        await this._chatProvider.executeDeferredToolCall(deferredToolResponse);
+
                         break;
 
                     default:

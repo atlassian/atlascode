@@ -538,6 +538,16 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.ShowDeferredAskUserQuestions:
                     setAskUserQuestionsToolArgs({ toolCallId: event.toolCallId, args: event.args });
                     break;
+                case RovoDevProviderMessageType.ShowDeferredExitPlanMode:
+                    const plan = `\n${event.args.plan}`; // Precede plan with a newline for better formatting in the chat
+                    const chatMessage: Response = {
+                        event_kind: 'text',
+                        content: plan,
+                        index: -1,
+                    };
+                    handleAppendResponse(chatMessage);
+                    break;
+
                 default:
                     // this is never supposed to happen since there aren't other type of messages
                     handleAppendResponse({
