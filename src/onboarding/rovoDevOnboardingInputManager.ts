@@ -1,6 +1,7 @@
 import { commands, env, InputBox, QuickInputButton, QuickInputButtons, Uri, window } from 'vscode';
 
 import { Commands } from '../constants';
+import { validateEmail } from '../webviews/components/fieldValidators';
 import { OnboardingButtons } from './utils';
 
 const TOKEN_URL =
@@ -90,7 +91,7 @@ class RovoDevOnboardingInputManager {
         this._tokenInput.title = 'Setup Atlascode';
         this._tokenInput.placeholder = 'Enter your token';
         this._tokenInput.prompt = `Create a token at [id.atlassian.com](${TOKEN_URL}) to get the full power of Atlassian complete with Rovo Dev AI coding capabilities and MCP connections.`;
-        this._tokenInput.password = false;
+        this._tokenInput.password = true;
         this._tokenInput.show();
     }
 
@@ -109,6 +110,7 @@ class RovoDevOnboardingInputManager {
         this._emailInput.value = '';
         this._siteUrlInput.value = '';
         this._tokenInput.value = this._tokenValue;
+        this._tokenInput.password = true;
         this._tokenInput.show();
     }
 
@@ -166,8 +168,9 @@ class RovoDevOnboardingInputManager {
 
     private _onEmailAccept() {
         const email = this._emailInput.value?.trim();
-        if (!email) {
-            this._emailInput.validationMessage = 'Please enter your email';
+        const emailError = validateEmail(email ?? '');
+        if (emailError) {
+            this._emailInput.validationMessage = 'Please enter a valid email address';
             return;
         }
         this._emailValue = email;
