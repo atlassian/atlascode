@@ -1020,8 +1020,10 @@ const RovoDevView: React.FC = () => {
         });
     }, [postMessage, isFullContextModeToggled]);
 
-    const hidePromptBox =
-        currentState.state === 'Disabled' ||
+    const hidePromptBox = currentState.state === 'Disabled';
+
+    const disableSendButton =
+        currentState.state === 'ProcessTerminated' ||
         (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance');
 
     return (
@@ -1157,7 +1159,8 @@ const RovoDevView: React.FC = () => {
                                             openJira={openJira}
                                         />
                                         <PromptInputBox
-                                            disabled={currentState.state === 'ProcessTerminated'}
+                                            disableSendButton={disableSendButton}
+                                            readOnly={currentState.state === 'ProcessTerminated'}
                                             currentState={currentState}
                                             isDeepPlanEnabled={isDeepPlanToggled}
                                             isYoloModeEnabled={isYoloModeToggled}
