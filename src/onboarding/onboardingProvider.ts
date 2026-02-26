@@ -43,7 +43,7 @@ class OnboardingProvider {
 
         this._rovoDevInputManager = new RovoDevOnboardingInputManager(
             () => this._handleBack(OnboardingStep.RovoDev),
-            (args) => void this._onRovoTokenSubmit(args),
+            (args) => this._onRovoTokenSubmit(args),
         );
 
         this._mainMenuQuickPickManager = new OnboardingQuickPickManager(
@@ -88,9 +88,7 @@ class OnboardingProvider {
             await commands.executeCommand('atlascode.views.rovoDev.webView.focus');
         } catch (error) {
             Logger.error(error, 'Rovo Dev onboarding: failed to save credentials');
-            const message = error instanceof Error ? error.message : 'Failed to configure Rovo Dev. Please try again.';
-            window.showErrorMessage(message);
-            this.show(OnboardingStep.MainMenu);
+            throw error;
         }
     }
 

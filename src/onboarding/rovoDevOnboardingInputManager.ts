@@ -21,9 +21,9 @@ class RovoDevOnboardingInputManager {
     private _transitioningToToken: boolean = false;
     private _submitting: boolean = false;
     private _onBack: () => void;
-    private _onSubmit: (args: RovoDevOnboardingSubmitArgs) => void;
+    private _onSubmit: (args: RovoDevOnboardingSubmitArgs) => void | Promise<void>;
 
-    constructor(onBack: () => void, onSubmit: (args: RovoDevOnboardingSubmitArgs) => void) {
+    constructor(onBack: () => void, onSubmit: (args: RovoDevOnboardingSubmitArgs) => void | Promise<void>) {
         this._onBack = onBack;
         this._onSubmit = onSubmit;
 
@@ -196,7 +196,7 @@ class RovoDevOnboardingInputManager {
         }
     }
 
-    private _onSiteUrlAccept() {
+    private async _onSiteUrlAccept() {
         const raw = this._siteUrlInput.value?.trim() ?? '';
         const normalized = raw
             .replace(/^https?:\/\//, '')
@@ -212,16 +212,26 @@ class RovoDevOnboardingInputManager {
         }
         this._siteUrlValue = normalized;
         if (this._tokenValue && this._emailValue) {
+            this._siteUrlInput.validationMessage = undefined;
+            this._siteUrlInput.busy = true;
             this._submitting = true;
-            this._siteUrlInput.hide();
-            this._onSubmit({
+            const args: RovoDevOnboardingSubmitArgs = {
                 token: this._tokenValue,
                 siteUrl: this._siteUrlValue,
                 email: this._emailValue,
-            });
-            this._tokenValue = '';
-            this._emailValue = '';
-            this._siteUrlValue = '';
+            };
+            try {
+                await Promise.resolve(this._onSubmit(args));
+                this._siteUrlInput.hide();
+                this._tokenValue = '';
+                this._emailValue = '';
+                this._siteUrlValue = '';
+            } catch (e) {
+                this._submitting = false;
+                this._siteUrlInput.busy = false;
+                this._siteUrlInput.validationMessage =
+                    e instanceof Error ? e.message : 'Login failed. Please check your credentials and try again.';
+            }
             return;
         }
         this._tokenValue = '';
