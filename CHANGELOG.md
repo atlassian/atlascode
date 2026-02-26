@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.21
+
+### Bug fixes
+
+- Fixed issue description losing line breaks and formatting in edit mode after save (HTML-to-ADF conversion now preserves line breaks as hardBreak nodes)
+
 ## What's new in 4.0.20
 
 ### Features
@@ -15,7 +21,6 @@
 
 ### Bug Fixes
 
-- Fixed issue description losing line breaks and formatting in edit mode after save (HTML-to-ADF conversion now preserves line breaks as hardBreak nodes)
 - Jira Data Center: fixed errors when adding or updating comments (comment body is now sent as string for DC, ADF for Cloud)
 - Jira DC: fixed updating issue description (description is sent as WikiMarkup string for DC, ADF for Cloud)
 - Jira DC: user mentions in comments and description now show the correct username instead of @unknown
