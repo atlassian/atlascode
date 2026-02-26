@@ -1199,7 +1199,10 @@ const RovoDevView: React.FC = () => {
                                             openJira={openJira}
                                         />
                                         <PromptInputBox
-                                            disabled={currentState.state === 'ProcessTerminated'}
+                                            disabled={
+                                                currentState.state === 'ProcessTerminated' ||
+                                                askUserQuestionsToolArgs !== null
+                                            }
                                             currentState={currentState}
                                             isDeepPlanEnabled={isDeepPlanToggled}
                                             isYoloModeEnabled={isYoloModeToggled}
