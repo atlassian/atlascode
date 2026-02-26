@@ -1,3 +1,5 @@
+// import { defaultSchema } from '@atlaskit/adf-schema/schema-default';
+import { JSONTransformer } from '@atlaskit/editor-json-transformer';
 import { WikiMarkupTransformer } from '@atlaskit/editor-wikimarkup-transformer';
 
 // ADF (Atlassian Document Format) node structure
@@ -90,17 +92,15 @@ export function convertAdfToWikimarkup(adf: AdfNode | string | null | undefined)
         // Check if it's valid ADF
         if (adfDoc && adfDoc.type === 'doc' && adfDoc.version === 1) {
             try {
-                // Validate ADF structure before transformation
                 if (!adfDoc.content || !Array.isArray(adfDoc.content)) {
                     console.warn('Invalid ADF structure: missing or invalid content array');
                     return extractPlainTextFromAdf(adfDoc);
                 }
 
-                // WikiMarkupTransformer provides its own schema
-                const transformer = new WikiMarkupTransformer();
-                // Convert ADF to WikiMarkup
-                const wikimarkup = transformer.encode(adfDoc);
-                return wikimarkup;
+                const jsonTransformer = new JSONTransformer();
+                const pmNode = jsonTransformer.parse(adfDoc);
+                const wikiTransformer = new WikiMarkupTransformer();
+                return wikiTransformer.encode(pmNode);
             } catch (transformError) {
                 console.warn('WikiMarkup transformer failed, falling back to plain text extraction:', transformError);
                 // Fallback to plain text extraction
@@ -211,57 +211,6 @@ export function convertWikimarkupToAdf(wikimarkup: string): AdfNode {
             ],
         };
     }
-}
-
-/**
- * Splits paragraph (and heading) content at hardBreak nodes into separate block nodes.
- * Used when converting HTML-to-ADF content so that each visual line can be its own block if needed.
- */
-export function splitParagraphsAtHardBreaks(adf: AdfNode): AdfNode {
-    if (!adf || adf.type !== 'doc' || !Array.isArray(adf.content)) {
-        return adf;
-    }
-    const newContent: AdfNode[] = [];
-    for (const node of adf.content) {
-        if (node.type !== 'paragraph' && node.type !== 'heading') {
-            newContent.push(node);
-            continue;
-        }
-        const content = node.content;
-        if (!content || content.length === 0) {
-            newContent.push(node);
-            continue;
-        }
-        const runs: AdfNode[][] = [];
-        let current: AdfNode[] = [];
-        for (const n of content) {
-            if (n.type === 'hardBreak') {
-                if (current.length > 0) {
-                    runs.push(current);
-                    current = [];
-                }
-            } else {
-                current.push(n);
-            }
-        }
-        if (current.length > 0) {
-            runs.push(current);
-        }
-        if (runs.length === 0) {
-            newContent.push(node);
-            continue;
-        }
-        const blockType = node.type;
-        const attrs = node.attrs;
-        for (const run of runs) {
-            newContent.push(
-                blockType === 'heading'
-                    ? { type: 'heading', attrs: attrs || { level: 1 }, content: run }
-                    : { type: 'paragraph', content: run },
-            );
-        }
-    }
-    return { ...adf, content: newContent };
 }
 
 /**
