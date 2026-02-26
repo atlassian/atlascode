@@ -3,23 +3,19 @@ import { Comment, CommentVisibility, IssueKeyAndSite } from '@atlassianlabs/jira
 import { issueCommentEvent } from '../../analytics';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Container } from '../../container';
-import { commentBodyToString } from '../../util/adfToCommentBody';
 
-/** DC expects comment body as string; Cloud accepts ADF. Normalize only for DC. */
 export async function postComment(
     issue: IssueKeyAndSite<DetailedSiteInfo>,
-    comment: string | Record<string, unknown>,
+    comment: string,
     commentId?: string,
     restriction?: CommentVisibility,
 ): Promise<Comment> {
     const client = await Container.clientManager.jiraClient(issue.siteDetails);
-    const bodyForApi = issue.siteDetails.isCloud ? comment : commentBodyToString(comment);
-    const bodyTyped = bodyForApi as string; // Cloud accepts ADF object; client .d.ts types body as string
 
     const resp =
         commentId === undefined
-            ? await client.addComment(issue.key, bodyTyped, restriction)
-            : await client.updateComment(issue.key, commentId, bodyTyped, restriction);
+            ? await client.addComment(issue.key, comment, restriction)
+            : await client.updateComment(issue.key, commentId, comment, restriction);
 
     issueCommentEvent(issue.siteDetails).then((e) => {
         Container.analyticsClient.sendTrackEvent(e);
