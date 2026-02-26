@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## Unreleased
+
+### Bug Fixes
+
+- Fixed duplicate remote creation when checking out PR branches from forked repositories - the extension now reuses existing remotes that point to the same repository
+
 ## What's new in 4.0.20
 
 ### Features

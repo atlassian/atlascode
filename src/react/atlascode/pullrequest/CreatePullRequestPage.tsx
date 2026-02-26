@@ -98,6 +98,38 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
     const [transition, setTransition] = useState<Transition>(emptyTransition);
     const [submitState, setSubmitState] = useState<submittingState>('initial');
 
+    // Lookup the SiteRemote object based on the selected sourceRemoteName
+    const sourceSiteRemote = useMemo(() => {
+        if (!sourceRemoteName) {
+            return state.repoData.workspaceRepo.mainSiteRemote;
+        }
+
+        const found = state.repoData.workspaceRepo.siteRemotes.find((sr) => sr.remote.name === sourceRemoteName);
+
+        return found || state.repoData.workspaceRepo.mainSiteRemote;
+    }, [sourceRemoteName, state.repoData.workspaceRepo.siteRemotes, state.repoData.workspaceRepo.mainSiteRemote]);
+
+    // Filter local branches based on selected source remote
+    const filteredSourceBranches = useMemo(() => {
+        if (!sourceRemoteName) {
+            return state.repoData.localBranches;
+        }
+
+        return state.repoData.localBranches.filter((branch) => {
+            // Include branches that track the selected remote
+            if (branch.upstream?.remote === sourceRemoteName) {
+                return true;
+            }
+            // Include branches without upstream (untracked local branches)
+            // These can be pushed to any remote
+            if (!branch.upstream) {
+                return true;
+            }
+            // Exclude branches that track a different remote
+            return false;
+        });
+    }, [sourceRemoteName, state.repoData.localBranches]);
+
     const handleTitleChange = useCallback(
         (event: React.ChangeEvent<HTMLInputElement>) => setTitle(event.target.value),
         [setTitle],
@@ -148,7 +180,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                 setSubmitState(submitType);
                 await controller.submit({
                     workspaceRepo: state.repoData.workspaceRepo,
-                    sourceSiteRemote: state.repoData.workspaceRepo.mainSiteRemote,
+                    sourceSiteRemote: sourceSiteRemote,
                     sourceBranch: sourceBranch,
                     sourceRemoteName: sourceRemoteName,
                     destinationBranch: destinationBranch,
@@ -172,6 +204,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
             state.repoData,
             sourceBranch,
             sourceRemoteName,
+            sourceSiteRemote,
             destinationBranch,
             title,
             summary,
@@ -312,7 +345,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                                             </TextField>
                                                         )}
                                                         <Autocomplete
-                                                            options={state.repoData.localBranches}
+                                                            options={filteredSourceBranches}
                                                             getOptionLabel={(option: Branch) => option.name!}
                                                             isOptionEqualToValue={(option: Branch, value: Branch) =>
                                                                 option.name === value.name
