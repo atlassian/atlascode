@@ -488,6 +488,11 @@
                 "category": "Bitbucket"
             },
             {
+                "command": "atlascode.bb.copySourceLink",
+                "title": "Copy Source Link",
+                "category": "Bitbucket"
+            },
+            {
                 "command": "atlascode.bb.editThisFile",
                 "title": "Edit this File",
                 "category": "Bitbucket",
@@ -717,6 +722,13 @@
                     "command": "atlascode.bb.editThisFile",
                     "group": "atlascode",
                     "when": "resourceScheme == atlascode.bbpr && config.atlascode.bitbucket.enabled"
+                }
+            ],
+            "explorer/context": [
+                {
+                    "command": "atlascode.bb.copySourceLink",
+                    "group": "atlascode",
+                    "when": "!explorerResourceIsFolder && config.atlascode.bitbucket.enabled && atlascode:isBitbucketCloudRepo"
                 }
             ],
             "scm/title": [
