@@ -206,10 +206,7 @@ class RovoDevOnboardingInputManager {
             this._siteUrlInput.validationMessage = 'Please enter your site (e.g. yoursite.atlassian.net)';
             return;
         }
-        if (!normalized.endsWith('.atlassian.net')) {
-            this._siteUrlInput.validationMessage = 'Site must be an Atlassian Cloud URL (*.atlassian.net)';
-            return;
-        }
+
         this._siteUrlValue = normalized;
         if (this._tokenValue && this._emailValue) {
             this._siteUrlInput.validationMessage = undefined;
