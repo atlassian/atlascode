@@ -17,7 +17,11 @@ interface AdfBlockNode {
     attrs?: Record<string, unknown>;
 }
 
-type AdfNode = AdfTextNode | AdfBlockNode;
+interface AdfHardBreakNode {
+    type: 'hardBreak';
+}
+
+type AdfNode = AdfTextNode | AdfBlockNode | AdfHardBreakNode;
 
 function textNode(text: string, marks?: AdfTextNode['marks']): AdfTextNode {
     const node: AdfTextNode = { type: 'text', text };
@@ -66,8 +70,38 @@ function parseInlineNodes(element: Element): AdfNode[] {
     return nodes;
 }
 
+function hardBreakNode(): AdfHardBreakNode {
+    return { type: 'hardBreak' };
+}
+
+/**
+ * Builds paragraph content from inline nodes: converts \n (from <br> or text) to ADF hardBreak
+ * so that line breaks and formatting are preserved in edit mode after save.
+ */
+
 function flattenParagraphContent(nodes: AdfNode[]): AdfNode[] {
-    const out: AdfNode[] = nodes.filter((n) => !(n.type === 'text' && 'text' in n && n.text === '\n'));
+    const out: AdfNode[] = [];
+    for (const n of nodes) {
+        if (n.type === 'text' && 'text' in n) {
+            if (n.text === '\n') {
+                out.push(hardBreakNode());
+                continue;
+            }
+            if (typeof n.text === 'string' && n.text.includes('\n')) {
+                const parts = n.text.split('\n');
+                for (let i = 0; i < parts.length; i++) {
+                    if (parts[i].length > 0) {
+                        out.push(textNode(parts[i], n.marks));
+                    }
+                    if (i < parts.length - 1) {
+                        out.push(hardBreakNode());
+                    }
+                }
+                continue;
+            }
+        }
+        out.push(n);
+    }
     return out.length ? out : [textNode('')];
 }
 
