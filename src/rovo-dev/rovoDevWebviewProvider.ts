@@ -26,8 +26,6 @@ import {
 } from 'vscode';
 
 import { GitErrorCodes } from '../typings/git';
-import { FeatureFlagClient } from '../util/featureFlags/featureFlagClient';
-import { Features } from '../util/features';
 import { RovodevCommandContext, RovodevCommands } from './api/componentApi';
 import { DetailedSiteInfo, ExtensionApi, MinimalIssue } from './api/extensionApi';
 import {
@@ -628,7 +626,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private async sendProviderReadyEvent(userEmail: string | undefined) {
         const yoloMode = this._yoloMode;
-        const featureFlagClient = FeatureFlagClient.getInstance();
 
         await this._webView!.postMessage({
             type: RovoDevProviderMessageType.ProviderReady,
@@ -636,9 +633,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             workspacePath: workspace.workspaceFolders?.[0]?.uri.fsPath,
             homeDir: process.env.HOME || process.env.USERPROFILE,
             yoloMode,
-            features: {
-                dedicatedRovoDevAuth: featureFlagClient.checkGate(Features.DedicatedRovoDevAuth),
-            },
         });
 
         // Send existing Jira credentials for autocomplete

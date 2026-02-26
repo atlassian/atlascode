@@ -9,7 +9,6 @@ export enum Features {
     RovoDevEntitlementNotification = 'atlascode-rovodev-entitlement-notification',
     RovoDevLspEnabled = 'atlascode-enable-rovodev-lsp',
     SentryLogging = 'atlascode-sentry-logging',
-    DedicatedRovoDevAuth = 'atlascode-use-dedicated-rovodev-auth',
     RequireDedicatedRovoDevAuth = 'atlascode-require-dedicated-rovodev-auth',
 }
 
@@ -18,7 +17,6 @@ export enum Features {
  * This might happen during initialization or if there are network issues.
  */
 export const defaultFeatureGateValues: Partial<FeatureGateValues> = {
-    [Features.DedicatedRovoDevAuth]: true,
     [Features.RequireDedicatedRovoDevAuth]: false,
 };
 

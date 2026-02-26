@@ -92,21 +92,20 @@ const IssueMainPanel: React.FC<Props> = ({
 
     // Use centralized editor state
     const { openEditor, closeEditor, isEditorActive } = useEditorState();
-    // Handle descriptionText - convert ADF object to appropriate format for editor
+    // Use raw description (ADF or string) for the editor; no HTML→ADF conversion.
     const getDescriptionTextForEditor = React.useCallback(() => {
         if (
             typeof defaultDescription === 'object' &&
+            defaultDescription !== null &&
             defaultDescription.version === 1 &&
             defaultDescription.type === 'doc'
         ) {
-            // For new Atlaskit editor: convert ADF to JSON string
             if (isAtlaskitEditorEnabled) {
                 return JSON.stringify(defaultDescription);
             }
-            // For legacy editor: convert ADF to WikiMarkup
             return convertAdfToWikimarkup(defaultDescription);
         }
-        return defaultDescription || '';
+        return typeof defaultDescription === 'string' ? defaultDescription : '';
     }, [defaultDescription, isAtlaskitEditorEnabled]);
 
     const [descriptionText, setDescriptionText] = React.useState(() => getDescriptionTextForEditor());
