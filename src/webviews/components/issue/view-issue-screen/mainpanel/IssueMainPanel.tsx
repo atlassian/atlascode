@@ -93,11 +93,13 @@ const IssueMainPanel: React.FC<Props> = ({
 
     // Use centralized editor state
     const { openEditor, closeEditor, isEditorActive } = useEditorState();
-    // Prefer rendered HTML when available so links (and other content) from Jira Web show in edit mode (Cloud and DC).
+    // Jira Cloud: prefer rendered HTML for editor so links (and other content) added on Jira Web show in edit mode.
+    // Jira DC: prefer raw ADF when available to preserve formatting after save from this editor.
     const getDescriptionTextForEditor = React.useCallback(() => {
-        if (renderedDescription && typeof renderedDescription === 'string') {
+        const useRenderedFirst = siteDetails.isCloud && renderedDescription && typeof renderedDescription === 'string';
+        if (useRenderedFirst) {
             try {
-                const adfFromHtml = convertHtmlToAdf(renderedDescription);
+                const adfFromHtml = convertHtmlToAdf(renderedDescription!);
                 if (isAtlaskitEditorEnabled) {
                     return JSON.stringify(adfFromHtml);
                 }
@@ -117,8 +119,19 @@ const IssueMainPanel: React.FC<Props> = ({
             }
             return convertAdfToWikimarkup(defaultDescription);
         }
+        if (renderedDescription && typeof renderedDescription === 'string') {
+            try {
+                const adfFromHtml = convertHtmlToAdf(renderedDescription);
+                if (isAtlaskitEditorEnabled) {
+                    return JSON.stringify(adfFromHtml);
+                }
+                return convertAdfToWikimarkup(adfFromHtml);
+            } catch (e) {
+                console.warn('Failed to use rendered description for editor', e);
+            }
+        }
         return typeof defaultDescription === 'string' ? defaultDescription : '';
-    }, [defaultDescription, renderedDescription, isAtlaskitEditorEnabled]);
+    }, [defaultDescription, renderedDescription, isAtlaskitEditorEnabled, siteDetails.isCloud]);
 
     const [descriptionText, setDescriptionText] = React.useState(() => getDescriptionTextForEditor());
     const [localIsEditingDescription, setLocalIsEditingDescription] = React.useState(false);

@@ -1,195 +1,43 @@
 /**
- * Converts HTML (e.g. Jira renderedFields.description) to ADF.
- * Used when links or other content added on Jira Web are present in the rendered
- * HTML but not in the raw description (Cloud and DC). Using rendered HTML for
- * the editor keeps edit mode in sync with render mode.
+ * Converts Jira rendered description HTML → ADF for the issue description editor.
+ * Used only in IssueMainPanel when we have description.rendered (e.g. Cloud, or fallback)
+ * so that content added on Jira Web (links, etc.) appears in edit mode.
+ * Pipeline: TurndownService (HTML → Markdown) + MarkdownTransformer (Markdown → ADF).
  */
 
-interface AdfTextNode {
-    type: 'text';
-    text: string;
-    marks?: Array<{ type: string; attrs?: Record<string, string> }>;
-}
+import { MarkdownTransformer } from '@atlaskit/editor-markdown-transformer';
+import TurndownService from 'turndown';
 
-interface AdfBlockNode {
-    type: string;
-    content?: AdfNode[];
-    attrs?: Record<string, unknown>;
-}
+const turndown = new TurndownService();
+const markdownTransformer = new MarkdownTransformer();
 
-interface AdfHardBreakNode {
-    type: 'hardBreak';
-}
+const emptyDoc = (): { version: 1; type: 'doc'; content: any[] } => ({
+    version: 1,
+    type: 'doc',
+    content: [{ type: 'paragraph', content: [] }],
+});
 
-type AdfNode = AdfTextNode | AdfBlockNode | AdfHardBreakNode;
-
-function textNode(text: string, marks?: AdfTextNode['marks']): AdfTextNode {
-    const node: AdfTextNode = { type: 'text', text };
-    if (marks && marks.length > 0) {
-        node.marks = marks;
-    }
-    return node;
-}
-
-function linkMark(href: string): { type: string; attrs: Record<string, string> } {
-    return { type: 'link', attrs: { href } };
-}
-
-function parseInlineNodes(element: Element): AdfNode[] {
-    const nodes: AdfNode[] = [];
-    const walk = (el: Node): void => {
-        if (el.nodeType === Node.TEXT_NODE) {
-            const t = el.textContent?.trim();
-            if (t) {
-                nodes.push(textNode(t));
-            }
-            return;
-        }
-        if (el.nodeType !== Node.ELEMENT_NODE) {
-            return;
-        }
-        const e = el as Element;
-        const tag = e.tagName.toLowerCase();
-        if (tag === 'a') {
-            const href = e.getAttribute('href') || '';
-            const text = e.textContent?.trim() || href;
-            nodes.push(textNode(text, [linkMark(href)]));
-            return;
-        }
-        if (tag === 'strong' || tag === 'b' || tag === 'em' || tag === 'i') {
-            e.childNodes.forEach(walk);
-            return;
-        }
-        if (tag === 'br') {
-            nodes.push(textNode('\n'));
-            return;
-        }
-        e.childNodes.forEach(walk);
-    };
-    element.childNodes.forEach(walk);
-    return nodes;
-}
-
-function hardBreakNode(): AdfHardBreakNode {
-    return { type: 'hardBreak' };
-}
-
-/**
- * Builds paragraph content from inline nodes: converts \n (from <br> or text) to ADF hardBreak
- * so that line breaks and formatting are preserved in edit mode after save.
- */
-
-function flattenParagraphContent(nodes: AdfNode[]): AdfNode[] {
-    const out: AdfNode[] = [];
-    for (const n of nodes) {
-        if (n.type === 'text' && 'text' in n) {
-            if (n.text === '\n') {
-                out.push(hardBreakNode());
-                continue;
-            }
-            if (typeof n.text === 'string' && n.text.includes('\n')) {
-                const parts = n.text.split('\n');
-                for (let i = 0; i < parts.length; i++) {
-                    if (parts[i].length > 0) {
-                        out.push(textNode(parts[i], n.marks));
-                    }
-                    if (i < parts.length - 1) {
-                        out.push(hardBreakNode());
-                    }
-                }
-                continue;
-            }
-        }
-        out.push(n);
-    }
-    return out.length ? out : [textNode('')];
-}
-
-/**
- * Converts an HTML string (e.g. from Jira renderedFields) to ADF document.
- * Supports paragraphs, links, headings, and basic structure. Safe in webview (uses DOMParser).
- */
-export function convertHtmlToAdf(html: string): { version: 1; type: 'doc'; content: AdfBlockNode[] } {
-    const content: AdfBlockNode[] = [];
+export function convertHtmlToAdf(html: string): { version: 1; type: 'doc'; content: any[] } {
     if (!html || typeof html !== 'string') {
-        return { version: 1, type: 'doc', content: [{ type: 'paragraph', content: [textNode('')] }] };
+        return emptyDoc();
     }
-
     try {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const body = doc.body;
-
-        const getBlockType = (tag: string): 'paragraph' | 'heading' => (/^h[1-6]$/.test(tag) ? 'heading' : 'paragraph');
-        const getHeadingLevel = (tag: string): number => {
-            const m = /^h([1-6])$/i.exec(tag);
-            return m ? parseInt(m[1], 10) : 1;
-        };
-
-        const visit = (el: Element): void => {
-            const tag = el.tagName.toLowerCase();
-            if (tag === 'ul' || tag === 'ol') {
-                Array.from(el.children).forEach((li) => {
-                    if (li.tagName.toLowerCase() === 'li') {
-                        const inner = parseInlineNodes(li);
-                        content.push({ type: 'paragraph', content: flattenParagraphContent(inner) });
-                    }
-                });
-                return;
-            }
-            if (['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'li', 'br'].includes(tag)) {
-                if (tag === 'br') {
-                    content.push({ type: 'paragraph', content: [textNode('')] });
-                    return;
-                }
-                const inner = parseInlineNodes(el);
-                const blockType = getBlockType(tag);
-                content.push(
-                    blockType === 'heading'
-                        ? {
-                              type: 'heading',
-                              attrs: { level: getHeadingLevel(tag) },
-                              content: flattenParagraphContent(inner),
-                          }
-                        : { type: 'paragraph', content: flattenParagraphContent(inner) },
-                );
-                return;
-            }
-            const inner = parseInlineNodes(el);
-            if (inner.length > 0) {
-                content.push({ type: 'paragraph', content: flattenParagraphContent(inner) });
-            }
-        };
-
-        const blocks: Element[] = [];
-        for (const child of body.childNodes) {
-            if (child.nodeType !== Node.ELEMENT_NODE) {
-                const text = child.textContent?.trim();
-                if (text) {
-                    const wrap = doc.createElement('p');
-                    wrap.textContent = text;
-                    blocks.push(wrap);
-                }
-                continue;
-            }
-            blocks.push(child as Element);
-        }
-        blocks.forEach(visit);
-
-        if (content.length === 0) {
-            content.push({ type: 'paragraph', content: [textNode('')] });
-        }
-
-        return { version: 1, type: 'doc', content };
-    } catch (err) {
-        console.warn('htmlToAdf: parse failed', err);
+        const md = turndown.turndown(html);
+        const node = markdownTransformer.parse(md);
+        const doc = node.toJSON() as { content?: any[] };
         return {
             version: 1,
             type: 'doc',
+            content: Array.isArray(doc?.content) ? doc.content : [],
+        };
+    } catch (err) {
+        console.warn('htmlToAdf: parse failed', err);
+        return {
+            ...emptyDoc(),
             content: [
                 {
                     type: 'paragraph',
-                    content: [textNode(html.replace(/<[^>]+>/g, ' ').trim() || '')],
+                    content: [{ type: 'text', text: html.replace(/<[^>]+>/g, ' ').trim() || '' }],
                 },
             ],
         };
