@@ -42,7 +42,6 @@ import { parseToolCallMessage } from './tools/ToolCallItem';
 import {
     appendResponse,
     AskUserQuestionsResult,
-    CODE_PLAN_EXECUTE_PROMPT,
     ConnectionTimeout,
     DialogMessage,
     extractLastNMessages,
@@ -541,11 +540,12 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.ShowDeferredExitPlanMode:
                     const plan = `\n${event.args.plan}`; // Precede plan with a newline for better formatting in the chat
                     const chatMessage: Response = {
-                        event_kind: 'text',
+                        event_kind: '_RovoDevExitPlanMode',
                         content: plan,
-                        index: -1,
+                        toolCallId: event.toolCallId,
                     };
                     handleAppendResponse(chatMessage);
+                    setIsDeepPlanCreated(true);
                     break;
 
                 default:
@@ -613,6 +613,22 @@ const RovoDevView: React.FC = () => {
         setState,
     ]);
 
+    const handleExitPlanMode = useCallback(
+        (proceed: boolean, toolCallId: string) => {
+            postMessage({
+                type: RovoDevViewResponseType.ExitPlanModeSubmit,
+                result: { proceed },
+                toolCallId,
+            });
+
+            if (proceed) {
+                setCurrentState({ state: 'ExecutingPlan' });
+            }
+            setIsDeepPlanCreated(false);
+        },
+        [postMessage],
+    );
+
     const sendPrompt = useCallback(
         (text: string): boolean => {
             if (text.trim() === '') {
@@ -674,15 +690,6 @@ const RovoDevView: React.FC = () => {
             setLastCompletedPromptId(undefined);
         }
     }, [lastCompletedPromptId, currentState.state, postMessage]);
-
-    const executeCodePlan = useCallback(() => {
-        if (currentState.state !== 'WaitingForPrompt') {
-            return;
-        }
-        if (sendPrompt(CODE_PLAN_EXECUTE_PROMPT)) {
-            setCurrentState({ state: 'ExecutingPlan' });
-        }
-    }, [currentState, sendPrompt]);
 
     const retryPromptAfterError = useCallback((): void => {
         setCurrentState({ state: 'GeneratingResponse' });
@@ -1121,7 +1128,6 @@ const RovoDevView: React.FC = () => {
                         }}
                         pendingToolCall={pendingToolCallMessage}
                         deepPlanCreated={isDeepPlanCreated}
-                        executeCodePlan={executeCodePlan}
                         currentState={currentState}
                         onChangesGitPushed={onChangesGitPushed}
                         onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
@@ -1137,6 +1143,7 @@ const RovoDevView: React.FC = () => {
                         onLinkClick={onLinkClick}
                         credentialHints={credentialHints}
                         features={features}
+                        onGeneratePlanClick={(e: string, proceed: boolean) => handleExitPlanMode(proceed, e)}
                     />
                     {!hidePromptBox && (
                         <div className="input-section-container">
@@ -1201,7 +1208,8 @@ const RovoDevView: React.FC = () => {
                                         <PromptInputBox
                                             disabled={
                                                 currentState.state === 'ProcessTerminated' ||
-                                                askUserQuestionsToolArgs !== null
+                                                askUserQuestionsToolArgs !== null ||
+                                                isDeepPlanCreated
                                             }
                                             currentState={currentState}
                                             isDeepPlanEnabled={isDeepPlanToggled}

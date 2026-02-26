@@ -41,12 +41,19 @@ export type ChatMessage =
     | RovoDevTextResponse
     | RovoDevToolCallResponse
     | RovoDevToolReturnResponse
-    | RovoDevRetryPromptResponse;
+    | RovoDevRetryPromptResponse
+    | RovoDevExitPlanModeMessage;
 
 export interface UserPromptMessage {
     event_kind: '_RovoDevUserPrompt';
     content: string;
     context?: RovoDevContextItem[];
+}
+
+export interface RovoDevExitPlanModeMessage {
+    event_kind: '_RovoDevExitPlanMode';
+    toolCallId: string;
+    content: string;
 }
 
 export interface PullRequestMessage {

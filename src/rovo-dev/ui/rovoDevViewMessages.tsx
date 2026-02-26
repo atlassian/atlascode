@@ -50,6 +50,7 @@ export const enum RovoDevViewResponseType {
     ShowSessionHistory = 'showSessionHistory',
     FetchSavedPrompts = 'fetchSavedPrompts',
     AskUserQuestionsSubmit = 'askUserQuestionsSubmit',
+    ExitPlanModeSubmit = 'exitPlanModeSubmit',
 }
 
 export type FileOperationType = 'modify' | 'create' | 'delete';
@@ -119,4 +120,5 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.RestartProcess>
     | ReducerAction<RovoDevViewResponseType.ShowSessionHistory>
     | ReducerAction<RovoDevViewResponseType.FetchSavedPrompts>
-    | ReducerAction<RovoDevViewResponseType.AskUserQuestionsSubmit, AskUserQuestionsResult>;
+    | ReducerAction<RovoDevViewResponseType.AskUserQuestionsSubmit, AskUserQuestionsResult>
+    | ReducerAction<RovoDevViewResponseType.ExitPlanModeSubmit, { result: { proceed: boolean }; toolCallId: string }>;

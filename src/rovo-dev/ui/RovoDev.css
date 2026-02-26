@@ -289,7 +289,6 @@ body {
 .code-plan-button-container {
     display: flex;
     justify-content: flex-start;
-    margin-bottom: 8px;
 }
   
 .code-plan-button {
@@ -301,16 +300,39 @@ body {
     width: fit-content;
     background-color: inherit;
     padding: 6px 12px;
+    gap: 4px;
 }
 
-.code-plan-button:hover {
-    border: 1px solid var(--vscode-focusBorder);
+.code-plan-button .primary {
+    color: var(--vscode-button-foreground);
+    background-color: var(--vscode-button-background);
+}
+
+.code-plan-button .primary:hover {
+    background-color: var(--vscode-button-hoverBackground);
     cursor: pointer;
+}
+
+.code-plan-button .secondary {
+    color: var(--vscode-button-secondaryForeground);
+    background-color: var(--vscode-button-secondaryBackground);
+}
+
+.code-plan-button .secondary:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+    color: var(--vscode-button-secondaryForeground);
+    cursor: pointer;
+}
+
+.code-plan-button:disabled {
+    border: 1px solid var(--vscode-editorWidget-border);
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-input-placeholderForeground);
+    cursor: not-allowed;
 }
 
 .code-plan-button span {
     font-size: 14px;
-    color: var(--vscode-button-secondaryForeground);
 }
 
 /* Messaging styles */
@@ -336,6 +358,7 @@ body {
     align-items: center;
     gap: 0;
     margin-bottom: 8px;
+    justify-content: space-between;
 }
 
 .chat-message-action {

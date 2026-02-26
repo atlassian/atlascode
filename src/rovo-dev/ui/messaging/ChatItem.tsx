@@ -29,6 +29,7 @@ interface ChatItemProps {
     };
     drawerOpen: boolean;
     onLinkClick: (href: string) => void;
+    onGeneratePlanClick?: (planId: string, proceed: boolean) => void;
 }
 
 export const ChatItem = React.memo<ChatItemProps>(
@@ -41,6 +42,7 @@ export const ChatItem = React.memo<ChatItemProps>(
         renderProps,
         drawerOpen,
         onLinkClick,
+        onGeneratePlanClick,
     }) => {
         if (!block) {
             return null;
@@ -56,16 +58,24 @@ export const ChatItem = React.memo<ChatItemProps>(
                     onLinkClick={onLinkClick}
                 />
             );
-        } else if (block.event_kind === '_RovoDevUserPrompt' || block.event_kind === 'text') {
+        } else if (
+            block.event_kind === '_RovoDevUserPrompt' ||
+            block.event_kind === 'text' ||
+            block.event_kind === '_RovoDevExitPlanMode'
+        ) {
             return (
                 <ChatMessageItem
                     msg={block}
-                    enableActions={block.event_kind === 'text' && block.isSummary === true}
+                    enableActions={
+                        (block.event_kind === 'text' && block.isSummary === true) ||
+                        block.event_kind === '_RovoDevExitPlanMode'
+                    }
                     onCopy={handleCopyResponse}
                     onFeedback={handleFeedbackTrigger}
                     openFile={renderProps.openFile}
                     openJira={renderProps.openJira}
                     onLinkClick={onLinkClick}
+                    onGeneratePlanClick={onGeneratePlanClick}
                 />
             );
         } else if (block.event_kind === 'tool-return') {

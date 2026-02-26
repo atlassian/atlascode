@@ -606,6 +606,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.AskUserQuestionsSubmit:
+                    case RovoDevViewResponseType.ExitPlanModeSubmit:
                         const deferredToolResponse: RovoDevDeferredToolCallResponse = {
                             tool_call_id: e.toolCallId,
                             result: e.result,

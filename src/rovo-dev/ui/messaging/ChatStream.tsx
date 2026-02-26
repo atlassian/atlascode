@@ -15,7 +15,6 @@ import { CredentialHint } from '../landing-page/disabled-messages/RovoDevLoginFo
 import { RovoDevLanding } from '../landing-page/RovoDevLanding';
 import { useMessagingApi } from '../messagingApi';
 import { McpConsentChoice, RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
-import { CodePlanButton } from '../technical-plan/CodePlanButton';
 import { ToolCallItem } from '../tools/ToolCallItem';
 import { ConnectionTimeout, DialogMessage, PullRequestMessage, Response, scrollToEnd } from '../utils';
 import { ChatStreamMessageRenderer } from './ChatStreamMessageRenderer';
@@ -39,7 +38,6 @@ interface ChatStreamProps {
     >;
     pendingToolCall: string;
     deepPlanCreated: boolean;
-    executeCodePlan: () => void;
     currentState: State;
     onChangesGitPushed: (msg: PullRequestMessage, pullRequestCreated: boolean) => void;
     onCollapsiblePanelExpanded: () => void;
@@ -55,6 +53,7 @@ interface ChatStreamProps {
     onLinkClick: (href: string) => void;
     credentialHints?: CredentialHint[];
     features?: RovoDevFeatures;
+    onGeneratePlanClick?: (planId: string, proceed: boolean) => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -63,7 +62,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     renderProps,
     pendingToolCall,
     deepPlanCreated,
-    executeCodePlan,
     currentState,
     messagingApi,
     onChangesGitPushed,
@@ -80,6 +78,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     onLinkClick,
     credentialHints,
     features,
+    onGeneratePlanClick,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -259,6 +258,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
                     renderProps={renderProps}
                     onLinkClick={onLinkClick}
+                    onGeneratePlanClick={onGeneratePlanClick}
                 />
             )}
 
@@ -304,7 +304,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
             {!isChatHistoryDisabled && currentState.state === 'WaitingForPrompt' && (
                 <FollowUpActionFooter>
-                    {deepPlanCreated && <CodePlanButton execute={executeCodePlan} />}
                     {canCreatePR && !deepPlanCreated && hasChangesInGit && (
                         <PullRequestForm
                             onCancel={() => {
