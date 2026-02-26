@@ -13,6 +13,7 @@ import { AttachmentsModal } from '../../AttachmentsModal';
 import { convertAdfToWikimarkup, convertWikimarkupToAdf } from '../../common/adfToWikimarkup';
 import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
 import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
+import { convertHtmlToAdf } from '../../common/htmlToAdf';
 import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
 import { WorklogFormDialog } from '../../WorklogFormDialog';
 import Worklogs from '../../Worklogs';
@@ -92,22 +93,32 @@ const IssueMainPanel: React.FC<Props> = ({
 
     // Use centralized editor state
     const { openEditor, closeEditor, isEditorActive } = useEditorState();
-    // Handle descriptionText - convert ADF object to appropriate format for editor
+    // Prefer rendered HTML when available so links (and other content) from Jira Web show in edit mode (Cloud and DC).
     const getDescriptionTextForEditor = React.useCallback(() => {
+        if (renderedDescription && typeof renderedDescription === 'string') {
+            try {
+                const adfFromHtml = convertHtmlToAdf(renderedDescription);
+                if (isAtlaskitEditorEnabled) {
+                    return JSON.stringify(adfFromHtml);
+                }
+                return convertAdfToWikimarkup(adfFromHtml);
+            } catch (e) {
+                console.warn('Failed to use rendered description for editor', e);
+            }
+        }
         if (
             typeof defaultDescription === 'object' &&
+            defaultDescription !== null &&
             defaultDescription.version === 1 &&
             defaultDescription.type === 'doc'
         ) {
-            // For new Atlaskit editor: convert ADF to JSON string
             if (isAtlaskitEditorEnabled) {
                 return JSON.stringify(defaultDescription);
             }
-            // For legacy editor: convert ADF to WikiMarkup
             return convertAdfToWikimarkup(defaultDescription);
         }
-        return defaultDescription || '';
-    }, [defaultDescription, isAtlaskitEditorEnabled]);
+        return typeof defaultDescription === 'string' ? defaultDescription : '';
+    }, [defaultDescription, renderedDescription, isAtlaskitEditorEnabled]);
 
     const [descriptionText, setDescriptionText] = React.useState(() => getDescriptionTextForEditor());
     const [localIsEditingDescription, setLocalIsEditingDescription] = React.useState(false);
