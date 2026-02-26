@@ -1232,9 +1232,8 @@ export class JiraIssueWebview
                             const isCloud = msg.site.isCloud;
                             const msgWatcherAccountId = msg.watcher.accountId; // undefined for Server/Data Center
                             const msgWatcherKey = msg.watcher.key; // undefined for Cloud
-                            const query = isCloud ? { accountId: msgWatcherAccountId } : { username: msgWatcherKey };
 
-                            await client.removeWatcher(msg.issueKey, query);
+                            await client.removeWatcher(msg.issueKey, msgWatcherAccountId);
 
                             if (
                                 !this._editUIData.fieldValues['watches'] ||
