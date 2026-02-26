@@ -1,4 +1,3 @@
-// import { defaultSchema } from '@atlaskit/adf-schema/schema-default';
 import { JSONTransformer } from '@atlaskit/editor-json-transformer';
 import { WikiMarkupTransformer } from '@atlaskit/editor-wikimarkup-transformer';
 
@@ -30,11 +29,6 @@ function extractPlainTextFromAdf(adf: AdfNode): string {
             // Base case: text node
             if (node.type === 'text') {
                 return node.text || '';
-            }
-
-            // Line break within a paragraph
-            if (node.type === 'hardBreak') {
-                return '\n';
             }
 
             // Handle task items
