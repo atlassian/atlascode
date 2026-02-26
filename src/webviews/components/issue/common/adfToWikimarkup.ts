@@ -30,7 +30,7 @@ function extractPlainTextFromAdf(adf: AdfNode): string {
                 return node.text || '';
             }
 
-            // Line break within a paragraph (e.g. from htmlToAdf)
+            // Line break within a paragraph
             if (node.type === 'hardBreak') {
                 return '\n';
             }

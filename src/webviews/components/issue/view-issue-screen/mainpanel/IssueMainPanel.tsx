@@ -13,7 +13,6 @@ import { AttachmentsModal } from '../../AttachmentsModal';
 import { convertAdfToWikimarkup, convertWikimarkupToAdf } from '../../common/adfToWikimarkup';
 import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
 import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
-import { convertHtmlToAdf } from '../../common/htmlToAdf';
 import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
 import { WorklogFormDialog } from '../../WorklogFormDialog';
 import Worklogs from '../../Worklogs';
@@ -93,21 +92,8 @@ const IssueMainPanel: React.FC<Props> = ({
 
     // Use centralized editor state
     const { openEditor, closeEditor, isEditorActive } = useEditorState();
-    // Jira Cloud: prefer rendered HTML for editor so links (and other content) added on Jira Web show in edit mode.
-    // Jira DC: prefer raw ADF when available to preserve formatting after save from this editor.
+    // Use raw description (ADF or string) for the editor; no HTML→ADF conversion.
     const getDescriptionTextForEditor = React.useCallback(() => {
-        const useRenderedFirst = siteDetails.isCloud && renderedDescription && typeof renderedDescription === 'string';
-        if (useRenderedFirst) {
-            try {
-                const adfFromHtml = convertHtmlToAdf(renderedDescription!);
-                if (isAtlaskitEditorEnabled) {
-                    return JSON.stringify(adfFromHtml);
-                }
-                return convertAdfToWikimarkup(adfFromHtml);
-            } catch (e) {
-                console.warn('Failed to use rendered description for editor', e);
-            }
-        }
         if (
             typeof defaultDescription === 'object' &&
             defaultDescription !== null &&
@@ -119,19 +105,8 @@ const IssueMainPanel: React.FC<Props> = ({
             }
             return convertAdfToWikimarkup(defaultDescription);
         }
-        if (renderedDescription && typeof renderedDescription === 'string') {
-            try {
-                const adfFromHtml = convertHtmlToAdf(renderedDescription);
-                if (isAtlaskitEditorEnabled) {
-                    return JSON.stringify(adfFromHtml);
-                }
-                return convertAdfToWikimarkup(adfFromHtml);
-            } catch (e) {
-                console.warn('Failed to use rendered description for editor', e);
-            }
-        }
         return typeof defaultDescription === 'string' ? defaultDescription : '';
-    }, [defaultDescription, renderedDescription, isAtlaskitEditorEnabled, siteDetails.isCloud]);
+    }, [defaultDescription, isAtlaskitEditorEnabled]);
 
     const [descriptionText, setDescriptionText] = React.useState(() => getDescriptionTextForEditor());
     const [localIsEditingDescription, setLocalIsEditingDescription] = React.useState(false);
