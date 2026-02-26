@@ -5,6 +5,7 @@
 ### Bug Fixes
 
 - **RovoDev**: Fixed MCP permission race condition - users can now type their prompts while MCP permission dialogs are displayed. The send button is disabled during MCP acceptance, but the input remains editable to prevent loss of user input.
+- Fixed issue description losing line breaks and formatting in edit mode after save (HTML-to-ADF conversion now preserves line breaks as hardBreak nodes)
 
 ## What's new in 4.0.20
 

@@ -1,3 +1,4 @@
+import { JSONTransformer } from '@atlaskit/editor-json-transformer';
 import { WikiMarkupTransformer } from '@atlaskit/editor-wikimarkup-transformer';
 
 // ADF (Atlassian Document Format) node structure
@@ -85,17 +86,15 @@ export function convertAdfToWikimarkup(adf: AdfNode | string | null | undefined)
         // Check if it's valid ADF
         if (adfDoc && adfDoc.type === 'doc' && adfDoc.version === 1) {
             try {
-                // Validate ADF structure before transformation
                 if (!adfDoc.content || !Array.isArray(adfDoc.content)) {
                     console.warn('Invalid ADF structure: missing or invalid content array');
                     return extractPlainTextFromAdf(adfDoc);
                 }
 
-                // WikiMarkupTransformer provides its own schema
-                const transformer = new WikiMarkupTransformer();
-                // Convert ADF to WikiMarkup
-                const wikimarkup = transformer.encode(adfDoc);
-                return wikimarkup;
+                const jsonTransformer = new JSONTransformer();
+                const pmNode = jsonTransformer.parse(adfDoc);
+                const wikiTransformer = new WikiMarkupTransformer();
+                return wikiTransformer.encode(pmNode);
             } catch (transformError) {
                 console.warn('WikiMarkup transformer failed, falling back to plain text extraction:', transformError);
                 // Fallback to plain text extraction
