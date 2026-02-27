@@ -419,6 +419,7 @@ export class RovoDevChatProvider {
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.RovoDevResponseMessage,
                     message: group,
+                    restoredSession: true,
                 });
                 group = [];
             }

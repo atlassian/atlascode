@@ -360,10 +360,17 @@ export const appendResponse = (
     response: Response | Response[],
     handleAppendModifiedFileToolReturns: (tr: RovoDevToolReturnResponse) => void,
     thinkingBlockEnabled: boolean,
+    isRestoredSession?: boolean,
 ): Response[] => {
     if (Array.isArray(response)) {
         for (const _resp of response) {
-            prev = appendResponse(prev, _resp, handleAppendModifiedFileToolReturns, thinkingBlockEnabled);
+            prev = appendResponse(
+                prev,
+                _resp,
+                handleAppendModifiedFileToolReturns,
+                thinkingBlockEnabled,
+                isRestoredSession,
+            );
         }
         return prev;
     }
