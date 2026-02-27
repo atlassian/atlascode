@@ -303,20 +303,17 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         onSelectedSavedPrompt={handleSelectSavedPrompt}
                         onAddRepositoryFile={onAddContext}
                     />
-                    <Tooltip content="Preferences">
-                        <PromptSettingsPopup
-                            onDeepPlanToggled={onDeepPlanToggled}
-                            onYoloModeToggled={onYoloModeToggled}
-                            onFullContextToggled={onFullContextToggled}
-                            isDeepPlanEnabled={isDeepPlanEnabled}
-                            isYoloModeEnabled={isYoloModeEnabled}
-                            isFullContextEnabled={isFullContextEnabled}
-                            availableAgentModes={availableAgentModes}
-                            currentAgentMode={currentAgentMode}
-                            onAgentModeChange={onAgentModeChange}
-                            onClose={() => {}}
-                        />
-                    </Tooltip>
+                    <PromptSettingsPopup
+                        onDeepPlanToggled={onDeepPlanToggled}
+                        onYoloModeToggled={onYoloModeToggled}
+                        onFullContextToggled={onFullContextToggled}
+                        isYoloModeEnabled={isYoloModeEnabled}
+                        isFullContextEnabled={isFullContextEnabled}
+                        availableAgentModes={availableAgentModes}
+                        currentAgentMode={currentAgentMode}
+                        onAgentModeChange={onAgentModeChange}
+                        onClose={() => {}}
+                    />
                     {isDeepPlanEnabled && onDeepPlanToggled && (
                         <Tooltip content="Disable deep plan">
                             <div
