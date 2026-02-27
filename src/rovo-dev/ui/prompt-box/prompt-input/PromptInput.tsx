@@ -53,6 +53,7 @@ interface PromptInputBoxProps {
     onCancel: () => void;
     onAddContext: () => void;
     onCopy: () => void;
+    handleMcpConfigurationCommand: () => void;
     handleMemoryCommand: () => void;
     handleTriggerFeedbackCommand: () => void;
     handleSessionCommand?: () => void;
@@ -136,6 +137,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     onCancel,
     onAddContext,
     onCopy,
+    handleMcpConfigurationCommand,
     handleMemoryCommand,
     handleTriggerFeedbackCommand,
     handleSessionCommand,
@@ -193,6 +195,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                 editor,
                 onSend,
                 onCopy,
+                handleMcpConfigurationCommand,
                 handleMemoryCommand,
                 handleTriggerFeedbackCommand,
                 handleSessionCommand,
@@ -203,6 +206,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         editor,
         onSend,
         onCopy,
+        handleMcpConfigurationCommand,
         handleMemoryCommand,
         handleTriggerFeedbackCommand,
         onYoloModeToggled,

@@ -556,6 +556,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await env.openExternal(Uri.parse(e.href));
                         break;
 
+                    case RovoDevViewResponseType.OpenMcpConfiguration:
+                        await commands.executeCommand(RovodevCommands.OpenRovoDevMcpJson);
+                        break;
+
                     case RovoDevViewResponseType.OpenRovoDevLogFile:
                         await commands.executeCommand(RovodevCommands.OpenRovoDevLogFile);
                         break;

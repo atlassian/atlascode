@@ -100,6 +100,16 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         command: { title: 'Feedback', id: 'rovo-dev.triggerFeedback', tooltip: 'Provide feedback on Rovo Dev' },
     },
     {
+        label: '/mcp',
+        insertText: '',
+        description: 'Open the MCP configuration file',
+        command: {
+            title: 'MCP configuration',
+            id: 'rovo-dev.mcpConfiguration',
+            tooltip: 'Open the MCP configuration file',
+        },
+    },
+    {
         label: '/memory',
         insertText: '/memory',
         description: 'Show agent memory',
@@ -279,6 +289,7 @@ export function setupMonacoCommands(
     editor: monaco.editor.IStandaloneCodeEditor,
     onSend: (text: string) => boolean,
     onCopy: () => void,
+    handleMcpConfigurationCommand: () => void,
     handleMemoryCommand: () => void,
     handleTriggerFeedbackCommand: () => void,
     handleSessionCommand?: () => void,
@@ -303,6 +314,11 @@ export function setupMonacoCommands(
 
     monaco.editor.registerCommand('rovo-dev.agentMemory', () => {
         handleMemoryCommand();
+        editor.setValue('');
+    });
+
+    monaco.editor.registerCommand('rovo-dev.mcpConfiguration', () => {
+        handleMcpConfigurationCommand();
         editor.setValue('');
     });
 

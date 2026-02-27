@@ -27,6 +27,7 @@ export const enum RovoDevViewResponseType {
     ReportCreatePrButtonClicked = 'reportCreatePrButtonClicked',
     CheckGitChanges = 'checkGitChanges',
     WebviewReady = 'webviewReady',
+    OpenMcpConfiguration = 'openMcpConfiguration',
     GetAgentMemory = 'getAgentMemory',
     TriggerFeedback = 'triggerFeedback',
     SendFeedback = 'sendFeedback',
@@ -83,6 +84,7 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.ReportCreatePrButtonClicked>
     | ReducerAction<RovoDevViewResponseType.CheckGitChanges>
     | ReducerAction<RovoDevViewResponseType.WebviewReady>
+    | ReducerAction<RovoDevViewResponseType.OpenMcpConfiguration>
     | ReducerAction<RovoDevViewResponseType.GetAgentMemory>
     | ReducerAction<RovoDevViewResponseType.TriggerFeedback>
     | ReducerAction<
