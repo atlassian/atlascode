@@ -88,6 +88,7 @@ import { getJiraIssueUri } from '../views/jira/treeViews/utils';
 import { NotificationManagerImpl } from '../views/notifications/notificationManager';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { ContextMenuCommandData, InitializingWebview } from './abstractWebview';
+import { convertAdfToWikimarkup } from './components/issue/common/adfToWikimarkup';
 
 const EditJiraIssueUIRenderEventName = 'ui.jira.editJiraIssue.render.lcp';
 const EditJiraIssueUpdatesEventName = 'ui.jira.editJiraIssue.update.lcp';
@@ -685,10 +686,28 @@ export class JiraIssueWebview
                 }
                 case 'editIssue': {
                     handled = true;
-                    const newFieldValues: FieldValues = (msg as EditIssueAction).fields;
+                    let newFieldValues: FieldValues = (msg as EditIssueAction).fields;
                     try {
                         const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
                         const teamId = (msg as EditIssueAction).teamId;
+
+                        // DC expects description (and other rich-text) as string; Cloud accepts ADF
+                        if (!this._issue!.siteDetails.isCloud && !teamId) {
+                            newFieldValues = { ...newFieldValues };
+                            for (const key of Object.keys(newFieldValues)) {
+                                const val = newFieldValues[key];
+                                if (
+                                    typeof val === 'object' &&
+                                    val !== null &&
+                                    'type' in val &&
+                                    (val as { type?: string }).type === 'doc'
+                                ) {
+                                    newFieldValues[key] = convertAdfToWikimarkup(
+                                        val as Parameters<typeof convertAdfToWikimarkup>[0],
+                                    );
+                                }
+                            }
+                        }
 
                         await client.editIssue(
                             this._issue!.key,

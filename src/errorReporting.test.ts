@@ -267,46 +267,25 @@ describe('errorReporting', () => {
                 );
             });
 
-            it('captured by uncaughtException', () => {
+            it('captured by uncaughtException should NOT send to analytics', () => {
                 const error = createError('Error1', '/.vscode/extensions/atlassian.atlascode-');
                 uncaughtExceptionListener(error);
 
-                expect(analytics.errorEvent).toHaveBeenCalledWith(
-                    undefined,
-                    error.message,
-                    error,
-                    'NodeJS.uncaughtException',
-                    undefined,
-                    undefined,
-                );
+                expect(analytics.errorEvent).not.toHaveBeenCalled();
             });
 
-            it('captured by uncaughtExceptionMonitor', () => {
+            it('captured by uncaughtExceptionMonitor should NOT send to analytics', () => {
                 const error = createError('Error1', '/.vscode/extensions/atlassian.atlascode-');
                 uncaughtExceptionMonitorListener(error);
 
-                expect(analytics.errorEvent).toHaveBeenCalledWith(
-                    undefined,
-                    error.message,
-                    error,
-                    'NodeJS.uncaughtExceptionMonitor',
-                    undefined,
-                    undefined,
-                );
+                expect(analytics.errorEvent).not.toHaveBeenCalled();
             });
 
-            it('captured by unhandledRejection', () => {
+            it('captured by unhandledRejection should NOT send to analytics', () => {
                 const error = createError('Error1', '/.vscode/extensions/atlassian.atlascode-');
                 unhandledRejectionListener(error);
 
-                expect(analytics.errorEvent).toHaveBeenCalledWith(
-                    undefined,
-                    error.message,
-                    error,
-                    'NodeJS.unhandledRejection',
-                    undefined,
-                    undefined,
-                );
+                expect(analytics.errorEvent).not.toHaveBeenCalled();
             });
         });
 

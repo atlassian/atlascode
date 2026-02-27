@@ -478,6 +478,23 @@ describe('VSCPullRequestDetailsActionApi', () => {
         });
     });
 
+    describe('updateDraftStatus', () => {
+        it('should update pull request draft status', async () => {
+            const mockBbApi = {
+                pullrequests: {
+                    updateDraftStatus: jest.fn().mockResolvedValue(mockPullRequest),
+                },
+            };
+            (clientForSite as jest.Mock).mockResolvedValue(mockBbApi);
+
+            const result = await api.updateDraftStatus(mockPullRequest, true);
+
+            expect(mockBbApi.pullrequests.updateDraftStatus).toHaveBeenCalledWith(mockPullRequest, true);
+            expect(mockCommands.executeCommand).toHaveBeenCalledWith(Commands.BitbucketRefreshPullRequests);
+            expect(result).toBe(mockPullRequest);
+        });
+    });
+
     describe('updateCommits', () => {
         it('should fetch updated commits', async () => {
             const mockBbApi = {

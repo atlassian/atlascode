@@ -8,6 +8,7 @@ import { ErrorDisplay } from '../../common/ErrorDisplay';
 import { StartWorkControllerContext, useStartWorkController } from '../startWorkController';
 import {
     CreateBranchSection,
+    NoRepositoryWarning,
     RovoDevToggle,
     SnackbarNotification,
     SuccessAlert,
@@ -53,6 +54,10 @@ const StartWorkPageV3: React.FunctionComponent = () => {
                         </Box>
                     )}
 
+                    {formState.isInitialized && formState.branchSetupEnabled && !formState.selectedRepository && (
+                        <NoRepositoryWarning key={state.issue.key} />
+                    )}
+
                     <TaskInfoSection state={state} controller={controller} />
                     <CreateBranchSection
                         state={state}
@@ -80,12 +85,22 @@ const StartWorkPageV3: React.FunctionComponent = () => {
                             <Button
                                 variant="contained"
                                 color="primary"
-                                disabled={submitState === 'submitting'}
+                                disabled={
+                                    submitState === 'submitting' ||
+                                    (formState.branchSetupEnabled && !formState.selectedRepository)
+                                }
                                 onClick={handleCreateBranch}
                                 data-testid="start-work.start-button"
                                 endIcon={
                                     submitState === 'submitting' ? <CircularProgress color="inherit" size={20} /> : null
                                 }
+                                sx={{
+                                    '&.Mui-disabled': {
+                                        backgroundColor: 'var(--vscode-button-background)',
+                                        color: 'var(--vscode-button-foreground)',
+                                        opacity: 0.7,
+                                    },
+                                }}
                             >
                                 {formState.branchSetupEnabled ? 'Create branch' : 'Start work'}
                             </Button>

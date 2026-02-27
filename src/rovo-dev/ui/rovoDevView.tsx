@@ -7,13 +7,14 @@ import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
 import * as React from 'react';
-import { RovoDevToolReturnResponse } from 'src/rovo-dev/client';
+import { AgentMode, RovoDevModeInfo, RovoDevToolReturnResponse } from 'src/rovo-dev/client';
 import { RovoDevContextItem, State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
 import { DetailedSiteInfo, MinimalIssue } from '../api/extensionApiTypes';
 import { RovodevStaticConfig } from '../api/rovodevStaticConfig';
-import { RovoDevFeatures, RovoDevProviderMessage, RovoDevProviderMessageType } from '../rovoDevWebviewProviderMessages';
+import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../rovoDevWebviewProviderMessages';
+import { RovoDevErrorContext } from './common/common';
 import { FeedbackConfirmationForm } from './feedback-form/FeedbackConfirmationForm';
 import { FeedbackForm, FeedbackType } from './feedback-form/FeedbackForm';
 import { CredentialHint } from './landing-page/disabled-messages/RovoDevLoginForm';
@@ -58,7 +59,6 @@ const RovoDevView: React.FC = () => {
     const [isDeepPlanToggled, setIsDeepPlanToggled] = useState(false);
     const [isYoloModeToggled, setIsYoloModeToggled] = useState(RovodevStaticConfig.isBBY); // Yolo mode is default in Boysenberry
     const [isFullContextModeToggled, setIsFullContextModeToggled] = useState(false);
-    const [features, setFeatures] = useState<RovoDevFeatures>({});
     const [workspacePath, setWorkspacePath] = useState<string>('');
     const [homeDir, setHomeDir] = useState<string>('');
     const [history, setHistory] = useState<Response[]>([]);
@@ -79,6 +79,8 @@ const RovoDevView: React.FC = () => {
     const [lastCompletedPromptId, setLastCompletedPromptId] = useState<string | undefined>(undefined);
     const [isAtlassianUser, setIsAtlassianUser] = useState(false);
     const [feedbackType, setFeedbackType] = React.useState<'like' | 'dislike' | undefined>(undefined);
+    const [availableAgentModes, setAvailableAgentModes] = useState<RovoDevModeInfo[]>([]);
+    const [currentAgentMode, setCurrentAgentMode] = useState<AgentMode | null>('default');
     const [canFetchSavedPrompts, setCanFetchSavedPrompts] = React.useState(false);
 
     // Initialize atlaskit theme for proper token support
@@ -171,6 +173,19 @@ const RovoDevView: React.FC = () => {
                 errorMessage: msg,
                 errorType: error.name,
                 errorStack: error.stack || undefined,
+            });
+        },
+        [dispatch],
+    );
+
+    const reportError = useCallback(
+        (error: Error, component: string) => {
+            dispatch({
+                type: RovoDevViewResponseType.ReportRenderError,
+                errorMessage: error.message,
+                errorType: error.name,
+                errorStack: error.stack || undefined,
+                componentStack: component,
             });
         },
         [dispatch],
@@ -339,9 +354,6 @@ const RovoDevView: React.FC = () => {
                         setIsYoloModeToggled(event.yoloMode);
                     }
                     setIsAtlassianUser(event.isAtlassianUser);
-                    if (event.features) {
-                        setFeatures(event.features);
-                    }
                     break;
 
                 case RovoDevProviderMessageType.SetDebugPanel:
@@ -492,6 +504,20 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.RovoDevAuthValidating:
                 case RovoDevProviderMessageType.RovoDevAuthValidationComplete:
                     // These messages are handled by the login form component directly
+                    break;
+
+                case RovoDevProviderMessageType.GetAvailableAgentModesComplete:
+                    setAvailableAgentModes(
+                        [...event.modes].sort((a, b) => (a.mode === 'default' ? -1 : b.mode === 'default' ? 1 : 0)),
+                    );
+                    break;
+
+                case RovoDevProviderMessageType.GetCurrentAgentModeComplete:
+                    setCurrentAgentMode(event.mode);
+                    break;
+
+                case RovoDevProviderMessageType.SetAgentModeComplete:
+                    setCurrentAgentMode(event.mode);
                     break;
 
                 default:
@@ -697,6 +723,12 @@ const RovoDevView: React.FC = () => {
         (uid: string) => retryAfterErrorEnabled === uid,
         [retryAfterErrorEnabled],
     );
+
+    const handleRestartProcess = useCallback(() => {
+        postMessage({
+            type: RovoDevViewResponseType.RestartProcess,
+        });
+    }, [postMessage]);
 
     const onChangesGitPushed = useCallback(
         (msg: PullRequestMessage, pullRequestCreated: boolean) => {
@@ -955,6 +987,13 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
+    const onAgentModeChange = useCallback(
+        (mode: AgentMode) => {
+            postMessage({ type: RovoDevViewResponseType.SetAgentMode, mode });
+        },
+        [postMessage],
+    );
+
     const handleShowSessionsCommand = React.useCallback(() => {
         postMessage({ type: RovoDevViewResponseType.ShowSessionHistory });
     }, [postMessage]);
@@ -982,171 +1021,178 @@ const RovoDevView: React.FC = () => {
         (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance');
 
     return (
-        <RovoDevErrorBoundary postMessage={postMessage}>
-            <div
-                id="rovoDevDragDropOverlay"
-                onDragLeave={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    document.getElementById('rovoDevDragDropOverlay')!.style.display = 'none';
-                }}
-                onDrop={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    document.getElementById('rovoDevDragDropOverlay')!.style.display = 'none';
+        <RovoDevErrorContext.Provider value={{ reportError }}>
+            <RovoDevErrorBoundary postMessage={postMessage}>
+                <div
+                    id="rovoDevDragDropOverlay"
+                    onDragLeave={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        document.getElementById('rovoDevDragDropOverlay')!.style.display = 'none';
+                    }}
+                    onDrop={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        document.getElementById('rovoDevDragDropOverlay')!.style.display = 'none';
 
-                    const items = event.dataTransfer?.items || [];
-                    processDropDataTransferItems(items, onAddContext);
-                }}
-            >
-                <div id="rovoDevDragDropOverlayMessage">
-                    <span className="codicon codicon-attach"></span>
-                    Drop files and Jira work items
-                    <br />
-                    to attach them as context
+                        const items = event.dataTransfer?.items || [];
+                        processDropDataTransferItems(items, onAddContext);
+                    }}
+                >
+                    <div id="rovoDevDragDropOverlayMessage">
+                        <span className="codicon codicon-attach"></span>
+                        Drop files and Jira work items
+                        <br />
+                        to attach them as context
+                    </div>
                 </div>
-            </div>
-            <div
-                className="rovoDevChat"
-                onDragOver={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    document.getElementById('rovoDevDragDropOverlay')!.style.display = 'flex';
-                }}
-            >
-                {debugPanelEnabled && (
-                    <DebugPanel
+                <div
+                    className="rovoDevChat"
+                    onDragOver={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        document.getElementById('rovoDevDragDropOverlay')!.style.display = 'flex';
+                    }}
+                >
+                    {debugPanelEnabled && (
+                        <DebugPanel
+                            currentState={currentState}
+                            debugContext={debugPanelContext}
+                            debugMcpContext={debugPanelMcpContext}
+                            onLinkClick={onLinkClick}
+                        />
+                    )}
+                    <ChatStream
+                        chatHistory={history}
+                        modalDialogs={modalDialogs}
+                        renderProps={{
+                            openFile,
+                            openJira,
+                            checkFileExists,
+                            isRetryAfterErrorButtonEnabled,
+                            retryPromptAfterError,
+                            onRestartProcess: handleRestartProcess,
+                            onOpenLogFile: () => postMessage({ type: RovoDevViewResponseType.OpenRovoDevLogFile }),
+                            onError,
+                        }}
+                        messagingApi={{
+                            postMessage,
+                            postMessagePromise,
+                            setState,
+                        }}
+                        pendingToolCall={pendingToolCallMessage}
+                        deepPlanCreated={isDeepPlanCreated}
+                        executeCodePlan={executeCodePlan}
                         currentState={currentState}
-                        debugContext={debugPanelContext}
-                        debugMcpContext={debugPanelMcpContext}
+                        onChangesGitPushed={onChangesGitPushed}
+                        onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
+                        handleFeedbackTrigger={handleFeedbackTrigger}
+                        onLoginClick={onLoginClick}
+                        onRovoDevAuthSubmit={onRovoDevAuthSubmit}
+                        onOpenFolder={onOpenFolder}
+                        onMcpChoice={onMcpChoice}
+                        setPromptText={setPromptTextFromAction}
+                        jiraWorkItems={jiraWorkItems}
+                        onJiraItemClick={onJiraItemClick}
+                        onToolPermissionChoice={onToolPermissionChoice}
                         onLinkClick={onLinkClick}
+                        credentialHints={credentialHints}
                     />
-                )}
-                <ChatStream
-                    chatHistory={history}
-                    modalDialogs={modalDialogs}
-                    renderProps={{
-                        openFile,
-                        openJira,
-                        checkFileExists,
-                        isRetryAfterErrorButtonEnabled,
-                        retryPromptAfterError,
-                        onOpenLogFile: () => postMessage({ type: RovoDevViewResponseType.OpenRovoDevLogFile }),
-                        onError,
-                    }}
-                    messagingApi={{
-                        postMessage,
-                        postMessagePromise,
-                        setState,
-                    }}
-                    pendingToolCall={pendingToolCallMessage}
-                    deepPlanCreated={isDeepPlanCreated}
-                    executeCodePlan={executeCodePlan}
-                    currentState={currentState}
-                    onChangesGitPushed={onChangesGitPushed}
-                    onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
-                    handleFeedbackTrigger={handleFeedbackTrigger}
-                    onLoginClick={onLoginClick}
-                    onRovoDevAuthSubmit={onRovoDevAuthSubmit}
-                    onOpenFolder={onOpenFolder}
-                    onMcpChoice={onMcpChoice}
-                    setPromptText={setPromptTextFromAction}
-                    jiraWorkItems={jiraWorkItems}
-                    onJiraItemClick={onJiraItemClick}
-                    onToolPermissionChoice={onToolPermissionChoice}
-                    onLinkClick={onLinkClick}
-                    credentialHints={credentialHints}
-                    features={features}
-                />
-                {!hidePromptBox && (
-                    <div className="input-section-container">
-                        {isFeedbackFormVisible && (
+                    {!hidePromptBox && (
+                        <div className="input-section-container">
+                            {isFeedbackFormVisible && (
+                                <div
+                                    style={{
+                                        padding: '8px 16px',
+                                    }}
+                                >
+                                    <FeedbackForm
+                                        type={feedbackType}
+                                        onSubmit={(feedbackType, feedback, canContact, includeTenMessages) => {
+                                            setFeedbackType(undefined);
+                                            executeSendFeedback(feedbackType, feedback, canContact, includeTenMessages);
+                                            confirmFeedback();
+                                        }}
+                                        onCancel={() => {
+                                            setFeedbackType(undefined);
+                                            setIsFeedbackFormVisible(false);
+                                        }}
+                                    />
+                                </div>
+                            )}{' '}
                             <div
                                 style={{
                                     padding: '8px 16px',
                                 }}
                             >
-                                <FeedbackForm
-                                    type={feedbackType}
-                                    onSubmit={(feedbackType, feedback, canContact, includeTenMessages) => {
-                                        setFeedbackType(undefined);
-                                        executeSendFeedback(feedbackType, feedback, canContact, includeTenMessages);
-                                        confirmFeedback();
-                                    }}
-                                    onCancel={() => {
-                                        setFeedbackType(undefined);
-                                        setIsFeedbackFormVisible(false);
-                                    }}
-                                />
+                                {isFeedbackConfirmationFormVisible && (
+                                    <FeedbackConfirmationForm
+                                        onClose={() => setIsFeedbackConfirmationFormVisible(false)}
+                                    />
+                                )}
                             </div>
-                        )}{' '}
-                        <div
-                            style={{
-                                padding: '8px 16px',
-                            }}
-                        >
-                            {isFeedbackConfirmationFormVisible && (
-                                <FeedbackConfirmationForm onClose={() => setIsFeedbackConfirmationFormVisible(false)} />
-                            )}
-                        </div>
-                        <div className="input-section-container">
-                            <UpdatedFilesComponent
-                                modifiedFiles={totalModifiedFiles}
-                                onUndo={undoFiles}
-                                onKeep={keepFiles}
-                                openDiff={openFile}
-                                actionsEnabled={currentState.state === 'WaitingForPrompt'}
-                                workspacePath={workspacePath}
-                                homeDir={homeDir}
-                            />
-                            <div className="prompt-container-container">
-                                <div className="prompt-container">
-                                    <PromptContextCollection
-                                        content={promptContextCollection}
-                                        readonly={false}
-                                        onRemoveContext={onRemoveContext}
-                                        onToggleActiveItem={onToggleContextFocus}
-                                        openFile={openFile}
-                                        openJira={openJira}
-                                    />
-                                    <PromptInputBox
-                                        disabled={currentState.state === 'ProcessTerminated'}
-                                        currentState={currentState}
-                                        isDeepPlanEnabled={isDeepPlanToggled}
-                                        isYoloModeEnabled={isYoloModeToggled}
-                                        isFullContextEnabled={isFullContextModeToggled}
-                                        onDeepPlanToggled={() => setIsDeepPlanToggled((prev) => !prev)}
-                                        onYoloModeToggled={
-                                            RovodevStaticConfig.isBBY ? undefined : () => onYoloModeToggled()
-                                        }
-                                        onFullContextToggled={
-                                            isAtlassianUser && !RovodevStaticConfig.isBBY
-                                                ? () => onFullContextModeToggled()
-                                                : undefined
-                                        }
-                                        onSend={sendPrompt}
-                                        onCancel={cancelResponse}
-                                        onAddContext={onAddContext}
-                                        onCopy={handleCopyResponse}
-                                        handleMemoryCommand={executeGetAgentMemory}
-                                        handleTriggerFeedbackCommand={handleShowFeedbackForm}
-                                        promptText={promptText}
-                                        onPromptTextSet={handlePromptTextSet}
-                                        handleSessionCommand={handleShowSessionsCommand}
-                                        handleFetchSavedPrompts={handleFetchSavedPrompts}
-                                        canFetchSavedPrompts={canFetchSavedPrompts}
-                                    />
+                            <div className="input-section-container">
+                                <UpdatedFilesComponent
+                                    modifiedFiles={totalModifiedFiles}
+                                    onUndo={undoFiles}
+                                    onKeep={keepFiles}
+                                    openDiff={openFile}
+                                    actionsEnabled={currentState.state === 'WaitingForPrompt'}
+                                    workspacePath={workspacePath}
+                                    homeDir={homeDir}
+                                />
+                                <div className="prompt-container-container">
+                                    <div className="prompt-container">
+                                        <PromptContextCollection
+                                            content={promptContextCollection}
+                                            readonly={false}
+                                            onRemoveContext={onRemoveContext}
+                                            onToggleActiveItem={onToggleContextFocus}
+                                            openFile={openFile}
+                                            openJira={openJira}
+                                        />
+                                        <PromptInputBox
+                                            disabled={currentState.state === 'ProcessTerminated'}
+                                            currentState={currentState}
+                                            isDeepPlanEnabled={isDeepPlanToggled}
+                                            isYoloModeEnabled={isYoloModeToggled}
+                                            isFullContextEnabled={isFullContextModeToggled}
+                                            availableAgentModes={availableAgentModes}
+                                            currentAgentMode={currentAgentMode}
+                                            onAgentModeChange={onAgentModeChange}
+                                            onDeepPlanToggled={() => setIsDeepPlanToggled((prev) => !prev)}
+                                            onYoloModeToggled={
+                                                RovodevStaticConfig.isBBY ? undefined : () => onYoloModeToggled()
+                                            }
+                                            onFullContextToggled={
+                                                isAtlassianUser && !RovodevStaticConfig.isBBY
+                                                    ? () => onFullContextModeToggled()
+                                                    : undefined
+                                            }
+                                            onSend={sendPrompt}
+                                            onCancel={cancelResponse}
+                                            onAddContext={onAddContext}
+                                            onCopy={handleCopyResponse}
+                                            handleMemoryCommand={executeGetAgentMemory}
+                                            handleTriggerFeedbackCommand={handleShowFeedbackForm}
+                                            promptText={promptText}
+                                            onPromptTextSet={handlePromptTextSet}
+                                            handleSessionCommand={handleShowSessionsCommand}
+                                            handleFetchSavedPrompts={handleFetchSavedPrompts}
+                                            canFetchSavedPrompts={canFetchSavedPrompts}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="ai-disclaimer">
+                                    <InformationCircleIcon label="Disclaimer logo" size="small" />
+                                    Uses AI. Verify results.
                                 </div>
                             </div>
-                            <div className="ai-disclaimer">
-                                <InformationCircleIcon label="Disclaimer logo" size="small" />
-                                Uses AI. Verify results.
-                            </div>
                         </div>
-                    </div>
-                )}
-            </div>
-        </RovoDevErrorBoundary>
+                    )}
+                </div>
+            </RovoDevErrorBoundary>
+        </RovoDevErrorContext.Provider>
     );
 };
 

@@ -1,12 +1,23 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 
+jest.mock('@atlaskit/css', () => ({
+    cssMap: (styles: any) => {
+        const result: any = {};
+        for (const key in styles) {
+            result[key] = styles[key];
+        }
+        return result;
+    },
+}));
+
 import PromptSettingsPopup from './PromptSettingsPopup';
 
 describe('PromptSettingsPopup', () => {
     const mockOnDeepPlanToggled = jest.fn();
     const mockOnYoloModeToggled = jest.fn();
     const mockOnFullContextToggled = jest.fn();
+    const mockOnAgentModeChange = jest.fn();
     const mockOnClose = jest.fn();
 
     beforeEach(() => {
@@ -22,6 +33,9 @@ describe('PromptSettingsPopup', () => {
                 isDeepPlanEnabled={false}
                 isYoloModeEnabled={false}
                 isFullContextEnabled={false}
+                availableAgentModes={[]}
+                currentAgentMode={null}
+                onAgentModeChange={mockOnAgentModeChange}
                 onClose={mockOnClose}
             />,
         );
@@ -39,6 +53,9 @@ describe('PromptSettingsPopup', () => {
                 isDeepPlanEnabled={false}
                 isYoloModeEnabled={false}
                 isFullContextEnabled={false}
+                availableAgentModes={[]}
+                currentAgentMode={null}
+                onAgentModeChange={mockOnAgentModeChange}
                 onClose={mockOnClose}
             />,
         );
@@ -61,6 +78,9 @@ describe('PromptSettingsPopup', () => {
                 isDeepPlanEnabled={false}
                 isYoloModeEnabled={false}
                 isFullContextEnabled={false}
+                availableAgentModes={[]}
+                currentAgentMode={null}
+                onAgentModeChange={mockOnAgentModeChange}
                 onClose={mockOnClose}
             />,
         );
@@ -83,6 +103,9 @@ describe('PromptSettingsPopup', () => {
                 isDeepPlanEnabled={false}
                 isYoloModeEnabled={false}
                 isFullContextEnabled={false}
+                availableAgentModes={[]}
+                currentAgentMode={null}
+                onAgentModeChange={mockOnAgentModeChange}
                 onClose={mockOnClose}
             />,
         );

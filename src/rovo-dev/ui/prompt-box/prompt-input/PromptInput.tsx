@@ -1,5 +1,4 @@
 import AiGenerativeTextSummaryIcon from '@atlaskit/icon/core/ai-generative-text-summary';
-import AngleBracketsIcon from '@atlaskit/icon/core/angle-brackets';
 import SendIcon from '@atlaskit/icon/core/arrow-up';
 import CrossIcon from '@atlaskit/icon/core/cross';
 import LockUnlockedIcon from '@atlaskit/icon/core/lock-unlocked';
@@ -10,11 +9,13 @@ import Tooltip from '@atlaskit/tooltip';
 import * as monaco from 'monaco-editor';
 import React from 'react';
 import { RovodevStaticConfig } from 'src/rovo-dev/api/rovodevStaticConfig';
+import { AgentMode, RovoDevModeInfo } from 'src/rovo-dev/client';
 import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
 
 import { rovoDevTextareaStyles } from '../../rovoDevViewStyles';
 import { onKeyDownHandler, SavedPrompt } from '../../utils';
 import PromptContextPopup from '../prompt-context-popup/PromptContextPopup';
+import { getAgentModeIcon } from '../prompt-settings-popup/AgentModeSection';
 import PromptSettingsPopup from '../prompt-settings-popup/PromptSettingsPopup';
 import {
     createMonacoPromptEditor,
@@ -36,6 +37,9 @@ interface PromptInputBoxProps {
     isDeepPlanEnabled: boolean;
     isYoloModeEnabled: boolean;
     isFullContextEnabled: boolean;
+    availableAgentModes: RovoDevModeInfo[];
+    currentAgentMode: AgentMode | null;
+    onAgentModeChange: (mode: AgentMode) => void;
     onDeepPlanToggled?: () => void;
     onYoloModeToggled?: () => void;
     onFullContextToggled?: () => void;
@@ -112,6 +116,9 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     isDeepPlanEnabled,
     isYoloModeEnabled,
     isFullContextEnabled,
+    availableAgentModes,
+    currentAgentMode,
+    onAgentModeChange,
     onDeepPlanToggled,
     onYoloModeToggled,
     onFullContextToggled,
@@ -238,6 +245,29 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         return () => io.disconnect();
     }, [editor]);
 
+    const handleSelectSavedPrompt = React.useCallback(
+        (prompt: SavedPrompt) => {
+            if (editor) {
+                const text = `!${prompt.name} `;
+                const position = editor.getPosition();
+                editor.executeEdits('', [
+                    {
+                        range: new monaco.Range(
+                            position!.lineNumber,
+                            position!.column,
+                            position!.lineNumber,
+                            position!.column,
+                        ),
+                        text: text,
+                        forceMoveMarkers: true,
+                    },
+                ]);
+                editor.focus();
+            }
+        },
+        [editor],
+    );
+
     const isWaitingForPrompt = React.useMemo(
         () =>
             currentState.state === 'WaitingForPrompt' ||
@@ -267,17 +297,12 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                 }}
             >
                 <div style={{ display: 'flex', flexDirection: 'row', alignContent: 'center', gap: 4 }}>
-                    <Tooltip content="Add">
-                        <PromptContextPopup
-                            items={[
-                                {
-                                    icon: <AngleBracketsIcon label="Add context icon" />,
-                                    label: 'Reference file from repository',
-                                    action: onAddContext,
-                                },
-                            ]}
-                        />
-                    </Tooltip>
+                    <PromptContextPopup
+                        fetchSavedPrompts={handleFetchSavedPrompts}
+                        canFetchSavedPrompts={canFetchSavedPrompts}
+                        onSelectedSavedPrompt={handleSelectSavedPrompt}
+                        onAddRepositoryFile={onAddContext}
+                    />
                     <Tooltip content="Preferences">
                         <PromptSettingsPopup
                             onDeepPlanToggled={onDeepPlanToggled}
@@ -286,13 +311,16 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                             isDeepPlanEnabled={isDeepPlanEnabled}
                             isYoloModeEnabled={isYoloModeEnabled}
                             isFullContextEnabled={isFullContextEnabled}
+                            availableAgentModes={availableAgentModes}
+                            currentAgentMode={currentAgentMode}
+                            onAgentModeChange={onAgentModeChange}
                             onClose={() => {}}
                         />
                     </Tooltip>
                     {isDeepPlanEnabled && onDeepPlanToggled && (
                         <Tooltip content="Disable deep plan">
                             <div
-                                className="deep-plan-indicator"
+                                className="mode-indicator"
                                 onClick={() => onDeepPlanToggled()}
                                 onKeyDown={onKeyDownHandler(onDeepPlanToggled)}
                                 tabIndex={0}
@@ -307,7 +335,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                     {isFullContextEnabled && onFullContextToggled && (
                         <Tooltip content="Disable Full-Context mode">
                             <div
-                                className="deep-plan-indicator"
+                                className="mode-indicator"
                                 onClick={() => onFullContextToggled()}
                                 onKeyDown={onKeyDownHandler(onFullContextToggled)}
                                 tabIndex={0}
@@ -322,7 +350,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                     {isYoloModeEnabled && onYoloModeToggled && (
                         <Tooltip content="Disable YOLO mode">
                             <div
-                                className="deep-plan-indicator"
+                                className="mode-indicator"
                                 onClick={() => onYoloModeToggled()}
                                 onKeyDown={onKeyDownHandler(onYoloModeToggled)}
                                 tabIndex={0}
@@ -334,6 +362,21 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                             </div>
                         </Tooltip>
                     )}{' '}
+                    {currentAgentMode && currentAgentMode !== 'default' && (
+                        <Tooltip content={`${currentAgentMode} mode`}>
+                            <div
+                                className="mode-indicator"
+                                onClick={() => onAgentModeChange('default')}
+                                onKeyDown={onKeyDownHandler(() => onAgentModeChange('default'))}
+                                tabIndex={0}
+                                role="button"
+                                aria-label={`${currentAgentMode} mode`}
+                            >
+                                {getAgentModeIcon(currentAgentMode)}
+                                <CrossIcon size="small" label={`${currentAgentMode} mode`} />
+                            </div>
+                        </Tooltip>
+                    )}
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                     {showCancelButton ? (

@@ -68,7 +68,7 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                 repoData: repoData,
             });
         } catch (e) {
-            this.logger.error(e, 'Error updating start work page');
+            this.logger.error(e, 'Error updating start work page or creating pull request', 'invalidate');
             this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
         } finally {
             this.isRefreshing = false;
@@ -86,10 +86,14 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                 try {
                     await this.invalidate();
                 } catch (e) {
-                    this.logger.error(e, 'Error refeshing start work page');
+                    this.logger.error(
+                        e,
+                        'Error refreshing start work page or creating pull request',
+                        'onMessageReceived Refresh',
+                    );
                     this.postMessage({
                         type: CommonMessageType.Error,
-                        reason: formatError(e, 'Error refeshing start work page'),
+                        reason: formatError(e, 'Error refreshing start work page or creating pull request'),
                     });
                 }
                 break;
@@ -164,7 +168,9 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                         type: CreatePullRequestMessageType.SubmitResponse,
                         pr: pr,
                     });
-                    this.analytics.firePrCreatedEvent(msg.sourceSiteRemote.site!.details);
+                    this.analytics.firePrCreatedEvent(msg.sourceSiteRemote.site!.details, {
+                        isDraft: msg.isDraft,
+                    });
                 } catch (e) {
                     this.logger.error(e, 'Error creating pull request');
                     this.postMessage({
@@ -177,7 +183,17 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                     });
                 }
                 break;
+            case CreatePullRequestActionType.CreatePullRequestButtonClicked: {
+                try {
+                    await this.analytics.fireCreatePullRequestButtonClickedEvent('CreatePullRequestPage', {
+                        isDraft: msg.isDraft,
+                    });
+                } catch (error) {
+                    this.logger.error(error, 'Error sending analytics event for Create Pull Request button click');
+                }
 
+                break;
+            }
             case CommonActionType.SendAnalytics:
             case CommonActionType.CopyLink:
             case CommonActionType.OpenJiraIssue:
@@ -191,7 +207,6 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                 this.commonHandler.onMessageReceived(msg);
                 break;
             }
-
             default: {
                 defaultActionGuard(msg);
             }

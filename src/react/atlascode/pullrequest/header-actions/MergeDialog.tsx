@@ -21,10 +21,11 @@ import {
 import { makeStyles } from '@mui/styles';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { DetailedSiteInfo } from '../../../atlclients/authInfo';
-import { Commit, MergeStrategy, PullRequestData } from '../../../bitbucket/model';
-import { JiraTransitionMenu } from './JiraTransitionMenu';
-import { MergeChecks } from './MergeChecks';
+import { DetailedSiteInfo } from '../../../../atlclients/authInfo';
+import { Commit, MergeStrategy, PullRequestData } from '../../../../bitbucket/model';
+import { JiraTransitionMenu } from '../JiraTransitionMenu';
+import { MergeChecks } from '../MergeChecks';
+import { MergeButton } from './MergeButton';
 
 const useStyles = makeStyles((theme: Theme) => ({
     table: {
@@ -210,16 +211,12 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
     return (
         <Box>
             <Box hidden={loadState.basicData}>
-                <Button
-                    color={'primary'}
-                    variant={'contained'}
+                <MergeButton
+                    prState={prData.state}
+                    isMerging={isMerging}
+                    isDraft={prData.draft}
                     onClick={handleOpen}
-                    disabled={prData.state !== 'OPEN' || isMerging}
-                >
-                    <Typography variant={'button'} noWrap>
-                        {prData.state === 'OPEN' ? 'Merge' : 'Merged'}
-                    </Typography>
-                </Button>
+                ></MergeButton>
             </Box>
             <Box hidden={!loadState.basicData}>
                 <CircularProgress />

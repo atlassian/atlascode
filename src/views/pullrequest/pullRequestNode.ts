@@ -53,12 +53,14 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             .filter((p) => p.status === 'APPROVED')
             .map((approver) => `Approved-by: ${approver.displayName}`)
             .join('\n');
+        const PRTitle = this.pr?.data?.title ?? 'Unknown title';
+        const avatarUrl = this.pr?.data?.author?.avatarUrl ?? Resources.icons.get('pullrequest');
+        const PRId = this.pr?.data?.id ?? 'Unknown ID';
+        const isDraft = this.pr?.data?.draft ?? false;
 
-        const item = new vscode.TreeItem(`${this.pr.data.title!}`, vscode.TreeItemCollapsibleState.Collapsed);
-        item.tooltip = `#${this.pr.data.id!} ${this.pr.data.title!}${
-            approvalText.length > 0 ? `\n\n${approvalText}` : ''
-        }`;
-        item.iconPath = vscode.Uri.parse(this.pr.data!.author!.avatarUrl);
+        const item = new vscode.TreeItem(`${PRTitle}`, vscode.TreeItemCollapsibleState.Collapsed);
+        item.tooltip = `#${PRId} ${PRTitle}${isDraft ? ' | Draft' : ''}${approvalText.length > 0 ? `\n\n${approvalText}` : ''}`;
+        item.iconPath = vscode.Uri.parse(avatarUrl);
         item.contextValue = PullRequestContextValue;
         item.resourceUri = vscode.Uri.parse(this.pr.data.url);
         let dateString = '';
@@ -71,7 +73,8 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
                 addSuffix: true,
             });
         }
-        item.description = `updated ${dateString}`;
+
+        item.description = `${isDraft ? 'Draft |' : ''} updated ${dateString}`;
 
         return item;
     }

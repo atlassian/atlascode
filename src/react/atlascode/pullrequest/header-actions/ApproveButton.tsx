@@ -2,7 +2,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { Box, Button, Typography } from '@mui/material';
 import React, { useCallback } from 'react';
 
-import { ApprovalStatus } from '../../../bitbucket/model';
+import { ApprovalStatus } from '../../../../bitbucket/model';
 
 type ApproveButtonProps = {
     hidden?: boolean;

@@ -20,6 +20,12 @@ module.exports = {
         mui: resolveApp('./src/react/index.tsx'),
     },
     devtool: 'cheap-module-source-map',
+    cache: {
+        type: 'filesystem',
+        buildDependencies: {
+            config: [__filename],
+        },
+    },
 
     output: {
         publicPath: '',

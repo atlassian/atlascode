@@ -468,26 +468,7 @@ describe('VSCCreatePullRequestActionApi', () => {
         it('should parse git commit data correctly', () => {
             const gitData =
                 'abc123\nJohn Doe\njohn@example.com\n1234567890\n1234567890\nparent123\nTest commit message\x00';
-
-            // Create a spy on the method and implement test behavior
-            const parseGitCommitsSpy = jest.spyOn(api as any, 'parseGitCommits').mockImplementation((data) => {
-                return [
-                    {
-                        hash: 'abc123',
-                        message: 'Test commit message',
-                        parents: ['parent123'],
-                        authorDate: new Date(1234567890 * 1000),
-                        authorName: 'John Doe',
-                        authorEmail: 'john@example.com',
-                        commitDate: new Date(1234567890 * 1000),
-                    },
-                ];
-            });
-
-            const result = (api as any).parseGitCommits(gitData);
-
-            expect(result).toHaveLength(1);
-            expect(result[0]).toEqual({
+            const parseGitCommitsMockResult = {
                 hash: 'abc123',
                 message: 'Test commit message',
                 parents: ['parent123'],
@@ -495,7 +476,16 @@ describe('VSCCreatePullRequestActionApi', () => {
                 authorName: 'John Doe',
                 authorEmail: 'john@example.com',
                 commitDate: new Date(1234567890 * 1000),
+            };
+            // Create a spy on the method and implement test behavior
+            const parseGitCommitsSpy = jest.spyOn(api as any, 'parseGitCommits').mockImplementation((data) => {
+                return [parseGitCommitsMockResult];
             });
+
+            const result = (api as any).parseGitCommits(gitData);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual(parseGitCommitsMockResult);
 
             // Clean up the spy
             parseGitCommitsSpy.mockRestore();
@@ -605,56 +595,57 @@ describe('VSCCreatePullRequestActionApi', () => {
             reviewers: [mockUser],
             closeSourceBranch: false,
             pushLocalChanges: true,
+            isDraft: false,
+        };
+        const mockPRResponse = {
+            site: mockWorkspaceRepo.mainSiteRemote.site!,
+            data: {
+                id: 'pr123',
+                title: 'Test PR',
+                siteDetails: mockWorkspaceRepo.mainSiteRemote.site!.details,
+                version: 0,
+                url: '',
+                author: mockUser,
+                participants: [],
+                source: {
+                    repo: {
+                        id: '',
+                        name: '',
+                        displayName: '',
+                        fullName: '',
+                        url: '',
+                        avatarUrl: '',
+                        issueTrackerEnabled: false,
+                    },
+                    branchName: '',
+                    commitHash: '',
+                },
+                destination: {
+                    repo: {
+                        id: '',
+                        name: '',
+                        displayName: '',
+                        fullName: '',
+                        url: '',
+                        avatarUrl: '',
+                        issueTrackerEnabled: false,
+                    },
+                    branchName: '',
+                    commitHash: '',
+                },
+                htmlSummary: '',
+                rawSummary: '',
+                ts: '',
+                updatedTs: '',
+                state: 'OPEN',
+                closeSourceBranch: false,
+                taskCount: 0,
+                draft: false,
+            },
         };
 
         it('should create pull request successfully', async () => {
-            const mockPR = {
-                site: mockWorkspaceRepo.mainSiteRemote.site!,
-                data: {
-                    id: 'pr123',
-                    title: 'Test PR',
-                    siteDetails: mockWorkspaceRepo.mainSiteRemote.site!.details,
-                    version: 0,
-                    url: '',
-                    author: mockUser,
-                    participants: [],
-                    source: {
-                        repo: {
-                            id: '',
-                            name: '',
-                            displayName: '',
-                            fullName: '',
-                            url: '',
-                            avatarUrl: '',
-                            issueTrackerEnabled: false,
-                        },
-                        branchName: '',
-                        commitHash: '',
-                    },
-                    destination: {
-                        repo: {
-                            id: '',
-                            name: '',
-                            displayName: '',
-                            fullName: '',
-                            url: '',
-                            avatarUrl: '',
-                            issueTrackerEnabled: false,
-                        },
-                        branchName: '',
-                        commitHash: '',
-                    },
-                    htmlSummary: '',
-                    rawSummary: '',
-                    ts: '',
-                    updatedTs: '',
-                    state: 'OPEN',
-                    closeSourceBranch: false,
-                    taskCount: 0,
-                    draft: false,
-                },
-            };
-            mockClient.pullrequests.create.mockResolvedValue(mockPR);
+            mockClient.pullrequests.create.mockResolvedValue(mockPRResponse);
 
             const result = await api.create(mockCreateData);
 
@@ -669,58 +660,47 @@ describe('VSCCreatePullRequestActionApi', () => {
                     summary: 'Test PR description',
                 }),
             );
-            expect(commands.executeCommand).toHaveBeenCalledWith(Commands.BitbucketShowPullRequestDetails, mockPR);
+            expect(commands.executeCommand).toHaveBeenCalledWith(
+                Commands.BitbucketShowPullRequestDetails,
+                mockPRResponse,
+            );
             expect(commands.executeCommand).toHaveBeenCalledWith(Commands.BitbucketRefreshPullRequests);
-            expect(result).toEqual(mockPR);
+            expect(result).toEqual(mockPRResponse);
+        });
+
+        it('should create Draft pull request successfully', async () => {
+            const mockDraftPRResponse = {
+                ...mockPRResponse,
+                data: {
+                    ...mockPRResponse.data,
+                    draft: true,
+                },
+            };
+            mockClient.pullrequests.create.mockResolvedValue(mockDraftPRResponse);
+
+            const result = await api.create({ ...mockCreateData, isDraft: true });
+
+            expect(mockScm.push).toHaveBeenCalledWith('origin', 'feature/branch');
+            expect(mockClient.pullrequests.create).toHaveBeenCalledWith(
+                mockWorkspaceRepo.mainSiteRemote.site,
+                mockWorkspaceRepo,
+                expect.objectContaining({
+                    sourceBranchName: 'feature/branch',
+                    destinationBranchName: 'main',
+                    title: 'Test PR',
+                    summary: 'Test PR description',
+                    draft: true,
+                }),
+            );
+            expect(commands.executeCommand).toHaveBeenCalledWith(
+                Commands.BitbucketShowPullRequestDetails,
+                mockDraftPRResponse,
+            );
+            expect(commands.executeCommand).toHaveBeenCalledWith(Commands.BitbucketRefreshPullRequests);
+            expect(result).toEqual(mockDraftPRResponse);
         });
 
         it('should handle issue transition when issue and transition provided', async () => {
-            const mockPR = {
-                site: mockWorkspaceRepo.mainSiteRemote.site!,
-                data: {
-                    id: 'pr123',
-                    siteDetails: mockWorkspaceRepo.mainSiteRemote.site!.details,
-                    version: 0,
-                    url: '',
-                    author: mockUser,
-                    participants: [],
-                    source: {
-                        repo: {
-                            id: '',
-                            name: '',
-                            displayName: '',
-                            fullName: '',
-                            url: '',
-                            avatarUrl: '',
-                            issueTrackerEnabled: false,
-                        },
-                        branchName: '',
-                        commitHash: '',
-                    },
-                    destination: {
-                        repo: {
-                            id: '',
-                            name: '',
-                            displayName: '',
-                            fullName: '',
-                            url: '',
-                            avatarUrl: '',
-                            issueTrackerEnabled: false,
-                        },
-                        branchName: '',
-                        commitHash: '',
-                    },
-                    title: '',
-                    htmlSummary: '',
-                    rawSummary: '',
-                    ts: '',
-                    updatedTs: '',
-                    state: 'OPEN',
-                    closeSourceBranch: false,
-                    taskCount: 0,
-                    draft: false,
-                },
-            };
             const mockIssue = { key: 'TEST-123' } as MinimalIssue<DetailedSiteInfo>;
             const mockTransition = {
                 id: 'transition123',
@@ -753,7 +733,7 @@ describe('VSCCreatePullRequestActionApi', () => {
                 transition: mockTransition,
             };
 
-            mockClient.pullrequests.create.mockResolvedValue(mockPR);
+            mockClient.pullrequests.create.mockResolvedValue(mockPRResponse);
 
             await api.create(dataWithIssue);
 
@@ -779,55 +759,9 @@ describe('VSCCreatePullRequestActionApi', () => {
         });
 
         it('should not push when pushLocalChanges is false', async () => {
-            const mockPR = {
-                site: mockWorkspaceRepo.mainSiteRemote.site!,
-                data: {
-                    id: 'pr123',
-                    siteDetails: mockWorkspaceRepo.mainSiteRemote.site!.details,
-                    version: 0,
-                    url: '',
-                    author: mockUser,
-                    participants: [],
-                    source: {
-                        repo: {
-                            id: '',
-                            name: '',
-                            displayName: '',
-                            fullName: '',
-                            url: '',
-                            avatarUrl: '',
-                            issueTrackerEnabled: false,
-                        },
-                        branchName: '',
-                        commitHash: '',
-                    },
-                    destination: {
-                        repo: {
-                            id: '',
-                            name: '',
-                            displayName: '',
-                            fullName: '',
-                            url: '',
-                            avatarUrl: '',
-                            issueTrackerEnabled: false,
-                        },
-                        branchName: '',
-                        commitHash: '',
-                    },
-                    title: '',
-                    htmlSummary: '',
-                    rawSummary: '',
-                    ts: '',
-                    updatedTs: '',
-                    state: 'OPEN',
-                    closeSourceBranch: false,
-                    taskCount: 0,
-                    draft: false,
-                },
-            };
             const dataWithoutPush = { ...mockCreateData, pushLocalChanges: false };
 
-            mockClient.pullrequests.create.mockResolvedValue(mockPR);
+            mockClient.pullrequests.create.mockResolvedValue(mockPRResponse);
 
             await api.create(dataWithoutPush);
 

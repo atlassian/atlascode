@@ -3,6 +3,7 @@ import { CreateMetaTransformerResult, FieldValues, IssueTypeUI, ValueType } from
 import { decode } from 'base64-arraybuffer-es6';
 import { format } from 'date-fns';
 import FormData from 'form-data';
+import { AnalyticRequiredFieldInfo } from 'src/analyticsTypes';
 import { startWorkOnIssue } from 'src/commands/jira/startWorkOnIssue';
 import { getFilledFieldKeys } from 'src/util/fieldValues';
 import timer from 'src/util/perf';
@@ -25,6 +26,7 @@ import {
     CreateIssueAction,
     isAiSuggestionFeedback,
     isCreateIssue,
+    isCreateIssueErrorDisplayed,
     isCreateIssueValidationFailed,
     isGenerateIssueSuggestions,
     isLoadMoreProjects,
@@ -50,6 +52,10 @@ export interface PartialIssue {
     onCreated?: (data: CommentData | BBData) => void;
     summary?: string;
     description?: string;
+    // Fields for expanding from sidebar panel with pre-selected values
+    siteId?: string;
+    projectKey?: string;
+    issueTypeId?: string;
 }
 
 export interface CommentData {
@@ -95,6 +101,8 @@ export class CreateIssueWebview
     private _apiError: unknown = undefined;
     private _hadValidationError: boolean = false;
     private _lastFilledFields: string[] = [];
+    private _submitAttempt: number = 0;
+    private _errorBannerDetails: string | { message?: string; title?: string } | undefined = undefined;
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -126,33 +134,57 @@ export class CreateIssueWebview
 
     private fireAbandonedEventIfNeeded() {
         if (!this._issueCreatedSuccessfully && this._siteDetails && this._siteDetails.id) {
-            const exitReason = this._apiError ? 'error' : 'closed';
-            const requiredFieldsFilled = this.areRequiredFieldsFilled();
+            const exitReason = this._apiError || this._errorBannerDetails ? 'error' : 'closed';
 
+            // if _lastFilledFields is empty user didn't press submit button, or we didn't identify missed required fields in React.
+            // Here we will try to get filled fields based on the selected issue type fields.
+            if (!this._lastFilledFields.length) {
+                if (this._selectedIssueTypeId) {
+                    this._lastFilledFields = getFilledFieldKeys(
+                        this._screenData.issueTypeUIs[this._selectedIssueTypeId!].fieldValues,
+                    );
+                } else {
+                    this._lastFilledFields = ['unknown_issue_type'];
+                }
+            }
+
+            const missedRequiredFields = this.getMissedRequiredFields();
             createIssueAbandonedEvent(
                 this._siteDetails,
                 exitReason,
                 this._lastFilledFields,
-                requiredFieldsFilled,
+                missedRequiredFields,
                 this._hadValidationError,
                 this._apiError,
+                this._submitAttempt,
+                this._errorBannerDetails,
             ).then((e) => {
                 Container.analyticsClient.sendTrackEvent(e);
             });
         }
     }
 
-    private areRequiredFieldsFilled(): boolean {
+    private getMissedRequiredFields(): AnalyticRequiredFieldInfo[] {
         if (!this._selectedIssueTypeId || !this._screenData.issueTypeUIs[this._selectedIssueTypeId]) {
-            return false;
+            return [];
         }
 
         const issueTypeUI = this._screenData.issueTypeUIs[this._selectedIssueTypeId];
-        const requiredFieldKeys = Object.values(issueTypeUI.fields)
-            .filter((field) => field.required)
-            .map((field) => field.key);
+        const requiredFields = Object.values(issueTypeUI.fields).filter((field) => field.required);
 
-        return requiredFieldKeys.every((key) => this._lastFilledFields.includes(key));
+        return requiredFields
+            .map((requiredField) => {
+                return !this._lastFilledFields.includes(requiredField.key)
+                    ? {
+                          name: requiredField.name,
+                          uiType: requiredField.uiType,
+                          advanced: requiredField.advanced,
+                          valueType: requiredField.valueType,
+                          isArray: requiredField.isArray,
+                      }
+                    : null;
+            })
+            .filter((field) => field !== null);
     }
 
     private updateFilledFieldsTracking(fieldValues: FieldValues) {
@@ -169,6 +201,8 @@ export class CreateIssueWebview
         this._apiError = undefined;
         this._hadValidationError = false;
         this._lastFilledFields = [];
+        this._submitAttempt = 0;
+        this._errorBannerDetails = undefined;
     }
 
     override async createOrShow(
@@ -310,7 +344,8 @@ export class CreateIssueWebview
         if (inputSite) {
             this._siteDetails = inputSite;
         } else {
-            let siteId = Container.config.jira.lastCreatePreSelectedValues.siteId;
+            // Check for partial issue siteId first (from sidebar expansion)
+            let siteId = this._partialIssue?.siteId || Container.config.jira.lastCreatePreSelectedValues.siteId;
             if (!siteId) {
                 siteId = '';
             }
@@ -332,7 +367,9 @@ export class CreateIssueWebview
         } else if (inputProject) {
             this._currentProject = inputProject;
         } else {
-            let projectKey = Container.config.jira.lastCreatePreSelectedValues.projectKey;
+            // Check for partial issue projectKey first (from sidebar expansion)
+            let projectKey =
+                this._partialIssue?.projectKey || Container.config.jira.lastCreatePreSelectedValues.projectKey;
             if (!projectKey) {
                 projectKey = '';
             }
@@ -350,6 +387,11 @@ export class CreateIssueWebview
                     this._currentProject = await Container.jiraProjectManager.getFirstProject(this._siteDetails);
                 }
             }
+        }
+
+        // Check for partial issue issueTypeId (from sidebar expansion)
+        if (this._partialIssue?.issueTypeId) {
+            this._selectedIssueTypeId = this._partialIssue.issueTypeId;
         }
 
         await saveLastCreatePreferences({
@@ -535,9 +577,11 @@ export class CreateIssueWebview
             this._selectedIssueTypeId = this._screenData.selectedIssueType.id;
 
             if (this._currentProject) {
-                const savedIssueTypeId = Container.config.jira.lastCreatePreSelectedValues.issueTypeId;
-                if (savedIssueTypeId && this._screenData.issueTypeUIs[savedIssueTypeId]) {
-                    this._selectedIssueTypeId = savedIssueTypeId;
+                // Check for partial issue issueTypeId first (from sidebar expansion), then saved preferences
+                const issueTypeIdToUse =
+                    this._partialIssue?.issueTypeId || Container.config.jira.lastCreatePreSelectedValues.issueTypeId;
+                if (issueTypeIdToUse && this._screenData.issueTypeUIs[issueTypeIdToUse]) {
+                    this._selectedIssueTypeId = issueTypeIdToUse;
                 }
             }
 
@@ -965,7 +1009,16 @@ export class CreateIssueWebview
                     handled = true;
                     if (isCreateIssueValidationFailed(msg)) {
                         this._hadValidationError = true;
+                        this._submitAttempt = this._submitAttempt ? this._submitAttempt + 1 : 1;
                         this._lastFilledFields = msg.filledFields;
+                    }
+                    break;
+                }
+                case 'createIssueErrorDisplayed': {
+                    // stores the error details when error banner is displayed to be used for analytics when issue is submitted
+                    handled = true;
+                    if (isCreateIssueErrorDisplayed(msg)) {
+                        this._errorBannerDetails = msg.errorDetails;
                     }
                     break;
                 }

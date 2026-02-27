@@ -170,6 +170,24 @@ describe('PullRequestTitlesNode', () => {
         expect(mockTreeItem.contextValue).toBe(PullRequestContextValue);
     });
 
+    test('getTreeItem returns a TreeItem with correct properties for draft PR', () => {
+        const mockDraftPR = {
+            ...mockPr,
+            data: {
+                ...mockPr.data,
+                draft: true,
+            },
+        };
+        prNode = new PullRequestTitlesNode(mockDraftPR, false);
+        const treeItem = prNode.getTreeItem();
+        expect(treeItem).toBe(mockTreeItem);
+
+        expect(vscode.TreeItem).toHaveBeenCalledWith(mockDraftPR.data.title, vscode.TreeItemCollapsibleState.Collapsed);
+        expect(mockTreeItem.tooltip).toContain(mockDraftPR.data.title);
+        expect(mockTreeItem.tooltip).toContain('#123 Test PR | Draft');
+        expect(mockTreeItem.description).toBe('Draft | updated about 3 years ago');
+    });
+
     test('getPR returns the PR object', () => {
         expect(prNode.getPR()).toBe(mockPr);
     });

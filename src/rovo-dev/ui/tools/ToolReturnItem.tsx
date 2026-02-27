@@ -31,7 +31,7 @@ export const ToolReturnParsedItem: React.FC<{
             {toolIcon}
             <div className="tool-return-item-base" style={{ flexWrap: 'wrap' }}>
                 <div className="tool-return-content">
-                    <MarkedDown value={msg.content} onLinkClick={onLinkClick} />
+                    <MarkedDown value={msg.content ?? ''} onLinkClick={onLinkClick} />
                 </div>
                 {renderTitle(msg)}
             </div>

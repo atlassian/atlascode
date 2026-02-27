@@ -268,7 +268,8 @@ export abstract class AbstractIssueEditorPage<
         }
         // Check if it's an ADF object
         if (t === 'object' && value.type === 'doc' && value.version === 1) {
-            // For new Atlaskit editor, convert to JSON string
+            // This method always returns a string (used by string-only controls: Textfield, DatePicker, legacy text area).
+            // Atlaskit path: serialize ADF to JSON string so we have a reversible string form; the editor itself receives the raw object via fieldValues.
             if (this.state.showAtlaskitEditor) {
                 return JSON.stringify(value);
             }

@@ -26,11 +26,9 @@ import {
 } from 'vscode';
 
 import { GitErrorCodes } from '../typings/git';
-import { FeatureFlagClient } from '../util/featureFlags/featureFlagClient';
-import { Features } from '../util/features';
 import { RovodevCommandContext, RovodevCommands } from './api/componentApi';
 import { DetailedSiteInfo, ExtensionApi, MinimalIssue } from './api/extensionApi';
-import { RovoDevApiClient, RovoDevApiError, RovoDevHealthcheckResponse } from './client';
+import { AgentMode, RovoDevApiClient, RovoDevApiError, RovoDevHealthcheckResponse } from './client';
 import { buildErrorDetails } from './errorDetailsBuilder';
 import { createValidatedRovoDevAuthInfo } from './rovoDevAuthValidator';
 import { RovoDevChatContextProvider } from './rovoDevChatContextProvider';
@@ -104,6 +102,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     // we keep the data in this collection so we can attach some metadata to the next
     // prompt informing Rovo Dev that those files has been reverted
     private _revertedChanges: string[] = [];
+
+    /** Agent mode selected by the user before healthcheck completed; applied after setReady. */
+    private _pendingAgentMode?: AgentMode;
 
     private _disposables: Disposable[] = [];
 
@@ -512,6 +513,38 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         this._chatProvider.fullContextMode = e.value;
                         break;
 
+                    case RovoDevViewResponseType.GetAvailableAgentModes:
+                        const modes = await this._chatProvider.getAvailableAgentModes();
+                        await webview.postMessage({
+                            type: RovoDevProviderMessageType.GetAvailableAgentModesComplete,
+                            modes: modes || [],
+                        });
+                        break;
+
+                    case RovoDevViewResponseType.GetCurrentAgentMode:
+                        const mode = await this._chatProvider.getCurrentAgentMode();
+                        await webview.postMessage({
+                            type: RovoDevProviderMessageType.GetCurrentAgentModeComplete,
+                            mode: mode || 'default',
+                        });
+                        break;
+
+                    case RovoDevViewResponseType.SetAgentMode:
+                        if (!this._chatProvider.isReady()) {
+                            this._pendingAgentMode = e.mode;
+                            await webview.postMessage({
+                                type: RovoDevProviderMessageType.SetAgentModeComplete,
+                                mode: e.mode,
+                            });
+                        } else {
+                            await this._chatProvider.setAgentMode(e.mode);
+                            await webview.postMessage({
+                                type: RovoDevProviderMessageType.SetAgentModeComplete,
+                                mode: e.mode,
+                            });
+                        }
+                        break;
+
                     case RovoDevViewResponseType.OpenExternalLink:
                         await env.openExternal(Uri.parse(e.href));
                         break;
@@ -522,6 +555,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                     case RovoDevViewResponseType.StartNewSession:
                         await this.executeNewSession();
+                        break;
+
+                    case RovoDevViewResponseType.RestartProcess:
+                        await this.executeRestartProcess();
                         break;
 
                     case RovoDevViewResponseType.MessageRendered:
@@ -572,7 +609,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private async sendProviderReadyEvent(userEmail: string | undefined) {
         const yoloMode = this._yoloMode;
-        const featureFlagClient = FeatureFlagClient.getInstance();
 
         await this._webView!.postMessage({
             type: RovoDevProviderMessageType.ProviderReady,
@@ -580,13 +616,39 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             workspacePath: workspace.workspaceFolders?.[0]?.uri.fsPath,
             homeDir: process.env.HOME || process.env.USERPROFILE,
             yoloMode,
-            features: {
-                dedicatedRovoDevAuth: featureFlagClient.checkGate(Features.DedicatedRovoDevAuth),
-            },
         });
 
         // Send existing Jira credentials for autocomplete
         await this.sendExistingJiraCredentials();
+    }
+
+    /**
+     * Fetches agent modes asynchronously and sends them to the frontend when ready.
+     * This is called during startup to improve initialization performance.
+     */
+    private async fetchAgentModes(): Promise<void> {
+        if (!this._chatProvider || !this._webView) {
+            return;
+        }
+
+        try {
+            const [availableModes, currentAgentMode] = await Promise.all([
+                this._chatProvider.getAvailableAgentModes(),
+                this._chatProvider.getCurrentAgentMode(),
+            ]);
+
+            await this._webView.postMessage({
+                type: RovoDevProviderMessageType.GetAvailableAgentModesComplete,
+                modes: availableModes || [],
+            });
+
+            await this._webView.postMessage({
+                type: RovoDevProviderMessageType.GetCurrentAgentModeComplete,
+                mode: currentAgentMode || 'default',
+            });
+        } catch (error) {
+            Logger.error(error, 'Failed to fetch agent modes');
+        }
     }
 
     private beginNewSession(sessionId: string | null, source: 'init' | 'manuallyCreated' | 'restored'): void {
@@ -695,6 +757,34 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         } catch (error) {
             // Silently fail - autocomplete is a nice-to-have feature
             RovoDevTelemetryProvider.logError(error, 'Failed to fetch credential hints for autocomplete');
+        }
+    }
+
+    private async sendExpiredRovoDevCredentials(): Promise<void> {
+        if (!this._webView) {
+            return;
+        }
+
+        try {
+            const rovoDevAuth = await this.extensionApi.auth.getRovoDevAuthInfo();
+            if (rovoDevAuth && rovoDevAuth.user?.email) {
+                const rovoDevAuthWithHost = rovoDevAuth as any;
+
+                if (rovoDevAuthWithHost.host) {
+                    await this._webView.postMessage({
+                        type: RovoDevProviderMessageType.SetExistingJiraCredentials,
+                        credentials: [
+                            {
+                                host: rovoDevAuthWithHost.host,
+                                email: rovoDevAuth.user.email,
+                            },
+                        ],
+                    });
+                }
+            }
+        } catch (error) {
+            // Silently fail - pre-filling is a nice-to-have feature
+            Logger.warn(error, 'Failed to fetch expired RovoDev credentials for pre-fill');
         }
     }
 
@@ -1077,10 +1167,18 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 },
             });
         } catch (e) {
-            await this.processError(e);
+            const gitErrorCode = e.gitErrorCode;
+
+            // Don't log user configuration/input errors - these are expected and user needs to fix them
+            const isUserConfigError =
+                gitErrorCode === GitErrorCodes.NoUserNameConfigured ||
+                gitErrorCode === GitErrorCodes.NoUserEmailConfigured ||
+                e.message?.includes('Commit message is required') ||
+                e.message?.includes('Branch name is required');
+
+            await this.processError(e, { skipLogError: isUserConfigError });
 
             const errorMessage = e.message;
-            const gitErrorCode = e.gitErrorCode;
 
             await webview.postMessage({
                 type: RovoDevProviderMessageType.CreatePRComplete,
@@ -1443,7 +1541,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             isPromptPending: this._chatProvider.isPromptPending,
         });
 
-        await this._chatProvider.setReady(rovoDevClient);
+        await this._chatProvider.setReady(rovoDevClient, this._pendingAgentMode);
+        if (this._pendingAgentMode) {
+            await webView.postMessage({
+                type: RovoDevProviderMessageType.SetAgentModeComplete,
+                mode: this._pendingAgentMode,
+            });
+            this._pendingAgentMode = undefined;
+        }
+
+        await this.fetchAgentModes();
 
         if (this.isBoysenberry) {
             // update the isAtlassianUser flag based on Rovo Dev status response
@@ -1491,6 +1598,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._isProviderDisabled = true;
 
         this.setRovoDevTerminated();
+
+        // If the reason is UnauthorizedAuth, send expired credentials for pre-filling the form
+        if (reason === 'UnauthorizedAuth') {
+            await this.sendExpiredRovoDevCredentials();
+        }
 
         const webView = this._webView!;
         await webView.postMessage({
@@ -1566,6 +1678,22 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         if (this._isProviderDisabled) {
             return;
         }
+
+        // Check if this is an unauthorized error (expired/invalid credentials)
+        if (stderr && stderr.includes('UnauthorizedError')) {
+            // First check if user has valid Jira credentials - these can be used seamlessly
+            const primarySite = await this.extensionApi.auth.getCloudPrimaryAuthSite();
+            if (primarySite && primarySite.authInfo.user?.email) {
+                // User has valid Jira credentials with API token - RovoDev can use them
+                // Don't disable RovoDev, let it continue with these credentials
+                return;
+            }
+
+            // No valid Jira credentials, show login UI
+            await this.signalRovoDevDisabled('UnauthorizedAuth');
+            return;
+        }
+
         this._isProviderDisabled = true;
 
         this.setRovoDevTerminated();
@@ -1595,6 +1723,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     // and with Disabled you can't.
     private setRovoDevTerminated(): Promise<void> {
         this._rovoDevApiClient = undefined;
+        this._pendingAgentMode = undefined;
         setCommandContext(RovodevCommandContext.RovoDevApiReady, false);
 
         this._chatProvider.shutdown();

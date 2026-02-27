@@ -576,10 +576,26 @@ export class CredentialManager implements Disposable {
                 Logger.debug(`Successfully saved refreshed tokens for credentialId: ${site.credentialId}`);
             } else if (tokenResponse.shouldInvalidate || tokenResponse.shouldSlowDown) {
                 if (tokenResponse.shouldSlowDown) {
+                    const newAttemptsCount = (this._failedRefreshCache.get(site.credentialId)?.attemptsCount ?? 0) + 1;
                     this._failedRefreshCache.set(site.credentialId, {
-                        attemptsCount: (this._failedRefreshCache.get(site.credentialId)?.attemptsCount ?? 0) + 1,
+                        attemptsCount: newAttemptsCount,
                         lastAttemptAt: new Date(),
                     });
+                    // Only log error after hitting retry limit
+                    if (newAttemptsCount >= 5) {
+                        Logger.error(
+                            new Error(
+                                `Token refresh failed after ${newAttemptsCount} attempts for credentialId: ${site.credentialId}`,
+                            ),
+                        );
+                    }
+                }
+                if (tokenResponse.shouldInvalidate) {
+                    Logger.error(
+                        new Error(
+                            `Token refresh failed - credentials invalidated for credentialId: ${site.credentialId}`,
+                        ),
+                    );
                 }
                 credentials.state = AuthInfoState.Invalid;
                 await this.saveAuthInfo(site, credentials);

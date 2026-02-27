@@ -82,6 +82,7 @@ const mockController: PullRequestDetailsControllerApi = {
     fetchUsers: jest.fn(),
     updateSummary: jest.fn(),
     updateTitle: jest.fn(),
+    updateDraftStatus: jest.fn(),
     checkoutBranch: jest.fn(),
     openDiff: jest.fn(),
     openJiraIssue: jest.fn(),

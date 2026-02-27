@@ -29,6 +29,7 @@ export enum PullRequestDetailsMessageType {
     UpdateReviewersResponse = 'updateReviewersResponse',
     UpdateSummary = 'updateSummary',
     UpdateTitle = 'updateTitle',
+    UpdateDraftStatus = 'updateDraftStatus',
     UpdateCommits = 'updateCommits',
     UpdateReviewers = 'updateReviewers',
     UpdateApprovalStatus = 'updateApprovalStatus',
@@ -46,6 +47,7 @@ export type PullRequestDetailsMessage =
     | ReducerAction<PullRequestDetailsMessageType.Init, PullRequestDetailsInitMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateSummary, PullRequestDetailsSummaryMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateTitle, PullRequestDetailsTitleMessage>
+    | ReducerAction<PullRequestDetailsMessageType.UpdateDraftStatus, PullRequestDetailsDraftStatusMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateCommits, PullRequestDetailsCommitsMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateReviewers, PullRequestDetailsReviewersMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateApprovalStatus, PullRequestDetailsApprovalMessage>
@@ -106,6 +108,10 @@ export interface PullRequestDetailsSummaryMessage {
 
 export interface PullRequestDetailsTitleMessage {
     title: string;
+}
+
+export interface PullRequestDetailsDraftStatusMessage {
+    isDraft: boolean;
 }
 
 export interface PullRequestDetailsCommitsMessage {

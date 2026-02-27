@@ -1662,6 +1662,7 @@ describe('ServerPullRequestApi', () => {
                 destinationBranchName: 'main',
                 reviewerAccountIds: ['reviewer1', 'reviewer2'],
                 closeSourceBranch: false,
+                draft: false,
             };
 
             const mockCreateResponse = {
@@ -1694,6 +1695,7 @@ describe('ServerPullRequestApi', () => {
                         id: 'main',
                     },
                     reviewers: [{ user: { name: 'reviewer1' } }, { user: { name: 'reviewer2' } }],
+                    draft: false,
                 },
                 {
                     markup: true,

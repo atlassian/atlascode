@@ -1,26 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 
-import PromptContextPopup, { PromptContextPopupItem } from './PromptContextPopup';
+import PromptContextPopup from './PromptContextPopup';
 
-const mockItems: PromptContextPopupItem[] = [
-    {
-        label: 'Test Item 1',
-        description: 'Test description 1',
-        icon: <span>📄</span>,
-        action: jest.fn(),
-    },
-    {
-        label: 'Test Item 2',
-        icon: <span>🔧</span>,
-        action: jest.fn(),
-    },
-    {
-        label: 'Test Item 3',
-        description: 'Test description 3',
-        icon: <span>⚙️</span>,
-    },
-];
+const mockOnAddRepositoryFile = jest.fn();
 
 describe('PromptContextPopup', () => {
     beforeEach(() => {
@@ -28,13 +11,13 @@ describe('PromptContextPopup', () => {
     });
 
     it('renders closed state initially', () => {
-        render(<PromptContextPopup items={mockItems} />);
+        render(<PromptContextPopup onAddRepositoryFile={mockOnAddRepositoryFile} />);
         expect(screen.getByLabelText('Prompt context')).toBeTruthy();
         expect(screen.queryByLabelText('Prompt context (open)')).not.toBeTruthy();
     });
 
     it('toggles open state when trigger button is clicked', () => {
-        render(<PromptContextPopup items={mockItems} />);
+        render(<PromptContextPopup onAddRepositoryFile={mockOnAddRepositoryFile} />);
 
         const triggerButton = screen.getByLabelText('Prompt context');
         fireEvent.click(triggerButton);
@@ -44,7 +27,7 @@ describe('PromptContextPopup', () => {
     });
 
     it('closes popup when close button is clicked', () => {
-        render(<PromptContextPopup items={mockItems} />);
+        render(<PromptContextPopup onAddRepositoryFile={mockOnAddRepositoryFile} />);
 
         // Open popup
         fireEvent.click(screen.getByLabelText('Prompt context'));
@@ -57,69 +40,19 @@ describe('PromptContextPopup', () => {
     });
 
     it('renders all items when open', () => {
-        render(<PromptContextPopup items={mockItems} />);
+        render(<PromptContextPopup onAddRepositoryFile={mockOnAddRepositoryFile} />);
 
         fireEvent.click(screen.getByLabelText('Prompt context'));
 
-        expect(screen.getByText('Test Item 1')).toBeTruthy();
-        expect(screen.getByText('Test Item 2')).toBeTruthy();
-        expect(screen.getByText('Test Item 3')).toBeTruthy();
-    });
-
-    it('renders item descriptions when provided', () => {
-        render(<PromptContextPopup items={mockItems} />);
-
-        fireEvent.click(screen.getByLabelText('Prompt context'));
-
-        expect(screen.getByText('Test description 1')).toBeTruthy();
-        expect(screen.getByText('Test description 3')).toBeTruthy();
-        expect(screen.queryByText('Test description 2')).not.toBeTruthy();
+        expect(screen.getByText('Reference file from repository')).toBeTruthy();
     });
 
     it('calls item action when item is clicked', () => {
-        render(<PromptContextPopup items={mockItems} />);
+        render(<PromptContextPopup onAddRepositoryFile={mockOnAddRepositoryFile} />);
 
         fireEvent.click(screen.getByLabelText('Prompt context'));
-        fireEvent.click(screen.getByText('Test Item 1'));
+        fireEvent.click(screen.getByText('Reference file from repository'));
 
-        expect(mockItems[0].action).toHaveBeenCalledTimes(1);
-    });
-
-    it('closes popup after item is clicked', () => {
-        render(<PromptContextPopup items={mockItems} />);
-
-        fireEvent.click(screen.getByLabelText('Prompt context'));
-        fireEvent.click(screen.getByText('Test Item 1'));
-
-        expect(screen.getByLabelText('Prompt context')).toBeTruthy();
-        expect(screen.queryByLabelText('Prompt context (open)')).not.toBeTruthy();
-    });
-
-    it('handles items without action gracefully', () => {
-        render(<PromptContextPopup items={mockItems} />);
-
-        fireEvent.click(screen.getByLabelText('Prompt context'));
-        fireEvent.click(screen.getByText('Test Item 3'));
-
-        // Should not throw error and should still close popup
-        expect(screen.getByLabelText('Prompt context')).toBeTruthy();
-    });
-
-    it('renders empty state when no items provided', () => {
-        render(<PromptContextPopup items={[]} />);
-
-        fireEvent.click(screen.getByLabelText('Prompt context'));
-
-        expect(screen.queryByText('Test Item 1')).not.toBeTruthy();
-    });
-
-    it('renders item icons correctly', () => {
-        render(<PromptContextPopup items={mockItems} />);
-
-        fireEvent.click(screen.getByLabelText('Prompt context'));
-
-        expect(screen.getByText('📄')).toBeTruthy();
-        expect(screen.getByText('🔧')).toBeTruthy();
-        expect(screen.getByText('⚙️')).toBeTruthy();
+        expect(mockOnAddRepositoryFile).toHaveBeenCalledTimes(1);
     });
 });

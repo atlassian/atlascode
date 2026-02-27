@@ -710,6 +710,7 @@ export class CloudPullRequestApi implements PullRequestApi {
                 account_id: accountId,
             })),
             close_source_branch: createPrData.closeSourceBranch,
+            draft: createPrData.draft || false,
         };
 
         const { ownerSlug, repoSlug } = site;
@@ -737,6 +738,15 @@ export class CloudPullRequestApi implements PullRequestApi {
             `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}`,
             prBody,
         );
+        return CloudPullRequestApi.toPullRequestData(data, pr.site, pr.workspaceRepo);
+    }
+
+    async updateDraftStatus(pr: PullRequest, isDraft: boolean): Promise<PullRequest> {
+        const { ownerSlug, repoSlug } = pr.site;
+
+        const { data } = await this.client.put(`/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}`, {
+            draft: isDraft,
+        });
         return CloudPullRequestApi.toPullRequestData(data, pr.site, pr.workspaceRepo);
     }
 

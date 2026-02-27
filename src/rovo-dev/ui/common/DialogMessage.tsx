@@ -28,6 +28,7 @@ export const DialogMessageItem: React.FC<{
     customButton?: { text: string; onClick?: () => void };
     onOpenLogFile?: () => void;
     onLinkClick: (href: string) => void;
+    onRestartProcess?: () => void;
 }> = ({
     msg,
     isRetryAfterErrorButtonEnabled,
@@ -36,6 +37,7 @@ export const DialogMessageItem: React.FC<{
     customButton,
     onOpenLogFile,
     onLinkClick,
+    onRestartProcess,
 }) => {
     const [isDetailsExpanded, setIsDetailsExpanded] = React.useState(false);
     const [isStackTraceExpanded, setIsStackTraceExpanded] = React.useState(false);
@@ -113,7 +115,7 @@ export const DialogMessageItem: React.FC<{
                     {msg.text && (
                         <div style={messageContentStyles}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <MarkedDown value={msg.text} onLinkClick={onLinkClick} />
+                                <MarkedDown value={msg.text ?? ''} onLinkClick={onLinkClick} />
                             </div>
                         </div>
                     )}
@@ -139,6 +141,21 @@ export const DialogMessageItem: React.FC<{
                                 </button>
                             </div>
                         )}
+
+                    {msg.type === 'error' && msg.isProcessTerminated && onRestartProcess && (
+                        <div
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'flex-start',
+                                width: '100%',
+                                marginTop: '8px',
+                            }}
+                        >
+                            <button style={inChatButtonStyles} onClick={onRestartProcess}>
+                                Restart Process
+                            </button>
+                        </div>
+                    )}
 
                     {msg.type === 'toolPermissionRequest' && onToolPermissionChoice && (
                         <div

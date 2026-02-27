@@ -1,0 +1,17 @@
+{
+    "priority": 2,
+    "request": {
+        "method": "POST",
+        "urlPath": "/rest/api/2/issue/BTS-1/comment",
+        "bodyPatterns": [
+            {
+                "matchesJsonPath": "$.body.type"
+            }
+        ]
+    },
+    "response": {
+        "status": 400,
+        "body": "Comment body must be a string (wiki markup or plain text), not an ADF object. Jira DC does not accept ADF.",
+        "headers": { "Content-Type": "text/plain" }
+    }
+}

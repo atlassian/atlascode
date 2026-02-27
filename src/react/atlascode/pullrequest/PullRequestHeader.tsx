@@ -1,8 +1,8 @@
 import { AppBar, Box, Link, Toolbar, Typography } from '@mui/material';
 import React from 'react';
 
+import { PullRequestHeaderActions } from './header-actions/PullRequestHeaderActions';
 import { PullRequestDetailsControllerApi, PullRequestDetailsState } from './pullRequestDetailsController';
-import { PullRequestHeaderActions } from './PullRequestHeaderActions';
 
 interface PullRequestHeaderProps {
     state: PullRequestDetailsState;

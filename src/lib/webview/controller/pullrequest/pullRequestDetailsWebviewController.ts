@@ -305,6 +305,24 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 break;
             }
 
+            case PullRequestDetailsActionType.UpdateDraftStatusRequest: {
+                try {
+                    const pr = await this.api.updateDraftStatus(this.pr, msg.isDraft);
+                    this.pr = pr;
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateDraftStatus,
+                        isDraft: pr.data.draft,
+                    });
+                } catch (e) {
+                    this.logger.error(e, 'Error updating draft status');
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error updating draft status'),
+                    });
+                }
+                break;
+            }
+
             case PullRequestDetailsActionType.UpdateApprovalStatus: {
                 try {
                     this.analytics.firePrApproveEvent(this.pr.site.details);

@@ -1,11 +1,7 @@
 import * as React from 'react';
 import { RovodevStaticConfig } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
-import {
-    RovoDevFeatures,
-    RovoDevProviderMessage,
-    RovoDevProviderMessageType,
-} from 'src/rovo-dev/rovoDevWebviewProviderMessages';
+import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
 import { DetailedSiteInfo, MinimalIssue } from '../../api/extensionApiTypes';
 import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc, OpenJiraFunc } from '../common/common';
@@ -30,6 +26,7 @@ interface ChatStreamProps {
         checkFileExists: CheckFileExistsFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
+        onRestartProcess: () => void;
         onOpenLogFile: () => void;
         onError: (error: Error, errorMessage: string) => void;
     };
@@ -53,7 +50,6 @@ interface ChatStreamProps {
     onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionDialogChoice | 'enableYolo') => void;
     onLinkClick: (href: string) => void;
     credentialHints?: CredentialHint[];
-    features?: RovoDevFeatures;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -78,7 +74,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     onToolPermissionChoice,
     onLinkClick,
     credentialHints,
-    features,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -245,7 +240,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     onJiraItemClick={onJiraItemClick}
                     onLinkClick={onLinkClick}
                     credentialHints={credentialHints}
-                    features={features}
                 />
             )}
             {!isChatHistoryDisabled && (
@@ -274,6 +268,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             msg={dialog}
                             isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
                             retryAfterError={renderProps.retryPromptAfterError}
+                            onRestartProcess={renderProps.onRestartProcess}
                             onToolPermissionChoice={onToolPermissionChoice}
                             onOpenLogFile={renderProps.onOpenLogFile}
                             onLinkClick={onLinkClick}

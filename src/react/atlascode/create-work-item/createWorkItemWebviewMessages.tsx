@@ -6,6 +6,7 @@ export enum CreateWorkItemWebviewResponseType {
     UpdateField = 'updateField',
     UpdateSelectOptions = 'updateSelectOptions',
     Cancel = 'cancel',
+    OpenFullEditor = 'openFullEditor',
 }
 export interface CreateWorkItemViewRequiredField {
     field: FieldUI;
@@ -40,4 +41,10 @@ export type CreateWorkItemWebviewResponse =
       }
     | {
           type: CreateWorkItemWebviewResponseType.Cancel;
+      }
+    | {
+          type: CreateWorkItemWebviewResponseType.OpenFullEditor;
+          payload: {
+              summary: string;
+          };
       };

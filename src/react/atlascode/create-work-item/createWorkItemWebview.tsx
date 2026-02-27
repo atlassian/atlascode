@@ -195,6 +195,15 @@ const CreateWorkItemWebview: React.FC = () => {
         postMessage({ type: CreateWorkItemWebviewResponseType.Cancel });
     }, [postMessage]);
 
+    const handleOpenFullEditor = React.useCallback(() => {
+        postMessage({
+            type: CreateWorkItemWebviewResponseType.OpenFullEditor,
+            payload: {
+                summary: state.summary,
+            },
+        });
+    }, [postMessage, state.summary]);
+
     React.useEffect(() => {
         postMessage({ type: CreateWorkItemWebviewResponseType.WebviewReady });
     }, [postMessage]);
@@ -267,6 +276,11 @@ const CreateWorkItemWebview: React.FC = () => {
                                 />
                             )}
                         </Field>
+                        <div className="form-actions-row">
+                            <button type="button" className="more-options-link" onClick={handleOpenFullEditor}>
+                                More options
+                            </button>
+                        </div>
                         <div className="form-actions">
                             <button onClick={handleCancel} className="form-button button-secondary" type="button">
                                 Cancel
@@ -284,7 +298,7 @@ const CreateWorkItemWebview: React.FC = () => {
                                     data-vscode-context='{"webviewSection": "createButton", "preventDefaultContextMenuItems": true}'
                                     onClick={(e) => {
                                         e.preventDefault();
-                                        e.target.dispatchEvent(
+                                        (e.target as HTMLButtonElement).dispatchEvent(
                                             new MouseEvent('contextmenu', {
                                                 bubbles: true,
                                                 clientX: e.clientX,

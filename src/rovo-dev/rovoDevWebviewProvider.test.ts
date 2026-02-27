@@ -668,6 +668,33 @@ describe('RovoDevWebviewProvider - Business Logic', () => {
             expect(getProcessTerminatedMessage(undefined)).toBe('Please start a new chat session to continue.');
         });
 
+        it('should detect UnauthorizedError in stderr and trigger login UI', () => {
+            const handleProcessTermination = (stderr?: string) => {
+                // Check if this is an unauthorized error (expired/invalid credentials)
+                if (stderr && stderr.includes('UnauthorizedError')) {
+                    return { action: 'showLoginUI', reason: 'UnauthorizedAuth' };
+                }
+                return { action: 'showTerminationError', reason: 'ProcessTerminated' };
+            };
+
+            expect(handleProcessTermination('Error: UnauthorizedError: Token expired')).toEqual({
+                action: 'showLoginUI',
+                reason: 'UnauthorizedAuth',
+            });
+            expect(handleProcessTermination('Some error\n    at UnauthorizedError\n    at process.ts:123')).toEqual({
+                action: 'showLoginUI',
+                reason: 'UnauthorizedAuth',
+            });
+            expect(handleProcessTermination('Network error')).toEqual({
+                action: 'showTerminationError',
+                reason: 'ProcessTerminated',
+            });
+            expect(handleProcessTermination()).toEqual({
+                action: 'showTerminationError',
+                reason: 'ProcessTerminated',
+            });
+        });
+
         it('should handle process failed to initialize messages', () => {
             const getProcessFailedMessage = (errorMessage?: string) => {
                 return errorMessage

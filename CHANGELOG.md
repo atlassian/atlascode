@@ -1,13 +1,45 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.21
+
+### Bug fixes
+
+- Fixed issue description losing line breaks and formatting in edit mode after save (HTML-to-ADF conversion now preserves line breaks as hardBreak nodes)
+
+## What's new in 4.0.20
+
+### Features
+
+- Added Draft pull requests
+- Rovo Dev: Added "Restart Process" button to error dialogs when the Rovo Dev process terminates unexpectedly
+
+### Improvements
+
+- Added warning message when no git repository selected on Start Work page
+- Bumped Rovo Dev version to v0.13.47
+- Added ADF ↔ WikiMarkup conversion for Jira Data Center: transform description and comments to/from WikiMarkup so DC (string-based API) and Cloud (ADF) both work correctly
+
+### Bug Fixes
+
+- Jira Data Center: fixed errors when adding or updating comments (comment body is now sent as string for DC, ADF for Cloud)
+- Jira DC: fixed updating issue description (description is sent as WikiMarkup string for DC, ADF for Cloud)
+- Jira DC: user mentions in comments and description now show the correct username instead of @unknown
+
+### Bug Fixes
+
+- Fixed Rovo Dev UI crashes when markdown content fails to parse
+
+### Bug Fixes
+
+- Improved error messages when git user.name or user.email is not configured, providing helpful setup instructions
+
 ## What's new in 4.0.19
 
 ### Improvements
 
 - Onboarding panel enables/disables Jira and Bitbucket based on user selections
-- URI handler for Rovo Dev - vscode://atlassian.atlascode/rovoDev will bring the user directly to Rovo Dev part of the extension 
+- URI handler for Rovo Dev - vscode://atlassian.atlascode/rovoDev will bring the user directly to Rovo Dev part of the extension
 - Added "Enable Rovo Dev" command and URI handler support for programmatically enabling Rovo Dev
-
 
 ### Bug Fixes
 

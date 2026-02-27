@@ -1,4 +1,3 @@
-import { Features } from 'src/util/features';
 import { Position, Range, Uri, ViewColumn, window, workspace, WorkspaceEdit } from 'vscode';
 
 import { startIssueCreationEvent } from '../../analytics';
@@ -8,6 +7,7 @@ import { WorkspaceRepo } from '../../bitbucket/model';
 import { SimplifiedTodoIssueData } from '../../config/model';
 import { Container } from '../../container';
 import { Logger } from '../../logger';
+import { Features } from '../../util/featureFlags';
 import { CommentData } from '../../webviews/createIssueWebview';
 import { buildSuggestionSettings, IssueSuggestionManager } from './issueSuggestionManager';
 

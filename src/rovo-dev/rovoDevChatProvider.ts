@@ -4,7 +4,9 @@ import { v4 } from 'uuid';
 
 import { ExtensionApi } from './api/extensionApi';
 import {
+    AgentMode,
     RovoDevApiClient,
+    RovoDevApiError,
     RovoDevChatRequest,
     RovoDevChatRequestContext,
     RovoDevChatRequestContextFileEntry,
@@ -48,6 +50,7 @@ export class RovoDevChatProvider {
     private _currentPrompt: RovoDevPrompt | undefined;
     private _rovoDevApiClient: RovoDevApiClient | undefined;
     private _webView: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse> | undefined;
+    private _onUnauthorizedCallback: (() => Promise<void>) | undefined;
 
     private _replayInProgress = false;
     private _lastMessageSentTime: number | undefined;
@@ -69,6 +72,14 @@ export class RovoDevChatProvider {
         if (value) {
             this.signalToolRequestAllowAll();
         }
+    }
+
+    private _agentMode: AgentMode = 'default';
+    public get agentMode() {
+        return this._agentMode;
+    }
+    public set agentMode(value: AgentMode) {
+        this._agentMode = value;
     }
 
     public fullContextMode = false;
@@ -98,8 +109,20 @@ export class RovoDevChatProvider {
         this._webView = webView;
     }
 
-    public async setReady(rovoDevApiClient: RovoDevApiClient) {
+    public setOnUnauthorizedCallback(callback: (() => Promise<void>) | undefined) {
+        this._onUnauthorizedCallback = callback;
+    }
+
+    public isReady(): boolean {
+        return !!this._rovoDevApiClient;
+    }
+
+    public async setReady(rovoDevApiClient: RovoDevApiClient, pendingAgentMode?: AgentMode) {
         this._rovoDevApiClient = rovoDevApiClient;
+
+        if (pendingAgentMode) {
+            await this.setAgentMode(pendingAgentMode);
+        }
 
         if (this._pendingPrompt) {
             const pendingPrompt = this._pendingPrompt;
@@ -697,6 +720,48 @@ export class RovoDevChatProvider {
         }
     }
 
+    public async setAgentMode(mode: AgentMode) {
+        if (!this._rovoDevApiClient) {
+            return;
+        }
+
+        try {
+            await this._rovoDevApiClient.setAgentMode(mode);
+            this._agentMode = mode;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            throw new Error(`Failed to set agent mode: ${errorMessage}`);
+        }
+    }
+
+    public async getAvailableAgentModes() {
+        if (!this._rovoDevApiClient) {
+            return;
+        }
+
+        try {
+            const response = await this._rovoDevApiClient.getAvailableModes();
+            return response.modes;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            throw new Error(`Failed to get available agent modes: ${errorMessage}`);
+        }
+    }
+
+    public async getCurrentAgentMode() {
+        if (!this._rovoDevApiClient) {
+            return;
+        }
+
+        try {
+            const response = await this._rovoDevApiClient.getAgentMode();
+            return response.mode;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            throw new Error(`Failed to get current agent mode: ${errorMessage}`);
+        }
+    }
+
     private async executeStreamingApiWithErrorHandling(
         sourceApi: StreamingApi,
         func: (client: RovoDevApiClient) => Promise<any>,
@@ -714,6 +779,18 @@ export class RovoDevChatProvider {
                     });
                     Logger.info('Rovo Dev API request aborted by user');
                     return;
+                }
+                // Check if this is a 401 or 403 error indicating expired/invalid credentials
+                // Also check if the stack trace contains "UnauthorizedError"
+                const isUnauthorizedError =
+                    (error instanceof RovoDevApiError && (error.httpStatus === 401 || error.httpStatus === 403)) ||
+                    (error instanceof Error && error.stack?.includes('UnauthorizedError'));
+                if (isUnauthorizedError) {
+                    Logger.info('Detected unauthorized error - triggering login UI');
+                    if (this._onUnauthorizedCallback) {
+                        await this._onUnauthorizedCallback();
+                        return;
+                    }
                 }
                 // the error is retriable only when it happens during the streaming of a 'chat' response
                 await this.processError(error, { isRetriable: sourceApi === 'chat' });

@@ -159,6 +159,10 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
                 setCommandContext('atlascode:showCreateWorkItemWebview', false);
                 break;
             }
+            case CreateWorkItemWebviewResponseType.OpenFullEditor: {
+                await this.openFullEditor(message.payload.summary);
+                break;
+            }
             default: {
                 console.warn(`Unknown message type received in CreateWorkItemWebview: ${message}`);
             }
@@ -493,6 +497,18 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
         if (resp) {
             setCommandContext('atlascode:showCreateWorkItemWebview', false);
         }
+    }
+
+    private async openFullEditor(summary: string): Promise<void> {
+        const partialIssue = {
+            summary: summary || undefined,
+            siteId: this._selectedSite?.id,
+            projectKey: this._selectedProject?.key,
+            issueTypeId: this._selectedIssueType?.id,
+        };
+
+        await Container.createIssueWebview.createOrShow(undefined, partialIssue);
+        setCommandContext('atlascode:showCreateWorkItemWebview', false);
     }
 
     override dispose(): void {

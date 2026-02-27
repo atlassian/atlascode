@@ -1,5 +1,6 @@
 import { RovoDevContextItem, RovoDevPrompt, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 
+import { AgentMode } from '../client';
 import { ReducerAction } from '../messaging';
 import { FeedbackType } from './feedback-form/FeedbackForm';
 
@@ -35,12 +36,16 @@ export const enum RovoDevViewResponseType {
     ToolPermissionChoiceSubmit = 'toolPermissionChoiceSubmit',
     YoloModeToggled = 'yoloModeToggled',
     FullContextModeToggled = 'fullContextModeToggled',
+    GetAvailableAgentModes = 'getAvailableAgentModes',
+    SetAgentMode = 'setAgentMode',
+    GetCurrentAgentMode = 'getCurrentAgentMode',
     FilterModifiedFilesByContent = 'filterModifiedFilesByContent',
     OpenExternalLink = 'openExternalLink',
     OpenRovoDevLogFile = 'openRovoDevLogFile',
     MessageRendered = 'messageRendered',
     ReportRenderError = 'reportRenderError',
     StartNewSession = 'startNewSession',
+    RestartProcess = 'restartProcess',
     ShowSessionHistory = 'showSessionHistory',
     FetchSavedPrompts = 'fetchSavedPrompts',
 }
@@ -92,6 +97,9 @@ export type RovoDevViewResponse =
       >
     | ReducerAction<RovoDevViewResponseType.YoloModeToggled, { value: boolean }>
     | ReducerAction<RovoDevViewResponseType.FullContextModeToggled, { value: boolean }>
+    | ReducerAction<RovoDevViewResponseType.GetAvailableAgentModes>
+    | ReducerAction<RovoDevViewResponseType.SetAgentMode, { mode: AgentMode }>
+    | ReducerAction<RovoDevViewResponseType.GetCurrentAgentMode>
     | ReducerAction<RovoDevViewResponseType.FilterModifiedFilesByContent, { files: ModifiedFile[] }>
     | ReducerAction<RovoDevViewResponseType.OpenExternalLink, { href: string }>
     | ReducerAction<RovoDevViewResponseType.OpenRovoDevLogFile>
@@ -106,5 +114,6 @@ export type RovoDevViewResponse =
           }
       >
     | ReducerAction<RovoDevViewResponseType.StartNewSession>
+    | ReducerAction<RovoDevViewResponseType.RestartProcess>
     | ReducerAction<RovoDevViewResponseType.ShowSessionHistory>
     | ReducerAction<RovoDevViewResponseType.FetchSavedPrompts>;
