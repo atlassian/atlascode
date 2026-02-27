@@ -217,8 +217,8 @@ export function modelsJsonResponseToMarkdown(
 
     let buffer = '';
 
-    for (const prompt of data.models) {
-        buffer += `**${prompt.model_id}**\n- ${prompt.description}\n- Credit multiplier: ${prompt.credit_multiplier}x\n\n`;
+    for (const model of data.models) {
+        buffer += `**${model.model_id}**\n- ${model.description}\n- Credit multiplier: ${model.credit_multiplier}x\n\n`;
     }
 
     return {
