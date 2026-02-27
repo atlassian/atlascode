@@ -374,7 +374,6 @@ export const appendResponse = (
         }
         return prev;
     }
-    // Left off here
 
     if (!response) {
         return prev;
@@ -395,7 +394,7 @@ export const appendResponse = (
         }
         // Group tool return with previous message if applicable
         if (response.event_kind === 'tool-return' || response.event_kind === 'retry-prompt') {
-            if (response.event_kind === 'tool-return') {
+            if (response.event_kind === 'tool-return' && !isRestoredSession) {
                 handleAppendModifiedFileToolReturns(response);
             }
             if (response.tool_name !== 'create_technical_plan' && thinkingBlockEnabled) {
@@ -427,7 +426,7 @@ export const appendResponse = (
         }
     } else {
         if (response.event_kind === 'tool-return' || response.event_kind === 'retry-prompt') {
-            if (response.event_kind === 'tool-return') {
+            if (response.event_kind === 'tool-return' && !isRestoredSession) {
                 handleAppendModifiedFileToolReturns(response);
             }
             if (response.tool_name !== 'create_technical_plan' && thinkingBlockEnabled) {
