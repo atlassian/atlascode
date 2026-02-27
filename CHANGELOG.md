@@ -1,11 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
-
 ## What's new in 4.0.22
 
 ### Features
 
 - Rovo Dev: Agent model selection both via /models command, and dedicated drop-down menu
+- Rovo Dev: Added support for /mcp command
 
 ## What's new in 4.0.21
 
