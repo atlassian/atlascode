@@ -24,15 +24,7 @@ export const CodePlanButton: React.FC<CodePlanButtonProps> = ({ execute, disable
     return (
         <div style={{ display: 'flex', flexDirection: 'row', gap: '4px', alignItems: 'center' }}>
             <div className="code-plan-button-container">
-                <Tooltip
-                    content={
-                        isExecuted
-                            ? 'Code plan executed'
-                            : isCancelled
-                              ? 'Code plan cancelled'
-                              : 'Execute generated code plan'
-                    }
-                >
+                <Tooltip content={isExecuted ? 'Code plan executed' : isCancelled ? '' : 'Execute generated code plan'}>
                     <button
                         disabled={disabled || isExecuted || isCancelled}
                         className="code-plan-button primary"
@@ -50,7 +42,7 @@ export const CodePlanButton: React.FC<CodePlanButtonProps> = ({ execute, disable
                 </Tooltip>
             </div>
             <div className="code-plan-button-container">
-                <Tooltip content="Cancel generated code plan">
+                <Tooltip content={isCancelled || isExecuted ? '' : 'Cancel code plan generation'}>
                     <button
                         disabled={disabled || isExecuted || isCancelled}
                         className="code-plan-button secondary"

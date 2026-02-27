@@ -331,6 +331,12 @@ body {
     cursor: not-allowed;
 }
 
+.code-plan-button:disabled:hover {
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-input-placeholderForeground);
+    cursor: not-allowed;
+}
+
 .code-plan-button span {
     font-size: 14px;
 }
