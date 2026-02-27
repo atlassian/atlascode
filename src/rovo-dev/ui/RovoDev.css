@@ -874,6 +874,18 @@ body {
     padding: 8px;
 }
 
+.agent-model-selector-item {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    padding: 8px;
+    cursor: pointer;
+}
+
+.agent-model-selector-item:hover {
+    background-color: var(--vscode-list-hoverBackground);
+}
+
 .prompt-settings-action {
     --ds-icon-inverse: var(--vscode-sideBar-background);
     margin-left: auto;

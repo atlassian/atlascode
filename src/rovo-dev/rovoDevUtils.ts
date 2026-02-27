@@ -5,6 +5,7 @@ import { window, workspace } from 'vscode';
 
 import {
     RovoDevMessageWithCtaLink,
+    RovoDevModelsResponse,
     RovoDevPromptsResponse,
     RovoDevStatusResponse,
     RovoDevUsageResponse,
@@ -199,6 +200,34 @@ export function promptsJsonResponseToMarkdown(response: RovoDevPromptsResponse):
     return buffer;
 }
 
+export function modelsJsonResponseToMarkdown(
+    response: RovoDevModelsResponse,
+): { title: string; text: string; agentModelChanged: boolean } | undefined {
+    const data = response.data;
+
+    if (data.message) {
+        return {
+            title: 'Agent model changed',
+            text: data.message,
+            agentModelChanged: true,
+        };
+    } else if (!Array.isArray(data.models) || data.models.length === 0) {
+        return undefined;
+    }
+
+    let buffer = '';
+
+    for (const model of data.models) {
+        buffer += `**${model.model_id}**\n- ${model.description}\n- Credit multiplier: ${model.credit_multiplier}x\n\n`;
+    }
+
+    return {
+        title: 'Available models',
+        text: buffer,
+        agentModelChanged: false,
+    };
+}
+
 function formatText(text: string, cliTags: string[], links: { text: string; link: string }[]) {
     if (cliTags.includes('italic')) {
         text = `*${text}*`;
@@ -274,4 +303,8 @@ export function parseCustomCliTagsForMarkdown(text: string, links: { text: strin
         formatText(parseCustomCliTagsForMarkdown(contentWithinTags, links), firstTagContent.split(' '), links) +
         parseCustomCliTagsForMarkdown(text.substring(afterTags), links)
     );
+}
+
+export function removeCustomCliTags(text: string): string {
+    return text.replace(/\[\/?[^\]]+]/g, '');
 }
