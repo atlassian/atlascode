@@ -38,7 +38,7 @@ const PopupContainer = React.forwardRef<HTMLDivElement, PopupComponentProps>(
                 marginRight: '16px',
                 maxWidth: '350px',
                 height: '75%',
-                overflowX: 'auto',
+                overflowY: 'auto',
                 ...props.style,
             }}
             ref={ref}
