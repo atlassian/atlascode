@@ -609,6 +609,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             tool_call_id: e.toolCallId,
                             result: e.result,
                         };
+                        const switchToDefaultMode = e.type === RovoDevViewResponseType.ExitPlanModeSubmit;
+                        if (switchToDefaultMode && e.result.proceed === true) {
+                            await this._chatProvider.setAgentMode('default');
+                            await webview.postMessage({
+                                type: RovoDevProviderMessageType.SetAgentModeComplete,
+                                mode: 'default',
+                            });
+                        }
                         await this._chatProvider.executeDeferredToolCall(deferredToolResponse);
 
                         break;
