@@ -2,6 +2,7 @@ import { RovoDevContextItem, RovoDevPrompt, ToolPermissionDialogChoice } from 's
 
 import { AgentMode } from '../client';
 import { ReducerAction } from '../messaging';
+import { RovoDevAgentModel } from '../rovoDevWebviewProviderMessages';
 import { FeedbackType } from './feedback-form/FeedbackForm';
 
 export const enum RovoDevViewResponseType {
@@ -38,6 +39,7 @@ export const enum RovoDevViewResponseType {
     FullContextModeToggled = 'fullContextModeToggled',
     GetAvailableAgentModes = 'getAvailableAgentModes',
     SetAgentMode = 'setAgentMode',
+    SetAgentModel = 'setAgentModel',
     GetCurrentAgentMode = 'getCurrentAgentMode',
     FilterModifiedFilesByContent = 'filterModifiedFilesByContent',
     OpenExternalLink = 'openExternalLink',
@@ -99,6 +101,7 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.FullContextModeToggled, { value: boolean }>
     | ReducerAction<RovoDevViewResponseType.GetAvailableAgentModes>
     | ReducerAction<RovoDevViewResponseType.SetAgentMode, { mode: AgentMode }>
+    | ReducerAction<RovoDevViewResponseType.SetAgentModel, { model: RovoDevAgentModel }>
     | ReducerAction<RovoDevViewResponseType.GetCurrentAgentMode>
     | ReducerAction<RovoDevViewResponseType.FilterModifiedFilesByContent, { files: ModifiedFile[] }>
     | ReducerAction<RovoDevViewResponseType.OpenExternalLink, { href: string }>

@@ -1,6 +1,7 @@
 import { Logger } from 'src/logger';
 import { RovoDevViewResponse } from 'src/rovo-dev/ui/rovoDevViewMessages';
 import { v4 } from 'uuid';
+import { Event, EventEmitter } from 'vscode';
 
 import { ExtensionApi } from './api/extensionApi';
 import {
@@ -25,6 +26,7 @@ import {
     TechnicalPlan,
 } from './rovoDevTypes';
 import {
+    modelsJsonResponseToMarkdown,
     parseCustomCliTagsForMarkdown,
     promptsJsonResponseToMarkdown,
     readLastNLogLines,
@@ -43,6 +45,11 @@ type StreamingApi = 'chat' | 'replay';
 export class RovoDevChatProvider {
     private readonly extensionApi = new ExtensionApi();
     private readonly isDebugging = this.extensionApi.metadata.isDebugging();
+
+    private _onAgentModelChanged = new EventEmitter<void>();
+    public get onAgentModelChanged(): Event<void> {
+        return this._onAgentModelChanged.event;
+    }
 
     private _pendingToolConfirmation: Record<string, ToolPermissionChoice | 'undecided'> = {};
     private _pendingToolConfirmationLeft = 0;
@@ -407,6 +414,11 @@ export class RovoDevChatProvider {
         for (const msg of parser.flush()) {
             await this.processRovoDevResponse(sourceApi, msg);
         }
+
+        // Rovo Dev can change agent mid-response to a fallback model when the main one is troublesome.
+        // While we should handle such events in real time, this is meant to capture anything that we
+        // may have missed, and make sure the agent selector is always in sync with Rovo Dev
+        this._onAgentModelChanged.fire();
     }
 
     private async processRovoDevReplayResponse(responses: RovoDevResponse[]): Promise<void> {
@@ -656,6 +668,27 @@ export class RovoDevChatProvider {
                 });
                 break;
 
+            case 'models':
+                const parsedModelsResponse = modelsJsonResponseToMarkdown(response);
+                if (parsedModelsResponse) {
+                    await webview.postMessage({
+                        type: RovoDevProviderMessageType.ShowDialog,
+                        message: {
+                            type: 'info',
+                            title: parsedModelsResponse.title,
+                            text: parsedModelsResponse.text,
+                            event_kind: '_RovoDevDialog',
+                        },
+                    });
+
+                    if (parsedModelsResponse.agentModelChanged) {
+                        this._onAgentModelChanged.fire();
+                    }
+                } else {
+                    this.processError(new Error('Invalid models response'));
+                }
+                break;
+
             case 'close':
                 // response terminated
                 break;
@@ -672,8 +705,9 @@ export class RovoDevChatProvider {
             default:
                 // this should really never happen, as unknown messages are caugh and wrapped into the
                 // message `_parsing_error`
-                const error = new Error(`Rovo Dev response error: unknown event kind: ${(response as any).event_kind}`);
-                RovoDevTelemetryProvider.logError(error, 'Unexpected event kind in Rovo Dev response');
+                // @ts-expect-error ts(2339) - response here should be 'never'
+                const error = new Error(`Rovo Dev response error: unknown event kind: ${response.event_kind}`);
+                RovoDevTelemetryProvider.logError(error);
                 throw error;
         }
     }

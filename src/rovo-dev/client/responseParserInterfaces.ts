@@ -137,6 +137,21 @@ export interface RovoDevPromptsResponse {
     };
 }
 
+export interface RovoDevModelsResponse {
+    event_kind: 'models';
+    data: {
+        model_name?: string;
+        model_id?: string;
+        message?: string;
+        models?: {
+            name: string;
+            model_id: string;
+            description: string;
+            credit_multiplier: string;
+        }[];
+    };
+}
+
 export type RovoDevResponse =
     | RovoDevParsingError
     | RovoDevUserPromptResponse
@@ -152,6 +167,7 @@ export type RovoDevResponse =
     | RovoDevStatusResponse
     | RovoDevUsageResponse
     | RovoDevPromptsResponse
+    | RovoDevModelsResponse
     | RovoDevCloseResponse
     | RovoDevReplayEndResponse
     | RovoDevIgnoredResponse;

@@ -13,7 +13,7 @@ const PromptSettingsItem: React.FC<{
     return (
         <div className="prompt-settings-item">
             <div className="prompt-settings-logo">{icon}</div>
-            <div id="prompt-settings-context">
+            <div>
                 <p style={{ fontWeight: 'bold' }}>
                     {label}
                     {isInternalOnly && (
@@ -26,11 +26,7 @@ const PromptSettingsItem: React.FC<{
             </div>
             {action && (
                 <div className="prompt-settings-action">
-                    {actionType === 'toggle' ? (
-                        <Toggle isChecked={toggled} onChange={() => action()} label={`${label} toggle`} />
-                    ) : (
-                        <button aria-label="prompt-settings-action" />
-                    )}
+                    <Toggle isChecked={toggled} onChange={action} label={`${label} toggle`} />
                 </div>
             )}
         </div>

@@ -111,3 +111,29 @@ export interface RovoDevSavedPromptsResponse {
         content_file: string;
     }[];
 }
+
+export interface RovoDevGetAgentModelResponse {
+    model_name: string;
+    model_id: string;
+    credit_multiplier: string;
+    message: string;
+}
+
+export interface RovoDevSetAgentModelRequest {
+    model_id: string;
+}
+
+export interface RovoDevSetAgentModelResponse {
+    model_name: string;
+    model_id: string;
+    message: string;
+}
+
+export interface RovoDevGetAvailableAgentModelsResponse {
+    models: {
+        name: string;
+        model_id: string;
+        description: string;
+        credit_multiplier: string;
+    }[];
+}

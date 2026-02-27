@@ -42,8 +42,9 @@ import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevSessionManager } from './rovoDevSessionManager';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import { RovoDevContextItem } from './rovoDevTypes';
-import { readLastNLogLines } from './rovoDevUtils';
+import { readLastNLogLines, removeCustomCliTags } from './rovoDevUtils';
 import {
+    RovoDevAgentModel,
     RovoDevDisabledReason,
     RovoDevEntitlementCheckFailedDetail,
     RovoDevProviderMessage,
@@ -194,6 +195,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         );
 
         this._chatProvider = new RovoDevChatProvider(this.isBoysenberry, this._telemetryProvider);
+        this._chatProvider.onAgentModelChanged(() => this.refreshAgentModel());
+
         this._chatContextprovider = new RovoDevChatContextProvider();
 
         this._yoloMode = this.loadYoloModeFromStorage();
@@ -543,6 +546,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                                 mode: e.mode,
                             });
                         }
+                        break;
+
+                    case RovoDevViewResponseType.SetAgentModel:
+                        await this.setAgentModel(e.model);
                         break;
 
                     case RovoDevViewResponseType.OpenExternalLink:
@@ -988,6 +995,62 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             RovoDevTelemetryProvider.logError(error, 'Error logging out from RovoDev');
             window.showErrorMessage(`Failed to logout: ${error}`);
         }
+    }
+
+    private async initializeAgentModels() {
+        if (!this.rovoDevApiClient || !this._webView) {
+            return;
+        }
+
+        const availableModelsData = await this.rovoDevApiClient.getAvailableAgentModels();
+        const availableModels = availableModelsData.models ?? [];
+        const availableModelsForWebview = availableModels.map((model) => ({
+            modelId: model.model_id,
+            modelName: removeCustomCliTags(model.name),
+            creditMultiplier: model.credit_multiplier,
+        }));
+
+        this._webView.postMessage({
+            type: RovoDevProviderMessageType.UpdateAgentModels,
+            models: availableModelsForWebview,
+        });
+    }
+
+    private async refreshAgentModel() {
+        if (!this.rovoDevApiClient || !this._webView) {
+            return;
+        }
+
+        const currentModelInfo = await this.rovoDevApiClient.getAgentModel();
+        this._webView.postMessage({
+            type: RovoDevProviderMessageType.AgentModelChanged,
+            modelId: currentModelInfo.model_id,
+            modelName: currentModelInfo.model_name,
+            creditMultiplier: currentModelInfo.credit_multiplier,
+        });
+    }
+
+    private async setAgentModel(model: RovoDevAgentModel) {
+        if (!this.rovoDevApiClient || !this._webView) {
+            return;
+        }
+
+        const response = await this.rovoDevApiClient.setAgentModel(model.modelId);
+
+        this._webView.postMessage({
+            type: RovoDevProviderMessageType.ShowDialog,
+            message: {
+                type: 'info',
+                text: response.message,
+                title: 'Agent model changed',
+                event_kind: '_RovoDevDialog',
+            },
+        });
+
+        this._webView.postMessage({
+            type: RovoDevProviderMessageType.AgentModelChanged,
+            ...model,
+        });
     }
 
     private async executeOpenFile(
@@ -1530,6 +1593,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             // @ts-expect-error ts(2339) - result.status here should be 'never'
             throw new Error(`Invalid healthcheck's response: "${result.status.toString()}".`);
         }
+
+        this.refreshAgentModel();
+        this.initializeAgentModels();
 
         setCommandContext(RovodevCommandContext.RovoDevApiReady, true);
         this.beginNewSession(result.sessionId || null, 'init');

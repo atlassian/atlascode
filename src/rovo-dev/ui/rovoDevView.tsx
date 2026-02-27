@@ -13,7 +13,11 @@ import { v4 } from 'uuid';
 
 import { DetailedSiteInfo, MinimalIssue } from '../api/extensionApiTypes';
 import { RovodevStaticConfig } from '../api/rovodevStaticConfig';
-import { RovoDevProviderMessage, RovoDevProviderMessageType } from '../rovoDevWebviewProviderMessages';
+import {
+    RovoDevAgentModel,
+    RovoDevProviderMessage,
+    RovoDevProviderMessageType,
+} from '../rovoDevWebviewProviderMessages';
 import { RovoDevErrorContext } from './common/common';
 import { FeedbackConfirmationForm } from './feedback-form/FeedbackConfirmationForm';
 import { FeedbackForm, FeedbackType } from './feedback-form/FeedbackForm';
@@ -82,6 +86,8 @@ const RovoDevView: React.FC = () => {
     const [availableAgentModes, setAvailableAgentModes] = useState<RovoDevModeInfo[]>([]);
     const [currentAgentMode, setCurrentAgentMode] = useState<AgentMode | null>('default');
     const [canFetchSavedPrompts, setCanFetchSavedPrompts] = React.useState(false);
+    const [currentAgentModel, setCurrentAgentModel] = useState<RovoDevAgentModel | undefined>(undefined);
+    const [availableAgentModels, setAvailableAgentModels] = useState<RovoDevAgentModel[]>([]);
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -518,6 +524,14 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.SetAgentModeComplete:
                     setCurrentAgentMode(event.mode);
+                    break;
+
+                case RovoDevProviderMessageType.AgentModelChanged:
+                    setCurrentAgentModel(event);
+                    break;
+
+                case RovoDevProviderMessageType.UpdateAgentModels:
+                    setAvailableAgentModels(event.models);
                     break;
 
                 default:
@@ -994,6 +1008,13 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
+    const onAgentModelChange = useCallback(
+        (model: RovoDevAgentModel) => {
+            postMessage({ type: RovoDevViewResponseType.SetAgentModel, model });
+        },
+        [postMessage],
+    );
+
     const handleShowSessionsCommand = React.useCallback(() => {
         postMessage({ type: RovoDevViewResponseType.ShowSessionHistory });
     }, [postMessage]);
@@ -1159,7 +1180,10 @@ const RovoDevView: React.FC = () => {
                                             isFullContextEnabled={isFullContextModeToggled}
                                             availableAgentModes={availableAgentModes}
                                             currentAgentMode={currentAgentMode}
+                                            availableAgentModels={availableAgentModels}
+                                            currentAgentModel={currentAgentModel}
                                             onAgentModeChange={onAgentModeChange}
+                                            onAgentModelChange={onAgentModelChange}
                                             onDeepPlanToggled={() => setIsDeepPlanToggled((prev) => !prev)}
                                             onYoloModeToggled={
                                                 RovodevStaticConfig.isBBY ? undefined : () => onYoloModeToggled()

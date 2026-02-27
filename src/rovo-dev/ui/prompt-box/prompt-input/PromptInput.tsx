@@ -11,9 +11,11 @@ import React from 'react';
 import { RovodevStaticConfig } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { AgentMode, RovoDevModeInfo } from 'src/rovo-dev/client';
 import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevAgentModel } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
 import { rovoDevTextareaStyles } from '../../rovoDevViewStyles';
 import { onKeyDownHandler, SavedPrompt } from '../../utils';
+import { AgentModelSelector } from '../agent-model-selection/AgentModelSelector';
 import PromptContextPopup from '../prompt-context-popup/PromptContextPopup';
 import { getAgentModeIcon } from '../prompt-settings-popup/AgentModeSection';
 import PromptSettingsPopup from '../prompt-settings-popup/PromptSettingsPopup';
@@ -39,7 +41,10 @@ interface PromptInputBoxProps {
     isFullContextEnabled: boolean;
     availableAgentModes: RovoDevModeInfo[];
     currentAgentMode: AgentMode | null;
+    availableAgentModels: RovoDevAgentModel[];
+    currentAgentModel: RovoDevAgentModel | undefined;
     onAgentModeChange: (mode: AgentMode) => void;
+    onAgentModelChange: (model: RovoDevAgentModel) => void;
     onDeepPlanToggled?: () => void;
     onYoloModeToggled?: () => void;
     onFullContextToggled?: () => void;
@@ -118,7 +123,10 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     isFullContextEnabled,
     availableAgentModes,
     currentAgentMode,
+    availableAgentModels,
+    currentAgentModel,
     onAgentModeChange,
+    onAgentModelChange,
     onDeepPlanToggled,
     onYoloModeToggled,
     onFullContextToggled,
@@ -284,6 +292,8 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         [currentState],
     );
 
+    const disableAgentModelSelector = React.useMemo(() => currentState.state !== 'WaitingForPrompt', [currentState]);
+
     return (
         <>
             <div id="prompt-editor-container" style={{ ...{ fieldSizing: 'content' }, ...rovoDevTextareaStyles }} />
@@ -292,8 +302,8 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                     display: 'flex',
                     flexDirection: 'row',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
                     flexWrap: 'wrap',
+                    gap: 4,
                 }}
             >
                 <div style={{ display: 'flex', flexDirection: 'row', alignContent: 'center', gap: 4 }}>
@@ -378,7 +388,15 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         </Tooltip>
                     )}
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div>
+                    <AgentModelSelector
+                        availableModels={availableAgentModels}
+                        currentModel={currentAgentModel}
+                        onModelChange={onAgentModelChange}
+                        isDisabled={disableAgentModelSelector}
+                    />
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
                     {showCancelButton ? (
                         <Tooltip content="Stop generating" position="top">
                             <button
