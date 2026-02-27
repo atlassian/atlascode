@@ -362,6 +362,45 @@ describe('RovoDevChatProvider', () => {
 
             expect(chatProvider.currentPromptId).toBe('replay');
         });
+
+        it('should send replay responses with restoredSession flag set to true', async () => {
+            await chatProvider.setReady(mockApiClient);
+
+            const mockReadableStream = new ReadableStream({
+                start(controller) {
+                    controller.enqueue(
+                        new TextEncoder().encode('event: text\ndata: {"index": 0, "content": "Hello"}\n\n'),
+                    );
+                    controller.enqueue(
+                        new TextEncoder().encode(
+                            'event: tool-call\ndata: {"tool_call_id": "call-1", "tool_name": "test_tool", "args": {}}\n\n',
+                        ),
+                    );
+                    controller.enqueue(new TextEncoder().encode('event: replay_end\ndata: {}\n\n'));
+                    controller.enqueue(new TextEncoder().encode('event: close\ndata: {}\n\n'));
+                    controller.close();
+                },
+            });
+            mockApiClient.replay.mockResolvedValue({ body: mockReadableStream } as Response);
+
+            await chatProvider.executeReplay();
+
+            const replayMessageCalls = mockWebview.postMessage.mock.calls.filter(
+                (call) => call[0].type === RovoDevProviderMessageType.RovoDevResponseMessage,
+            );
+
+            expect(replayMessageCalls.length).toBeGreaterThan(0);
+            expect(replayMessageCalls[0][0]).toEqual(
+                expect.objectContaining({
+                    type: RovoDevProviderMessageType.RovoDevResponseMessage,
+                    message: expect.arrayContaining([
+                        expect.objectContaining({ event_kind: 'text' }),
+                        expect.objectContaining({ event_kind: 'tool-call' }),
+                    ]),
+                    restoredSession: true,
+                }),
+            );
+        });
     });
 
     describe('executeCancel', () => {
