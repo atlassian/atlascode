@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.22
+
+### Bug Fixes
+
+- Fixed a bug where modified files of restored Rovo chats would appear in the tool component.
+
 ## What's new in 4.0.21
 
 ### Bug fixes
