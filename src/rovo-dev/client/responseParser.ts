@@ -2,6 +2,7 @@
 
 import {
     RovoDevClearResponse,
+    RovoDevDeferredRequestResponse,
     RovoDevExceptionResponse,
     RovoDevOnCallToolStartResponse,
     RovoDevParsingError,
@@ -141,6 +142,15 @@ interface RovoDevOnCallToolStartChunk {
     data: RovoDevOnCallToolStartResponseRaw;
 }
 
+interface RovoDevDeferredRequestResponseRaw {
+    calls: RovoDevToolCallResponseRaw[];
+}
+
+interface RovoDevDeferredRequestChunk {
+    event_kind: 'deferred-request';
+    data: RovoDevDeferredRequestResponseRaw;
+}
+
 // doc missing
 type RovoDevStatusChunk = RovoDevStatusResponse;
 
@@ -174,7 +184,8 @@ type RovoDevSingleResponseRaw =
     | RovoDevExceptionResponseRaw
     | RovoDevClearResponseRaw
     | RovoDevPruneResponseRaw
-    | RovoDevOnCallToolStartResponseRaw;
+    | RovoDevOnCallToolStartResponseRaw
+    | RovoDevDeferredRequestResponseRaw;
 
 type RovoDevSingleChunk =
     | RovoDevUserPromptChunk
@@ -187,6 +198,7 @@ type RovoDevSingleChunk =
     | RovoDevClearChunk
     | RovoDevPruneChunk
     | RovoDevOnCallToolStartChunk
+    | RovoDevDeferredRequestChunk
     | RovoDevStatusChunk
     | RovoDevUsageChunk
     | RovoDevPromptsChunk
@@ -336,6 +348,12 @@ function parseOnCallToolStart(data: RovoDevOnCallToolStartResponseRaw): RovoDevO
     };
 }
 
+function parseDeferredRequest(data: RovoDevDeferredRequestResponseRaw): RovoDevDeferredRequestResponse {
+    return {
+        event_kind: 'deferred_request',
+        tools: data.calls.map((call) => parseResponseToolCall(call)),
+    };
+}
 // the parser
 
 function generateError(error: Error): RovoDevParsingError {
@@ -532,6 +550,11 @@ export class RovoDevResponseParser {
                 return buffer
                     ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
                     : parseOnCallToolStart(chunk.data);
+
+            case 'deferred-request':
+                return buffer
+                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
+                    : parseDeferredRequest(chunk.data);
 
             case 'status':
             case 'usage':

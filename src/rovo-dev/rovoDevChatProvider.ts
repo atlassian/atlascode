@@ -50,7 +50,7 @@ export class RovoDevChatProvider {
 
     private _pendingToolConfirmation: Record<string, ToolPermissionChoice | 'undecided'> = {};
     private _pendingToolConfirmationLeft = 0;
-    private _pendingDeferredToolCall: Record<string, 'incomplete' | 'complete'> = {};
+    private _pendingDeferredRequest: string | undefined;
     private _pendingPrompt: RovoDevPrompt | undefined;
     private _currentPrompt: RovoDevPrompt | undefined;
     private _rovoDevApiClient: RovoDevApiClient | undefined;
@@ -186,8 +186,20 @@ export class RovoDevChatProvider {
 
         const requestPayload = this.preparePayloadForChatRequest(this._currentPrompt);
 
+        // if there's a pending deferred tool call, attach the tool_call_id and the result to the next prompt payload to bypass
+        if (this._pendingDeferredRequest) {
+            requestPayload.message = {
+                tool_call_id: this._pendingDeferredRequest,
+                result: {
+                    proceed: false,
+                    followUp: text,
+                },
+            };
+            this._pendingDeferredRequest = undefined;
+        }
+
         if (!isCommand) {
-            if (this.fullContextMode) {
+            if (this.fullContextMode && typeof requestPayload.message === 'string') {
                 requestPayload.message = `use fullcontext: ${requestPayload.message}`;
             }
 
@@ -212,19 +224,12 @@ export class RovoDevChatProvider {
     }
 
     public async executeDeferredToolCall(payload: RovoDevDeferredToolCallResponse) {
-        if (
-            !this._pendingDeferredToolCall[payload.tool_call_id] ||
-            this._pendingDeferredToolCall[payload.tool_call_id] !== 'incomplete'
-        ) {
-            return;
-        }
         const chatRequestPayload: RovoDevChatRequest = {
             message: payload,
             context: [],
         };
-
+        this._pendingDeferredRequest = undefined;
         await this.sendPromptToRovoDev(chatRequestPayload);
-        this._pendingDeferredToolCall[payload.tool_call_id] = 'complete';
     }
 
     private async sendPromptToRovoDev(requestPayload: RovoDevChatRequest) {
@@ -233,6 +238,7 @@ export class RovoDevChatProvider {
         const fetchOp = async (client: RovoDevApiClient) => {
             this._abortController?.abort();
             this._abortController = new AbortController();
+
             // Boysenberry is always in YOLO mode
             const response = await client.chat(requestPayload, !this._isBoysenberry, this._abortController.signal);
 
@@ -465,27 +471,28 @@ export class RovoDevChatProvider {
         await flush();
     }
 
-    private async processDeferredToolCallResponse(deferredTools: RovoDevToolCallResponse): Promise<void> {
+    private async processDeferredToolCallResponse(deferredTool: RovoDevToolCallResponse): Promise<void> {
         const webview = this._webView!;
 
         try {
-            if (deferredTools.tool_name === 'ask_user_questions') {
-                const args = JSON.parse(deferredTools.args) as RovoDevAskUserQuestionsToolArgs;
+            this._pendingDeferredRequest = deferredTool.tool_call_id;
+            if (deferredTool.tool_name === 'ask_user_questions') {
+                const args = JSON.parse(deferredTool.args) as RovoDevAskUserQuestionsToolArgs;
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.ShowDeferredAskUserQuestions,
-                    toolCallId: deferredTools.tool_call_id,
+                    toolCallId: deferredTool.tool_call_id,
                     args,
                 });
-            } else if (deferredTools.tool_name === 'exit_plan_mode') {
-                const args = JSON.parse(deferredTools.args) as RovoDevExitPlanModeToolArgs;
+            } else if (deferredTool.tool_name === 'exit_plan_mode') {
+                const args = JSON.parse(deferredTool.args) as RovoDevExitPlanModeToolArgs;
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.ShowDeferredExitPlanMode,
-                    toolCallId: deferredTools.tool_call_id,
+                    toolCallId: deferredTool.tool_call_id,
                     args,
                 });
             }
         } catch (error) {
-            console.log('Failed to parse deferred tool call arguments', error);
+            console.log('Failed to parse deferred tool call arguments', error); // TODO: proper error handling and telemetry
         }
     }
 
@@ -613,18 +620,6 @@ export class RovoDevChatProvider {
             case 'on_call_tools_start':
                 this._pendingToolConfirmation = {};
                 this._pendingToolConfirmationLeft = 0;
-                const deferredTools = response.tools.filter(
-                    (tool) =>
-                        (tool.tool_name === 'ask_user_questions' || tool.tool_name === 'exit_plan_mode') &&
-                        this._pendingDeferredToolCall[tool.tool_call_id] === undefined, // only process deferred tool calls that are not yet marked as 'incomplete' or 'complete'
-                );
-
-                if (deferredTools.length > 0) {
-                    deferredTools.forEach(async (tool) => {
-                        this._pendingDeferredToolCall[tool.tool_call_id] = 'incomplete';
-                        await this.processDeferredToolCallResponse(tool);
-                    });
-                }
 
                 if (!response.permission_required) {
                     break;
@@ -663,6 +658,10 @@ export class RovoDevChatProvider {
                 }
                 break;
 
+            case 'deferred_request':
+                const deferredTool = response.tools[0]; // currently we only support one deferred tool call at a time, so we take the first one from the array
+                this.processDeferredToolCallResponse(deferredTool);
+                break;
             case 'status':
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.ShowDialog,

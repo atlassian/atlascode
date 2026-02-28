@@ -20,11 +20,31 @@ export const ChatMessageItem: React.FC<{
     openFile: OpenFileFunc;
     openJira: OpenJiraFunc;
     onLinkClick: (href: string) => void;
+    deepPlanCreated?: string | null;
     onGeneratePlanClick?: (planId: string, proceed: boolean) => void;
-}> = ({ msg, icon, enableActions, onCopy, onFeedback, openFile, openJira, onLinkClick, onGeneratePlanClick }) => {
+}> = ({
+    msg,
+    icon,
+    enableActions,
+    onCopy,
+    onFeedback,
+    openFile,
+    openJira,
+    onLinkClick,
+    deepPlanCreated,
+    onGeneratePlanClick,
+}) => {
     const [isCopied, setIsCopied] = useState(false);
     const messageTypeStyles = msg.event_kind === '_RovoDevUserPrompt' ? 'user-message' : 'agent-message';
 
+    const canGeneratePlan = React.useMemo(
+        () =>
+            msg.event_kind === '_RovoDevExitPlanMode' &&
+            onGeneratePlanClick &&
+            deepPlanCreated &&
+            deepPlanCreated === msg.toolCallId,
+        [msg, onGeneratePlanClick, deepPlanCreated],
+    );
     const handleCopyClick = useCallback(() => {
         if (onCopy && msg.content) {
             onCopy(msg.content);
@@ -97,7 +117,10 @@ export const ChatMessageItem: React.FC<{
                         </Tooltip>
                     </div>
                     {msg.event_kind === '_RovoDevExitPlanMode' && onGeneratePlanClick && (
-                        <CodePlanButton execute={(e: boolean) => onGeneratePlanClick(msg.toolCallId, e)} />
+                        <CodePlanButton
+                            execute={(e: boolean) => onGeneratePlanClick(msg.toolCallId, e)}
+                            disabled={!canGeneratePlan}
+                        />
                     )}
                 </div>
             )}

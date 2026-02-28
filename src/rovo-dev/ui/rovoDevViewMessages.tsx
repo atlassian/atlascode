@@ -3,7 +3,7 @@ import { RovoDevContextItem, RovoDevPrompt, ToolPermissionDialogChoice } from 's
 import { AgentMode } from '../client';
 import { ReducerAction } from '../messaging';
 import { FeedbackType } from './feedback-form/FeedbackForm';
-import { AskUserQuestionsResult } from './utils';
+import { AskUserQuestionsResultMessage, ExitPlanModeResultMessage } from './utils';
 
 export const enum RovoDevViewResponseType {
     Refresh = 'refresh',
@@ -120,5 +120,5 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.RestartProcess>
     | ReducerAction<RovoDevViewResponseType.ShowSessionHistory>
     | ReducerAction<RovoDevViewResponseType.FetchSavedPrompts>
-    | ReducerAction<RovoDevViewResponseType.AskUserQuestionsSubmit, AskUserQuestionsResult>
-    | ReducerAction<RovoDevViewResponseType.ExitPlanModeSubmit, { result: { proceed: boolean }; toolCallId: string }>;
+    | ReducerAction<RovoDevViewResponseType.AskUserQuestionsSubmit, AskUserQuestionsResultMessage>
+    | ReducerAction<RovoDevViewResponseType.ExitPlanModeSubmit, ExitPlanModeResultMessage>;

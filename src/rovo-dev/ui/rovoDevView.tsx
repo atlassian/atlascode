@@ -41,7 +41,7 @@ import { DebugPanel } from './tools/DebugPanel';
 import { parseToolCallMessage } from './tools/ToolCallItem';
 import {
     appendResponse,
-    AskUserQuestionsResult,
+    AskUserQuestionsResultMessage,
     ConnectionTimeout,
     DialogMessage,
     extractLastNMessages,
@@ -61,7 +61,6 @@ const RovoDevView: React.FC = () => {
     const [pendingToolCallMessage, setPendingToolCallMessage] = useState('');
     const [retryAfterErrorEnabled, setRetryAfterErrorEnabled] = useState('');
     const [totalModifiedFiles, setTotalModifiedFiles] = useState<ToolReturnParseResult[]>([]);
-    const [isDeepPlanCreated, setIsDeepPlanCreated] = useState(false);
     const [isDeepPlanToggled, setIsDeepPlanToggled] = useState(false);
     const [isYoloModeToggled, setIsYoloModeToggled] = useState(RovodevStaticConfig.isBBY); // Yolo mode is default in Boysenberry
     const [isFullContextModeToggled, setIsFullContextModeToggled] = useState(false);
@@ -92,6 +91,7 @@ const RovoDevView: React.FC = () => {
         toolCallId: string;
         args: RovoDevAskUserQuestionsToolArgs;
     } | null>(null);
+    const [deepPlanCreated, setDeepPlanCreated] = useState<string | null>(null);
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -170,7 +170,7 @@ const RovoDevView: React.FC = () => {
         keepFiles(totalModifiedFiles);
         setHistory([]);
         setTotalModifiedFiles([]);
-        setIsDeepPlanCreated(false);
+        setDeepPlanCreated(null);
         setIsFeedbackFormVisible(false);
         setPendingToolCallMessage('');
     }, [keepFiles, totalModifiedFiles]);
@@ -273,15 +273,6 @@ const RovoDevView: React.FC = () => {
         (response: Response | Response[]) => {
             setHistory((prev) => {
                 prev = appendResponse(prev, response, handleAppendModifiedFileToolReturns, thinkingBlockEnabled);
-
-                const last = prev.at(-1);
-                if (
-                    !Array.isArray(last) &&
-                    last?.event_kind === 'tool-return' &&
-                    last.tool_name === 'create_technical_plan'
-                ) {
-                    setIsDeepPlanCreated(true);
-                }
 
                 return prev;
             });
@@ -491,9 +482,6 @@ const RovoDevView: React.FC = () => {
                     if (Array.isArray(event.state.history)) {
                         setHistory(event.state.history);
                     }
-                    if (event.state.isDeepPlanCreated !== undefined) {
-                        setIsDeepPlanCreated(event.state.isDeepPlanCreated);
-                    }
                     if (event.state.isDeepPlanToggled !== undefined) {
                         setIsDeepPlanToggled(event.state.isDeepPlanToggled);
                     }
@@ -541,7 +529,7 @@ const RovoDevView: React.FC = () => {
                         toolCallId: event.toolCallId,
                     };
                     handleAppendResponse(chatMessage);
-                    setIsDeepPlanCreated(true);
+                    setDeepPlanCreated(event.toolCallId);
                     break;
 
                 default:
@@ -591,7 +579,7 @@ const RovoDevView: React.FC = () => {
     React.useEffect(() => {
         setState({
             history,
-            isDeepPlanCreated,
+            deepPlanCreated,
             isDeepPlanToggled,
             isYoloModeToggled,
             isFullContextModeToggled,
@@ -600,7 +588,7 @@ const RovoDevView: React.FC = () => {
         });
     }, [
         history,
-        isDeepPlanCreated,
+        deepPlanCreated,
         isDeepPlanToggled,
         isYoloModeToggled,
         isFullContextModeToggled,
@@ -608,6 +596,17 @@ const RovoDevView: React.FC = () => {
         promptContextCollection,
         setState,
     ]);
+
+    const handleSubmitAskUserQuestions = React.useCallback(
+        (result: AskUserQuestionsResultMessage) => {
+            postMessage({
+                type: RovoDevViewResponseType.AskUserQuestionsSubmit,
+                ...result,
+            });
+            setAskUserQuestionsToolArgs(null);
+        },
+        [postMessage],
+    );
 
     const handleExitPlanMode = useCallback(
         (proceed: boolean, toolCallId: string) => {
@@ -620,7 +619,7 @@ const RovoDevView: React.FC = () => {
             if (proceed) {
                 setCurrentState({ state: 'ExecutingPlan' });
             }
-            setIsDeepPlanCreated(false);
+            setDeepPlanCreated(null);
         },
         [postMessage],
     );
@@ -638,7 +637,8 @@ const RovoDevView: React.FC = () => {
                 return false;
             }
 
-            setIsDeepPlanCreated(false);
+            setDeepPlanCreated(null);
+            setAskUserQuestionsToolArgs(null);
 
             // Disable the send button, and enable the pause button
             setCurrentState((prev) => {
@@ -659,7 +659,7 @@ const RovoDevView: React.FC = () => {
 
             return true;
         },
-        [currentState, isDeepPlanToggled, promptContextCollection, postMessage],
+        [currentState, postMessage, isDeepPlanToggled, promptContextCollection],
     );
 
     React.useEffect(() => {
@@ -702,7 +702,7 @@ const RovoDevView: React.FC = () => {
         }
 
         setCurrentState({ state: 'CancellingResponse' });
-        setIsDeepPlanCreated(false);
+        setDeepPlanCreated(null);
 
         // Send the signal to cancel the response
         postMessage({
@@ -1040,17 +1040,6 @@ const RovoDevView: React.FC = () => {
         return response.savedPrompts || [];
     }, [postMessagePromise]);
 
-    const handleSubmitAskUserQuestions = React.useCallback(
-        (result: AskUserQuestionsResult) => {
-            postMessage({
-                type: RovoDevViewResponseType.AskUserQuestionsSubmit,
-                ...result,
-            });
-            setAskUserQuestionsToolArgs(null);
-        },
-        [postMessage],
-    );
-
     React.useEffect(() => {
         postMessage({
             type: RovoDevViewResponseType.FullContextModeToggled,
@@ -1123,7 +1112,7 @@ const RovoDevView: React.FC = () => {
                             setState,
                         }}
                         pendingToolCall={pendingToolCallMessage}
-                        deepPlanCreated={isDeepPlanCreated}
+                        deepPlanCreated={deepPlanCreated}
                         currentState={currentState}
                         onChangesGitPushed={onChangesGitPushed}
                         onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
@@ -1201,11 +1190,7 @@ const RovoDevView: React.FC = () => {
                                             openJira={openJira}
                                         />
                                         <PromptInputBox
-                                            disabled={
-                                                currentState.state === 'ProcessTerminated' ||
-                                                askUserQuestionsToolArgs !== null ||
-                                                isDeepPlanCreated
-                                            }
+                                            disabled={currentState.state === 'ProcessTerminated'}
                                             currentState={currentState}
                                             isDeepPlanEnabled={isDeepPlanToggled}
                                             isYoloModeEnabled={isYoloModeToggled}

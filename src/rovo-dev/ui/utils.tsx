@@ -117,10 +117,18 @@ export interface SavedPromptsResponse {
     prompts: SavedPrompt[];
 }
 
-export interface AskUserQuestionsResult {
+export interface DeferredRequestResultMessage {
     toolCallId: string;
+}
+
+export interface AskUserQuestionsResultMessage extends DeferredRequestResultMessage {
     result: { question: string; answer: string }[];
 }
+
+export interface ExitPlanModeResultMessage extends DeferredRequestResultMessage {
+    result: { proceed: boolean };
+}
+
 interface ToolReturnInfo {
     title: string;
     type: 'modify' | 'create' | 'delete' | 'open' | 'bash';
@@ -470,3 +478,5 @@ export async function processDropDataTransferItems(
     const values = await Promise.all(promises);
     callback(values);
 }
+
+export const capitalizeFirst = (s: string): string => (s.length === 0 ? s : s.charAt(0).toUpperCase() + s.slice(1));

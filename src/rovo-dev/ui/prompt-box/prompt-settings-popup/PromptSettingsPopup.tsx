@@ -81,80 +81,78 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
     }
 
     return (
-        <Tooltip content="Preferences">
-            <Popup
-                shouldRenderToParent
-                isOpen={isOpen}
-                trigger={(props) => (
-                    <>
-                        {isOpen ? (
-                            <button
-                                {...props}
-                                onClick={() => setIsOpen((prev) => !prev)}
-                                className="prompt-button-secondary-open"
-                                aria-label="Prompt settings (open)"
-                            >
-                                <CrossIcon label="Close prompt settings" />
-                            </button>
-                        ) : (
-                            <button
-                                {...props}
-                                onClick={() => setIsOpen((prev) => !prev)}
-                                className="prompt-button-secondary"
-                                aria-label="Prompt settings"
-                            >
-                                <CustomizeIcon label="Prompt settings" />
-                            </button>
-                        )}
-                    </>
-                )}
-                content={() => (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <AgentModeSection
-                            currentMode={currentAgentMode}
-                            availableModes={availableAgentModes}
-                            setAgentMode={handleAgentModeChange}
-                        />
-                        <Box
-                            as="p"
-                            xcss={styles.sectionTitle}
-                            style={{
-                                fontSize: '12px',
-                            }}
+        <Popup
+            shouldRenderToParent
+            isOpen={isOpen}
+            trigger={(props) => (
+                <Tooltip content="Preferences">
+                    {isOpen ? (
+                        <button
+                            {...props}
+                            onClick={() => setIsOpen((prev) => !prev)}
+                            className="prompt-button-secondary-open"
+                            aria-label="Prompt settings (open)"
                         >
-                            Others
-                        </Box>
-                        {onFullContextToggled && (
-                            <PromptSettingsItem
-                                icon={<TelescopeIcon label="Full-Context mode" />}
-                                label="Full-Context mode"
-                                description="Toggle Full-Context mode to enable the agent to research documents and historical data, helping it better understand the problem to solve."
-                                action={onFullContextToggled}
-                                actionType="toggle"
-                                toggled={isFullContextEnabled}
-                                isInternalOnly={true}
-                            />
-                        )}
-                        {onYoloModeToggled && (
-                            <PromptSettingsItem
-                                icon={<LockUnlockedIcon label="YOLO mode" />}
-                                label="YOLO"
-                                description="Toggle yolo mode which runs all file CRUD operations and bash commands without confirmation. Use with caution!"
-                                action={onYoloModeToggled}
-                                actionType="toggle"
-                                toggled={isYoloModeEnabled}
-                            />
-                        )}
-                    </div>
-                )}
-                placement="top-start"
-                popupComponent={PopupContainer}
-                onClose={() => {
-                    setIsOpen(false);
-                    onClose();
-                }}
-            />
-        </Tooltip>
+                            <CrossIcon label="Close prompt settings" />
+                        </button>
+                    ) : (
+                        <button
+                            {...props}
+                            onClick={() => setIsOpen((prev) => !prev)}
+                            className="prompt-button-secondary"
+                            aria-label="Prompt settings"
+                        >
+                            <CustomizeIcon label="Prompt settings" />
+                        </button>
+                    )}
+                </Tooltip>
+            )}
+            content={() => (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <AgentModeSection
+                        currentMode={currentAgentMode}
+                        availableModes={availableAgentModes}
+                        setAgentMode={handleAgentModeChange}
+                    />
+                    <Box
+                        as="p"
+                        xcss={styles.sectionTitle}
+                        style={{
+                            fontSize: '12px',
+                        }}
+                    >
+                        Others
+                    </Box>
+                    {onFullContextToggled && (
+                        <PromptSettingsItem
+                            icon={<TelescopeIcon label="Full-Context mode" />}
+                            label="Full-Context mode"
+                            description="Toggle Full-Context mode to enable the agent to research documents and historical data, helping it better understand the problem to solve."
+                            action={onFullContextToggled}
+                            actionType="toggle"
+                            toggled={isFullContextEnabled}
+                            isInternalOnly={true}
+                        />
+                    )}
+                    {onYoloModeToggled && (
+                        <PromptSettingsItem
+                            icon={<LockUnlockedIcon label="YOLO mode" />}
+                            label="YOLO"
+                            description="Toggle yolo mode which runs all file CRUD operations and bash commands without confirmation. Use with caution!"
+                            action={onYoloModeToggled}
+                            actionType="toggle"
+                            toggled={isYoloModeEnabled}
+                        />
+                    )}
+                </div>
+            )}
+            placement="top-start"
+            popupComponent={PopupContainer}
+            onClose={() => {
+                setIsOpen(false);
+                onClose();
+            }}
+        />
     );
 };
 

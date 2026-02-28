@@ -85,6 +85,11 @@ export interface RovoDevOnCallToolStartResponse {
     permissions: Record<string, RovoDevToolPemissionScenario>;
 }
 
+export interface RovoDevDeferredRequestResponse {
+    event_kind: 'deferred_request';
+    tools: RovoDevToolCallResponse[];
+}
+
 export interface RovoDevCloseResponse {
     event_kind: 'close';
 }
@@ -149,6 +154,7 @@ export type RovoDevResponse =
     | RovoDevClearResponse
     | RovoDevPruneResponse
     | RovoDevOnCallToolStartResponse
+    | RovoDevDeferredRequestResponse
     | RovoDevStatusResponse
     | RovoDevUsageResponse
     | RovoDevPromptsResponse

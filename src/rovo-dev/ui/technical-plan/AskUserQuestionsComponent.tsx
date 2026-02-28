@@ -2,12 +2,12 @@ import QuestionCircleIcon from '@atlaskit/icon/core/question-circle';
 import React from 'react';
 import { RovoDevAskUserQuestionsToolArgs } from 'src/rovo-dev/client';
 
-import { AskUserQuestionsResult } from '../utils';
+import { AskUserQuestionsResultMessage } from '../utils';
 
 interface AskUserQuestionsComponentProps {
     toolCallId: string;
     args: RovoDevAskUserQuestionsToolArgs;
-    onSubmit: (payload: AskUserQuestionsResult) => void;
+    onSubmit: (payload: AskUserQuestionsResultMessage) => void;
 }
 
 export const AskUserQuestionsComponent: React.FC<AskUserQuestionsComponentProps> = ({ toolCallId, args, onSubmit }) => {
@@ -26,14 +26,6 @@ export const AskUserQuestionsComponent: React.FC<AskUserQuestionsComponentProps>
         const result = Object.entries(answers).map(([question, { option }]) => ({
             question,
             answer: option,
-        }));
-        onSubmit({ toolCallId, result });
-    }, [answers, onSubmit, toolCallId]);
-
-    const handleCancel = React.useCallback(() => {
-        const result = Object.entries(answers).map(([question]) => ({
-            question,
-            answer: 'Cancel plan',
         }));
         onSubmit({ toolCallId, result });
     }, [answers, onSubmit, toolCallId]);
@@ -69,9 +61,6 @@ export const AskUserQuestionsComponent: React.FC<AskUserQuestionsComponentProps>
             <div className="form-actions">
                 <button className="form-submit-button" onClick={handleSubmit}>
                     Submit
-                </button>
-                <button type="button" onClick={handleCancel} className="form-cancel-button">
-                    Cancel
                 </button>
             </div>
         </div>

@@ -29,6 +29,7 @@ interface ChatItemProps {
     };
     drawerOpen: boolean;
     onLinkClick: (href: string) => void;
+    deepPlanCreated?: string | null;
     onGeneratePlanClick?: (planId: string, proceed: boolean) => void;
 }
 
@@ -42,6 +43,7 @@ export const ChatItem = React.memo<ChatItemProps>(
         renderProps,
         drawerOpen,
         onLinkClick,
+        deepPlanCreated,
         onGeneratePlanClick,
     }) => {
         if (!block) {
@@ -75,6 +77,7 @@ export const ChatItem = React.memo<ChatItemProps>(
                     openFile={renderProps.openFile}
                     openJira={renderProps.openJira}
                     onLinkClick={onLinkClick}
+                    deepPlanCreated={deepPlanCreated}
                     onGeneratePlanClick={onGeneratePlanClick}
                 />
             );

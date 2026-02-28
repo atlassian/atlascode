@@ -13,7 +13,7 @@ import { AgentMode, RovoDevModeInfo } from 'src/rovo-dev/client';
 import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
 
 import { rovoDevTextareaStyles } from '../../rovoDevViewStyles';
-import { onKeyDownHandler, SavedPrompt } from '../../utils';
+import { capitalizeFirst, onKeyDownHandler, SavedPrompt } from '../../utils';
 import PromptContextPopup from '../prompt-context-popup/PromptContextPopup';
 import { getAgentModeIcon } from '../prompt-settings-popup/AgentModeSection';
 import PromptSettingsPopup from '../prompt-settings-popup/PromptSettingsPopup';
@@ -360,14 +360,14 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         </Tooltip>
                     )}{' '}
                     {currentAgentMode && currentAgentMode !== 'default' && (
-                        <Tooltip content={`${currentAgentMode} mode`}>
+                        <Tooltip content={`${capitalizeFirst(currentAgentMode)} mode`}>
                             <div
                                 className="mode-indicator"
                                 onClick={() => onAgentModeChange('default')}
                                 onKeyDown={onKeyDownHandler(() => onAgentModeChange('default'))}
                                 tabIndex={0}
                                 role="button"
-                                aria-label={`${currentAgentMode} mode`}
+                                aria-label={`${capitalizeFirst(currentAgentMode)} mode`}
                             >
                                 {getAgentModeIcon(currentAgentMode)}
                                 <CrossIcon size="small" label={`${currentAgentMode} mode`} />

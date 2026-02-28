@@ -8,6 +8,8 @@ import { token } from '@atlaskit/tokens';
 import React from 'react';
 import { AgentMode, RovoDevModeInfo } from 'src/rovo-dev/client';
 
+import { capitalizeFirst } from '../../utils';
+
 // const DISABLED_AGENT_MODES: readonly string[] = ['plan'];
 
 /** Shown when the available modes list hasn't loaded yet, so the UI is never empty. */
@@ -35,8 +37,6 @@ export const getAgentModeIcon = (mode: string) => {
             return null;
     }
 };
-
-const capitalizeFirst = (s: string): string => (s.length === 0 ? s : s.charAt(0).toUpperCase() + s.slice(1));
 
 const styles = cssMap({
     sectionWrapper: {

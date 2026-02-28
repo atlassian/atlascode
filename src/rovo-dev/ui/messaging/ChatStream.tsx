@@ -33,7 +33,7 @@ interface ChatStreamProps {
         typeof useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>
     >;
     pendingToolCall: string;
-    deepPlanCreated: boolean;
+    deepPlanCreated: string | null;
     currentState: State;
     onChangesGitPushed: (msg: PullRequestMessage, pullRequestCreated: boolean) => void;
     onCollapsiblePanelExpanded: () => void;
@@ -251,6 +251,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
                     renderProps={renderProps}
                     onLinkClick={onLinkClick}
+                    deepPlanCreated={deepPlanCreated}
                     onGeneratePlanClick={onGeneratePlanClick}
                 />
             )}
