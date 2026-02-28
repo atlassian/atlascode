@@ -129,7 +129,6 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                             label="Full-Context mode"
                             description="Toggle Full-Context mode to enable the agent to research documents and historical data, helping it better understand the problem to solve."
                             action={onFullContextToggled}
-                            actionType="toggle"
                             toggled={isFullContextEnabled}
                             isInternalOnly={true}
                         />
@@ -140,7 +139,6 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                             label="YOLO"
                             description="Toggle yolo mode which runs all file CRUD operations and bash commands without confirmation. Use with caution!"
                             action={onYoloModeToggled}
-                            actionType="toggle"
                             toggled={isYoloModeEnabled}
                         />
                     )}

@@ -4,9 +4,13 @@ import {
     RovoDevAvailableModesResponse,
     RovoDevCancelResponse,
     RovoDevChatRequest,
+    RovoDevGetAgentModelResponse,
     RovoDevGetAgentModeResponse,
+    RovoDevGetAvailableAgentModelsResponse,
     RovoDevHealthcheckResponse,
     RovoDevSavedPromptsResponse,
+    RovoDevSetAgentModelRequest,
+    RovoDevSetAgentModelResponse,
     RovoDevSetAgentModeRequest,
     RovoDevSetAgentModeResponse,
     RovoDevStatusAPIResponse,
@@ -330,6 +334,32 @@ export class RovoDevApiClient {
      */
     public async getAvailableModes(): Promise<RovoDevAvailableModesResponse> {
         const response = await this.fetchApi('/v3/available-modes', 'GET');
+        return await response.json();
+    }
+
+    /** Invokes the GET `/v3/agent-model` API.
+     * @returns {Promise<RovoDevGetAgentModelResponse>} An object representing the current agent model.
+     */
+    public async getAgentModel(): Promise<RovoDevGetAgentModelResponse> {
+        const response = await this.fetchApi('/v3/agent-model', 'GET');
+        return await response.json();
+    }
+
+    /** Invokes the PUT `/v3/agent-model` API.
+     * @param {string} modelId The agent model ID to switch to.
+     * @returns {Promise<RovoDevSetAgentModelResponse>} An object representing the API response.
+     */
+    public async setAgentModel(modelId: string): Promise<RovoDevSetAgentModelResponse> {
+        const request: RovoDevSetAgentModelRequest = { model_id: modelId };
+        const response = await this.fetchApi('/v3/agent-model', 'PUT', JSON.stringify(request));
+        return await response.json();
+    }
+
+    /** Invokes the GET `/v3/agent-models` API.
+     * @returns {Promise<RovoDevGetAvailableAgentModelsResponse>} An object representing all available agent models.
+     */
+    public async getAvailableAgentModels(): Promise<RovoDevGetAvailableAgentModelsResponse> {
+        const response = await this.fetchApi('/v3/agent-models', 'GET');
         return await response.json();
     }
 

@@ -4,6 +4,7 @@ import {
     RovoDevClearResponse,
     RovoDevDeferredRequestResponse,
     RovoDevExceptionResponse,
+    RovoDevModelsResponse,
     RovoDevOnCallToolStartResponse,
     RovoDevParsingError,
     RovoDevPromptsResponse,
@@ -202,6 +203,7 @@ type RovoDevSingleChunk =
     | RovoDevStatusChunk
     | RovoDevUsageChunk
     | RovoDevPromptsChunk
+    | RovoDevModelsResponse
     | RovoDevCloseChunk
     | RovoDevReplayEndChunk
     | RovoDevRequestUsageChunk;
@@ -559,6 +561,7 @@ export class RovoDevResponseParser {
             case 'status':
             case 'usage':
             case 'prompts':
+            case 'models':
                 return buffer
                     ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
                     : chunk;
