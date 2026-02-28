@@ -7,6 +7,10 @@
 
 - Rovo Dev: Agent model selection both via /models command, and dedicated drop-down menu
 
+### Improvements
+
+-  Added the UI in the Rovo chat box for the moved file tool.
+
 ## What's new in 4.0.21
 
 ### Bug Fixes
