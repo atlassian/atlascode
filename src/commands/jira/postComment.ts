@@ -3,6 +3,7 @@ import { Comment, CommentVisibility, IssueKeyAndSite } from '@atlassianlabs/jira
 import { issueCommentEvent } from '../../analytics';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Container } from '../../container';
+import { Logger } from '../../logger';
 import { commentBodyToString } from '../../util/adfToCommentBody';
 
 /** DC expects comment body as string; Cloud accepts ADF. Normalize only for DC. */
@@ -26,4 +27,30 @@ export async function postComment(
     });
 
     return resp;
+}
+
+/**
+ * Fetches a comment with its renderedBody field populated.
+ * This ensures wiki markup formatting is preserved when displaying comments.
+ *
+ * @param issue - The issue containing the comment
+ * @param commentId - The ID of the comment to fetch
+ * @returns Promise<Comment> with renderedBody populated
+ */
+export async function fetchCommentWithRenderedBody(
+    issue: IssueKeyAndSite<DetailedSiteInfo>,
+    commentId: string,
+): Promise<Comment> {
+    try {
+        const client = await Container.clientManager.jiraClient(issue.siteDetails);
+
+        // Fetch comment with expand parameter to get renderedBody
+        // The expand parameter requests additional fields including HTML-rendered content
+        const comment = await (client as any).getComment(issue.key, commentId, 'renderedBody');
+
+        return comment;
+    } catch (error) {
+        Logger.error(error, `Failed to fetch comment ${commentId} with renderedBody for issue ${issue.key}`);
+        throw error;
+    }
 }

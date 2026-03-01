@@ -21,10 +21,13 @@ import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
 import { useEditorState } from '../EditorStateContext';
 import { useEditorForceClose } from '../hooks/useEditorForceClose';
 
+type ADFDoc = { version: number; type: 'doc'; content: any[] };
+type JiraCommentWithAdf = Omit<JiraComment, 'body'> & { body: string | ADFDoc };
+
 export type IssueCommentComponentProps = {
     siteDetails: DetailedSiteInfo;
     currentUser: User;
-    comments: JiraComment[];
+    comments: JiraCommentWithAdf[];
     isServiceDeskProject: boolean;
     onSave: (commentBody: any, commentId?: string, restriction?: CommentVisibility) => void; // Can be string or ADF object
     onCreate: (commentBody: any, restriction?: CommentVisibility) => void; // Can be string or ADF object
@@ -41,7 +44,7 @@ export type IssueCommentComponentProps = {
 };
 const CommentComponent: React.FC<{
     siteDetails: DetailedSiteInfo;
-    comment: JiraComment;
+    comment: JiraCommentWithAdf;
     onSave: (t: any, commentId?: string, restriction?: CommentVisibility) => void; // Can be string or ADF object
     fetchImage: (url: string) => Promise<string>;
     onDelete: (commentId: string) => void;
@@ -78,7 +81,21 @@ const CommentComponent: React.FC<{
         [isAtlaskitEditorEnabled, closeEditor, editorId],
     );
     const [isSaving, setIsSaving] = React.useState(false);
-    const bodyText = comment.renderedBody ? comment.renderedBody : comment.body;
+    const bodyText = React.useMemo(() => {
+        // Prefer renderedBody (HTML from server) - this preserves wiki markup formatting
+        if (comment.renderedBody) {
+            return comment.renderedBody;
+        }
+
+        // Fallback: If no renderedBody and body is ADF, convert to WikiMarkup for display
+        const cb: any = comment.body;
+        if (typeof cb === 'object' && cb !== null && cb.version === 1 && cb.type === 'doc') {
+            return convertAdfToWikimarkup(cb);
+        }
+
+        // Last resort: display as-is (plain text or string)
+        return comment.body as any;
+    }, [comment.body, comment.renderedBody]);
 
     // Convert comment body to appropriate format for editor
     const getCommentTextForEditor = React.useCallback(
@@ -415,7 +432,7 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
             />
             {comments
                 .sort((a, b) => (a.created > b.created ? -1 : 1))
-                .map((comment: JiraComment) => (
+                .map((comment: JiraCommentWithAdf) => (
                     <CommentComponent
                         key={`${comment.id}::${comment.updated}`}
                         siteDetails={siteDetails}

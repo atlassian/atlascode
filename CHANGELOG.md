@@ -7,6 +7,10 @@
 
 - Rovo Dev: Agent model selection both via /models command, and dedicated drop-down menu
 
+### Bug Fixes
+
+- Fixed Jira comments losing wiki markup formatting when posted or updated - comments now fetch and preserve server-rendered HTML content
+
 ## What's new in 4.0.21
 
 ### Bug Fixes

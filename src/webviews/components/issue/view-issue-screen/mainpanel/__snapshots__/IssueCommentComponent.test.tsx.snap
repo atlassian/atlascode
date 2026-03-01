@@ -1,0 +1,459 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`IssueCommentComponent Snapshot Tests should match snapshot for empty comment list: empty-comment-list 1`] = `
+<div>
+  <div
+    class="MuiBox-root css-0"
+    data-testid="issue.comments-section"
+    style="display: flex; flex-direction: column; padding-top: 8px; gap: 16px;"
+  >
+    <div
+      class="MuiBox-root css-0"
+      style="display: flex; flex-direction: column; width: 100%;"
+    >
+      <div
+        class="MuiBox-root css-0"
+        data-testid="issue.new-comment"
+        style="display: flex; flex-direction: row; align-items: center;"
+      >
+        <div
+          class="MuiBox-root css-0"
+          style="margin-right: 8px; margin-top: 0px;"
+        >
+          <div
+            class="_12ji1r31 _1qu2glyw _12y3idpf _1e0c1o8l _kqswh2mm"
+          >
+            <span
+              class="_vchh1ntv _bfhkcxp3 _16qs1nhn _19itglyw _12ji1r31 _1qu2glyw _12y31o36 _1reo15vq _18m915vq _v564ieh6 _1e0c1txw _kqswpfqs _4cvr1fhb _1bah1h6o _2lx21bp4 _80om1kw7 _6rthv77o _1pfhv77o _12l2v77o _ahbqv77o _85i5ze3t _1q51ze3t _y4tize3t _bozgze3t _t9ec1aqe _9v7aze3t _qc5o1p41 _z0ai1osq _18postnw _1hfk1j28 _aetrf705 _1peqidpf _11fnglyw _1ejjglyw _mizu194a _1ah3v77o _ra3xnqa1 _128mdkaa _4dave4h9 _2rko1qll _14mj1qll _1bsb1tcg _4t3i1tcg"
+              style="--avatar-bg-color: var(--vscode-editor-background)!important; --avatar-box-shadow: 0 0 0 2px var(--vscode-editor-background)!important;"
+            >
+              <img
+                alt=""
+                aria-hidden="true"
+                class="_16jlkb7n _1o9zkb7n _i0dl1osq _1e0c1txw _1bsb1osq _4t3i1osq _2rko1rr0"
+                data-ssr-placeholder-ignored="true"
+                data-vc="avatar-image"
+                src="https://avatar.example.com/48x48"
+              />
+            </span>
+          </div>
+        </div>
+        <div
+          class="_16jlkb7n _1o9zkb7n _i0dl1osq _11c82smr _1reo15vq _18m915vq _v564r5cv _189ee4h9 _1e0c1txw _vchhusvi _4cvr1h6o _1bah1yb4 _lcxv1wug _s7n4jp4b _slp31hna _1tnqfajl _1h6drsbi _1dqonqa1 _syazi7uo _80om1kdv _bfhk1j9a _msj6gir2 _1q51e4h9 _85i5e4h9 _bozgidpf _y4tiidpf _1p9x1v1w _qao9r01l _q433vyy1 _4cvxrsbi _irr3l4ek ac-inputField"
+          data-ds--text-field--container="true"
+          role="presentation"
+          style="max-width: 100%;"
+        >
+          <input
+            class="_19itidpf _11c81ixg _12ji1r31 _1qu2glyw _12y31o36 _vchhusvi _1bsb1osq _1ul9idpf _bfhk1j28 _syaz1kw7 _80om1kw7 _14ji12x7 _olc612x7 _1kod12x7 _7ba012x7 _1goxglyw _13xeglyw _1n7e1l2s _1idr1rpy _1tn22smr _l9oiu2gc _549yu2gc _1h5w12x7 _124212x7"
+            css="[object Object]"
+            data-ds--text-field--input="true"
+            placeholder="Add a comment..."
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`IssueCommentComponent Snapshot Tests should match snapshot when rendering comment with renderedBody: comment-with-rendered-body 1`] = `
+<div>
+  <div
+    class="MuiBox-root css-0"
+    data-testid="issue.comments-section"
+    style="display: flex; flex-direction: column; padding-top: 8px; gap: 16px;"
+  >
+    <div
+      class="MuiBox-root css-0"
+      style="display: flex; flex-direction: column; width: 100%;"
+    >
+      <div
+        class="MuiBox-root css-0"
+        data-testid="issue.new-comment"
+        style="display: flex; flex-direction: row; align-items: center;"
+      >
+        <div
+          class="MuiBox-root css-0"
+          style="margin-right: 8px; margin-top: 0px;"
+        >
+          <div
+            class="_12ji1r31 _1qu2glyw _12y3idpf _1e0c1o8l _kqswh2mm"
+          >
+            <span
+              class="_vchh1ntv _bfhkcxp3 _16qs1nhn _19itglyw _12ji1r31 _1qu2glyw _12y31o36 _1reo15vq _18m915vq _v564ieh6 _1e0c1txw _kqswpfqs _4cvr1fhb _1bah1h6o _2lx21bp4 _80om1kw7 _6rthv77o _1pfhv77o _12l2v77o _ahbqv77o _85i5ze3t _1q51ze3t _y4tize3t _bozgze3t _t9ec1aqe _9v7aze3t _qc5o1p41 _z0ai1osq _18postnw _1hfk1j28 _aetrf705 _1peqidpf _11fnglyw _1ejjglyw _mizu194a _1ah3v77o _ra3xnqa1 _128mdkaa _4dave4h9 _2rko1qll _14mj1qll _1bsb1tcg _4t3i1tcg"
+              style="--avatar-bg-color: var(--vscode-editor-background)!important; --avatar-box-shadow: 0 0 0 2px var(--vscode-editor-background)!important;"
+            >
+              <img
+                alt=""
+                aria-hidden="true"
+                class="_16jlkb7n _1o9zkb7n _i0dl1osq _1e0c1txw _1bsb1osq _4t3i1osq _2rko1rr0"
+                data-ssr-placeholder-ignored="true"
+                data-vc="avatar-image"
+                src="https://avatar.example.com/48x48"
+              />
+            </span>
+          </div>
+        </div>
+        <div
+          class="_16jlkb7n _1o9zkb7n _i0dl1osq _11c82smr _1reo15vq _18m915vq _v564r5cv _189ee4h9 _1e0c1txw _vchhusvi _4cvr1h6o _1bah1yb4 _lcxv1wug _s7n4jp4b _slp31hna _1tnqfajl _1h6drsbi _1dqonqa1 _syazi7uo _80om1kdv _bfhk1j9a _msj6gir2 _1q51e4h9 _85i5e4h9 _bozgidpf _y4tiidpf _1p9x1v1w _qao9r01l _q433vyy1 _4cvxrsbi _irr3l4ek ac-inputField"
+          data-ds--text-field--container="true"
+          role="presentation"
+          style="max-width: 100%;"
+        >
+          <input
+            class="_19itidpf _11c81ixg _12ji1r31 _1qu2glyw _12y31o36 _vchhusvi _1bsb1osq _1ul9idpf _bfhk1j28 _syaz1kw7 _80om1kw7 _14ji12x7 _olc612x7 _1kod12x7 _7ba012x7 _1goxglyw _13xeglyw _1n7e1l2s _1idr1rpy _1tn22smr _l9oiu2gc _549yu2gc _1h5w12x7 _124212x7"
+            css="[object Object]"
+            data-ds--text-field--input="true"
+            placeholder="Add a comment..."
+          />
+        </div>
+      </div>
+    </div>
+    <div
+      class="_1e0c11p5 _vchhusvi _gy1pu2gc _1p57u2gc _kqswh2mm _yv0e5bpd _1lmcvpz5"
+    >
+      <div
+        class="_19itglyw _vchhusvi _r06hglyw _nd5l1ofd"
+      >
+        <div
+          class="_12ji1r31 _1qu2glyw _12y3idpf _1e0c1o8l _kqswh2mm"
+        >
+          <span
+            class="_vchh1ntv _bfhkcxp3 _16qs1nhn _19itglyw _12ji1r31 _1qu2glyw _12y31o36 _1reo15vq _18m915vq _v564ieh6 _1e0c1txw _kqswpfqs _4cvr1fhb _1bah1h6o _2lx21bp4 _80om1kw7 _6rthv77o _1pfhv77o _12l2v77o _ahbqv77o _85i5ze3t _1q51ze3t _y4tize3t _bozgze3t _t9ec1aqe _9v7aze3t _qc5o1p41 _z0ai1osq _18postnw _1hfk1j28 _aetrf705 _1peqidpf _11fnglyw _1ejjglyw _mizu194a _1ah3v77o _ra3xnqa1 _128mdkaa _4dave4h9 _2rko1qll _14mj1qll _1bsb1tcg _4t3i1tcg"
+            style="--avatar-bg-color: var(--vscode-editor-background)!important; --avatar-box-shadow: 0 0 0 2px var(--vscode-editor-background)!important;"
+          >
+            <img
+              alt=""
+              aria-hidden="true"
+              class="_16jlkb7n _1o9zkb7n _i0dl1osq _1e0c1txw _1bsb1osq _4t3i1osq _2rko1rr0"
+              data-ssr-placeholder-ignored="true"
+              data-vc="avatar-image"
+              src="https://avatar.example.com/48x48"
+            />
+          </span>
+        </div>
+      </div>
+      <div
+        class="_nd5l8niw _1ul9idpf _1q51v77o _slp31hna"
+      >
+        <div
+          class="_1e0c1txw _vchhusvi _gy1p12x7 _1p5712x7 _2lx21bp4 _1bah1fhb"
+        >
+          <div
+            class="_1e0c1txw _vchhusvi _gy1p1b66 _1p571b66 _2lx21bp4 _1bah1fhb"
+          >
+            <h3
+              class="_11c82smr"
+            >
+              <span
+                class="_1e0c1txw _vchhusvi _gy1pu2gc _1p57u2gc _4cvr1h6o _2lx2vrvc"
+              >
+                <span
+                  class="_syaz1gjq _k48p1wq8"
+                  role="presentation"
+                >
+                  <div
+                    class="jira-comment-author"
+                  >
+                    Another User
+                  </div>
+                </span>
+                <div
+                  class="inlinePanelSubheading"
+                >
+                  about 3 years ago
+                </div>
+              </span>
+            </h3>
+            <div
+              class="_19itglyw _vchhusvi _r06hglyw _syaz1fxt"
+            >
+              <p>
+                <h1>
+                  Heading
+                </h1>
+                <p>
+                  Some content
+                </p>
+              </p>
+            </div>
+          </div>
+          <div
+            class="css-1w890ve"
+          >
+            <span
+              role="presentation"
+            >
+              <button
+                class="css-1j0hxvg"
+                tabindex="0"
+                type="button"
+              >
+                <span
+                  class="css-1gd7hga"
+                >
+                  Edit
+                </span>
+              </button>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`IssueCommentComponent Snapshot Tests should match snapshot when rendering multiple comments: multiple-comments 1`] = `
+<div>
+  <div
+    class="MuiBox-root css-0"
+    data-testid="issue.comments-section"
+    style="display: flex; flex-direction: column; padding-top: 8px; gap: 16px;"
+  >
+    <div
+      class="MuiBox-root css-0"
+      style="display: flex; flex-direction: column; width: 100%;"
+    >
+      <div
+        class="MuiBox-root css-0"
+        data-testid="issue.new-comment"
+        style="display: flex; flex-direction: row; align-items: center;"
+      >
+        <div
+          class="MuiBox-root css-0"
+          style="margin-right: 8px; margin-top: 0px;"
+        >
+          <div
+            class="_12ji1r31 _1qu2glyw _12y3idpf _1e0c1o8l _kqswh2mm"
+          >
+            <span
+              class="_vchh1ntv _bfhkcxp3 _16qs1nhn _19itglyw _12ji1r31 _1qu2glyw _12y31o36 _1reo15vq _18m915vq _v564ieh6 _1e0c1txw _kqswpfqs _4cvr1fhb _1bah1h6o _2lx21bp4 _80om1kw7 _6rthv77o _1pfhv77o _12l2v77o _ahbqv77o _85i5ze3t _1q51ze3t _y4tize3t _bozgze3t _t9ec1aqe _9v7aze3t _qc5o1p41 _z0ai1osq _18postnw _1hfk1j28 _aetrf705 _1peqidpf _11fnglyw _1ejjglyw _mizu194a _1ah3v77o _ra3xnqa1 _128mdkaa _4dave4h9 _2rko1qll _14mj1qll _1bsb1tcg _4t3i1tcg"
+              style="--avatar-bg-color: var(--vscode-editor-background)!important; --avatar-box-shadow: 0 0 0 2px var(--vscode-editor-background)!important;"
+            >
+              <img
+                alt=""
+                aria-hidden="true"
+                class="_16jlkb7n _1o9zkb7n _i0dl1osq _1e0c1txw _1bsb1osq _4t3i1osq _2rko1rr0"
+                data-ssr-placeholder-ignored="true"
+                data-vc="avatar-image"
+                src="https://avatar.example.com/48x48"
+              />
+            </span>
+          </div>
+        </div>
+        <div
+          class="_16jlkb7n _1o9zkb7n _i0dl1osq _11c82smr _1reo15vq _18m915vq _v564r5cv _189ee4h9 _1e0c1txw _vchhusvi _4cvr1h6o _1bah1yb4 _lcxv1wug _s7n4jp4b _slp31hna _1tnqfajl _1h6drsbi _1dqonqa1 _syazi7uo _80om1kdv _bfhk1j9a _msj6gir2 _1q51e4h9 _85i5e4h9 _bozgidpf _y4tiidpf _1p9x1v1w _qao9r01l _q433vyy1 _4cvxrsbi _irr3l4ek ac-inputField"
+          data-ds--text-field--container="true"
+          role="presentation"
+          style="max-width: 100%;"
+        >
+          <input
+            class="_19itidpf _11c81ixg _12ji1r31 _1qu2glyw _12y31o36 _vchhusvi _1bsb1osq _1ul9idpf _bfhk1j28 _syaz1kw7 _80om1kw7 _14ji12x7 _olc612x7 _1kod12x7 _7ba012x7 _1goxglyw _13xeglyw _1n7e1l2s _1idr1rpy _1tn22smr _l9oiu2gc _549yu2gc _1h5w12x7 _124212x7"
+            css="[object Object]"
+            data-ds--text-field--input="true"
+            placeholder="Add a comment..."
+          />
+        </div>
+      </div>
+    </div>
+    <div
+      class="_1e0c11p5 _vchhusvi _gy1pu2gc _1p57u2gc _kqswh2mm _yv0e5bpd _1lmcvpz5"
+    >
+      <div
+        class="_19itglyw _vchhusvi _r06hglyw _nd5l1ofd"
+      >
+        <div
+          class="_12ji1r31 _1qu2glyw _12y3idpf _1e0c1o8l _kqswh2mm"
+        >
+          <span
+            class="_vchh1ntv _bfhkcxp3 _16qs1nhn _19itglyw _12ji1r31 _1qu2glyw _12y31o36 _1reo15vq _18m915vq _v564ieh6 _1e0c1txw _kqswpfqs _4cvr1fhb _1bah1h6o _2lx21bp4 _80om1kw7 _6rthv77o _1pfhv77o _12l2v77o _ahbqv77o _85i5ze3t _1q51ze3t _y4tize3t _bozgze3t _t9ec1aqe _9v7aze3t _qc5o1p41 _z0ai1osq _18postnw _1hfk1j28 _aetrf705 _1peqidpf _11fnglyw _1ejjglyw _mizu194a _1ah3v77o _ra3xnqa1 _128mdkaa _4dave4h9 _2rko1qll _14mj1qll _1bsb1tcg _4t3i1tcg"
+            style="--avatar-bg-color: var(--vscode-editor-background)!important; --avatar-box-shadow: 0 0 0 2px var(--vscode-editor-background)!important;"
+          >
+            <img
+              alt=""
+              aria-hidden="true"
+              class="_16jlkb7n _1o9zkb7n _i0dl1osq _1e0c1txw _1bsb1osq _4t3i1osq _2rko1rr0"
+              data-ssr-placeholder-ignored="true"
+              data-vc="avatar-image"
+              src="https://avatar.example.com/48x48"
+            />
+          </span>
+        </div>
+      </div>
+      <div
+        class="_nd5l8niw _1ul9idpf _1q51v77o _slp31hna"
+      >
+        <div
+          class="_1e0c1txw _vchhusvi _gy1p12x7 _1p5712x7 _2lx21bp4 _1bah1fhb"
+        >
+          <div
+            class="_1e0c1txw _vchhusvi _gy1p1b66 _1p571b66 _2lx21bp4 _1bah1fhb"
+          >
+            <h3
+              class="_11c82smr"
+            >
+              <span
+                class="_1e0c1txw _vchhusvi _gy1pu2gc _1p57u2gc _4cvr1h6o _2lx2vrvc"
+              >
+                <span
+                  class="_syaz1gjq _k48p1wq8"
+                  role="presentation"
+                >
+                  <div
+                    class="jira-comment-author"
+                  >
+                    Another User
+                  </div>
+                </span>
+                <div
+                  class="inlinePanelSubheading"
+                >
+                  about 3 years ago
+                </div>
+              </span>
+            </h3>
+            <div
+              class="_19itglyw _vchhusvi _r06hglyw _syaz1fxt"
+            >
+              <p>
+                <p>
+                  Another test comment
+                </p>
+              </p>
+            </div>
+          </div>
+          <div
+            class="css-1w890ve"
+          >
+            <span
+              role="presentation"
+            >
+              <button
+                class="css-1j0hxvg"
+                tabindex="0"
+                type="button"
+              >
+                <span
+                  class="css-1gd7hga"
+                >
+                  Edit
+                </span>
+              </button>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="_1e0c11p5 _vchhusvi _gy1pu2gc _1p57u2gc _kqswh2mm _yv0e5bpd _1lmcvpz5"
+    >
+      <div
+        class="_19itglyw _vchhusvi _r06hglyw _nd5l1ofd"
+      >
+        <div
+          class="_12ji1r31 _1qu2glyw _12y3idpf _1e0c1o8l _kqswh2mm"
+        >
+          <span
+            class="_vchh1ntv _bfhkcxp3 _16qs1nhn _19itglyw _12ji1r31 _1qu2glyw _12y31o36 _1reo15vq _18m915vq _v564ieh6 _1e0c1txw _kqswpfqs _4cvr1fhb _1bah1h6o _2lx21bp4 _80om1kw7 _6rthv77o _1pfhv77o _12l2v77o _ahbqv77o _85i5ze3t _1q51ze3t _y4tize3t _bozgze3t _t9ec1aqe _9v7aze3t _qc5o1p41 _z0ai1osq _18postnw _1hfk1j28 _aetrf705 _1peqidpf _11fnglyw _1ejjglyw _mizu194a _1ah3v77o _ra3xnqa1 _128mdkaa _4dave4h9 _2rko1qll _14mj1qll _1bsb1tcg _4t3i1tcg"
+            style="--avatar-bg-color: var(--vscode-editor-background)!important; --avatar-box-shadow: 0 0 0 2px var(--vscode-editor-background)!important;"
+          >
+            <img
+              alt=""
+              aria-hidden="true"
+              class="_16jlkb7n _1o9zkb7n _i0dl1osq _1e0c1txw _1bsb1osq _4t3i1osq _2rko1rr0"
+              data-ssr-placeholder-ignored="true"
+              data-vc="avatar-image"
+              src="https://avatar.example.com/48x48"
+            />
+          </span>
+        </div>
+      </div>
+      <div
+        class="_nd5l8niw _1ul9idpf _1q51v77o _slp31hna"
+      >
+        <div
+          class="_1e0c1txw _vchhusvi _gy1p12x7 _1p5712x7 _2lx21bp4 _1bah1fhb"
+        >
+          <div
+            class="_1e0c1txw _vchhusvi _gy1p1b66 _1p571b66 _2lx21bp4 _1bah1fhb"
+          >
+            <h3
+              class="_11c82smr"
+            >
+              <span
+                class="_1e0c1txw _vchhusvi _gy1pu2gc _1p57u2gc _4cvr1h6o _2lx2vrvc"
+              >
+                <span
+                  class="_syaz1gjq _k48p1wq8"
+                  role="presentation"
+                >
+                  <div
+                    class="jira-comment-author"
+                  >
+                    Test User
+                  </div>
+                </span>
+                <div
+                  class="inlinePanelSubheading"
+                >
+                  about 3 years ago
+                </div>
+              </span>
+            </h3>
+            <div
+              class="_19itglyw _vchhusvi _r06hglyw _syaz1fxt"
+            >
+              <p>
+                <p>
+                  This is a test comment
+                </p>
+              </p>
+            </div>
+          </div>
+          <div
+            class="css-1w890ve"
+          >
+            <span
+              role="presentation"
+            >
+              <button
+                class="css-1j0hxvg"
+                tabindex="0"
+                type="button"
+              >
+                <span
+                  class="css-1gd7hga"
+                >
+                  Edit
+                </span>
+              </button>
+            </span>
+            <span
+              class="css-zlt279"
+            >
+              ·
+            </span>
+            <span
+              role="presentation"
+            >
+              <button
+                class="css-1j0hxvg"
+                tabindex="0"
+                type="button"
+              >
+                <span
+                  class="css-1gd7hga"
+                >
+                  Delete
+                </span>
+              </button>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

@@ -10,7 +10,7 @@ import { expansionCastTo } from 'testsutil/miscFunctions';
 import { commands, env, WebviewPanel } from 'vscode';
 
 import { DetailedSiteInfo, emptySiteInfo, ProductJira } from '../atlclients/authInfo';
-import { postComment } from '../commands/jira/postComment';
+import { fetchCommentWithRenderedBody, postComment } from '../commands/jira/postComment';
 import { startWorkOnIssue } from '../commands/jira/startWorkOnIssue';
 import { Container } from '../container';
 import * as fetchIssue from '../jira/fetchIssue';
@@ -773,6 +773,7 @@ describe('JiraIssueWebview', () => {
 
             const newComment = { id: 'comment-1', body: commentBody };
             (postComment as jest.Mock).mockResolvedValue(newComment);
+            (fetchCommentWithRenderedBody as jest.Mock).mockResolvedValue(newComment);
 
             jiraIssueWebview['_editUIData'].fieldValues['comment'] = { comments: [] };
             const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
@@ -798,19 +799,25 @@ describe('JiraIssueWebview', () => {
                 nonce: 'nonce-123',
             };
 
-            const existingComment = { id: commentId, body: 'Original comment' };
             const updatedComment = { id: commentId, body: commentBody };
 
             (postComment as jest.Mock).mockResolvedValue(updatedComment);
+            (fetchCommentWithRenderedBody as jest.Mock).mockResolvedValue(updatedComment);
 
             jiraIssueWebview['_editUIData'].fieldValues['comment'] = {
-                comments: [existingComment],
+                comments: [{ id: commentId, body: 'Original comment' }],
             };
+
+            const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
 
             await jiraIssueWebview['onMessageReceived'](msg);
 
             expect(postComment).toHaveBeenCalledWith(mockIssue, commentBody, commentId, undefined);
             expect(jiraIssueWebview['_editUIData'].fieldValues['comment'].comments[0]).toEqual(updatedComment);
+            expect(postMessageSpy).toHaveBeenCalledWith({
+                type: 'fieldValueUpdate',
+                fieldValues: { comment: { comments: [updatedComment] }, nonce: 'nonce-123' },
+            });
         });
 
         test('should handle deleteComment action', async () => {
@@ -837,6 +844,140 @@ describe('JiraIssueWebview', () => {
                 type: 'fieldValueUpdate',
                 fieldValues: { comment: { comments: [] }, nonce: 'nonce-123' },
             });
+        });
+
+        test('should fetch comment with renderedBody when creating a new comment', async () => {
+            const commentBody = 'New comment with wiki markup';
+            const msg = {
+                action: 'comment',
+                commentBody,
+                issue: mockIssue,
+                nonce: 'nonce-123',
+            };
+
+            const newComment = { id: 'comment-1', body: commentBody };
+            const fullCommentWithRenderedBody = {
+                ...newComment,
+                renderedBody: '<p>New comment with wiki markup</p>',
+            };
+
+            (postComment as jest.Mock).mockResolvedValue(newComment);
+            (fetchCommentWithRenderedBody as jest.Mock).mockResolvedValue(fullCommentWithRenderedBody);
+
+            jiraIssueWebview['_editUIData'].fieldValues['comment'] = { comments: [] };
+            const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+
+            await jiraIssueWebview['onMessageReceived'](msg);
+
+            expect(postComment).toHaveBeenCalledWith(mockIssue, commentBody, undefined, undefined);
+            expect(fetchCommentWithRenderedBody).toHaveBeenCalledWith(mockIssue, 'comment-1');
+            expect(jiraIssueWebview['_editUIData'].fieldValues['comment'].comments).toContain(
+                fullCommentWithRenderedBody,
+            );
+            expect(postMessageSpy).toHaveBeenCalledWith({
+                type: 'fieldValueUpdate',
+                fieldValues: { comment: { comments: [fullCommentWithRenderedBody] }, nonce: 'nonce-123' },
+            });
+        });
+
+        test('should fallback to postComment result if fetchCommentWithRenderedBody fails', async () => {
+            const commentBody = 'New comment';
+            const msg = {
+                action: 'comment',
+                commentBody,
+                issue: mockIssue,
+                nonce: 'nonce-123',
+            };
+
+            const newComment = { id: 'comment-1', body: commentBody };
+
+            (postComment as jest.Mock).mockResolvedValue(newComment);
+            (fetchCommentWithRenderedBody as jest.Mock).mockRejectedValue(new Error('Fetch failed'));
+
+            jiraIssueWebview['_editUIData'].fieldValues['comment'] = { comments: [] };
+
+            await jiraIssueWebview['onMessageReceived'](msg);
+
+            expect(fetchCommentWithRenderedBody).toHaveBeenCalledWith(mockIssue, 'comment-1');
+            // Should still add the comment from postComment response
+            expect(jiraIssueWebview['_editUIData'].fieldValues['comment'].comments).toContain(newComment);
+            expect(Logger.warn).toHaveBeenCalledWith(
+                expect.any(Error),
+                expect.stringContaining('Failed to fetch comment with renderedBody'),
+            );
+        });
+
+        test('should fetch comment with renderedBody when updating an existing comment', async () => {
+            const commentId = 'comment-1';
+            const commentBody = 'Updated comment with formatting';
+            const msg = {
+                action: 'comment',
+                commentBody,
+                commentId,
+                issue: mockIssue,
+                nonce: 'nonce-123',
+            };
+
+            const updatedComment = { id: commentId, body: commentBody };
+            const fullCommentWithRenderedBody = {
+                ...updatedComment,
+                renderedBody: '<p>Updated comment <strong>with formatting</strong></p>',
+            };
+
+            (postComment as jest.Mock).mockResolvedValue(updatedComment);
+            (fetchCommentWithRenderedBody as jest.Mock).mockResolvedValue(fullCommentWithRenderedBody);
+
+            const existingComment = { id: commentId, body: 'Original comment' };
+            jiraIssueWebview['_editUIData'].fieldValues['comment'] = {
+                comments: [existingComment],
+            };
+
+            const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
+
+            await jiraIssueWebview['onMessageReceived'](msg);
+
+            expect(postComment).toHaveBeenCalledWith(mockIssue, commentBody, commentId, undefined);
+            expect(fetchCommentWithRenderedBody).toHaveBeenCalledWith(mockIssue, commentId);
+            expect(jiraIssueWebview['_editUIData'].fieldValues['comment'].comments[0]).toEqual(
+                fullCommentWithRenderedBody,
+            );
+            expect(postMessageSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: 'fieldValueUpdate',
+                }),
+            );
+        });
+
+        test('should fallback to postComment result when updating if fetchCommentWithRenderedBody fails', async () => {
+            const commentId = 'comment-1';
+            const commentBody = 'Updated comment text';
+            const msg = {
+                action: 'comment',
+                commentBody,
+                commentId,
+                issue: mockIssue,
+                nonce: 'nonce-123',
+            };
+
+            const updatedComment = { id: commentId, body: commentBody };
+
+            (postComment as jest.Mock).mockResolvedValue(updatedComment);
+            (fetchCommentWithRenderedBody as jest.Mock).mockRejectedValue(new Error('Network error'));
+
+            const existingComment = { id: commentId, body: 'Original comment' };
+            jiraIssueWebview['_editUIData'].fieldValues['comment'] = {
+                comments: [existingComment],
+            };
+
+            await jiraIssueWebview['onMessageReceived'](msg);
+
+            expect(fetchCommentWithRenderedBody).toHaveBeenCalledWith(mockIssue, commentId);
+            // Should use the basic comment response when fetch fails
+            expect(jiraIssueWebview['_editUIData'].fieldValues['comment'].comments[0]).toEqual(updatedComment);
+            expect(Logger.warn).toHaveBeenCalledWith(
+                expect.any(Error),
+                expect.stringContaining('Failed to fetch comment with renderedBody'),
+            );
         });
 
         test('should handle createIssue action', async () => {

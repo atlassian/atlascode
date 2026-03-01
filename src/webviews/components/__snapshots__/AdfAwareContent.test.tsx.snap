@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`AdfAwareContent Snapshot Tests should match snapshot for complex ADF with formatting: complex-adf-with-formatting 1`] = `
+<div>
+  <div
+    data-testid="adf-renderer"
+  >
+    Rendered ADF Content
+  </div>
+</div>
+`;
+
+exports[`AdfAwareContent Snapshot Tests should match snapshot for invalid content fallback: invalid-content-fallback 1`] = `
+<div>
+  <p />
+</div>
+`;
+
+exports[`AdfAwareContent Snapshot Tests should match snapshot for valid ADF content: valid-adf-content 1`] = `
+<div>
+  <div
+    data-testid="adf-renderer"
+  >
+    Rendered ADF Content
+  </div>
+</div>
+`;
+
+exports[`AdfAwareContent Valid ADF content should render valid ADF string content 1`] = `
+<div
+  data-testid="adf-renderer"
+>
+  Rendered ADF Content
+</div>
+`;
