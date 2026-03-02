@@ -225,7 +225,7 @@ export class ClientManager implements Disposable {
             try {
                 await newClient.getCurrentUser();
             } catch (e) {
-                Logger.error(e as Error, `${tag}: getCurrentUser failed for ${site.baseApiUrl}`);
+                Logger.warn(e as Error, `${tag}: getCurrentUser failed for ${site.baseApiUrl}`);
                 // Mark this site as failed
                 this._failedSites.add(siteKey);
                 throw e;
