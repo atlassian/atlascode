@@ -7,7 +7,7 @@ import { clientForSite } from '../../bitbucket/bbUtils';
 import { WorkspaceRepo } from '../../bitbucket/model';
 import { Commands } from '../../constants';
 import { Logger } from '../../logger';
-import { categorizeNetworkError, retryWithBackoff } from '../../util/retry';
+import { categorizeNetworkError } from '../../util/retry';
 import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 
 export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
@@ -15,6 +15,7 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
     private _lastSuccessfulFetch = new Map<string, Date | undefined>();
     private _consecutiveFailures = new Map<string, number>();
     private _failedCredentials = new Set<string>(); // Track credentials that failed auth/network this cycle
+    private _invalidatedCredentials = new Set<string>(); // Permanently track invalidated credentials - never retry
     private readonly MAX_CONSECUTIVE_FAILURES = 5;
 
     constructor(private _bbCtx: BitbucketContext) {
@@ -50,7 +51,15 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
             for (const wsRepo of repos) {
                 const site = wsRepo.mainSiteRemote.site!;
 
-                // Skip if this credential already failed
+                // Skip if credential is permanently invalidated
+                if (this._invalidatedCredentials.has(credentialId)) {
+                    Logger.debug(
+                        `Skipping ${path.basename(wsRepo.rootUri)} - credential ${credentialId} has been invalidated`,
+                    );
+                    continue;
+                }
+
+                // Skip if this credential already failed this cycle
                 if (this._failedCredentials.has(credentialId)) {
                     Logger.debug(
                         `Skipping ${path.basename(wsRepo.rootUri)} - credential ${credentialId} already failed this cycle`,
@@ -61,14 +70,13 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
                 try {
                     const bbApi = await clientForSite(site);
 
-                    const prList = await retryWithBackoff(() => bbApi.pullrequests.getLatest(wsRepo), {
-                        maxAttempts: 3,
-                        initialDelayMs: 1000,
-                        maxDelayMs: 5000,
-                    });
+                    const prList = await bbApi.pullrequests.getLatest(wsRepo);
 
                     this._consecutiveFailures.set(wsRepo.rootUri, 0);
                     this._lastSuccessfulFetch.set(wsRepo.rootUri, new Date());
+
+                    // Clear invalidated credential on successful auth
+                    this._invalidatedCredentials.delete(credentialId);
 
                     const lastChecked = this._lastCheckedTime.has(wsRepo.rootUri)
                         ? this._lastCheckedTime.get(wsRepo.rootUri)!
@@ -84,6 +92,18 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
                     const errorInfo = categorizeNetworkError(e);
                     const repoName = wsRepo.rootUri;
 
+                    // Check if credentials are invalidated - never retry these
+                    const errorMessage = e.message?.toLowerCase() || '';
+                    if (
+                        errorMessage.includes('credentials invalidated') ||
+                        errorMessage.includes('credential invalidated')
+                    ) {
+                        this._invalidatedCredentials.add(credentialId);
+                        Logger.warn(
+                            `Credential ${credentialId} has been invalidated - will not retry until re-authenticated`,
+                        );
+                    }
+
                     // Mark credential as failed for systemic errors
                     if (['auth', 'network', 'dns', 'timeout'].includes(errorInfo.category)) {
                         this._failedCredentials.add(credentialId);
@@ -95,14 +115,20 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
                     const lastSuccess = this._lastSuccessfulFetch.get(wsRepo.rootUri);
                     const timeSinceLastSuccess = lastSuccess ? Date.now() - lastSuccess.getTime() : -1;
 
-                    BitbucketLogger.error(
-                        e,
-                        `Error while fetching latest pull requests for ${repoName}`,
+                    const logMessage = `Error while fetching latest pull requests for ${repoName}`;
+                    const logTags = [
                         `error_category:${errorInfo.category}`,
                         `error_details:${errorInfo.message}`,
                         `consecutive_failures:${failures}`,
                         `time_since_last_success_ms:${timeSinceLastSuccess}`,
-                    );
+                    ];
+
+                    // Auth errors (401/403) are expected when credentials expire - warn instead of error
+                    if (errorInfo.category === 'auth') {
+                        Logger.warn(`${logMessage} - ${logTags.join(', ')}`);
+                    } else {
+                        BitbucketLogger.error(e, logMessage, ...logTags);
+                    }
 
                     if (failures >= this.MAX_CONSECUTIVE_FAILURES) {
                         const repoBaseName = path.basename(repoName);
