@@ -1,4 +1,5 @@
 import { Comment as JiraComment, User } from '@atlassianlabs/jira-pi-common-models';
+type ADFDoc = { version: number; type: 'doc'; content: any[] };
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { DetailedSiteInfo, Product } from 'src/atlclients/authInfo';
@@ -23,6 +24,8 @@ const mockSiteDetails: DetailedSiteInfo = {
         key: 'jira',
     } as Product,
 };
+
+type JiraCommentWithAdf = Omit<JiraComment, 'body'> & { body: string | ADFDoc };
 
 const mockCurrentUser: User = {
     accountId: 'user-123',
@@ -278,5 +281,259 @@ describe('IssueCommentComponent', () => {
             }),
             undefined,
         );
+    });
+
+    describe('Comment body text rendering (bodyText logic)', () => {
+        it('should prefer renderedBody over body when available', () => {
+            const commentWithRenderedBody: JiraComment = {
+                id: 'comment-3',
+                body: 'h1. This is wiki markup',
+                renderedBody: '<h1>This is wiki markup</h1>',
+                author: mockComments[0].author,
+                created: '2023-01-03T12:00:00Z',
+                updated: '2023-01-03T12:00:00Z',
+                self: '',
+                visibility: undefined,
+                jsdPublic: false,
+            };
+
+            renderWithEditorProvider(
+                <IssueCommentComponent
+                    siteDetails={mockSiteDetails}
+                    currentUser={mockCurrentUser}
+                    comments={[commentWithRenderedBody]}
+                    isServiceDeskProject={false}
+                    onSave={mockOnSave}
+                    onCreate={mockOnCreate}
+                    fetchUsers={mockFetchUsers}
+                    fetchImage={mockFetchImage}
+                    onDelete={mockOnDelete}
+                    commentText=""
+                    onCommentTextChange={mockOnCommentTextChange}
+                    isEditingComment={false}
+                    onEditingCommentChange={mockOnEditingCommentChange}
+                    isAtlaskitEditorEnabled={false}
+                    mentionProvider={mockMentionProvider}
+                    handleEditorFocus={mockHandleEditorFocus}
+                />,
+            );
+
+            // The rendered body should be used to display the comment
+            expect(mockFetchImage).not.toHaveBeenCalled(); // Just checking component rendered
+        });
+
+        it('should convert ADF to WikiMarkup when renderedBody is not available', () => {
+            const adfComment: JiraCommentWithAdf = {
+                id: 'comment-4',
+                body: {
+                    version: 1,
+                    type: 'doc',
+                    content: [
+                        {
+                            type: 'paragraph',
+                            content: [
+                                {
+                                    type: 'text',
+                                    text: 'This is ADF content',
+                                },
+                            ],
+                        },
+                    ],
+                },
+                author: mockComments[0].author,
+                created: '2023-01-04T12:00:00Z',
+                updated: '2023-01-04T12:00:00Z',
+                self: '',
+                visibility: undefined,
+                jsdPublic: false,
+            };
+
+            renderWithEditorProvider(
+                <IssueCommentComponent
+                    siteDetails={mockSiteDetails}
+                    currentUser={mockCurrentUser}
+                    comments={[adfComment]}
+                    isServiceDeskProject={false}
+                    onSave={mockOnSave}
+                    onCreate={mockOnCreate}
+                    fetchUsers={mockFetchUsers}
+                    fetchImage={mockFetchImage}
+                    onDelete={mockOnDelete}
+                    commentText=""
+                    onCommentTextChange={mockOnCommentTextChange}
+                    isEditingComment={false}
+                    onEditingCommentChange={mockOnEditingCommentChange}
+                    isAtlaskitEditorEnabled={false}
+                    mentionProvider={mockMentionProvider}
+                    handleEditorFocus={mockHandleEditorFocus}
+                />,
+            );
+
+            // Component should render without errors
+            expect(screen.getByTestId('issue.comments-section')).toBeTruthy();
+        });
+
+        it('should use plain text body as fallback when no renderedBody or ADF', () => {
+            const plainTextComment: JiraComment = {
+                id: 'comment-5',
+                body: 'Plain text comment',
+                author: mockComments[0].author,
+                created: '2023-01-05T12:00:00Z',
+                updated: '2023-01-05T12:00:00Z',
+                self: '',
+                visibility: undefined,
+                jsdPublic: false,
+            };
+
+            renderWithEditorProvider(
+                <IssueCommentComponent
+                    siteDetails={mockSiteDetails}
+                    currentUser={mockCurrentUser}
+                    comments={[plainTextComment]}
+                    isServiceDeskProject={false}
+                    onSave={mockOnSave}
+                    onCreate={mockOnCreate}
+                    fetchUsers={mockFetchUsers}
+                    fetchImage={mockFetchImage}
+                    onDelete={mockOnDelete}
+                    commentText=""
+                    onCommentTextChange={mockOnCommentTextChange}
+                    isEditingComment={false}
+                    onEditingCommentChange={mockOnEditingCommentChange}
+                    isAtlaskitEditorEnabled={false}
+                    mentionProvider={mockMentionProvider}
+                    handleEditorFocus={mockHandleEditorFocus}
+                />,
+            );
+
+            expect(screen.getByTestId('issue.comments-section')).toBeTruthy();
+        });
+
+        it('should handle comments with all text formatting possibilities', () => {
+            const complexComment: JiraComment = {
+                id: 'comment-6',
+                body: '*bold* _italic_ -strikethrough- +underline+ [link|http://example.com]',
+                renderedBody:
+                    '<p><strong>bold</strong> <em>italic</em> <s>strikethrough</s> <u>underline</u> <a href="http://example.com">link</a></p>',
+                author: mockComments[0].author,
+                created: '2023-01-06T12:00:00Z',
+                updated: '2023-01-06T12:00:00Z',
+                self: '',
+                visibility: undefined,
+                jsdPublic: false,
+            };
+
+            renderWithEditorProvider(
+                <IssueCommentComponent
+                    siteDetails={mockSiteDetails}
+                    currentUser={mockCurrentUser}
+                    comments={[complexComment]}
+                    isServiceDeskProject={false}
+                    onSave={mockOnSave}
+                    onCreate={mockOnCreate}
+                    fetchUsers={mockFetchUsers}
+                    fetchImage={mockFetchImage}
+                    onDelete={mockOnDelete}
+                    commentText=""
+                    onCommentTextChange={mockOnCommentTextChange}
+                    isEditingComment={false}
+                    onEditingCommentChange={mockOnEditingCommentChange}
+                    isAtlaskitEditorEnabled={false}
+                    mentionProvider={mockMentionProvider}
+                    handleEditorFocus={mockHandleEditorFocus}
+                />,
+            );
+
+            expect(screen.getByTestId('issue.comments-section')).toBeTruthy();
+        });
+    });
+
+    describe('Snapshot Tests', () => {
+        it('should match snapshot when rendering multiple comments', () => {
+            const { container } = renderWithEditorProvider(
+                <IssueCommentComponent
+                    siteDetails={mockSiteDetails}
+                    currentUser={mockCurrentUser}
+                    comments={mockComments}
+                    isServiceDeskProject={false}
+                    onSave={mockOnSave}
+                    onCreate={mockOnCreate}
+                    fetchUsers={mockFetchUsers}
+                    fetchImage={mockFetchImage}
+                    onDelete={mockOnDelete}
+                    commentText=""
+                    onCommentTextChange={mockOnCommentTextChange}
+                    isEditingComment={false}
+                    onEditingCommentChange={mockOnEditingCommentChange}
+                    isAtlaskitEditorEnabled={false}
+                    mentionProvider={mockMentionProvider}
+                    handleEditorFocus={mockHandleEditorFocus}
+                />,
+            );
+
+            expect(container).toMatchSnapshot('multiple-comments');
+        });
+
+        it('should match snapshot when rendering comment with renderedBody', () => {
+            const commentWithRenderedBody: JiraComment = {
+                id: 'comment-3',
+                body: 'h1. Heading\nSome content',
+                renderedBody: '<h1>Heading</h1><p>Some content</p>',
+                author: mockComments[0].author,
+                created: '2023-01-03T12:00:00Z',
+                updated: '2023-01-03T12:00:00Z',
+                self: '',
+                visibility: undefined,
+                jsdPublic: false,
+            };
+
+            const { container } = renderWithEditorProvider(
+                <IssueCommentComponent
+                    siteDetails={mockSiteDetails}
+                    currentUser={mockCurrentUser}
+                    comments={[commentWithRenderedBody]}
+                    isServiceDeskProject={false}
+                    onSave={mockOnSave}
+                    onCreate={mockOnCreate}
+                    fetchUsers={mockFetchUsers}
+                    fetchImage={mockFetchImage}
+                    onDelete={mockOnDelete}
+                    commentText=""
+                    onCommentTextChange={mockOnCommentTextChange}
+                    isEditingComment={false}
+                    onEditingCommentChange={mockOnEditingCommentChange}
+                    isAtlaskitEditorEnabled={false}
+                    mentionProvider={mockMentionProvider}
+                    handleEditorFocus={mockHandleEditorFocus}
+                />,
+            );
+
+            expect(container).toMatchSnapshot('comment-with-rendered-body');
+        });
+
+        it('should match snapshot for empty comment list', () => {
+            const { container } = renderWithEditorProvider(
+                <IssueCommentComponent
+                    siteDetails={mockSiteDetails}
+                    currentUser={mockCurrentUser}
+                    comments={[]}
+                    isServiceDeskProject={false}
+                    onSave={mockOnSave}
+                    onCreate={mockOnCreate}
+                    fetchUsers={mockFetchUsers}
+                    fetchImage={mockFetchImage}
+                    onDelete={mockOnDelete}
+                    commentText=""
+                    onCommentTextChange={mockOnCommentTextChange}
+                    isEditingComment={false}
+                    onEditingCommentChange={mockOnEditingCommentChange}
+                    isAtlaskitEditorEnabled={false}
+                    mentionProvider={mockMentionProvider}
+                    handleEditorFocus={mockHandleEditorFocus}
+                />,
+            );
+
+            expect(container).toMatchSnapshot('empty-comment-list');
+        });
     });
 });

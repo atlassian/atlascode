@@ -31,7 +31,7 @@ import { performanceEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { clientForSite } from '../bitbucket/bbUtils';
 import { PullRequestData } from '../bitbucket/model';
-import { postComment } from '../commands/jira/postComment';
+import { fetchCommentWithRenderedBody, postComment } from '../commands/jira/postComment';
 import { showIssue } from '../commands/jira/showIssue';
 import { startWorkOnIssue } from '../commands/jira/startWorkOnIssue';
 import { configuration } from '../config/configuration';
@@ -849,7 +849,17 @@ export class JiraIssueWebview
                                 if (Array.isArray(comments)) {
                                     const idx = comments.findIndex((value) => value.id === msg.commentId);
                                     if (idx >= 0) {
-                                        comments.splice(idx, 1, res);
+                                        // Fetch full comment with renderedBody to preserve formatting
+                                        try {
+                                            const fullComment = await fetchCommentWithRenderedBody(msg.issue, res.id);
+                                            comments.splice(idx, 1, fullComment);
+                                        } catch (fetchError) {
+                                            Logger.warn(
+                                                fetchError,
+                                                'Failed to fetch comment with renderedBody, using API response',
+                                            );
+                                            comments.splice(idx, 1, res);
+                                        }
                                     }
                                 } else {
                                     throw new Error(
@@ -858,7 +868,17 @@ export class JiraIssueWebview
                                 }
                             } else {
                                 const res = await postComment(msg.issue, msg.commentBody, undefined, msg.restriction);
-                                this._editUIData.fieldValues['comment'].comments.push(res);
+                                // Fetch full comment with renderedBody to preserve formatting
+                                try {
+                                    const fullComment = await fetchCommentWithRenderedBody(msg.issue, res.id);
+                                    this._editUIData.fieldValues['comment'].comments.push(fullComment);
+                                } catch (fetchError) {
+                                    Logger.warn(
+                                        fetchError,
+                                        'Failed to fetch comment with renderedBody, using API response',
+                                    );
+                                    this._editUIData.fieldValues['comment'].comments.push(res);
+                                }
                             }
 
                             this.postMessage({
