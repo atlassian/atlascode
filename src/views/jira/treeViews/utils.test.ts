@@ -1,4 +1,4 @@
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue } from '@atlassian-pi/jira-pi-common-models';
 import { cloneDeep } from 'lodash';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { JQLEntry } from 'src/config/model';

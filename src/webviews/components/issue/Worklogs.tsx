@@ -5,7 +5,7 @@ import EditIcon from '@atlaskit/icon/core/edit';
 import InlineDialog from '@atlaskit/inline-dialog';
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
-import { Worklog, WorklogContainer } from '@atlassianlabs/jira-pi-common-models';
+import { Worklog, WorklogContainer } from '@atlassian-pi/jira-pi-common-models';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import * as React from 'react';
 

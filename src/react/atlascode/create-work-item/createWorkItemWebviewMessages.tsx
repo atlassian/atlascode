@@ -1,4 +1,4 @@
-import { FieldUI } from '@atlassianlabs/jira-pi-meta-models';
+import { FieldUI } from '@atlassian-pi/jira-pi-meta-models';
 
 export enum CreateWorkItemWebviewResponseType {
     WebviewReady = 'webviewReady',

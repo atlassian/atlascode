@@ -1,4 +1,4 @@
-import { JQLErrors } from '@atlassianlabs/jira-pi-common-models';
+import { JQLErrors } from '@atlassian-pi/jira-pi-common-models';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import { useCallback, useContext, useRef } from 'react';
 import useConstant from 'use-constant';

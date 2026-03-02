@@ -1,4 +1,4 @@
-import { createEmptyMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { createEmptyMinimalIssue, MinimalIssue } from '@atlassian-pi/jira-pi-common-models';
 import { ReducerAction } from 'src/ipc/messaging';
 
 import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';

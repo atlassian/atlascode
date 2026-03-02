@@ -3,8 +3,8 @@ import AvatarGroup from '@atlaskit/avatar-group';
 import EyeOpenIcon from '@atlaskit/icon/core/eye-open';
 import EyeOpenFilledIcon from '@atlaskit/icon/core/eye-open-filled';
 import { AsyncSelect } from '@atlaskit/select';
-import { User, Watches } from '@atlassianlabs/jira-pi-common-models';
-import { ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { User, Watches } from '@atlassian-pi/jira-pi-common-models';
+import { ValueType } from '@atlassian-pi/jira-pi-meta-models';
 import debounce from 'lodash.debounce';
 import * as React from 'react';
 

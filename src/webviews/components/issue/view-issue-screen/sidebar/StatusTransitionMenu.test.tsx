@@ -1,4 +1,4 @@
-import { Status, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { Status, Transition } from '@atlassian-pi/jira-pi-common-models';
 import { fireEvent, render } from '@testing-library/react';
 import React from 'react';
 

@@ -1,4 +1,4 @@
-import { JiraClient, JiraCloudClient, JiraServerClient } from '@atlassianlabs/jira-pi-client';
+import { JiraClient, JiraCloudClient, JiraServerClient } from '@atlassian-pi/jira-pi-client';
 import PQueue from 'p-queue';
 import { ConfigurationChangeEvent, ExtensionContext } from 'vscode';
 import { commands, window } from 'vscode';
@@ -34,8 +34,8 @@ import { ClientManager } from './clientManager';
 import { Negotiator } from './negotiate';
 
 // Mock all external dependencies
-jest.mock('@atlassianlabs/jira-pi-client');
-jest.mock('@atlassianlabs/pi-client-common', () => ({
+jest.mock('@atlassian-pi/jira-pi-client');
+jest.mock('@atlassian-pi/pi-client-common', () => ({
     getProxyHostAndPort: jest.fn().mockReturnValue(['localhost', 8080]),
 }));
 jest.mock('p-queue');

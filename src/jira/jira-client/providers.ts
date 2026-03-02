@@ -1,5 +1,5 @@
-import { AuthorizationProvider, TransportFactory } from '@atlassianlabs/jira-pi-client';
-import { AgentProvider, getProxyHostAndPort, shouldTunnelHost } from '@atlassianlabs/pi-client-common';
+import { AuthorizationProvider, TransportFactory } from '@atlassian-pi/jira-pi-client';
+import { AgentProvider, getProxyHostAndPort, shouldTunnelHost } from '@atlassian-pi/pi-client-common';
 import axios from 'axios';
 import * as fs from 'fs';
 import * as https from 'https';
