@@ -334,4 +334,157 @@ describe('appendResponse', () => {
         expect(result[0]).toEqual(prev);
         expect(result[1]).toEqual(response);
     });
+
+    it('should not call handleAppendModifiedFileToolReturns when isRestoredSession is true', () => {
+        const toolCallMessage: RovoDevToolCallResponse = {
+            event_kind: 'tool-call',
+            tool_name: 'bash',
+            args: 'args1',
+            tool_call_id: 'id1',
+        };
+
+        const prev: Response[] = [{ event_kind: 'text', content: 'previous', index: 0 }];
+        const response: RovoDevToolReturnResponse = {
+            event_kind: 'tool-return',
+            tool_name: 'bash',
+            content: 'result',
+            tool_call_id: 'id1',
+            timestamp: '0',
+            toolCallMessage,
+        };
+
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true, true);
+
+        expect(mockHandleAppendModifiedFileToolReturns).not.toHaveBeenCalled();
+        expect(result).toHaveLength(1);
+        expect(Array.isArray(result[0])).toBe(true);
+        expect(result[0]).toHaveLength(2);
+    });
+
+    it('should call handleAppendModifiedFileToolReturns when isRestoredSession is false', () => {
+        const toolCallMessage: RovoDevToolCallResponse = {
+            event_kind: 'tool-call',
+            tool_name: 'bash',
+            args: 'args1',
+            tool_call_id: 'id1',
+        };
+
+        const prev: Response[] = [{ event_kind: 'text', content: 'previous', index: 0 }];
+        const response: RovoDevToolReturnResponse = {
+            event_kind: 'tool-return',
+            tool_name: 'bash',
+            content: 'result',
+            tool_call_id: 'id1',
+            timestamp: '0',
+            toolCallMessage,
+        };
+
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true, false);
+
+        expect(mockHandleAppendModifiedFileToolReturns).toHaveBeenCalledWith(response);
+        expect(result).toHaveLength(1);
+        expect(Array.isArray(result[0])).toBe(true);
+        expect(result[0]).toHaveLength(2);
+    });
+
+    it('should call handleAppendModifiedFileToolReturns when isRestoredSession is undefined (default behavior)', () => {
+        const toolCallMessage: RovoDevToolCallResponse = {
+            event_kind: 'tool-call',
+            tool_name: 'bash',
+            args: 'args1',
+            tool_call_id: 'id1',
+        };
+
+        const prev: Response[] = [{ event_kind: 'text', content: 'previous', index: 0 }];
+        const response: RovoDevToolReturnResponse = {
+            event_kind: 'tool-return',
+            tool_name: 'bash',
+            content: 'result',
+            tool_call_id: 'id1',
+            timestamp: '0',
+            toolCallMessage,
+        };
+
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
+
+        expect(mockHandleAppendModifiedFileToolReturns).toHaveBeenCalledWith(response);
+        expect(result).toHaveLength(1);
+        expect(Array.isArray(result[0])).toBe(true);
+        expect(result[0]).toHaveLength(2);
+    });
+
+    it('should not call handleAppendModifiedFileToolReturns when isRestoredSession is true and latest is array', () => {
+        const toolCallMessage1: RovoDevToolCallResponse = {
+            event_kind: 'tool-call',
+            tool_name: 'grep',
+            args: 'args1',
+            tool_call_id: 'id1',
+        };
+        const toolCallMessage2: RovoDevToolCallResponse = {
+            event_kind: 'tool-call',
+            tool_name: 'bash',
+            args: 'args1',
+            tool_call_id: 'id2',
+        };
+
+        const existingArray: ChatMessage[] = [
+            {
+                event_kind: 'tool-return',
+                tool_name: 'grep',
+                content: 'result',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage: toolCallMessage1,
+            },
+        ];
+        const prev: Response[] = [existingArray];
+        const response: RovoDevToolReturnResponse = {
+            event_kind: 'tool-return',
+            tool_name: 'bash',
+            content: 'result2',
+            tool_call_id: 'id2',
+            timestamp: '0',
+            toolCallMessage: toolCallMessage2,
+        };
+
+        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true, true);
+
+        expect(mockHandleAppendModifiedFileToolReturns).not.toHaveBeenCalled();
+        expect(result).toHaveLength(1);
+        expect(Array.isArray(result[0])).toBe(true);
+        expect(result[0]).toHaveLength(2);
+    });
+
+    it('should propagate isRestoredSession through recursive array calls', () => {
+        const toolCallMessage: RovoDevToolCallResponse = {
+            event_kind: 'tool-call',
+            tool_name: 'bash',
+            args: 'args1',
+            tool_call_id: 'id1',
+        };
+
+        const prev: Response[] = [{ event_kind: 'text', content: 'previous', index: 0 }];
+        const response1: RovoDevToolReturnResponse = {
+            event_kind: 'tool-return',
+            tool_name: 'bash',
+            content: 'result1',
+            tool_call_id: 'id1',
+            timestamp: '0',
+            toolCallMessage,
+        };
+        const response2: RovoDevToolReturnResponse = {
+            event_kind: 'tool-return',
+            tool_name: 'bash',
+            content: 'result2',
+            tool_call_id: 'id1',
+            timestamp: '0',
+            toolCallMessage,
+        };
+        const responseArray: ChatMessage[] = [response1, response2];
+
+        const result = appendResponse(prev, responseArray, mockHandleAppendModifiedFileToolReturns, true, true);
+
+        expect(mockHandleAppendModifiedFileToolReturns).not.toHaveBeenCalled();
+        expect(result.length).toBeGreaterThan(0);
+    });
 });

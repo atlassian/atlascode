@@ -266,9 +266,15 @@ const RovoDevView: React.FC = () => {
     }, []);
 
     const handleAppendResponse = useCallback(
-        (response: Response | Response[]) => {
+        (response: Response | Response[], isRestoredSession?: boolean) => {
             setHistory((prev) => {
-                prev = appendResponse(prev, response, handleAppendModifiedFileToolReturns, thinkingBlockEnabled);
+                prev = appendResponse(
+                    prev,
+                    response,
+                    handleAppendModifiedFileToolReturns,
+                    thinkingBlockEnabled,
+                    isRestoredSession,
+                );
 
                 const last = prev.at(-1);
                 if (
@@ -306,6 +312,7 @@ const RovoDevView: React.FC = () => {
                     );
 
                     const messages = Array.isArray(event.message) ? event.message : [event.message];
+                    const isRestoredSession = event.restoredSession || false;
 
                     const last = messages.at(-1);
                     if (last?.event_kind === 'tool-call') {
@@ -315,7 +322,10 @@ const RovoDevView: React.FC = () => {
                     }
 
                     // tool calls are used only to set the pending tool call message, so we don't need to append them
-                    handleAppendResponse(messages.filter((x) => x.event_kind !== 'tool-call'));
+                    handleAppendResponse(
+                        messages.filter((x) => x.event_kind !== 'tool-call'),
+                        isRestoredSession,
+                    );
                     break;
 
                 case RovoDevProviderMessageType.CompleteMessage:

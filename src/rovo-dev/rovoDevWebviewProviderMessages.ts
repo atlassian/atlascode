@@ -84,7 +84,7 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.SignalPromptSent, RovoDevPrompt & { echoMessage: boolean }>
     | ReducerAction<
           RovoDevProviderMessageType.RovoDevResponseMessage,
-          { message: RovoDevResponseMessageType | RovoDevResponseMessageType[] }
+          { message: RovoDevResponseMessageType | RovoDevResponseMessageType[]; restoredSession?: boolean }
       >
     | ReducerAction<RovoDevProviderMessageType.CompleteMessage, { promptId: string }>
     | ReducerAction<RovoDevProviderMessageType.ShowDialog, { message: DialogMessage }>

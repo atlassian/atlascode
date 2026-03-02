@@ -360,10 +360,17 @@ export const appendResponse = (
     response: Response | Response[],
     handleAppendModifiedFileToolReturns: (tr: RovoDevToolReturnResponse) => void,
     thinkingBlockEnabled: boolean,
+    isRestoredSession?: boolean,
 ): Response[] => {
     if (Array.isArray(response)) {
         for (const _resp of response) {
-            prev = appendResponse(prev, _resp, handleAppendModifiedFileToolReturns, thinkingBlockEnabled);
+            prev = appendResponse(
+                prev,
+                _resp,
+                handleAppendModifiedFileToolReturns,
+                thinkingBlockEnabled,
+                isRestoredSession,
+            );
         }
         return prev;
     }
@@ -387,7 +394,7 @@ export const appendResponse = (
         }
         // Group tool return with previous message if applicable
         if (response.event_kind === 'tool-return' || response.event_kind === 'retry-prompt') {
-            if (response.event_kind === 'tool-return') {
+            if (response.event_kind === 'tool-return' && !isRestoredSession) {
                 handleAppendModifiedFileToolReturns(response);
             }
             if (response.tool_name !== 'create_technical_plan' && thinkingBlockEnabled) {
@@ -419,7 +426,7 @@ export const appendResponse = (
         }
     } else {
         if (response.event_kind === 'tool-return' || response.event_kind === 'retry-prompt') {
-            if (response.event_kind === 'tool-return') {
+            if (response.event_kind === 'tool-return' && !isRestoredSession) {
                 handleAppendModifiedFileToolReturns(response);
             }
             if (response.tool_name !== 'create_technical_plan' && thinkingBlockEnabled) {
