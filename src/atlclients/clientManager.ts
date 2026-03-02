@@ -1,5 +1,5 @@
-import { JiraClient, JiraCloudClient, JiraServerClient } from '@atlassianlabs/jira-pi-client';
-import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
+import { JiraClient, JiraCloudClient, JiraServerClient } from '@atlassian-pi/jira-pi-client';
+import { getProxyHostAndPort } from '@atlassian-pi/pi-client-common';
 import { AxiosResponse } from 'axios';
 import PQueue from 'p-queue';
 import { ConfigurationChangeEvent, Disposable, ExtensionContext } from 'vscode';

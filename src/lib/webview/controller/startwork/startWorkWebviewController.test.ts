@@ -1,4 +1,4 @@
-import { createEmptyMinimalIssue, MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { createEmptyMinimalIssue, MinimalIssue, Transition } from '@atlassian-pi/jira-pi-common-models';
 import { defaultActionGuard } from 'src/ipc/messaging';
 import { Logger } from 'src/logger';
 

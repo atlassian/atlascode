@@ -1,4 +1,4 @@
-import { EditIssueUI } from '@atlassianlabs/jira-metaui-client';
+import { EditIssueUI } from '@atlassian-pi/jira-metaui-client';
 import {
     Comment,
     createEmptyMinimalIssue,
@@ -9,8 +9,8 @@ import {
     readIssueLinkIssue,
     readSearchResults,
     User,
-} from '@atlassianlabs/jira-pi-common-models';
-import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+} from '@atlassian-pi/jira-pi-common-models';
+import { FieldValues, ValueType } from '@atlassian-pi/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
 import { RovodevCommands } from 'src/rovo-dev/api/componentApi';

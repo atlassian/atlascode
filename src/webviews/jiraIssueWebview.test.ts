@@ -4,7 +4,7 @@ import {
     MinimalIssue,
     readSearchResults,
     User,
-} from '@atlassianlabs/jira-pi-common-models';
+} from '@atlassian-pi/jira-pi-common-models';
 import { attachAssigneesToIssues, collectAssigneesFromResponse } from 'src/jira/issueAssigneeUtils';
 import { expansionCastTo } from 'testsutil/miscFunctions';
 import { commands, env, WebviewPanel } from 'vscode';
@@ -68,8 +68,8 @@ jest.mock('../jira/transitionIssue', () => ({
 jest.mock('../commands/jira/postComment');
 jest.mock('../bitbucket/bbUtils');
 jest.mock('../commands/jira/startWorkOnIssue');
-jest.mock('@atlassianlabs/jira-pi-common-models', () => ({
-    ...jest.requireActual('@atlassianlabs/jira-pi-common-models'),
+jest.mock('@atlassian-pi/jira-pi-common-models', () => ({
+    ...jest.requireActual('@atlassian-pi/jira-pi-common-models'),
     readSearchResults: jest.fn(),
 }));
 jest.mock('../views/notifications/notificationManager', () => ({
@@ -450,7 +450,7 @@ describe('JiraIssueWebview', () => {
             mockJiraClient.searchForIssuesUsingJqlGet.mockResolvedValue(mockSearchResults);
 
             // Mock readSearchResults function
-            const readSearchResultsMock = require('@atlassianlabs/jira-pi-common-models').readSearchResults;
+            const readSearchResultsMock = require('@atlassian-pi/jira-pi-common-models').readSearchResults;
             readSearchResultsMock.mockResolvedValue(mockSearchResults);
 
             const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');

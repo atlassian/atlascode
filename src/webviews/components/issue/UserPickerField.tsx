@@ -1,4 +1,4 @@
-import { User } from '@atlassianlabs/jira-pi-common-models';
+import { User } from '@atlassian-pi/jira-pi-common-models';
 import { Avatar, Grid, TextField, Typography } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';

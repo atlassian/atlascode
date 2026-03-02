@@ -1,4 +1,4 @@
-import { MinimalIssue, Project } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue, Project } from '@atlassian-pi/jira-pi-common-models';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { QuickPickItem } from 'vscode';
 

@@ -1,4 +1,4 @@
-import { MinimalIssue, User } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue, User } from '@atlassian-pi/jira-pi-common-models';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 

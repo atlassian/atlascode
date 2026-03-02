@@ -4,7 +4,7 @@ import { startIssueCreationEvent } from '../../analytics';
 import { ProductJira } from '../../atlclients/authInfo';
 import { Container } from '../../container';
 import { CommentData } from '../../webviews/createIssueWebview';
-import { createIssue, TodoIssueData } from './createIssue';
+import { createIssueCommand as createIssue, TodoIssueData } from './createIssue';
 
 // Mock dependencies
 jest.mock('vscode', () => {
@@ -102,12 +102,17 @@ describe('createIssue', () => {
     describe('Uri input', () => {
         it('should create issue from file Uri', async () => {
             const uri = Uri.file('/test/path');
-
             await createIssue(uri);
 
-            expect(Container.createIssueWebview.createOrShow).toHaveBeenCalledWith(ViewColumn.Active, {
-                description: expect.any(String),
-            });
+            expect(Container.createIssueWebview.createOrShow).toHaveBeenCalledWith(
+                ViewColumn.Active,
+                {
+                    description: expect.any(String),
+                },
+                undefined,
+                undefined,
+                expect.objectContaining({ creationSource: 'contextMenu', creationId: expect.any(String) }),
+            );
 
             expect(startIssueCreationEvent).toHaveBeenCalledWith('contextMenu', ProductJira);
 
@@ -121,7 +126,13 @@ describe('createIssue', () => {
 
             await createIssue(uri as any);
 
-            expect(Container.createIssueWebview.createOrShow).toHaveBeenCalledWith();
+            expect(Container.createIssueWebview.createOrShow).toHaveBeenCalledWith(
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                expect.objectContaining({ creationSource: 'explorer', creationId: expect.any(String) }),
+            );
             expect(startIssueCreationEvent).toHaveBeenCalledWith('explorer', ProductJira);
         });
     });
@@ -130,7 +141,13 @@ describe('createIssue', () => {
         it('should create issue with no data', async () => {
             await createIssue(undefined);
 
-            expect(Container.createIssueWebview.createOrShow).toHaveBeenCalledWith();
+            expect(Container.createIssueWebview.createOrShow).toHaveBeenCalledWith(
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                expect.objectContaining({ creationSource: 'explorer', creationId: expect.any(String) }),
+            );
             expect(startIssueCreationEvent).toHaveBeenCalledWith('explorer', ProductJira);
 
             // After the promise resolves
@@ -141,7 +158,13 @@ describe('createIssue', () => {
         it('should create issue with custom source', async () => {
             await createIssue(undefined, 'settingsPage');
 
-            expect(Container.createIssueWebview.createOrShow).toHaveBeenCalledWith();
+            expect(Container.createIssueWebview.createOrShow).toHaveBeenCalledWith(
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                expect.objectContaining({ creationSource: 'settingsPage', creationId: expect.any(String) }),
+            );
             expect(startIssueCreationEvent).toHaveBeenCalledWith('settingsPage', ProductJira);
         });
     });

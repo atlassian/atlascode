@@ -1,4 +1,4 @@
-import { MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssueOrKeyAndSite } from '@atlassian-pi/jira-pi-common-models';
 import { ReducerAction } from 'src/ipc/messaging';
 
 import { UIErrorInfo } from '../../../analyticsTypes';

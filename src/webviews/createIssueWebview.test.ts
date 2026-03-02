@@ -1,5 +1,5 @@
-import { IssueType, MinimalORIssueLink, Project } from '@atlassianlabs/jira-pi-common-models';
-import { CreateMetaTransformerResult, FieldUI, IssueTypeUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { IssueType, MinimalORIssueLink, Project } from '@atlassian-pi/jira-pi-common-models';
+import { CreateMetaTransformerResult, FieldUI, IssueTypeUI, ValueType } from '@atlassian-pi/jira-pi-meta-models';
 import { expansionCastTo } from 'testsutil';
 import { Position, Uri, window } from 'vscode';
 

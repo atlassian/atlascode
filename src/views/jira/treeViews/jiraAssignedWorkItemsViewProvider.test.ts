@@ -1,4 +1,4 @@
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue } from '@atlassian-pi/jira-pi-common-models';
 import { it } from '@jest/globals';
 import { expansionCastTo, forceCastTo } from 'testsutil';
 import * as vscode from 'vscode';

@@ -1,4 +1,4 @@
-import { MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue, Transition } from '@atlassian-pi/jira-pi-common-models';
 import axios from 'axios';
 import { commands, Uri } from 'vscode';
 
