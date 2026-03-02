@@ -3,8 +3,8 @@ import {
     FilterSearchResults,
     JQLAutocompleteData,
     JQLErrors,
-} from '@atlassianlabs/jira-pi-common-models';
-import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
+} from '@atlassian-pi/jira-pi-common-models';
+import { getProxyHostAndPort } from '@atlassian-pi/pi-client-common';
 import axios from 'axios';
 import { flatten } from 'flatten-anything';
 import { merge } from 'merge-anything';
@@ -32,7 +32,7 @@ import { FocusEventActions } from '../ExplorerFocusManager';
 import { VSCConfigActionApi } from './vscConfigActionApi';
 
 // Mock all external dependencies
-jest.mock('@atlassianlabs/pi-client-common');
+jest.mock('@atlassian-pi/pi-client-common');
 jest.mock('axios');
 jest.mock('flatten-anything');
 jest.mock('merge-anything');

@@ -1,4 +1,4 @@
-import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
+import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from '@atlassian-pi/jira-pi-common-models';
 import { commands, Disposable, env, ExtensionContext, TextEditor, Uri, window } from 'vscode';
 
 import {

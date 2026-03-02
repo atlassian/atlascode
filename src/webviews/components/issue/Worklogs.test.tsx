@@ -1,6 +1,6 @@
 import '@testing-library/dom';
 
-import { Worklog, WorklogContainer } from '@atlassianlabs/jira-pi-common-models';
+import { Worklog, WorklogContainer } from '@atlassian-pi/jira-pi-common-models';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 
