@@ -59,7 +59,7 @@ import * as SelectFieldHelper from '../selectFieldHelper';
 import { WebviewComponent } from '../WebviewComponent';
 import { AttachmentForm } from './AttachmentForm';
 import CascadingSelectField, { CascadingSelectOption } from './CascadingSelectField';
-import { convertAdfToWikimarkup } from './common/adfToWikimarkup';
+import { convertAdfToWikimarkup, convertWikimarkupToAdf } from './common/adfToWikimarkup';
 import { AtlascodeMentionProvider } from './common/AtlaskitEditor/AtlascodeMentionsProvider';
 import AtlaskitEditor from './common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from './common/JiraIssueTextArea';
@@ -645,13 +645,26 @@ export abstract class AbstractIssueEditorPage<
                     let markup: React.ReactNode = <p></p>;
 
                     if ((field as InputFieldUI).isMultiline) {
+                        const rawFieldValue = this.state.fieldValues[`${field.key}`];
+                        const isAdfValue =
+                            typeof rawFieldValue === 'object' &&
+                            rawFieldValue !== null &&
+                            rawFieldValue.type === 'doc' &&
+                            rawFieldValue.version === 1;
+                        const textValue = isAdfValue
+                            ? convertAdfToWikimarkup(rawFieldValue)
+                            : typeof rawFieldValue === 'string'
+                              ? rawFieldValue
+                              : '';
+
                         markup = (
                             <EditRenderedTextArea
-                                text={this.state.fieldValues[`${field.key}`]}
+                                text={textValue}
                                 renderedText={this.state.fieldValues[`${field.key}.rendered`]}
                                 fetchUsers={this.fetchAndTransformUsers}
                                 onSave={async (val: string) => {
-                                    await this.handleInlineEdit(field, val);
+                                    const saveValue = isAdfValue ? convertWikimarkupToAdf(val) : val;
+                                    await this.handleInlineEdit(field, saveValue);
                                 }}
                                 fetchImage={(img) => this.fetchImage(img)}
                             />
