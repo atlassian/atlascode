@@ -1,5 +1,5 @@
-import { IssueType, JiraSiteInfo, Project } from '@atlassianlabs/jira-pi-common-models';
-import { isSelectFieldUI, IssueTypeUI, IssueTypeUIs } from '@atlassianlabs/jira-pi-meta-models';
+import { IssueType, JiraSiteInfo, Project } from '@atlassian-pi/jira-pi-common-models';
+import { isSelectFieldUI, IssueTypeUI, IssueTypeUIs } from '@atlassian-pi/jira-pi-meta-models';
 import path from 'path';
 import { DetailedSiteInfo, ProductJira } from 'src/atlclients/authInfo';
 import { setCommandContext } from 'src/commandContext';

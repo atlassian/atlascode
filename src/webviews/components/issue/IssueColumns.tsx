@@ -6,7 +6,7 @@ import Lozenge from '@atlaskit/lozenge';
 import Spinner from '@atlaskit/spinner';
 import Textfield from '@atlaskit/textfield';
 import Tooltip from '@atlaskit/tooltip';
-import { IssueLinkIssue, MinimalIssueOrKeyAndSite, User } from '@atlassianlabs/jira-pi-common-models';
+import { IssueLinkIssue, MinimalIssueOrKeyAndSite, User } from '@atlassian-pi/jira-pi-common-models';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import * as React from 'react';
 import { useAsyncAbortable } from 'react-async-hook';

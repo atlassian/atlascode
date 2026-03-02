@@ -1,7 +1,7 @@
 // TODO: move this with other analytics stuff into a separate folder
 // not doing it now to prevent too many import changes
 
-import { FieldUI } from '@atlassianlabs/jira-pi-meta-models';
+import { FieldUI } from '@atlassian-pi/jira-pi-meta-models';
 
 /**
  * Names of the channels used for routing analytics events in UI

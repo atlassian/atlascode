@@ -3,7 +3,7 @@ import {
     FilterSearchResults,
     JQLAutocompleteData,
     JQLErrors,
-} from '@atlassianlabs/jira-pi-common-models';
+} from '@atlassian-pi/jira-pi-common-models';
 
 import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../../atlclients/authInfo';
 import { FeedbackUser } from '../../../ipc/models/common';

@@ -1,7 +1,7 @@
 import Lozenge from '@atlaskit/lozenge';
 import type { OptionProps, SingleValueProps } from '@atlaskit/select';
 import Select, { components } from '@atlaskit/select';
-import { emptyTransition, Status, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { emptyTransition, Status, Transition } from '@atlassian-pi/jira-pi-common-models';
 import * as React from 'react';
 
 import { colorToLozengeAppearanceMap } from '../colors';

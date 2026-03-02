@@ -1,4 +1,4 @@
-import { User } from '@atlassianlabs/jira-pi-common-models';
+import { User } from '@atlassian-pi/jira-pi-common-models';
 import {
     Box,
     Button as MuiButton,

@@ -11,8 +11,8 @@ import AssetsSchemaIcon from '@atlaskit/icon-lab/core/assets-schema';
 import InlineDialog from '@atlaskit/inline-dialog';
 import Popup from '@atlaskit/popup';
 import Tooltip from '@atlaskit/tooltip';
-import { Transition, User } from '@atlassianlabs/jira-pi-common-models';
-import { FieldUI, FieldUIs, FieldValues } from '@atlassianlabs/jira-pi-meta-models';
+import { Transition, User } from '@atlassian-pi/jira-pi-common-models';
+import { FieldUI, FieldUIs, FieldValues } from '@atlassian-pi/jira-pi-meta-models';
 import { Box } from '@mui/material';
 import React from 'react';
 

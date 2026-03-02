@@ -1,4 +1,4 @@
-import { isMinimalIssue, MinimalIssue, readSearchResults } from '@atlassianlabs/jira-pi-common-models';
+import { isMinimalIssue, MinimalIssue, readSearchResults } from '@atlassian-pi/jira-pi-common-models';
 import { ValidBasicAuthSiteData } from 'src/atlclients/clientManager';
 import { showIssueForURL } from 'src/commands/jira/showIssue';
 import { configuration } from 'src/config/configuration';
