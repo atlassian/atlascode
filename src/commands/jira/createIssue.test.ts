@@ -102,13 +102,7 @@ describe('createIssue', () => {
     describe('Uri input', () => {
         it('should create issue from file Uri', async () => {
             const uri = Uri.file('/test/path');
-            try {
-                await createIssue(uri);
-            } catch (error) {
-                // Handle any unexpected errors
-                console.error('Error in test:', error);
-            }
-            // await createIssue(uri);
+            await createIssue(uri);
 
             expect(Container.createIssueWebview.createOrShow).toHaveBeenCalledWith(
                 ViewColumn.Active,
