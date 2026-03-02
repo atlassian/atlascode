@@ -46,6 +46,8 @@ export const enum RovoDevProviderMessageType {
     GetCurrentAgentModeComplete = 'getCurrentAgentModeComplete',
     SetAgentModeComplete = 'setAgentModeComplete',
     UpdateSavedPrompts = 'updateSavedPrompts',
+    UpdateAgentModels = 'updateAgentModels',
+    AgentModelChanged = 'agentModelChanged',
 }
 
 export type RovoDevDisabledReason = DisabledState['subState'];
@@ -66,6 +68,12 @@ export interface RovoDevWebviewState {
     isFullContextModeToggled: boolean;
     isAtlassianUser: boolean;
     promptContextCollection: RovoDevContextItem[];
+}
+
+export interface RovoDevAgentModel {
+    modelId: string;
+    modelName: string;
+    creditMultiplier: string;
 }
 
 export type RovoDevProviderMessage =
@@ -132,4 +140,6 @@ export type RovoDevProviderMessage =
     | ReducerAction<
           RovoDevProviderMessageType.UpdateSavedPrompts,
           { savedPrompts: { name: string; description: string; content_file: string }[] | undefined }
-      >;
+      >
+    | ReducerAction<RovoDevProviderMessageType.UpdateAgentModels, { models: RovoDevAgentModel[] }>
+    | ReducerAction<RovoDevProviderMessageType.AgentModelChanged, RovoDevAgentModel>;

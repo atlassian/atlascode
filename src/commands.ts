@@ -16,7 +16,7 @@ import { addAtlascodeAsRecommendedExtension } from './commands/addRecommendedExt
 import { rerunPipeline } from './commands/bitbucket/rerunPipeline';
 import { runPipeline } from './commands/bitbucket/runPipeline';
 import { assignIssue } from './commands/jira/assignIssue';
-import { createIssue } from './commands/jira/createIssue';
+import { createIssueCommand } from './commands/jira/createIssue';
 import { showIssue, showIssueForKey, showIssueForSiteIdAndKey, showIssueForURL } from './commands/jira/showIssue';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
 import { configuration } from './config/configuration';
@@ -54,11 +54,11 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         ),
         commands.registerCommand(Commands.CreateIssue, (data: any, source?: CreateIssueSource) => {
             const effectiveSource: CreateIssueSource = source ?? (data === undefined ? 'commandPalette' : 'explorer');
-            return createIssue(data, effectiveSource);
+            return createIssueCommand(data, effectiveSource);
         }),
-        commands.registerCommand(Commands.CreateIssueFromSidebar, () => createIssue(undefined, 'sidebarButton')),
+        commands.registerCommand(Commands.CreateIssueFromSidebar, () => createIssueCommand(undefined, 'sidebarButton')),
         commands.registerCommand(Commands.CreateIssueFromIssueContext, () =>
-            createIssue(undefined, 'issueContextMenu'),
+            createIssueCommand(undefined, 'issueContextMenu'),
         ),
         commands.registerCommand(
             Commands.ShowIssue,
@@ -170,7 +170,10 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         }),
         commands.registerCommand(Commands.AddRecommendedExtension, addAtlascodeAsRecommendedExtension),
         commands.registerCommand(Commands.ExpandCreateWorkItemWebview, () => {
-            Container.createIssueWebview.createOrShow();
+            Container.createIssueWebview.createOrShow(undefined, undefined, undefined, undefined, {
+                creationSource: 'expandButton(CreateWorkItem)',
+                creationId: Date.now().toString(),
+            });
             setCommandContext('atlascode:showCreateWorkItemWebview', false);
         }),
         commands.registerCommand(

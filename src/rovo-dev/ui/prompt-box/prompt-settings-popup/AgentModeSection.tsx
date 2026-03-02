@@ -106,7 +106,7 @@ const AgentModeSection: React.FC<AgentModeSectionProps> = ({
                             }}
                         >
                             {modeIcon && <Box xcss={styles.modeLogo}>{modeIcon}</Box>}
-                            <Box id="prompt-settings-context" xcss={styles.modeContext}>
+                            <Box xcss={styles.modeContext}>
                                 <Box
                                     as="p"
                                     xcss={styles.labelText}

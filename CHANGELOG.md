@@ -1,9 +1,17 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+
+## What's new in 4.0.22
+
+### Features
+
+- Rovo Dev: Agent model selection both via /models command, and dedicated drop-down menu
+
 ## What's new in 4.0.21
 
-### Bug fixes
+### Bug Fixes
 
+- **RovoDev**: Fixed MCP permission race condition - users can now type their prompts while MCP permission dialogs are displayed. The send button is disabled during MCP acceptance, but the input remains editable to prevent loss of user input.
 - Fixed issue description losing line breaks and formatting in edit mode after save (HTML-to-ADF conversion now preserves line breaks as hardBreak nodes)
 
 ## What's new in 4.0.20
@@ -24,13 +32,7 @@
 - Jira Data Center: fixed errors when adding or updating comments (comment body is now sent as string for DC, ADF for Cloud)
 - Jira DC: fixed updating issue description (description is sent as WikiMarkup string for DC, ADF for Cloud)
 - Jira DC: user mentions in comments and description now show the correct username instead of @unknown
-
-### Bug Fixes
-
 - Fixed Rovo Dev UI crashes when markdown content fails to parse
-
-### Bug Fixes
-
 - Improved error messages when git user.name or user.email is not configured, providing helpful setup instructions
 
 ## What's new in 4.0.19
