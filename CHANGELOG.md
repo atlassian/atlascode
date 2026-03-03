@@ -11,6 +11,10 @@
 
 -  Added the UI in the Rovo chat box for the moved file tool.
 
+### Bug Fixes
+
+- **RovoDev**: Fixed MCP server acceptance flow not showing in Boysenberry mode
+
 ## What's new in 4.0.21
 
 ### Bug Fixes
