@@ -1,15 +1,15 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
-
 ## What's new in 4.0.22
 
 ### Features
 
 - Rovo Dev: Agent model selection both via /models command, and dedicated drop-down menu
+- Rovo Dev: Support new `plan` mode with `deferred_request` handling
 
 ### Improvements
 
--  Added the UI in the Rovo chat box for the moved file tool.
+- Added the UI in the Rovo chat box for the moved file tool.
 
 ## What's new in 4.0.21
 

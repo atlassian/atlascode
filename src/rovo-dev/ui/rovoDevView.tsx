@@ -1222,6 +1222,8 @@ const RovoDevView: React.FC = () => {
                                             currentAgentMode={currentAgentMode}
                                             availableAgentModels={availableAgentModels}
                                             currentAgentModel={currentAgentModel}
+                                            isAskUserQuestionsEnabled={askUserQuestionsToolArgs !== null}
+                                            isExitPlanModeEnabled={deepPlanCreated !== null}
                                             onAgentModeChange={onAgentModeChange}
                                             onAgentModelChange={onAgentModelChange}
                                             onDeepPlanToggled={() => setIsDeepPlanToggled((prev) => !prev)}

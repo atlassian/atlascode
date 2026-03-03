@@ -44,6 +44,8 @@ interface PromptInputBoxProps {
     currentAgentMode: AgentMode | null;
     availableAgentModels: RovoDevAgentModel[];
     currentAgentModel: RovoDevAgentModel | undefined;
+    isAskUserQuestionsEnabled: boolean;
+    isExitPlanModeEnabled: boolean;
     onAgentModeChange: (mode: AgentMode) => void;
     onAgentModelChange: (model: RovoDevAgentModel) => void;
     onDeepPlanToggled?: () => void;
@@ -127,6 +129,8 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     currentAgentMode,
     availableAgentModels,
     currentAgentModel,
+    isAskUserQuestionsEnabled,
+    isExitPlanModeEnabled,
     onAgentModeChange,
     onAgentModelChange,
     onDeepPlanToggled,
@@ -226,12 +230,18 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         const isGeneratingResponse =
             currentState.state === 'GeneratingResponse' ||
             (currentState.state === 'Initializing' && currentState.isPromptPending);
+        let placeholder = getTextAreaPlaceholder(isGeneratingResponse, currentState);
 
+        if (isAskUserQuestionsEnabled && currentState.state === 'WaitingForPrompt') {
+            placeholder = 'Answer the questions or write a follow up prompt...';
+        } else if (isExitPlanModeEnabled && currentState.state === 'WaitingForPrompt') {
+            placeholder = 'Execute code plan or write a follow up prompt...';
+        }
         editor.updateOptions({
             readOnly: readOnly,
-            placeholder: getTextAreaPlaceholder(isGeneratingResponse, currentState),
+            placeholder,
         });
-    }, [currentState, editor, readOnly]);
+    }, [currentState, editor, isAskUserQuestionsEnabled, isExitPlanModeEnabled, readOnly]);
 
     // Focus the editor when it becomes visible in the viewport - helps with opening Rovo Dev panel already focused
     React.useEffect(() => {
