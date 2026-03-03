@@ -265,6 +265,18 @@ export function parseToolReturnMessage(
                 });
                 break;
 
+            case 'ask_user_questions':
+                resp.push({
+                    content: 'Asked user questions',
+                    type: 'open',
+                });
+                break;
+            case 'exit_plan_mode':
+                resp.push({
+                    content: 'Exited plan mode',
+                    type: 'modify',
+                });
+                break;
             case 'mcp__atlassian__invoke_tool':
             case 'mcp__atlassian__get_tool_schema':
             case 'mcp__scout__invoke_tool':

@@ -1,5 +1,3 @@
-import AngleBracketsIcon from '@atlaskit/icon/core/angle-brackets';
-import CheckCircleIcon from '@atlaskit/icon/core/check-circle';
 import Tooltip from '@atlaskit/tooltip';
 import React from 'react';
 
@@ -19,23 +17,16 @@ export const CodePlanButton: React.FC<CodePlanButtonProps> = ({ execute, disable
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'row', gap: '4px', alignItems: 'center' }}>
-            <div className="code-plan-button-container">
-                <Tooltip content={isExecuted ? 'Code plan executed' : ''}>
-                    <button
-                        disabled={disabled || isExecuted}
-                        className="code-plan-button primary"
-                        onClick={() => handleClick(true)}
-                    >
-                        {isExecuted ? (
-                            <CheckCircleIcon label="Code plan executed" />
-                        ) : (
-                            <AngleBracketsIcon label="Code plan" />
-                        )}
-                        <span>Generate code</span>
-                    </button>
-                </Tooltip>
-            </div>
+        <div className="code-plan-button-container">
+            <Tooltip content={disabled ? '' : isExecuted ? 'Code plan executed' : 'Execute generated plan'}>
+                <button
+                    disabled={disabled || isExecuted}
+                    className="code-plan-button"
+                    onClick={() => handleClick(true)}
+                >
+                    <span>Generate code</span>
+                </button>
+            </Tooltip>
         </div>
     );
 };

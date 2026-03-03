@@ -617,8 +617,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             result: e.result,
                         };
 
-                        const switchToDefaultMode = e.type === RovoDevViewResponseType.ExitPlanModeSubmit;
-                        if (switchToDefaultMode && e.result.proceed === true) {
+                        const switchToDefaultMode =
+                            e.type === RovoDevViewResponseType.ExitPlanModeSubmit && e.result.proceed === true;
+                        if (switchToDefaultMode) {
                             await this._chatProvider.setAgentMode('default');
                             await webview.postMessage({
                                 type: RovoDevProviderMessageType.SetAgentModeComplete,
