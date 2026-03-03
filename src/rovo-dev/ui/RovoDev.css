@@ -429,6 +429,11 @@ body {
     color: var(--ds-text-inverse) !important;
 }
 
+.user-message .message-content blockquote,
+.assistant-message .message-content blockquote {
+    background-color: var(--ds-background-inverse-subtle) !important;
+}
+
 .rovodev-markdown-link {
     cursor: pointer;
     color: var(--vscode-textLink-foreground);
