@@ -424,14 +424,10 @@ body {
 
 /* Code blocks and quotes */
 .user-message .message-content pre,
-.user-message .message-content code {
+.user-message .message-content code,
+.user-message .message-content blockquote {
     background-color: var(--ds-background-inverse-subtle) !important;
     color: var(--ds-text-inverse) !important;
-}
-
-.user-message .message-content blockquote,
-.assistant-message .message-content blockquote {
-    background-color: var(--ds-background-inverse-subtle) !important;
 }
 
 .rovodev-markdown-link {
