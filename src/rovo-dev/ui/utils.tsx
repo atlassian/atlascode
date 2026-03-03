@@ -95,7 +95,7 @@ export interface ToolReturnParseResult {
     filePath?: string;
     title?: string;
     technicalPlan?: TechnicalPlan;
-    type?: 'modify' | 'create' | 'delete' | 'open' | 'bash';
+    type?: 'modify' | 'create' | 'delete' | 'open' | 'bash' | 'move';
 }
 
 export type Response = ChatMessage | ChatMessage[] | null;
@@ -111,7 +111,7 @@ export interface SavedPromptsResponse {
 }
 interface ToolReturnInfo {
     title: string;
-    type: 'modify' | 'create' | 'delete' | 'open' | 'bash';
+    type: 'modify' | 'create' | 'delete' | 'open' | 'bash' | 'move';
 }
 
 export const modifyFileTitleMap: Record<string, ToolReturnInfo> = {
@@ -121,6 +121,7 @@ export const modifyFileTitleMap: Record<string, ToolReturnInfo> = {
     created: { title: 'Created file', type: 'create' },
     deleted: { title: 'Deleted file', type: 'delete' },
     updated: { title: 'Updated file', type: 'modify' },
+    moved: { title: 'Moved file', type: 'move' },
     expanded_folder: { title: 'Expanded folder', type: 'open' },
 };
 
@@ -143,6 +144,7 @@ export function parseToolReturnMessage(
             case 'open_files':
             case 'create_file':
             case 'delete_file':
+            case 'move_file':
                 const contentArray = msg.parsedContent ? msg.parsedContent : [msg.content];
                 if (!Array.isArray(contentArray)) {
                     console.warn('Invalid content format in ToolReturnMessage:', msg.content);
@@ -157,7 +159,7 @@ export function parseToolReturnMessage(
 
                     const trimmedLine = line.split('\n\n')[0].trim();
                     const matches = trimmedLine.match(
-                        /^Successfully\s+(expanded code chunks|replaced code|opened|created|deleted|updated)(?:\s+in)?\s+(.+)?$/,
+                        /^Successfully\s+(expanded code chunks|replaced code|opened|moved|created|deleted|updated)(?:\s+in)?\s+(.+)?$/,
                     );
                     if (matches && matches.length >= 3) {
                         let filePath = matches[2].trim();
@@ -274,7 +276,7 @@ export function parseToolReturnMessage(
 }
 
 export const isCodeChangeTool = (toolName: string): boolean => {
-    return ['find_and_replace_code', 'create_file', 'delete_file'].includes(toolName);
+    return ['find_and_replace_code', 'create_file', 'delete_file', 'move_file'].includes(toolName);
 };
 
 export const CODE_PLAN_EXECUTE_PROMPT = 'Execute the code plan that you have created';
