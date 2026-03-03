@@ -511,9 +511,11 @@ export class RovoDevChatProvider {
         } catch (error) {
             const err =
                 error instanceof Error ? error : new Error('Failed to process the deferred tool call response.');
-            // if the processing of the deferred tool call response fails, we consider the whole process as failed and terminate it, to avoid leaving the user in a limbo state where they can't proceed but also don't have a clear feedback on what happened
-            await this.processError(err, {
-                isProcessTerminated: true,
+            await this.processError(err);
+            // If parsing deferred tool request failed, we should still send a response to Rovo Dev to avoid blocking the agent's execution
+            await this.executeDeferredToolCall({
+                tool_call_id: deferredTool.tool_call_id,
+                result: err.message,
             });
         }
     }
