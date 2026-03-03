@@ -488,23 +488,33 @@ export class RovoDevChatProvider {
 
         try {
             this._pendingDeferredRequest = deferredTool.tool_call_id;
-            if (deferredTool.tool_name === 'ask_user_questions') {
-                const args = JSON.parse(deferredTool.args) as RovoDevAskUserQuestionsToolArgs;
-                await webview.postMessage({
-                    type: RovoDevProviderMessageType.ShowDeferredAskUserQuestions,
-                    toolCallId: deferredTool.tool_call_id,
-                    args,
-                });
-            } else if (deferredTool.tool_name === 'exit_plan_mode') {
-                const args = JSON.parse(deferredTool.args) as RovoDevExitPlanModeToolArgs;
-                await webview.postMessage({
-                    type: RovoDevProviderMessageType.ShowDeferredExitPlanMode,
-                    toolCallId: deferredTool.tool_call_id,
-                    args,
-                });
+            switch (deferredTool.tool_name) {
+                case 'ask_user_questions':
+                    const askUserQuestionsArgs = JSON.parse(deferredTool.args) as RovoDevAskUserQuestionsToolArgs;
+                    await webview.postMessage({
+                        type: RovoDevProviderMessageType.ShowDeferredAskUserQuestions,
+                        toolCallId: deferredTool.tool_call_id,
+                        args: askUserQuestionsArgs,
+                    });
+                    break;
+                case 'exit_plan_mode':
+                    const exitPlanModeArgs = JSON.parse(deferredTool.args) as RovoDevExitPlanModeToolArgs;
+                    await webview.postMessage({
+                        type: RovoDevProviderMessageType.ShowDeferredExitPlanMode,
+                        toolCallId: deferredTool.tool_call_id,
+                        args: exitPlanModeArgs,
+                    });
+                    break;
+                default:
+                    throw new Error(`Unknown deferred tool call: ${deferredTool.tool_name}`);
             }
         } catch (error) {
-            console.log('Failed to parse deferred tool call arguments', error); // TODO: proper error handling and telemetry
+            const err =
+                error instanceof Error ? error : new Error('Failed to process the deferred tool call response.');
+            // if the processing of the deferred tool call response fails, we consider the whole process as failed and terminate it, to avoid leaving the user in a limbo state where they can't proceed but also don't have a clear feedback on what happened
+            await this.processError(err, {
+                isProcessTerminated: true,
+            });
         }
     }
 
