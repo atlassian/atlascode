@@ -7,6 +7,8 @@ import { BasicAuthInfo, Product, ProductBitbucket, ProductJira, SiteInfo } from 
 import { configuration } from '../config/configuration';
 import { BitbucketEnabledKey, Commands, JiraEnabledKey } from '../constants';
 import { Container } from '../container';
+import { createValidatedRovoDevAuthInfo } from '../rovo-dev/rovoDevAuthValidator';
+import { RovoDevProcessManager } from '../rovo-dev/rovoDevProcessManager';
 import { EXTENSION_URL } from '../uriHandler/atlascodeUriHandler';
 import OnboardingQuickInputManager from './onboardingQuickInputManager';
 import OnboardingQuickPickManager from './onboardingQuickPickManager';
@@ -74,9 +76,6 @@ class OnboardingProvider {
     }
 
     private async _onRovoTokenSubmit(args: RovoDevOnboardingSubmitArgs): Promise<void> {
-        const { createValidatedRovoDevAuthInfo } = await import('../rovo-dev/rovoDevAuthValidator');
-        const { RovoDevProcessManager } = await import('../rovo-dev/rovoDevProcessManager');
-
         try {
             const host = args.siteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
             const authInfo = await createValidatedRovoDevAuthInfo(host, args.email, args.token);
