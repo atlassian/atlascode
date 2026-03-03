@@ -1,0 +1,27 @@
+src/rovo-dev/ui/RovoDev.css
+  3c2bd985ab07e0f4 432-436
+CHANGELOG.md
+  3c2bd985ab07e0f4 14-17
+src/rovo-dev/ui/messaging/ChatStream.tsx
+  3c2bd985ab07e0f4 230-231
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.7",
+  "base_commit_sha": "47366c80eb94d318d985f9d9394fbeb31ca866ef",
+  "prompts": {
+    "3c2bd985ab07e0f4": {
+      "agent_id": {
+        "tool": "rovodev-cli",
+        "id": "rovodev-session",
+        "model": "auto"
+      },
+      "human_author": "Bryan Wieger <bwieger@atlassian.com>",
+      "messages": [],
+      "total_additions": 334,
+      "total_deletions": 1,
+      "accepted_lines": 336,
+      "overriden_lines": 0
+    }
+  }
+}
