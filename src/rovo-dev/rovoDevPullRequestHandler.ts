@@ -199,7 +199,10 @@ export class RovoDevPullRequestHandler {
                 );
                 RovoDevTelemetryProvider.logError(error, 'Git push failed: no upstream branch');
                 throw error;
-            } else if (errorMessage.includes('rejected')) {
+            } else if (
+                errorMessage.includes('rejected') &&
+                (errorMessage.includes('non-fast-forward') || errorMessage.includes('fetch first'))
+            ) {
                 const error = new Error(
                     'Push was rejected. The remote branch may have changes you need to pull first.',
                 );
