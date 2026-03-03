@@ -82,7 +82,6 @@ class OnboardingProvider {
             await Container.credentialManager.saveRovoDevAuthInfo(authInfo);
             await configuration.updateEffective('rovodev.enabled', true, null, true);
             await RovoDevProcessManager.initializeRovoDev(Container.context, true);
-            Container.focus();
             this.hideQuickPick(OnboardingStep.RovoDev);
             await commands.executeCommand('atlascode.views.rovoDev.webView.focus');
         } catch (error) {
