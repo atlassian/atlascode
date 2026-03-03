@@ -363,5 +363,24 @@ describe('PullRequestCreatedMonitor', () => {
             expect(monitor['_consecutiveFailures'].get(mockRepo.rootUri)).toBe(1);
             expect(monitor['_consecutiveFailures'].get(mockRepo3.rootUri)).toBe(0);
         });
+
+        it('should skip repos when pullrequests API is unavailable without marking as failure', async () => {
+            const mockBbApiWithoutPR = {};
+            (clientForSite as jest.Mock).mockResolvedValue(mockBbApiWithoutPR);
+
+            monitor['_consecutiveFailures'].set(mockRepo.rootUri, 2);
+
+            monitor.checkForNewActivity();
+            await flushPromises();
+
+            // Should log warning
+            expect(Logger.warn).toHaveBeenCalledWith(expect.stringContaining('Pull requests API not available'));
+
+            // Should NOT increment failure counter
+            expect(monitor['_consecutiveFailures'].get(mockRepo.rootUri)).toBe(2);
+
+            // Should NOT mark last successful fetch
+            expect(monitor['_lastSuccessfulFetch'].get(mockRepo.rootUri)).toBeUndefined();
+        });
     });
 });

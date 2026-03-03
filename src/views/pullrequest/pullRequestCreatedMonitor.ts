@@ -70,6 +70,11 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
                 try {
                     const bbApi = await clientForSite(site);
 
+                    if (!bbApi.pullrequests) {
+                        Logger.warn(`Pull requests API not available for ${path.basename(wsRepo.rootUri)}`);
+                        continue;
+                    }
+
                     const prList = await bbApi.pullrequests.getLatest(wsRepo);
 
                     this._consecutiveFailures.set(wsRepo.rootUri, 0);
