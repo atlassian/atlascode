@@ -47,6 +47,23 @@ jest.mock('../uriHandler/atlascodeUriHandler', () => ({
     AtlascodeUriHandler: jest.fn(),
 }));
 
+jest.mock('../rovo-dev/rovoDevAuthValidator', () => ({
+    createValidatedRovoDevAuthInfo: jest.fn(async () => ({
+        user: { id: 'id', displayName: 'name', email: 'a@b.com', avatarUrl: '' },
+        state: 'Valid',
+        username: 'a@b.com',
+        password: 'token',
+        host: 'example.atlassian.net',
+        cloudId: 'cloudId',
+    })),
+}));
+
+jest.mock('../rovo-dev/rovoDevProcessManager', () => ({
+    RovoDevProcessManager: {
+        initializeRovoDev: jest.fn(),
+    },
+}));
+
 import { ConfigurationTarget, window } from 'vscode';
 
 import { ProductBitbucket, ProductJira } from '../atlclients/authInfo';
