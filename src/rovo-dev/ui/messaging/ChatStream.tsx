@@ -227,7 +227,8 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
-            {!RovodevStaticConfig.isBBY && (
+            {(!RovodevStaticConfig.isBBY ||
+                (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance')) && (
                 <RovoDevLanding
                     currentState={currentState}
                     isHistoryEmpty={chatHistory.length === 0}
