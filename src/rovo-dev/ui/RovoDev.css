@@ -1017,3 +1017,41 @@ body {
 .vscode-high-contrast .rovodev-markdown-link {
     color: inherit;
 }
+/* Code block copy button styles */
+.code-block-wrapper {
+    position: relative;
+    display: block;
+}
+
+.code-copy-button-container {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+}
+
+.code-copy-button {
+    background-color: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    border: 1px solid var(--vscode-button-border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.code-copy-button:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+.code-copy-button:active {
+    background-color: var(--vscode-button-background);
+}
+
+.code-copy-button.copied {
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+}

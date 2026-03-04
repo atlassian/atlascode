@@ -43,7 +43,7 @@ export const ChatMessageItem: React.FC<{
                 {icon && <div className="message-icon">{icon}</div>}
                 <div className="message-content">
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <MarkedDown value={msg.content || ''} onLinkClick={onLinkClick} />
+                        <MarkedDown value={msg.content || ''} onLinkClick={onLinkClick} onCopy={onCopy} />
                     </div>
                 </div>
             </div>
