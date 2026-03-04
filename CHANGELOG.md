@@ -43,6 +43,12 @@
 - Fixed Rovo Dev UI crashes when markdown content fails to parse
 - Improved error messages when git user.name or user.email is not configured, providing helpful setup instructions
 
+### Bug Fixes
+
+- Rovo Dev: Fixed JSON parsing errors caused by multi-byte UTF-8 characters being split across HTTP chunk boundaries
+    - Added safe JSON parsing in `parseToolReturnMessage` for all tool arguments
+    - Added buffering logic in SSE response parser to handle incomplete UTF-8 sequences
+
 ## What's new in 4.0.19
 
 ### Improvements

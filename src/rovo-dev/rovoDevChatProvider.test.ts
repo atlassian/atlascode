@@ -994,5 +994,61 @@ describe('RovoDevChatProvider', () => {
                 }),
             );
         });
+
+        it('should handle multi-byte Unicode characters in streaming response', async () => {
+            const mockPrompt: RovoDevPrompt = {
+                text: 'test prompt',
+                enable_deep_plan: false,
+                context: [],
+            };
+
+            // Test with various Unicode characters: emoji, accented chars, CJK, etc.
+            const unicodeText = 'Hello 👋 café 日本語 🚀 Ñoño';
+
+            // Create proper SSE format with part_start event
+            const partStartEvent = JSON.stringify({
+                part: {
+                    part_kind: 'text',
+                    content: unicodeText,
+                    index: 0,
+                },
+            });
+
+            // Simulate streaming where multi-byte chars might be split across chunks
+            const encoder = new TextEncoder();
+            const fullMessage = `event: part_start\ndata: ${partStartEvent}\n\n`;
+            const fullBytes = encoder.encode(fullMessage);
+
+            // Split at a point that might break a multi-byte character
+            const splitPoint = Math.floor(fullBytes.length / 2);
+            const chunk1 = fullBytes.slice(0, splitPoint);
+            const chunk2 = fullBytes.slice(splitPoint);
+            const closeEvent = encoder.encode('event: close\ndata: {}\n\n');
+
+            const mockReadableStream = new ReadableStream({
+                start(controller) {
+                    controller.enqueue(chunk1);
+                    controller.enqueue(chunk2);
+                    controller.enqueue(closeEvent);
+                    controller.close();
+                },
+            });
+
+            const mockResponse = { body: mockReadableStream } as Response;
+            mockApiClient.chat.mockResolvedValue(mockResponse);
+
+            await chatProvider.executeChat(mockPrompt, []);
+
+            // Verify the Unicode text was correctly processed
+            expect(mockWebview.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: RovoDevProviderMessageType.RovoDevResponseMessage,
+                    message: expect.objectContaining({
+                        event_kind: 'text',
+                        content: unicodeText,
+                    }),
+                }),
+            );
+        });
     });
 });

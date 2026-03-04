@@ -386,9 +386,25 @@ export class RovoDevResponseParser {
                 continue;
             }
 
+            // Parse JSON data safely - if it fails due to incomplete UTF-8 sequences from chunking,
+            // put it back in the buffer to wait for more data
+            let parsedData: any;
+            if (match[2]) {
+                try {
+                    parsedData = JSON.parse(match[2]);
+                } catch {
+                    // JSON parse failed - likely due to incomplete multi-byte UTF-8 character at chunk boundary
+                    // Put this chunk back in the buffer and wait for more data
+                    this.buffer = chunkRaw + '\n\n' + this.buffer;
+                    continue;
+                }
+            } else {
+                parsedData = '';
+            }
+
             const chunk: RovoDevSingleChunk | RovoDevPartStartChunk | RovoDevPartDeltaChunk = {
                 event_kind: match[1].trim() as any,
-                data: match[2] ? JSON.parse(match[2]) : '',
+                data: parsedData,
             };
 
             let tmpChunkToFlush: RovoDevResponse | undefined;
