@@ -341,7 +341,10 @@ const ToolCall: React.FC<{
 }> = ({ toolName, toolArgs, mcpServer }) => {
     const jsonArgs = React.useMemo(() => {
         try {
-            return toolArgs ? JSON.parse(toolArgs) : {};
+            if (!toolArgs) {
+                return {};
+            }
+            return typeof toolArgs === 'string' ? JSON.parse(toolArgs) : toolArgs;
         } catch {
             return {};
         }

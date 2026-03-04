@@ -204,7 +204,12 @@ export function parseToolReturnMessage(
                 break;
 
             case 'expand_folder':
-                const folder = msg.toolCallMessage.args && JSON.parse(msg.toolCallMessage.args);
+                const folderArgs = msg.toolCallMessage.args;
+                const folder = folderArgs
+                    ? typeof folderArgs === 'string'
+                        ? JSON.parse(folderArgs)
+                        : folderArgs
+                    : null;
                 if (folder?.folder_path) {
                     resp.push({
                         title: folder.folder_path,
@@ -220,7 +225,8 @@ export function parseToolReturnMessage(
                 break;
 
             case 'bash':
-                const args = msg.toolCallMessage.args && JSON.parse(msg.toolCallMessage.args);
+                const bashArgs = msg.toolCallMessage.args;
+                const args = bashArgs ? (typeof bashArgs === 'string' ? JSON.parse(bashArgs) : bashArgs) : null;
                 if (args?.command) {
                     resp.push({
                         title: args.command,
@@ -232,8 +238,10 @@ export function parseToolReturnMessage(
 
             case 'grep':
                 const toolCallArgs = msg.toolCallMessage.args;
-                const searchPattern = toolCallArgs ? JSON.parse(toolCallArgs).content_pattern : undefined;
-                const pathGlob = toolCallArgs ? JSON.parse(toolCallArgs).path_glob : undefined;
+                const grepArgs =
+                    toolCallArgs && typeof toolCallArgs === 'string' ? JSON.parse(toolCallArgs) : toolCallArgs;
+                const searchPattern = grepArgs?.content_pattern;
+                const pathGlob = grepArgs?.path_glob;
                 const matches = (msg.content ?? '').split('\n').filter((line) => line.trim() !== '');
                 let content = 'Searched files';
                 if (searchPattern && pathGlob) {
@@ -257,7 +265,9 @@ export function parseToolReturnMessage(
 
             case 'create_technical_plan':
                 // Use parsedContent if available (it's the parsed object), otherwise parse msg.content (string)
-                const planData: TechnicalPlan = msg.parsedContent ?? (msg.content ? JSON.parse(msg.content) : null);
+                const planData: TechnicalPlan =
+                    msg.parsedContent ??
+                    (msg.content && typeof msg.content === 'string' ? JSON.parse(msg.content) : null);
 
                 resp.push({
                     content: '',
@@ -281,7 +291,11 @@ export function parseToolReturnMessage(
             case 'mcp__atlassian__get_tool_schema':
             case 'mcp__scout__invoke_tool':
                 const mcpToolCallArgs = msg.toolCallMessage.args;
-                const mcpToolData = mcpToolCallArgs ? JSON.parse(mcpToolCallArgs) : undefined;
+                const mcpToolData = mcpToolCallArgs
+                    ? typeof mcpToolCallArgs === 'string'
+                        ? JSON.parse(mcpToolCallArgs)
+                        : mcpToolCallArgs
+                    : undefined;
                 resp.push({
                     content: `Invoked MCP tool: \`${mcpToolData?.tool_name || 'unknown tool'}\``,
                     type: 'bash',
