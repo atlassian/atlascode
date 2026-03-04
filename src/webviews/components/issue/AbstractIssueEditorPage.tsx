@@ -651,6 +651,7 @@ export abstract class AbstractIssueEditorPage<
                             rawFieldValue !== null &&
                             rawFieldValue.type === 'doc' &&
                             rawFieldValue.version === 1;
+                        const shouldConvertToAdf = isAdfValue || this.state.siteDetails.isCloud;
                         const textValue = isAdfValue
                             ? convertAdfToWikimarkup(rawFieldValue)
                             : typeof rawFieldValue === 'string'
@@ -663,7 +664,7 @@ export abstract class AbstractIssueEditorPage<
                                 renderedText={this.state.fieldValues[`${field.key}.rendered`]}
                                 fetchUsers={this.fetchAndTransformUsers}
                                 onSave={async (val: string) => {
-                                    const saveValue = isAdfValue ? convertWikimarkupToAdf(val) : val;
+                                    const saveValue = shouldConvertToAdf ? convertWikimarkupToAdf(val) : val;
                                     await this.handleInlineEdit(field, saveValue);
                                 }}
                                 fetchImage={(img) => this.fetchImage(img)}
