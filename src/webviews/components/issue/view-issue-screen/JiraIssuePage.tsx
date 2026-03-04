@@ -735,6 +735,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                             <NavItem
                                                 text={issue.key}
                                                 iconUrl={issue.issuetype?.iconUrl}
+                                                issueTypeName={issue.issuetype?.name}
                                                 href={
                                                     shouldOpenInJira
                                                         ? `${this.state.siteDetails.baseLinkUrl}/browse/${issue.key}`
@@ -760,6 +761,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                         text={`${this.state.key}`}
                                         href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`}
                                         iconUrl={itIconUrl}
+                                        issueTypeName={this.state.fieldValues['issuetype']?.name}
                                         onCopy={this.handleCopyIssueLink}
                                     />
                                 </Tooltip>

@@ -1592,24 +1592,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             const mcp_servers = result.mcp_servers || {};
             const serversToReview = Object.keys(mcp_servers).filter((x) => mcp_servers[x] === 'pending user review');
 
-            if (this.isBoysenberry) {
-                await this.signalRovoDevDisabled('Other');
-                await this.processError(
-                    new Error(`Cannot start third party MCP servers:${serversToReview.map((name) => `\n- ${name}`)}`),
-                    { title: 'Failed to initialize Rovo Dev', skipLogError: true },
+            if (serversToReview.length === 0) {
+                await this.signalProcessFailedToInitialize(
+                    'Failed to initialize Rovo Dev, something went wrong with the MCP servers acceptance flow.',
                 );
             } else {
-                if (serversToReview.length === 0) {
-                    await this.signalProcessFailedToInitialize(
-                        'Failed to initialize Rovo Dev, something went wrong with the MCP servers acceptance flow.',
-                    );
-                } else {
-                    await webView.postMessage({
-                        type: RovoDevProviderMessageType.SetMcpAcceptanceRequired,
-                        isPromptPending: this._chatProvider.isPromptPending,
-                        mcpIds: serversToReview,
-                    });
-                }
+                await webView.postMessage({
+                    type: RovoDevProviderMessageType.SetMcpAcceptanceRequired,
+                    isPromptPending: this._chatProvider.isPromptPending,
+                    mcpIds: serversToReview,
+                });
             }
 
             return;

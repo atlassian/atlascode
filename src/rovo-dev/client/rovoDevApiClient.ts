@@ -107,8 +107,8 @@ export class RovoDevApiClient {
         } catch (err) {
             const reason = err.cause?.code || err.message || err;
             const error = new RovoDevApiError(`Failed to fetch '${restApi} API: ${reason}'`, 0, undefined);
-            // Skip logging for healthcheck calls since they're polled frequently during startup
-            if (restApi !== '/healthcheck') {
+            // Skip logging for healthcheck and cache-file-path calls since they're polled frequently or expected to fail
+            if (restApi !== '/healthcheck' && !restApi.includes('/cache-file-path')) {
                 RovoDevTelemetryProvider.logError(error, String(reason));
             }
             throw error;
@@ -119,8 +119,8 @@ export class RovoDevApiClient {
         } else {
             const message = `Failed to fetch '${restApi} API: HTTP ${response.status}'`;
             const error = new RovoDevApiError(message, response.status, response);
-            // Skip logging for healthcheck calls since they're polled frequently during startup
-            if (restApi !== '/healthcheck') {
+            // Skip logging for healthcheck and cache-file-path calls since they're polled frequently or expected to fail
+            if (restApi !== '/healthcheck' && !restApi.includes('/cache-file-path')) {
                 RovoDevTelemetryProvider.logError(error, message);
             }
             throw error;
