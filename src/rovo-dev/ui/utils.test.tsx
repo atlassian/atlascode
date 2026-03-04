@@ -571,7 +571,7 @@ describe('parseToolReturnMessage', () => {
             expect(result).toHaveLength(1);
             expect(result[0]).toEqual({
                 content: '',
-                technicalPlan: null, // Falls through since content is not a string
+                technicalPlan: planData, // Now correctly handles pre-parsed objects
             });
             expect(mockOnError).not.toHaveBeenCalled();
         });
