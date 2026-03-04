@@ -40,8 +40,8 @@ export const ChatMessageItem: React.FC<{
     const canGeneratePlan = React.useMemo(
         () =>
             msg.event_kind === '_RovoDevExitPlanMode' &&
-            onGeneratePlanClick &&
-            deepPlanCreated &&
+            !!onGeneratePlanClick &&
+            !!deepPlanCreated &&
             deepPlanCreated === msg.toolCallId,
         [msg, onGeneratePlanClick, deepPlanCreated],
     );

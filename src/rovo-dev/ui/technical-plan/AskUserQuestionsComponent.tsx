@@ -11,8 +11,8 @@ interface AskUserQuestionsComponentProps {
 }
 
 export const AskUserQuestionsComponent: React.FC<AskUserQuestionsComponentProps> = ({ toolCallId, args, onSubmit }) => {
-    const [answers, setAnswers] = React.useState<{ [key: string]: { option: string } }>(
-        args.questions.reduce((acc, question) => ({ ...acc, [question.question]: { option: '' } }), {}),
+    const [answers, setAnswers] = React.useState<Record<string, { option: string }>>(() =>
+        Object.fromEntries(args.questions.map((question) => [question.question, { option: '' }])),
     );
 
     const onSelectOption = React.useCallback((question: string, option: string) => {

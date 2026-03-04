@@ -10,8 +10,6 @@ import { AgentMode, RovoDevModeInfo } from 'src/rovo-dev/client';
 
 import { capitalizeFirst } from '../../utils';
 
-// const DISABLED_AGENT_MODES: readonly string[] = ['plan'];
-
 /** Shown when the available modes list hasn't loaded yet, so the UI is never empty. */
 const DEFAULT_AGENT_MODES: RovoDevModeInfo[] = [
     { mode: 'default', description: 'Full agent with read, write, and execute' },
@@ -82,8 +80,7 @@ const AgentModeSection: React.FC<AgentModeSectionProps> = ({
     availableModes,
     setAgentMode,
 }: AgentModeSectionProps) => {
-    const sourceModes = availableModes.length > 0 ? availableModes : DEFAULT_AGENT_MODES;
-    const agentModes = sourceModes;
+    const agentModes = availableModes.length > 0 ? availableModes : DEFAULT_AGENT_MODES;
 
     return (
         <Box xcss={styles.sectionWrapper}>

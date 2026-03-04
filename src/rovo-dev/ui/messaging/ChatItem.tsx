@@ -154,7 +154,8 @@ export const ChatItem = React.memo<ChatItemProps>(
         return (
             prevProps.block === nextProps.block &&
             !isAppendedMessages() &&
-            prevProps.drawerOpen === nextProps.drawerOpen
+            prevProps.drawerOpen === nextProps.drawerOpen &&
+            prevProps.deepPlanCreated === nextProps.deepPlanCreated
         );
     },
 );
