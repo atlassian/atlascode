@@ -9,6 +9,7 @@
 
 ### Improvements
 
+- Jira issue view: show issue type (e.g. Bug, Story, Task) before the issue key in the header/breadcrumb
 -  Added the UI in the Rovo chat box for the moved file tool.
 
 ### Bug Fixes
