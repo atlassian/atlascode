@@ -275,6 +275,13 @@ export class RovoDevChatProvider {
             }
             this._pendingCancellation = true;
 
+            // Optimistically unlock the UI immediately
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.CompleteMessage,
+                promptId: this._currentPromptId,
+                isCancellation: true,
+            });
+
             try {
                 const cancelResponse = await this._rovoDevApiClient.cancel();
                 success = cancelResponse.cancelled || cancelResponse.message === 'No chat in progress';
@@ -431,6 +438,7 @@ export class RovoDevChatProvider {
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.RovoDevResponseMessage,
                     message: group,
+                    promptId: this._currentPromptId,
                 });
                 group = [];
             }
@@ -495,6 +503,7 @@ export class RovoDevChatProvider {
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.RovoDevResponseMessage,
                     message: response,
+                    promptId: this._currentPromptId,
                 });
                 break;
 
@@ -503,6 +512,7 @@ export class RovoDevChatProvider {
                     await webview.postMessage({
                         type: RovoDevProviderMessageType.RovoDevResponseMessage,
                         message: response,
+                        promptId: this._currentPromptId,
                     });
                 }
                 break;
@@ -877,6 +887,7 @@ export class RovoDevChatProvider {
             text,
             enable_deep_plan,
             context,
+            promptId: this._currentPromptId,
         });
     }
 
