@@ -5,6 +5,7 @@
 ### Improvements
 
 - **RovoDev**: Refactored JSON parsing logic with `safeJsonParse` helper function to reduce code duplication and improve maintainability
+- **RovoDev**: Centered text within tool call statements in RovoDev chat.
 
 ### Bug Fixes
 
