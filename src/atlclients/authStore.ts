@@ -366,7 +366,7 @@ export class CredentialManager implements Disposable {
         if (!isOAuthInfo(credentials)) {
             return authInfo; // not an OAuth info, no need to refresh
         }
-        const GRACE_PERIOD = 10 * Time.MINUTES;
+        const GRACE_PERIOD = 30 * Time.MINUTES;
 
         if (credentials.expirationDate) {
             const diff = credentials.expirationDate - Date.now();
@@ -589,6 +589,7 @@ export class CredentialManager implements Disposable {
                             ),
                         );
                     }
+                    // Do not invalidate on transient errors (e.g. network) - credentials stay valid for retry later
                 }
                 if (tokenResponse.shouldInvalidate) {
                     Logger.error(
@@ -596,9 +597,9 @@ export class CredentialManager implements Disposable {
                             `Token refresh failed - credentials invalidated for credentialId: ${site.credentialId}`,
                         ),
                     );
+                    credentials.state = AuthInfoState.Invalid;
+                    await this.saveAuthInfo(site, credentials);
                 }
-                credentials.state = AuthInfoState.Invalid;
-                await this.saveAuthInfo(site, credentials);
             }
         }
     }

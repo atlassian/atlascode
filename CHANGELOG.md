@@ -24,6 +24,7 @@
 
 ### Improvements
 
+- Jira and Bitbucket (OAuth): Longer session persistence – credentials are no longer invalidated on transient token-refresh failures (e.g. network errors). Re-login is only required when the refresh token is actually invalid (e.g. 401/403). OAuth refresh grace period increased from 10 to 30 minutes so access tokens are refreshed earlier and sessions stay valid longer.
 - Jira issue view: show issue type (e.g. Bug, Story, Task) before the issue key in the header/breadcrumb
 - Added the UI in the Rovo chat box for the moved file tool.
 
