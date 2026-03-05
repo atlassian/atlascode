@@ -1369,7 +1369,9 @@ describe('JiraIssueWebview', () => {
 
                 await jiraIssueWebview['onMessageReceived'](msg);
 
-                expect(mockJiraClient.removeWatcher).toHaveBeenCalledWith(mockIssue.key, { username: watcher.key });
+                expect(mockJiraClient.removeWatcher).toHaveBeenCalledWith(mockIssue.key, {
+                    username: watcher.key,
+                });
                 expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchers).not.toContain(watcher);
                 expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchCount).toBe(0);
                 expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].isWatching).toBe(false);
