@@ -404,9 +404,21 @@ export class RovoDevResponseParser {
                 continue;
             }
 
+            let parsedData: any = '';
+            if (match[2]) {
+                try {
+                    parsedData = typeof match[2] === 'string' ? JSON.parse(match[2]) : match[2];
+                } catch (e) {
+                    yield generateError(
+                        new Error(`Rovo Dev parser error: unable to parse JSON data: "${match[2]}", error: ${e}`),
+                    );
+                    continue;
+                }
+            }
+
             const chunk: RovoDevSingleChunk | RovoDevPartStartChunk | RovoDevPartDeltaChunk = {
                 event_kind: match[1].trim() as any,
-                data: match[2] ? JSON.parse(match[2]) : '',
+                data: parsedData,
             };
 
             let tmpChunkToFlush: RovoDevResponse | undefined;

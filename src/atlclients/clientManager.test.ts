@@ -141,6 +141,7 @@ describe('ClientManager', () => {
         mockCredentialManager = {
             getAuthInfo: jest.fn(),
             refreshAccessToken: jest.fn(),
+            onDidAuthChange: jest.fn().mockReturnValue({ dispose: jest.fn() }),
         };
 
         // Mock Container
@@ -219,7 +220,7 @@ describe('ClientManager', () => {
         it('should register configuration and site manager event handlers', () => {
             expect(configuration.onDidChange).toHaveBeenCalled();
             expect(mockSiteManager.onDidSitesAvailableChange).toHaveBeenCalled();
-            expect(mockContext.subscriptions).toHaveLength(2);
+            expect(mockContext.subscriptions).toHaveLength(3);
         });
     });
 
