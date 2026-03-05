@@ -1,5 +1,4 @@
 import { cssMap } from '@atlaskit/css';
-import AiGenerativeTextSummaryIcon from '@atlaskit/icon/core/ai-generative-text-summary';
 import CrossIcon from '@atlaskit/icon/core/cross';
 import CustomizeIcon from '@atlaskit/icon/core/customize';
 import LockUnlockedIcon from '@atlaskit/icon/core/lock-unlocked';
@@ -7,6 +6,7 @@ import TelescopeIcon from '@atlaskit/icon-lab/core/telescope';
 import Popup, { PopupComponentProps } from '@atlaskit/popup';
 import { Box } from '@atlaskit/primitives';
 import { token } from '@atlaskit/tokens';
+import Tooltip from '@atlaskit/tooltip';
 import React, { useCallback } from 'react';
 import { AgentMode, RovoDevModeInfo } from 'src/rovo-dev/client';
 
@@ -25,7 +25,6 @@ interface PromptSettingsPopupProps {
     onDeepPlanToggled?: () => void;
     onYoloModeToggled?: () => void;
     onFullContextToggled?: () => void;
-    isDeepPlanEnabled: boolean;
     isYoloModeEnabled: boolean;
     isFullContextEnabled: boolean;
     availableAgentModes: RovoDevModeInfo[];
@@ -59,7 +58,6 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
     onDeepPlanToggled,
     onYoloModeToggled,
     onFullContextToggled,
-    isDeepPlanEnabled,
     isYoloModeEnabled,
     isFullContextEnabled,
     availableAgentModes,
@@ -87,7 +85,7 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
             shouldRenderToParent
             isOpen={isOpen}
             trigger={(props) => (
-                <>
+                <Tooltip content="Preferences">
                     {isOpen ? (
                         <button
                             {...props}
@@ -107,7 +105,7 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                             <CustomizeIcon label="Prompt settings" />
                         </button>
                     )}
-                </>
+                </Tooltip>
             )}
             content={() => (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -125,15 +123,6 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                     >
                         Others
                     </Box>
-                    {onDeepPlanToggled && (
-                        <PromptSettingsItem
-                            icon={<AiGenerativeTextSummaryIcon label="Deep plan" />}
-                            label="Plan"
-                            description="Tackle complex, multi-step code by first generating a plan before coding."
-                            action={onDeepPlanToggled}
-                            toggled={isDeepPlanEnabled}
-                        />
-                    )}
                     {onFullContextToggled && (
                         <PromptSettingsItem
                             icon={<TelescopeIcon label="Full-Context mode" />}

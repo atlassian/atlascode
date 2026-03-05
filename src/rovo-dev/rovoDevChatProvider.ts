@@ -8,12 +8,16 @@ import {
     AgentMode,
     RovoDevApiClient,
     RovoDevApiError,
+    RovoDevAskUserQuestionsToolArgs,
     RovoDevChatRequest,
     RovoDevChatRequestContext,
     RovoDevChatRequestContextFileEntry,
     RovoDevChatRequestContextOtherEntry,
+    RovoDevDeferredToolCallResponse,
+    RovoDevExitPlanModeToolArgs,
     RovoDevResponse,
     RovoDevResponseParser,
+    RovoDevToolCallResponse,
     ToolPermissionChoice,
 } from './client';
 import { buildErrorDetails, buildExceptionDetails } from './errorDetailsBuilder';
@@ -53,6 +57,7 @@ export class RovoDevChatProvider {
 
     private _pendingToolConfirmation: Record<string, ToolPermissionChoice | 'undecided'> = {};
     private _pendingToolConfirmationLeft = 0;
+    private _pendingDeferredRequest: string | undefined;
     private _pendingPrompt: RovoDevPrompt | undefined;
     private _currentPrompt: RovoDevPrompt | undefined;
     private _rovoDevApiClient: RovoDevApiClient | undefined;
@@ -188,8 +193,20 @@ export class RovoDevChatProvider {
 
         const requestPayload = this.preparePayloadForChatRequest(this._currentPrompt);
 
+        // if there's a pending deferred tool call, attach the tool_call_id and the result to the next prompt payload to bypass
+        if (this._pendingDeferredRequest) {
+            requestPayload.message = {
+                tool_call_id: this._pendingDeferredRequest,
+                result: {
+                    proceed: false,
+                    followUp: text,
+                },
+            };
+            this._pendingDeferredRequest = undefined;
+        }
+
         if (!isCommand) {
-            if (this.fullContextMode) {
+            if (this.fullContextMode && typeof requestPayload.message === 'string') {
                 requestPayload.message = `use fullcontext: ${requestPayload.message}`;
             }
 
@@ -213,12 +230,22 @@ export class RovoDevChatProvider {
         await this.sendPromptToRovoDev(requestPayload);
     }
 
+    public async executeDeferredToolCall(payload: RovoDevDeferredToolCallResponse) {
+        const chatRequestPayload: RovoDevChatRequest = {
+            message: payload,
+            context: [],
+        };
+        this._pendingDeferredRequest = undefined;
+        await this.sendPromptToRovoDev(chatRequestPayload);
+    }
+
     private async sendPromptToRovoDev(requestPayload: RovoDevChatRequest) {
         this.beginNewPrompt();
 
         const fetchOp = async (client: RovoDevApiClient) => {
             this._abortController?.abort();
             this._abortController = new AbortController();
+
             // Boysenberry is always in YOLO mode
             const response = await client.chat(requestPayload, !this._isBoysenberry, this._abortController.signal);
 
@@ -456,6 +483,43 @@ export class RovoDevChatProvider {
         await flush();
     }
 
+    private async processDeferredToolCallResponse(deferredTool: RovoDevToolCallResponse): Promise<void> {
+        const webview = this._webView!;
+
+        try {
+            this._pendingDeferredRequest = deferredTool.tool_call_id;
+            switch (deferredTool.tool_name) {
+                case 'ask_user_questions':
+                    const askUserQuestionsArgs = JSON.parse(deferredTool.args) as RovoDevAskUserQuestionsToolArgs;
+                    await webview.postMessage({
+                        type: RovoDevProviderMessageType.ShowDeferredAskUserQuestions,
+                        toolCallId: deferredTool.tool_call_id,
+                        args: askUserQuestionsArgs,
+                    });
+                    break;
+                case 'exit_plan_mode':
+                    const exitPlanModeArgs = JSON.parse(deferredTool.args) as RovoDevExitPlanModeToolArgs;
+                    await webview.postMessage({
+                        type: RovoDevProviderMessageType.ShowDeferredExitPlanMode,
+                        toolCallId: deferredTool.tool_call_id,
+                        args: exitPlanModeArgs,
+                    });
+                    break;
+                default:
+                    throw new Error(`Unknown deferred tool call: ${deferredTool.tool_name}`);
+            }
+        } catch (error) {
+            const err =
+                error instanceof Error ? error : new Error('Failed to process the deferred tool call response.');
+            await this.processError(err);
+            // If parsing deferred tool request failed, we should still send a response to Rovo Dev to avoid blocking the agent's execution
+            await this.executeDeferredToolCall({
+                tool_call_id: deferredTool.tool_call_id,
+                result: err.message,
+            });
+        }
+    }
+
     private async processRovoDevResponse(sourceApi: StreamingApi, response: RovoDevResponse): Promise<void> {
         const fireTelemetry = sourceApi === 'chat';
         const webview = this._webView!;
@@ -618,6 +682,10 @@ export class RovoDevChatProvider {
                 }
                 break;
 
+            case 'deferred_request':
+                const deferredTool = response.tools[0]; // currently we only support one deferred tool call at a time, so we take the first one from the array
+                this.processDeferredToolCallResponse(deferredTool);
+                break;
             case 'status':
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.ShowDialog,

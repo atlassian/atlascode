@@ -85,6 +85,11 @@ export interface RovoDevOnCallToolStartResponse {
     permissions: Record<string, RovoDevToolPemissionScenario>;
 }
 
+export interface RovoDevDeferredRequestResponse {
+    event_kind: 'deferred_request';
+    tools: RovoDevToolCallResponse[];
+}
+
 export interface RovoDevCloseResponse {
     event_kind: 'close';
 }
@@ -164,6 +169,7 @@ export type RovoDevResponse =
     | RovoDevClearResponse
     | RovoDevPruneResponse
     | RovoDevOnCallToolStartResponse
+    | RovoDevDeferredRequestResponse
     | RovoDevStatusResponse
     | RovoDevUsageResponse
     | RovoDevPromptsResponse
@@ -186,6 +192,24 @@ export type RovoDevToolName =
     | 'mcp_invoke_tool'
     | 'mcp__atlassian__invoke_tool'
     | 'mcp__atlassian__get_tool_schema'
-    | 'mcp__scout__invoke_tool';
+    | 'mcp__scout__invoke_tool'
+    | RovoDevDeferredToolCallName;
 
 export type RovoDevToolPemissionScenario = 'ASK' | 'ALLOWED' | 'DENIED';
+
+export type RovoDevDeferredToolCallName = 'ask_user_questions' | 'exit_plan_mode';
+
+export interface RovoDevAskUserQuestionsToolArgs {
+    questions: {
+        header: string;
+        question: string;
+        options: {
+            label: string;
+            description: string;
+        }[];
+    }[];
+}
+
+export interface RovoDevExitPlanModeToolArgs {
+    plan: string;
+}

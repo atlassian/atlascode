@@ -1,5 +1,10 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.23
+
+### Features
+
+- Rovo Dev: Support new `plan` mode with `deferred_request` handling
 
 ## What's new in 4.0.22
 
@@ -9,7 +14,12 @@
 
 ### Improvements
 
--  Added the UI in the Rovo chat box for the moved file tool.
+- Jira issue view: show issue type (e.g. Bug, Story, Task) before the issue key in the header/breadcrumb
+- Added the UI in the Rovo chat box for the moved file tool.
+
+### Bug Fixes
+
+- **RovoDev**: Fixed MCP server acceptance flow not showing in Boysenberry mode
 
 ## What's new in 4.0.21
 

@@ -41,12 +41,19 @@ export type ChatMessage =
     | RovoDevTextResponse
     | RovoDevToolCallResponse
     | RovoDevToolReturnResponse
-    | RovoDevRetryPromptResponse;
+    | RovoDevRetryPromptResponse
+    | RovoDevExitPlanModeMessage;
 
 export interface UserPromptMessage {
     event_kind: '_RovoDevUserPrompt';
     content: string;
     context?: RovoDevContextItem[];
+}
+
+export interface RovoDevExitPlanModeMessage {
+    event_kind: '_RovoDevExitPlanMode';
+    toolCallId: string;
+    content: string;
 }
 
 export interface PullRequestMessage {
@@ -109,6 +116,19 @@ export interface SavedPrompt {
 export interface SavedPromptsResponse {
     prompts: SavedPrompt[];
 }
+
+export interface DeferredRequestResultMessage {
+    toolCallId: string;
+}
+
+export interface AskUserQuestionsResultMessage extends DeferredRequestResultMessage {
+    result: { question: string; answer: string }[];
+}
+
+export interface ExitPlanModeResultMessage extends DeferredRequestResultMessage {
+    result: { proceed: boolean };
+}
+
 interface ToolReturnInfo {
     title: string;
     type: 'modify' | 'create' | 'delete' | 'open' | 'bash' | 'move';
@@ -245,6 +265,18 @@ export function parseToolReturnMessage(
                 });
                 break;
 
+            case 'ask_user_questions':
+                resp.push({
+                    content: 'Asked user questions',
+                    type: 'open',
+                });
+                break;
+            case 'exit_plan_mode':
+                resp.push({
+                    content: 'Exited plan mode',
+                    type: 'modify',
+                });
+                break;
             case 'mcp__atlassian__invoke_tool':
             case 'mcp__atlassian__get_tool_schema':
             case 'mcp__scout__invoke_tool':
@@ -460,3 +492,5 @@ export async function processDropDataTransferItems(
     const values = await Promise.all(promises);
     callback(values);
 }
+
+export const capitalizeFirst = (s: string): string => (s.length === 0 ? s : s.charAt(0).toUpperCase() + s.slice(1));
