@@ -106,9 +106,6 @@ function createEditor(setIsEmpty: (isEmpty: boolean) => void) {
 
     const editor = createMonacoPromptEditor(container);
 
-    // Note: onDidChangeModelContent listener is tracked separately in the component
-    // to allow proper cleanup, so we don't register it here
-
     return editor;
 }
 
