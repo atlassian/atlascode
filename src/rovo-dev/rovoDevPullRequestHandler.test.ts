@@ -252,6 +252,70 @@ To unknown-host.com:atlassian/atlascode.git
             expect(mockCommit).toHaveBeenCalledWith(commitMessage, { all: true });
         });
 
+        it('Should throw helpful error when git user.name is not configured', async () => {
+            const branchName = 'my-branch';
+            const commitMessage = 'My commit message';
+
+            const mockCommit = jest.fn().mockRejectedValue({
+                message: 'Failed to execute git',
+                gitErrorCode: 'NoUserNameConfigured',
+            });
+
+            mockGitApi.mockReturnValue({
+                repositories: [
+                    {
+                        state: {
+                            HEAD: { name: 'main' },
+                            workingTreeChanges: [{ uri: 'file1.txt' }],
+                            indexChanges: [],
+                            mergeChanges: [],
+                        },
+                        rootUri: { fsPath: '/mock/path' },
+                        commit: mockCommit,
+                        createBranch: jest.fn(),
+                        fetch: jest.fn(),
+                    },
+                ],
+            });
+
+            await expect(handler.createPR(branchName, commitMessage)).rejects.toThrow(
+                'Failed to commit changes: Git user.name is not configured',
+            );
+            await expect(handler.createPR(branchName, commitMessage)).rejects.toThrow('git config --global user.name');
+        });
+
+        it('Should throw helpful error when git user.email is not configured', async () => {
+            const branchName = 'my-branch';
+            const commitMessage = 'My commit message';
+
+            const mockCommit = jest.fn().mockRejectedValue({
+                message: 'Failed to execute git',
+                gitErrorCode: 'NoUserEmailConfigured',
+            });
+
+            mockGitApi.mockReturnValue({
+                repositories: [
+                    {
+                        state: {
+                            HEAD: { name: 'main' },
+                            workingTreeChanges: [{ uri: 'file1.txt' }],
+                            indexChanges: [],
+                            mergeChanges: [],
+                        },
+                        rootUri: { fsPath: '/mock/path' },
+                        commit: mockCommit,
+                        createBranch: jest.fn(),
+                        fetch: jest.fn(),
+                    },
+                ],
+            });
+
+            await expect(handler.createPR(branchName, commitMessage)).rejects.toThrow(
+                'Failed to commit changes: Git user.email is not configured',
+            );
+            await expect(handler.createPR(branchName, commitMessage)).rejects.toThrow('git config --global user.email');
+        });
+
         it('Should call env.openExternal when a standard success git push occurs', async () => {
             const branchName = 'feature-branch';
             const commitMessage = 'Add new feature';

@@ -1,4 +1,4 @@
-import { IssueKeyAndSite, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
+import { IssueKeyAndSite, MinimalIssueOrKeyAndSite } from '@atlassian-pi/jira-pi-common-models';
 import { Commands } from 'src/constants';
 import { commands, Uri, window } from 'vscode';
 

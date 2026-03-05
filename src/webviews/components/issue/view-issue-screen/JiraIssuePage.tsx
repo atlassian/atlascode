@@ -1,8 +1,8 @@
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Tooltip from '@atlaskit/tooltip';
 import WidthObserver from '@atlaskit/width-detector';
-import { CommentVisibility, IssueType, MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
-import { FieldUI, InputFieldUI, SelectFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { CommentVisibility, IssueType, MinimalIssue, Transition } from '@atlassian-pi/jira-pi-common-models';
+import { FieldUI, InputFieldUI, SelectFieldUI, UIType, ValueType } from '@atlassian-pi/jira-pi-meta-models';
 import { Box, Tab, Tabs } from '@mui/material';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import * as React from 'react';
@@ -735,6 +735,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                             <NavItem
                                                 text={issue.key}
                                                 iconUrl={issue.issuetype?.iconUrl}
+                                                issueTypeName={issue.issuetype?.name}
                                                 href={
                                                     shouldOpenInJira
                                                         ? `${this.state.siteDetails.baseLinkUrl}/browse/${issue.key}`
@@ -760,6 +761,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                         text={`${this.state.key}`}
                                         href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`}
                                         iconUrl={itIconUrl}
+                                        issueTypeName={this.state.fieldValues['issuetype']?.name}
                                         onCopy={this.handleCopyIssueLink}
                                     />
                                 </Tooltip>

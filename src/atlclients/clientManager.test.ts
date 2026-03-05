@@ -1,4 +1,4 @@
-import { JiraClient, JiraCloudClient, JiraServerClient } from '@atlassianlabs/jira-pi-client';
+import { JiraClient, JiraCloudClient, JiraServerClient } from '@atlassian-pi/jira-pi-client';
 import PQueue from 'p-queue';
 import { ConfigurationChangeEvent, ExtensionContext } from 'vscode';
 import { commands, window } from 'vscode';
@@ -34,8 +34,8 @@ import { ClientManager } from './clientManager';
 import { Negotiator } from './negotiate';
 
 // Mock all external dependencies
-jest.mock('@atlassianlabs/jira-pi-client');
-jest.mock('@atlassianlabs/pi-client-common', () => ({
+jest.mock('@atlassian-pi/jira-pi-client');
+jest.mock('@atlassian-pi/pi-client-common', () => ({
     getProxyHostAndPort: jest.fn().mockReturnValue(['localhost', 8080]),
 }));
 jest.mock('p-queue');
@@ -141,6 +141,7 @@ describe('ClientManager', () => {
         mockCredentialManager = {
             getAuthInfo: jest.fn(),
             refreshAccessToken: jest.fn(),
+            onDidAuthChange: jest.fn().mockReturnValue({ dispose: jest.fn() }),
         };
 
         // Mock Container
@@ -219,7 +220,7 @@ describe('ClientManager', () => {
         it('should register configuration and site manager event handlers', () => {
             expect(configuration.onDidChange).toHaveBeenCalled();
             expect(mockSiteManager.onDidSitesAvailableChange).toHaveBeenCalled();
-            expect(mockContext.subscriptions).toHaveLength(2);
+            expect(mockContext.subscriptions).toHaveLength(3);
         });
     });
 

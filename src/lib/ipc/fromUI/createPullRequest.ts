@@ -1,4 +1,4 @@
-import { MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue, Transition } from '@atlassian-pi/jira-pi-common-models';
 import { ReducerAction } from 'src/ipc/messaging';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';

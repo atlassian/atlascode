@@ -1,4 +1,4 @@
-import { emptyTransition, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { emptyTransition, Transition } from '@atlassian-pi/jira-pi-common-models';
 import { useCallback, useContext, useEffect, useState } from 'react';
 
 import { StartWorkActionType } from '../../../../../lib/ipc/fromUI/startWork';

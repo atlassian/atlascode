@@ -205,7 +205,7 @@ describe('RovoDevApiClient', () => {
 
             // after the POST /v3/set_chat_message, we expect a GET /v3/stream_chat to be called
             expect(mockFetch).toHaveBeenCalledWith(
-                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=false',
+                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=false&enable_deferred_tools=true',
                 {
                     method: 'GET',
                     headers: {
@@ -241,7 +241,7 @@ describe('RovoDevApiClient', () => {
 
             // after the POST /v3/set_chat_message, we expect a GET /v3/stream_chat to be called
             expect(mockFetch).toHaveBeenCalledWith(
-                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=true',
+                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=true&enable_deferred_tools=true',
                 {
                     method: 'GET',
                     headers: {
@@ -281,7 +281,7 @@ describe('RovoDevApiClient', () => {
 
             // after the POST /v3/set_chat_message, we expect a GET /v3/stream_chat to be called
             expect(mockFetch).toHaveBeenCalledWith(
-                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=false',
+                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=false&enable_deferred_tools=true',
                 {
                     method: 'GET',
                     headers: {
@@ -316,7 +316,7 @@ describe('RovoDevApiClient', () => {
 
             // after the POST /v3/set_chat_message, we expect a GET /v3/stream_chat to be called
             expect(mockFetch).toHaveBeenCalledWith(
-                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=false',
+                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=false&enable_deferred_tools=true',
                 {
                     method: 'GET',
                     headers: {
@@ -352,7 +352,7 @@ describe('RovoDevApiClient', () => {
 
             // after the POST /v3/set_chat_message, we expect a GET /v3/stream_chat to be called
             expect(mockFetch).toHaveBeenCalledWith(
-                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=false',
+                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=false&enable_deferred_tools=true',
                 {
                     method: 'GET',
                     headers: {
@@ -1871,6 +1871,221 @@ describe('RovoDevApiClient', () => {
 
             await expect(client.getAvailableModes()).rejects.toThrow(
                 "Failed to fetch '/v3/available-modes API: HTTP 500",
+            );
+        });
+    });
+
+    describe('getAgentModel method', () => {
+        it('should return current agent model successfully', async () => {
+            const mockGetAgentModelResponse = {
+                model_name: 'GPT-4',
+                model_id: 'gpt-4',
+                credit_multiplier: '1.5',
+                message: 'Current model is GPT-4',
+            };
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue(mockGetAgentModelResponse),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.getAgentModel();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/agent-model', {
+                method: 'GET',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: undefined,
+            });
+            expect(result).toEqual(mockGetAgentModelResponse);
+            expect(result.model_id).toBe('gpt-4');
+            expect(result.model_name).toBe('GPT-4');
+            expect(result.credit_multiplier).toBe('1.5');
+        });
+
+        it('should throw error when API call fails', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.getAgentModel()).rejects.toThrow("Failed to fetch '/v3/agent-model API: HTTP 500");
+        });
+    });
+
+    describe('setAgentModel method', () => {
+        it('should set agent model successfully', async () => {
+            const mockSetAgentModelResponse = {
+                model_name: 'GPT-4',
+                model_id: 'gpt-4',
+                message: 'Agent model set to GPT-4',
+            };
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue(mockSetAgentModelResponse),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.setAgentModel('gpt-4');
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/agent-model', {
+                method: 'PUT',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: JSON.stringify({ model_id: 'gpt-4' }),
+            });
+            expect(result.model_id).toBe('gpt-4');
+            expect(result.message).toBe('Agent model set to GPT-4');
+        });
+
+        it('should handle different model IDs', async () => {
+            const mockSetAgentModelResponse = {
+                model_name: 'Claude 3',
+                model_id: 'claude-3',
+                message: 'Agent model set to Claude 3',
+            };
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue(mockSetAgentModelResponse),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.setAgentModel('claude-3');
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/agent-model', {
+                method: 'PUT',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: JSON.stringify({ model_id: 'claude-3' }),
+            });
+            expect(result.model_id).toBe('claude-3');
+        });
+
+        it('should throw error when API call fails', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.setAgentModel('gpt-4')).rejects.toThrow(
+                "Failed to fetch '/v3/agent-model API: HTTP 500",
+            );
+        });
+
+        it('should throw error when API returns 400 (invalid model)', async () => {
+            const mockResponse = {
+                status: 400,
+                statusText: 'Bad Request',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.setAgentModel('invalid-model')).rejects.toThrow(
+                "Failed to fetch '/v3/agent-model API: HTTP 400",
+            );
+        });
+    });
+
+    describe('getAvailableAgentModels method', () => {
+        it('should return list of available agent models successfully', async () => {
+            const mockAvailableModelsResponse = {
+                models: [
+                    {
+                        name: 'GPT-4',
+                        model_id: 'gpt-4',
+                        description: 'Most capable model',
+                        credit_multiplier: '1.5',
+                    },
+                    {
+                        name: 'GPT-3.5 Turbo',
+                        model_id: 'gpt-3.5-turbo',
+                        description: 'Fast and efficient',
+                        credit_multiplier: '1.0',
+                    },
+                    {
+                        name: 'Claude 3',
+                        model_id: 'claude-3',
+                        description: 'Anthropic model',
+                        credit_multiplier: '2.0',
+                    },
+                ],
+            };
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue(mockAvailableModelsResponse),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.getAvailableAgentModels();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/agent-models', {
+                method: 'GET',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: undefined,
+            });
+            expect(result).toEqual(mockAvailableModelsResponse);
+            expect(result.models).toHaveLength(3);
+            expect(result.models[0].model_id).toBe('gpt-4');
+            expect(result.models[0].name).toBe('GPT-4');
+            expect(result.models[0].credit_multiplier).toBe('1.5');
+        });
+
+        it('should handle empty models list', async () => {
+            const mockAvailableModelsResponse = {
+                models: [],
+            };
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue(mockAvailableModelsResponse),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.getAvailableAgentModels();
+
+            expect(result.models).toHaveLength(0);
+        });
+
+        it('should throw error when API call fails', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.getAvailableAgentModels()).rejects.toThrow(
+                "Failed to fetch '/v3/agent-models API: HTTP 500",
             );
         });
     });

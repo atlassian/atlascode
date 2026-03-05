@@ -1,6 +1,6 @@
-import { EpicFieldInfo, IssueLinkType } from '@atlassianlabs/jira-pi-common-models';
-import { IssueCreateMetadata } from '@atlassianlabs/jira-pi-meta-models';
-import { Fields } from '@atlassianlabs/jira-pi-meta-models';
+import { EpicFieldInfo, IssueLinkType } from '@atlassian-pi/jira-pi-common-models';
+import { IssueCreateMetadata } from '@atlassian-pi/jira-pi-meta-models';
+import { Fields } from '@atlassian-pi/jira-pi-meta-models';
 import { expansionCastTo } from 'testsutil';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';

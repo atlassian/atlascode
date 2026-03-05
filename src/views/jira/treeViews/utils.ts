@@ -1,4 +1,4 @@
-import { isMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { isMinimalIssue, MinimalIssue } from '@atlassian-pi/jira-pi-common-models';
 import { Command, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
 
 import { DetailedSiteInfo, ProductJira } from '../../../atlclients/authInfo';

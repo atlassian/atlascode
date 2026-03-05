@@ -1,4 +1,4 @@
-import * as piClientCommon from '@atlassianlabs/pi-client-common';
+import * as piClientCommon from '@atlassian-pi/pi-client-common';
 import axios from 'axios';
 import * as fs from 'fs';
 import { Agent } from 'http';
@@ -24,7 +24,7 @@ import {
     oauthJiraTransportFactory,
 } from './providers';
 
-jest.mock('@atlassianlabs/pi-client-common');
+jest.mock('@atlassian-pi/pi-client-common');
 jest.mock('axios');
 jest.mock('../../container');
 jest.mock('../../atlclients/basicInterceptor');

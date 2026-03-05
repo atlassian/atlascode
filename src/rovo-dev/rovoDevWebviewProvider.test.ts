@@ -86,6 +86,7 @@ jest.mock('./rovoDevChatProvider', () => ({
         executeReplay: jest.fn(),
         setReady: jest.fn(),
         shutdown: jest.fn(),
+        onAgentModelChanged: jest.fn(),
         isPromptPending: false,
         currentPromptId: 'test-id',
         pendingCancellation: false,

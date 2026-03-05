@@ -1,6 +1,46 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.23
+
+### Improvements
+
+- **RovoDev**: Refactored JSON parsing logic with `safeJsonParse` helper function to reduce code duplication and improve maintainability
+
+### Bug Fixes
+
+- **RovoDev**: Fixed JSON parsing errors in ToolReturnMessage handling - added type checking before JSON.parse() to prevent "Input data should be a String" and invalid JSON errors
+- Added comprehensive test coverage for parseToolReturnMessage with both string and pre-parsed object inputs
+## What's new in 4.0.23
+
+### Features
+
+- Rovo Dev: Support new `plan` mode with `deferred_request` handling
+
+## What's new in 4.0.22
+
+### Features
+
+- Rovo Dev: Agent model selection both via /models command, and dedicated drop-down menu
+
+### Improvements
+
+- Jira and Bitbucket (OAuth): Longer session persistence – credentials are no longer invalidated on transient token-refresh failures (e.g. network errors). Re-login is only required when the refresh token is actually invalid (e.g. 401/403). OAuth refresh grace period increased from 10 to 30 minutes so access tokens are refreshed earlier and sessions stay valid longer.
+- Jira issue view: show issue type (e.g. Bug, Story, Task) before the issue key in the header/breadcrumb
+- Added the UI in the Rovo chat box for the moved file tool.
+
+### Bug Fixes
+
+- **RovoDev**: Fixed MCP server acceptance flow not showing in Boysenberry mode
+
+## What's new in 4.0.21
+
+### Bug Fixes
+
+- **RovoDev**: Fixed MCP permission race condition - users can now type their prompts while MCP permission dialogs are displayed. The send button is disabled during MCP acceptance, but the input remains editable to prevent loss of user input.
+- Fixed issue description losing line breaks and formatting in edit mode after save (HTML-to-ADF conversion now preserves line breaks as hardBreak nodes)
+
 ## What's new in 4.0.20
+
 ### Features
 
 - Added Draft pull requests
@@ -9,6 +49,16 @@
 ### Improvements
 
 - Added warning message when no git repository selected on Start Work page
+- Bumped Rovo Dev version to v0.13.47
+- Added ADF ↔ WikiMarkup conversion for Jira Data Center: transform description and comments to/from WikiMarkup so DC (string-based API) and Cloud (ADF) both work correctly
+
+### Bug Fixes
+
+- Jira Data Center: fixed errors when adding or updating comments (comment body is now sent as string for DC, ADF for Cloud)
+- Jira DC: fixed updating issue description (description is sent as WikiMarkup string for DC, ADF for Cloud)
+- Jira DC: user mentions in comments and description now show the correct username instead of @unknown
+- Fixed Rovo Dev UI crashes when markdown content fails to parse
+- Improved error messages when git user.name or user.email is not configured, providing helpful setup instructions
 
 ## What's new in 4.0.19
 

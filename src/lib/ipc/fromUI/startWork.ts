@@ -1,4 +1,4 @@
-import { Transition } from '@atlassianlabs/jira-pi-common-models';
+import { Transition } from '@atlassian-pi/jira-pi-common-models';
 import { ReducerAction } from 'src/ipc/messaging';
 
 import { WorkspaceRepo } from '../../../bitbucket/model';

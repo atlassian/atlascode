@@ -16,7 +16,7 @@ import {
     IssueType,
     JsdInternalCommentVisibility,
     MinimalIssueOrKeyAndSite,
-} from '@atlassianlabs/jira-pi-common-models';
+} from '@atlassian-pi/jira-pi-common-models';
 import {
     FieldUI,
     FieldUIs,
@@ -26,7 +26,7 @@ import {
     SelectFieldUI,
     UIType,
     ValueType,
-} from '@atlassianlabs/jira-pi-meta-models';
+} from '@atlassian-pi/jira-pi-meta-models';
 import { Tooltip } from '@mui/material';
 import { formatDistanceToNow } from 'date-fns';
 import debounce from 'lodash.debounce';
@@ -59,6 +59,7 @@ import * as SelectFieldHelper from '../selectFieldHelper';
 import { WebviewComponent } from '../WebviewComponent';
 import { AttachmentForm } from './AttachmentForm';
 import CascadingSelectField, { CascadingSelectOption } from './CascadingSelectField';
+import { convertAdfToWikimarkup } from './common/adfToWikimarkup';
 import { AtlascodeMentionProvider } from './common/AtlaskitEditor/AtlascodeMentionsProvider';
 import AtlaskitEditor from './common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from './common/JiraIssueTextArea';
@@ -264,6 +265,17 @@ export abstract class AbstractIssueEditorPage<
         }
         if (t === 'number' || t === 'boolean') {
             return String(value);
+        }
+        // Check if it's an ADF object
+        if (t === 'object' && value.type === 'doc' && value.version === 1) {
+            // This method always returns a string (used by string-only controls: Textfield, DatePicker, legacy text area).
+            // Atlaskit path: serialize ADF to JSON string so we have a reversible string form; the editor itself receives the raw object via fieldValues.
+            if (this.state.showAtlaskitEditor) {
+                return JSON.stringify(value);
+            }
+            // For legacy editor, convert ADF to WikiMarkup
+            // Note: This will gracefully fall back to plain text if conversion fails
+            return convertAdfToWikimarkup(value);
         }
         // For any other type (objects, symbols, functions), render empty string
         return '';

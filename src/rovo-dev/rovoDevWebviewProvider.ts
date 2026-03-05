@@ -26,11 +26,15 @@ import {
 } from 'vscode';
 
 import { GitErrorCodes } from '../typings/git';
-import { FeatureFlagClient } from '../util/featureFlags/featureFlagClient';
-import { Features } from '../util/features';
 import { RovodevCommandContext, RovodevCommands } from './api/componentApi';
 import { DetailedSiteInfo, ExtensionApi, MinimalIssue } from './api/extensionApi';
-import { AgentMode, RovoDevApiClient, RovoDevApiError, RovoDevHealthcheckResponse } from './client';
+import {
+    AgentMode,
+    RovoDevApiClient,
+    RovoDevApiError,
+    RovoDevDeferredToolCallResponse,
+    RovoDevHealthcheckResponse,
+} from './client';
 import { buildErrorDetails } from './errorDetailsBuilder';
 import { createValidatedRovoDevAuthInfo } from './rovoDevAuthValidator';
 import { RovoDevChatContextProvider } from './rovoDevChatContextProvider';
@@ -44,8 +48,9 @@ import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevSessionManager } from './rovoDevSessionManager';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import { RovoDevContextItem } from './rovoDevTypes';
-import { readLastNLogLines } from './rovoDevUtils';
+import { readLastNLogLines, removeCustomCliTags } from './rovoDevUtils';
 import {
+    RovoDevAgentModel,
     RovoDevDisabledReason,
     RovoDevEntitlementCheckFailedDetail,
     RovoDevProviderMessage,
@@ -196,6 +201,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         );
 
         this._chatProvider = new RovoDevChatProvider(this.isBoysenberry, this._telemetryProvider);
+        this._chatProvider.onAgentModelChanged(() => this.refreshAgentModel());
+
         this._chatContextprovider = new RovoDevChatContextProvider();
 
         this._yoloMode = this.loadYoloModeFromStorage();
@@ -547,6 +554,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         }
                         break;
 
+                    case RovoDevViewResponseType.SetAgentModel:
+                        await this.setAgentModel(e.model);
+                        break;
+
                     case RovoDevViewResponseType.OpenExternalLink:
                         await env.openExternal(Uri.parse(e.href));
                         break;
@@ -598,6 +609,27 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             savedPrompts: prompts,
                         });
                         break;
+
+                    case RovoDevViewResponseType.AskUserQuestionsSubmit:
+                    case RovoDevViewResponseType.ExitPlanModeSubmit:
+                        const deferredToolResponse: RovoDevDeferredToolCallResponse = {
+                            tool_call_id: e.toolCallId,
+                            result: e.result,
+                        };
+
+                        const switchToDefaultMode =
+                            e.type === RovoDevViewResponseType.ExitPlanModeSubmit && e.result.proceed === true;
+                        if (switchToDefaultMode) {
+                            await this._chatProvider.setAgentMode('default');
+                            await webview.postMessage({
+                                type: RovoDevProviderMessageType.SetAgentModeComplete,
+                                mode: 'default',
+                            });
+                        }
+                        await this._chatProvider.executeDeferredToolCall(deferredToolResponse);
+
+                        break;
+
                     default:
                         // @ts-expect-error ts(2339) - e here should be 'never'
                         this.processError(new Error(`Unknown message type: ${e.type}`));
@@ -611,7 +643,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private async sendProviderReadyEvent(userEmail: string | undefined) {
         const yoloMode = this._yoloMode;
-        const featureFlagClient = FeatureFlagClient.getInstance();
 
         await this._webView!.postMessage({
             type: RovoDevProviderMessageType.ProviderReady,
@@ -619,9 +650,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             workspacePath: workspace.workspaceFolders?.[0]?.uri.fsPath,
             homeDir: process.env.HOME || process.env.USERPROFILE,
             yoloMode,
-            features: {
-                dedicatedRovoDevAuth: featureFlagClient.checkGate(Features.DedicatedRovoDevAuth),
-            },
         });
 
         // Send existing Jira credentials for autocomplete
@@ -996,6 +1024,62 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
+    private async initializeAgentModels() {
+        if (!this.rovoDevApiClient || !this._webView) {
+            return;
+        }
+
+        const availableModelsData = await this.rovoDevApiClient.getAvailableAgentModels();
+        const availableModels = availableModelsData.models ?? [];
+        const availableModelsForWebview = availableModels.map((model) => ({
+            modelId: model.model_id,
+            modelName: removeCustomCliTags(model.name),
+            creditMultiplier: model.credit_multiplier,
+        }));
+
+        this._webView.postMessage({
+            type: RovoDevProviderMessageType.UpdateAgentModels,
+            models: availableModelsForWebview,
+        });
+    }
+
+    private async refreshAgentModel() {
+        if (!this.rovoDevApiClient || !this._webView) {
+            return;
+        }
+
+        const currentModelInfo = await this.rovoDevApiClient.getAgentModel();
+        this._webView.postMessage({
+            type: RovoDevProviderMessageType.AgentModelChanged,
+            modelId: currentModelInfo.model_id,
+            modelName: currentModelInfo.model_name,
+            creditMultiplier: currentModelInfo.credit_multiplier,
+        });
+    }
+
+    private async setAgentModel(model: RovoDevAgentModel) {
+        if (!this.rovoDevApiClient || !this._webView) {
+            return;
+        }
+
+        const response = await this.rovoDevApiClient.setAgentModel(model.modelId);
+
+        this._webView.postMessage({
+            type: RovoDevProviderMessageType.ShowDialog,
+            message: {
+                type: 'info',
+                text: response.message,
+                title: 'Agent model changed',
+                event_kind: '_RovoDevDialog',
+            },
+        });
+
+        this._webView.postMessage({
+            type: RovoDevProviderMessageType.AgentModelChanged,
+            ...model,
+        });
+    }
+
     private async executeOpenFile(
         filePath: string,
         tryShowDiff: boolean,
@@ -1173,10 +1257,18 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 },
             });
         } catch (e) {
-            await this.processError(e);
+            const gitErrorCode = e.gitErrorCode;
+
+            // Don't log user configuration/input errors - these are expected and user needs to fix them
+            const isUserConfigError =
+                gitErrorCode === GitErrorCodes.NoUserNameConfigured ||
+                gitErrorCode === GitErrorCodes.NoUserEmailConfigured ||
+                e.message?.includes('Commit message is required') ||
+                e.message?.includes('Branch name is required');
+
+            await this.processError(e, { skipLogError: isUserConfigError });
 
             const errorMessage = e.message;
-            const gitErrorCode = e.gitErrorCode;
 
             await webview.postMessage({
                 type: RovoDevProviderMessageType.CreatePRComplete,
@@ -1500,24 +1592,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             const mcp_servers = result.mcp_servers || {};
             const serversToReview = Object.keys(mcp_servers).filter((x) => mcp_servers[x] === 'pending user review');
 
-            if (this.isBoysenberry) {
-                await this.signalRovoDevDisabled('Other');
-                await this.processError(
-                    new Error(`Cannot start third party MCP servers:${serversToReview.map((name) => `\n- ${name}`)}`),
-                    { title: 'Failed to initialize Rovo Dev', skipLogError: true },
+            if (serversToReview.length === 0) {
+                await this.signalProcessFailedToInitialize(
+                    'Failed to initialize Rovo Dev, something went wrong with the MCP servers acceptance flow.',
                 );
             } else {
-                if (serversToReview.length === 0) {
-                    await this.signalProcessFailedToInitialize(
-                        'Failed to initialize Rovo Dev, something went wrong with the MCP servers acceptance flow.',
-                    );
-                } else {
-                    await webView.postMessage({
-                        type: RovoDevProviderMessageType.SetMcpAcceptanceRequired,
-                        isPromptPending: this._chatProvider.isPromptPending,
-                        mcpIds: serversToReview,
-                    });
-                }
+                await webView.postMessage({
+                    type: RovoDevProviderMessageType.SetMcpAcceptanceRequired,
+                    isPromptPending: this._chatProvider.isPromptPending,
+                    mcpIds: serversToReview,
+                });
             }
 
             return;
@@ -1528,6 +1612,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             // @ts-expect-error ts(2339) - result.status here should be 'never'
             throw new Error(`Invalid healthcheck's response: "${result.status.toString()}".`);
         }
+
+        this.refreshAgentModel();
+        this.initializeAgentModels();
 
         setCommandContext(RovodevCommandContext.RovoDevApiReady, true);
         this.beginNewSession(result.sessionId || null, 'init');
