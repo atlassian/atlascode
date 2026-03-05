@@ -226,7 +226,7 @@ describe('CredentialManager', () => {
         });
 
         it('should return OAuth info without refresh when token has plenty of time remaining', async () => {
-            const futureExpirationTime = Date.now() + 20 * Time.MINUTES; // Well beyond grace period
+            const futureExpirationTime = Date.now() + 40 * Time.MINUTES; // Well beyond 30-min grace period
             const oauthInfo: OAuthInfo = {
                 user: { id: 'user-id', displayName: 'User Name', email: 'user@example.com', avatarUrl: '' },
                 state: AuthInfoState.Valid,
