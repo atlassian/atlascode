@@ -2,6 +2,16 @@
 
 ## What's new in 4.0.23
 
+### Improvements
+
+- **RovoDev**: Refactored JSON parsing logic with `safeJsonParse` helper function to reduce code duplication and improve maintainability
+
+### Bug Fixes
+
+- **RovoDev**: Fixed JSON parsing errors in ToolReturnMessage handling - added type checking before JSON.parse() to prevent "Input data should be a String" and invalid JSON errors
+- Added comprehensive test coverage for parseToolReturnMessage with both string and pre-parsed object inputs
+## What's new in 4.0.23
+
 ### Features
 
 - Rovo Dev: Support new `plan` mode with `deferred_request` handling
