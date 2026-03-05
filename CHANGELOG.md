@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.24
+
+### Improvements
+
+- **RovoDev**: Enhanced "Fix by Rovo Dev" and "Explain by Rovo Dev" code actions with rich context extraction - now includes actual code content, surrounding code, import statements, and structured diagnostics for significantly better AI responses
+
 ## What's new in 4.0.23
 
 ### Improvements
