@@ -28,7 +28,13 @@ import {
 import { GitErrorCodes } from '../typings/git';
 import { RovodevCommandContext, RovodevCommands } from './api/componentApi';
 import { DetailedSiteInfo, ExtensionApi, MinimalIssue } from './api/extensionApi';
-import { AgentMode, RovoDevApiClient, RovoDevApiError, RovoDevHealthcheckResponse } from './client';
+import {
+    AgentMode,
+    RovoDevApiClient,
+    RovoDevApiError,
+    RovoDevDeferredToolCallResponse,
+    RovoDevHealthcheckResponse,
+} from './client';
 import { buildErrorDetails } from './errorDetailsBuilder';
 import { createValidatedRovoDevAuthInfo } from './rovoDevAuthValidator';
 import { RovoDevChatContextProvider } from './rovoDevChatContextProvider';
@@ -603,6 +609,27 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             savedPrompts: prompts,
                         });
                         break;
+
+                    case RovoDevViewResponseType.AskUserQuestionsSubmit:
+                    case RovoDevViewResponseType.ExitPlanModeSubmit:
+                        const deferredToolResponse: RovoDevDeferredToolCallResponse = {
+                            tool_call_id: e.toolCallId,
+                            result: e.result,
+                        };
+
+                        const switchToDefaultMode =
+                            e.type === RovoDevViewResponseType.ExitPlanModeSubmit && e.result.proceed === true;
+                        if (switchToDefaultMode) {
+                            await this._chatProvider.setAgentMode('default');
+                            await webview.postMessage({
+                                type: RovoDevProviderMessageType.SetAgentModeComplete,
+                                mode: 'default',
+                            });
+                        }
+                        await this._chatProvider.executeDeferredToolCall(deferredToolResponse);
+
+                        break;
+
                     default:
                         // @ts-expect-error ts(2339) - e here should be 'never'
                         this.processError(new Error(`Unknown message type: ${e.type}`));

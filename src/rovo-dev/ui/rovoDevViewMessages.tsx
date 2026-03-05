@@ -4,6 +4,7 @@ import { AgentMode } from '../client';
 import { ReducerAction } from '../messaging';
 import { RovoDevAgentModel } from '../rovoDevWebviewProviderMessages';
 import { FeedbackType } from './feedback-form/FeedbackForm';
+import { AskUserQuestionsResultMessage, ExitPlanModeResultMessage } from './utils';
 
 export const enum RovoDevViewResponseType {
     Refresh = 'refresh',
@@ -50,6 +51,8 @@ export const enum RovoDevViewResponseType {
     RestartProcess = 'restartProcess',
     ShowSessionHistory = 'showSessionHistory',
     FetchSavedPrompts = 'fetchSavedPrompts',
+    AskUserQuestionsSubmit = 'askUserQuestionsSubmit',
+    ExitPlanModeSubmit = 'exitPlanModeSubmit',
 }
 
 export type FileOperationType = 'modify' | 'create' | 'delete';
@@ -119,4 +122,6 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.StartNewSession>
     | ReducerAction<RovoDevViewResponseType.RestartProcess>
     | ReducerAction<RovoDevViewResponseType.ShowSessionHistory>
-    | ReducerAction<RovoDevViewResponseType.FetchSavedPrompts>;
+    | ReducerAction<RovoDevViewResponseType.FetchSavedPrompts>
+    | ReducerAction<RovoDevViewResponseType.AskUserQuestionsSubmit, AskUserQuestionsResultMessage>
+    | ReducerAction<RovoDevViewResponseType.ExitPlanModeSubmit, ExitPlanModeResultMessage>;
