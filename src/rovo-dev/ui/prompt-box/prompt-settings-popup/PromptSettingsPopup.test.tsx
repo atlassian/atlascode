@@ -30,7 +30,6 @@ describe('PromptSettingsPopup', () => {
                 onDeepPlanToggled={mockOnDeepPlanToggled}
                 onYoloModeToggled={mockOnYoloModeToggled}
                 onFullContextToggled={mockOnFullContextToggled}
-                isDeepPlanEnabled={false}
                 isYoloModeEnabled={false}
                 isFullContextEnabled={false}
                 availableAgentModes={[]}
@@ -50,7 +49,6 @@ describe('PromptSettingsPopup', () => {
                 onDeepPlanToggled={mockOnDeepPlanToggled}
                 onYoloModeToggled={mockOnYoloModeToggled}
                 onFullContextToggled={mockOnFullContextToggled}
-                isDeepPlanEnabled={false}
                 isYoloModeEnabled={false}
                 isFullContextEnabled={false}
                 availableAgentModes={[]}
@@ -64,34 +62,6 @@ describe('PromptSettingsPopup', () => {
         fireEvent.click(settingsButton);
 
         expect(screen.getByText('Plan')).toBeTruthy();
-        expect(
-            screen.getByText('Tackle complex, multi-step code by first generating a plan before coding.'),
-        ).toBeTruthy();
-    });
-
-    it('calls onToggleDeepPlan when toggle is clicked', () => {
-        render(
-            <PromptSettingsPopup
-                onDeepPlanToggled={mockOnDeepPlanToggled}
-                onYoloModeToggled={mockOnYoloModeToggled}
-                onFullContextToggled={mockOnFullContextToggled}
-                isDeepPlanEnabled={false}
-                isYoloModeEnabled={false}
-                isFullContextEnabled={false}
-                availableAgentModes={[]}
-                currentAgentMode={null}
-                onAgentModeChange={mockOnAgentModeChange}
-                onClose={mockOnClose}
-            />,
-        );
-
-        const settingsButton = screen.getByRole('button', { name: 'Prompt settings' });
-        fireEvent.click(settingsButton);
-
-        const toggle = screen.getByLabelText('Plan toggle');
-        fireEvent.click(toggle);
-
-        expect(mockOnDeepPlanToggled).toHaveBeenCalledTimes(1);
     });
 
     it('closes popup and calls onClose when clicking outside', () => {
@@ -100,7 +70,6 @@ describe('PromptSettingsPopup', () => {
                 onDeepPlanToggled={mockOnDeepPlanToggled}
                 onYoloModeToggled={mockOnYoloModeToggled}
                 onFullContextToggled={mockOnFullContextToggled}
-                isDeepPlanEnabled={false}
                 isYoloModeEnabled={false}
                 isFullContextEnabled={false}
                 availableAgentModes={[]}

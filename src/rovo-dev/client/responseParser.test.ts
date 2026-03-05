@@ -700,5 +700,79 @@ describe('RovoDevResponseParser', () => {
             expect(toolReturnEvent.toolCallMessage).toBeDefined();
             expect(toolReturnEvent.toolCallMessage.tool_name).toBe('get_weather');
         });
+
+        describe('models responses', () => {
+            it('should parse a models response with model change message', () => {
+                const input =
+                    'event: models\ndata: {"model_name": "GPT-4", "model_id": "gpt-4", "message": "Agent model changed to GPT-4"}\n\n';
+
+                const results = Array.from(parser.parse(input));
+
+                expect(results).toHaveLength(1);
+                expect(results[0]).toEqual({
+                    event_kind: 'models',
+                    data: {
+                        model_name: 'GPT-4',
+                        model_id: 'gpt-4',
+                        message: 'Agent model changed to GPT-4',
+                    },
+                });
+            });
+
+            it('should parse a models response with available models list', () => {
+                const input = `event: models\ndata: {"models": [{"name": "GPT-4", "model_id": "gpt-4", "description": "Most capable", "credit_multiplier": "1.5"}, {"name": "GPT-3.5", "model_id": "gpt-3.5-turbo", "description": "Fast", "credit_multiplier": "1.0"}]}\n\n`;
+
+                const results = Array.from(parser.parse(input));
+
+                expect(results).toHaveLength(1);
+                expect(results[0].event_kind).toBe('models');
+                const modelsResponse = results[0] as any;
+                expect(modelsResponse.data.models).toHaveLength(2);
+                expect(modelsResponse.data.models[0]).toEqual({
+                    name: 'GPT-4',
+                    model_id: 'gpt-4',
+                    description: 'Most capable',
+                    credit_multiplier: '1.5',
+                });
+            });
+
+            it('should parse models response with empty models array', () => {
+                const input = 'event: models\ndata: {"models": []}\n\n';
+
+                const results = Array.from(parser.parse(input));
+
+                expect(results).toHaveLength(1);
+                expect(results[0].event_kind).toBe('models');
+                const modelsResponse = results[0] as any;
+                expect(modelsResponse.data.models).toEqual([]);
+            });
+
+            it('should handle models event as a non-bufferable generic event', () => {
+                const allResults: RovoDevResponse[] = [];
+
+                // Parse a models event
+                let input = 'event: models\ndata: {"model_id": "gpt-4", "message": "Model changed"}\n\n';
+                allResults.push(...Array.from(parser.parse(input)));
+
+                // Parse another generic event to ensure models is not buffered
+                input = 'event: status\ndata: {}\n\n';
+                allResults.push(...Array.from(parser.parse(input)));
+
+                expect(allResults).toHaveLength(2);
+                expect(allResults[0].event_kind).toBe('models');
+                expect(allResults[1].event_kind).toBe('status');
+            });
+
+            it('should parse models event with both message and models array', () => {
+                const input = `event: models\ndata: {"message": "Available models", "models": [{"name": "GPT-4", "model_id": "gpt-4", "description": "Test", "credit_multiplier": "1.0"}]}\n\n`;
+
+                const results = Array.from(parser.parse(input));
+
+                expect(results).toHaveLength(1);
+                const modelsResponse = results[0] as any;
+                expect(modelsResponse.data.message).toBe('Available models');
+                expect(modelsResponse.data.models).toHaveLength(1);
+            });
+        });
     });
 });

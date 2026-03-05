@@ -2,6 +2,8 @@ import { DetailedSiteInfo, MinimalIssue } from './api/extensionApi';
 import {
     AgentMode,
     EntitlementCheckRovoDevHealthcheckResponse,
+    RovoDevAskUserQuestionsToolArgs,
+    RovoDevExitPlanModeToolArgs,
     RovoDevModeInfo,
     RovoDevRetryPromptResponse,
     RovoDevTextResponse,
@@ -46,15 +48,15 @@ export const enum RovoDevProviderMessageType {
     GetCurrentAgentModeComplete = 'getCurrentAgentModeComplete',
     SetAgentModeComplete = 'setAgentModeComplete',
     UpdateSavedPrompts = 'updateSavedPrompts',
+    ShowDeferredAskUserQuestions = 'showDeferredAskUserQuestions',
+    ShowDeferredExitPlanMode = 'showDeferredExitPlanMode',
+    UpdateAgentModels = 'updateAgentModels',
+    AgentModelChanged = 'agentModelChanged',
 }
 
 export type RovoDevDisabledReason = DisabledState['subState'];
 
 export type RovoDevEntitlementCheckFailedDetail = EntitlementCheckRovoDevHealthcheckResponse['detail'];
-
-export interface RovoDevFeatures {
-    dedicatedRovoDevAuth?: boolean;
-}
 
 export type RovoDevResponseMessageType =
     | RovoDevTextResponse
@@ -70,6 +72,12 @@ export interface RovoDevWebviewState {
     isFullContextModeToggled: boolean;
     isAtlassianUser: boolean;
     promptContextCollection: RovoDevContextItem[];
+}
+
+export interface RovoDevAgentModel {
+    modelId: string;
+    modelName: string;
+    creditMultiplier: string;
 }
 
 export type RovoDevProviderMessage =
@@ -92,7 +100,6 @@ export type RovoDevProviderMessage =
               workspacePath?: string;
               homeDir?: string;
               yoloMode?: boolean;
-              features?: RovoDevFeatures;
           }
       >
     | ReducerAction<RovoDevProviderMessageType.SetInitializing, { isPromptPending: boolean }>
@@ -137,4 +144,14 @@ export type RovoDevProviderMessage =
     | ReducerAction<
           RovoDevProviderMessageType.UpdateSavedPrompts,
           { savedPrompts: { name: string; description: string; content_file: string }[] | undefined }
-      >;
+      >
+    | ReducerAction<
+          RovoDevProviderMessageType.ShowDeferredAskUserQuestions,
+          { toolCallId: string; args: RovoDevAskUserQuestionsToolArgs }
+      >
+    | ReducerAction<
+          RovoDevProviderMessageType.ShowDeferredExitPlanMode,
+          { toolCallId: string; args: RovoDevExitPlanModeToolArgs }
+      >
+    | ReducerAction<RovoDevProviderMessageType.UpdateAgentModels, { models: RovoDevAgentModel[] }>
+    | ReducerAction<RovoDevProviderMessageType.AgentModelChanged, RovoDevAgentModel>;

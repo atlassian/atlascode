@@ -1,6 +1,6 @@
 import '@testing-library/dom';
 
-import { FieldUI } from '@atlassianlabs/jira-pi-meta-models';
+import { FieldUI } from '@atlassian-pi/jira-pi-meta-models';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { DetailedSiteInfo, Product } from 'src/atlclients/authInfo';
@@ -155,9 +155,14 @@ describe('IssueMainPanel', () => {
         fireEvent.change(textArea, { target: { value: 'Updated description' } });
         fireEvent.click(screen.getByText('Save'));
 
+        // Expect ADF format (WikiMarkup is converted to ADF)
         expect(mockHandleInlineEdit).toHaveBeenCalledWith(
             expect.objectContaining({ key: 'description', name: 'Description' }),
-            'Updated description',
+            expect.objectContaining({
+                version: 1,
+                type: 'doc',
+                content: expect.any(Array),
+            }),
         );
     });
 

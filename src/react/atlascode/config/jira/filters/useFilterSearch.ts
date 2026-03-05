@@ -1,4 +1,4 @@
-import { FilterSearchResults } from '@atlassianlabs/jira-pi-common-models';
+import { FilterSearchResults } from '@atlassian-pi/jira-pi-common-models';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import { useState } from 'react';
 import { useAsyncAbortable } from 'react-async-hook';

@@ -3,7 +3,7 @@ import {
     FilterSearchResults,
     JQLAutocompleteData,
     JQLErrors,
-} from '@atlassianlabs/jira-pi-common-models';
+} from '@atlassian-pi/jira-pi-common-models';
 import { flatten } from 'flatten-anything';
 import { ReducerAction } from 'src/ipc/messaging';
 

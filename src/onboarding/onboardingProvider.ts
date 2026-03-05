@@ -7,20 +7,31 @@ import { BasicAuthInfo, Product, ProductBitbucket, ProductJira, SiteInfo } from 
 import { configuration } from '../config/configuration';
 import { BitbucketEnabledKey, Commands, JiraEnabledKey } from '../constants';
 import { Container } from '../container';
+import { createValidatedRovoDevAuthInfo } from '../rovo-dev/rovoDevAuthValidator';
+import { RovoDevProcessManager } from '../rovo-dev/rovoDevProcessManager';
 import { EXTENSION_URL } from '../uriHandler/atlascodeUriHandler';
 import OnboardingQuickInputManager from './onboardingQuickInputManager';
 import OnboardingQuickPickManager from './onboardingQuickPickManager';
-import { OnboardingInputBoxStep, OnboardingQuickPickItem, onboardingQuickPickItems, OnboardingStep } from './utils';
+import RovoDevOnboardingInputManager, { RovoDevOnboardingSubmitArgs } from './rovoDevOnboardingInputManager';
+import {
+    mainMenuQuickPickItems,
+    OnboardingInputBoxStep,
+    OnboardingQuickPickItem,
+    onboardingQuickPickItems,
+    OnboardingStep,
+} from './utils';
 
 class OnboardingProvider {
     private id = 'atlascodeOnboardingQuickPick';
 
     private _analyticsClient: AnalyticsClient;
 
+    private _mainMenuQuickPickManager: OnboardingQuickPickManager;
     private _jiraQuickPickManager: OnboardingQuickPickManager;
     private _bitbucketQuickPickManager: OnboardingQuickPickManager;
 
     private _quickInputManager: OnboardingQuickInputManager;
+    private _rovoDevInputManager: RovoDevOnboardingInputManager;
 
     constructor() {
         this._analyticsClient = Container.analyticsClient;
@@ -32,10 +43,28 @@ class OnboardingProvider {
             this._handleServerLogin.bind(this),
         );
 
+        this._rovoDevInputManager = new RovoDevOnboardingInputManager(
+            () => this._handleBack(OnboardingStep.RovoDev),
+            (args) => this._onRovoTokenSubmit(args),
+        );
+
+        this._mainMenuQuickPickManager = new OnboardingQuickPickManager(
+            mainMenuQuickPickItems(),
+            null,
+            this._onMainMenuAccept.bind(this),
+            undefined,
+            {
+                title: 'Get started with Atlassian',
+                showBackButton: false,
+                step: OnboardingStep.MainMenu,
+            },
+        );
+
         this._jiraQuickPickManager = new OnboardingQuickPickManager(
             onboardingQuickPickItems(ProductJira),
             ProductJira,
             this._quickPickOnDidAccept.bind(this),
+            this._handleBack.bind(this),
         );
 
         this._bitbucketQuickPickManager = new OnboardingQuickPickManager(
@@ -46,10 +75,53 @@ class OnboardingProvider {
         );
     }
 
-    // --- Handle Quick Pick Accept ---
-    private async _quickPickOnDidAccept(item: OnboardingQuickPickItem, product: Product) {
-        const onboardingId = item.onboardingId;
+    private async _onRovoTokenSubmit(args: RovoDevOnboardingSubmitArgs): Promise<void> {
+        try {
+            const host = args.siteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+            const authInfo = await createValidatedRovoDevAuthInfo(host, args.email, args.token);
+            await Container.credentialManager.saveRovoDevAuthInfo(authInfo);
+            await configuration.updateEffective('rovodev.enabled', true, null, true);
+            await RovoDevProcessManager.initializeRovoDev(Container.context, true);
+            this.hideQuickPick(OnboardingStep.RovoDev);
+            await commands.executeCommand('atlascode.views.rovoDev.webView.focus');
+        } catch (error) {
+            Logger.error(error, 'Rovo Dev onboarding: failed to save credentials');
+            throw error;
+        }
+    }
 
+    // --- Handle Main Menu Accept ---
+    private _onMainMenuAccept(item: OnboardingQuickPickItem) {
+        const onboardingId = item.onboardingId;
+        if (!onboardingId) {
+            return;
+        }
+        switch (onboardingId) {
+            case 'onboarding:rovo':
+                this.show(OnboardingStep.RovoDev);
+                break;
+            case 'onboarding:jira':
+                this.show(OnboardingStep.Jira);
+                break;
+            case 'onboarding:bitbucket':
+                this.show(OnboardingStep.Bitbucket);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private _showRovoDevTokenSetup() {
+        this._mainMenuQuickPickManager.hide();
+        this._rovoDevInputManager.start();
+    }
+
+    // --- Handle Quick Pick Accept ---
+    private async _quickPickOnDidAccept(item: OnboardingQuickPickItem, product: Product | null) {
+        if (!product) {
+            return;
+        }
+        const onboardingId = item.onboardingId;
         if (!onboardingId) {
             return;
         }
@@ -75,52 +147,48 @@ class OnboardingProvider {
     // --- Handle Next Step ---
     private _handleNext(step: OnboardingStep) {
         if (step === OnboardingStep.Jira) {
-            // Refresh Jira explorers
             commands.executeCommand(Commands.RefreshAssignedWorkItemsExplorer);
-
             commands.executeCommand(Commands.RefreshCustomJqlExplorer);
         } else if (step === OnboardingStep.Bitbucket) {
-            // Refresh Bitbucket explorers
             commands.executeCommand(Commands.BitbucketRefreshPullRequests);
-
             commands.executeCommand(Commands.RefreshPipelines);
-            this.hideQuickPick(step);
-            return;
         } else {
             return;
         }
         Container.focus();
         this.hideQuickPick(step);
-
-        this.show(step + 1);
+        this.show(OnboardingStep.MainMenu);
     }
 
     // --- Start Onboarding ---
     start() {
         this._fireViewScreenEvent();
         Container.focus();
-
-        this.show(OnboardingStep.Jira);
+        this.show(OnboardingStep.MainMenu);
     }
 
     // --- Show QuickPick ---
     show(step: OnboardingStep) {
-        if (step === OnboardingStep.Jira) {
-            // Show Jira items
+        if (step === OnboardingStep.MainMenu) {
+            this._mainMenuQuickPickManager.show();
+        } else if (step === OnboardingStep.Jira) {
             this._jiraQuickPickManager.show();
         } else if (step === OnboardingStep.Bitbucket) {
-            // Show Bitbucket items
             this._bitbucketQuickPickManager.show();
-        } else {
-            return;
+        } else if (step === OnboardingStep.RovoDev) {
+            this._showRovoDevTokenSetup();
         }
     }
 
     hideQuickPick(step: OnboardingStep) {
-        if (step === OnboardingStep.Jira) {
+        if (step === OnboardingStep.MainMenu) {
+            this._mainMenuQuickPickManager.hide();
+        } else if (step === OnboardingStep.Jira) {
             this._jiraQuickPickManager.hide();
         } else if (step === OnboardingStep.Bitbucket) {
             this._bitbucketQuickPickManager.hide();
+        } else if (step === OnboardingStep.RovoDev) {
+            this._rovoDevInputManager.hide();
         }
     }
 
@@ -167,7 +235,7 @@ class OnboardingProvider {
 
     private _handleBack(step: OnboardingStep) {
         this.hideQuickPick(step);
-        this.show(step - 1);
+        this.show(OnboardingStep.MainMenu);
     }
 
     private _handleCloud(product: Product) {

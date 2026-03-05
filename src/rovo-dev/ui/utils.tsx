@@ -41,12 +41,19 @@ export type ChatMessage =
     | RovoDevTextResponse
     | RovoDevToolCallResponse
     | RovoDevToolReturnResponse
-    | RovoDevRetryPromptResponse;
+    | RovoDevRetryPromptResponse
+    | RovoDevExitPlanModeMessage;
 
 export interface UserPromptMessage {
     event_kind: '_RovoDevUserPrompt';
     content: string;
     context?: RovoDevContextItem[];
+}
+
+export interface RovoDevExitPlanModeMessage {
+    event_kind: '_RovoDevExitPlanMode';
+    toolCallId: string;
+    content: string;
 }
 
 export interface PullRequestMessage {
@@ -95,7 +102,7 @@ export interface ToolReturnParseResult {
     filePath?: string;
     title?: string;
     technicalPlan?: TechnicalPlan;
-    type?: 'modify' | 'create' | 'delete' | 'open' | 'bash';
+    type?: 'modify' | 'create' | 'delete' | 'open' | 'bash' | 'move';
 }
 
 export type Response = ChatMessage | ChatMessage[] | null;
@@ -109,9 +116,22 @@ export interface SavedPrompt {
 export interface SavedPromptsResponse {
     prompts: SavedPrompt[];
 }
+
+export interface DeferredRequestResultMessage {
+    toolCallId: string;
+}
+
+export interface AskUserQuestionsResultMessage extends DeferredRequestResultMessage {
+    result: { question: string; answer: string }[];
+}
+
+export interface ExitPlanModeResultMessage extends DeferredRequestResultMessage {
+    result: { proceed: boolean };
+}
+
 interface ToolReturnInfo {
     title: string;
-    type: 'modify' | 'create' | 'delete' | 'open' | 'bash';
+    type: 'modify' | 'create' | 'delete' | 'open' | 'bash' | 'move';
 }
 
 export const modifyFileTitleMap: Record<string, ToolReturnInfo> = {
@@ -121,8 +141,39 @@ export const modifyFileTitleMap: Record<string, ToolReturnInfo> = {
     created: { title: 'Created file', type: 'create' },
     deleted: { title: 'Deleted file', type: 'delete' },
     updated: { title: 'Updated file', type: 'modify' },
+    moved: { title: 'Moved file', type: 'move' },
     expanded_folder: { title: 'Expanded folder', type: 'open' },
 };
+
+// Type definitions for parsed tool arguments
+interface FolderArgs {
+    folder_path?: string;
+}
+
+interface BashArgs {
+    command?: string;
+}
+
+interface GrepArgs {
+    content_pattern?: string;
+    path_glob?: string;
+}
+
+interface McpToolArgs {
+    tool_name?: string;
+}
+
+/**
+ * Safely parses JSON string or returns the value if it's already an object.
+ * @param value - The value to parse (string or already parsed object)
+ * @returns Parsed object or the original value if already parsed, or null if value is falsy
+ */
+function safeJsonParse<T = any>(value: string | T | null | undefined): T | null {
+    if (!value) {
+        return null;
+    }
+    return typeof value === 'string' ? JSON.parse(value) : value;
+}
 
 /**
  * Parses the content of a ToolReturnMessage and extracts relevant information.
@@ -143,6 +194,7 @@ export function parseToolReturnMessage(
             case 'open_files':
             case 'create_file':
             case 'delete_file':
+            case 'move_file':
                 const contentArray = msg.parsedContent ? msg.parsedContent : [msg.content];
                 if (!Array.isArray(contentArray)) {
                     console.warn('Invalid content format in ToolReturnMessage:', msg.content);
@@ -157,7 +209,7 @@ export function parseToolReturnMessage(
 
                     const trimmedLine = line.split('\n\n')[0].trim();
                     const matches = trimmedLine.match(
-                        /^Successfully\s+(expanded code chunks|replaced code|opened|created|deleted|updated)(?:\s+in)?\s+(.+)?$/,
+                        /^Successfully\s+(expanded code chunks|replaced code|opened|moved|created|deleted|updated)(?:\s+in)?\s+(.+)?$/,
                     );
                     if (matches && matches.length >= 3) {
                         let filePath = matches[2].trim();
@@ -182,7 +234,7 @@ export function parseToolReturnMessage(
                 break;
 
             case 'expand_folder':
-                const folder = msg.toolCallMessage.args && JSON.parse(msg.toolCallMessage.args);
+                const folder = safeJsonParse<FolderArgs>(msg.toolCallMessage.args);
                 if (folder?.folder_path) {
                     resp.push({
                         title: folder.folder_path,
@@ -198,7 +250,7 @@ export function parseToolReturnMessage(
                 break;
 
             case 'bash':
-                const args = msg.toolCallMessage.args && JSON.parse(msg.toolCallMessage.args);
+                const args = safeJsonParse<BashArgs>(msg.toolCallMessage.args);
                 if (args?.command) {
                     resp.push({
                         title: args.command,
@@ -209,9 +261,9 @@ export function parseToolReturnMessage(
                 break;
 
             case 'grep':
-                const toolCallArgs = msg.toolCallMessage.args;
-                const searchPattern = toolCallArgs ? JSON.parse(toolCallArgs).content_pattern : undefined;
-                const pathGlob = toolCallArgs ? JSON.parse(toolCallArgs).path_glob : undefined;
+                const grepArgs = safeJsonParse<GrepArgs>(msg.toolCallMessage.args);
+                const searchPattern = grepArgs?.content_pattern;
+                const pathGlob = grepArgs?.path_glob;
                 const matches = (msg.content ?? '').split('\n').filter((line) => line.trim() !== '');
                 let content = 'Searched files';
                 if (searchPattern && pathGlob) {
@@ -235,7 +287,9 @@ export function parseToolReturnMessage(
 
             case 'create_technical_plan':
                 // Use parsedContent if available (it's the parsed object), otherwise parse msg.content (string)
-                const planData: TechnicalPlan = msg.parsedContent ?? (msg.content ? JSON.parse(msg.content) : null);
+                const planData = (msg.parsedContent ?? safeJsonParse<TechnicalPlan>(msg.content)) as
+                    | TechnicalPlan
+                    | undefined;
 
                 resp.push({
                     content: '',
@@ -243,11 +297,22 @@ export function parseToolReturnMessage(
                 });
                 break;
 
+            case 'ask_user_questions':
+                resp.push({
+                    content: 'Asked user questions',
+                    type: 'open',
+                });
+                break;
+            case 'exit_plan_mode':
+                resp.push({
+                    content: 'Exited plan mode',
+                    type: 'modify',
+                });
+                break;
             case 'mcp__atlassian__invoke_tool':
             case 'mcp__atlassian__get_tool_schema':
             case 'mcp__scout__invoke_tool':
-                const mcpToolCallArgs = msg.toolCallMessage.args;
-                const mcpToolData = mcpToolCallArgs ? JSON.parse(mcpToolCallArgs) : undefined;
+                const mcpToolData = safeJsonParse<McpToolArgs>(msg.toolCallMessage.args);
                 resp.push({
                     content: `Invoked MCP tool: \`${mcpToolData?.tool_name || 'unknown tool'}\``,
                     type: 'bash',
@@ -274,7 +339,7 @@ export function parseToolReturnMessage(
 }
 
 export const isCodeChangeTool = (toolName: string): boolean => {
-    return ['find_and_replace_code', 'create_file', 'delete_file'].includes(toolName);
+    return ['find_and_replace_code', 'create_file', 'delete_file', 'move_file'].includes(toolName);
 };
 
 export const CODE_PLAN_EXECUTE_PROMPT = 'Execute the code plan that you have created';
@@ -458,3 +523,5 @@ export async function processDropDataTransferItems(
     const values = await Promise.all(promises);
     callback(values);
 }
+
+export const capitalizeFirst = (s: string): string => (s.length === 0 ? s : s.charAt(0).toUpperCase() + s.slice(1));

@@ -1,15 +1,21 @@
-import { emptyIssueType, emptyProject, IssueType, Project } from '@atlassianlabs/jira-pi-common-models';
-import { CreateMetaTransformerResult, FieldValues, IssueTypeUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { emptyIssueType, emptyProject, IssueType, Project } from '@atlassian-pi/jira-pi-common-models';
+import { CreateMetaTransformerResult, FieldValues, IssueTypeUI, ValueType } from '@atlassian-pi/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import { format } from 'date-fns';
 import FormData from 'form-data';
-import { AnalyticRequiredFieldInfo } from 'src/analyticsTypes';
+import { AnalyticRequiredFieldInfo, CreateIssueSource } from 'src/analyticsTypes';
 import { startWorkOnIssue } from 'src/commands/jira/startWorkOnIssue';
 import { getFilledFieldKeys } from 'src/util/fieldValues';
 import timer from 'src/util/perf';
 import { commands, ConfigurationTarget, Disposable, Position, Uri, ViewColumn } from 'vscode';
 
-import { createIssueAbandonedEvent, issueCreatedEvent, issueOpenRovoDevEvent, performanceEvent } from '../analytics';
+import {
+    createIssueAbandonedEvent,
+    issueCreatedEvent,
+    issueOpenRovoDevEvent,
+    performanceEvent,
+    viewScreenEvent,
+} from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { buildSuggestionSettings, IssueSuggestionManager } from '../commands/jira/issueSuggestionManager';
 import { showIssue } from '../commands/jira/showIssue';
@@ -69,6 +75,12 @@ export interface BBData {
     issueKey: string;
 }
 
+export type CreateIssueAnalyticsData = {
+    creationSource: CreateIssueSource;
+    creationId: string;
+    isWorkItemWebview?: boolean;
+};
+
 const emptyCreateMetaResult: CreateMetaTransformerResult<DetailedSiteInfo> = {
     selectedIssueType: emptyIssueType,
     issueTypeUIs: {},
@@ -103,12 +115,14 @@ export class CreateIssueWebview
     private _lastFilledFields: string[] = [];
     private _submitAttempt: number = 0;
     private _errorBannerDetails: string | { message?: string; title?: string } | undefined = undefined;
+    private _analyticsIssueCreatingData: CreateIssueAnalyticsData;
 
     constructor(extensionPath: string) {
         super(extensionPath);
         this._screenData = emptyCreateMetaResult;
         this._siteDetails = emptySiteInfo;
         this._projectsWithCreateIssuesPermission = {};
+        this._analyticsIssueCreatingData = { creationSource: 'unknown', creationId: '' };
     }
 
     public get title(): string {
@@ -149,16 +163,18 @@ export class CreateIssueWebview
             }
 
             const missedRequiredFields = this.getMissedRequiredFields();
-            createIssueAbandonedEvent(
-                this._siteDetails,
+            createIssueAbandonedEvent({
+                site: this._siteDetails,
                 exitReason,
-                this._lastFilledFields,
+                filledFields: this._lastFilledFields,
                 missedRequiredFields,
-                this._hadValidationError,
-                this._apiError,
-                this._submitAttempt,
-                this._errorBannerDetails,
-            ).then((e) => {
+                hadValidationError: this._hadValidationError,
+                apiError: this._apiError,
+                submitAttempt: this._submitAttempt,
+                errorBannerDetails: this._errorBannerDetails,
+                creationSource: this._analyticsIssueCreatingData.creationSource,
+                creationId: this._analyticsIssueCreatingData.creationId,
+            }).then((e) => {
                 Container.analyticsClient.sendTrackEvent(e);
             });
         }
@@ -210,9 +226,11 @@ export class CreateIssueWebview
         data?: PartialIssue,
         issueSuggestionSettings?: IssueSuggestionSettings,
         todoData?: SimplifiedTodoIssueData,
+        analyticsData?: CreateIssueAnalyticsData,
     ): Promise<void> {
         this._issueSuggestionSettings = issueSuggestionSettings;
         this._todoData = todoData;
+        this._analyticsIssueCreatingData = analyticsData || { creationSource: 'explorer', creationId: '' };
         await super.createOrShow(column);
         await this.initialize(data);
     }
@@ -640,9 +658,11 @@ export class CreateIssueWebview
 
             this.postMessage(createData);
             const createDuration = timer.measureAndClear(CreateJiraIssueRenderEventName);
-            performanceEvent(CreateJiraIssueRenderEventName, createDuration).then((event) => {
-                Container.analyticsClient.sendTrackEvent(event);
-            });
+            performanceEvent(CreateJiraIssueRenderEventName, createDuration, this._analyticsIssueCreatingData).then(
+                (event) => {
+                    Container.analyticsClient.sendTrackEvent(event);
+                },
+            );
         } catch (e) {
             Logger.error(e, 'error updating issue fields');
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
@@ -830,6 +850,15 @@ export class CreateIssueWebview
         return [payload, worklog, issuelinks, attachments];
     }
 
+    // overriding fireViewScreenEvent from AbstractReactWebview to add additional analytics data for CreateIssueWebview
+    protected override fireViewScreenEvent() {
+        viewScreenEvent(this.id, this.siteOrUndefined, this.productOrUndefined, this._analyticsIssueCreatingData).then(
+            (e) => {
+                Container.analyticsClient.sendScreenEvent(e);
+            },
+        );
+    }
+
     protected override async onMessageReceived(msg: Action): Promise<boolean> {
         let handled = await super.onMessageReceived(msg);
 
@@ -928,7 +957,7 @@ export class CreateIssueWebview
 
                             this._issueCreatedSuccessfully = true;
 
-                            issueCreatedEvent(msg.site, resp.key).then((e) => {
+                            issueCreatedEvent(msg.site, resp.key, this._analyticsIssueCreatingData).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
 

@@ -1,5 +1,5 @@
-import { MinimalIssueLink } from '@atlassianlabs/jira-pi-common-models';
-import { IssueLinkTypeSelectOption } from '@atlassianlabs/jira-pi-meta-models';
+import { MinimalIssueLink } from '@atlassian-pi/jira-pi-common-models';
+import { IssueLinkTypeSelectOption } from '@atlassian-pi/jira-pi-meta-models';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 

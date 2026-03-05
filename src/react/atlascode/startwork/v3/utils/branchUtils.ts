@@ -1,4 +1,4 @@
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue } from '@atlassian-pi/jira-pi-common-models';
 import Mustache from 'mustache';
 
 import { BranchType, RepoData } from '../../../../../lib/ipc/toUI/startWork';

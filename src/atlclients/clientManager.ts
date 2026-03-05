@@ -1,5 +1,5 @@
-import { JiraClient, JiraCloudClient, JiraServerClient } from '@atlassianlabs/jira-pi-client';
-import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
+import { JiraClient, JiraCloudClient, JiraServerClient } from '@atlassian-pi/jira-pi-client';
+import { getProxyHostAndPort } from '@atlassian-pi/pi-client-common';
 import { AxiosResponse } from 'axios';
 import PQueue from 'p-queue';
 import { ConfigurationChangeEvent, Disposable, ExtensionContext } from 'vscode';
@@ -53,17 +53,25 @@ export class ClientManager implements Disposable {
     private _queue = new PQueue({ concurrency: 1 });
     private _agentChanged: boolean = false;
     private hasWarnedOfFailure = false;
+    private _failedSites: Set<string> = new Set(); // Track sites that have failed
 
     constructor(context: ExtensionContext) {
         context.subscriptions.push(
             configuration.onDidChange(this.onConfigurationChanged, this),
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
+            Container.credentialManager.onDidAuthChange(this.onAuthChange, this),
         );
         this.onConfigurationChanged(configuration.initializingChangeEvent);
     }
 
     dispose() {
         this._clients.clear();
+        this._failedSites.clear();
+    }
+
+    private onAuthChange() {
+        // When credentials change, clear all failed sites to give them a fresh chance
+        this._failedSites.clear();
     }
 
     /*
@@ -153,6 +161,14 @@ export class ClientManager implements Disposable {
     public async jiraClient(site: DetailedSiteInfo): Promise<JiraClient<DetailedSiteInfo>> {
         const tag = Math.floor(Math.random() * 1000);
 
+        // If this site has failed before, don't retry - silently reject to avoid spam
+        const siteKey = this.keyForSite(site);
+        if (this._failedSites.has(siteKey)) {
+            Logger.debug(`Skipping jiraClient for ${site.host} - previously failed`);
+            // Return rejected promise without logging error - caller's catch block will handle it
+            return Promise.reject(new Error(`Site previously failed authentication`));
+        }
+
         let newClient: JiraClient<DetailedSiteInfo> | undefined = undefined;
         try {
             newClient = await this._queue.add(async () => {
@@ -199,14 +215,25 @@ export class ClientManager implements Disposable {
             });
         } catch (e) {
             Logger.error(e as Error, `${tag}: Error creating Jira client for ${site.baseApiUrl}`);
+            // Mark this site as failed - don't retry until credentials change
+            this._failedSites.add(siteKey);
             throw e;
         }
 
         // test if Cloud API Token is still good
         if (site.isCloud && isBasicAuthInfo(await Container.credentialManager.getAuthInfo(site, false))) {
-            await newClient.getCurrentUser();
+            try {
+                await newClient.getCurrentUser();
+            } catch (e) {
+                Logger.warn(e as Error, `${tag}: getCurrentUser failed for ${site.baseApiUrl}`);
+                // Mark this site as failed
+                this._failedSites.add(siteKey);
+                throw e;
+            }
         }
 
+        // Success - clear any previous failure status
+        this._failedSites.delete(siteKey);
         return newClient;
     }
 

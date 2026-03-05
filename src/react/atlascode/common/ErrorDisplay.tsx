@@ -1,4 +1,4 @@
-import { isErrorCollection, isErrorWithMessages } from '@atlassianlabs/jira-pi-common-models';
+import { isErrorCollection, isErrorWithMessages } from '@atlassian-pi/jira-pi-common-models';
 import CloseIcon from '@mui/icons-material/Close';
 import { Collapse, IconButton, Snackbar, Theme } from '@mui/material';
 import { Alert, AlertTitle } from '@mui/material';

@@ -67,7 +67,7 @@ export async function startWorkFlow(page: Page, type: BitbucketTypes, request: A
     ).toBeVisible();
 
     // setup mocks for next status
-    const cleanupIssueMock = await setupIssueMock(request, { status: NEXT_STATUS });
+    const cleanupIssueMock = await setupIssueMock(request, { status: NEXT_STATUS }, 'GET', type);
     const cleanupSearchMock = await setupSearchMock(request, NEXT_STATUS, type);
 
     await page.getByRole('tab', { name: 'Start work on BTS-1', exact: true }).getByLabel(/close/i).click();

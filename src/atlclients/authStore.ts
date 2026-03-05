@@ -366,7 +366,7 @@ export class CredentialManager implements Disposable {
         if (!isOAuthInfo(credentials)) {
             return authInfo; // not an OAuth info, no need to refresh
         }
-        const GRACE_PERIOD = 10 * Time.MINUTES;
+        const GRACE_PERIOD = 30 * Time.MINUTES;
 
         if (credentials.expirationDate) {
             const diff = credentials.expirationDate - Date.now();
@@ -576,13 +576,30 @@ export class CredentialManager implements Disposable {
                 Logger.debug(`Successfully saved refreshed tokens for credentialId: ${site.credentialId}`);
             } else if (tokenResponse.shouldInvalidate || tokenResponse.shouldSlowDown) {
                 if (tokenResponse.shouldSlowDown) {
+                    const newAttemptsCount = (this._failedRefreshCache.get(site.credentialId)?.attemptsCount ?? 0) + 1;
                     this._failedRefreshCache.set(site.credentialId, {
-                        attemptsCount: (this._failedRefreshCache.get(site.credentialId)?.attemptsCount ?? 0) + 1,
+                        attemptsCount: newAttemptsCount,
                         lastAttemptAt: new Date(),
                     });
+                    // Only log error after hitting retry limit
+                    if (newAttemptsCount >= 5) {
+                        Logger.error(
+                            new Error(
+                                `Token refresh failed after ${newAttemptsCount} attempts for credentialId: ${site.credentialId}`,
+                            ),
+                        );
+                    }
+                    // Do not invalidate on transient errors (e.g. network) - credentials stay valid for retry later
                 }
-                credentials.state = AuthInfoState.Invalid;
-                await this.saveAuthInfo(site, credentials);
+                if (tokenResponse.shouldInvalidate) {
+                    Logger.error(
+                        new Error(
+                            `Token refresh failed - credentials invalidated for credentialId: ${site.credentialId}`,
+                        ),
+                    );
+                    credentials.state = AuthInfoState.Invalid;
+                    await this.saveAuthInfo(site, credentials);
+                }
             }
         }
     }

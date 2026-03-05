@@ -36,4 +36,19 @@ describe('MarkedDown', () => {
         const { container } = render(<MarkedDown value="" onLinkClick={mockOnLinkClick} />);
         expect(container.querySelector('span')).toBeTruthy();
     });
+
+    it('handles malformed markdown gracefully', () => {
+        // Mock console.error to verify it's called
+        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+
+        // Extremely malformed markdown that might cause parser errors
+        const malformedMarkdown = '```\n\n```\n**unclosed bold\n[invalid link](';
+
+        const { container } = render(<MarkedDown value={malformedMarkdown} onLinkClick={mockOnLinkClick} />);
+
+        // Should render something (either parsed or fallback to plain text)
+        expect(container.querySelector('span')).toBeTruthy();
+
+        consoleErrorSpy.mockRestore();
+    });
 });
