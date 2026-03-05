@@ -1,0 +1,27 @@
+src/rovo-dev/rovoDevContextExtractor.test.ts
+  3c2bd985ab07e0f4 1,4-41,43,45-180
+src/rovo-dev/rovoDevContextExtractor.ts
+  3c2bd985ab07e0f4 1-105,107-109,111-156,158-217,219-234
+src/rovo-dev/rovoDevCodeActionProvider.ts
+  3c2bd985ab07e0f4 57-58,60-61,67,89-109
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "04cc7f7164ba2b829adc3e73c8c7ca67828e2f81",
+  "prompts": {
+    "3c2bd985ab07e0f4": {
+      "agent_id": {
+        "tool": "rovodev-cli",
+        "id": "rovodev-session",
+        "model": "auto"
+      },
+      "human_author": "Bryan Wieger <bwieger@atlassian.com>",
+      "messages": [],
+      "total_additions": 811,
+      "total_deletions": 13,
+      "accepted_lines": 1020,
+      "overriden_lines": 7
+    }
+  }
+}
