@@ -6,6 +6,10 @@
 
 - Rovo Dev: Support new `plan` mode with `deferred_request` handling
 
+### Cleanup
+
+- Rovo Dev: Removed legacy `create_technical_plan` plan mode implementation in favor of new `deferred_request`-based plan mode
+
 ## What's new in 4.0.22
 
 ### Features

@@ -325,7 +325,6 @@ const friendlyToolName: Record<RovoDevToolName, string> = {
     expand_folder: 'Expand folder',
     grep: 'Search for',
     bash: 'Run command',
-    create_technical_plan: 'Create a technical plan',
     mcp_invoke_tool: "Invoke an MCP server's tool",
     mcp__atlassian__invoke_tool: "Invoke an Atlassian MCP server's tool",
     mcp__atlassian__get_tool_schema: "Get an Atlassian MCP server's tool schema",
@@ -371,8 +370,6 @@ const ToolCallBody: React.FC<{
         );
     } else if (toolName === 'grep') {
         return <code style={{ maxWidth: '100%' }}>{jsonArgs.content_pattern}</code>;
-    } else if (toolName === 'create_technical_plan') {
-        return null;
     } else if (toolName === 'mcp_invoke_tool') {
         return (
             <table style={{ border: '0' }}>
