@@ -7,7 +7,7 @@ import {
     RovoDevToolReturnResponse,
 } from 'src/rovo-dev/client';
 
-import { RovoDevContextItem, TechnicalPlan } from '../rovoDevTypes';
+import { RovoDevContextItem } from '../rovoDevTypes';
 
 /**
  * Creates a keyboard event handler that triggers onClick when Enter or Space is pressed.
@@ -101,7 +101,6 @@ export interface ToolReturnParseResult {
     diff?: string;
     filePath?: string;
     title?: string;
-    technicalPlan?: TechnicalPlan;
     type?: 'modify' | 'create' | 'delete' | 'open' | 'bash' | 'move';
 }
 
@@ -285,18 +284,6 @@ export function parseToolReturnMessage(
 
                 break;
 
-            case 'create_technical_plan':
-                // Use parsedContent if available (it's the parsed object), otherwise parse msg.content (string)
-                const planData = (msg.parsedContent ?? safeJsonParse<TechnicalPlan>(msg.content)) as
-                    | TechnicalPlan
-                    | undefined;
-
-                resp.push({
-                    content: '',
-                    technicalPlan: planData,
-                });
-                break;
-
             case 'ask_user_questions':
                 resp.push({
                     content: 'Asked user questions',
@@ -455,7 +442,7 @@ export const appendResponse = (
             if (response.event_kind === 'tool-return') {
                 handleAppendModifiedFileToolReturns(response);
             }
-            if (response.tool_name !== 'create_technical_plan' && thinkingBlockEnabled) {
+            if (thinkingBlockEnabled) {
                 // Do not group if User, Error message, or Pull Request message is the latest
                 const canGroup =
                     latest &&
@@ -478,7 +465,6 @@ export const appendResponse = (
                     return latest ? [...prev, latest, [response]] : [...prev, [response]];
                 }
             } else {
-                // create_technical_plan is always its own message
                 return latest ? [...prev, latest, response] : [...prev, response];
             }
         }
@@ -487,11 +473,10 @@ export const appendResponse = (
             if (response.event_kind === 'tool-return') {
                 handleAppendModifiedFileToolReturns(response);
             }
-            if (response.tool_name !== 'create_technical_plan' && thinkingBlockEnabled) {
+            if (thinkingBlockEnabled) {
                 latest.push(response);
                 return [...prev, latest];
             } else {
-                // create_technical_plan is always its own message
                 return [...prev, latest, response];
             }
         }

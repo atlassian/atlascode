@@ -54,8 +54,6 @@ export function parseToolCallMessage(msgToolName: RovoDevToolName): string {
             return `Searching for patterns`;
         case 'bash':
             return `Executing bash command`;
-        case 'create_technical_plan':
-            return 'Creating technical plan';
         case 'mcp_invoke_tool':
         case 'mcp__atlassian__invoke_tool':
         case 'mcp__atlassian__get_tool_schema':
