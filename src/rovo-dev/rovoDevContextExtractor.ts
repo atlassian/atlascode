@@ -53,7 +53,7 @@ export function extractCodeContext(
     const finalConfig = { ...DEFAULT_CONFIG, ...config };
 
     const selectedCode = document.getText(range);
-    const surroundingCode = extractSurroundingCode(document, range, finalConfig);
+    const surroundingCode = getCodeSection(document, range, finalConfig);
     const imports = finalConfig.includeImports ? extractImports(document, finalConfig.maxImportLines) : '';
     const diagnosticInfo = formatDiagnostics(diagnostics);
 
@@ -69,11 +69,7 @@ export function extractCodeContext(
 /**
  * Extracts code surrounding the selection
  */
-function extractSurroundingCode(
-    document: vscode.TextDocument,
-    range: vscode.Range,
-    config: ContextExtractionConfig,
-): string {
+function getCodeSection(document: vscode.TextDocument, range: vscode.Range, config: ContextExtractionConfig): string {
     const startLine = Math.max(0, range.start.line - config.linesBefore);
     const endLine = Math.min(document.lineCount - 1, range.end.line + config.linesAfter);
 
@@ -100,15 +96,20 @@ function extractImports(document: vscode.TextDocument, maxLines: number): string
     const maxLinesToScan = Math.min(maxLines, document.lineCount);
 
     for (let i = 0; i < maxLinesToScan; i++) {
-        const line = document.lineAt(i).text.trim();
+        const documentLine = document.lineAt(i);
+        const trimmedLine = documentLine.text.trim();
 
         // Stop if we've moved past the import section
-        if (line && !importPatterns.some((pattern) => pattern.test(line)) && !isCommentOrEmpty(line)) {
+        if (
+            trimmedLine &&
+            !importPatterns.some((pattern) => pattern.test(trimmedLine)) &&
+            !isCommentOrEmpty(trimmedLine)
+        ) {
             break;
         }
 
-        if (importPatterns.some((pattern) => pattern.test(line))) {
-            imports.push(document.lineAt(i).text);
+        if (importPatterns.some((pattern) => pattern.test(trimmedLine))) {
+            imports.push(documentLine.text);
         }
     }
 
@@ -154,12 +155,28 @@ function isCommentOrEmpty(line: string): boolean {
  * Format diagnostics into a structured format
  */
 function formatDiagnostics(diagnostics: readonly vscode.Diagnostic[]): DiagnosticInfo[] {
-    return diagnostics.map((d) => ({
-        message: d.message,
-        severity: getSeverityString(d.severity),
-        source: d.source,
-        code: d.code ? String(d.code) : undefined,
-    }));
+    return diagnostics.map((d) => {
+        // Handle different shapes of Diagnostic.code
+        // vscode.Diagnostic.code can be a string, number, or an object like { value, target }
+        let codeValue: string | number | undefined;
+
+        if (d.code === undefined || d.code === null) {
+            codeValue = undefined;
+        } else if (typeof d.code === 'object' && 'value' in d.code) {
+            // Preserve numeric codes as numbers; otherwise convert to string
+            const val = (d.code as any).value;
+            codeValue = typeof val === 'number' ? val : String(val);
+        } else {
+            codeValue = d.code as string | number;
+        }
+
+        return {
+            message: d.message,
+            severity: getSeverityString(d.severity),
+            source: d.source,
+            code: codeValue,
+        };
+    });
 }
 
 /**

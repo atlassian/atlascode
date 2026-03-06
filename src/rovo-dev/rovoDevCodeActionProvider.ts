@@ -1,4 +1,5 @@
 import path from 'path';
+import { Logger } from 'src/logger';
 import * as vscode from 'vscode';
 
 import { RovodevCommands } from './api/componentApi';
@@ -102,7 +103,7 @@ export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
             return buildContextualPrompt(basePrompt, extractedContext, intent);
         } catch (error) {
             // Fallback to basic prompt if context extraction fails
-            console.error('Failed to extract context for Rovo Dev:', error);
+            Logger.warn('Failed to extract context for Rovo Dev:', error);
             return diagnostics.length
                 ? `${basePrompt}\nAdditional problem context:\n${diagnostics.map((d) => d.message).join('\n')}`
                 : basePrompt;
