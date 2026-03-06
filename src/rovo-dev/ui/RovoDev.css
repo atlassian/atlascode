@@ -260,6 +260,13 @@ body {
     word-break: break-all;
 }
 
+.tool-return-content p {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;;
+}
+
 .tool-call-item span {
     color: var(--vscode-input-placeholderForeground)
 }
