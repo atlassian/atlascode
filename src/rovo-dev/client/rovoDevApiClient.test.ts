@@ -264,7 +264,6 @@ describe('RovoDevApiClient', () => {
             const message = 'Hello, how can I help?';
             const response = await client.chat({
                 message,
-                enable_deep_plan: true,
                 context: [],
             });
 
@@ -275,7 +274,7 @@ describe('RovoDevApiClient', () => {
                     'Content-Type': 'application/json',
                     Authorization: 'Bearer sessionToken',
                 },
-                body: JSON.stringify({ message, enable_deep_plan: true, context: [] }),
+                body: JSON.stringify({ message, context: [] }),
             });
             expect(response).toBe(mockResponse);
 

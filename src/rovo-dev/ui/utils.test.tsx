@@ -137,30 +137,6 @@ describe('appendResponse', () => {
         expect(result[1]).toHaveLength(1);
     });
 
-    it('should handle create_technical_plan as separate message', () => {
-        const toolCallMessage: RovoDevToolCallResponse = {
-            event_kind: 'tool-call',
-            tool_name: 'create_technical_plan',
-            args: 'args1',
-            tool_call_id: 'id1',
-        };
-
-        const prev: Response[] = [{ event_kind: 'text', content: 'previous', index: 0 }];
-        const response: RovoDevToolReturnResponse = {
-            event_kind: 'tool-return',
-            tool_name: 'create_technical_plan',
-            content: 'plan',
-            tool_call_id: 'id1',
-            timestamp: '0',
-            toolCallMessage,
-        };
-
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
-
-        expect(result).toHaveLength(2);
-        expect(result[1]).toEqual(response);
-    });
-
     it('should merge with existing thinking group', () => {
         const toolCallMessage1: RovoDevToolCallResponse = {
             event_kind: 'tool-call',
@@ -213,32 +189,6 @@ describe('appendResponse', () => {
         expect(result).toHaveLength(1);
         expect(Array.isArray(result[0])).toBe(true);
         expect(result[0]).toHaveLength(3);
-    });
-
-    it('should handle create_technical_plan when latest is array', () => {
-        const toolCallMessage: RovoDevToolCallResponse = {
-            event_kind: 'tool-call',
-            tool_name: 'create_technical_plan',
-            args: 'args1',
-            tool_call_id: 'id2',
-        };
-        const existingArray: ChatMessage[] = [
-            { event_kind: 'tool-call', tool_name: 'grep', args: 'args1', tool_call_id: 'id1' },
-        ];
-        const prev: Response[] = [existingArray];
-        const response: RovoDevToolReturnResponse = {
-            event_kind: 'tool-return',
-            tool_name: 'create_technical_plan',
-            content: 'plan',
-            tool_call_id: 'id2',
-            timestamp: '0',
-            toolCallMessage,
-        };
-
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
-
-        expect(result).toHaveLength(2);
-        expect(result[1]).toEqual(response);
     });
 
     it('should handle array response when latest exists', () => {
@@ -508,103 +458,6 @@ describe('parseToolReturnMessage', () => {
                 title: '1 match found',
                 content: 'Searched for `TODO` in files matching `**/*.ts`',
                 type: 'open',
-            });
-            expect(mockOnError).not.toHaveBeenCalled();
-        });
-
-        it('should handle create_technical_plan with string content', () => {
-            const toolCallMessage: RovoDevToolCallResponse = {
-                event_kind: 'tool-call',
-                tool_name: 'create_technical_plan',
-                args: '{}',
-                tool_call_id: 'id1',
-            };
-
-            const planData = {
-                description: 'Test plan',
-                steps: [{ description: 'Step 1', tool_name: 'bash' }],
-            };
-
-            const msg: RovoDevToolReturnResponse = {
-                event_kind: 'tool-return',
-                tool_name: 'create_technical_plan',
-                content: JSON.stringify(planData),
-                tool_call_id: 'id1',
-                timestamp: '0',
-                toolCallMessage,
-            };
-
-            const result = parseToolReturnMessage(msg, mockOnError);
-
-            expect(result).toHaveLength(1);
-            expect(result[0]).toEqual({
-                content: '',
-                technicalPlan: planData,
-            });
-            expect(mockOnError).not.toHaveBeenCalled();
-        });
-
-        it('should handle create_technical_plan with pre-parsed content', () => {
-            const toolCallMessage: RovoDevToolCallResponse = {
-                event_kind: 'tool-call',
-                tool_name: 'create_technical_plan',
-                args: '{}',
-                tool_call_id: 'id1',
-            };
-
-            const planData = {
-                description: 'Test plan',
-                steps: [{ description: 'Step 1', tool_name: 'bash' }],
-            };
-
-            const msg: RovoDevToolReturnResponse = {
-                event_kind: 'tool-return',
-                tool_name: 'create_technical_plan',
-                content: planData as any, // Pre-parsed object
-                tool_call_id: 'id1',
-                timestamp: '0',
-                toolCallMessage,
-            };
-
-            const result = parseToolReturnMessage(msg, mockOnError);
-
-            expect(result).toHaveLength(1);
-            expect(result[0]).toEqual({
-                content: '',
-                technicalPlan: planData, // Now correctly handles pre-parsed objects
-            });
-            expect(mockOnError).not.toHaveBeenCalled();
-        });
-
-        it('should handle create_technical_plan with parsedContent', () => {
-            const toolCallMessage: RovoDevToolCallResponse = {
-                event_kind: 'tool-call',
-                tool_name: 'create_technical_plan',
-                args: '{}',
-                tool_call_id: 'id1',
-            };
-
-            const planData = {
-                description: 'Test plan',
-                steps: [{ description: 'Step 1', tool_name: 'bash' }],
-            };
-
-            const msg: RovoDevToolReturnResponse = {
-                event_kind: 'tool-return',
-                tool_name: 'create_technical_plan',
-                content: 'ignored',
-                parsedContent: planData,
-                tool_call_id: 'id1',
-                timestamp: '0',
-                toolCallMessage,
-            };
-
-            const result = parseToolReturnMessage(msg, mockOnError);
-
-            expect(result).toHaveLength(1);
-            expect(result[0]).toEqual({
-                content: '',
-                technicalPlan: planData,
             });
             expect(mockOnError).not.toHaveBeenCalled();
         });

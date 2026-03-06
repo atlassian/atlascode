@@ -188,7 +188,6 @@ export type RovoDevToolName =
     | 'expand_folder'
     | 'grep'
     | 'bash'
-    | 'create_technical_plan'
     | 'mcp_invoke_tool'
     | 'mcp__atlassian__invoke_tool'
     | 'mcp__atlassian__get_tool_schema'

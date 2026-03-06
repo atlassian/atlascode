@@ -1,12 +1,17 @@
+# Your Atlassian workspace, right in VS Code
+Stop switching tabs. Start shipping code. The Atlassian extension brings **Jira**, **Bitbucket**, and AI-powered **Rovo Dev** directly into your IDE.
 
-# Atlassian: Jira, Rovo Dev, Bitbucket
+Browse, View, Create, and Manage your Jira Work Items, Bitbucket PRs, Bitbucket Pipelines.
+
+**Now with Rovo Dev**: Your context-aware AI teammate that knows your codebase, tickets, and docs. Rovo Dev brings AI-assisted development directly into VS Code by combining Atlassian context with code-aware assistance.
+
+- Ask questions about code, Jira work items, or Confluence docs without leaving your IDE
+- Offload tasks like drafting Jira work items, pull requests, and even code changes to Rovo Dev
+- Get work suggestions, view your code reviews, and tackle tasks directly from VS Code
+- Manage notifications and reviews in-flow—no context switching
 
 
-Stay in your IDE; don't switch contexts. 
-
-Browse, View, Create, and Manage your Jira Work Items, Bitbucket PRs, Bitbucket Pipelines. 
-
-Use Rovo Dev, our AI Coding Agent, to complete tasks, ask questions, and fix up PRs & Pipelines. 
+**New in GA:** Mode control for AI autonomy, auto-saving sessions, file-aware context, full change history with native diff views and more.
 
 Compatible with VS Code, Cursor, Windsurf and other forks.
 

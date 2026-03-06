@@ -7,7 +7,6 @@ import React, { useCallback, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 
 import { ChatMessageItem } from '../messaging/ChatMessageItem';
-import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
 import { ChatMessage, onKeyDownHandler, parseToolReturnMessage } from '../utils';
 import { DialogMessageItem } from './DialogMessage';
@@ -211,16 +210,6 @@ export const renderChatHistory = (
         case 'tool-return':
             const parsedMessages = parseToolReturnMessage(msg, onError);
             return parsedMessages.map((message) => {
-                if (message.technicalPlan) {
-                    return (
-                        <TechnicalPlanComponent
-                            content={message.technicalPlan}
-                            openFile={openFile}
-                            onLinkClick={onLinkClick}
-                            checkFileExists={checkFileExists}
-                        />
-                    );
-                }
                 return <ToolReturnParsedItem msg={message} openFile={openFile} onLinkClick={onLinkClick} />;
             });
         case '_RovoDevDialog':

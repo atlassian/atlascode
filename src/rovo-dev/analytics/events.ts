@@ -6,7 +6,6 @@ export type RovoDevEnv = 'IDE' | 'Boysenberry';
 export const RovodevPerformanceTags = {
     timeToFirstByte: 'api.rovodev.chat.response.timeToFirstByte',
     timeToFirstMessage: 'api.rovodev.chat.response.timeToFirstMessage',
-    timeToTechPlan: 'api.rovodev.chat.response.timeToTechPlan',
     timeToLastMessage: 'api.rovodev.chat.response.timeToLastMessage',
     timeToRender: 'ui.rovodev.chat.response.timeToRender',
 } as const;
@@ -50,21 +49,6 @@ export namespace Track {
             appInstanceId: string;
             sessionId: string;
             promptId: string;
-            deepPlanEnabled: boolean;
-        };
-    };
-
-    export type TechnicalPlanningShown = {
-        action: 'rovoDevTechnicalPlanningShown';
-        subject: 'atlascode';
-        attributes: {
-            rovoDevEnv: RovoDevEnv;
-            appInstanceId: string;
-            sessionId: string;
-            promptId: string;
-            stepsCount: number;
-            filesCount: number;
-            questionsCount: number;
         };
     };
 
@@ -216,7 +200,6 @@ export namespace Track {
 export type TrackEvent =
     | Track.NewSessionAction
     | Track.PromptSent
-    | Track.TechnicalPlanningShown
     | Track.FilesSummaryShown
     | Track.FileChangedAction
     | Track.StopAction
