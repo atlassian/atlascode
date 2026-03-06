@@ -18,6 +18,8 @@
 
 ### Bug Fixes
 
+- Bitbucket DC: Fixed PRs list pagination
+
 - **RovoDev**: Fixed JSON parsing errors in ToolReturnMessage handling - added type checking before JSON.parse() to prevent "Input data should be a String" and invalid JSON errors
 - Added comprehensive test coverage for parseToolReturnMessage with both string and pre-parsed object inputs
 
