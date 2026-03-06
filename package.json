@@ -247,6 +247,11 @@
                 "title": "Copy Image"
             },
             {
+                "command": "atlascode.copyLogsAndDiagnostics",
+                "title": "Copy Logs & Diagnostics",
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.jira.searchIssues",
                 "title": "Search Jira Issue Results",
                 "icon": {

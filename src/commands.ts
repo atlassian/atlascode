@@ -13,6 +13,7 @@ import { BasicAuthInfo, DetailedSiteInfo, ProductBitbucket, ProductJira } from '
 import { showBitbucketDebugInfo } from './bitbucket/bbDebug';
 import { setCommandContext } from './commandContext';
 import { addAtlascodeAsRecommendedExtension } from './commands/addRecommendedExtension';
+import { copyLogsAndDiagnostics } from './util/diagnosticsCollector';
 import { rerunPipeline } from './commands/bitbucket/rerunPipeline';
 import { runPipeline } from './commands/bitbucket/runPipeline';
 import { assignIssue } from './commands/jira/assignIssue';
@@ -175,6 +176,15 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 creationId: Date.now().toString(),
             });
             setCommandContext('atlascode:showCreateWorkItemWebview', false);
+        }),
+        commands.registerCommand(Commands.CopyLogsAndDiagnostics, async () => {
+            try {
+                await copyLogsAndDiagnostics();
+                window.showInformationMessage('Logs and diagnostics copied to clipboard.');
+            } catch (e) {
+                Logger.error(e, 'Failed to copy logs and diagnostics');
+                window.showErrorMessage('Failed to copy logs and diagnostics.');
+            }
         }),
         commands.registerCommand(
             Commands.CopyImageElement,

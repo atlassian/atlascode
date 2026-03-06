@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.24
+
+### Improvements
+
+- Added a "Copy Logs & Diagnostics" button to the Settings sidebar and Command Palette for easier support troubleshooting. Copies VS Code version, OS, extension version, auth types, and feature status to the clipboard.
+
 ## What's new in 4.0.23
 
 ### Improvements

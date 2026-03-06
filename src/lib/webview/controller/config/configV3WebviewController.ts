@@ -313,6 +313,10 @@ export class ConfigV3WebviewController implements WebviewController<SectionV3Cha
                 vscode.commands.executeCommand(Commands.JiraLogin);
                 break;
             }
+            case ConfigActionType.CopyLogsAndDiagnostics: {
+                vscode.commands.executeCommand(Commands.CopyLogsAndDiagnostics);
+                break;
+            }
             case CommonActionType.SendAnalytics:
             case CommonActionType.CopyLink:
             case CommonActionType.OpenJiraIssue:
