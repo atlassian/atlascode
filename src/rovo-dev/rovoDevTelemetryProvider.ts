@@ -21,7 +21,6 @@ export type PartialEvent<T extends { action: string; subject: string; attributes
 export type TelemetryEvent =
     | PartialEvent<Track.NewSessionAction>
     | PartialEvent<Track.PromptSent>
-    | PartialEvent<Track.TechnicalPlanningShown>
     | PartialEvent<Track.FilesSummaryShown>
     | PartialEvent<Track.FileChangedAction>
     | PartialEvent<Track.StopAction>

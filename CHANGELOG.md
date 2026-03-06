@@ -2,6 +2,14 @@
 
 ## What's new in 4.0.23
 
+### Features
+
+- **Rovo Dev**: Support new `plan` mode with `deferred_request` handling
+
+### Cleanup
+
+- **Rovo Dev**: Removed legacy `create_technical_plan` plan mode implementation in favor of new `deferred_request`-based plan mode
+
 ### Improvements
 
 - **RovoDev**: Fixed prompt input performance degradation after extended idle periods by properly disposing Monaco editor resources and event listeners on component cleanup
@@ -12,11 +20,6 @@
 
 - **RovoDev**: Fixed JSON parsing errors in ToolReturnMessage handling - added type checking before JSON.parse() to prevent "Input data should be a String" and invalid JSON errors
 - Added comprehensive test coverage for parseToolReturnMessage with both string and pre-parsed object inputs
-## What's new in 4.0.23
-
-### Features
-
-- Rovo Dev: Support new `plan` mode with `deferred_request` handling
 
 ## What's new in 4.0.22
 
