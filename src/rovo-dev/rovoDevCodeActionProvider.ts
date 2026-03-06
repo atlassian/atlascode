@@ -53,8 +53,11 @@ export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
         const baseName = document.fileName.split(path.sep).pop() || '';
         const action = new vscode.CodeAction(title, vscode.CodeActionKind.QuickFix);
 
+        // Sanitize diagnostic messages to prevent JSON parsing errors
+        const sanitizedMessages = context.diagnostics.map((d) => d.message.replace(/[\r\n]+/g, ' ').trim()).join('\n');
+
         const finalPrompt = context.diagnostics.length
-            ? `${prompt}\nAdditional problem context:\n${context.diagnostics.map((d) => d.message).join('\n')}`
+            ? `${prompt}\nAdditional problem context:\n${sanitizedMessages}`
             : prompt;
 
         action.command = {
