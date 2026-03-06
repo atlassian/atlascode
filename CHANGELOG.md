@@ -16,6 +16,7 @@
 ### Features
 
 - Rovo Dev: Support new `plan` mode with `deferred_request` handling
+- Rovo Dev: Copy code button is now avaliable in Rovo Dev chat for generated code blocks.
 
 ## What's new in 4.0.22
 
