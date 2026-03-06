@@ -1031,22 +1031,13 @@ describe('JiraIssueWebview', () => {
                 nonce: 'nonce-123',
             };
 
-            const mockTransport = jest.fn().mockResolvedValue({});
-            mockJiraClient.transportFactory.mockReturnValue(mockTransport);
-            mockJiraClient.authorizationProvider.mockResolvedValue('Bearer test-token');
-            mockJiraClient.apiVersion = '3';
+            mockJiraClient.deleteIssuelink = jest.fn().mockResolvedValue({});
 
             const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
 
             await jiraIssueWebview['onMessageReceived'](msg);
 
-            const expectedUrl = `${mockSiteDetails.baseApiUrl.replace(/\/rest$/, '')}/rest/api/3/issueLink/${linkId}`;
-            expect(mockTransport).toHaveBeenCalledWith(expectedUrl, {
-                method: 'DELETE',
-                headers: {
-                    Authorization: 'Bearer test-token',
-                },
-            });
+            expect(mockJiraClient.deleteIssuelink).toHaveBeenCalledWith(linkId);
             expect(jiraIssueWebview['_editUIData'].fieldValues['issuelinks']).toHaveLength(1);
             expect(jiraIssueWebview['_editUIData'].fieldValues['issuelinks'][0].id).toBe('link-2');
             expect(postMessageSpy).toHaveBeenCalled();
@@ -1378,7 +1369,9 @@ describe('JiraIssueWebview', () => {
 
                 await jiraIssueWebview['onMessageReceived'](msg);
 
-                expect(mockJiraClient.removeWatcher).toHaveBeenCalledWith(mockIssue.key, { username: watcher.key });
+                expect(mockJiraClient.removeWatcher).toHaveBeenCalledWith(mockIssue.key, {
+                    username: watcher.key,
+                });
                 expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchers).not.toContain(watcher);
                 expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchCount).toBe(0);
                 expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].isWatching).toBe(false);

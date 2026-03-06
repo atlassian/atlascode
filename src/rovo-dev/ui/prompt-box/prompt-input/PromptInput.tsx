@@ -14,7 +14,7 @@ import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevAgentModel } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
 import { rovoDevTextareaStyles } from '../../rovoDevViewStyles';
-import { onKeyDownHandler, SavedPrompt } from '../../utils';
+import { capitalizeFirst, onKeyDownHandler, SavedPrompt } from '../../utils';
 import { AgentModelSelector } from '../agent-model-selection/AgentModelSelector';
 import PromptContextPopup from '../prompt-context-popup/PromptContextPopup';
 import { getAgentModeIcon } from '../prompt-settings-popup/AgentModeSection';
@@ -44,6 +44,8 @@ interface PromptInputBoxProps {
     currentAgentMode: AgentMode | null;
     availableAgentModels: RovoDevAgentModel[];
     currentAgentModel: RovoDevAgentModel | undefined;
+    isAskUserQuestionsEnabled: boolean;
+    isExitPlanModeEnabled: boolean;
     onAgentModeChange: (mode: AgentMode) => void;
     onAgentModelChange: (model: RovoDevAgentModel) => void;
     onDeepPlanToggled?: () => void;
@@ -127,6 +129,8 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     currentAgentMode,
     availableAgentModels,
     currentAgentModel,
+    isAskUserQuestionsEnabled,
+    isExitPlanModeEnabled,
     onAgentModeChange,
     onAgentModelChange,
     onDeepPlanToggled,
@@ -226,12 +230,18 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         const isGeneratingResponse =
             currentState.state === 'GeneratingResponse' ||
             (currentState.state === 'Initializing' && currentState.isPromptPending);
+        let placeholder = getTextAreaPlaceholder(isGeneratingResponse, currentState);
 
+        if (isAskUserQuestionsEnabled && currentState.state === 'WaitingForPrompt') {
+            placeholder = 'Answer the questions or write a follow up prompt...';
+        } else if (isExitPlanModeEnabled && currentState.state === 'WaitingForPrompt') {
+            placeholder = 'Execute code plan or write a follow up prompt...';
+        }
         editor.updateOptions({
             readOnly: readOnly,
-            placeholder: getTextAreaPlaceholder(isGeneratingResponse, currentState),
+            placeholder,
         });
-    }, [currentState, editor, readOnly]);
+    }, [currentState, editor, isAskUserQuestionsEnabled, isExitPlanModeEnabled, readOnly]);
 
     // Focus the editor when it becomes visible in the viewport - helps with opening Rovo Dev panel already focused
     React.useEffect(() => {
@@ -315,20 +325,17 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         onSelectedSavedPrompt={handleSelectSavedPrompt}
                         onAddRepositoryFile={onAddContext}
                     />
-                    <Tooltip content="Preferences">
-                        <PromptSettingsPopup
-                            onDeepPlanToggled={onDeepPlanToggled}
-                            onYoloModeToggled={onYoloModeToggled}
-                            onFullContextToggled={onFullContextToggled}
-                            isDeepPlanEnabled={isDeepPlanEnabled}
-                            isYoloModeEnabled={isYoloModeEnabled}
-                            isFullContextEnabled={isFullContextEnabled}
-                            availableAgentModes={availableAgentModes}
-                            currentAgentMode={currentAgentMode}
-                            onAgentModeChange={onAgentModeChange}
-                            onClose={() => {}}
-                        />
-                    </Tooltip>
+                    <PromptSettingsPopup
+                        onDeepPlanToggled={onDeepPlanToggled}
+                        onYoloModeToggled={onYoloModeToggled}
+                        onFullContextToggled={onFullContextToggled}
+                        isYoloModeEnabled={isYoloModeEnabled}
+                        isFullContextEnabled={isFullContextEnabled}
+                        availableAgentModes={availableAgentModes}
+                        currentAgentMode={currentAgentMode}
+                        onAgentModeChange={onAgentModeChange}
+                        onClose={() => {}}
+                    />
                     {isDeepPlanEnabled && onDeepPlanToggled && (
                         <Tooltip content="Disable deep plan">
                             <div
@@ -375,14 +382,14 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         </Tooltip>
                     )}{' '}
                     {currentAgentMode && currentAgentMode !== 'default' && (
-                        <Tooltip content={`${currentAgentMode} mode`}>
+                        <Tooltip content={`${capitalizeFirst(currentAgentMode)} mode`}>
                             <div
                                 className="mode-indicator"
                                 onClick={() => onAgentModeChange('default')}
                                 onKeyDown={onKeyDownHandler(() => onAgentModeChange('default'))}
                                 tabIndex={0}
                                 role="button"
-                                aria-label={`${currentAgentMode} mode`}
+                                aria-label={`${capitalizeFirst(currentAgentMode)} mode`}
                             >
                                 {getAgentModeIcon(currentAgentMode)}
                                 <CrossIcon size="small" label={`${currentAgentMode} mode`} />

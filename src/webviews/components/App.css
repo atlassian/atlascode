@@ -1507,6 +1507,12 @@ div[role='dialog'],
     cursor: pointer;
 }
 
+.jira-issue-type {
+    color: var(--vscode-descriptionForeground);
+    margin-right: 6px;
+    font-size: 0.9em;
+}
+
 .jira-issue-key {
     display: inline-flex;
     align-items: center;

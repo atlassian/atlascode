@@ -24,6 +24,8 @@ interface ChatStreamMessageRendererProps {
     onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionChoice) => void;
     onCollapsiblePanelExpanded: () => void;
     onLinkClick: (href: string) => void;
+    deepPlanCreated?: string | null;
+    onGeneratePlanClick?: (planId: string, proceed: boolean) => void;
 }
 
 export const ChatStreamMessageRenderer = React.memo<ChatStreamMessageRendererProps>(
@@ -36,6 +38,8 @@ export const ChatStreamMessageRenderer = React.memo<ChatStreamMessageRendererPro
         onCollapsiblePanelExpanded,
         renderProps,
         onLinkClick,
+        deepPlanCreated,
+        onGeneratePlanClick,
     }) => {
         if (!chatHistory) {
             return null;
@@ -75,6 +79,8 @@ export const ChatStreamMessageRenderer = React.memo<ChatStreamMessageRendererPro
                     renderProps={renderProps}
                     drawerOpen={idx === openDrawerIdx}
                     onLinkClick={onLinkClick}
+                    deepPlanCreated={deepPlanCreated}
+                    onGeneratePlanClick={onGeneratePlanClick}
                 />
             );
         });
@@ -86,5 +92,7 @@ export const ChatStreamMessageRenderer = React.memo<ChatStreamMessageRendererPro
         prevProps.handleFeedbackTrigger === nextProps.handleFeedbackTrigger &&
         prevProps.onToolPermissionChoice === nextProps.onToolPermissionChoice &&
         prevProps.onCollapsiblePanelExpanded === nextProps.onCollapsiblePanelExpanded &&
-        prevProps.renderProps === nextProps.renderProps,
+        prevProps.renderProps === nextProps.renderProps &&
+        prevProps.deepPlanCreated === nextProps.deepPlanCreated &&
+        prevProps.onGeneratePlanClick === nextProps.onGeneratePlanClick,
 );

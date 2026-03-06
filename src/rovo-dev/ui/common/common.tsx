@@ -247,6 +247,7 @@ export const renderChatHistory = (
             );
         case 'text':
         case '_RovoDevUserPrompt':
+        case '_RovoDevExitPlanMode':
             return <ChatMessageItem msg={msg} openFile={openFile} openJira={openJira} onLinkClick={onLinkClick} />;
         case 'retry-prompt':
             return (
