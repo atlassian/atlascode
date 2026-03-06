@@ -15,10 +15,6 @@ jest.mock('../create-pr/PullRequestForm', () => ({
     PullRequestChatItem: ({ msg }: any) => <div data-testid="pr-chat-item">{msg.event_kind}</div>,
 }));
 
-jest.mock('../technical-plan/TechnicalPlanComponent', () => ({
-    TechnicalPlanComponent: ({ content }: any) => <div data-testid="technical-plan">{content}</div>,
-}));
-
 jest.mock('../tools/ToolReturnItem', () => ({
     ToolReturnParsedItem: ({ msg }: any) => <div data-testid="tool-return-parsed">{msg.content}</div>,
 }));
@@ -47,6 +43,7 @@ describe('ChatItem', () => {
             checkFileExists: jest.fn(),
             isRetryAfterErrorButtonEnabled: jest.fn(),
             retryPromptAfterError: jest.fn(),
+            onRestartProcess: jest.fn(),
             onOpenLogFile: jest.fn(),
             onError: jest.fn(),
         },
@@ -90,18 +87,7 @@ describe('ChatItem', () => {
         expect(screen.getByTestId('chat-message')).toBeTruthy();
     });
 
-    it('renders TechnicalPlanComponent for tool-return with technical plan', () => {
-        const block: Response = {
-            event_kind: 'tool-return',
-        } as Response;
-
-        mockParseToolReturnMessage.mockReturnValue([{ technicalPlan: 'Technical plan content' }]);
-
-        render(<ChatItem {...defaultProps} block={block} />);
-        expect(screen.getByTestId('technical-plan')).toBeTruthy();
-    });
-
-    it('renders ToolReturnParsedItem for tool-return without technical plan', () => {
+    it('renders ToolReturnParsedItem for tool-return', () => {
         const block: Response = {
             event_kind: 'tool-return',
         } as Response;

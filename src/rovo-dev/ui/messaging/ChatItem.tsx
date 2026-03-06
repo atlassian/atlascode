@@ -5,7 +5,6 @@ import { ToolPermissionChoice } from 'src/rovo-dev/client';
 import { CheckFileExistsFunc, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
 import { PullRequestChatItem } from '../create-pr/PullRequestForm';
-import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
 import { parseToolReturnMessage, Response } from '../utils';
 import { ChatMessageItem } from './ChatMessageItem';
@@ -23,11 +22,14 @@ interface ChatItemProps {
         checkFileExists: CheckFileExistsFunc;
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
+        onRestartProcess: () => void;
         onOpenLogFile: () => void;
         onError: (error: Error, errorMessage: string) => void;
     };
     drawerOpen: boolean;
     onLinkClick: (href: string) => void;
+    deepPlanCreated?: string | null;
+    onGeneratePlanClick?: (planId: string, proceed: boolean) => void;
 }
 
 export const ChatItem = React.memo<ChatItemProps>(
@@ -40,6 +42,8 @@ export const ChatItem = React.memo<ChatItemProps>(
         renderProps,
         drawerOpen,
         onLinkClick,
+        deepPlanCreated,
+        onGeneratePlanClick,
     }) => {
         if (!block) {
             return null;
@@ -55,32 +59,31 @@ export const ChatItem = React.memo<ChatItemProps>(
                     onLinkClick={onLinkClick}
                 />
             );
-        } else if (block.event_kind === '_RovoDevUserPrompt' || block.event_kind === 'text') {
+        } else if (
+            block.event_kind === '_RovoDevUserPrompt' ||
+            block.event_kind === 'text' ||
+            block.event_kind === '_RovoDevExitPlanMode'
+        ) {
             return (
                 <ChatMessageItem
                     msg={block}
-                    enableActions={block.event_kind === 'text' && block.isSummary === true}
+                    enableActions={
+                        (block.event_kind === 'text' && block.isSummary === true) ||
+                        block.event_kind === '_RovoDevExitPlanMode'
+                    }
                     onCopy={handleCopyResponse}
                     onFeedback={handleFeedbackTrigger}
                     openFile={renderProps.openFile}
                     openJira={renderProps.openJira}
                     onLinkClick={onLinkClick}
+                    deepPlanCreated={deepPlanCreated}
+                    onGeneratePlanClick={onGeneratePlanClick}
                 />
             );
         } else if (block.event_kind === 'tool-return') {
             const parsedMessages = parseToolReturnMessage(block, renderProps.onError);
 
             return parsedMessages.map((message) => {
-                if (message.technicalPlan) {
-                    return (
-                        <TechnicalPlanComponent
-                            content={message.technicalPlan}
-                            openFile={renderProps.openFile}
-                            onLinkClick={onLinkClick}
-                            checkFileExists={renderProps.checkFileExists}
-                        />
-                    );
-                }
                 return <ToolReturnParsedItem msg={message} openFile={renderProps.openFile} onLinkClick={onLinkClick} />;
             });
         } else if (block.event_kind === '_RovoDevDialog') {
@@ -98,6 +101,7 @@ export const ChatItem = React.memo<ChatItemProps>(
                     msg={block}
                     isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
                     retryAfterError={renderProps.retryPromptAfterError}
+                    onRestartProcess={renderProps.onRestartProcess}
                     onToolPermissionChoice={onToolPermissionChoice}
                     customButton={customButton}
                     onOpenLogFile={renderProps.onOpenLogFile}
@@ -139,7 +143,8 @@ export const ChatItem = React.memo<ChatItemProps>(
         return (
             prevProps.block === nextProps.block &&
             !isAppendedMessages() &&
-            prevProps.drawerOpen === nextProps.drawerOpen
+            prevProps.drawerOpen === nextProps.drawerOpen &&
+            prevProps.deepPlanCreated === nextProps.deepPlanCreated
         );
     },
 );

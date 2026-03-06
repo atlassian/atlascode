@@ -106,6 +106,16 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         command: { title: 'Agent Memory', id: 'rovo-dev.agentMemory', tooltip: 'Show agent memory' },
     },
     {
+        label: '/models',
+        insertText: '/models',
+        description: 'Show available agent models',
+        command: {
+            title: 'Models',
+            id: 'rovo-dev.triggerAgentModels',
+            tooltip: 'Show available agent models',
+        },
+    },
+    {
         label: '/prompts',
         insertText: '!',
         description: 'Show saved prompts',
@@ -273,67 +283,105 @@ export function setupMonacoCommands(
     handleTriggerFeedbackCommand: () => void,
     handleSessionCommand?: () => void,
     onYoloModeToggled?: () => void,
-) {
-    monaco.editor.registerCommand('rovo-dev.clearChat', () => {
-        if (onSend('/clear')) {
+): monaco.IDisposable {
+    const disposables: monaco.IDisposable[] = [];
+
+    disposables.push(
+        monaco.editor.registerCommand('rovo-dev.clearChat', () => {
+            if (onSend('/clear')) {
+                editor.setValue('');
+            }
+        }),
+    );
+
+    disposables.push(
+        monaco.editor.registerCommand('rovo-dev.pruneChat', () => {
+            if (onSend('/prune')) {
+                editor.setValue('');
+            }
+        }),
+    );
+
+    disposables.push(
+        monaco.editor.registerCommand('rovo-dev.copyResponse', () => {
             editor.setValue('');
-        }
-    });
+            onCopy();
+        }),
+    );
 
-    monaco.editor.registerCommand('rovo-dev.pruneChat', () => {
-        if (onSend('/prune')) {
+    disposables.push(
+        monaco.editor.registerCommand('rovo-dev.agentMemory', () => {
+            handleMemoryCommand();
             editor.setValue('');
-        }
-    });
+        }),
+    );
 
-    monaco.editor.registerCommand('rovo-dev.copyResponse', () => {
-        editor.setValue('');
-        onCopy();
-    });
+    disposables.push(
+        monaco.editor.registerCommand('rovo-dev.triggerPrompts', () => {
+            // Trigger suggestions for saved prompts
+            editor.trigger('keyboard', 'editor.action.triggerSuggest', { auto: true });
+        }),
+    );
 
-    monaco.editor.registerCommand('rovo-dev.agentMemory', () => {
-        handleMemoryCommand();
-        editor.setValue('');
-    });
+    disposables.push(
+        monaco.editor.registerCommand('rovo-dev.triggerStatus', () => {
+            if (onSend('/status')) {
+                editor.setValue('');
+            }
+        }),
+    );
 
-    monaco.editor.registerCommand('rovo-dev.triggerPrompts', () => {
-        // Trigger suggestions for saved prompts
-        editor.trigger('keyboard', 'editor.action.triggerSuggest', { auto: true });
-    });
+    disposables.push(
+        monaco.editor.registerCommand('rovo-dev.triggerUsage', () => {
+            if (onSend('/usage')) {
+                editor.setValue('');
+            }
+        }),
+    );
 
-    monaco.editor.registerCommand('rovo-dev.triggerStatus', () => {
-        if (onSend('/status')) {
-            editor.setValue('');
-        }
-    });
-
-    monaco.editor.registerCommand('rovo-dev.triggerUsage', () => {
-        if (onSend('/usage')) {
-            editor.setValue('');
-        }
-    });
+    disposables.push(
+        monaco.editor.registerCommand('rovo-dev.triggerAgentModels', () => {
+            if (onSend('/models')) {
+                editor.setValue('');
+            }
+        }),
+    );
 
     if (onYoloModeToggled) {
-        monaco.editor.registerCommand('rovo-dev.toggleYoloMode', () => {
-            onYoloModeToggled();
-            editor.setValue('');
-        });
+        disposables.push(
+            monaco.editor.registerCommand('rovo-dev.toggleYoloMode', () => {
+                onYoloModeToggled();
+                editor.setValue('');
+            }),
+        );
     }
 
-    monaco.editor.registerCommand('rovo-dev.triggerFeedback', () => {
-        handleTriggerFeedbackCommand();
-        editor.setValue('');
-    });
+    disposables.push(
+        monaco.editor.registerCommand('rovo-dev.triggerFeedback', () => {
+            handleTriggerFeedbackCommand();
+            editor.setValue('');
+        }),
+    );
 
     if (handleSessionCommand) {
-        monaco.editor.registerCommand('rovo-dev.triggerSessions', () => {
-            handleSessionCommand();
-            editor.setValue('');
-        });
+        disposables.push(
+            monaco.editor.registerCommand('rovo-dev.triggerSessions', () => {
+                handleSessionCommand();
+                editor.setValue('');
+            }),
+        );
     }
+
+    return {
+        dispose: () => {
+            disposables.forEach((d) => d?.dispose());
+        },
+    };
 }
 
 export function setupPromptKeyBindings(editor: monaco.editor.IStandaloneCodeEditor, handleSend: () => void) {
+    // Note: editor.addCommand() returns a string (command ID), not a disposable,
+    // so the commands are automatically cleaned up when the editor instance is disposed.
     editor.addCommand(monaco.KeyCode.Enter, () => handleSend(), '!suggestWidgetVisible'); // Only trigger if suggestions are not visible
 
     editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
@@ -387,7 +435,7 @@ export function setupPromptKeyBindings(editor: monaco.editor.IStandaloneCodeEdit
 }
 
 // Auto-resize functionality
-export function setupAutoResize(editor: monaco.editor.IStandaloneCodeEditor, maxHeight = 200) {
+export function setupAutoResize(editor: monaco.editor.IStandaloneCodeEditor, maxHeight = 200): monaco.IDisposable {
     const updateHeight = () => {
         const contentHeight = Math.min(maxHeight, editor.getContentHeight());
         const container = editor.getContainerDomNode();
@@ -395,6 +443,8 @@ export function setupAutoResize(editor: monaco.editor.IStandaloneCodeEditor, max
         editor.layout();
     };
 
-    editor.onDidContentSizeChange(updateHeight);
+    const disposable = editor.onDidContentSizeChange(updateHeight);
     updateHeight();
+
+    return disposable;
 }

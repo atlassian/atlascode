@@ -1,14 +1,21 @@
-import { emptyIssueType, emptyProject, IssueType, Project } from '@atlassianlabs/jira-pi-common-models';
-import { CreateMetaTransformerResult, FieldValues, IssueTypeUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { emptyIssueType, emptyProject, IssueType, Project } from '@atlassian-pi/jira-pi-common-models';
+import { CreateMetaTransformerResult, FieldValues, IssueTypeUI, ValueType } from '@atlassian-pi/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import { format } from 'date-fns';
 import FormData from 'form-data';
+import { AnalyticRequiredFieldInfo, CreateIssueSource } from 'src/analyticsTypes';
 import { startWorkOnIssue } from 'src/commands/jira/startWorkOnIssue';
 import { getFilledFieldKeys } from 'src/util/fieldValues';
 import timer from 'src/util/perf';
 import { commands, ConfigurationTarget, Disposable, Position, Uri, ViewColumn } from 'vscode';
 
-import { createIssueAbandonedEvent, issueCreatedEvent, issueOpenRovoDevEvent, performanceEvent } from '../analytics';
+import {
+    createIssueAbandonedEvent,
+    issueCreatedEvent,
+    issueOpenRovoDevEvent,
+    performanceEvent,
+    viewScreenEvent,
+} from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { buildSuggestionSettings, IssueSuggestionManager } from '../commands/jira/issueSuggestionManager';
 import { showIssue } from '../commands/jira/showIssue';
@@ -25,6 +32,7 @@ import {
     CreateIssueAction,
     isAiSuggestionFeedback,
     isCreateIssue,
+    isCreateIssueErrorDisplayed,
     isCreateIssueValidationFailed,
     isGenerateIssueSuggestions,
     isLoadMoreProjects,
@@ -67,6 +75,12 @@ export interface BBData {
     issueKey: string;
 }
 
+export type CreateIssueAnalyticsData = {
+    creationSource: CreateIssueSource;
+    creationId: string;
+    isWorkItemWebview?: boolean;
+};
+
 const emptyCreateMetaResult: CreateMetaTransformerResult<DetailedSiteInfo> = {
     selectedIssueType: emptyIssueType,
     issueTypeUIs: {},
@@ -99,12 +113,16 @@ export class CreateIssueWebview
     private _apiError: unknown = undefined;
     private _hadValidationError: boolean = false;
     private _lastFilledFields: string[] = [];
+    private _submitAttempt: number = 0;
+    private _errorBannerDetails: string | { message?: string; title?: string } | undefined = undefined;
+    private _analyticsIssueCreatingData: CreateIssueAnalyticsData;
 
     constructor(extensionPath: string) {
         super(extensionPath);
         this._screenData = emptyCreateMetaResult;
         this._siteDetails = emptySiteInfo;
         this._projectsWithCreateIssuesPermission = {};
+        this._analyticsIssueCreatingData = { creationSource: 'unknown', creationId: '' };
     }
 
     public get title(): string {
@@ -130,33 +148,59 @@ export class CreateIssueWebview
 
     private fireAbandonedEventIfNeeded() {
         if (!this._issueCreatedSuccessfully && this._siteDetails && this._siteDetails.id) {
-            const exitReason = this._apiError ? 'error' : 'closed';
-            const requiredFieldsFilled = this.areRequiredFieldsFilled();
+            const exitReason = this._apiError || this._errorBannerDetails ? 'error' : 'closed';
 
-            createIssueAbandonedEvent(
-                this._siteDetails,
+            // if _lastFilledFields is empty user didn't press submit button, or we didn't identify missed required fields in React.
+            // Here we will try to get filled fields based on the selected issue type fields.
+            if (!this._lastFilledFields.length) {
+                if (this._selectedIssueTypeId) {
+                    this._lastFilledFields = getFilledFieldKeys(
+                        this._screenData.issueTypeUIs[this._selectedIssueTypeId!].fieldValues,
+                    );
+                } else {
+                    this._lastFilledFields = ['unknown_issue_type'];
+                }
+            }
+
+            const missedRequiredFields = this.getMissedRequiredFields();
+            createIssueAbandonedEvent({
+                site: this._siteDetails,
                 exitReason,
-                this._lastFilledFields,
-                requiredFieldsFilled,
-                this._hadValidationError,
-                this._apiError,
-            ).then((e) => {
+                filledFields: this._lastFilledFields,
+                missedRequiredFields,
+                hadValidationError: this._hadValidationError,
+                apiError: this._apiError,
+                submitAttempt: this._submitAttempt,
+                errorBannerDetails: this._errorBannerDetails,
+                creationSource: this._analyticsIssueCreatingData.creationSource,
+                creationId: this._analyticsIssueCreatingData.creationId,
+            }).then((e) => {
                 Container.analyticsClient.sendTrackEvent(e);
             });
         }
     }
 
-    private areRequiredFieldsFilled(): boolean {
+    private getMissedRequiredFields(): AnalyticRequiredFieldInfo[] {
         if (!this._selectedIssueTypeId || !this._screenData.issueTypeUIs[this._selectedIssueTypeId]) {
-            return false;
+            return [];
         }
 
         const issueTypeUI = this._screenData.issueTypeUIs[this._selectedIssueTypeId];
-        const requiredFieldKeys = Object.values(issueTypeUI.fields)
-            .filter((field) => field.required)
-            .map((field) => field.key);
+        const requiredFields = Object.values(issueTypeUI.fields).filter((field) => field.required);
 
-        return requiredFieldKeys.every((key) => this._lastFilledFields.includes(key));
+        return requiredFields
+            .map((requiredField) => {
+                return !this._lastFilledFields.includes(requiredField.key)
+                    ? {
+                          name: requiredField.name,
+                          uiType: requiredField.uiType,
+                          advanced: requiredField.advanced,
+                          valueType: requiredField.valueType,
+                          isArray: requiredField.isArray,
+                      }
+                    : null;
+            })
+            .filter((field) => field !== null);
     }
 
     private updateFilledFieldsTracking(fieldValues: FieldValues) {
@@ -173,6 +217,8 @@ export class CreateIssueWebview
         this._apiError = undefined;
         this._hadValidationError = false;
         this._lastFilledFields = [];
+        this._submitAttempt = 0;
+        this._errorBannerDetails = undefined;
     }
 
     override async createOrShow(
@@ -180,9 +226,11 @@ export class CreateIssueWebview
         data?: PartialIssue,
         issueSuggestionSettings?: IssueSuggestionSettings,
         todoData?: SimplifiedTodoIssueData,
+        analyticsData?: CreateIssueAnalyticsData,
     ): Promise<void> {
         this._issueSuggestionSettings = issueSuggestionSettings;
         this._todoData = todoData;
+        this._analyticsIssueCreatingData = analyticsData || { creationSource: 'explorer', creationId: '' };
         await super.createOrShow(column);
         await this.initialize(data);
     }
@@ -610,9 +658,11 @@ export class CreateIssueWebview
 
             this.postMessage(createData);
             const createDuration = timer.measureAndClear(CreateJiraIssueRenderEventName);
-            performanceEvent(CreateJiraIssueRenderEventName, createDuration).then((event) => {
-                Container.analyticsClient.sendTrackEvent(event);
-            });
+            performanceEvent(CreateJiraIssueRenderEventName, createDuration, this._analyticsIssueCreatingData).then(
+                (event) => {
+                    Container.analyticsClient.sendTrackEvent(event);
+                },
+            );
         } catch (e) {
             Logger.error(e, 'error updating issue fields');
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
@@ -800,6 +850,15 @@ export class CreateIssueWebview
         return [payload, worklog, issuelinks, attachments];
     }
 
+    // overriding fireViewScreenEvent from AbstractReactWebview to add additional analytics data for CreateIssueWebview
+    protected override fireViewScreenEvent() {
+        viewScreenEvent(this.id, this.siteOrUndefined, this.productOrUndefined, this._analyticsIssueCreatingData).then(
+            (e) => {
+                Container.analyticsClient.sendScreenEvent(e);
+            },
+        );
+    }
+
     protected override async onMessageReceived(msg: Action): Promise<boolean> {
         let handled = await super.onMessageReceived(msg);
 
@@ -898,7 +957,7 @@ export class CreateIssueWebview
 
                             this._issueCreatedSuccessfully = true;
 
-                            issueCreatedEvent(msg.site, resp.key).then((e) => {
+                            issueCreatedEvent(msg.site, resp.key, this._analyticsIssueCreatingData).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
 
@@ -979,7 +1038,16 @@ export class CreateIssueWebview
                     handled = true;
                     if (isCreateIssueValidationFailed(msg)) {
                         this._hadValidationError = true;
+                        this._submitAttempt = this._submitAttempt ? this._submitAttempt + 1 : 1;
                         this._lastFilledFields = msg.filledFields;
+                    }
+                    break;
+                }
+                case 'createIssueErrorDisplayed': {
+                    // stores the error details when error banner is displayed to be used for analytics when issue is submitted
+                    handled = true;
+                    if (isCreateIssueErrorDisplayed(msg)) {
+                        this._errorBannerDetails = msg.errorDetails;
                     }
                     break;
                 }

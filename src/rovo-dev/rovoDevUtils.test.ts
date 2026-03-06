@@ -1,6 +1,163 @@
-import { parseCustomCliTagsForMarkdown } from './rovoDevUtils';
+import { RovoDevModelsResponse } from './client/responseParserInterfaces';
+import { modelsJsonResponseToMarkdown, parseCustomCliTagsForMarkdown, removeCustomCliTags } from './rovoDevUtils';
 
 describe('rovoDevUtils', () => {
+    describe('modelsJsonResponseToMarkdown', () => {
+        it('should return undefined when models array is empty', () => {
+            const response: RovoDevModelsResponse = {
+                event_kind: 'models',
+                data: {
+                    models: [],
+                },
+            };
+            const result = modelsJsonResponseToMarkdown(response);
+            expect(result).toBeUndefined();
+        });
+
+        it('should return undefined when models array is not present', () => {
+            const response: RovoDevModelsResponse = {
+                event_kind: 'models',
+                data: {},
+            };
+            const result = modelsJsonResponseToMarkdown(response);
+            expect(result).toBeUndefined();
+        });
+
+        it('should format model change message when message is present', () => {
+            const response: RovoDevModelsResponse = {
+                event_kind: 'models',
+                data: {
+                    model_name: 'GPT-4',
+                    model_id: 'gpt-4',
+                    message: 'Agent model changed to GPT-4',
+                },
+            };
+            const result = modelsJsonResponseToMarkdown(response);
+            expect(result).toEqual({
+                title: 'Agent model changed',
+                text: 'Agent model changed to GPT-4',
+                agentModelChanged: true,
+            });
+        });
+
+        it('should format available models list correctly', () => {
+            const response: RovoDevModelsResponse = {
+                event_kind: 'models',
+                data: {
+                    models: [
+                        {
+                            name: 'GPT-4',
+                            model_id: 'gpt-4',
+                            description: 'Most capable model',
+                            credit_multiplier: '1.5',
+                        },
+                        {
+                            name: 'GPT-3.5',
+                            model_id: 'gpt-3.5-turbo',
+                            description: 'Fast and efficient',
+                            credit_multiplier: '1.0',
+                        },
+                    ],
+                },
+            };
+            const result = modelsJsonResponseToMarkdown(response);
+            expect(result).toEqual({
+                title: 'Available models',
+                text: '**gpt-4**\n- Most capable model\n- Credit multiplier: 1.5x\n\n**gpt-3.5-turbo**\n- Fast and efficient\n- Credit multiplier: 1.0x\n\n',
+                agentModelChanged: false,
+            });
+        });
+
+        it('should format single model correctly', () => {
+            const response: RovoDevModelsResponse = {
+                event_kind: 'models',
+                data: {
+                    models: [
+                        {
+                            name: 'Claude',
+                            model_id: 'claude-3',
+                            description: 'Anthropic model',
+                            credit_multiplier: '2.0',
+                        },
+                    ],
+                },
+            };
+            const result = modelsJsonResponseToMarkdown(response);
+            expect(result).toEqual({
+                title: 'Available models',
+                text: '**claude-3**\n- Anthropic model\n- Credit multiplier: 2.0x\n\n',
+                agentModelChanged: false,
+            });
+        });
+
+        it('should prioritize message over models array', () => {
+            const response: RovoDevModelsResponse = {
+                event_kind: 'models',
+                data: {
+                    message: 'Model changed',
+                    models: [
+                        {
+                            name: 'GPT-4',
+                            model_id: 'gpt-4',
+                            description: 'Test',
+                            credit_multiplier: '1.0',
+                        },
+                    ],
+                },
+            };
+            const result = modelsJsonResponseToMarkdown(response);
+            expect(result).toEqual({
+                title: 'Agent model changed',
+                text: 'Model changed',
+                agentModelChanged: true,
+            });
+        });
+    });
+
+    describe('removeCustomCliTags', () => {
+        it('should remove all custom CLI tags', () => {
+            const input = '[bold]Hello[/bold] [italic]World[/italic]';
+            const result = removeCustomCliTags(input);
+            expect(result).toBe('Hello World');
+        });
+
+        it('should remove tags with attributes', () => {
+            const input = '[link=https://example.com]Click here[/link]';
+            const result = removeCustomCliTags(input);
+            expect(result).toBe('Click here');
+        });
+
+        it('should handle mixed content', () => {
+            const input = 'Normal [bold]bold[/bold] more normal [custom]custom[/custom] text';
+            const result = removeCustomCliTags(input);
+            expect(result).toBe('Normal bold more normal custom text');
+        });
+
+        it('should handle empty string', () => {
+            const input = '';
+            const result = removeCustomCliTags(input);
+            expect(result).toBe('');
+        });
+
+        it('should return unchanged text without tags', () => {
+            const input = 'No tags here';
+            const result = removeCustomCliTags(input);
+            expect(result).toBe('No tags here');
+        });
+
+        it('should handle nested tags', () => {
+            const input = '[outer][inner]text[/inner][/outer]';
+            const result = removeCustomCliTags(input);
+            expect(result).toBe('text');
+        });
+
+        it('should handle complex tag names', () => {
+            const input = '[bold italic]text[/bold italic]';
+            const result = removeCustomCliTags(input);
+            expect(result).toBe('text');
+        });
+    });
+
     describe('cleanCustomCliTagsForMarkdown', () => {
         it('should return unchanged text when no tags are present', () => {
             const input = 'This is plain text without any tags';

@@ -3,8 +3,8 @@ import Form, { ErrorMessage, Field, FormFooter, FormHeader, RequiredAsterisk } f
 import Page from '@atlaskit/page';
 import Select, { components } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
-import { IssueKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
-import { FieldUI, FieldValues, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { IssueKeyAndSite } from '@atlassian-pi/jira-pi-common-models';
+import { FieldUI, FieldValues, UIType, ValueType } from '@atlassian-pi/jira-pi-meta-models';
 import * as React from 'react';
 import { v4 } from 'uuid';
 
@@ -27,6 +27,7 @@ import {
     CommonEditorViewState,
     emptyCommonEditorState,
 } from '../AbstractIssueEditorPage';
+import { convertWikimarkupToAdf } from '../common/adfToWikimarkup';
 import { MissingScopesBanner } from '../common/missing-scopes-banner/MissingScopesBanner';
 import { CreateIssueButton } from './actions/CreateIssueButton';
 import { Panel } from './Panel';
@@ -271,11 +272,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         });
     }
 
-    handleSubmit = async (e: any) => {
-        if (this.state.isLoggedOut) {
-            return { _form: 'You have been logged out. Please close this tab and log in again.' };
-        }
-
+    checkRequiredFields(): Record<string, string> {
         const requiredFields = Object.values(this.state.fields).filter((field) => field.required);
 
         const errs: Record<string, string> = {};
@@ -305,24 +302,51 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                 errs[field.key] = 'EMPTY';
             }
         });
+        return errs;
+    }
 
+    handleSubmitButtonClick = () => {
+        const errs = this.checkRequiredFields();
         if (Object.keys(errs).length > 0) {
             const missingRequiredFields = Object.keys(errs);
             const filledFields = getFilledFieldKeys(this.state.fieldValues);
-
             this.postMessage({
                 action: 'createIssueValidationFailed',
                 missingRequiredFields,
                 filledFields,
             });
+        }
+    };
 
+    handleSubmit = async (e: any) => {
+        if (this.state.isLoggedOut) {
+            return { _form: 'You have been logged out. Please close this tab and log in again.' };
+        }
+
+        const errs = this.checkRequiredFields();
+        if (Object.keys(errs).length > 0) {
             return errs;
+        }
+
+        // Convert WikiMarkup fields to ADF if using legacy editor AND site is Cloud
+        // When showAtlaskitEditor is false we use the legacy editor, which stores description/comment as WikiMarkup.
+        // Cloud API expects ADF, so we convert here. DC keeps WikiMarkup (no conversion).
+        const issueData = { ...this.state.fieldValues };
+        if (!this.state.showAtlaskitEditor && this.state.siteDetails.isCloud) {
+            // Convert description if it's a string (WikiMarkup)
+            if (issueData.description && typeof issueData.description === 'string') {
+                issueData.description = convertWikimarkupToAdf(issueData.description);
+            }
+            // Convert comment if it's a string (WikiMarkup)
+            if (issueData.comment && typeof issueData.comment === 'string') {
+                issueData.comment = convertWikimarkupToAdf(issueData.comment);
+            }
         }
 
         const createAction = {
             action: 'createIssue',
             site: this.state.siteDetails,
-            issueData: this.state.fieldValues,
+            issueData: issueData,
             onCreateAction: this.state.onCreateAction,
         };
 
@@ -516,6 +540,12 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         this.postMessage({ action: 'fetchMediaToken' });
     }
 
+    override componentDidUpdate(_: Readonly<{}>, prevState: Readonly<ViewState>): void {
+        if (prevState.isErrorBannerOpen === false && prevState.isErrorBannerOpen !== this.state.isErrorBannerOpen) {
+            this.postMessage({ action: 'createIssueErrorDisplayed', errorDetails: this.state.errorDetails });
+        }
+    }
+
     public override render() {
         if (!this.state.fieldValues['issuetype']?.id && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refresh' });
@@ -619,6 +649,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                                             this.state.isSomethingLoading &&
                                                             this.state.loadingField === 'submitButton'
                                                         }
+                                                        onClick={this.handleSubmitButtonClick}
                                                     >
                                                         Create
                                                     </CreateIssueButton>

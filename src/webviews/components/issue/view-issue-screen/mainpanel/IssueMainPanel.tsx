@@ -1,8 +1,8 @@
 import Button from '@atlaskit/button';
 import AddIcon from '@atlaskit/icon/core/add';
 import Tooltip from '@atlaskit/tooltip';
-import { IssueType, MinimalIssueOrKeyAndSite, User } from '@atlassianlabs/jira-pi-common-models';
-import { FieldUI, FieldUIs, FieldValues, IssueLinkTypeSelectOption } from '@atlassianlabs/jira-pi-meta-models';
+import { IssueType, MinimalIssueOrKeyAndSite, User } from '@atlassian-pi/jira-pi-common-models';
+import { FieldUI, FieldUIs, FieldValues, IssueLinkTypeSelectOption } from '@atlassian-pi/jira-pi-meta-models';
 import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
@@ -10,6 +10,7 @@ import { AdfAwareContent } from '../../../AdfAwareContent';
 import { RenderedContent } from '../../../RenderedContent';
 import { AttachmentList } from '../../AttachmentList';
 import { AttachmentsModal } from '../../AttachmentsModal';
+import { convertAdfToWikimarkup, convertWikimarkupToAdf } from '../../common/adfToWikimarkup';
 import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
 import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
@@ -91,17 +92,21 @@ const IssueMainPanel: React.FC<Props> = ({
 
     // Use centralized editor state
     const { openEditor, closeEditor, isEditorActive } = useEditorState();
-    // Handle descriptionText - convert ADF object to JSON string for editor input
+    // Use raw description (ADF or string) for the editor; no HTML→ADF conversion.
     const getDescriptionTextForEditor = React.useCallback(() => {
         if (
             typeof defaultDescription === 'object' &&
+            defaultDescription !== null &&
             defaultDescription.version === 1 &&
             defaultDescription.type === 'doc'
         ) {
-            return JSON.stringify(defaultDescription);
+            if (isAtlaskitEditorEnabled) {
+                return JSON.stringify(defaultDescription);
+            }
+            return convertAdfToWikimarkup(defaultDescription);
         }
-        return defaultDescription || '';
-    }, [defaultDescription]);
+        return typeof defaultDescription === 'string' ? defaultDescription : '';
+    }, [defaultDescription, isAtlaskitEditorEnabled]);
 
     const [descriptionText, setDescriptionText] = React.useState(() => getDescriptionTextForEditor());
     const [localIsEditingDescription, setLocalIsEditingDescription] = React.useState(false);
@@ -254,7 +259,9 @@ const IssueMainPanel: React.FC<Props> = ({
                                     setDescriptionText(e);
                                 }}
                                 onSave={(i: string) => {
-                                    handleInlineEdit(fields['description'], i);
+                                    // Convert WikiMarkup to ADF before saving (API v3 requires ADF)
+                                    const adfContent = convertWikimarkupToAdf(i);
+                                    handleInlineEdit(fields['description'], adfContent);
                                     closeEditorHandler();
                                 }}
                                 onCancel={() => {

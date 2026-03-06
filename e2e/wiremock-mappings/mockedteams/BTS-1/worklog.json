@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/rest/api/2/issue/BTS-1/worklog"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {"startAt":0,"maxResults":5000,"total":0,"worklogs":[]},
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

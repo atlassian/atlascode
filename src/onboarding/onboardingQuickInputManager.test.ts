@@ -11,6 +11,9 @@ jest.mock('vscode', () => {
         window: {
             createInputBox: jest.fn(),
         },
+        commands: {
+            executeCommand: jest.fn(),
+        },
         env: {
             openExternal: jest.fn(),
         },
@@ -35,6 +38,7 @@ const mockInputBox = (i: number) => ({
     hide: jest.fn(),
     onDidTriggerButton: jest.fn(),
     onDidAccept: jest.fn(),
+    onDidHide: jest.fn(),
 });
 
 describe('OnboardingQuickInputManager', () => {

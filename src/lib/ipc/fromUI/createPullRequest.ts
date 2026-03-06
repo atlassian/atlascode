@@ -1,4 +1,4 @@
-import { MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue, Transition } from '@atlassian-pi/jira-pi-common-models';
 import { ReducerAction } from 'src/ipc/messaging';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
@@ -11,6 +11,7 @@ export enum CreatePullRequestActionType {
     FetchDetails = 'fetchCommits',
     FetchUsersRequest = 'fetchUsersRequest',
     OpenDiff = 'openDiff',
+    CreatePullRequestButtonClicked = 'createPullRequestButtonClicked',
     SubmitCreateRequest = 'submitCreateRequest',
 }
 
@@ -20,6 +21,7 @@ export type CreatePullRequestAction =
     | ReducerAction<CreatePullRequestActionType.OpenDiff, OpenDiffAction>
     | ReducerAction<CreatePullRequestActionType.FetchUsersRequest, FetchUsersRequestAction>
     | ReducerAction<CreatePullRequestActionType.SubmitCreateRequest, SubmitCreateRequestAction>
+    | ReducerAction<CreatePullRequestActionType.CreatePullRequestButtonClicked, CreatePullRequestButtonClickedAction>
     | CommonAction;
 
 export interface FetchIssueAction {
@@ -55,4 +57,8 @@ export interface SubmitCreateRequestAction {
     issue?: MinimalIssue<DetailedSiteInfo>;
     transition?: Transition;
     isDraft: boolean;
+}
+export interface CreatePullRequestButtonClickedAction {
+    isDraft: boolean;
+    sourceSiteRemote: SiteRemote;
 }

@@ -1,5 +1,5 @@
 import Lozenge from '@atlaskit/lozenge';
-import { emptyTransition, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { emptyTransition, Transition } from '@atlassian-pi/jira-pi-common-models';
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import { Box, Checkbox, FormControlLabel, Grid, MenuItem, TextField, Typography } from '@mui/material';
 import React, { useCallback, useEffect } from 'react';

@@ -113,7 +113,8 @@ describe('RovoDevEntitlementChecker', () => {
             const result = await checker.checkEntitlement();
 
             expect(result).toStrictEqual({ isEntitled: false, type: 'CREDENTIAL_ERROR' });
-            expect(Logger.error).toHaveBeenCalledWith(expect.any(Error), 'Unable to check Rovo Dev entitlement');
+            expect(Logger.debug).toHaveBeenCalledWith('No credentials found for Rovo Dev entitlement check');
+            expect(Logger.debug).toHaveBeenCalledWith('Rovo Dev entitlement check result: CREDENTIAL_ERROR');
         });
 
         it('should return false when API call fails', async () => {
@@ -132,7 +133,8 @@ describe('RovoDevEntitlementChecker', () => {
             const result = await checker.checkEntitlement();
 
             expect(result).toStrictEqual({ isEntitled: false, type: 'FETCH_FAILED' });
-            expect(Logger.error).toHaveBeenCalledWith(expect.any(Error), 'Unable to check Rovo Dev entitlement');
+            expect(Logger.debug).toHaveBeenCalledWith('Rovo Dev entitlement check returned status 403');
+            expect(Logger.debug).toHaveBeenCalledWith('Rovo Dev entitlement check result: FETCH_FAILED');
         });
 
         it('should handle network errors gracefully', async () => {
@@ -148,6 +150,103 @@ describe('RovoDevEntitlementChecker', () => {
             const result = await checker.checkEntitlement();
 
             expect(result).toStrictEqual({ isEntitled: false, type: 'FETCH_FAILED' });
+            expect(Logger.debug).toHaveBeenCalledWith(
+                'Rovo Dev entitlement fetch failed for test.atlassian.net: Network error',
+            );
+            expect(Logger.debug).toHaveBeenCalledWith('Rovo Dev entitlement check result: FETCH_FAILED');
+        });
+
+        it('should use cached entitlement on subsequent calls', async () => {
+            mockClientManager.getCloudPrimarySite.mockResolvedValue({
+                host: 'test.atlassian.net',
+                siteCloudId: 'site123',
+                isValid: true,
+                authInfo: { username: 'user', password: 'pass' },
+            });
+
+            (fetch as jest.Mock).mockResolvedValue({
+                ok: true,
+                text: () => Promise.resolve('ROVO_DEV_STANDARD'),
+            });
+
+            // First call
+            const result1 = await checker.checkEntitlement();
+            expect(result1).toStrictEqual({ isEntitled: true, type: 'ROVO_DEV_STANDARD' });
+            expect(fetch).toHaveBeenCalledTimes(1);
+
+            // Second call should use cache
+            const result2 = await checker.checkEntitlement();
+            expect(result2).toStrictEqual({ isEntitled: true, type: 'ROVO_DEV_STANDARD' });
+            expect(fetch).toHaveBeenCalledTimes(1); // Still 1, not called again
+            expect(Logger.debug).toHaveBeenCalledWith('Cached entitlement response: ROVO_DEV_STANDARD');
+        });
+
+        it('should handle invalid entitlement type', async () => {
+            mockClientManager.getCloudPrimarySite.mockResolvedValue({
+                host: 'test.atlassian.net',
+                siteCloudId: 'site123',
+                isValid: true,
+                authInfo: { username: 'user', password: 'pass' },
+            });
+
+            (fetch as jest.Mock).mockResolvedValue({
+                ok: true,
+                text: () => Promise.resolve('INVALID_TYPE'),
+            });
+
+            const result = await checker.checkEntitlement();
+
+            expect(result).toStrictEqual({ isEntitled: false, type: 'NO_ACTIVE_PRODUCT' });
+            expect(Logger.debug).toHaveBeenCalledWith('No active Rovo Dev product found, received: INVALID_TYPE');
+            expect(Logger.debug).toHaveBeenCalledWith('Rovo Dev entitlement check result: NO_ACTIVE_PRODUCT');
+        });
+
+        it('should send analytics events on success', async () => {
+            mockClientManager.getCloudPrimarySite.mockResolvedValue({
+                host: 'test.atlassian.net',
+                siteCloudId: 'site123',
+                isValid: true,
+                authInfo: { username: 'user', password: 'pass' },
+            });
+
+            (fetch as jest.Mock).mockResolvedValue({
+                ok: true,
+                text: () => Promise.resolve('ROVO_DEV_BETA'),
+            });
+
+            await checker.checkEntitlement();
+
+            expect(rovoDevEntitlementCheckEvent).toHaveBeenCalledWith(true, 'ROVO_DEV_BETA');
+            expect(mockAnalyticsClient.sendTrackEvent).toHaveBeenCalled();
+        });
+
+        it('should send analytics events on failure', async () => {
+            mockClientManager.getCloudPrimarySite.mockResolvedValue(undefined);
+
+            await checker.checkEntitlement();
+
+            expect(rovoDevEntitlementCheckEvent).toHaveBeenCalledWith(false, 'CREDENTIAL_ERROR');
+            expect(mockAnalyticsClient.sendTrackEvent).toHaveBeenCalled();
+        });
+
+        it('should send analytics with status code for fetch failures', async () => {
+            mockClientManager.getCloudPrimarySite.mockResolvedValue({
+                host: 'test.atlassian.net',
+                siteCloudId: 'site123',
+                isValid: true,
+                authInfo: { username: 'user', password: 'pass' },
+            });
+
+            (fetch as jest.Mock).mockResolvedValue({
+                ok: false,
+                status: 401,
+                toString: () => 'Unauthorized',
+            });
+
+            await checker.checkEntitlement();
+
+            expect(rovoDevEntitlementCheckEvent).toHaveBeenCalledWith(false, 'FETCH_FAILED_401');
+            expect(mockAnalyticsClient.sendTrackEvent).toHaveBeenCalled();
         });
     });
 });

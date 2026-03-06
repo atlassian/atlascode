@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { State } from 'src/rovo-dev/rovoDevTypes';
-import { RovoDevFeatures } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
 import { DialogMessageItem } from '../../common/DialogMessage';
 import { McpConsentChoice } from '../../rovoDevViewMessages';
@@ -26,71 +25,33 @@ export const DisabledMessage: React.FC<{
     onLinkClick: (url: string) => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
     credentialHints?: CredentialHint[];
-    features?: RovoDevFeatures;
-}> = ({
-    currentState,
-    onLoginClick,
-    onRovoDevAuthSubmit,
-    onOpenFolder,
-    onLinkClick,
-    onMcpChoice,
-    credentialHints,
-    features,
-}) => {
+}> = ({ currentState, onLoginClick, onRovoDevAuthSubmit, onOpenFolder, onLinkClick, onMcpChoice, credentialHints }) => {
     if (currentState.state === 'Disabled' && currentState.subState === 'NeedAuth') {
-        if (features?.dedicatedRovoDevAuth) {
-            // Show inline login form
-            return (
-                <div style={loginFormContainerStyles}>
-                    <div style={{ marginBottom: '12px' }}>Sign in to Rovo Dev with an API token</div>
-                    <RovoDevLoginForm
-                        onSubmit={(host, email, apiToken) => {
-                            onRovoDevAuthSubmit(host, email, apiToken);
-                        }}
-                        credentialHints={credentialHints}
-                    />
-                </div>
-            );
-        }
-
         return (
-            <div style={messageOuterStyles}>
-                <div>Create an Atlassian API token and add it here to use Rovo Dev</div>
-                <button style={{ ...inChatButtonStyles, marginTop: '8px' }} onClick={() => onLoginClick(false)}>
-                    Add API Token
-                </button>
+            <div style={loginFormContainerStyles}>
+                <div style={{ marginBottom: '12px' }}>Sign in to Rovo Dev with an API token</div>
+                <RovoDevLoginForm
+                    onSubmit={(host, email, apiToken) => {
+                        onRovoDevAuthSubmit(host, email, apiToken);
+                    }}
+                    credentialHints={credentialHints}
+                />
             </div>
         );
     }
 
     if (currentState.state === 'Disabled' && currentState.subState === 'UnauthorizedAuth') {
-        if (features?.dedicatedRovoDevAuth) {
-            // Show inline login form with expired credentials pre-filled
-            return (
-                <div style={loginFormContainerStyles}>
-                    <div style={{ marginBottom: '12px' }}>
-                        Your API token has expired. Please sign in again with a new API token.
-                    </div>
-                    <RovoDevLoginForm
-                        onSubmit={(host, email, apiToken) => {
-                            onRovoDevAuthSubmit(host, email, apiToken);
-                        }}
-                        credentialHints={credentialHints}
-                    />
-                </div>
-            );
-        }
-
         return (
-            <div style={messageOuterStyles}>
-                <div>
-                    It looks like the API token you used for authentication has expired.
-                    <br />
-                    Please fix the authentication to continue.
+            <div style={loginFormContainerStyles}>
+                <div style={{ marginBottom: '12px' }}>
+                    Your API token has expired. Please sign in again with a new API token.
                 </div>
-                <button style={{ ...inChatButtonStyles, marginTop: '8px' }} onClick={() => onLoginClick(false)}>
-                    Auth settings
-                </button>
+                <RovoDevLoginForm
+                    onSubmit={(host, email, apiToken) => {
+                        onRovoDevAuthSubmit(host, email, apiToken);
+                    }}
+                    credentialHints={credentialHints}
+                />
             </div>
         );
     }

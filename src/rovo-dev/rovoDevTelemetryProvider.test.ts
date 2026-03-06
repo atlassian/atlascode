@@ -88,7 +88,6 @@ describe('Rovo Dev events', () => {
                 subject: 'atlascode',
                 attributes: {
                     promptId: mockPromptId,
-                    deepPlanEnabled: true,
                 },
             });
 
@@ -101,43 +100,6 @@ describe('Rovo Dev events', () => {
             expect(event.trackEvent.attributes.appInstanceId).toEqual(appInstanceId);
             expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
             expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
-            expect(event.trackEvent.attributes.deepPlanEnabled).toEqual(true);
-        },
-    );
-
-    it.each(RovoDevEnvironments)(
-        'should create rovoDevTechnicalPlanningShownEvent with planning details',
-        async (rovoDevEnv) => {
-            const stepsCount = 5;
-            const filesCount = 3;
-            const questionsCount = 2;
-            telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId);
-            await telemetryProvider.startNewSession(mockSessionId, 'init');
-            mockSendTrackEvent.mockClear();
-
-            await telemetryProvider.fireTelemetryEvent({
-                action: 'rovoDevTechnicalPlanningShown',
-                subject: 'atlascode',
-                attributes: {
-                    promptId: mockPromptId,
-                    stepsCount,
-                    filesCount,
-                    questionsCount,
-                },
-            });
-
-            expect(mockSendTrackEvent).toHaveBeenCalled();
-            const event = await mockSendTrackEvent.mock.calls[0][0];
-
-            expect(event.trackEvent.action).toEqual('rovoDevTechnicalPlanningShown');
-            expect(event.trackEvent.actionSubject).toEqual('atlascode');
-            expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
-            expect(event.trackEvent.attributes.appInstanceId).toEqual(appInstanceId);
-            expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
-            expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
-            expect(event.trackEvent.attributes.stepsCount).toEqual(stepsCount);
-            expect(event.trackEvent.attributes.filesCount).toEqual(filesCount);
-            expect(event.trackEvent.attributes.questionsCount).toEqual(questionsCount);
         },
     );
 

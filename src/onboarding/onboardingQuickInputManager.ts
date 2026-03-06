@@ -43,10 +43,14 @@ class OnboardingQuickInputManager {
             input.step = i + 1;
             input.ignoreFocusOut = true;
             input.buttons = [QuickInputButtons.Back, OnboardingButtons.dismiss];
-            input.onDidTriggerButton((e) => this._quickInputOnDidTriggerButton(e, i));
-            input.onDidAccept(() => this._onDidInputAccept(i));
+            input.onDidTriggerButton((e) => this._quickInputOnDidTriggerButton(e, i as OnboardingInputBoxStep));
+            input.onDidAccept(() => this._onDidInputAccept(i as OnboardingInputBoxStep));
             return input;
         });
+    }
+
+    hide() {
+        this._quickInput.forEach((input) => input.hide());
     }
 
     start(product: Product, env: string) {

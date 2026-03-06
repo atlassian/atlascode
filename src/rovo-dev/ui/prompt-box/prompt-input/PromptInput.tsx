@@ -11,9 +11,11 @@ import React from 'react';
 import { RovodevStaticConfig } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { AgentMode, RovoDevModeInfo } from 'src/rovo-dev/client';
 import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevAgentModel } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
 import { rovoDevTextareaStyles } from '../../rovoDevViewStyles';
-import { onKeyDownHandler, SavedPrompt } from '../../utils';
+import { capitalizeFirst, onKeyDownHandler, SavedPrompt } from '../../utils';
+import { AgentModelSelector } from '../agent-model-selection/AgentModelSelector';
 import PromptContextPopup from '../prompt-context-popup/PromptContextPopup';
 import { getAgentModeIcon } from '../prompt-settings-popup/AgentModeSection';
 import PromptSettingsPopup from '../prompt-settings-popup/PromptSettingsPopup';
@@ -31,7 +33,8 @@ import {
 type NonDisabledState = Exclude<State, DisabledState>;
 
 interface PromptInputBoxProps {
-    disabled?: boolean;
+    disableSendButton?: boolean;
+    readOnly?: boolean;
     hideButtons?: boolean;
     currentState: NonDisabledState;
     isDeepPlanEnabled: boolean;
@@ -39,7 +42,12 @@ interface PromptInputBoxProps {
     isFullContextEnabled: boolean;
     availableAgentModes: RovoDevModeInfo[];
     currentAgentMode: AgentMode | null;
+    availableAgentModels: RovoDevAgentModel[];
+    currentAgentModel: RovoDevAgentModel | undefined;
+    isAskUserQuestionsEnabled: boolean;
+    isExitPlanModeEnabled: boolean;
     onAgentModeChange: (mode: AgentMode) => void;
+    onAgentModelChange: (model: RovoDevAgentModel) => void;
     onDeepPlanToggled?: () => void;
     onYoloModeToggled?: () => void;
     onFullContextToggled?: () => void;
@@ -98,27 +106,24 @@ function createEditor(setIsEmpty: (isEmpty: boolean) => void) {
 
     const editor = createMonacoPromptEditor(container);
 
-    editor.onDidChangeModelContent(() => {
-        if (editor.getValue().trim().length === 0) {
-            setIsEmpty(true);
-        } else {
-            setIsEmpty(false);
-        }
-    });
-
-    setupAutoResize(editor);
     return editor;
 }
 
 export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
-    disabled,
+    disableSendButton,
+    readOnly,
     currentState,
     isDeepPlanEnabled,
     isYoloModeEnabled,
     isFullContextEnabled,
     availableAgentModes,
     currentAgentMode,
+    availableAgentModels,
+    currentAgentModel,
+    isAskUserQuestionsEnabled,
+    isExitPlanModeEnabled,
     onAgentModeChange,
+    onAgentModelChange,
     onDeepPlanToggled,
     onYoloModeToggled,
     onFullContextToggled,
@@ -137,8 +142,46 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     const [editor, setEditor] = React.useState<ReturnType<typeof createEditor>>(undefined);
     const [isEmpty, setIsEmpty] = React.useState(true);
     const promptCompletionProviderRef = React.useRef<monaco.IDisposable | null>(null);
+    const contentChangeListenerRef = React.useRef<monaco.IDisposable | null>(null);
+    const autoResizeRef = React.useRef<monaco.IDisposable | null>(null);
+    const commandsRef = React.useRef<monaco.IDisposable | null>(null);
+
     // create the editor only once - use onAddContext hook to retry
     React.useEffect(() => setEditor((prev) => prev ?? createEditor(setIsEmpty)), [onAddContext]);
+
+    // Track content changes for isEmpty state
+    React.useEffect(() => {
+        if (!editor) {
+            return;
+        }
+
+        contentChangeListenerRef.current = editor.onDidChangeModelContent(() => {
+            if (editor.getValue().trim().length === 0) {
+                setIsEmpty(true);
+            } else {
+                setIsEmpty(false);
+            }
+        });
+
+        return () => {
+            contentChangeListenerRef.current?.dispose();
+            contentChangeListenerRef.current = null;
+        };
+    }, [editor]);
+
+    // Setup auto-resize
+    React.useEffect(() => {
+        if (!editor) {
+            return;
+        }
+
+        autoResizeRef.current = setupAutoResize(editor);
+
+        return () => {
+            autoResizeRef.current?.dispose();
+            autoResizeRef.current = null;
+        };
+    }, [editor]);
 
     React.useEffect(() => {
         if (editor && handleFetchSavedPrompts) {
@@ -178,17 +221,24 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     }, [editor, handleSend]);
 
     React.useEffect(() => {
-        if (editor) {
-            setupMonacoCommands(
-                editor,
-                onSend,
-                onCopy,
-                handleMemoryCommand,
-                handleTriggerFeedbackCommand,
-                handleSessionCommand,
-                onYoloModeToggled,
-            );
+        if (!editor) {
+            return;
         }
+
+        commandsRef.current = setupMonacoCommands(
+            editor,
+            onSend,
+            onCopy,
+            handleMemoryCommand,
+            handleTriggerFeedbackCommand,
+            handleSessionCommand,
+            onYoloModeToggled,
+        );
+
+        return () => {
+            commandsRef.current?.dispose();
+            commandsRef.current = null;
+        };
     }, [
         editor,
         onSend,
@@ -216,22 +266,33 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         const isGeneratingResponse =
             currentState.state === 'GeneratingResponse' ||
             (currentState.state === 'Initializing' && currentState.isPromptPending);
+        let placeholder = getTextAreaPlaceholder(isGeneratingResponse, currentState);
 
+        if (isAskUserQuestionsEnabled && currentState.state === 'WaitingForPrompt') {
+            placeholder = 'Answer the questions or write a follow up prompt...';
+        } else if (isExitPlanModeEnabled && currentState.state === 'WaitingForPrompt') {
+            placeholder = 'Execute code plan or write a follow up prompt...';
+        }
         editor.updateOptions({
-            readOnly: disabled,
-            placeholder: getTextAreaPlaceholder(isGeneratingResponse, currentState),
+            readOnly: readOnly,
+            placeholder,
         });
-    }, [currentState, editor, disabled]);
+    }, [currentState, editor, isAskUserQuestionsEnabled, isExitPlanModeEnabled, readOnly]);
 
     // Focus the editor when it becomes visible in the viewport - helps with opening Rovo Dev panel already focused
     React.useEffect(() => {
+        if (!editor) {
+            return;
+        }
+
+        const container = document.getElementById('prompt-editor-container');
+        if (!container) {
+            return;
+        }
+
         const io = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
-                if (
-                    entry.isIntersecting &&
-                    !!editor &&
-                    entry.target === document.getElementById('prompt-editor-container')
-                ) {
+                if (entry.isIntersecting && !!editor && entry.target === container) {
                     const lineNumber = editor.getModel()!.getLineCount();
                     const column = editor.getModel()!.getLineLength(lineNumber) + 1;
                     editor.focus();
@@ -240,9 +301,18 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             });
         });
 
-        io.observe(document.getElementById('prompt-editor-container')!);
+        io.observe(container);
 
         return () => io.disconnect();
+    }, [editor]);
+
+    // Dispose editor and all resources on unmount
+    React.useEffect(() => {
+        return () => {
+            if (editor) {
+                editor.dispose();
+            }
+        };
     }, [editor]);
 
     const handleSelectSavedPrompt = React.useCallback(
@@ -284,6 +354,8 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         [currentState],
     );
 
+    const disableAgentModelSelector = React.useMemo(() => currentState.state !== 'WaitingForPrompt', [currentState]);
+
     return (
         <>
             <div id="prompt-editor-container" style={{ ...{ fieldSizing: 'content' }, ...rovoDevTextareaStyles }} />
@@ -292,8 +364,8 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                     display: 'flex',
                     flexDirection: 'row',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
                     flexWrap: 'wrap',
+                    gap: 4,
                 }}
             >
                 <div style={{ display: 'flex', flexDirection: 'row', alignContent: 'center', gap: 4 }}>
@@ -303,20 +375,17 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         onSelectedSavedPrompt={handleSelectSavedPrompt}
                         onAddRepositoryFile={onAddContext}
                     />
-                    <Tooltip content="Preferences">
-                        <PromptSettingsPopup
-                            onDeepPlanToggled={onDeepPlanToggled}
-                            onYoloModeToggled={onYoloModeToggled}
-                            onFullContextToggled={onFullContextToggled}
-                            isDeepPlanEnabled={isDeepPlanEnabled}
-                            isYoloModeEnabled={isYoloModeEnabled}
-                            isFullContextEnabled={isFullContextEnabled}
-                            availableAgentModes={availableAgentModes}
-                            currentAgentMode={currentAgentMode}
-                            onAgentModeChange={onAgentModeChange}
-                            onClose={() => {}}
-                        />
-                    </Tooltip>
+                    <PromptSettingsPopup
+                        onDeepPlanToggled={onDeepPlanToggled}
+                        onYoloModeToggled={onYoloModeToggled}
+                        onFullContextToggled={onFullContextToggled}
+                        isYoloModeEnabled={isYoloModeEnabled}
+                        isFullContextEnabled={isFullContextEnabled}
+                        availableAgentModes={availableAgentModes}
+                        currentAgentMode={currentAgentMode}
+                        onAgentModeChange={onAgentModeChange}
+                        onClose={() => {}}
+                    />
                     {isDeepPlanEnabled && onDeepPlanToggled && (
                         <Tooltip content="Disable deep plan">
                             <div
@@ -363,14 +432,14 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         </Tooltip>
                     )}{' '}
                     {currentAgentMode && currentAgentMode !== 'default' && (
-                        <Tooltip content={`${currentAgentMode} mode`}>
+                        <Tooltip content={`${capitalizeFirst(currentAgentMode)} mode`}>
                             <div
                                 className="mode-indicator"
                                 onClick={() => onAgentModeChange('default')}
                                 onKeyDown={onKeyDownHandler(() => onAgentModeChange('default'))}
                                 tabIndex={0}
                                 role="button"
-                                aria-label={`${currentAgentMode} mode`}
+                                aria-label={`${capitalizeFirst(currentAgentMode)} mode`}
                             >
                                 {getAgentModeIcon(currentAgentMode)}
                                 <CrossIcon size="small" label={`${currentAgentMode} mode`} />
@@ -378,7 +447,15 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         </Tooltip>
                     )}
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div>
+                    <AgentModelSelector
+                        availableModels={availableAgentModels}
+                        currentModel={currentAgentModel}
+                        onModelChange={onAgentModelChange}
+                        isDisabled={disableAgentModelSelector}
+                    />
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
                     {showCancelButton ? (
                         <Tooltip content="Stop generating" position="top">
                             <button
@@ -386,7 +463,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                 id="bordered-button"
                                 aria-label="stop"
                                 onClick={() => onCancel()}
-                                disabled={disabled || currentState.state === 'CancellingResponse'}
+                                disabled={disableSendButton || currentState.state === 'CancellingResponse'}
                             >
                                 <VideoStopOverlayIcon color={token('color.icon.danger')} label="Stop" />
                             </button>
@@ -396,7 +473,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                             className="prompt-button-primary"
                             aria-label="send"
                             onClick={() => handleSend()}
-                            disabled={disabled || !isWaitingForPrompt || isEmpty}
+                            disabled={disableSendButton || !isWaitingForPrompt || isEmpty}
                         >
                             <SendIcon label="Send prompt" />
                         </button>

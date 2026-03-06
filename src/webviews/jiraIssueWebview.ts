@@ -1,4 +1,4 @@
-import { EditIssueUI } from '@atlassianlabs/jira-metaui-client';
+import { EditIssueUI } from '@atlassian-pi/jira-metaui-client';
 import {
     Comment,
     createEmptyMinimalIssue,
@@ -9,8 +9,8 @@ import {
     readIssueLinkIssue,
     readSearchResults,
     User,
-} from '@atlassianlabs/jira-pi-common-models';
-import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+} from '@atlassian-pi/jira-pi-common-models';
+import { FieldValues, ValueType } from '@atlassian-pi/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
 import { RovodevCommands } from 'src/rovo-dev/api/componentApi';
@@ -88,6 +88,7 @@ import { getJiraIssueUri } from '../views/jira/treeViews/utils';
 import { NotificationManagerImpl } from '../views/notifications/notificationManager';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { ContextMenuCommandData, InitializingWebview } from './abstractWebview';
+import { convertAdfToWikimarkup } from './components/issue/common/adfToWikimarkup';
 
 const EditJiraIssueUIRenderEventName = 'ui.jira.editJiraIssue.render.lcp';
 const EditJiraIssueUpdatesEventName = 'ui.jira.editJiraIssue.update.lcp';
@@ -685,10 +686,28 @@ export class JiraIssueWebview
                 }
                 case 'editIssue': {
                     handled = true;
-                    const newFieldValues: FieldValues = (msg as EditIssueAction).fields;
+                    let newFieldValues: FieldValues = (msg as EditIssueAction).fields;
                     try {
                         const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
                         const teamId = (msg as EditIssueAction).teamId;
+
+                        // DC expects description (and other rich-text) as string; Cloud accepts ADF
+                        if (!this._issue!.siteDetails.isCloud && !teamId) {
+                            newFieldValues = { ...newFieldValues };
+                            for (const key of Object.keys(newFieldValues)) {
+                                const val = newFieldValues[key];
+                                if (
+                                    typeof val === 'object' &&
+                                    val !== null &&
+                                    'type' in val &&
+                                    (val as { type?: string }).type === 'doc'
+                                ) {
+                                    newFieldValues[key] = convertAdfToWikimarkup(
+                                        val as Parameters<typeof convertAdfToWikimarkup>[0],
+                                    );
+                                }
+                            }
+                        }
 
                         await client.editIssue(
                             this._issue!.key,
@@ -982,18 +1001,7 @@ export class JiraIssueWebview
                         handled = true;
                         try {
                             const client = await Container.clientManager.jiraClient(msg.site);
-
-                            // Use direct DELETE request to issueLink endpoint
-                            const apiVersion = client.apiVersion || '3';
-                            const baseApiUrl = msg.site.baseApiUrl.replace(/\/rest$/, '');
-                            const deleteUrl = `${baseApiUrl}/rest/api/${apiVersion}/issueLink/${msg.objectWithId.id}`;
-
-                            await client.transportFactory()(deleteUrl, {
-                                method: 'DELETE',
-                                headers: {
-                                    Authorization: await client.authorizationProvider('DELETE', deleteUrl),
-                                },
-                            });
+                            await client.deleteIssuelink(msg.objectWithId.id);
 
                             // Update local state after successful deletion
                             if (
@@ -1229,7 +1237,13 @@ export class JiraIssueWebview
                         handled = true;
                         try {
                             const client = await Container.clientManager.jiraClient(msg.site);
-                            await client.removeWatcher(msg.issueKey, msg.watcher.accountId);
+                            const isCloud = msg.site.isCloud;
+                            const msgWatcherAccountId = msg.watcher.accountId; // undefined for Server/Data Center
+                            const msgWatcherKey = msg.watcher.key; // undefined for Cloud
+                            const query = isCloud ? { accountId: msgWatcherAccountId } : { username: msgWatcherKey };
+
+                            await client.removeWatcher(msg.issueKey, query);
+
                             if (
                                 !this._editUIData.fieldValues['watches'] ||
                                 !this._editUIData.fieldValues['watches'].watchers ||
@@ -1238,13 +1252,19 @@ export class JiraIssueWebview
                                 this._editUIData.fieldValues['watches'].watchers = [];
                             }
                             const foundIndex: number = this._editUIData.fieldValues['watches'].watchers.findIndex(
-                                (user: User) => user.accountId === msg.watcher.accountId,
+                                (user: User) => {
+                                    const isAccountIdEqual = user.accountId === msgWatcherAccountId;
+                                    const isUsernameEqual = user.key && msgWatcherKey && user.key === msgWatcherKey;
+                                    return isCloud ? isAccountIdEqual : isUsernameEqual;
+                                },
                             );
                             if (foundIndex > -1) {
                                 this._editUIData.fieldValues['watches'].watchers.splice(foundIndex, 1);
                             }
-
-                            if (msg.watcher.accountId === this._currentUser.accountId) {
+                            const isCurrentUserWatcher = isCloud
+                                ? msgWatcherAccountId === this._currentUser.accountId
+                                : msgWatcherKey === this._currentUser.key;
+                            if (isCurrentUserWatcher) {
                                 this._editUIData.fieldValues['watches'].isWatching = false;
                             }
 

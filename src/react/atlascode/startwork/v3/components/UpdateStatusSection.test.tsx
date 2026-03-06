@@ -1,4 +1,4 @@
-import { emptyTransition } from '@atlassianlabs/jira-pi-common-models';
+import { emptyTransition } from '@atlassian-pi/jira-pi-common-models';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 

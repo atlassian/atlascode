@@ -2,7 +2,9 @@ import { RovoDevContextItem, RovoDevPrompt, ToolPermissionDialogChoice } from 's
 
 import { AgentMode } from '../client';
 import { ReducerAction } from '../messaging';
+import { RovoDevAgentModel } from '../rovoDevWebviewProviderMessages';
 import { FeedbackType } from './feedback-form/FeedbackForm';
+import { AskUserQuestionsResultMessage, ExitPlanModeResultMessage } from './utils';
 
 export const enum RovoDevViewResponseType {
     Refresh = 'refresh',
@@ -38,6 +40,7 @@ export const enum RovoDevViewResponseType {
     FullContextModeToggled = 'fullContextModeToggled',
     GetAvailableAgentModes = 'getAvailableAgentModes',
     SetAgentMode = 'setAgentMode',
+    SetAgentModel = 'setAgentModel',
     GetCurrentAgentMode = 'getCurrentAgentMode',
     FilterModifiedFilesByContent = 'filterModifiedFilesByContent',
     OpenExternalLink = 'openExternalLink',
@@ -45,8 +48,11 @@ export const enum RovoDevViewResponseType {
     MessageRendered = 'messageRendered',
     ReportRenderError = 'reportRenderError',
     StartNewSession = 'startNewSession',
+    RestartProcess = 'restartProcess',
     ShowSessionHistory = 'showSessionHistory',
     FetchSavedPrompts = 'fetchSavedPrompts',
+    AskUserQuestionsSubmit = 'askUserQuestionsSubmit',
+    ExitPlanModeSubmit = 'exitPlanModeSubmit',
 }
 
 export type FileOperationType = 'modify' | 'create' | 'delete';
@@ -98,6 +104,7 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.FullContextModeToggled, { value: boolean }>
     | ReducerAction<RovoDevViewResponseType.GetAvailableAgentModes>
     | ReducerAction<RovoDevViewResponseType.SetAgentMode, { mode: AgentMode }>
+    | ReducerAction<RovoDevViewResponseType.SetAgentModel, { model: RovoDevAgentModel }>
     | ReducerAction<RovoDevViewResponseType.GetCurrentAgentMode>
     | ReducerAction<RovoDevViewResponseType.FilterModifiedFilesByContent, { files: ModifiedFile[] }>
     | ReducerAction<RovoDevViewResponseType.OpenExternalLink, { href: string }>
@@ -113,5 +120,8 @@ export type RovoDevViewResponse =
           }
       >
     | ReducerAction<RovoDevViewResponseType.StartNewSession>
+    | ReducerAction<RovoDevViewResponseType.RestartProcess>
     | ReducerAction<RovoDevViewResponseType.ShowSessionHistory>
-    | ReducerAction<RovoDevViewResponseType.FetchSavedPrompts>;
+    | ReducerAction<RovoDevViewResponseType.FetchSavedPrompts>
+    | ReducerAction<RovoDevViewResponseType.AskUserQuestionsSubmit, AskUserQuestionsResultMessage>
+    | ReducerAction<RovoDevViewResponseType.ExitPlanModeSubmit, ExitPlanModeResultMessage>;

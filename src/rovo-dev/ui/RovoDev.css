@@ -260,6 +260,13 @@ body {
     word-break: break-all;
 }
 
+.tool-return-content p {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;;
+}
+
 .tool-call-item span {
     color: var(--vscode-input-placeholderForeground)
 }
@@ -289,7 +296,6 @@ body {
 .code-plan-button-container {
     display: flex;
     justify-content: flex-start;
-    margin-bottom: 8px;
 }
   
 .code-plan-button {
@@ -308,9 +314,21 @@ body {
     cursor: pointer;
 }
 
+.code-plan-button:disabled {
+    border: 1px solid var(--vscode-editorWidget-border);
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-input-placeholderForeground);
+    cursor: not-allowed;
+}
+
+.code-plan-button:disabled:hover {
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-input-placeholderForeground);
+    cursor: not-allowed;
+}
+
 .code-plan-button span {
     font-size: 14px;
-    color: var(--vscode-button-secondaryForeground);
 }
 
 /* Messaging styles */
@@ -336,6 +354,7 @@ body {
     align-items: center;
     gap: 0;
     margin-bottom: 8px;
+    justify-content: space-between;
 }
 
 .chat-message-action {
@@ -424,7 +443,8 @@ body {
 
 /* Code blocks and quotes */
 .user-message .message-content pre,
-.user-message .message-content code {
+.user-message .message-content code,
+.user-message .message-content blockquote {
     background-color: var(--ds-background-inverse-subtle) !important;
     color: var(--ds-text-inverse) !important;
 }
@@ -872,6 +892,18 @@ body {
     background-color: var(--vscode-sideBar-background);
     border-radius: 8px;
     padding: 8px;
+}
+
+.agent-model-selector-item {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    padding: 8px;
+    cursor: pointer;
+}
+
+.agent-model-selector-item:hover {
+    background-color: var(--vscode-list-hoverBackground);
 }
 
 .prompt-settings-action {

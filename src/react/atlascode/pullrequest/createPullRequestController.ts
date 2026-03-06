@@ -1,4 +1,4 @@
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue } from '@atlassian-pi/jira-pi-common-models';
 import React, { useCallback, useMemo, useReducer } from 'react';
 import { defaultActionGuard, defaultStateGuard, ReducerAction } from 'src/ipc/messaging';
 import { v4 } from 'uuid';
@@ -215,6 +215,11 @@ export function useCreatePullRequestController(): [CreatePullRequestState, Creat
         (data: SubmitCreateRequestAction): Promise<PullRequest> => {
             return new Promise<PullRequest>((resolve, reject) => {
                 (async () => {
+                    postMessage({
+                        type: CreatePullRequestActionType.CreatePullRequestButtonClicked,
+                        isDraft: data.isDraft,
+                        sourceSiteRemote: data.sourceSiteRemote,
+                    });
                     try {
                         const response = await postMessagePromise(
                             {
@@ -231,7 +236,7 @@ export function useCreatePullRequestController(): [CreatePullRequestState, Creat
                 })();
             });
         },
-        [postMessagePromise],
+        [postMessagePromise, postMessage],
     );
 
     const sendRefresh = useCallback((): void => {

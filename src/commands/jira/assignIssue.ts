@@ -1,4 +1,4 @@
-import { isMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { isMinimalIssue, MinimalIssue } from '@atlassian-pi/jira-pi-common-models';
 import { commands } from 'vscode';
 
 import { DetailedSiteInfo } from '../../atlclients/authInfo';

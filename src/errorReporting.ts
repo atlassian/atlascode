@@ -87,7 +87,9 @@ function errorHandler(
         }
 
         if (analyticsClient) {
-            event.then((e) => analyticsClient!.sendTrackEvent(e));
+            event
+                .then((e) => analyticsClient!.sendTrackEvent(e))
+                .catch((e) => Logger.debug(e, `Error sending error event: ${errorMessage}`));
         } else {
             eventQueue.push(event);
         }

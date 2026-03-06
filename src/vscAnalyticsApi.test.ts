@@ -182,9 +182,13 @@ describe('VSCAnalyticsApi', () => {
         });
 
         it('should fire PR created event', async () => {
-            await analyticsApi.firePrCreatedEvent(mockSite);
+            await analyticsApi.firePrCreatedEvent(mockSite, { isDraft: false });
 
-            expect(analytics.prCreatedEvent).toHaveBeenCalledWith(mockSite);
+            expect(analytics.prCreatedEvent).toHaveBeenCalledWith(mockSite, {
+                hostProduct: 'Jira',
+                instanceType: 'cloud',
+                isDraft: false,
+            });
             expect(mockAnalyticsClient.sendTrackEvent).toHaveBeenCalled();
         });
 

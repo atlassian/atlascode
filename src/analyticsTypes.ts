@@ -1,6 +1,10 @@
 // TODO: move this with other analytics stuff into a separate folder
 // not doing it now to prevent too many import changes
 
+import { FieldUI } from '@atlassian-pi/jira-pi-meta-models';
+
+import { DetailedSiteInfo } from './atlclients/authInfo';
+
 /**
  * Names of the channels used for routing analytics events in UI
  */
@@ -79,7 +83,10 @@ export type CreateIssueSource =
     | 'contextMenu' // File right-click context menu
     | 'issueContextMenu' // Issue right-click context menu
     | 'settingsPage' // Settings Explore page
-    | 'explorer'; // Default/legacy fallback
+    | 'moreOptionsButton(CreateWorkItem)' // The "More options" button in the createWorkItemView
+    | 'expandButton(CreateWorkItem)' // The "Expand" button in the createWorkItemView
+    | 'explorer' // Default/legacy fallback
+    | 'unknown'; // For when the source is not known, to differentiate from legacy 'explorer' source
 
 /**
  * Exit reason for tracking why users abandon the Create Jira Issue page
@@ -87,3 +94,33 @@ export type CreateIssueSource =
 export type CreateIssueExitReason =
     | 'closed' // user closed the tab without creating issue
     | 'error'; // user left after getting an API error
+
+export type AnalyticRequiredFieldInfo = Pick<FieldUI, 'name' | 'uiType' | 'advanced' | 'valueType' | 'isArray'>;
+
+export type CreatePRAttributes = {
+    isDraft: boolean;
+};
+
+export type CreatePRButtonClickedEventAttributes = {
+    isDraft: boolean;
+};
+
+export type IssueAbandonedAnalyticsData = {
+    site: DetailedSiteInfo;
+    exitReason: CreateIssueExitReason;
+    filledFields: string[];
+    missedRequiredFields: AnalyticRequiredFieldInfo[];
+    hadValidationError: boolean;
+    apiError?: unknown;
+    submitAttempt?: number;
+    errorBannerDetails?: string | { message?: string; title?: string } | undefined;
+    creationSource: CreateIssueSource;
+    creationId: string;
+};
+
+export type WorkItemAbandonedAnalyticsData = {
+    creationSource: CreateIssueSource;
+    creationId: string;
+    site: DetailedSiteInfo;
+    apiError?: unknown;
+};

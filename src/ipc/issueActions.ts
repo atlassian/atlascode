@@ -8,8 +8,8 @@ import {
     Project,
     Transition,
     User,
-} from '@atlassianlabs/jira-pi-common-models';
-import { FieldValues, IssueLinkTypeSelectOption, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+} from '@atlassian-pi/jira-pi-common-models';
+import { FieldValues, IssueLinkTypeSelectOption, ValueType } from '@atlassian-pi/jira-pi-meta-models';
 import { IssueSuggestionSettings, SimplifiedTodoIssueData } from 'src/config/model';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
@@ -47,7 +47,7 @@ export interface TransitionIssueAction extends Action {
 export interface IssueCommentAction extends Action {
     action: 'comment';
     issue: IssueKeyAndSite<DetailedSiteInfo>;
-    commentBody: string;
+    commentBody: string | Record<string, unknown>; // Cloud: ADF; DC: string (normalized in postComment)
     commentId?: string;
     restriction?: CommentVisibility;
 }
@@ -273,6 +273,11 @@ export interface CreateIssueValidationFailedAction extends Action {
     filledFields: string[];
 }
 
+export interface CreateIssueErrorDisplayedAction extends Action {
+    action: 'createIssueErrorDisplayed';
+    errorDetails: string | { message?: string; title?: string } | undefined;
+}
+
 export function isGetImage(a: Action): a is GetImageAction {
     return (<GetImageAction>a).action === 'getImage';
 }
@@ -467,5 +472,11 @@ export function isCreateIssueValidationFailed(a: Action): a is CreateIssueValida
         a &&
         a.action === 'createIssueValidationFailed' &&
         (<CreateIssueValidationFailedAction>a).missingRequiredFields !== undefined
+    );
+}
+
+export function isCreateIssueErrorDisplayed(a: Action): a is CreateIssueErrorDisplayedAction {
+    return (
+        a && a.action === 'createIssueErrorDisplayed' && (<CreateIssueErrorDisplayedAction>a).errorDetails !== undefined
     );
 }
