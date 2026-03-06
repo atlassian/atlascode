@@ -1341,10 +1341,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // Actually invoke the rovodev service, feed responses to the webview as normal
         const revertedChanges = this._revertedChanges;
         this._revertedChanges = [];
-        await this._chatProvider.executeChat(
-            { text: prompt, enable_deep_plan: false, context: context || [] },
-            revertedChanges,
-        );
+        await this._chatProvider.executeChat({ text: prompt, context: context || [] }, revertedChanges);
     }
 
     /**

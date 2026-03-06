@@ -88,7 +88,6 @@ describe('RovoDevChatProvider', () => {
                 promptFirstByteReceived: jest.fn(),
                 promptFirstMessageReceived: jest.fn(),
                 promptLastMessageReceived: jest.fn(),
-                promptTechnicalPlanReceived: jest.fn(),
                 promptLastMessageRendered: jest.fn(),
             },
         } as any;
@@ -154,7 +153,6 @@ describe('RovoDevChatProvider', () => {
         it('should execute pending prompt when API client is set', async () => {
             const mockPrompt: RovoDevPrompt = {
                 text: 'test prompt',
-                enable_deep_plan: false,
                 context: [],
             };
 
@@ -184,7 +182,7 @@ describe('RovoDevChatProvider', () => {
     describe('shutdown', () => {
         it('should clear API client and pending prompts', async () => {
             await chatProvider.setReady(mockApiClient);
-            chatProvider['_pendingPrompt'] = { text: 'test', enable_deep_plan: false, context: [] };
+            chatProvider['_pendingPrompt'] = { text: 'test', context: [] };
 
             chatProvider.shutdown();
 
@@ -217,7 +215,6 @@ describe('RovoDevChatProvider', () => {
             // First execute a prompt
             const mockPrompt: RovoDevPrompt = {
                 text: 'test prompt',
-                enable_deep_plan: false,
                 context: [],
             };
 
@@ -263,7 +260,6 @@ describe('RovoDevChatProvider', () => {
 
             const mockPrompt: RovoDevPrompt = {
                 text: 'test prompt',
-                enable_deep_plan: true,
                 context: [],
             };
 
@@ -416,7 +412,7 @@ describe('RovoDevChatProvider', () => {
             providerWithoutClient.setWebview(mockWebview);
 
             // Set a pending prompt
-            providerWithoutClient['_pendingPrompt'] = { text: 'test', enable_deep_plan: false, context: [] };
+            providerWithoutClient['_pendingPrompt'] = { text: 'test', context: [] };
 
             const result = await providerWithoutClient.executeCancel(false);
 
@@ -643,7 +639,6 @@ describe('RovoDevChatProvider', () => {
         it('should not execute if text is empty', async () => {
             const mockPrompt: RovoDevPrompt = {
                 text: '',
-                enable_deep_plan: false,
                 context: [],
             };
 
@@ -655,7 +650,6 @@ describe('RovoDevChatProvider', () => {
         it('should filter out disabled file context', async () => {
             const mockPrompt: RovoDevPrompt = {
                 text: 'test prompt',
-                enable_deep_plan: false,
                 context: [
                     {
                         contextType: 'file',
@@ -698,7 +692,6 @@ describe('RovoDevChatProvider', () => {
         it('should disable deep plan for commands', async () => {
             const mockPrompt: RovoDevPrompt = {
                 text: '/status',
-                enable_deep_plan: true,
                 context: [
                     {
                         contextType: 'file',
@@ -722,7 +715,6 @@ describe('RovoDevChatProvider', () => {
 
             expect(mockApiClient.chat).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    enable_deep_plan: false,
                     context: [],
                 }),
                 true,
@@ -735,7 +727,6 @@ describe('RovoDevChatProvider', () => {
 
             const mockPrompt: RovoDevPrompt = {
                 text: 'test prompt',
-                enable_deep_plan: false,
                 context: [],
             };
 
@@ -762,7 +753,6 @@ describe('RovoDevChatProvider', () => {
         it('should add reverted files to context', async () => {
             const mockPrompt: RovoDevPrompt = {
                 text: 'test prompt',
-                enable_deep_plan: false,
                 context: [],
             };
 
@@ -800,7 +790,6 @@ describe('RovoDevChatProvider', () => {
         it('should signal prompt sent to webview', async () => {
             const mockPrompt: RovoDevPrompt = {
                 text: 'test prompt',
-                enable_deep_plan: true,
                 context: [],
             };
 
@@ -819,7 +808,6 @@ describe('RovoDevChatProvider', () => {
                 expect.objectContaining({
                     type: RovoDevProviderMessageType.SignalPromptSent,
                     text: 'test prompt',
-                    enable_deep_plan: true,
                     echoMessage: true,
                 }),
             );
@@ -828,7 +816,6 @@ describe('RovoDevChatProvider', () => {
         it('should fire telemetry event when prompt is sent', async () => {
             const mockPrompt: RovoDevPrompt = {
                 text: 'test prompt',
-                enable_deep_plan: true,
                 context: [],
             };
 
@@ -849,7 +836,6 @@ describe('RovoDevChatProvider', () => {
                 subject: 'atlascode',
                 attributes: {
                     promptId: 'test-uuid-123',
-                    deepPlanEnabled: true,
                 },
             });
         });
@@ -860,7 +846,6 @@ describe('RovoDevChatProvider', () => {
 
             const mockPrompt: RovoDevPrompt = {
                 text: 'test prompt',
-                enable_deep_plan: false,
                 context: [],
             };
 
@@ -873,7 +858,6 @@ describe('RovoDevChatProvider', () => {
         it('should process Jira context correctly', async () => {
             const mockPrompt: RovoDevPrompt = {
                 text: 'test prompt',
-                enable_deep_plan: false,
                 context: [
                     {
                         contextType: 'jiraWorkItem',
@@ -914,7 +898,6 @@ describe('RovoDevChatProvider', () => {
 
             const mockPrompt: RovoDevPrompt = {
                 text: 'test prompt',
-                enable_deep_plan: false,
                 context: [],
             };
 
@@ -934,7 +917,6 @@ describe('RovoDevChatProvider', () => {
 
             const mockPrompt: RovoDevPrompt = {
                 text: 'test prompt',
-                enable_deep_plan: false,
                 context: [],
             };
 
@@ -954,7 +936,6 @@ describe('RovoDevChatProvider', () => {
 
             const mockPrompt: RovoDevPrompt = {
                 text: 'test prompt',
-                enable_deep_plan: false,
                 context: [],
             };
 
@@ -977,7 +958,6 @@ describe('RovoDevChatProvider', () => {
 
             const mockPrompt: RovoDevPrompt = {
                 text: 'test prompt',
-                enable_deep_plan: false,
                 context: [],
             };
 

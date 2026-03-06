@@ -5,7 +5,6 @@ import { ToolPermissionChoice } from 'src/rovo-dev/client';
 import { CheckFileExistsFunc, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
 import { PullRequestChatItem } from '../create-pr/PullRequestForm';
-import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
 import { parseToolReturnMessage, Response } from '../utils';
 import { ChatMessageItem } from './ChatMessageItem';
@@ -85,16 +84,6 @@ export const ChatItem = React.memo<ChatItemProps>(
             const parsedMessages = parseToolReturnMessage(block, renderProps.onError);
 
             return parsedMessages.map((message) => {
-                if (message.technicalPlan) {
-                    return (
-                        <TechnicalPlanComponent
-                            content={message.technicalPlan}
-                            openFile={renderProps.openFile}
-                            onLinkClick={onLinkClick}
-                            checkFileExists={renderProps.checkFileExists}
-                        />
-                    );
-                }
                 return <ToolReturnParsedItem msg={message} openFile={renderProps.openFile} onLinkClick={onLinkClick} />;
             });
         } else if (block.event_kind === '_RovoDevDialog') {

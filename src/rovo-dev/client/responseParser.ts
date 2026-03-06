@@ -175,6 +175,10 @@ interface RovoDevRequestUsageChunk {
     event_kind: 'request-usage';
 }
 
+interface RovoDevThinkingChunk {
+    event_kind: 'thinking';
+}
+
 type RovoDevSingleResponseRaw =
     | RovoDevUserPromptResponseRaw
     | RovoDevTextResponseRaw
@@ -206,7 +210,8 @@ type RovoDevSingleChunk =
     | RovoDevModelsResponse
     | RovoDevCloseChunk
     | RovoDevReplayEndChunk
-    | RovoDevRequestUsageChunk;
+    | RovoDevRequestUsageChunk
+    | RovoDevThinkingChunk;
 
 // https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.PartStartEvent
 interface RovoDevPartStartResponseRaw {
@@ -580,6 +585,7 @@ export class RovoDevResponseParser {
 
             // events we ignore
             case 'request-usage':
+            case 'thinking':
                 return buffer
                     ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
                     : { event_kind: '_ignored' };

@@ -22,13 +22,7 @@ import {
 } from './client';
 import { buildErrorDetails, buildExceptionDetails } from './errorDetailsBuilder';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
-import {
-    RovoDevContextItem,
-    RovoDevFileContext,
-    RovoDevJiraContext,
-    RovoDevPrompt,
-    TechnicalPlan,
-} from './rovoDevTypes';
+import { RovoDevContextItem, RovoDevFileContext, RovoDevJiraContext, RovoDevPrompt } from './rovoDevTypes';
 import {
     modelsJsonResponseToMarkdown,
     parseCustomCliTagsForMarkdown,
@@ -160,7 +154,7 @@ export class RovoDevChatProvider {
     }
 
     private async internalExecuteChat(
-        { text, enable_deep_plan, context }: RovoDevPrompt,
+        { text, context }: RovoDevPrompt,
         revertedFiles: string[],
         flushingPendingPrompt: boolean,
     ) {
@@ -173,21 +167,19 @@ export class RovoDevChatProvider {
 
         const isCommand = text.trim().startsWith('/');
         if (isCommand) {
-            enable_deep_plan = false;
             context = [];
         }
 
         // when flushing a pending prompt, we don't want to echo the prompt in chat again
-        await this.signalPromptSent({ text, enable_deep_plan, context }, !flushingPendingPrompt);
+        await this.signalPromptSent({ text, context }, !flushingPendingPrompt);
 
         if (!this._rovoDevApiClient) {
-            this._pendingPrompt = { text, enable_deep_plan, context };
+            this._pendingPrompt = { text, context };
             return;
         }
 
         this._currentPrompt = {
             text,
-            enable_deep_plan,
             context,
         };
 
@@ -254,7 +246,6 @@ export class RovoDevChatProvider {
                 subject: 'atlascode',
                 attributes: {
                     promptId: this._currentPromptId,
-                    deepPlanEnabled: !!requestPayload.enable_deep_plan,
                 },
             });
 
@@ -521,36 +512,7 @@ export class RovoDevChatProvider {
     }
 
     private async processRovoDevResponse(sourceApi: StreamingApi, response: RovoDevResponse): Promise<void> {
-        const fireTelemetry = sourceApi === 'chat';
         const webview = this._webView!;
-
-        if (
-            fireTelemetry &&
-            response.event_kind === 'tool-return' &&
-            response.tool_name === 'create_technical_plan' &&
-            response.parsedContent
-        ) {
-            this._telemetryProvider.perfLogger.promptTechnicalPlanReceived(this._currentPromptId);
-
-            const parsedContent = response.parsedContent as TechnicalPlan;
-            const stepsCount = parsedContent.logicalChanges.length;
-            const filesCount = parsedContent.logicalChanges.reduce((p, c) => p + c.filesToChange.length, 0);
-            const questionsCount = parsedContent.logicalChanges.reduce(
-                (p, c) => p + c.filesToChange.reduce((p2, c2) => p2 + (c2.clarifyingQuestionIfAny ? 1 : 0), 0),
-                0,
-            );
-
-            this._telemetryProvider.fireTelemetryEvent({
-                action: 'rovoDevTechnicalPlanningShown',
-                subject: 'atlascode',
-                attributes: {
-                    promptId: this._currentPromptId,
-                    stepsCount,
-                    filesCount,
-                    questionsCount,
-                },
-            });
-        }
 
         switch (response.event_kind) {
             case 'text':
@@ -576,10 +538,9 @@ export class RovoDevChatProvider {
                     const { text, context } = this.parseUserPromptReplay(response.content || '');
                     this._currentPrompt = {
                         text: text,
-                        enable_deep_plan: false,
                         context: context,
                     };
-                    await this.signalPromptSent({ text, enable_deep_plan: false, context }, true);
+                    await this.signalPromptSent({ text, context }, true);
                 }
                 break;
 
@@ -958,13 +919,12 @@ export class RovoDevChatProvider {
         }
     }
 
-    private async signalPromptSent({ text, enable_deep_plan, context }: RovoDevPrompt, echoMessage: boolean) {
+    private async signalPromptSent({ text, context }: RovoDevPrompt, echoMessage: boolean) {
         const webview = this._webView!;
         return await webview.postMessage({
             type: RovoDevProviderMessageType.SignalPromptSent,
             echoMessage,
             text,
-            enable_deep_plan,
             context,
         });
     }
@@ -988,7 +948,6 @@ export class RovoDevChatProvider {
 
         return {
             message: prompt.text,
-            enable_deep_plan: prompt.enable_deep_plan,
             context: Array<RovoDevChatRequestContext>().concat(fileContext).concat(jiraContext),
         };
     }
