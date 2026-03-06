@@ -6,11 +6,13 @@
 
 - **RovoDev**: Refactored JSON parsing logic with `safeJsonParse` helper function to reduce code duplication and improve maintainability
 - **RovoDev**: Centered text within tool call statements in RovoDev chat.
+- **RovoDev**: Added special handling for `InvalidPromptError` with 'Unknown command:' messages — shows a user-friendly warning dialog instead of a scary error dialog with stack traces. Error type check is case-insensitive for robustness.
 
 ### Bug Fixes
 
 - **RovoDev**: Fixed JSON parsing errors in ToolReturnMessage handling - added type checking before JSON.parse() to prevent "Input data should be a String" and invalid JSON errors
 - Added comprehensive test coverage for parseToolReturnMessage with both string and pre-parsed object inputs
+- Fixed Jest config files failing to parse due to missing `.ts` extension in import paths for `jest.unit.config.ts` and `jest.react.config.ts`
 ## What's new in 4.0.23
 
 ### Features
