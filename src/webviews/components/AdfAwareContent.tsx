@@ -37,10 +37,4 @@ export const AdfAwareContent: React.FC<AdfAwareContentProps> = memo(({ content, 
         console.error('Failed to render ADF content, falling back to text:', error);
         return <p>{content}</p>;
     }
-
-    return (
-        <IntlProvider locale="en">
-            <ReactRenderer data-test-id="adf-renderer" document={document} />
-        </IntlProvider>
-    );
 });
