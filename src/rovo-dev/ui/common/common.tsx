@@ -165,7 +165,7 @@ export const MarkedDown: React.FC<{
                 root.unmount();
             });
         };
-    }, [onLinkClick, onCopy]);
+    }, [onLinkClick, onCopy, html]);
 
     // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- necessary to apply MarkDown formatting
     return <span ref={spanRef} dangerouslySetInnerHTML={{ __html: html }} />;
