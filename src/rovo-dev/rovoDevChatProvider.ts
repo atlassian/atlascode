@@ -555,7 +555,7 @@ export class RovoDevChatProvider {
                     response.message.includes('Unknown command:')
                 ) {
                     // Extract the command name from the message (e.g., "Unknown command: /model" -> "/model")
-                    const commandMatch = response.message.match(/Unknown command:\s*(\S+)/);
+                    const commandMatch = response.message.match(/Unknown command:\s*(\/\S+)/);
                     const command = commandMatch ? commandMatch[1] : 'the command you entered';
 
                     await webview.postMessage({
