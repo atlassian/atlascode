@@ -205,7 +205,7 @@ describe('RovoDevApiClient', () => {
 
             // after the POST /v3/set_chat_message, we expect a GET /v3/stream_chat to be called
             expect(mockFetch).toHaveBeenCalledWith(
-                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=false',
+                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=false&enable_deferred_tools=true',
                 {
                     method: 'GET',
                     headers: {
@@ -241,7 +241,7 @@ describe('RovoDevApiClient', () => {
 
             // after the POST /v3/set_chat_message, we expect a GET /v3/stream_chat to be called
             expect(mockFetch).toHaveBeenCalledWith(
-                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=true',
+                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=true&enable_deferred_tools=true',
                 {
                     method: 'GET',
                     headers: {
@@ -264,7 +264,6 @@ describe('RovoDevApiClient', () => {
             const message = 'Hello, how can I help?';
             const response = await client.chat({
                 message,
-                enable_deep_plan: true,
                 context: [],
             });
 
@@ -275,13 +274,13 @@ describe('RovoDevApiClient', () => {
                     'Content-Type': 'application/json',
                     Authorization: 'Bearer sessionToken',
                 },
-                body: JSON.stringify({ message, enable_deep_plan: true, context: [] }),
+                body: JSON.stringify({ message, context: [] }),
             });
             expect(response).toBe(mockResponse);
 
             // after the POST /v3/set_chat_message, we expect a GET /v3/stream_chat to be called
             expect(mockFetch).toHaveBeenCalledWith(
-                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=false',
+                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=false&enable_deferred_tools=true',
                 {
                     method: 'GET',
                     headers: {
@@ -316,7 +315,7 @@ describe('RovoDevApiClient', () => {
 
             // after the POST /v3/set_chat_message, we expect a GET /v3/stream_chat to be called
             expect(mockFetch).toHaveBeenCalledWith(
-                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=false',
+                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=false&enable_deferred_tools=true',
                 {
                     method: 'GET',
                     headers: {
@@ -352,7 +351,7 @@ describe('RovoDevApiClient', () => {
 
             // after the POST /v3/set_chat_message, we expect a GET /v3/stream_chat to be called
             expect(mockFetch).toHaveBeenCalledWith(
-                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=false',
+                'http://localhost:8080/v3/stream_chat?pause_on_call_tools_start=false&enable_deferred_tools=true',
                 {
                     method: 'GET',
                     headers: {

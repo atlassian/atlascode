@@ -2,6 +2,7 @@
 
 import {
     RovoDevClearResponse,
+    RovoDevDeferredRequestResponse,
     RovoDevExceptionResponse,
     RovoDevModelsResponse,
     RovoDevOnCallToolStartResponse,
@@ -142,6 +143,15 @@ interface RovoDevOnCallToolStartChunk {
     data: RovoDevOnCallToolStartResponseRaw;
 }
 
+interface RovoDevDeferredRequestResponseRaw {
+    calls: RovoDevToolCallResponseRaw[];
+}
+
+interface RovoDevDeferredRequestChunk {
+    event_kind: 'deferred-request';
+    data: RovoDevDeferredRequestResponseRaw;
+}
+
 // doc missing
 type RovoDevStatusChunk = RovoDevStatusResponse;
 
@@ -165,6 +175,10 @@ interface RovoDevRequestUsageChunk {
     event_kind: 'request-usage';
 }
 
+interface RovoDevThinkingChunk {
+    event_kind: 'thinking';
+}
+
 type RovoDevSingleResponseRaw =
     | RovoDevUserPromptResponseRaw
     | RovoDevTextResponseRaw
@@ -175,7 +189,8 @@ type RovoDevSingleResponseRaw =
     | RovoDevExceptionResponseRaw
     | RovoDevClearResponseRaw
     | RovoDevPruneResponseRaw
-    | RovoDevOnCallToolStartResponseRaw;
+    | RovoDevOnCallToolStartResponseRaw
+    | RovoDevDeferredRequestResponseRaw;
 
 type RovoDevSingleChunk =
     | RovoDevUserPromptChunk
@@ -188,13 +203,15 @@ type RovoDevSingleChunk =
     | RovoDevClearChunk
     | RovoDevPruneChunk
     | RovoDevOnCallToolStartChunk
+    | RovoDevDeferredRequestChunk
     | RovoDevStatusChunk
     | RovoDevUsageChunk
     | RovoDevPromptsChunk
     | RovoDevModelsResponse
     | RovoDevCloseChunk
     | RovoDevReplayEndChunk
-    | RovoDevRequestUsageChunk;
+    | RovoDevRequestUsageChunk
+    | RovoDevThinkingChunk;
 
 // https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.PartStartEvent
 interface RovoDevPartStartResponseRaw {
@@ -338,6 +355,12 @@ function parseOnCallToolStart(data: RovoDevOnCallToolStartResponseRaw): RovoDevO
     };
 }
 
+function parseDeferredRequest(data: RovoDevDeferredRequestResponseRaw): RovoDevDeferredRequestResponse {
+    return {
+        event_kind: 'deferred_request',
+        tools: data.calls.map((call) => parseResponseToolCall(call)),
+    };
+}
 // the parser
 
 function generateError(error: Error): RovoDevParsingError {
@@ -386,9 +409,21 @@ export class RovoDevResponseParser {
                 continue;
             }
 
+            let parsedData: any = '';
+            if (match[2]) {
+                try {
+                    parsedData = typeof match[2] === 'string' ? JSON.parse(match[2]) : match[2];
+                } catch (e) {
+                    yield generateError(
+                        new Error(`Rovo Dev parser error: unable to parse JSON data: "${match[2]}", error: ${e}`),
+                    );
+                    continue;
+                }
+            }
+
             const chunk: RovoDevSingleChunk | RovoDevPartStartChunk | RovoDevPartDeltaChunk = {
                 event_kind: match[1].trim() as any,
-                data: match[2] ? JSON.parse(match[2]) : '',
+                data: parsedData,
             };
 
             let tmpChunkToFlush: RovoDevResponse | undefined;
@@ -535,6 +570,11 @@ export class RovoDevResponseParser {
                     ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
                     : parseOnCallToolStart(chunk.data);
 
+            case 'deferred-request':
+                return buffer
+                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
+                    : parseDeferredRequest(chunk.data);
+
             case 'status':
             case 'usage':
             case 'prompts':
@@ -545,6 +585,7 @@ export class RovoDevResponseParser {
 
             // events we ignore
             case 'request-usage':
+            case 'thinking':
                 return buffer
                     ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
                     : { event_kind: '_ignored' };

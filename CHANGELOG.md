@@ -1,5 +1,25 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.23
+
+### Features
+
+- **Rovo Dev**: Support new `plan` mode with `deferred_request` handling
+
+### Cleanup
+
+- **Rovo Dev**: Removed legacy `create_technical_plan` plan mode implementation in favor of new `deferred_request`-based plan mode
+
+### Improvements
+
+- **RovoDev**: Fixed prompt input performance degradation after extended idle periods by properly disposing Monaco editor resources and event listeners on component cleanup
+- **RovoDev**: Refactored JSON parsing logic with `safeJsonParse` helper function to reduce code duplication and improve maintainability
+- **RovoDev**: Centered text within tool call statements in RovoDev chat.
+
+### Bug Fixes
+
+- **RovoDev**: Fixed JSON parsing errors in ToolReturnMessage handling - added type checking before JSON.parse() to prevent "Input data should be a String" and invalid JSON errors
+- Added comprehensive test coverage for parseToolReturnMessage with both string and pre-parsed object inputs
 
 ## What's new in 4.0.22
 
@@ -9,7 +29,13 @@
 
 ### Improvements
 
--  Added the UI in the Rovo chat box for the moved file tool.
+- Jira and Bitbucket (OAuth): Longer session persistence – credentials are no longer invalidated on transient token-refresh failures (e.g. network errors). Re-login is only required when the refresh token is actually invalid (e.g. 401/403). OAuth refresh grace period increased from 10 to 30 minutes so access tokens are refreshed earlier and sessions stay valid longer.
+- Jira issue view: show issue type (e.g. Bug, Story, Task) before the issue key in the header/breadcrumb
+- Added the UI in the Rovo chat box for the moved file tool.
+
+### Bug Fixes
+
+- **RovoDev**: Fixed MCP server acceptance flow not showing in Boysenberry mode
 
 ## What's new in 4.0.21
 

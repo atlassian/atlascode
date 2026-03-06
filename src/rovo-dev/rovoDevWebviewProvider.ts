@@ -28,7 +28,13 @@ import {
 import { GitErrorCodes } from '../typings/git';
 import { RovodevCommandContext, RovodevCommands } from './api/componentApi';
 import { DetailedSiteInfo, ExtensionApi, MinimalIssue } from './api/extensionApi';
-import { AgentMode, RovoDevApiClient, RovoDevApiError, RovoDevHealthcheckResponse } from './client';
+import {
+    AgentMode,
+    RovoDevApiClient,
+    RovoDevApiError,
+    RovoDevDeferredToolCallResponse,
+    RovoDevHealthcheckResponse,
+} from './client';
 import { buildErrorDetails } from './errorDetailsBuilder';
 import { createValidatedRovoDevAuthInfo } from './rovoDevAuthValidator';
 import { RovoDevChatContextProvider } from './rovoDevChatContextProvider';
@@ -603,6 +609,27 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             savedPrompts: prompts,
                         });
                         break;
+
+                    case RovoDevViewResponseType.AskUserQuestionsSubmit:
+                    case RovoDevViewResponseType.ExitPlanModeSubmit:
+                        const deferredToolResponse: RovoDevDeferredToolCallResponse = {
+                            tool_call_id: e.toolCallId,
+                            result: e.result,
+                        };
+
+                        const switchToDefaultMode =
+                            e.type === RovoDevViewResponseType.ExitPlanModeSubmit && e.result.proceed === true;
+                        if (switchToDefaultMode) {
+                            await this._chatProvider.setAgentMode('default');
+                            await webview.postMessage({
+                                type: RovoDevProviderMessageType.SetAgentModeComplete,
+                                mode: 'default',
+                            });
+                        }
+                        await this._chatProvider.executeDeferredToolCall(deferredToolResponse);
+
+                        break;
+
                     default:
                         // @ts-expect-error ts(2339) - e here should be 'never'
                         this.processError(new Error(`Unknown message type: ${e.type}`));
@@ -1314,10 +1341,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // Actually invoke the rovodev service, feed responses to the webview as normal
         const revertedChanges = this._revertedChanges;
         this._revertedChanges = [];
-        await this._chatProvider.executeChat(
-            { text: prompt, enable_deep_plan: false, context: context || [] },
-            revertedChanges,
-        );
+        await this._chatProvider.executeChat({ text: prompt, context: context || [] }, revertedChanges);
     }
 
     /**
@@ -1565,24 +1589,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             const mcp_servers = result.mcp_servers || {};
             const serversToReview = Object.keys(mcp_servers).filter((x) => mcp_servers[x] === 'pending user review');
 
-            if (this.isBoysenberry) {
-                await this.signalRovoDevDisabled('Other');
-                await this.processError(
-                    new Error(`Cannot start third party MCP servers:${serversToReview.map((name) => `\n- ${name}`)}`),
-                    { title: 'Failed to initialize Rovo Dev', skipLogError: true },
+            if (serversToReview.length === 0) {
+                await this.signalProcessFailedToInitialize(
+                    'Failed to initialize Rovo Dev, something went wrong with the MCP servers acceptance flow.',
                 );
             } else {
-                if (serversToReview.length === 0) {
-                    await this.signalProcessFailedToInitialize(
-                        'Failed to initialize Rovo Dev, something went wrong with the MCP servers acceptance flow.',
-                    );
-                } else {
-                    await webView.postMessage({
-                        type: RovoDevProviderMessageType.SetMcpAcceptanceRequired,
-                        isPromptPending: this._chatProvider.isPromptPending,
-                        mcpIds: serversToReview,
-                    });
-                }
+                await webView.postMessage({
+                    type: RovoDevProviderMessageType.SetMcpAcceptanceRequired,
+                    isPromptPending: this._chatProvider.isPromptPending,
+                    mcpIds: serversToReview,
+                });
             }
 
             return;

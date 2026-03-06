@@ -20,6 +20,18 @@ import { DialogMessage } from '../utils';
 import { MarkedDown } from './common';
 import { ExpandableSection } from './ExpandableSection';
 
+/**
+ * Safely parses JSON string or returns the value if it's already an object.
+ * @param value - The value to parse (string or already parsed object)
+ * @returns Parsed object or empty object if value is falsy
+ */
+function safeJsonParse<T = any>(value: string | T | null | undefined): T {
+    if (!value) {
+        return {} as T;
+    }
+    return typeof value === 'string' ? JSON.parse(value) : value;
+}
+
 export const DialogMessageItem: React.FC<{
     msg: DialogMessage;
     isRetryAfterErrorButtonEnabled?: (uid: string) => boolean;
@@ -325,11 +337,12 @@ const friendlyToolName: Record<RovoDevToolName, string> = {
     expand_folder: 'Expand folder',
     grep: 'Search for',
     bash: 'Run command',
-    create_technical_plan: 'Create a technical plan',
     mcp_invoke_tool: "Invoke an MCP server's tool",
     mcp__atlassian__invoke_tool: "Invoke an Atlassian MCP server's tool",
     mcp__atlassian__get_tool_schema: "Get an Atlassian MCP server's tool schema",
     mcp__scout__invoke_tool: "Invoke an MCP server's tool",
+    ask_user_questions: 'Ask user questions',
+    exit_plan_mode: 'Exit plan mode',
 };
 
 const ToolCall: React.FC<{
@@ -339,7 +352,7 @@ const ToolCall: React.FC<{
 }> = ({ toolName, toolArgs, mcpServer }) => {
     const jsonArgs = React.useMemo(() => {
         try {
-            return toolArgs ? JSON.parse(toolArgs) : {};
+            return safeJsonParse(toolArgs);
         } catch {
             return {};
         }
@@ -369,8 +382,6 @@ const ToolCallBody: React.FC<{
         );
     } else if (toolName === 'grep') {
         return <code style={{ maxWidth: '100%' }}>{jsonArgs.content_pattern}</code>;
-    } else if (toolName === 'create_technical_plan') {
-        return null;
     } else if (toolName === 'mcp_invoke_tool') {
         return (
             <table style={{ border: '0' }}>

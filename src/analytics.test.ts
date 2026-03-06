@@ -884,32 +884,6 @@ describe('analytics', () => {
             });
         });
 
-        describe('api.rovodev.chat.response.timeToTechPlan', () => {
-            it('should create a performance event with correct tag and measure', async () => {
-                const measure = 500;
-                const params = {
-                    rovoDevEnv: 'IDE' as const,
-                    appInstanceId: 'app-789',
-                    rovoDevSessionId: 'session-789',
-                    rovoDevPromptId: 'prompt-789',
-                };
-
-                const event = await analytics.performanceEvent(
-                    'api.rovodev.chat.response.timeToTechPlan',
-                    measure,
-                    params,
-                );
-
-                expect(event.trackEvent.action).toEqual('performanceEvent');
-                expect(event.trackEvent.actionSubject).toEqual('atlascode');
-                expect(event.trackEvent.attributes.tag).toEqual('api.rovodev.chat.response.timeToTechPlan');
-                expect(event.trackEvent.attributes.measure).toEqual(measure);
-                expect(event.trackEvent.attributes.appInstanceId).toEqual(params.appInstanceId);
-                expect(event.trackEvent.attributes.rovoDevSessionId).toEqual(params.rovoDevSessionId);
-                expect(event.trackEvent.attributes.rovoDevPromptId).toEqual(params.rovoDevPromptId);
-            });
-        });
-
         describe('api.rovodev.chat.response.timeToLastMessage', () => {
             it('should create a performance event with correct tag and measure', async () => {
                 const measure = 1000;
@@ -1078,18 +1052,6 @@ describe('analytics', () => {
 
             it('should have consistent action and actionSubject for timeToFirstMessage', async () => {
                 const event = await analytics.performanceEvent('api.rovodev.chat.response.timeToFirstMessage', 100, {
-                    rovoDevEnv: 'IDE',
-                    appInstanceId: 'test-app-id',
-                    rovoDevSessionId: 'test-session',
-                    rovoDevPromptId: 'test-prompt',
-                });
-
-                expect(event.trackEvent.action).toEqual('performanceEvent');
-                expect(event.trackEvent.actionSubject).toEqual('atlascode');
-            });
-
-            it('should have consistent action and actionSubject for timeToTechPlan', async () => {
-                const event = await analytics.performanceEvent('api.rovodev.chat.response.timeToTechPlan', 100, {
                     rovoDevEnv: 'IDE',
                     appInstanceId: 'test-app-id',
                     rovoDevSessionId: 'test-session',
