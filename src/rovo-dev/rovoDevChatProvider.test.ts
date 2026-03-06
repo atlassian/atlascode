@@ -978,7 +978,6 @@ describe('RovoDevChatProvider', () => {
         it('should show warning instead of error for unsupported slash commands', async () => {
             const mockPrompt: RovoDevPrompt = {
                 text: '/model',
-                enable_deep_plan: false,
                 context: [],
             };
 
@@ -1016,7 +1015,6 @@ describe('RovoDevChatProvider', () => {
         it('should extract command name from InvalidPromptError message', async () => {
             const mockPrompt: RovoDevPrompt = {
                 text: '/unknowncommand',
-                enable_deep_plan: false,
                 context: [],
             };
 
