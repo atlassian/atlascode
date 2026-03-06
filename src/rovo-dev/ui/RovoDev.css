@@ -1043,11 +1043,24 @@ body {
     display: block;
 }
 
+.code-block-wrapper-inline {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
 .code-copy-button-container {
     position: absolute;
     top: 8px;
     right: 8px;
     z-index: 10;
+}
+
+.code-block-wrapper-inline .code-copy-button-container {
+    position: static;
+    top: unset;
+    right: unset;
 }
 
 .code-copy-button {

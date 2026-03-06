@@ -131,17 +131,18 @@ export const MarkedDown: React.FC<{
                     return;
                 }
 
+                // Detect single-line code blocks by checking if the content has no newlines
+                const codeEl = pre.querySelector('code');
+                const codeText = (codeEl ?? pre).textContent || '';
+                const isInline = !codeText.includes('\n') || codeText.trim().split('\n').length === 1;
+
                 // Create wrapper
                 const wrapper = document.createElement('div');
-                wrapper.className = 'code-block-wrapper';
-                wrapper.style.position = 'relative';
+                wrapper.className = `code-block-wrapper${isInline ? ' code-block-wrapper-inline' : ''}`;
 
                 // Create container for the copy button
                 const buttonContainer = document.createElement('div');
                 buttonContainer.className = 'code-copy-button-container';
-                buttonContainer.style.position = 'absolute';
-                buttonContainer.style.top = '8px';
-                buttonContainer.style.right = '8px';
 
                 // Wrap the pre element
                 pre.parentNode?.insertBefore(wrapper, pre);
@@ -149,7 +150,6 @@ export const MarkedDown: React.FC<{
                 wrapper.appendChild(buttonContainer);
 
                 // Get the code text and render the button
-                const codeText = pre.textContent || '';
                 const root = ReactDOM.createRoot(buttonContainer);
                 root.render(<CodeBlockCopyButton codeText={codeText} onCopy={onCopy} />);
                 roots.set(buttonContainer, root);
