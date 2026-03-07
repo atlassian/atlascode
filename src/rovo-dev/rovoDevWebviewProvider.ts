@@ -1099,10 +1099,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         const resolvedPath = this.makeRelativePathAbsolute(filePath);
 
         if (cachedFilePath && fs.existsSync(cachedFilePath)) {
+            const fileIsDeleted = !fs.existsSync(resolvedPath);
+            // For deleted files, use an untitled empty URI so VS Code can show the diff
+            // without trying to read a nonexistent file from disk
+            const rightUri = fileIsDeleted ? Uri.parse(`untitled:${resolvedPath}`) : Uri.file(resolvedPath);
+            const diffTitle = fileIsDeleted ? `${filePath} (Deleted by Rovo Dev)` : `${filePath} (Rovo Dev)`;
+
             await this.extensionApi.commands.showDiff({
                 left: Uri.file(cachedFilePath),
-                right: Uri.file(resolvedPath),
-                title: `${filePath} (Rovo Dev)`,
+                right: rightUri,
+                title: diffTitle,
             });
             this._dwellTracker?.startDwellTimer();
         } else {

@@ -809,6 +809,40 @@ describe('RovoDevWebviewProvider - Business Logic', () => {
         });
     });
 
+    describe('executeOpenFile diff URI selection', () => {
+        it('should use untitled URI for deleted files when showing diff', () => {
+            // Mirrors the logic in executeOpenFile: when cachedFilePath exists but the file on disk is deleted,
+            // use an untitled URI for the right side of the diff
+            const buildDiffArgs = (filePath: string, cachedFileExists: boolean, fileOnDiskExists: boolean) => {
+                if (cachedFileExists) {
+                    const fileIsDeleted = !fileOnDiskExists;
+                    const rightUriScheme = fileIsDeleted ? 'untitled' : 'file';
+                    const diffTitle = fileIsDeleted ? `${filePath} (Deleted by Rovo Dev)` : `${filePath} (Rovo Dev)`;
+                    return { rightUriScheme, diffTitle };
+                }
+                return null;
+            };
+
+            // Deleted file: cached exists, file on disk does not
+            const deletedResult = buildDiffArgs('index.html', true, false);
+            expect(deletedResult).toEqual({
+                rightUriScheme: 'untitled',
+                diffTitle: 'index.html (Deleted by Rovo Dev)',
+            });
+
+            // Modified file: both cached and file on disk exist
+            const modifiedResult = buildDiffArgs('app.ts', true, true);
+            expect(modifiedResult).toEqual({
+                rightUriScheme: 'file',
+                diffTitle: 'app.ts (Rovo Dev)',
+            });
+
+            // No cached file: should return null (no diff to show)
+            const noCacheResult = buildDiffArgs('new.ts', false, true);
+            expect(noCacheResult).toBeNull();
+        });
+    });
+
     describe('executeUndoFiles', () => {
         it('should call restoreFromFileCache API and update reverted changes', () => {
             // Test the logic: executeUndoFiles should call the API and update _revertedChanges
