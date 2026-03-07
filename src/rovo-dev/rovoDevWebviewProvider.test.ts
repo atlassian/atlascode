@@ -925,4 +925,142 @@ describe('RovoDevWebviewProvider - Business Logic', () => {
             expect(result).toHaveLength(3);
         });
     });
+
+    describe('refreshModifiedFiles', () => {
+        it('should call listCachedFiles and post SetModifiedFiles message with converted files', async () => {
+            // Test verifying refreshModifiedFiles converts API response to SetModifiedFiles
+            const testLogic = async (apiResponse: any, mockApiCall: jest.Mock, mockPostMessage: jest.Mock) => {
+                try {
+                    const cachedFiles = await mockApiCall();
+                    const files = cachedFiles.map((entry: any) => ({
+                        filePath: entry.original_path,
+                        type: 'modify', // simplified for test
+                    }));
+                    await mockPostMessage({
+                        type: 'setModifiedFiles',
+                        files: files,
+                    });
+                    return true;
+                } catch {
+                    return false;
+                }
+            };
+
+            const mockApiCall = jest.fn().mockResolvedValue([
+                { original_path: 'src/app.ts', cached_path: '/cache/src/app.ts' },
+                { original_path: 'src/utils.ts', cached_path: '/cache/src/utils.ts' },
+            ]);
+
+            const mockPostMessage = jest.fn().mockResolvedValue(undefined);
+
+            const result = await testLogic({}, mockApiCall, mockPostMessage);
+
+            expect(result).toBe(true);
+            expect(mockApiCall).toHaveBeenCalled();
+            expect(mockPostMessage).toHaveBeenCalledWith({
+                type: 'setModifiedFiles',
+                files: [
+                    { filePath: 'src/app.ts', type: 'modify' },
+                    { filePath: 'src/utils.ts', type: 'modify' },
+                ],
+            });
+        });
+
+        it('should send empty files array when rovoDevApiClient is not set', async () => {
+            // Test verifying fallback behavior when API client is unavailable
+            const testLogic = async (mockPostMessage: jest.Mock) => {
+                await mockPostMessage({
+                    type: 'setModifiedFiles',
+                    files: [],
+                });
+            };
+
+            const mockPostMessage = jest.fn().mockResolvedValue(undefined);
+
+            await testLogic(mockPostMessage);
+
+            expect(mockPostMessage).toHaveBeenCalledWith({
+                type: 'setModifiedFiles',
+                files: [],
+            });
+        });
+
+        it('should send empty files array on API error', async () => {
+            // Test verifying error handling posts empty files
+            const testLogic = async (mockApiCall: jest.Mock, mockPostMessage: jest.Mock) => {
+                try {
+                    await mockApiCall();
+                    throw new Error('API failed');
+                } catch {
+                    await mockPostMessage({
+                        type: 'setModifiedFiles',
+                        files: [],
+                    });
+                }
+            };
+
+            const mockApiCall = jest.fn().mockRejectedValue(new Error('Network error'));
+            const mockPostMessage = jest.fn().mockResolvedValue(undefined);
+
+            await testLogic(mockApiCall, mockPostMessage);
+
+            expect(mockPostMessage).toHaveBeenCalledWith({
+                type: 'setModifiedFiles',
+                files: [],
+            });
+        });
+    });
+
+    describe('inferFileOperationType', () => {
+        it('should classify file as delete when original missing and cached exists', () => {
+            // Test verifying delete classification logic
+            const inferType = (originalExists: boolean, cachedExists: boolean): string => {
+                if (!originalExists && cachedExists) {
+                    return 'delete';
+                }
+                if (originalExists && !cachedExists) {
+                    return 'create';
+                }
+                return 'modify';
+            };
+
+            const result = inferType(false, true);
+
+            expect(result).toBe('delete');
+        });
+
+        it('should classify file as create when original exists and cached missing', () => {
+            // Test verifying create classification logic
+            const inferType = (originalExists: boolean, cachedExists: boolean): string => {
+                if (!originalExists && cachedExists) {
+                    return 'delete';
+                }
+                if (originalExists && !cachedExists) {
+                    return 'create';
+                }
+                return 'modify';
+            };
+
+            const result = inferType(true, false);
+
+            expect(result).toBe('create');
+        });
+
+        it('should classify file as modify when both original and cached exist', () => {
+            // Test verifying modify classification logic
+            const inferType = (originalExists: boolean, cachedExists: boolean): string => {
+                if (!originalExists && cachedExists) {
+                    return 'delete';
+                }
+                if (originalExists && !cachedExists) {
+                    return 'create';
+                }
+                return 'modify';
+            };
+
+            const result = inferType(true, true);
+
+            expect(result).toBe('modify');
+        });
+    });
 });

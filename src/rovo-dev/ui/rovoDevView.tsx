@@ -7,12 +7,7 @@ import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
 import * as React from 'react';
-import {
-    AgentMode,
-    RovoDevAskUserQuestionsToolArgs,
-    RovoDevModeInfo,
-    RovoDevToolReturnResponse,
-} from 'src/rovo-dev/client';
+import { AgentMode, RovoDevAskUserQuestionsToolArgs, RovoDevModeInfo } from 'src/rovo-dev/client';
 import { RovoDevContextItem, State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
@@ -33,13 +28,7 @@ import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
 import { PromptContextCollection } from './prompt-box/promptContext/promptContextCollection';
 import { UpdatedFilesComponent } from './prompt-box/updated-files/UpdatedFilesComponent';
 import { RovoDevErrorBoundary } from './RovoDevErrorBoundary';
-import {
-    FileOperationType,
-    McpConsentChoice,
-    ModifiedFile,
-    RovoDevViewResponse,
-    RovoDevViewResponseType,
-} from './rovoDevViewMessages';
+import { McpConsentChoice, ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
 import { AskUserQuestionsComponent } from './technical-plan/AskUserQuestionsComponent';
 import { DebugPanel } from './tools/DebugPanel';
 import { parseToolCallMessage } from './tools/ToolCallItem';
@@ -49,9 +38,7 @@ import {
     ConnectionTimeout,
     DialogMessage,
     extractLastNMessages,
-    isCodeChangeTool,
     modifyFileTitleMap,
-    parseToolReturnMessage,
     processDropDataTransferItems,
     PullRequestMessage,
     Response,
@@ -83,7 +70,6 @@ const RovoDevView: React.FC = () => {
     const [fileExistenceMap, setFileExistenceMap] = useState<Map<string, boolean>>(new Map());
     const [jiraWorkItems, setJiraWorkItems] = useState<MinimalIssue<DetailedSiteInfo>[] | undefined>(undefined);
     const [credentialHints, setCredentialHints] = useState<CredentialHint[]>([]);
-    const [pendingFilesForFiltering, setPendingFilesForFiltering] = useState<ModifiedFile[] | null>(null);
     const [thinkingBlockEnabled, setThinkingBlockEnabled] = useState(true);
     const [lastCompletedPromptId, setLastCompletedPromptId] = useState<string | undefined>(undefined);
     const [isAtlassianUser, setIsAtlassianUser] = useState(false);
@@ -207,62 +193,6 @@ const RovoDevView: React.FC = () => {
         [dispatch],
     );
 
-    const handleAppendModifiedFileToolReturns = useCallback(
-        (toolReturn: RovoDevToolReturnResponse) => {
-            if (isCodeChangeTool(toolReturn.tool_name)) {
-                const msg = parseToolReturnMessage(toolReturn, onError).filter((msg) => msg.filePath !== undefined);
-
-                setTotalModifiedFiles((currentFiles) => {
-                    const filesMap = new Map([...currentFiles].map((item) => [item.filePath!, item]));
-
-                    // Logic for handling deletions and modifications
-                    msg.forEach((file) => {
-                        if (!file.filePath) {
-                            return;
-                        }
-                        if (file.type === 'delete') {
-                            if (filesMap.has(file.filePath)) {
-                                const existingFile = filesMap.get(file.filePath);
-                                if (existingFile?.type === 'modify') {
-                                    filesMap.set(file.filePath, file); // If file was only modified but not created by RovoDev, still show deletion
-                                } else {
-                                    filesMap.delete(file.filePath); // If file was created by RovoDev, remove it from the map
-                                }
-                            } else {
-                                filesMap.set(file.filePath, file);
-                            }
-                        } else {
-                            if (!filesMap.has(file.filePath) || filesMap.get(file.filePath)?.type === 'delete') {
-                                filesMap.set(file.filePath, file); // Only add on first modification so we can track if file was created by RovoDev or just modified
-                            }
-                        }
-                    });
-
-                    const allFiles = Array.from(filesMap.values());
-                    const modifiedFiles = allFiles
-                        .filter((file) =>
-                            [
-                                modifyFileTitleMap.updated.type,
-                                modifyFileTitleMap.created.type,
-                                modifyFileTitleMap.deleted.type,
-                            ].includes(file.type!),
-                        )
-                        .map((file) => ({
-                            filePath: file.filePath!,
-                            type: file.type as FileOperationType,
-                        }));
-
-                    if (modifiedFiles.length > 0) {
-                        setPendingFilesForFiltering(modifiedFiles);
-                    }
-
-                    return allFiles;
-                });
-            }
-        },
-        [onError],
-    );
-
     const setSummaryMessageInHistory = useCallback(() => {
         setHistory((prev) => {
             const lastMessage = prev[prev.length - 1];
@@ -278,12 +208,12 @@ const RovoDevView: React.FC = () => {
     const handleAppendResponse = useCallback(
         (response: Response | Response[]) => {
             setHistory((prev) => {
-                prev = appendResponse(prev, response, handleAppendModifiedFileToolReturns, thinkingBlockEnabled);
+                prev = appendResponse(prev, response, thinkingBlockEnabled);
 
                 return prev;
             });
         },
-        [handleAppendModifiedFileToolReturns, thinkingBlockEnabled],
+        [thinkingBlockEnabled],
     );
 
     const onMessageHandler = useCallback(
@@ -464,21 +394,6 @@ const RovoDevView: React.FC = () => {
                     setCredentialHints(event.credentials);
                     break;
 
-                case RovoDevProviderMessageType.FilterModifiedFilesByContentComplete: {
-                    const convertedFiles: ToolReturnParseResult[] = event.filteredFiles.map((file) => {
-                        const content = modifyFileTitleMap[file.type]?.title || modifyFileTitleMap.updated.title;
-
-                        return {
-                            content,
-                            filePath: file.filePath,
-                            title: file.filePath.split('/').pop() || file.filePath,
-                            type: file.type,
-                        };
-                    });
-                    setTotalModifiedFiles(convertedFiles);
-                    break;
-                }
-
                 case RovoDevProviderMessageType.SetModifiedFiles: {
                     const convertedFiles: ToolReturnParseResult[] = event.files.map((file) => ({
                         content: modifyFileTitleMap[file.type]?.title || modifyFileTitleMap.updated.title,
@@ -585,18 +500,6 @@ const RovoDevView: React.FC = () => {
             dispatch(undefined);
         }
     }, [postMessage, dispatch, outgoingMessage]);
-
-    // Effect to trigger content filtering when files are pending
-    React.useEffect(() => {
-        if (pendingFilesForFiltering !== null) {
-            postMessage({
-                type: RovoDevViewResponseType.FilterModifiedFilesByContent,
-                files: pendingFilesForFiltering,
-            });
-            // Set to null to indicate filtering is in progress (prevents duplicate requests)
-            setPendingFilesForFiltering(null);
-        }
-    }, [pendingFilesForFiltering, postMessage]);
 
     // Save webview state for drag-and-drop preservation
     React.useEffect(() => {

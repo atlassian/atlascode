@@ -32,7 +32,6 @@ export const enum RovoDevProviderMessageType {
     GetCurrentBranchNameComplete = 'getCurrentBranchNameComplete',
     SetChatContext = 'setChatContext',
     CheckGitChangesComplete = 'checkGitChangesComplete',
-    FilterModifiedFilesByContentComplete = 'filterModifiedFilesByContentComplete',
     ForceStop = 'forceStop',
     ShowFeedbackForm = 'showFeedbackForm',
     SetDebugPanel = 'setDebugPanel',
@@ -115,7 +114,6 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.GetCurrentBranchNameComplete, { data: { branchName?: string } }>
     | ReducerAction<RovoDevProviderMessageType.SetChatContext, { context: RovoDevContextItem[] }>
     | ReducerAction<RovoDevProviderMessageType.CheckGitChangesComplete, { hasChanges: boolean }>
-    | ReducerAction<RovoDevProviderMessageType.FilterModifiedFilesByContentComplete, { filteredFiles: ModifiedFile[] }>
     | ReducerAction<RovoDevProviderMessageType.ForceStop>
     | ReducerAction<RovoDevProviderMessageType.ShowFeedbackForm>
     | ReducerAction<
