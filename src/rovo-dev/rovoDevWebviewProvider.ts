@@ -1320,10 +1320,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // Always focus on the specific vscode view, even if disabled (so user can see the login prompt)
         await this.extensionApi.commands.focusRovodevView();
 
-        // Wait for the webview to initialize, up to 5 seconds
+        // Wait for the webview to be ready to receive messages, up to 5 seconds
         const initialized = await safeWaitFor({
             condition: (value) => !!value,
-            check: () => !!this._webView,
+            check: () => (this._webviewReady ? this._webView : undefined),
             timeout: 5000,
             interval: 50,
         });
