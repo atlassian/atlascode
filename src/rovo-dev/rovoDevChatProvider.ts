@@ -549,6 +549,26 @@ export class RovoDevChatProvider {
                 break;
 
             case 'exception': {
+                // Handle InvalidPromptError for unsupported slash commands as a warning instead of an error
+                if (
+                    response.type.toLowerCase().includes('invalidprompt') &&
+                    response.message.includes('Unknown command:')
+                ) {
+                    // Extract the command name from the message (e.g., "Unknown command: /model" -> "/model")
+                    const commandMatch = response.message.match(/Unknown command:\s*(\S+)/);
+                    const command = commandMatch ? commandMatch[1] : 'the command you entered';
+
+                    await webview.postMessage({
+                        type: RovoDevProviderMessageType.ShowDialog,
+                        message: {
+                            event_kind: '_RovoDevDialog',
+                            type: 'warning',
+                            title: 'Unsupported Command',
+                            text: `The command ${command} is not supported.`,
+                        },
+                    });
+                    break;
+                }
                 RovoDevTelemetryProvider.logError(
                     new Error(`${response.type} ${response.message}`),
                     response.title || undefined,

@@ -974,5 +974,76 @@ describe('RovoDevChatProvider', () => {
                 }),
             );
         });
+
+        it('should show warning instead of error for unsupported slash commands', async () => {
+            const mockPrompt: RovoDevPrompt = {
+                text: '/model',
+                enable_deep_plan: false,
+                context: [],
+            };
+
+            // Create a stream that returns an InvalidPromptError exception for unknown command
+            const mockReadableStream = new ReadableStream({
+                start(controller) {
+                    controller.enqueue(
+                        new TextEncoder().encode(
+                            'event: exception\ndata: {"message":"Unknown command: /model","type":"InvalidPromptError"}\n\n',
+                        ),
+                    );
+                    controller.enqueue(new TextEncoder().encode('event: close\ndata: \n\n'));
+                    controller.close();
+                },
+            });
+            const mockResponse = { body: mockReadableStream } as Response;
+            mockApiClient.chat.mockResolvedValue(mockResponse);
+
+            await chatProvider.executeChat(mockPrompt, []);
+
+            // Should show warning dialog, not error
+            expect(mockWebview.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: RovoDevProviderMessageType.ShowDialog,
+                    message: expect.objectContaining({
+                        event_kind: '_RovoDevDialog',
+                        type: 'warning',
+                        title: 'Unsupported Command',
+                        text: 'The command /model is not supported.',
+                    }),
+                }),
+            );
+        });
+
+        it('should extract command name from InvalidPromptError message', async () => {
+            const mockPrompt: RovoDevPrompt = {
+                text: '/unknowncommand',
+                enable_deep_plan: false,
+                context: [],
+            };
+
+            const mockReadableStream = new ReadableStream({
+                start(controller) {
+                    controller.enqueue(
+                        new TextEncoder().encode(
+                            'event: exception\ndata: {"message":"Unknown command: /unknowncommand","type":"InvalidPromptError"}\n\n',
+                        ),
+                    );
+                    controller.enqueue(new TextEncoder().encode('event: close\ndata: \n\n'));
+                    controller.close();
+                },
+            });
+            const mockResponse = { body: mockReadableStream } as Response;
+            mockApiClient.chat.mockResolvedValue(mockResponse);
+
+            await chatProvider.executeChat(mockPrompt, []);
+
+            expect(mockWebview.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: RovoDevProviderMessageType.ShowDialog,
+                    message: expect.objectContaining({
+                        text: 'The command /unknowncommand is not supported.',
+                    }),
+                }),
+            );
+        });
     });
 });

@@ -29,6 +29,7 @@
 - **RovoDev**: Fixed prompt input performance degradation after extended idle periods by properly disposing Monaco editor resources and event listeners on component cleanup
 - **RovoDev**: Refactored JSON parsing logic with `safeJsonParse` helper function to reduce code duplication and improve maintainability
 - **RovoDev**: Centered text within tool call statements in RovoDev chat.
+- **RovoDev**: Added special handling for `InvalidPromptError` with 'Unknown command:' messages — shows a user-friendly warning dialog instead of a scary error dialog with stack traces. Error type check is case-insensitive for robustness.
 
 ### Bug Fixes
 
