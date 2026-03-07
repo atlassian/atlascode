@@ -202,6 +202,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         this._chatProvider = new RovoDevChatProvider(this.isBoysenberry, this._telemetryProvider);
         this._chatProvider.onAgentModelChanged(() => this.refreshAgentModel());
+        this._chatProvider.onPromptComplete(() => this.refreshModifiedFiles());
 
         this._chatContextprovider = new RovoDevChatContextProvider();
 
@@ -316,10 +317,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                     case RovoDevViewResponseType.UndoFileChanges:
                         await this.executeUndoFiles(e.files);
+                        await this.refreshModifiedFiles();
                         break;
 
                     case RovoDevViewResponseType.KeepFileChanges:
                         await this.executeKeepFiles(e.files);
+                        await this.refreshModifiedFiles();
+                        break;
+
+                    case RovoDevViewResponseType.RefreshModifiedFiles:
+                        await this.refreshModifiedFiles();
                         break;
 
                     case RovoDevViewResponseType.CreatePR:
@@ -1136,21 +1143,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async executeUndoFiles(files: ModifiedFile[]) {
-        const promises = files.map(async (file) => {
-            const resolvedPath = this.makeRelativePathAbsolute(file.filePath);
-            await getFsPromise((callback) => fs.rm(resolvedPath, { force: true }, callback));
+        const filePaths = files.map((f) => this.makeRelativePathAbsolute(f.filePath));
+        await this.rovoDevApiClient!.restoreFromFileCache(filePaths);
 
-            if (file.type !== 'create') {
-                const cachedFilePath = await this.rovoDevApiClient!.getCacheFilePath(file.filePath);
-                await getFsPromise((callback) => fs.copyFile(cachedFilePath, resolvedPath, callback));
-                await getFsPromise((callback) => fs.rm(cachedFilePath, callback));
-            }
-        });
-
-        await Promise.all(promises);
-
-        const paths = files.map((x) => x.filePath);
-        this._revertedChanges.push(...paths);
+        this._revertedChanges.push(...files.map((x) => x.filePath));
 
         this._telemetryProvider.fireTelemetryEvent({
             action: 'rovoDevFileChangedAction',
@@ -1164,12 +1160,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async executeKeepFiles(files: ModifiedFile[]) {
-        const promises = files.map(async (file) => {
-            const cachedFilePath = await this.rovoDevApiClient!.getCacheFilePath(file.filePath);
-            await getFsPromise((callback) => fs.rm(cachedFilePath, callback));
-        });
-
-        await Promise.all(promises);
+        const filePaths = files.map((f) => this.makeRelativePathAbsolute(f.filePath));
+        await this.rovoDevApiClient!.invalidateFileCache(filePaths);
 
         this._telemetryProvider.fireTelemetryEvent({
             action: 'rovoDevFileChangedAction',
@@ -1180,6 +1172,59 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 filesCount: files.length,
             },
         });
+    }
+
+    private inferFileOperationType(entry: any): 'create' | 'modify' | 'delete' {
+        const originalExists = fs.existsSync(entry.original_path);
+        const cachedExists = fs.existsSync(entry.cached_path);
+
+        if (!originalExists && cachedExists) {
+            return 'delete';
+        }
+        if (originalExists && !cachedExists) {
+            return 'create';
+        }
+        return 'modify';
+    }
+
+    private async refreshModifiedFiles() {
+        const webview = this._webView!;
+        if (!this.rovoDevApiClient) {
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.SetModifiedFiles,
+                files: [],
+            });
+            return;
+        }
+
+        try {
+            const cachedFiles = await this.rovoDevApiClient.listCachedFiles();
+            const files: ModifiedFile[] = cachedFiles.map((entry) => ({
+                filePath: entry.original_path,
+                type: this.inferFileOperationType(entry),
+            }));
+
+            // Normalize paths to workspace-relative if they're absolute
+            const workspaceRoot = workspace.workspaceFolders?.[0]?.uri.fsPath;
+            const normalizedFiles: ModifiedFile[] = files.map((file) => ({
+                filePath:
+                    workspaceRoot && path.isAbsolute(file.filePath)
+                        ? path.relative(workspaceRoot, file.filePath)
+                        : file.filePath,
+                type: file.type,
+            }));
+
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.SetModifiedFiles,
+                files: normalizedFiles,
+            });
+        } catch (error) {
+            Logger.debug('Error refreshing modified files:', error);
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.SetModifiedFiles,
+                files: [],
+            });
+        }
     }
 
     public async executeTriggerFeedback() {

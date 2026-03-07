@@ -479,6 +479,17 @@ const RovoDevView: React.FC = () => {
                     break;
                 }
 
+                case RovoDevProviderMessageType.SetModifiedFiles: {
+                    const convertedFiles: ToolReturnParseResult[] = event.files.map((file) => ({
+                        content: modifyFileTitleMap[file.type]?.title || modifyFileTitleMap.updated.title,
+                        filePath: file.filePath,
+                        title: file.filePath.split('/').pop() || file.filePath,
+                        type: file.type,
+                    }));
+                    setTotalModifiedFiles(convertedFiles);
+                    break;
+                }
+
                 case RovoDevProviderMessageType.SetThinkingBlockEnabled:
                     setThinkingBlockEnabled(() => event.enabled);
                     break;

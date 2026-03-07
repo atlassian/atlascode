@@ -140,3 +140,18 @@ export interface RovoDevGetAvailableAgentModelsResponse {
         credit_multiplier: string;
     }[];
 }
+
+export interface CachedFileEntry {
+    original_path: string;
+    cached_hash: string;
+    cached_path: string;
+}
+
+export interface RestoreFromCacheResponse {
+    message: string;
+    restored_count: number;
+}
+
+export interface InvalidateCacheResponse {
+    message: string;
+}

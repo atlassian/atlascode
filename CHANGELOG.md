@@ -1,5 +1,12 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.25
+
+### Improvements
+
+- **RovoDev**: Replaced `executeKeepFiles` with `invalidateFileCache` API call to eliminate manual file-system-based cache removal
+- **RovoDev**: Replaced tool-return-based file list with `listCachedFiles` API - eliminates fragile client-side heuristic parsing and provides authoritative file list from server; files now refresh after prompt completion, undo, and keep actions
+
 ## What's new in 4.0.24
 
 ### Improvements

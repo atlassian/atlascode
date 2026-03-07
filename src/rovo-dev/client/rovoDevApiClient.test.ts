@@ -2088,4 +2088,339 @@ describe('RovoDevApiClient', () => {
             );
         });
     });
+
+    describe('listCachedFiles method', () => {
+        it('should return cached files list successfully', async () => {
+            const mockCachedFiles = [
+                {
+                    original_path: '/src/app.ts',
+                    cached_hash: 'abc123',
+                    cached_path: '/cache/abc123/app.ts',
+                },
+                {
+                    original_path: '/src/utils.ts',
+                    cached_hash: 'def456',
+                    cached_path: '/cache/def456/utils.ts',
+                },
+            ];
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ cached_files: mockCachedFiles }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.listCachedFiles();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/cache-file-path', {
+                method: 'GET',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: undefined,
+            });
+            expect(result).toEqual(mockCachedFiles);
+            expect(result).toHaveLength(2);
+        });
+
+        it('should return empty array when no cached files exist', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ cached_files: [] }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.listCachedFiles();
+
+            expect(result).toEqual([]);
+        });
+
+        it('should handle cached files with special characters in paths', async () => {
+            const mockCachedFiles = [
+                {
+                    original_path: '/src/file with spaces.ts',
+                    cached_hash: 'xyz789',
+                    cached_path: '/cache/xyz789/file with spaces.ts',
+                },
+            ];
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ cached_files: mockCachedFiles }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.listCachedFiles();
+
+            expect(result).toEqual(mockCachedFiles);
+        });
+
+        it('should throw error when API call fails', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.listCachedFiles()).rejects.toThrow(
+                "Failed to fetch '/v3/cache-file-path API: HTTP 500",
+            );
+        });
+    });
+
+    describe('restoreFromFileCache method', () => {
+        it('should restore all files when no file paths provided', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ message: 'Files restored successfully', restored_count: 5 }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.restoreFromFileCache();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/restore-from-file-cache', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: JSON.stringify({}),
+            });
+            expect(result).toEqual({ message: 'Files restored successfully', restored_count: 5 });
+        });
+
+        it('should restore specific files when file paths provided', async () => {
+            const filePaths = ['/src/app.ts', '/src/utils.ts'];
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ message: 'Specified files restored', restored_count: 2 }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.restoreFromFileCache(filePaths);
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/restore-from-file-cache', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: JSON.stringify({ file_paths: filePaths }),
+            });
+            expect(result.restored_count).toBe(2);
+        });
+
+        it('should handle empty file paths array', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ message: 'No files restored', restored_count: 0 }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.restoreFromFileCache([]);
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/restore-from-file-cache', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: JSON.stringify({ file_paths: [] }),
+            });
+            expect(result.restored_count).toBe(0);
+        });
+
+        it('should handle file paths with special characters', async () => {
+            const filePaths = ['/src/file with spaces.ts', '/src/special&chars.ts'];
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ message: 'Files restored', restored_count: 2 }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.restoreFromFileCache(filePaths);
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/restore-from-file-cache', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: JSON.stringify({ file_paths: filePaths }),
+            });
+            expect(result.restored_count).toBe(2);
+        });
+
+        it('should throw error when API call fails', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.restoreFromFileCache()).rejects.toThrow(
+                "Failed to fetch '/v3/restore-from-file-cache API: HTTP 500",
+            );
+        });
+
+        it('should throw error for 404 not found', async () => {
+            const mockResponse = {
+                status: 404,
+                statusText: 'Not Found',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.restoreFromFileCache(['/src/nonexistent.ts'])).rejects.toThrow(
+                "Failed to fetch '/v3/restore-from-file-cache API: HTTP 404",
+            );
+        });
+    });
+
+    describe('invalidateFileCache method', () => {
+        it('should invalidate all cache entries when no file paths provided', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ message: 'Cache invalidated successfully' }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.invalidateFileCache();
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/invalidate-file-cache', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: JSON.stringify({}),
+            });
+            expect(result).toEqual({ message: 'Cache invalidated successfully' });
+        });
+
+        it('should invalidate specific cache entries when file paths provided', async () => {
+            const filePaths = ['/src/app.ts', '/src/utils.ts'];
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ message: 'Specified cache entries invalidated' }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.invalidateFileCache(filePaths);
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/invalidate-file-cache', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: JSON.stringify({ file_paths: filePaths }),
+            });
+            expect(result.message).toBe('Specified cache entries invalidated');
+        });
+
+        it('should handle empty file paths array', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ message: 'No cache entries invalidated' }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.invalidateFileCache([]);
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/invalidate-file-cache', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: JSON.stringify({ file_paths: [] }),
+            });
+            expect(result.message).toBe('No cache entries invalidated');
+        });
+
+        it('should handle file paths with special characters', async () => {
+            const filePaths = ['/src/file with spaces.ts', '/src/special&chars.ts'];
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ message: 'Cache entries invalidated' }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.invalidateFileCache(filePaths);
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/invalidate-file-cache', {
+                method: 'POST',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: JSON.stringify({ file_paths: filePaths }),
+            });
+            expect(result.message).toBe('Cache entries invalidated');
+        });
+
+        it('should throw error when API call fails', async () => {
+            const mockResponse = {
+                status: 500,
+                statusText: 'Internal Server Error',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.invalidateFileCache()).rejects.toThrow(
+                "Failed to fetch '/v3/invalidate-file-cache API: HTTP 500",
+            );
+        });
+
+        it('should throw error for 400 bad request', async () => {
+            const mockResponse = {
+                status: 400,
+                statusText: 'Bad Request',
+                headers: mockStandardResponseHeaders(),
+            } as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await expect(client.invalidateFileCache()).rejects.toThrow(
+                "Failed to fetch '/v3/invalidate-file-cache API: HTTP 400",
+            );
+        });
+    });
 });

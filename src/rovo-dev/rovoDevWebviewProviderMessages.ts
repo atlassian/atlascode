@@ -52,6 +52,7 @@ export const enum RovoDevProviderMessageType {
     ShowDeferredExitPlanMode = 'showDeferredExitPlanMode',
     UpdateAgentModels = 'updateAgentModels',
     AgentModelChanged = 'agentModelChanged',
+    SetModifiedFiles = 'setModifiedFiles',
 }
 
 export type RovoDevDisabledReason = DisabledState['subState'];
@@ -154,4 +155,5 @@ export type RovoDevProviderMessage =
           { toolCallId: string; args: RovoDevExitPlanModeToolArgs }
       >
     | ReducerAction<RovoDevProviderMessageType.UpdateAgentModels, { models: RovoDevAgentModel[] }>
-    | ReducerAction<RovoDevProviderMessageType.AgentModelChanged, RovoDevAgentModel>;
+    | ReducerAction<RovoDevProviderMessageType.AgentModelChanged, RovoDevAgentModel>
+    | ReducerAction<RovoDevProviderMessageType.SetModifiedFiles, { files: ModifiedFile[] }>;

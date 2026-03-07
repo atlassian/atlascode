@@ -49,6 +49,11 @@ export class RovoDevChatProvider {
         return this._onAgentModelChanged.event;
     }
 
+    private _onPromptComplete = new EventEmitter<void>();
+    public get onPromptComplete(): Event<void> {
+        return this._onPromptComplete.event;
+    }
+
     private _pendingToolConfirmation: Record<string, ToolPermissionChoice | 'undecided'> = {};
     private _pendingToolConfirmationLeft = 0;
     private _pendingDeferredRequest: string | undefined;
@@ -868,6 +873,9 @@ export class RovoDevChatProvider {
             type: RovoDevProviderMessageType.CompleteMessage,
             promptId: this._currentPromptId,
         });
+
+        // Signal that the prompt is complete so listeners can refresh data
+        this._onPromptComplete.fire();
     }
 
     private async processError(
