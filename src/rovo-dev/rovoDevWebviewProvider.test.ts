@@ -88,6 +88,7 @@ jest.mock('./rovoDevChatProvider', () => ({
         shutdown: jest.fn(),
         onAgentModelChanged: jest.fn(),
         onPromptComplete: jest.fn(),
+        onFileModifyingToolReturn: jest.fn(),
         isPromptPending: false,
         currentPromptId: 'test-id',
         pendingCancellation: false,

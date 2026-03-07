@@ -200,6 +200,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._chatProvider = new RovoDevChatProvider(this.isBoysenberry, this._telemetryProvider);
         this._chatProvider.onAgentModelChanged(() => this.refreshAgentModel());
         this._chatProvider.onPromptComplete(() => this.refreshModifiedFiles());
+        this._chatProvider.onFileModifyingToolReturn(() => this.refreshModifiedFiles());
 
         this._chatContextprovider = new RovoDevChatContextProvider();
 
