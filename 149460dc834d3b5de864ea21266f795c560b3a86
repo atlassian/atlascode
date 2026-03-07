@@ -1,0 +1,39 @@
+src/rovo-dev/ui/rovoDevViewMessages.tsx
+  3c2bd985ab07e0f4 56,129
+src/rovo-dev/ui/rovoDevView.tsx
+  3c2bd985ab07e0f4 482-492
+src/rovo-dev/rovoDevChatProvider.ts
+  3c2bd985ab07e0f4 52-56,876-878
+src/rovo-dev/client/rovoDevApiClientInterfaces.ts
+  3c2bd985ab07e0f4 143-157
+CHANGELOG.md
+  3c2bd985ab07e0f4 3-9
+src/rovo-dev/client/rovoDevApiClient.ts
+  3c2bd985ab07e0f4 4-6,375-403
+src/rovo-dev/rovoDevWebviewProvider.test.ts
+  3c2bd985ab07e0f4 90,810-927
+src/rovo-dev/rovoDevWebviewProviderMessages.ts
+  3c2bd985ab07e0f4 55,159
+src/rovo-dev/client/rovoDevApiClient.test.ts
+  3c2bd985ab07e0f4 2091-2425
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "149460dc834d3b5de864ea21266f795c560b3a86",
+  "prompts": {
+    "3c2bd985ab07e0f4": {
+      "agent_id": {
+        "tool": "rovodev-cli",
+        "id": "rovodev-session",
+        "model": "anthropic:claude-opus-4-6"
+      },
+      "human_author": "Bryan Wieger <bwieger@atlassian.com>",
+      "messages": [],
+      "total_additions": 1651,
+      "total_deletions": 120,
+      "accepted_lines": 1528,
+      "overriden_lines": 0
+    }
+  }
+}
