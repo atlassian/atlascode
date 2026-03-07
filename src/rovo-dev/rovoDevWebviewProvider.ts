@@ -1143,7 +1143,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async executeUndoFiles(files: ModifiedFile[]) {
-        const filePaths = files.map((f) => this.makeRelativePathAbsolute(f.filePath));
+        const filePaths = files.map((f) => f.filePath);
         await this.rovoDevApiClient!.restoreFromFileCache(filePaths);
 
         this._revertedChanges.push(...files.map((x) => x.filePath));
@@ -1160,7 +1160,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async executeKeepFiles(files: ModifiedFile[]) {
-        const filePaths = files.map((f) => this.makeRelativePathAbsolute(f.filePath));
+        const filePaths = files.map((f) => f.filePath);
         await this.rovoDevApiClient!.invalidateFileCache(filePaths);
 
         this._telemetryProvider.fireTelemetryEvent({
@@ -1175,7 +1175,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private inferFileOperationType(entry: any): 'create' | 'modify' | 'delete' {
-        const originalExists = fs.existsSync(entry.original_path);
+        const originalExists = fs.existsSync(this.makeRelativePathAbsolute(entry.original_path));
         const cachedExists = fs.existsSync(entry.cached_path);
 
         if (!originalExists && cachedExists) {
