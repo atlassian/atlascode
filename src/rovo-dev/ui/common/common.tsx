@@ -87,7 +87,10 @@ export const MarkedDown: React.FC<{
 
     const html = React.useMemo(() => {
         try {
-            return mdParser.render(value ?? '');
+            // Ensure value is always a string to prevent "Input data should be a String" errors
+            const stringValue =
+                value !== null && value !== undefined && typeof value !== 'string' ? String(value) : (value ?? '');
+            return mdParser.render(stringValue);
         } catch (error) {
             // If markdown parsing fails, report error to backend and return plain text
             console.error('Markdown parsing error:', error);
@@ -98,7 +101,9 @@ export const MarkedDown: React.FC<{
             }
 
             // Fallback to plain text instead of crashing
-            return value ?? '';
+            const stringValue =
+                value !== null && value !== undefined && typeof value !== 'string' ? String(value) : (value ?? '');
+            return stringValue;
         }
     }, [value, reportError]);
 
