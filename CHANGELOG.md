@@ -1,5 +1,19 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.24
+
+### Improvements
+
+- **RovoDev**: Enhanced "Fix by Rovo Dev" and "Explain by Rovo Dev" code actions with rich context extraction - now includes actual code content, surrounding code, import statements, and structured diagnostics for significantly better AI responses
+
+### Bug Fixes
+
+- **RovoDev**: Fixed chat message not appearing when clicking "Fix with Rovo Dev" before the chat view is fully initialized - now waits for the webview to be ready before executing the chat command
+
+### Features
+
+- **RovoDev**: Added copy code button within the Rovo Dev chat for code blocks in the chat.
+
 ## What's new in 4.0.23
 
 ### Features
