@@ -1,0 +1,25 @@
+src/rovo-dev/ui/utils.tsx
+  3c2bd985ab07e0f4 406
+src/rovo-dev/rovoDevWebviewProvider.test.ts
+  3c2bd985ab07e0f4 928-1065
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "25193a1658b411889cf622302134c65b082a75a7",
+  "prompts": {
+    "3c2bd985ab07e0f4": {
+      "agent_id": {
+        "tool": "rovodev-cli",
+        "id": "rovodev-session",
+        "model": "anthropic:claude-haiku-4-5@20251001"
+      },
+      "human_author": "Bryan Wieger <bwieger@atlassian.com>",
+      "messages": [],
+      "total_additions": 143,
+      "total_deletions": 477,
+      "accepted_lines": 1263,
+      "overriden_lines": 0
+    }
+  }
+}
