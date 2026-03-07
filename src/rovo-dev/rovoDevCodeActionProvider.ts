@@ -104,9 +104,9 @@ export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
         } catch (error) {
             // Fallback to basic prompt if context extraction fails
             Logger.warn('Failed to extract context for Rovo Dev:', error);
-            return diagnostics.length
-                ? `${basePrompt}\nAdditional problem context:\n${diagnostics.map((d) => d.message).join('\n')}`
-                : basePrompt;
+            // Sanitize diagnostic messages to prevent JSON parsing errors
+            const sanitizedMessages = diagnostics.map((d) => d.message.replace(/[\r\n]+/g, ' ').trim()).join('\n');
+            return diagnostics.length ? `${basePrompt}\nAdditional problem context:\n${sanitizedMessages}` : basePrompt;
         }
     }
 }
