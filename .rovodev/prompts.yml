@@ -2,3 +2,6 @@ prompts:
   - name: bump-version
     description: Bump version
     content_file: bump-version.md
+  - name: error-handling
+    description: Error handling and logging guidelines
+    content_file: error-handling.md
