@@ -1,0 +1,21 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "fa97568cc96cf2af263feb06eec4356e3fe16dee",
+  "prompts": {
+    "3c2bd985ab07e0f4": {
+      "agent_id": {
+        "tool": "rovodev-cli",
+        "id": "rovodev-session",
+        "model": "anthropic:claude-haiku-4-5@20251001"
+      },
+      "human_author": "Bryan Wieger <bwieger@atlassian.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 991,
+      "overriden_lines": 0
+    }
+  }
+}
