@@ -34,6 +34,7 @@
 
 - **RovoDev**: Fixed JSON parsing errors in ToolReturnMessage handling - added type checking before JSON.parse() to prevent "Input data should be a String" and invalid JSON errors
 - Added comprehensive test coverage for parseToolReturnMessage with both string and pre-parsed object inputs
+- Rovo Dev: Unsupported slash commands now show a helpful warning instead of an error dialog
 
 ## What's new in 4.0.22
 
