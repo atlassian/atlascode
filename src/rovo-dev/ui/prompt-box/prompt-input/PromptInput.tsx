@@ -23,11 +23,11 @@ import {
     createMonacoPromptEditor,
     createPromptCompletionProvider,
     createSlashCommandProvider,
+    getSlashCommands,
     removeMonacoStyles,
     setupAutoResize,
     setupMonacoCommands,
     setupPromptKeyBindings,
-    SLASH_COMMANDS,
 } from './utils';
 
 type NonDisabledState = Exclude<State, DisabledState>;
@@ -86,11 +86,7 @@ let monacoInitialized = false;
 
 function initMonaco(isBBY: boolean) {
     if (!monacoInitialized) {
-        let commands = SLASH_COMMANDS;
-        if (isBBY) {
-            commands = commands.filter((command) => command.label !== '/yolo' && command.label !== '/sessions');
-        }
-
+        const commands = getSlashCommands(isBBY).filter((command) => !command.disabled);
         monaco.languages.registerCompletionItemProvider('plaintext', createSlashCommandProvider(commands));
 
         monacoInitialized = true;
