@@ -23,11 +23,11 @@ import {
     createMonacoPromptEditor,
     createPromptCompletionProvider,
     createSlashCommandProvider,
+    getSlashCommands,
     removeMonacoStyles,
     setupAutoResize,
     setupMonacoCommands,
     setupPromptKeyBindings,
-    SLASH_COMMANDS,
 } from './utils';
 
 type NonDisabledState = Exclude<State, DisabledState>;
@@ -55,6 +55,7 @@ interface PromptInputBoxProps {
     onCancel: () => void;
     onAddContext: () => void;
     onCopy: () => void;
+    handleMcpConfigurationCommand: () => void;
     handleMemoryCommand: () => void;
     handleTriggerFeedbackCommand: () => void;
     handleSessionCommand?: () => void;
@@ -85,11 +86,7 @@ let monacoInitialized = false;
 
 function initMonaco(isBBY: boolean) {
     if (!monacoInitialized) {
-        let commands = SLASH_COMMANDS;
-        if (isBBY) {
-            commands = commands.filter((command) => command.label !== '/yolo' && command.label !== '/sessions');
-        }
-
+        const commands = getSlashCommands(isBBY).filter((command) => !command.disabled);
         monaco.languages.registerCompletionItemProvider('plaintext', createSlashCommandProvider(commands));
 
         monacoInitialized = true;
@@ -106,15 +103,6 @@ function createEditor(setIsEmpty: (isEmpty: boolean) => void) {
 
     const editor = createMonacoPromptEditor(container);
 
-    editor.onDidChangeModelContent(() => {
-        if (editor.getValue().trim().length === 0) {
-            setIsEmpty(true);
-        } else {
-            setIsEmpty(false);
-        }
-    });
-
-    setupAutoResize(editor);
     return editor;
 }
 
@@ -140,6 +128,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     onCancel,
     onAddContext,
     onCopy,
+    handleMcpConfigurationCommand,
     handleMemoryCommand,
     handleTriggerFeedbackCommand,
     handleSessionCommand,
@@ -151,8 +140,46 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     const [editor, setEditor] = React.useState<ReturnType<typeof createEditor>>(undefined);
     const [isEmpty, setIsEmpty] = React.useState(true);
     const promptCompletionProviderRef = React.useRef<monaco.IDisposable | null>(null);
+    const contentChangeListenerRef = React.useRef<monaco.IDisposable | null>(null);
+    const autoResizeRef = React.useRef<monaco.IDisposable | null>(null);
+    const commandsRef = React.useRef<monaco.IDisposable | null>(null);
+
     // create the editor only once - use onAddContext hook to retry
     React.useEffect(() => setEditor((prev) => prev ?? createEditor(setIsEmpty)), [onAddContext]);
+
+    // Track content changes for isEmpty state
+    React.useEffect(() => {
+        if (!editor) {
+            return;
+        }
+
+        contentChangeListenerRef.current = editor.onDidChangeModelContent(() => {
+            if (editor.getValue().trim().length === 0) {
+                setIsEmpty(true);
+            } else {
+                setIsEmpty(false);
+            }
+        });
+
+        return () => {
+            contentChangeListenerRef.current?.dispose();
+            contentChangeListenerRef.current = null;
+        };
+    }, [editor]);
+
+    // Setup auto-resize
+    React.useEffect(() => {
+        if (!editor) {
+            return;
+        }
+
+        autoResizeRef.current = setupAutoResize(editor);
+
+        return () => {
+            autoResizeRef.current?.dispose();
+            autoResizeRef.current = null;
+        };
+    }, [editor]);
 
     React.useEffect(() => {
         if (editor && handleFetchSavedPrompts) {
@@ -192,21 +219,30 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     }, [editor, handleSend]);
 
     React.useEffect(() => {
-        if (editor) {
-            setupMonacoCommands(
-                editor,
-                onSend,
-                onCopy,
-                handleMemoryCommand,
-                handleTriggerFeedbackCommand,
-                handleSessionCommand,
-                onYoloModeToggled,
-            );
+        if (!editor) {
+            return;
         }
+
+        commandsRef.current = setupMonacoCommands(
+            editor,
+            onSend,
+            onCopy,
+            handleMcpConfigurationCommand,
+            handleMemoryCommand,
+            handleTriggerFeedbackCommand,
+            handleSessionCommand,
+            onYoloModeToggled,
+        );
+
+        return () => {
+            commandsRef.current?.dispose();
+            commandsRef.current = null;
+        };
     }, [
         editor,
         onSend,
         onCopy,
+        handleMcpConfigurationCommand,
         handleMemoryCommand,
         handleTriggerFeedbackCommand,
         onYoloModeToggled,
@@ -245,13 +281,18 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
 
     // Focus the editor when it becomes visible in the viewport - helps with opening Rovo Dev panel already focused
     React.useEffect(() => {
+        if (!editor) {
+            return;
+        }
+
+        const container = document.getElementById('prompt-editor-container');
+        if (!container) {
+            return;
+        }
+
         const io = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
-                if (
-                    entry.isIntersecting &&
-                    !!editor &&
-                    entry.target === document.getElementById('prompt-editor-container')
-                ) {
+                if (entry.isIntersecting && !!editor && entry.target === container) {
                     const lineNumber = editor.getModel()!.getLineCount();
                     const column = editor.getModel()!.getLineLength(lineNumber) + 1;
                     editor.focus();
@@ -260,9 +301,18 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             });
         });
 
-        io.observe(document.getElementById('prompt-editor-container')!);
+        io.observe(container);
 
         return () => io.disconnect();
+    }, [editor]);
+
+    // Dispose editor and all resources on unmount
+    React.useEffect(() => {
+        return () => {
+            if (editor) {
+                editor.dispose();
+            }
+        };
     }, [editor]);
 
     const handleSelectSavedPrompt = React.useCallback(

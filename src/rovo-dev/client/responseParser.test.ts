@@ -774,5 +774,29 @@ describe('RovoDevResponseParser', () => {
                 expect(modelsResponse.data.models).toHaveLength(1);
             });
         });
+
+        describe('ignored events', () => {
+            it('should parse thinking event as ignored', () => {
+                const input = 'event: thinking\ndata: {}\n\n';
+
+                const results = Array.from(parser.parse(input));
+
+                expect(results).toHaveLength(1);
+                expect(results[0]).toEqual({
+                    event_kind: '_ignored',
+                });
+            });
+
+            it('should parse request-usage event as ignored', () => {
+                const input = 'event: request-usage\ndata: {}\n\n';
+
+                const results = Array.from(parser.parse(input));
+
+                expect(results).toHaveLength(1);
+                expect(results[0]).toEqual({
+                    event_kind: '_ignored',
+                });
+            });
+        });
     });
 });
