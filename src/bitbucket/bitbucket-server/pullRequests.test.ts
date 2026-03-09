@@ -825,7 +825,35 @@ describe('ServerPullRequestApi', () => {
     });
 
     describe('nextPage', () => {
-        it('should fetch next page of pull requests', async () => {
+        it('should fetch next page of pull requests and return next URL when more pages exist', async () => {
+            const mockPaginatedPullRequests = {
+                workspaceRepo: mockWorkspaceRepo,
+                site: mockSite,
+                data: [],
+                next: 'http://example.com/next-page?avatarSize=64&start=25',
+            };
+
+            const mockNextPageResponse = {
+                data: {
+                    isLastPage: false,
+                    nextPageStart: 50,
+                    limit: 25,
+                    size: 25,
+                    start: 25,
+                    values: [getPullRequestData],
+                },
+            };
+
+            mockGet.mockResolvedValue(mockNextPageResponse);
+
+            const result = await api.nextPage(mockPaginatedPullRequests);
+
+            expect(mockGet).toHaveBeenCalledWith('http://example.com/next-page?avatarSize=64&start=25');
+            expect(result.data).toHaveLength(1);
+            expect(result.next).toBe('http://example.com/next-page?avatarSize=64&start=50');
+        });
+
+        it('should fetch next page and return undefined next when last page', async () => {
             const mockPaginatedPullRequests = {
                 workspaceRepo: mockWorkspaceRepo,
                 site: mockSite,
@@ -833,13 +861,17 @@ describe('ServerPullRequestApi', () => {
                 next: 'http://example.com/next-page',
             };
 
-            const mockResponse = {
+            const mockLastPageResponse = {
                 data: {
+                    isLastPage: true,
+                    limit: 25,
+                    size: 5,
+                    start: 50,
                     values: [getPullRequestData],
                 },
             };
 
-            mockGet.mockResolvedValue(mockResponse);
+            mockGet.mockResolvedValue(mockLastPageResponse);
 
             const result = await api.nextPage(mockPaginatedPullRequests);
 

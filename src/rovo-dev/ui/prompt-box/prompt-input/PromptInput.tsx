@@ -23,11 +23,11 @@ import {
     createMonacoPromptEditor,
     createPromptCompletionProvider,
     createSlashCommandProvider,
+    getSlashCommands,
     removeMonacoStyles,
     setupAutoResize,
     setupMonacoCommands,
     setupPromptKeyBindings,
-    SLASH_COMMANDS,
 } from './utils';
 
 type NonDisabledState = Exclude<State, DisabledState>;
@@ -55,6 +55,7 @@ interface PromptInputBoxProps {
     onCancel: () => void;
     onAddContext: () => void;
     onCopy: () => void;
+    handleMcpConfigurationCommand: () => void;
     handleMemoryCommand: () => void;
     handleTriggerFeedbackCommand: () => void;
     handleSessionCommand?: () => void;
@@ -85,11 +86,7 @@ let monacoInitialized = false;
 
 function initMonaco(isBBY: boolean) {
     if (!monacoInitialized) {
-        let commands = SLASH_COMMANDS;
-        if (isBBY) {
-            commands = commands.filter((command) => command.label !== '/yolo' && command.label !== '/sessions');
-        }
-
+        const commands = getSlashCommands(isBBY).filter((command) => !command.disabled);
         monaco.languages.registerCompletionItemProvider('plaintext', createSlashCommandProvider(commands));
 
         monacoInitialized = true;
@@ -131,6 +128,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     onCancel,
     onAddContext,
     onCopy,
+    handleMcpConfigurationCommand,
     handleMemoryCommand,
     handleTriggerFeedbackCommand,
     handleSessionCommand,
@@ -229,6 +227,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             editor,
             onSend,
             onCopy,
+            handleMcpConfigurationCommand,
             handleMemoryCommand,
             handleTriggerFeedbackCommand,
             handleSessionCommand,
@@ -243,6 +242,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         editor,
         onSend,
         onCopy,
+        handleMcpConfigurationCommand,
         handleMemoryCommand,
         handleTriggerFeedbackCommand,
         onYoloModeToggled,

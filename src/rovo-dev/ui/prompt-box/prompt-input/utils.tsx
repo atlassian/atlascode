@@ -76,100 +76,120 @@ export const createMonacoPromptEditor = (container: HTMLElement) => {
 interface SlashCommand {
     label: string;
     insertText: string;
+    disabled?: boolean;
     description?: string;
     command?: monaco.languages.Command;
 }
 
-export const SLASH_COMMANDS: SlashCommand[] = [
-    {
-        label: '/clear',
-        insertText: '/clear',
-        description: 'Clear the chat',
-        command: { title: 'Clear', id: 'rovo-dev.clearChat', tooltip: 'Clear the chat' },
-    },
-    {
-        label: '/copy',
-        insertText: '/copy',
-        description: 'Copy the last response to clipboard',
-        command: { title: 'Copy', id: 'rovo-dev.copyResponse', tooltip: 'Copy the last response to clipboard' },
-    },
-    {
-        label: '/feedback',
-        insertText: '/feedback',
-        description: 'Provide feedback on Rovo Dev',
-        command: { title: 'Feedback', id: 'rovo-dev.triggerFeedback', tooltip: 'Provide feedback on Rovo Dev' },
-    },
-    {
-        label: '/memory',
-        insertText: '/memory',
-        description: 'Show agent memory',
-        command: { title: 'Agent Memory', id: 'rovo-dev.agentMemory', tooltip: 'Show agent memory' },
-    },
-    {
-        label: '/models',
-        insertText: '/models',
-        description: 'Show available agent models',
-        command: {
-            title: 'Models',
-            id: 'rovo-dev.triggerAgentModels',
-            tooltip: 'Show available agent models',
+export function getSlashCommands(isBBY: boolean): SlashCommand[] {
+    return [
+        {
+            label: '/clear',
+            insertText: '/clear',
+            description: 'Clear the chat',
+            command: { title: 'Clear', id: 'rovo-dev.clearChat', tooltip: 'Clear the chat' },
         },
-    },
-    {
-        label: '/prompts',
-        insertText: '!',
-        description: 'Show saved prompts',
-        command: {
-            title: 'Prompts',
-            id: 'rovo-dev.triggerPrompts',
-            tooltip: 'Show saved prompts',
+        {
+            label: '/copy',
+            insertText: '/copy',
+            description: 'Copy the last response to clipboard',
+            command: { title: 'Copy', id: 'rovo-dev.copyResponse', tooltip: 'Copy the last response to clipboard' },
         },
-    },
-    {
-        label: '/prune',
-        insertText: '/prune',
-        description: 'Prune the chat',
-        command: { title: 'Prune', id: 'rovo-dev.pruneChat', tooltip: 'Prune the chat' },
-    },
-    {
-        label: '/status',
-        insertText: '/status',
-        description: 'Show Rovo Dev status including version, account details and model',
-        command: {
-            title: 'Status',
-            id: 'rovo-dev.triggerStatus',
-            tooltip: 'Show Rovo Dev status including version, account details and model',
+        {
+            label: '/feedback',
+            insertText: '/feedback',
+            description: 'Provide feedback on Rovo Dev',
+            command: { title: 'Feedback', id: 'rovo-dev.triggerFeedback', tooltip: 'Provide feedback on Rovo Dev' },
         },
-    },
-    {
-        label: '/usage',
-        insertText: '/usage',
-        description: 'Show Rovo Dev credit usage',
-        command: {
-            title: 'Usage',
-            id: 'rovo-dev.triggerUsage',
-            tooltip: 'Show Rovo Dev credit usage',
+        {
+            label: '/mcp',
+            insertText: '',
+            description: 'Open the MCP configuration file',
+            command: {
+                title: 'MCP configuration',
+                id: 'rovo-dev.mcpConfiguration',
+                tooltip: 'Open the MCP configuration file',
+            },
+            disabled: isBBY,
         },
-    },
-    {
-        label: '/yolo',
-        insertText: '/yolo',
-        description: 'Toggle tool confirmations',
-        command: { title: 'Yolo Mode', id: 'rovo-dev.toggleYoloMode', tooltip: 'Toggle tool confirmations' },
-    },
-    {
-        label: '/ask',
-        insertText: '/ask ',
-        description: 'Ask a question in read-only mode (no file changes or terminal access)',
-        command: { title: 'Ask Mode', id: 'rovo-dev.invokeAskMode', tooltip: 'Invoke Ask mode' },
-    },
-    {
-        label: '/sessions',
-        insertText: '/sessions',
-        description: 'View and manage your agent sessions',
-        command: { title: 'Sessions', id: 'rovo-dev.triggerSessions', tooltip: 'View and manage your agent sessions' },
-    },
-];
+        {
+            label: '/memory',
+            insertText: '/memory',
+            description: 'Show agent memory',
+            command: { title: 'Agent Memory', id: 'rovo-dev.agentMemory', tooltip: 'Show agent memory' },
+        },
+        {
+            label: '/models',
+            insertText: '/models',
+            description: 'Show available agent models',
+            command: {
+                title: 'Models',
+                id: 'rovo-dev.triggerAgentModels',
+                tooltip: 'Show available agent models',
+            },
+        },
+        {
+            label: '/prompts',
+            insertText: '!',
+            description: 'Show saved prompts',
+            command: {
+                title: 'Prompts',
+                id: 'rovo-dev.triggerPrompts',
+                tooltip: 'Show saved prompts',
+            },
+        },
+        {
+            label: '/prune',
+            insertText: '/prune',
+            description: 'Prune the chat',
+            command: { title: 'Prune', id: 'rovo-dev.pruneChat', tooltip: 'Prune the chat' },
+        },
+        {
+            label: '/status',
+            insertText: '/status',
+            description: 'Show Rovo Dev status including version, account details and model',
+            command: {
+                title: 'Status',
+                id: 'rovo-dev.triggerStatus',
+                tooltip: 'Show Rovo Dev status including version, account details and model',
+            },
+        },
+        {
+            label: '/usage',
+            insertText: '/usage',
+            description: 'Show Rovo Dev credit usage',
+            command: {
+                title: 'Usage',
+                id: 'rovo-dev.triggerUsage',
+                tooltip: 'Show Rovo Dev credit usage',
+            },
+        },
+        {
+            label: '/yolo',
+            insertText: '/yolo',
+            description: 'Toggle tool confirmations',
+            command: { title: 'Yolo Mode', id: 'rovo-dev.toggleYoloMode', tooltip: 'Toggle tool confirmations' },
+            disabled: isBBY,
+        },
+        {
+            label: '/ask',
+            insertText: '/ask ',
+            description: 'Ask a question in read-only mode (no file changes or terminal access)',
+            command: { title: 'Ask Mode', id: 'rovo-dev.invokeAskMode', tooltip: 'Invoke Ask mode' },
+        },
+        {
+            label: '/sessions',
+            insertText: '/sessions',
+            description: 'View and manage your agent sessions',
+            command: {
+                title: 'Sessions',
+                id: 'rovo-dev.triggerSessions',
+                tooltip: 'View and manage your agent sessions',
+            },
+            disabled: isBBY,
+        },
+    ];
+}
 
 export const createSlashCommandProvider = (commands: SlashCommand[]): monaco.languages.CompletionItemProvider => {
     return {
@@ -279,6 +299,7 @@ export function setupMonacoCommands(
     editor: monaco.editor.IStandaloneCodeEditor,
     onSend: (text: string) => boolean,
     onCopy: () => void,
+    handleMcpConfigurationCommand: () => void,
     handleMemoryCommand: () => void,
     handleTriggerFeedbackCommand: () => void,
     handleSessionCommand?: () => void,
@@ -312,6 +333,13 @@ export function setupMonacoCommands(
     disposables.push(
         monaco.editor.registerCommand('rovo-dev.agentMemory', () => {
             handleMemoryCommand();
+            editor.setValue('');
+        }),
+    );
+
+    disposables.push(
+        monaco.editor.registerCommand('rovo-dev.mcpConfiguration', () => {
+            handleMcpConfigurationCommand();
             editor.setValue('');
         }),
     );
