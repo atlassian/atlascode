@@ -1,11 +1,5 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
-## What's new in 4.0.25
-
-### Features
-
-- **Rovo Dev**: Added Rovo Dev icon to the editor title bar for quick access — clicking it focuses the existing Rovo Dev sidebar panel
-
 ## What's new in 4.0.24
 
 ### Improvements
@@ -21,6 +15,8 @@
 ### Features
 
 - **Rovo Dev**: Support new `plan` mode with `deferred_request` handling
+
+- **Rovo Dev**: Added Rovo Dev icon to the editor title bar for quick access — clicking it focuses the existing Rovo Dev sidebar panel
 
 ### Cleanup
 
