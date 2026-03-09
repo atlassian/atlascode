@@ -9,6 +9,7 @@
 ### Bug Fixes
 
 - **RovoDev**: Fixed chat message not appearing when clicking "Fix with Rovo Dev" before the chat view is fully initialized - now waits for the webview to be ready before executing the chat command
+- Fixed "Cannot read properties of undefined (reading 'initiateApiTokenAuth')" error
 
 ### Features
 
