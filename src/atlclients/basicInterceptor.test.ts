@@ -99,9 +99,11 @@ describe('BasicInterceptor', () => {
     });
 
     describe('error interceptor', () => {
-        it('should handle 401 error and mark credentials as invalid', async () => {
+        it('should handle 401 error and persist Invalid for basic/API token auth', async () => {
             const authInfo = expansionCastTo<any>({
                 state: AuthInfoState.Valid,
+                username: 'user',
+                password: 'token',
             });
             mockAuthStore.getAuthInfo.mockResolvedValue(authInfo);
 
@@ -124,11 +126,39 @@ describe('BasicInterceptor', () => {
                 'Update Credentials',
             );
             expect(mockAuthStore.getAuthInfo).toHaveBeenCalledWith(mockSite);
+            await new Promise((r) => setImmediate(r));
+            expect(mockAuthStore.saveAuthInfo).toHaveBeenCalledWith(
+                mockSite,
+                expect.objectContaining({ state: AuthInfoState.Invalid }),
+            );
         });
 
-        it('should handle 403 error and mark credentials as invalid', async () => {
+        it('should not persist Invalid for OAuth on 401 (expired access token can be refreshed)', async () => {
+            const oauthAuthInfo = expansionCastTo<any>({
+                state: AuthInfoState.Valid,
+                access: 'access-token',
+                refresh: 'refresh-token',
+            });
+            mockAuthStore.getAuthInfo.mockResolvedValue(oauthAuthInfo);
+
+            const interceptor = new BasicInterceptor(mockSite, mockAuthStore);
+            await interceptor.attachToAxios(mockAxiosInstance);
+
+            const errorInterceptor = mockResponseInterceptorUse.mock.calls[0][1];
+            const error401 = { response: { status: 401 } };
+
+            await expect(errorInterceptor(error401)).rejects.toBe(error401);
+
+            expect(mockedWindow.showErrorMessage).toHaveBeenCalled();
+            await new Promise((r) => setImmediate(r));
+            expect(mockAuthStore.saveAuthInfo).not.toHaveBeenCalled();
+        });
+
+        it('should handle 403 error and persist Invalid for basic auth', async () => {
             const authInfo = expansionCastTo<any>({
                 state: AuthInfoState.Valid,
+                username: 'user',
+                password: 'token',
             });
             mockAuthStore.getAuthInfo.mockResolvedValue(authInfo);
 
@@ -149,6 +179,11 @@ describe('BasicInterceptor', () => {
                 `Credentials refused for ${mockSite.baseApiUrl}`,
                 { modal: false },
                 'Update Credentials',
+            );
+            await new Promise((r) => setImmediate(r));
+            expect(mockAuthStore.saveAuthInfo).toHaveBeenCalledWith(
+                mockSite,
+                expect.objectContaining({ state: AuthInfoState.Invalid }),
             );
         });
     });
