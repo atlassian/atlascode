@@ -2,7 +2,7 @@ import { LoadingButton } from '@atlaskit/button';
 import DropdownMenu, { DropdownItem } from '@atlaskit/dropdown-menu';
 import ChevronDownIcon from '@atlaskit/icon/core/chevron-down';
 import Lozenge from '@atlaskit/lozenge';
-import { Status, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { Status, Transition } from '@atlassian-pi/jira-pi-common-models';
 import { Box } from '@mui/material';
 import React from 'react';
 

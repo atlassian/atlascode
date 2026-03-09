@@ -66,6 +66,8 @@ describe('PromptInputBox', () => {
             modelId: 'Cool Model',
             creditMultiplier: '2',
         },
+        isAskUserQuestionsEnabled: false,
+        isExitPlanModeEnabled: false,
         onAgentModeChange: jest.fn(),
         onAgentModelChange: jest.fn(),
         onDeepPlanToggled: jest.fn(),

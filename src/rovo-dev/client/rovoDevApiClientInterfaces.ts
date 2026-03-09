@@ -15,10 +15,13 @@ export interface RovoDevChatRequestContextOtherEntry {
 
 export type RovoDevChatRequestContext = RovoDevChatRequestContextFileEntry | RovoDevChatRequestContextOtherEntry;
 
+export interface RovoDevDeferredToolCallResponse {
+    tool_call_id: string;
+    result: any;
+}
 export interface RovoDevChatRequest {
-    message: string;
+    message: string | RovoDevDeferredToolCallResponse;
     context: RovoDevChatRequestContext[];
-    enable_deep_plan?: boolean;
 }
 
 export interface BaicRovoDevHealthcheckResponse {

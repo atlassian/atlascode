@@ -8,10 +8,11 @@ import { RovoDevTextResponse } from 'src/rovo-dev/client';
 
 import { MarkedDown, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { PromptContextCollection } from '../prompt-box/promptContext/promptContextCollection';
-import { UserPromptMessage } from '../utils';
+import { CodePlanButton } from '../technical-plan/CodePlanButton';
+import { RovoDevExitPlanModeMessage, UserPromptMessage } from '../utils';
 
 export const ChatMessageItem: React.FC<{
-    msg: UserPromptMessage | RovoDevTextResponse;
+    msg: UserPromptMessage | RovoDevTextResponse | RovoDevExitPlanModeMessage;
     icon?: React.ReactNode;
     enableActions?: boolean;
     onCopy?: (text: string) => void;
@@ -19,10 +20,31 @@ export const ChatMessageItem: React.FC<{
     openFile: OpenFileFunc;
     openJira: OpenJiraFunc;
     onLinkClick: (href: string) => void;
-}> = ({ msg, icon, enableActions, onCopy, onFeedback, openFile, openJira, onLinkClick }) => {
+    deepPlanCreated?: string | null;
+    onGeneratePlanClick?: (planId: string, proceed: boolean) => void;
+}> = ({
+    msg,
+    icon,
+    enableActions,
+    onCopy,
+    onFeedback,
+    openFile,
+    openJira,
+    onLinkClick,
+    deepPlanCreated,
+    onGeneratePlanClick,
+}) => {
     const [isCopied, setIsCopied] = useState(false);
     const messageTypeStyles = msg.event_kind === '_RovoDevUserPrompt' ? 'user-message' : 'agent-message';
 
+    const canGeneratePlan = React.useMemo(
+        () =>
+            msg.event_kind === '_RovoDevExitPlanMode' &&
+            !!onGeneratePlanClick &&
+            !!deepPlanCreated &&
+            deepPlanCreated === msg.toolCallId,
+        [msg, onGeneratePlanClick, deepPlanCreated],
+    );
     const handleCopyClick = useCallback(() => {
         if (onCopy && msg.content) {
             onCopy(msg.content);
@@ -43,7 +65,7 @@ export const ChatMessageItem: React.FC<{
                 {icon && <div className="message-icon">{icon}</div>}
                 <div className="message-content">
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <MarkedDown value={msg.content || ''} onLinkClick={onLinkClick} />
+                        <MarkedDown value={msg.content || ''} onLinkClick={onLinkClick} onCopy={onCopy} />
                     </div>
                 </div>
             </div>
@@ -59,39 +81,47 @@ export const ChatMessageItem: React.FC<{
                     />
                 </div>
             )}
-            {msg.event_kind === 'text' && enableActions && (
+            {enableActions && (
                 <div className="chat-message-actions">
-                    <Tooltip content="Helpful">
-                        <button
-                            onClick={() => onFeedback?.(true)}
-                            aria-label="like-response-button"
-                            className="chat-message-action"
-                        >
-                            <ThumbsUpIcon label="thumbs-up" spacing="none" />
-                        </button>
-                    </Tooltip>
-                    <Tooltip content="Unhelpful">
-                        <button
-                            onClick={() => onFeedback?.(false)}
-                            aria-label="dislike-response-button"
-                            className="chat-message-action"
-                        >
-                            <ThumbsDownIcon label="thumbs-down" spacing="none" />
-                        </button>
-                    </Tooltip>
-                    <Tooltip key={isCopied ? 'copied' : 'copy'} content={isCopied ? 'Copied!' : 'Copy response'}>
-                        <button
-                            aria-label="copy-button"
-                            className={`chat-message-action copy-button ${isCopied ? 'copied' : ''}`}
-                            onClick={handleCopyClick}
-                        >
-                            {isCopied ? (
-                                <CheckCircleIcon label="Copied!" spacing="none" />
-                            ) : (
-                                <CopyIcon label="Copy button" spacing="none" />
-                            )}
-                        </button>
-                    </Tooltip>
+                    <div style={{ display: 'flex', flexDirection: 'row' }}>
+                        <Tooltip content="Helpful">
+                            <button
+                                onClick={() => onFeedback?.(true)}
+                                aria-label="like-response-button"
+                                className="chat-message-action"
+                            >
+                                <ThumbsUpIcon label="thumbs-up" spacing="none" />
+                            </button>
+                        </Tooltip>
+                        <Tooltip content="Unhelpful">
+                            <button
+                                onClick={() => onFeedback?.(false)}
+                                aria-label="dislike-response-button"
+                                className="chat-message-action"
+                            >
+                                <ThumbsDownIcon label="thumbs-down" spacing="none" />
+                            </button>
+                        </Tooltip>
+                        <Tooltip key={isCopied ? 'copied' : 'copy'} content={isCopied ? 'Copied!' : 'Copy response'}>
+                            <button
+                                aria-label="copy-button"
+                                className={`chat-message-action copy-button ${isCopied ? 'copied' : ''}`}
+                                onClick={handleCopyClick}
+                            >
+                                {isCopied ? (
+                                    <CheckCircleIcon label="Copied!" spacing="none" />
+                                ) : (
+                                    <CopyIcon label="Copy button" spacing="none" />
+                                )}
+                            </button>
+                        </Tooltip>
+                    </div>
+                    {msg.event_kind === '_RovoDevExitPlanMode' && onGeneratePlanClick && (
+                        <CodePlanButton
+                            execute={(e: boolean) => onGeneratePlanClick(msg.toolCallId, e)}
+                            disabled={!canGeneratePlan}
+                        />
+                    )}
                 </div>
             )}
         </>

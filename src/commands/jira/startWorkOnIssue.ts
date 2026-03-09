@@ -1,4 +1,4 @@
-import { MinimalIssue, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue, MinimalIssueOrKeyAndSite } from '@atlassian-pi/jira-pi-common-models';
 
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Container } from '../../container';

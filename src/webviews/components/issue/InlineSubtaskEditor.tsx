@@ -1,6 +1,6 @@
 import Select, { components } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
-import { emptyIssueType, IssueType } from '@atlassianlabs/jira-pi-common-models';
+import { emptyIssueType, IssueType } from '@atlassian-pi/jira-pi-common-models';
 import * as React from 'react';
 import EdiText from 'react-editext';
 

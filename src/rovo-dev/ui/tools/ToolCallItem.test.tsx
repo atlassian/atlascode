@@ -72,15 +72,6 @@ describe('ToolCallItem', () => {
         validateMessage('Executing bash command', toolMessage, getByText);
     });
 
-    it('renders the correct message for create_technical_plan tool', () => {
-        const toolMessage = parseToolCallMessage('create_technical_plan');
-        const { getByText } = render(
-            <ToolCallItem toolMessage={toolMessage} currentState={{ state: 'WaitingForPrompt' }} />,
-        );
-
-        validateMessage('Creating technical plan', toolMessage, getByText);
-    });
-
     it('renders the correct message for grep', () => {
         const toolMessage = parseToolCallMessage('grep');
         const { getByText } = render(

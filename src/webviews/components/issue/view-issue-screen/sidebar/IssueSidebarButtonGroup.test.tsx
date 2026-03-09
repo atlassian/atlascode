@@ -1,5 +1,5 @@
-import { Transition, User } from '@atlassianlabs/jira-pi-common-models';
-import { FieldUIs, FieldValues, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { Transition, User } from '@atlassian-pi/jira-pi-common-models';
+import { FieldUIs, FieldValues, UIType, ValueType } from '@atlassian-pi/jira-pi-meta-models';
 import { fireEvent, render } from '@testing-library/react';
 import React from 'react';
 

@@ -1,4 +1,4 @@
-import { EditIssueUI } from '@atlassianlabs/jira-metaui-client';
+import { EditIssueUI } from '@atlassian-pi/jira-metaui-client';
 import {
     Comment,
     createEmptyMinimalIssue,
@@ -9,8 +9,8 @@ import {
     readIssueLinkIssue,
     readSearchResults,
     User,
-} from '@atlassianlabs/jira-pi-common-models';
-import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+} from '@atlassian-pi/jira-pi-common-models';
+import { FieldValues, ValueType } from '@atlassian-pi/jira-pi-meta-models';
 import { decode } from 'base64-arraybuffer-es6';
 import FormData from 'form-data';
 import { RovodevCommands } from 'src/rovo-dev/api/componentApi';
@@ -1001,18 +1001,7 @@ export class JiraIssueWebview
                         handled = true;
                         try {
                             const client = await Container.clientManager.jiraClient(msg.site);
-
-                            // Use direct DELETE request to issueLink endpoint
-                            const apiVersion = client.apiVersion || '3';
-                            const baseApiUrl = msg.site.baseApiUrl.replace(/\/rest$/, '');
-                            const deleteUrl = `${baseApiUrl}/rest/api/${apiVersion}/issueLink/${msg.objectWithId.id}`;
-
-                            await client.transportFactory()(deleteUrl, {
-                                method: 'DELETE',
-                                headers: {
-                                    Authorization: await client.authorizationProvider('DELETE', deleteUrl),
-                                },
-                            });
+                            await client.deleteIssuelink(msg.objectWithId.id);
 
                             // Update local state after successful deletion
                             if (

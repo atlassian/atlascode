@@ -45,7 +45,7 @@ jest.mock('src/views/jira/searchJiraHelper', () => ({
 }));
 
 // Mock jira-pi-common-models
-jest.mock('@atlassianlabs/jira-pi-common-models', () => ({
+jest.mock('@atlassian-pi/jira-pi-common-models', () => ({
     isMinimalIssue: jest.fn((issue) => true),
     readSearchResults: jest.fn().mockResolvedValue({ issues: [] }),
 }));
@@ -195,7 +195,7 @@ describe('ExtensionApi', () => {
         describe('fetchWorkItems', () => {
             const mockSite = { id: 'site-1', name: 'Test Site' } as any;
             const { SearchJiraHelper } = require('src/views/jira/searchJiraHelper');
-            const { isMinimalIssue, readSearchResults } = require('@atlassianlabs/jira-pi-common-models');
+            const { isMinimalIssue, readSearchResults } = require('@atlassian-pi/jira-pi-common-models');
 
             beforeEach(() => {
                 // Reset all mocks for each test

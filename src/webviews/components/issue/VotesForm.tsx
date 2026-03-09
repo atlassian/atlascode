@@ -1,7 +1,7 @@
 import Avatar from '@atlaskit/avatar';
 import AvatarGroup from '@atlaskit/avatar-group';
 import ThumbsUpIcon from '@atlaskit/icon/core/thumbs-up';
-import { User, Votes } from '@atlassianlabs/jira-pi-common-models';
+import { User, Votes } from '@atlassian-pi/jira-pi-common-models';
 import * as React from 'react';
 
 type MyState = {

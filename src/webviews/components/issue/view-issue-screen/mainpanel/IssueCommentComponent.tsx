@@ -6,7 +6,7 @@ import {
     CommentVisibility,
     JsdInternalCommentVisibility,
     User,
-} from '@atlassianlabs/jira-pi-common-models';
+} from '@atlassian-pi/jira-pi-common-models';
 import { Box } from '@mui/material';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import React from 'react';

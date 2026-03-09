@@ -8,7 +8,7 @@ import { SimplifiedTodoIssueData } from '../../config/model';
 import { Container } from '../../container';
 import { Logger } from '../../logger';
 import { Features } from '../../util/featureFlags';
-import { CommentData } from '../../webviews/createIssueWebview';
+import { CommentData, CreateIssueAnalyticsData } from '../../webviews/createIssueWebview';
 import { buildSuggestionSettings, IssueSuggestionManager } from './issueSuggestionManager';
 
 export interface TodoIssueData {
@@ -30,8 +30,14 @@ function simplify(data: TodoIssueData): SimplifiedTodoIssueData {
     };
 }
 
-export async function createIssue(data: Uri | TodoIssueData | undefined, source?: CreateIssueSource) {
+export async function createIssueCommand(data: Uri | TodoIssueData | undefined, source?: CreateIssueSource) {
+    const analyticsData: CreateIssueAnalyticsData = {
+        creationSource: 'explorer',
+        creationId: Date.now().toString(),
+    };
+
     if (isTodoIssueData(data)) {
+        analyticsData.creationSource = 'todoComment';
         const settings = await buildSuggestionSettings();
         const todoData = simplify(data);
         const suggestionManager = new IssueSuggestionManager(settings);
@@ -46,6 +52,7 @@ export async function createIssue(data: Uri | TodoIssueData | undefined, source?
             },
             settings,
             todoData,
+            analyticsData,
         );
 
         try {
@@ -63,7 +70,7 @@ export async function createIssue(data: Uri | TodoIssueData | undefined, source?
             await Container.createIssueWebview.setGeneratingIssueSuggestions(false);
         }
 
-        startIssueCreationEvent('todoComment', ProductJira).then((e) => {
+        startIssueCreationEvent(analyticsData.creationSource, ProductJira).then((e) => {
             Container.analyticsClient.sendTrackEvent(e);
         });
 
@@ -71,19 +78,29 @@ export async function createIssue(data: Uri | TodoIssueData | undefined, source?
     }
 
     if (isUri(data) && data.scheme === 'file') {
-        Container.createIssueWebview.createOrShow(ViewColumn.Active, { description: descriptionForUri(data) });
-        startIssueCreationEvent('contextMenu', ProductJira).then((e) => {
+        analyticsData.creationSource = 'contextMenu' as CreateIssueSource;
+        Container.createIssueWebview.createOrShow(
+            ViewColumn.Active,
+            { description: descriptionForUri(data) },
+            undefined,
+            undefined,
+            analyticsData,
+        );
+        startIssueCreationEvent(analyticsData.creationSource, ProductJira).then((e) => {
             Container.analyticsClient.sendTrackEvent(e);
         });
         return;
     }
+
+    analyticsData.creationSource = source || 'explorer';
     if (Container.featureFlagClient.checkGate(Features.CreateWorkItemWebviewV2)) {
-        Container.createWorkItemWebviewProvider.createOrShow();
+        analyticsData.creationSource = 'sidebarButton';
+        Container.createWorkItemWebviewProvider.createOrShow(analyticsData);
     } else {
-        Container.createIssueWebview.createOrShow();
+        Container.createIssueWebview.createOrShow(undefined, undefined, undefined, undefined, analyticsData);
     }
 
-    startIssueCreationEvent(source || 'explorer', ProductJira).then((e) => {
+    startIssueCreationEvent(analyticsData.creationSource, ProductJira).then((e) => {
         Container.analyticsClient.sendTrackEvent(e);
     });
 }

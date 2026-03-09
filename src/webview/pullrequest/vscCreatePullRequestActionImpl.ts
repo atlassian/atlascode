@@ -1,4 +1,4 @@
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue } from '@atlassian-pi/jira-pi-common-models';
 import axios, { CancelToken, CancelTokenSource } from 'axios';
 import { commands, Uri } from 'vscode';
 

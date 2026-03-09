@@ -3,8 +3,8 @@ import {
     FilterSearchResults,
     JQLAutocompleteData,
     JQLErrors,
-} from '@atlassianlabs/jira-pi-common-models';
-import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
+} from '@atlassian-pi/jira-pi-common-models';
+import { getProxyHostAndPort } from '@atlassian-pi/pi-client-common';
 import axios, { CancelToken, CancelTokenSource } from 'axios';
 import { flatten } from 'flatten-anything';
 import { merge } from 'merge-anything';
