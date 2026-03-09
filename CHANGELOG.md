@@ -25,7 +25,6 @@
 - Bitbucket DC: Fixed PRs list pagination
 
 - **RovoDev**: Fixed JSON parsing errors in ToolReturnMessage handling - added type checking before JSON.parse() to prevent "Input data should be a String" and invalid JSON errors
-<<<<<<< HEAD
 - **Rovo Dev**: Unsupported slash commands now show a helpful warning instead of an error dialog
 - **Rovo Dev**: Added support for /mcp command
 - **RovoDev**: Fixed chat message not appearing when clicking "Fix with Rovo Dev" before the chat view is fully initialized - now waits for the webview to be ready before executing the chat command
