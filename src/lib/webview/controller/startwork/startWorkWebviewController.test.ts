@@ -302,6 +302,7 @@ describe('StartWorkWebviewController', () => {
                     transistionStatus: 'In Progress',
                     branch: 'feature/TEST-123',
                     upstream: 'origin',
+                    nonce: 'test-nonce',
                 });
                 expect(mockAnalytics.fireIssueWorkStartedEvent).toHaveBeenCalledWith(mockSiteDetails, true);
             });
@@ -320,6 +321,7 @@ describe('StartWorkWebviewController', () => {
                     transistionStatus: undefined,
                     branch: 'feature/TEST-123',
                     upstream: 'origin',
+                    nonce: 'test-nonce',
                 });
             });
 
@@ -337,6 +339,7 @@ describe('StartWorkWebviewController', () => {
                     transistionStatus: 'In Progress',
                     branch: undefined,
                     upstream: undefined,
+                    nonce: 'test-nonce',
                 });
             });
 
@@ -350,6 +353,7 @@ describe('StartWorkWebviewController', () => {
                 expect(mockMessagePoster).toHaveBeenCalledWith({
                     type: CommonMessageType.Error,
                     reason: 'Formatted error message',
+                    nonce: 'test-nonce',
                 });
             });
         });
