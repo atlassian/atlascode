@@ -30,14 +30,7 @@
 - **Rovo Dev**: Added support for /mcp command
 - **RovoDev**: Fixed chat message not appearing when clicking "Fix with Rovo Dev" before the chat view is fully initialized - now waits for the webview to be ready before executing the chat command
 - Fixed "Cannot read properties of undefined (reading 'initiateApiTokenAuth')" error
-=======
-- Added comprehensive test coverage for parseToolReturnMessage with both string and pre-parsed object inputs
 - Fixed the bug that prevented users from editing selected values in the landing page for Rovo Dev.
-
-### Features
-
-- Rovo Dev: Support new `plan` mode with `deferred_request` handling
->>>>>>> d1adf17e (edit changelog)
 
 ## What's new in 4.0.22
 
