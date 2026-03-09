@@ -2,6 +2,10 @@
 
 ## What's new in 4.0.24
 
+### Bug Fixes
+
+- **RovoDev**: Fixed feedback submission not including user email and name for Boysenberry users — user info is now fetched from Jira site auth when available, with a fallback to the status API
+
 ### Improvements
 
 - **RovoDev**: Enhanced "Fix by Rovo Dev" and "Explain by Rovo Dev" code actions with rich context extraction - now includes actual code content, surrounding code, import statements, and structured diagnostics for significantly better AI responses
