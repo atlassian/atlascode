@@ -34,6 +34,7 @@ export interface StartWorkResponseMessage {
     transistionStatus?: string;
     branch?: string;
     upstream?: string;
+    nonce: string;
 }
 
 export interface BranchType {
