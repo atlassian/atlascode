@@ -3,13 +3,14 @@ import { commands, window } from 'vscode';
 
 import { Commands } from '../constants';
 import { Logger } from '../logger';
-import { AuthInfoState, DetailedSiteInfo } from './authInfo';
+import { AuthInfoState, DetailedSiteInfo, isOAuthInfo } from './authInfo';
 import { AuthInterceptor } from './authInterceptor';
 import { CredentialManager } from './authStore';
 
 /**
- * BasicInterceptor detects any 401 or 403 responses from the REST service and blocks any further requests until the
- * user has updated their password.
+ * BasicInterceptor detects any 401 or 403 responses from the REST service and blocks further requests with the same
+ * client. For basic/API token auth, credentials are marked Invalid and persisted so the user must re-enter. For OAuth,
+ * Invalid is not persisted (401/403 often means expired access token; refresh will be attempted on next getAuthInfo).
  */
 export class BasicInterceptor implements AuthInterceptor {
     private _requestInterceptor: (config: AxiosRequestConfig) => any;
@@ -39,7 +40,10 @@ export class BasicInterceptor implements AuthInterceptor {
                 this.showError();
                 this._invalidCredentials = true;
                 this.authStore.getAuthInfo(this.site).then((authInfo) => {
-                    if (authInfo) {
+                    if (authInfo && !isOAuthInfo(authInfo)) {
+                        // Only persist Invalid for basic/API token auth. For OAuth, 401/403 often means
+                        // expired access token; the refresh token may still be valid and the next
+                        // getAuthInfo will refresh. Persisting Invalid here would force unnecessary re-login.
                         authInfo.state = AuthInfoState.Invalid;
                         this.authStore.saveAuthInfo(this.site, authInfo);
                     }
