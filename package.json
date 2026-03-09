@@ -678,7 +678,7 @@
             "editor/title": [
                 {
                     "command": "atlascode.rovodev.openChat",
-                    "when": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive",
+                    "when": "atlascode:rovoDevEnabled",
                     "group": "navigation"
                 },
                 {
