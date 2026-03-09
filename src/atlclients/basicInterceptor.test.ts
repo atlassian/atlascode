@@ -164,18 +164,20 @@ describe('BasicInterceptor', () => {
             const interceptor = new BasicInterceptor(mockSite, mockAuthStore);
             await interceptor.attachToAxios(mockAxiosInstance);
             const errorInterceptor = mockResponseInterceptorUse.mock.calls[0][1];
+            const error401 = { response: { status: 401 } };
+            const error403 = { response: { status: 403 } };
 
-            // First and second 401: tolerance, no invalidate
-            await errorInterceptor({ response: { status: 401 } });
+            // First and second 401/403: tolerance, no invalidate (interceptor always rejects with the error)
+            await expect(errorInterceptor(error401)).rejects.toBe(error401);
             expect(mockedWindow.showErrorMessage).not.toHaveBeenCalled();
             expect(mockAuthStore.saveAuthInfo).not.toHaveBeenCalled();
 
-            await errorInterceptor({ response: { status: 403 } });
+            await expect(errorInterceptor(error403)).rejects.toBe(error403);
             expect(mockedWindow.showErrorMessage).not.toHaveBeenCalled();
             expect(mockAuthStore.saveAuthInfo).not.toHaveBeenCalled();
 
             // Third 401: invalidate
-            await errorInterceptor({ response: { status: 401 } });
+            await expect(errorInterceptor(error401)).rejects.toBe(error401);
             expect(mockedWindow.showErrorMessage).toHaveBeenCalledWith(
                 `Credentials refused for ${mockSite.baseApiUrl}`,
                 { modal: false },
