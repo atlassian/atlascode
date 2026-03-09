@@ -280,6 +280,7 @@ describe('StartWorkWebviewController', () => {
                 targetBranch: 'feature/TEST-123',
                 upstream: 'origin',
                 pushBranchToRemote: true,
+                nonce: 'test-nonce',
             };
 
             it('should handle successful start request', async () => {
