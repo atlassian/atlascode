@@ -1,25 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
-## What's new in 4.0.24
-
-### Improvements
-
-- **RovoDev**: Enhanced "Fix by Rovo Dev" and "Explain by Rovo Dev" code actions with rich context extraction - now includes actual code content, surrounding code, import statements, and structured diagnostics for significantly better AI responses
-
-### Bug Fixes
-
-- **RovoDev**: Fixed chat message not appearing when clicking "Fix with Rovo Dev" before the chat view is fully initialized - now waits for the webview to be ready before executing the chat command
-- Fixed "Cannot read properties of undefined (reading 'initiateApiTokenAuth')" error
-
-### Features
-
-- **RovoDev**: Added copy code button within the Rovo Dev chat for code blocks in the chat.
-
 ## What's new in 4.0.23
 
 ### Features
 
 - **Rovo Dev**: Support new `plan` mode with `deferred_request` handling
+- **RovoDev**: Added copy code button within the Rovo Dev chat for code blocks in the chat.
 
 - **Rovo Dev**: Added Rovo Dev icon to the editor title bar for quick access — clicking it focuses the existing Rovo Dev sidebar panel
 
@@ -32,14 +18,17 @@
 - **RovoDev**: Fixed prompt input performance degradation after extended idle periods by properly disposing Monaco editor resources and event listeners on component cleanup
 - **RovoDev**: Refactored JSON parsing logic with `safeJsonParse` helper function to reduce code duplication and improve maintainability
 - **RovoDev**: Centered text within tool call statements in RovoDev chat.
+- **RovoDev**: Enhanced "Fix by Rovo Dev" and "Explain by Rovo Dev" code actions with rich context extraction - now includes actual code content, surrounding code, import statements, and structured diagnostics for significantly better AI responses
 
 ### Bug Fixes
 
 - Bitbucket DC: Fixed PRs list pagination
 
 - **RovoDev**: Fixed JSON parsing errors in ToolReturnMessage handling - added type checking before JSON.parse() to prevent "Input data should be a String" and invalid JSON errors
-- Added comprehensive test coverage for parseToolReturnMessage with both string and pre-parsed object inputs
-- Rovo Dev: Unsupported slash commands now show a helpful warning instead of an error dialog
+- **Rovo Dev**: Unsupported slash commands now show a helpful warning instead of an error dialog
+- **Rovo Dev**: Added support for /mcp command
+- **RovoDev**: Fixed chat message not appearing when clicking "Fix with Rovo Dev" before the chat view is fully initialized - now waits for the webview to be ready before executing the chat command
+- Fixed "Cannot read properties of undefined (reading 'initiateApiTokenAuth')" error
 
 ## What's new in 4.0.22
 
