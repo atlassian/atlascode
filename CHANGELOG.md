@@ -21,6 +21,8 @@
 
 - **Rovo Dev**: Support new `plan` mode with `deferred_request` handling
 
+- **Rovo Dev**: Added Rovo Dev icon to the editor title bar for quick access — clicking it focuses the existing Rovo Dev sidebar panel
+
 ### Cleanup
 
 - **Rovo Dev**: Removed legacy `create_technical_plan` plan mode implementation in favor of new `deferred_request`-based plan mode

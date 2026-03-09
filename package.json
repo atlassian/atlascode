@@ -591,6 +591,16 @@
                 "command": "atlascode.rovodev.enable",
                 "title": "Enable Rovo Dev",
                 "category": "Rovo Dev"
+            },
+            {
+                "command": "atlascode.rovodev.openChat",
+                "title": "Open Rovo Dev",
+                "icon": {
+                    "dark": "resources/dark/rovodev-icon.svg",
+                    "light": "resources/light/rovodev-icon.svg"
+                },
+                "category": "Rovo Dev",
+                "enablement": "atlascode:rovoDevEnabled"
             }
         ],
         "viewsContainers": {
@@ -666,6 +676,11 @@
                 }
             ],
             "editor/title": [
+                {
+                    "command": "atlascode.rovodev.openChat",
+                    "when": "atlascode:rovoDevEnabled",
+                    "group": "navigation"
+                },
                 {
                     "command": "atlascode.bb.toggleCommentsVisibility",
                     "when": "resourceScheme == atlascode.bbpr",
@@ -1000,6 +1015,10 @@
                 },
                 {
                     "command": "atlascode.rovodev.addToContext",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.rovodev.openChat",
                     "when": "false"
                 },
                 {
