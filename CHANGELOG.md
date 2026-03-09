@@ -9,6 +9,11 @@
 ### Bug Fixes
 
 - **RovoDev**: Fixed chat message not appearing when clicking "Fix with Rovo Dev" before the chat view is fully initialized - now waits for the webview to be ready before executing the chat command
+- Fixed "Cannot read properties of undefined (reading 'initiateApiTokenAuth')" error
+
+### Features
+
+- **RovoDev**: Added copy code button within the Rovo Dev chat for code blocks in the chat.
 
 ## What's new in 4.0.23
 
@@ -30,8 +35,11 @@
 
 ### Bug Fixes
 
+- Bitbucket DC: Fixed PRs list pagination
+
 - **RovoDev**: Fixed JSON parsing errors in ToolReturnMessage handling - added type checking before JSON.parse() to prevent "Input data should be a String" and invalid JSON errors
 - Added comprehensive test coverage for parseToolReturnMessage with both string and pre-parsed object inputs
+- Rovo Dev: Unsupported slash commands now show a helpful warning instead of an error dialog
 
 ## What's new in 4.0.22
 
