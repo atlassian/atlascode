@@ -40,6 +40,8 @@ describe('BasicInterceptor', () => {
 
         mockAuthStore = {
             getAuthInfo: jest.fn(),
+            getCachedAuthInfo: jest.fn(),
+            attemptRefreshAfterAuthError: jest.fn(),
             saveAuthInfo: jest.fn(),
         } as any;
 
@@ -99,57 +101,112 @@ describe('BasicInterceptor', () => {
     });
 
     describe('error interceptor', () => {
-        it('should handle 401 error and mark credentials as invalid', async () => {
-            const authInfo = expansionCastTo<any>({
+        it('should invalidate OAuth credentials on 401 when refresh fails', async () => {
+            const oauthAuthInfo = expansionCastTo<any>({
                 state: AuthInfoState.Valid,
+                access: 'access',
+                refresh: 'refresh',
             });
-            mockAuthStore.getAuthInfo.mockResolvedValue(authInfo);
+            mockAuthStore.getCachedAuthInfo.mockResolvedValue(oauthAuthInfo);
+            mockAuthStore.attemptRefreshAfterAuthError.mockResolvedValue(false);
 
             const interceptor = new BasicInterceptor(mockSite, mockAuthStore);
             await interceptor.attachToAxios(mockAxiosInstance);
 
             const errorInterceptor = mockResponseInterceptorUse.mock.calls[0][1];
-            const error401 = {
-                response: {
-                    status: 401,
-                },
-            };
+            const error401 = { response: { status: 401 } };
 
             await expect(errorInterceptor(error401)).rejects.toBe(error401);
 
-            expect(mockedLogger.debug).toHaveBeenCalledWith('Received 401 - marking credentials as invalid');
+            expect(mockAuthStore.getCachedAuthInfo).toHaveBeenCalledWith(mockSite);
+            expect(mockAuthStore.attemptRefreshAfterAuthError).toHaveBeenCalledWith(mockSite);
+            expect(mockedLogger.debug).toHaveBeenCalledWith(
+                'Received 401 - OAuth refresh failed, marking credentials as invalid',
+            );
             expect(mockedWindow.showErrorMessage).toHaveBeenCalledWith(
                 `Credentials refused for ${mockSite.baseApiUrl}`,
                 { modal: false },
                 'Update Credentials',
             );
-            expect(mockAuthStore.getAuthInfo).toHaveBeenCalledWith(mockSite);
         });
 
-        it('should handle 403 error and mark credentials as invalid', async () => {
-            const authInfo = expansionCastTo<any>({
+        it('should not invalidate OAuth credentials on 401 when refresh succeeds', async () => {
+            const oauthAuthInfo = expansionCastTo<any>({
                 state: AuthInfoState.Valid,
+                access: 'access',
+                refresh: 'refresh',
             });
-            mockAuthStore.getAuthInfo.mockResolvedValue(authInfo);
+            mockAuthStore.getCachedAuthInfo.mockResolvedValue(oauthAuthInfo);
+            mockAuthStore.attemptRefreshAfterAuthError.mockResolvedValue(true);
 
             const interceptor = new BasicInterceptor(mockSite, mockAuthStore);
             await interceptor.attachToAxios(mockAxiosInstance);
 
             const errorInterceptor = mockResponseInterceptorUse.mock.calls[0][1];
-            const error403 = {
-                response: {
-                    status: 403,
-                },
-            };
+            await expect(errorInterceptor({ response: { status: 401 } })).rejects.toBeDefined();
 
-            await expect(errorInterceptor(error403)).rejects.toBe(error403);
+            expect(mockAuthStore.attemptRefreshAfterAuthError).toHaveBeenCalledWith(mockSite);
+            expect(mockedLogger.debug).toHaveBeenCalledWith(
+                'Received 401 - OAuth refresh succeeded, credentials still valid',
+            );
+            expect(mockedWindow.showErrorMessage).not.toHaveBeenCalled();
+            expect(mockAuthStore.saveAuthInfo).not.toHaveBeenCalled();
+        });
 
-            expect(mockedLogger.debug).toHaveBeenCalledWith('Received 403 - marking credentials as invalid');
+        it('should invalidate Basic/PAT credentials only after threshold consecutive 401/403', async () => {
+            const basicAuthInfo = expansionCastTo<any>({
+                state: AuthInfoState.Valid,
+                username: 'user',
+                password: 'pass',
+            });
+            mockAuthStore.getCachedAuthInfo.mockResolvedValue(basicAuthInfo);
+
+            const interceptor = new BasicInterceptor(mockSite, mockAuthStore);
+            await interceptor.attachToAxios(mockAxiosInstance);
+            const errorInterceptor = mockResponseInterceptorUse.mock.calls[0][1];
+
+            // First and second 401: tolerance, no invalidate
+            await errorInterceptor({ response: { status: 401 } });
+            expect(mockedWindow.showErrorMessage).not.toHaveBeenCalled();
+            expect(mockAuthStore.saveAuthInfo).not.toHaveBeenCalled();
+
+            await errorInterceptor({ response: { status: 403 } });
+            expect(mockedWindow.showErrorMessage).not.toHaveBeenCalled();
+            expect(mockAuthStore.saveAuthInfo).not.toHaveBeenCalled();
+
+            // Third 401: invalidate
+            await errorInterceptor({ response: { status: 401 } });
             expect(mockedWindow.showErrorMessage).toHaveBeenCalledWith(
                 `Credentials refused for ${mockSite.baseApiUrl}`,
                 { modal: false },
                 'Update Credentials',
             );
+            expect(mockAuthStore.saveAuthInfo).toHaveBeenCalledWith(
+                mockSite,
+                expect.objectContaining({ state: AuthInfoState.Invalid }),
+            );
+        });
+
+        it('should handle 403 for OAuth and attempt refresh', async () => {
+            const oauthAuthInfo = expansionCastTo<any>({
+                state: AuthInfoState.Valid,
+                access: 'access',
+                refresh: 'refresh',
+            });
+            mockAuthStore.getCachedAuthInfo.mockResolvedValue(oauthAuthInfo);
+            mockAuthStore.attemptRefreshAfterAuthError.mockResolvedValue(false);
+
+            const interceptor = new BasicInterceptor(mockSite, mockAuthStore);
+            await interceptor.attachToAxios(mockAxiosInstance);
+            const errorInterceptor = mockResponseInterceptorUse.mock.calls[0][1];
+
+            await expect(errorInterceptor({ response: { status: 403 } })).rejects.toBeDefined();
+
+            expect(mockAuthStore.attemptRefreshAfterAuthError).toHaveBeenCalledWith(mockSite);
+            expect(mockedLogger.debug).toHaveBeenCalledWith(
+                'Received 403 - OAuth refresh failed, marking credentials as invalid',
+            );
+            expect(mockedWindow.showErrorMessage).toHaveBeenCalled();
         });
     });
 

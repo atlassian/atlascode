@@ -12,6 +12,7 @@
 
 ### Improvements
 
+- **Auth**: Differentiated handling of 401/403 for credential invalidation: OAuth credentials now attempt token refresh before invalidating; Basic/PAT credentials allow tolerance (invalidate after multiple consecutive 401/403)
 - **RovoDev**: Fixed prompt input performance degradation after extended idle periods by properly disposing Monaco editor resources and event listeners on component cleanup
 - **RovoDev**: Refactored JSON parsing logic with `safeJsonParse` helper function to reduce code duplication and improve maintainability
 - **RovoDev**: Centered text within tool call statements in RovoDev chat.

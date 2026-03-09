@@ -85,6 +85,33 @@ export class CredentialManager implements Disposable {
         return this.softRefreshOAuth(site, authInfo);
     }
 
+    /**
+     * Returns stored auth info without triggering OAuth refresh. Used when handling 401/403
+     * to decide credential type before attempting refresh or applying Basic/PAT tolerance.
+     */
+    public async getCachedAuthInfo(site: DetailedSiteInfo): Promise<AuthInfo | undefined> {
+        return this.getAuthInfoForProductAndCredentialId(site, true);
+    }
+
+    /**
+     * Attempts to refresh OAuth token after a 401/403 response. For OAuth credentials,
+     * runs refresh; for Basic/PAT, does nothing. Returns true if credentials are still
+     * valid (refresh succeeded or not OAuth), false if OAuth refresh failed and credentials
+     * were invalidated.
+     */
+    public async attemptRefreshAfterAuthError(site: DetailedSiteInfo): Promise<boolean> {
+        const credentials = await this.getAuthInfoForProductAndCredentialId(site, false);
+        if (!credentials) {
+            return false;
+        }
+        if (!isOAuthInfo(credentials)) {
+            return true; // Basic/PAT: tolerance is applied by the caller
+        }
+        await this.refreshAccessToken(site);
+        const after = await this.getAuthInfoForProductAndCredentialId(site, false);
+        return after?.state === AuthInfoState.Valid;
+    }
+
     public async checkScopes(site: DetailedSiteInfo, scopes: string[]): Promise<CheckedScopes | undefined> {
         // Scopes are only applicable to cloud sites
         if (!site.host.endsWith('.atlassian.net')) {
