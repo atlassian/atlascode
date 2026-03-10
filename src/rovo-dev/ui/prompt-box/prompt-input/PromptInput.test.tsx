@@ -78,6 +78,7 @@ describe('PromptInputBox', () => {
         sendButtonDisabled: false,
         onAddContext: jest.fn(),
         onCopy: jest.fn(),
+        handleMcpConfigurationCommand: jest.fn(),
         handleMemoryCommand: jest.fn(),
         handleTriggerFeedbackCommand: jest.fn(),
         handleSessionCommand: jest.fn(),

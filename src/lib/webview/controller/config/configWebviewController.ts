@@ -118,7 +118,11 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
         }
     }
 
-    public update(section: SectionChangeMessage) {
+    public update(section?: SectionChangeMessage) {
+        if (section === undefined) {
+            this.invalidate();
+            return;
+        }
         // Store the section data for potential invalidate calls
         this._initialSection = section;
 
