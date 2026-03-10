@@ -442,6 +442,7 @@ describe('ClientManager', () => {
                 `Bearer ${mockOAuthInfo.access}`,
                 expect.any(Object),
                 expect.any(Function),
+                expect.any(BasicInterceptor),
             );
         });
 
