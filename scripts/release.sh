@@ -1,28 +1,150 @@
 #!/bin/bash 
 set -e
 
-VERSION=$1
-if [ -z "$VERSION" ]; then
-  echo "Please provide a version number. Use even numbered minors for stable release. ex: X.2.x"
-  exit 1
+# Check for --dry flag
+DRY_RUN=false
+if [ "$1" = "--dry" ] || [ "$2" = "--dry" ]; then
+  DRY_RUN=true
+  echo "========================================="
+  echo "DRY RUN MODE - No remote push"
+  echo "========================================="
 fi
 
-# call asset-stable.sh to check if the version is stable
+# Parse version argument (skip --dry if present)
+VERSION=$1
+if [ "$VERSION" = "--dry" ]; then
+  VERSION=$2
+fi
+
+echo "========================================="
+echo "Automated Stable Release Script"
+echo "========================================="
+
+# If no version provided, calculate it automatically
+if [ -z "$VERSION" ]; then
+  echo ""
+  echo "No version provided. Calculating next stable version..."
+  
+  # Step 1: Always start from main
+  echo ""
+  echo "Step 1: Switching to main branch..."
+  git checkout main
+  
+  # Step 2: Fetch and update from remote
+  echo ""
+  echo "Step 2: Fetching and updating from remote..."
+  git fetch origin
+  git pull origin main
+  git fetch --tags --force
+  
+  # Step 3: Calculate the latest version number
+  echo ""
+  echo "Step 3: Calculating next stable version..."
+  latest_stable_version=$(./scripts/version/get-latest-stable.sh)
+  echo "Latest stable version: $latest_stable_version"
+  
+  # Parse the version components
+  major=$(echo $latest_stable_version | cut -d '.' -f 1)
+  minor=$(echo $latest_stable_version | cut -d '.' -f 2)
+  patch=$(echo $latest_stable_version | cut -d '.' -f 3)
+  
+  # Increment patch version for next stable release
+  next_patch=$((patch + 1))
+  VERSION="$major.$minor.$next_patch"
+  
+  echo "Next stable version: $VERSION"
+else
+  echo ""
+  echo "Using provided version: $VERSION"
+  
+  # Ensure we're on main and up to date
+  echo ""
+  echo "Switching to main branch and updating..."
+  git checkout main
+  git fetch origin
+  git pull origin main
+  git fetch --tags --force
+fi
+
+# Validate the version is stable
+echo ""
+echo "Validating version is stable..."
 ./scripts/version/assert-stable.sh $VERSION
 
-
-# Confirm that the CHANGELOG.md has been updated
+# Update CHANGELOG.md if needed
+echo ""
+echo "Checking CHANGELOG.md..."
 if ! grep -q "## What's new in $VERSION" CHANGELOG.md; then
-  echo "CHANGELOG.md has not been updated. Please update CHANGELOG.md with the changes in this release."
-  exit 1
+  echo "CHANGELOG.md needs update. Adding version entry..."
+  
+  # Find the first "## What's new" line and add the new version above it
+  sed -i.bak "/^## What's new in/i\\
+## What's new in $VERSION\\
+\\
+" CHANGELOG.md
+  
+  rm CHANGELOG.md.bak
+  echo "Added '## What's new in $VERSION' to CHANGELOG.md ✓"
+  
+  # Commit the changelog update
+  git add CHANGELOG.md
+  git commit -m "chore: update CHANGELOG for v$VERSION"
+else
+  echo "CHANGELOG.md already has entry for v$VERSION ✓"
 fi
 
-# add v to the beginning of the version number
-VERSION="v$VERSION"
+# Create release branch
+echo ""
+echo "Creating release branch..."
+RELEASE_BRANCH="release/v$VERSION"
+git checkout -b $RELEASE_BRANCH
 
-MESSAGE=${2:-"Release $VERSION"}
+# Add v to the beginning of the version number for tag
+VERSION_TAG="v$VERSION"
+MESSAGE=${3:-"Release $VERSION_TAG"}
 
-git checkout main
-git pull origin main 
-git tag $VERSION -m "$MESSAGE"
-git push origin $VERSION
+echo ""
+echo "Creating tag $VERSION_TAG..."
+git tag $VERSION_TAG -m "$MESSAGE"
+
+# Push to remote or show dry run message
+if [ "$DRY_RUN" = true ]; then
+  echo ""
+  echo "========================================="
+  echo "DRY RUN - Branch and tag created locally"
+  echo "========================================="
+  echo ""
+  echo "Created locally:"
+  echo "  - Branch: $RELEASE_BRANCH"
+  echo "  - Tag: $VERSION_TAG"
+  echo ""
+  echo "To push to remote, run without --dry flag:"
+  echo "  git push origin $RELEASE_BRANCH"
+  echo "  git push origin $VERSION_TAG"
+  echo ""
+  echo "To clean up:"
+  echo "  git checkout main"
+  echo "  git branch -D $RELEASE_BRANCH"
+  echo "  git tag -d $VERSION_TAG"
+else
+  echo ""
+  echo "Pushing to remote..."
+  git push origin $RELEASE_BRANCH
+  git push origin $VERSION_TAG
+  
+  echo ""
+  echo "========================================="
+  echo "✓ Release $VERSION_TAG completed!"
+  echo "========================================="
+  echo ""
+  echo "Release branch: $RELEASE_BRANCH"
+  echo "Tag: $VERSION_TAG"
+  echo ""
+  echo "Next steps:"
+  echo "1. Create a PR from $RELEASE_BRANCH to main"
+  echo "2. Review and merge the PR"
+  echo "3. The GitHub release workflow will trigger automatically"
+  echo ""
+  echo "To create a draft PR, visit:"
+  echo "https://github.com/atlassian/atlascode/pull/new/$RELEASE_BRANCH"
+fi
