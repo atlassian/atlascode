@@ -1,19 +1,13 @@
 #!/bin/bash 
 set -e
 
-# Check for --dry or dry flag
+# Check for dry flag (must be first argument)
 DRY_RUN=false
-if [ "$1" = "--dry" ] || [ "$1" = "dry" ] || [ "$2" = "--dry" ] || [ "$2" = "dry" ]; then
+if [ "$1" = "dry" ]; then
   DRY_RUN=true
   echo "========================================="
   echo "DRY RUN MODE - No remote push"
   echo "========================================="
-fi
-
-# Parse version argument (skip --dry or dry if present)
-VERSION=$1
-if [ "$VERSION" = "--dry" ] || [ "$VERSION" = "dry" ]; then
-  VERSION=$2
 fi
 
 echo "========================================="
