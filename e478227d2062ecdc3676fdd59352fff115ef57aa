@@ -1,0 +1,27 @@
+src/rovo-dev/client/rovoDevApiClientInterfaces.ts
+  3c2bd985ab07e0f4 148
+src/rovo-dev/rovoDevWebviewProvider.test.ts
+  3c2bd985ab07e0f4 1049-1054,1057,1060-1064,1067-1075,1077,1080-1084,1087-1088
+src/rovo-dev/client/rovoDevApiClient.test.ts
+  3c2bd985ab07e0f4 2099,2105,2151
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.10",
+  "base_commit_sha": "e478227d2062ecdc3676fdd59352fff115ef57aa",
+  "prompts": {
+    "3c2bd985ab07e0f4": {
+      "agent_id": {
+        "tool": "rovodev-cli",
+        "id": "rovodev-session",
+        "model": "anthropic:claude-sonnet-4-6"
+      },
+      "human_author": "Bryan Wieger <bwieger@atlassian.com>",
+      "messages": [],
+      "total_additions": 189,
+      "total_deletions": 113,
+      "accepted_lines": 684,
+      "overriden_lines": 0
+    }
+  }
+}
