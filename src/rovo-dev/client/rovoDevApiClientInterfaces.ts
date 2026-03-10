@@ -145,6 +145,7 @@ export interface CachedFileEntry {
     original_path: string;
     cached_hash: string;
     cached_path: string;
+    status: 'added' | 'modified' | 'deleted';
 }
 
 export interface RestoreFromCacheResponse {

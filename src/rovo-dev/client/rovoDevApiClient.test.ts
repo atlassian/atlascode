@@ -2096,11 +2096,13 @@ describe('RovoDevApiClient', () => {
                     original_path: '/src/app.ts',
                     cached_hash: 'abc123',
                     cached_path: '/cache/abc123/app.ts',
+                    status: 'modified',
                 },
                 {
                     original_path: '/src/utils.ts',
                     cached_hash: 'def456',
                     cached_path: '/cache/def456/utils.ts',
+                    status: 'added',
                 },
             ];
             const mockResponse = {
@@ -2146,6 +2148,7 @@ describe('RovoDevApiClient', () => {
                     original_path: '/src/file with spaces.ts',
                     cached_hash: 'xyz789',
                     cached_path: '/cache/xyz789/file with spaces.ts',
+                    status: 'modified',
                 },
             ];
             const mockResponse = {

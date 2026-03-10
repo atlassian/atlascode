@@ -1178,19 +1178,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
     }
 
-    private inferFileOperationType(entry: any): 'create' | 'modify' | 'delete' {
-        const originalExists = fs.existsSync(this.makeRelativePathAbsolute(entry.original_path));
-        const cachedExists = fs.existsSync(entry.cached_path);
-
-        if (!originalExists && cachedExists) {
-            return 'delete';
-        }
-        if (originalExists && !cachedExists) {
-            return 'create';
-        }
-        return 'modify';
-    }
-
     private async refreshModifiedFiles() {
         const webview = this._webView!;
         if (!this.rovoDevApiClient) {
@@ -1203,9 +1190,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         try {
             const cachedFiles = await this.rovoDevApiClient.listCachedFiles();
+
+            const statusToType: Record<string, 'create' | 'modify' | 'delete'> = {
+                added: 'create',
+                modified: 'modify',
+                deleted: 'delete',
+            };
+
             const files: ModifiedFile[] = cachedFiles.map((entry) => ({
                 filePath: entry.original_path,
-                type: this.inferFileOperationType(entry),
+                type: statusToType[entry.status] || 'modify',
             }));
 
             // Normalize paths to workspace-relative if they're absolute

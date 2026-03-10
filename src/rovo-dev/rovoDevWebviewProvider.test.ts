@@ -1046,54 +1046,46 @@ describe('RovoDevWebviewProvider - Business Logic', () => {
         });
     });
 
-    describe('inferFileOperationType', () => {
-        it('should classify file as delete when original missing and cached exists', () => {
-            // Test verifying delete classification logic
-            const inferType = (originalExists: boolean, cachedExists: boolean): string => {
-                if (!originalExists && cachedExists) {
-                    return 'delete';
-                }
-                if (originalExists && !cachedExists) {
-                    return 'create';
-                }
-                return 'modify';
+    describe('statusToType mapping', () => {
+        it('should map added status to create type', () => {
+            const statusToType: Record<string, 'create' | 'modify' | 'delete'> = {
+                added: 'create',
+                modified: 'modify',
+                deleted: 'delete',
             };
 
-            const result = inferType(false, true);
-
-            expect(result).toBe('delete');
+            expect(statusToType['added']).toBe('create');
         });
 
-        it('should classify file as create when original exists and cached missing', () => {
-            // Test verifying create classification logic
-            const inferType = (originalExists: boolean, cachedExists: boolean): string => {
-                if (!originalExists && cachedExists) {
-                    return 'delete';
-                }
-                if (originalExists && !cachedExists) {
-                    return 'create';
-                }
-                return 'modify';
+        it('should map modified status to modify type', () => {
+            const statusToType: Record<string, 'create' | 'modify' | 'delete'> = {
+                added: 'create',
+                modified: 'modify',
+                deleted: 'delete',
             };
 
-            const result = inferType(true, false);
-
-            expect(result).toBe('create');
+            expect(statusToType['modified']).toBe('modify');
         });
 
-        it('should classify file as modify when both original and cached exist', () => {
-            // Test verifying modify classification logic
-            const inferType = (originalExists: boolean, cachedExists: boolean): string => {
-                if (!originalExists && cachedExists) {
-                    return 'delete';
-                }
-                if (originalExists && !cachedExists) {
-                    return 'create';
-                }
-                return 'modify';
+        it('should map deleted status to delete type', () => {
+            const statusToType: Record<string, 'create' | 'modify' | 'delete'> = {
+                added: 'create',
+                modified: 'modify',
+                deleted: 'delete',
             };
 
-            const result = inferType(true, true);
+            expect(statusToType['deleted']).toBe('delete');
+        });
+
+        it('should default to modify for unknown status', () => {
+            const statusToType: Record<string, 'create' | 'modify' | 'delete'> = {
+                added: 'create',
+                modified: 'modify',
+                deleted: 'delete',
+            };
+
+            const unknownStatus = 'unknown';
+            const result = statusToType[unknownStatus] || 'modify';
 
             expect(result).toBe('modify');
         });
