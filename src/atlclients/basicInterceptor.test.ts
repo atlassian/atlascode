@@ -13,6 +13,7 @@ jest.mock('../logger');
 jest.mock('../constants', () => ({
     Commands: {
         ShowJiraAuth: 'atlascode.showJiraAuth',
+        ShowBitbucketAuth: 'atlascode.showBitbucketAuth',
     },
 }));
 
