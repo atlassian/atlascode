@@ -1,5 +1,8 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.24
+
+
 ## What's new in 4.0.23
 
 ### Features
@@ -31,6 +34,9 @@
 - Fixed "Cannot read properties of undefined (reading 'initiateApiTokenAuth')" error
 - Fixed the bug that prevented users from editing selected values in the landing page for Rovo Dev.
 
+## What's new in 4.0.24
+
+
 ## What's new in 4.0.22
 
 ### Features
@@ -47,12 +53,18 @@
 
 - **RovoDev**: Fixed MCP server acceptance flow not showing in Boysenberry mode
 
+## What's new in 4.0.24
+
+
 ## What's new in 4.0.21
 
 ### Bug Fixes
 
 - **RovoDev**: Fixed MCP permission race condition - users can now type their prompts while MCP permission dialogs are displayed. The send button is disabled during MCP acceptance, but the input remains editable to prevent loss of user input.
 - Fixed issue description losing line breaks and formatting in edit mode after save (HTML-to-ADF conversion now preserves line breaks as hardBreak nodes)
+
+## What's new in 4.0.24
+
 
 ## What's new in 4.0.20
 
@@ -75,6 +87,9 @@
 - Fixed Rovo Dev UI crashes when markdown content fails to parse
 - Improved error messages when git user.name or user.email is not configured, providing helpful setup instructions
 
+## What's new in 4.0.24
+
+
 ## What's new in 4.0.19
 
 ### Improvements
@@ -87,6 +102,9 @@
 
 - Fixed Stop button not appearing when executing Deep Plan
 
+## What's new in 4.0.24
+
+
 ## What's new in 4.0.18
 
 ### Bug Fixes
@@ -94,9 +112,15 @@
 - Fixed Rovo Dev forgetting previous Yolo mode setting
 - Fixed worklog creation error for users in UTC timezone
 
+## What's new in 4.0.24
+
+
 ## What's new in 4.0.17
 
 - Internal changes
+
+## What's new in 4.0.24
+
 
 ## What's new in 4.0.16
 
@@ -116,6 +140,9 @@
 - Fixed settings write failures blocking issue creation and site removal
 - Fixed dismiss button handling for 'Credentials refused...' popup
 - Added more meaningful error message in case of expired access token usage
+
+## What's new in 4.0.24
+
 
 ## What's new in 4.0.14
 
@@ -151,9 +178,15 @@
 - **Security**: Fixed querystring vulnerability (CVE fix)
 - **Rovo Dev Messages**: Properly handle and ignore request-usage messages from Rovo Dev
 
+## What's new in 4.0.24
+
+
 ## What's new in 4.0.13
 
 - Internal changes
+
+## What's new in 4.0.24
+
 
 ## What's new in 4.0.12
 
@@ -166,6 +199,9 @@
 
 - Fixed validation for required checkbox fields on issue creation
 
+## What's new in 4.0.24
+
+
 ## What's new in 4.0.10
 
 ### Features
@@ -174,11 +210,17 @@
 - Added Branch creation and Rovo Dev actions in Create Issue Page
 - Added filter by project support
 
+## What's new in 4.0.24
+
+
 ## What's new in 4.0.9
 
 ### Features
 
 - Added filter by assignee support
+
+## What's new in 4.0.24
+
 
 ## What's new in 4.0.8
 
@@ -189,6 +231,9 @@
 ### Bug Fixes
 
 - Fixed issue with project loading in Jira Cloud Create Issue Screen
+
+## What's new in 4.0.24
+
 
 ## What's new in 4.0.7
 
@@ -201,6 +246,9 @@
 
 - Fix issue with not working team adding functionality
 - Disabled CMD+B hotkey when Jira/Bitbucket editor has focus
+
+## What's new in 4.0.24
+
 
 ## What's new in 4.0.6
 
@@ -219,12 +267,18 @@
 - Fix some of the exit code 1 reason 2 failures of Rovo Dev on Windows
 - Fixed UI flickering of Jira suggestions in Rovo Dev
 
+## What's new in 4.0.24
+
+
 ## What's new in 4.0.5
 
 ### Features
 
 - Added drag and drop support into the Rovo Dev view for prompt context (requires pressing the `shift` key to drop)
 - Added native support for Jira work items for Rovo Dev prompt context
+
+## What's new in 4.0.24
+
 
 ## What's new in 4.0.4
 
@@ -237,6 +291,9 @@
 - Fixed duplicated slash commands in Rovo Dev's prompt box
 - Fixed broken entitlement check disabled view in 4.0.3
 
+## What's new in 4.0.24
+
+
 ## What's new in 4.0.3
 
 ### Improvements
@@ -248,17 +305,26 @@
 
 - Fixed issue with infinite loading when searching labels
 
+## What's new in 4.0.24
+
+
 ## What's new in 4.0.2
 
 ### Improvements
 
 - Removed the hint on code selection to send the text to Rovo Dev
 
+## What's new in 4.0.24
+
+
 ## What's new in 4.0.1
 
 ### Features
 
 - Added a config option to enable/disable the Rovo Dev feature
+
+## What's new in 4.0.24
+
 
 ## What's new in 4.0.0
 
@@ -272,9 +338,15 @@
 
 - Fix issue when logging out from api token does not restore the corresponding oauth site
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.8.20
 
 - Internal changes only.
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.8.19
 
@@ -283,9 +355,15 @@
 - Fix error while connecting several jira sites with an API token
 - Fix issue when pressing enter to submit the form does not work
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.8.18
 
 - Internal changes only.
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.8.17
 
@@ -294,15 +372,24 @@
 - Update pipeline schema to the current latest version
 - Add the ability to search issue through all connected sites
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.8.16
 
 - Internal changes only.
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.8.15
 
 ### Bug Fixes
 
 - Fix issue with create task functionality
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.8.14
 
@@ -314,6 +401,9 @@
 
 - Allow editing Cloud sites authenticated with an API token
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.8.13
 
 ### Features
@@ -321,12 +411,18 @@
 - Autocomplete the site URL for API token authentication using already OAuth authenticated sites
 - Don't require typing https:// when typing the authentication site's URL
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.8.12
 
 ### Bug Fixes
 
 - Fixed issue in create issue page when site select is empty after changing issue type
 - Fixed style issues on feedback modal
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.8.11
 
@@ -339,6 +435,9 @@
 - Fixed issue when project value was not updating in create issue page
 - Fixed issue when trying to create children issues on epic that had no children to begin with
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.8.10
 
 ### Features
@@ -349,6 +448,9 @@
 ### Bug Fixes
 
 - Added loading indicator to Refresh button for Jira issue auto-refreshes
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.8.9
 
@@ -364,6 +466,9 @@
 - Fixed a bug where we could not assign people to a Jira issue as DC users
 - Fixed race condition issue when connecting multiple instances
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.8.8
 
 ### Features
@@ -374,6 +479,9 @@
 
 - Fixed a bug where issues would not render due to malformed epic fields (#665)
 - Fixed status button in smaller screen size
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.8.7
 
@@ -394,6 +502,9 @@
 - Fixed an unexpected status dropdown behavior when user doesn't have enough permissions to change it
 - Improved the latency for opening, editing, and creating Jira work items
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.8.6
 
 ### Features
@@ -407,11 +518,17 @@
 - Fixed a bug when slash is missing after custom branch prefix in branch naming
 - Fixed bug when Jira issue view in active tab doesn't refresh itself after VS Code get focus
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.8.5
 
 ### Bug Fixes
 
 - Fixed a regression in the branch prefix dropdrown of the Start work page
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.8.4
 
@@ -426,6 +543,9 @@
 - Fixed the Pull Request 'File nesting' toggle
 - Removed duplicated and trailing dashes on proposed branch name in 'Start work' page
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.8.3
 
 ### Features
@@ -433,11 +553,17 @@
 - It is now possible to transition Jira work items to a different status from the sidebar, via `Transition Issue...` context menu option
 - Notifications for unseen & recent comments on Jira and Bitbucket are now supported
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.8.2
 
 ### Improvement
 
 - Removed the word "Labs" from the title of the extension
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.8.1
 
@@ -446,15 +572,24 @@
 - Banner notifications may be displayed if user is in an unauthenticated state.
 - Added rich text editing capabilities for Jira Issue editing and creation
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.8.0
 
 ### Improvements
 
 - Badge notifications may be displayed if user is in an unauthenticated state.
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.6.6
 
 - Internal changes only
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.6.5
 
@@ -463,21 +598,33 @@
 - Added support for opening a Jira Issue via URI in the form `vscode://atlassian.atlascode/openJiraIssue?key=<issueKey>&site=<siteHost>&source=<URI_source>`
 - Added support for start working on a Jira Issue via URI in the form `vscode://atlassian.atlascode/startWorkOnJira?key=<issueKey>&site=<siteHost>&source=<URI_source>`
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.6.4
 
 ### Bug fixes
 
 - Fixed "already registered id" error when rendering PR related issues in the Bitbucket Pull Requests side panel.
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.6.3
 
 - Internal changes only
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.6.2
 
 ### Bug fixes
 
 - Fixed global window bug which affected polyglot/juptyer notebook users
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.6.1
 
@@ -488,6 +635,9 @@
 ### Bug fixes
 
 - Fixed bug where field validators in Create Issue Page crash page when there is a custom required number field
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.6.0
 
@@ -501,6 +651,9 @@
 
 - Fixed bug where Epic/Parent links on Jira Issue Screen Navigation are not clickable
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.4.25
 
 ### Improvements
@@ -510,6 +663,9 @@
 ### Bug fixes
 
 - Some Jira issues weren't loading due to poor handling of missing fields.
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.4.24
 
@@ -522,11 +678,17 @@
 
 - Fixed bug in Bitbucket DC for PRs with comments where the PR Details would not display.
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.4.23
 
 ### Improvements
 
 - Updated and improved styling in ViewIssueScreen
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.4.22
 
@@ -534,11 +696,17 @@
 
 - Changed text in the onboarding flow to "Sign in to \_\_\_\_." Used to be "What version of {product} do you use?"
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.4.21
 
 ### Bug Fixes
 
 - Fixed a bug introduced in 3.4.20 causing the same issue being retrieved by different JQL queries in the 'Custom JQL filters panel' fail to render.
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.4.20
 
@@ -552,9 +720,15 @@
 - The existing 'Jira issues' panel is being renamed to 'Custom JQL filters' and now it only shows the customized JQL queries. If there are no customized JQLs, the panel will stay hidden.
 - Note: the above change is controlled under an experiment flag that could be turned off server side.
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.4.19
 
 - Internal changes only.
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.4.18
 
@@ -569,13 +743,22 @@
 
 - Improved new Onboarding authentication UI.
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.4.17
 
 - Internal changes only.
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.4.16
 
 - Internal changes only.
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.4.15
 
@@ -587,11 +770,17 @@
 
 - Editing comments in PRs work.
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.4.14
 
 ### Improvements
 
 - Improved the performance of BitBucket pull requests for large repositories by dividing APIs into critical and non-critical flows.
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.4.13
 
@@ -605,6 +794,9 @@
 - Fixed exceptions thrown during a failed stat-sig initialization for experimentations.
 - Fixed the time-out error that prevented the BitBucket pull request to load for large repos.
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.4.12
 
 ### Rollback Release !!
@@ -612,15 +804,24 @@
 - Same as 3.4.7
 - Rolled back several releases as we investigate a possible regression in the authentication flow.
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.4.11
 
 - Internal changes only.
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.4.10
 
 ### Bug Fixes
 
 - Fixed the bug introduced in 3.4.8 for Server / Data Center users on Authentication.
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.4.9
 
@@ -629,11 +830,17 @@
 - Same as 3.4.7
 - Rolled back 3.4.8 release as it contained a breaking bug for Server / Data Center users on Authentication.
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.4.8
 
 ### Features
 
 - Added a new toggle switch in 'Start work' page to choose if the new branch should be automatically pushed to remote.
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.4.7
 
@@ -642,6 +849,9 @@
 - Fixed 'Create Jira issue' page getting stuck on the loader when the first Jira server is unreachable.
 - Fixed 'Start work' not working when another 'Start work' tab is open.
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.4.6
 
 ### Features
@@ -649,11 +859,17 @@
 - Cleaned up feature flag for Jira Cloud authentication from Remote Development Environments
 - Placed code for Auth UI experiment. Still needs additional work before we turn this on.
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.4.5
 
 ### Bug Fixes
 
 - Fixed bitbucket PR erroring out due to deprecated API being used
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.4.4
 
@@ -661,11 +877,17 @@
 
 - Fixed images not showing up in Jira tickets' description and comments
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.4.3
 
 ### Bug Fixes
 
 - Fixed Bitbucket Data Center Auth not working for usernames with special characters.
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.4.2
 
@@ -673,11 +895,17 @@
 
 - Fixed file not found error when attaching files to Jira tickets
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.4.1
 
 ### Improvements
 
 - Lowered VS Code engine compatibility to v1.77.0
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.4.0
 
@@ -685,11 +913,17 @@
 
 - Fixed several API calls broken due to a breaking change introduced since Jira DC 8.4.0, which causes Jira tickets to not be displayed (404 error)
 
+## What's new in 4.0.24
+
+
 ## What's new in 3.2.3
 
 ### Bug Fixes
 
 - Fix on create Issue for JIRA cloud when there were no attachments.
+
+## What's new in 4.0.24
+
 
 ## What's new in 3.2.2
 
