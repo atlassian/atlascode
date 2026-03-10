@@ -164,6 +164,42 @@ describe('ConfigWebviewController', () => {
                 ...section,
             });
         });
+
+        test('should call invalidate when section is undefined', async () => {
+            const mockJiraSites = [{ id: 'site1' }];
+            const mockBBSites = [{ id: 'site2' }];
+            const mockTarget = 'workspace';
+            const mockConfig = { setting1: true };
+            const mockFeedbackUser = { id: 'user1' };
+
+            mockApi.getSitesWithAuth.mockResolvedValue([mockJiraSites, mockBBSites] as any);
+            mockApi.getConfigTarget.mockReturnValue(mockTarget as any);
+            mockApi.flattenedConfigForTarget.mockReturnValue(mockConfig as any);
+            mockApi.getFeedbackUser.mockResolvedValue(mockFeedbackUser as any);
+            mockApi.getIsRemote.mockReturnValue(false);
+            mockApi.shouldShowTunnelOption.mockReturnValue(true);
+
+            controller.update(undefined);
+
+            await new Promise(process.nextTick);
+
+            expect(mockApi.getSitesWithAuth).toHaveBeenCalledTimes(1);
+            expect(mockMessagePoster).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: ConfigMessageType.Init,
+                }),
+            );
+        });
+
+        test('should not post SectionChange when section is undefined', () => {
+            controller.update(undefined);
+
+            expect(mockMessagePoster).not.toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: ConfigMessageType.SectionChange,
+                }),
+            );
+        });
     });
 
     describe('invalidate', () => {
@@ -237,7 +273,7 @@ describe('ConfigWebviewController', () => {
 
             await controller.onMessageReceived({ type: CommonActionType.Refresh });
 
-            expect(mockLogger.error).toHaveBeenCalledWith(error, 'Error refeshing config');
+            expect(mockLogger.error).toHaveBeenCalledWith(error, 'Error refreshing config');
             expect(mockMessagePoster).toHaveBeenCalledWith({
                 type: CommonMessageType.Error,
                 reason: expect.anything(),
