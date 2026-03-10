@@ -119,7 +119,11 @@ export class ConfigV3WebviewController implements WebviewController<SectionV3Cha
         }
     }
 
-    public update(section: SectionV3ChangeMessage) {
+    public update(section?: SectionV3ChangeMessage) {
+        if (section === undefined) {
+            this.invalidate();
+            return;
+        }
         // Store the section data for potential invalidate calls
         this._initialSection = section;
 

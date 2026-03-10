@@ -562,6 +562,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await env.openExternal(Uri.parse(e.href));
                         break;
 
+                    case RovoDevViewResponseType.OpenMcpConfiguration:
+                        await commands.executeCommand(RovodevCommands.OpenRovoDevMcpJson);
+                        break;
+
                     case RovoDevViewResponseType.OpenRovoDevLogFile:
                         await commands.executeCommand(RovodevCommands.OpenRovoDevLogFile);
                         break;
@@ -1320,10 +1324,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // Always focus on the specific vscode view, even if disabled (so user can see the login prompt)
         await this.extensionApi.commands.focusRovodevView();
 
-        // Wait for the webview to initialize, up to 5 seconds
+        // Wait for the webview to be ready to receive messages, up to 5 seconds
         const initialized = await safeWaitFor({
             condition: (value) => !!value,
-            check: () => !!this._webView,
+            check: () => (this._webviewReady ? this._webView : undefined),
             timeout: 5000,
             interval: 50,
         });
@@ -1341,10 +1345,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // Actually invoke the rovodev service, feed responses to the webview as normal
         const revertedChanges = this._revertedChanges;
         this._revertedChanges = [];
-        await this._chatProvider.executeChat(
-            { text: prompt, enable_deep_plan: false, context: context || [] },
-            revertedChanges,
-        );
+        await this._chatProvider.executeChat({ text: prompt, context: context || [] }, revertedChanges);
     }
 
     /**

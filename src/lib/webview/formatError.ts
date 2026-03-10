@@ -1,4 +1,9 @@
-export function formatError(e: any, title?: string): any {
+export type FormattedError = {
+    [key: string]: unknown;
+    title?: string;
+    errorMessages?: string[];
+};
+export function formatError(e: any, title?: string): FormattedError | string {
     if (e.response) {
         if (e.response.data && e.response.data !== '') {
             return title ? { ...e.response.data, ...{ title: title } } : e.response.data;

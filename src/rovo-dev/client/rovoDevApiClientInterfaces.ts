@@ -22,7 +22,6 @@ export interface RovoDevDeferredToolCallResponse {
 export interface RovoDevChatRequest {
     message: string | RovoDevDeferredToolCallResponse;
     context: RovoDevChatRequestContext[];
-    enable_deep_plan?: boolean;
 }
 
 export interface BaicRovoDevHealthcheckResponse {

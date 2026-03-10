@@ -290,7 +290,6 @@ const RovoDevView: React.FC = () => {
         (event: RovoDevProviderMessage): void => {
             switch (event.type) {
                 case RovoDevProviderMessageType.SignalPromptSent:
-                    setIsDeepPlanToggled(event.enable_deep_plan || false);
                     setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE);
                     if (event.echoMessage) {
                         handleAppendResponse({
@@ -666,13 +665,12 @@ const RovoDevView: React.FC = () => {
             postMessage({
                 type: RovoDevViewResponseType.Prompt,
                 text,
-                enable_deep_plan: isDeepPlanToggled,
                 context: promptContextCollection,
             });
 
             return true;
         },
-        [currentState, postMessage, isDeepPlanToggled, promptContextCollection],
+        [currentState, postMessage, promptContextCollection],
     );
 
     React.useEffect(() => {
@@ -810,6 +808,12 @@ const RovoDevView: React.FC = () => {
 
         navigator.clipboard?.writeText(lastMessage.content);
     }, [currentState, history]);
+
+    const executeOpenMcpConfigurationFile = useCallback(() => {
+        postMessage({
+            type: RovoDevViewResponseType.OpenMcpConfiguration,
+        });
+    }, [postMessage]);
 
     const executeGetAgentMemory = useCallback(() => {
         postMessage({
@@ -1239,6 +1243,7 @@ const RovoDevView: React.FC = () => {
                                             onCancel={cancelResponse}
                                             onAddContext={onAddContext}
                                             onCopy={handleCopyResponse}
+                                            handleMcpConfigurationCommand={executeOpenMcpConfigurationFile}
                                             handleMemoryCommand={executeGetAgentMemory}
                                             handleTriggerFeedbackCommand={handleShowFeedbackForm}
                                             promptText={promptText}
