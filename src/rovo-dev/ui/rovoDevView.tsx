@@ -723,6 +723,12 @@ const RovoDevView: React.FC = () => {
         navigator.clipboard?.writeText(lastMessage.content);
     }, [currentState, history]);
 
+    const executeOpenMcpConfigurationFile = useCallback(() => {
+        postMessage({
+            type: RovoDevViewResponseType.OpenMcpConfiguration,
+        });
+    }, [postMessage]);
+
     const executeGetAgentMemory = useCallback(() => {
         postMessage({
             type: RovoDevViewResponseType.GetAgentMemory,
@@ -1151,6 +1157,7 @@ const RovoDevView: React.FC = () => {
                                             onCancel={cancelResponse}
                                             onAddContext={onAddContext}
                                             onCopy={handleCopyResponse}
+                                            handleMcpConfigurationCommand={executeOpenMcpConfigurationFile}
                                             handleMemoryCommand={executeGetAgentMemory}
                                             handleTriggerFeedbackCommand={handleShowFeedbackForm}
                                             promptText={promptText}

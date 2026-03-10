@@ -1,6 +1,7 @@
 import { Transition } from '@atlassian-pi/jira-pi-common-models';
 import React, { useCallback, useMemo, useReducer } from 'react';
 import { defaultStateGuard, ReducerAction } from 'src/ipc/messaging';
+import { v4 } from 'uuid';
 
 import { WorkspaceRepo } from '../../../bitbucket/model';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
@@ -155,6 +156,7 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
             return new Promise<StartWorkResponseMessage>((resolve, reject) => {
                 (async () => {
                     try {
+                        const nonce: string = v4();
                         const response = await postMessagePromise(
                             {
                                 type: StartWorkActionType.StartRequest,
@@ -166,9 +168,11 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
                                 targetBranch,
                                 upstream,
                                 pushBranchToRemote,
+                                nonce,
                             },
                             StartWorkMessageType.StartWorkResponse,
                             ConnectionTimeout,
+                            nonce,
                         );
                         resolve(response);
                     } catch (e) {
