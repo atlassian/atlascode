@@ -108,6 +108,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     // prompt informing Rovo Dev that those files has been reverted
     private _revertedChanges: string[] = [];
 
+    /** Workspace-relative paths of files currently in Rovo Dev's cache. */
+    private _trackedFiles: Set<string> = new Set();
+    private _modifiedFilesPollTimer?: ReturnType<typeof setInterval>;
+
     /** Agent mode selected by the user before healthcheck completed; applied after setReady. */
     private _pendingAgentMode?: AgentMode;
 
@@ -288,6 +292,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             viewId: this.viewType,
             baseUri: webview.asWebviewUri(this._extensionUri),
             stylesUri: codiconsUri,
+        });
+
+        // Refresh modified files when panel becomes visible
+        webviewView.onDidChangeVisibility(() => {
+            if (webviewView.visible && this._trackedFiles.size > 0) {
+                this.refreshModifiedFiles();
+            }
         });
 
         webview.onDidReceiveMessage(async (e) => {
@@ -716,6 +727,20 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         );
     }
 
+    private _startModifiedFilesPoll() {
+        this._stopModifiedFilesPoll();
+        this._modifiedFilesPollTimer = setInterval(() => {
+            if (this._trackedFiles.size > 0 && this._webviewView?.visible) {
+                this.refreshModifiedFiles();
+            }
+        }, 30_000);
+    }
+
+    private _stopModifiedFilesPoll() {
+        clearInterval(this._modifiedFilesPollTimer);
+        this._modifiedFilesPollTimer = undefined;
+    }
+
     private processError(
         error: Error & { gitErrorCode?: GitErrorCodes },
         {
@@ -876,6 +901,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
             const sessionId = await client.createSession();
             this._revertedChanges = [];
+            this._trackedFiles = new Set();
 
             await webview.postMessage({
                 type: RovoDevProviderMessageType.ClearChat,
@@ -908,6 +934,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
 
         this._revertedChanges = [];
+        this._trackedFiles = new Set();
         return this._telemetryProvider.fireTelemetryEvent({
             action: 'rovoDevRestartProcessAction',
             subject: 'atlascode',
@@ -1185,6 +1212,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 type: RovoDevProviderMessageType.SetModifiedFiles,
                 files: [],
             });
+            this._trackedFiles = new Set();
             return;
         }
 
@@ -1212,12 +1240,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 type: file.type,
             }));
 
+            this._trackedFiles = new Set(normalizedFiles.map((f) => f.filePath));
+
             await webview.postMessage({
                 type: RovoDevProviderMessageType.SetModifiedFiles,
                 files: normalizedFiles,
             });
         } catch (error) {
             Logger.debug('Error refreshing modified files:', error);
+            this._trackedFiles = new Set();
             await webview.postMessage({
                 type: RovoDevProviderMessageType.SetModifiedFiles,
                 files: [],
@@ -1387,6 +1418,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private _dispose() {
+        this._stopModifiedFilesPoll();
         this._disposables.forEach((d) => d.dispose());
         this._disposables = [];
         if (this._webView) {
@@ -1630,6 +1662,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
 
         await this._chatProvider.setReady(rovoDevClient, this._pendingAgentMode);
+        this._startModifiedFilesPoll();
         if (this._pendingAgentMode) {
             await webView.postMessage({
                 type: RovoDevProviderMessageType.SetAgentModeComplete,
