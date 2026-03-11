@@ -118,7 +118,7 @@ if [ "$DRY_RUN" = true ]; then
   echo "  ./scripts/release.sh"
   echo ""
   echo "To clean up local artifacts, run:"
-  echo "  git checkout main && git branch -D $RELEASE_BRANCH && git tag -d $VERSION_TAG"
+  echo "  git checkout main && git branch -D $RELEASE_BRANCH && git tag -d $VERSION_TAG && git checkout CHANGELOG.md"
 else
   echo ""
   echo "Pushing to remote..."
