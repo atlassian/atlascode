@@ -33,6 +33,16 @@ const useStyles = makeStyles(
                     'max-height': '1.5em',
                     'vertical-align': 'middle',
                 },
+                'img.plugin-emote-img': {
+                    border: 0,
+                    margin: 0,
+                    padding: 0,
+                    display: 'inline',
+                    'font-size': '1em',
+                    'max-height': '1.5em',
+                    'max-width': '1.5em',
+                    'vertical-align': 'bottom',
+                },
                 '.ap-mention': {
                     'background-color':
                         theme.palette.mode === 'dark'
