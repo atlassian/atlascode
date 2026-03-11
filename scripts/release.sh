@@ -71,11 +71,11 @@ echo "Checking CHANGELOG.md..."
 if ! grep -q "## What's new in $VERSION" CHANGELOG.md; then
   echo "CHANGELOG.md needs update. Adding version entry..."
   
-  # Find the first "## What's new" line and add the new version above it
-  sed -i.bak "/^## What's new in/i\\
+  # Find the first "## What's new" line and add the new version above it (only once)
+  sed -i.bak "0,/^## What's new in/{/^## What's new in/i\\
 ## What's new in $VERSION\\
 \\
-" CHANGELOG.md
+}" CHANGELOG.md
   
   rm CHANGELOG.md.bak
   echo "Added '## What's new in $VERSION' to CHANGELOG.md ✓"
