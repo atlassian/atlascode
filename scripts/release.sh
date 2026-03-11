@@ -75,20 +75,24 @@ git checkout -b $RELEASE_BRANCH
 echo ""
 echo "Checking CHANGELOG.md..."
 
-# Check if the first line is "## What's new in $VERSION"
-first_line=$(head -1 CHANGELOG.md)
+# Check if the third line is "## What's new in $VERSION"
+# Line 1: ### [Report an Issue](...)
+# Line 2: (blank)
+# Line 3: ## What's new in $VERSION
+third_line=$(sed -n '3p' CHANGELOG.md)
 expected_header="## What's new in $VERSION"
 
-if [ "$first_line" = "$expected_header" ]; then
+if [ "$third_line" = "$expected_header" ]; then
   echo "CHANGELOG.md already has latest version entry ✓"
 else
   echo "CHANGELOG.md needs update. Adding version entry..."
   
-  # Add the new version entry at the top
+  # Add the new version entry after line 2 (after the blank line)
   {
+    head -2 CHANGELOG.md
     echo "## What's new in $VERSION"
     echo ""
-    cat CHANGELOG.md
+    tail -n +3 CHANGELOG.md
   } > CHANGELOG.md.tmp && mv CHANGELOG.md.tmp CHANGELOG.md
   
   echo "Added '## What's new in $VERSION' to CHANGELOG.md ✓"
