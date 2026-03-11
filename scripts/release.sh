@@ -1,10 +1,6 @@
 #!/bin/bash 
 set -e
 
-# Ensure UTF-8 encoding for Windows compatibility
-export LANG=C.UTF-8
-export LC_ALL=C.UTF-8
-
 # Check for dry flag (must be first argument)
 DRY_RUN=false
 if [ "$1" = "dry" ]; then
