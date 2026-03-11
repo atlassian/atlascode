@@ -2,6 +2,10 @@
 
 ## What's new in 4.0.23
 
+### Bug Fixes
+
+- **Rovo Dev**: Fixed feedback collector in Boysenberry to use the user's actual email from the primary auth info, so that "can be contacted" submissions include the correct contact email
+
 ### Features
 
 - **Rovo Dev**: Support new `plan` mode with `deferred_request` handling

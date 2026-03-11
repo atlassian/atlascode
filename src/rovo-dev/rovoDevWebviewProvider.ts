@@ -469,7 +469,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                                 lastTenMessages: e.lastTenMessages,
                                 rovoDevSessionId: process.env.SANDBOX_SESSION_ID,
                             },
-                            this._userInfo,
+                            this.primaryAuthInfo(),
                             !!this.isBoysenberry,
                         );
                         break;
@@ -643,6 +643,29 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 await this.processError(error);
             }
         });
+    }
+
+    private primaryAuthInfo(): UserInfo | undefined {
+        if (this._userInfo) {
+            // If we have _userEmail from the BBY status API, prefer it over the Jira site email
+            // as it represents the user's actual account email
+            if (this._userEmail && this._userInfo.email !== this._userEmail) {
+                return { ...this._userInfo, email: this._userEmail };
+            }
+            return this._userInfo;
+        }
+
+        // In BBY context, _userInfo may not be available but _userEmail is
+        if (this._userEmail) {
+            return {
+                id: '',
+                displayName: '',
+                email: this._userEmail,
+                avatarUrl: '',
+            };
+        }
+
+        return undefined;
     }
 
     private async sendProviderReadyEvent(userEmail: string | undefined) {
