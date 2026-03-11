@@ -65,6 +65,12 @@ echo ""
 echo "Validating version is stable..."
 ./scripts/version/assert-stable.sh $VERSION
 
+# Create release branch first (before CHANGELOG update)
+echo ""
+echo "Creating release branch..."
+RELEASE_BRANCH="release/v$VERSION"
+git checkout -b $RELEASE_BRANCH
+
 # Update CHANGELOG.md if needed
 echo ""
 echo "Checking CHANGELOG.md..."
@@ -91,12 +97,6 @@ else
   git add CHANGELOG.md
   git commit -m "chore: update CHANGELOG for v$VERSION"
 fi
-
-# Create release branch
-echo ""
-echo "Creating release branch..."
-RELEASE_BRANCH="release/v$VERSION"
-git checkout -b $RELEASE_BRANCH
 
 # Add v to the beginning of the version number for tag
 VERSION_TAG="v$VERSION"
