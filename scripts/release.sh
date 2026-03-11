@@ -68,26 +68,28 @@ echo "Validating version is stable..."
 # Update CHANGELOG.md if needed
 echo ""
 echo "Checking CHANGELOG.md..."
-if ! grep -q "## What's new in $VERSION" CHANGELOG.md; then
+
+# Check if the first line is "## What's new in $VERSION"
+first_line=$(head -1 CHANGELOG.md)
+expected_header="## What's new in $VERSION"
+
+if [ "$first_line" = "$expected_header" ]; then
+  echo "CHANGELOG.md already has latest version entry ✓"
+else
   echo "CHANGELOG.md needs update. Adding version entry..."
   
-  # Find the first "## What's new" line and add the new version above it (only once)
-  # Using awk for cross-platform compatibility
-  awk -v version="$VERSION" '
-    !found && /^## What'\''s new in/ {
-      print "## What'\''s new in " version
-      print ""
-      found=1
-    }
-    { print }
-  ' CHANGELOG.md > CHANGELOG.md.tmp && mv CHANGELOG.md.tmp CHANGELOG.md
+  # Add the new version entry at the top
+  {
+    echo "## What's new in $VERSION"
+    echo ""
+    cat CHANGELOG.md
+  } > CHANGELOG.md.tmp && mv CHANGELOG.md.tmp CHANGELOG.md
+  
   echo "Added '## What's new in $VERSION' to CHANGELOG.md ✓"
   
   # Commit the changelog update
   git add CHANGELOG.md
   git commit -m "chore: update CHANGELOG for v$VERSION"
-else
-  echo "CHANGELOG.md already has entry for v$VERSION ✓"
 fi
 
 # Create release branch
