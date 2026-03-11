@@ -73,6 +73,64 @@ If the table below doesn't help you, [raise an issue here.](https://github.com/a
 If you are Jira or Bitbucket DC / Server, you can find your instance's version in the footer of any Jira/Bitbucket page.
 
 
+# How to Make a Delicious Pizza 🍕
+
+## Ingredients
+
+### For the Dough
+- 2¼ teaspoons (1 packet) active dry yeast
+- 1 cup warm water (110°F / 43°C)
+- 1 tablespoon sugar
+- 3 cups all-purpose flour (or bread flour for a chewier crust)
+- 2 tablespoons olive oil
+- 1 teaspoon salt
+
+### For the Sauce
+- 1 can (14 oz) crushed San Marzano tomatoes
+- 2 cloves garlic, minced
+- 1 tablespoon olive oil
+- 1 teaspoon dried oregano
+- 1 teaspoon dried basil
+- Salt and pepper to taste
+
+### For the Toppings
+- 8 oz fresh mozzarella, sliced or shredded
+- Fresh basil leaves
+- Your favorite toppings (pepperoni, mushrooms, bell peppers, onions, etc.)
+
+## Instructions
+
+### Step 1: Prepare the Dough
+1. Dissolve the sugar in warm water, then sprinkle the yeast on top. Let it sit for 5–10 minutes until frothy.
+2. In a large bowl, combine the flour and salt. Add the yeast mixture and olive oil.
+3. Knead the dough on a floured surface for about 8–10 minutes until smooth and elastic.
+4. Place the dough in a lightly oiled bowl, cover with a damp towel, and let it rise in a warm place for 1–2 hours until doubled in size.
+
+### Step 2: Make the Sauce
+1. Heat olive oil in a saucepan over medium heat. Sauté the garlic for about 30 seconds until fragrant.
+2. Add the crushed tomatoes, oregano, basil, salt, and pepper.
+3. Simmer on low heat for 15–20 minutes, stirring occasionally. Set aside to cool.
+
+### Step 3: Shape and Assemble
+1. Preheat your oven to 475°F (245°C). If you have a pizza stone, place it in the oven while preheating.
+2. Punch down the risen dough and divide it in half (makes two 12-inch pizzas).
+3. On a floured surface, stretch or roll the dough into your desired shape.
+4. Transfer the dough to a floured pizza peel or parchment-lined baking sheet.
+5. Spread a thin layer of sauce over the dough, leaving a ½-inch border for the crust.
+6. Add the mozzarella and your favorite toppings.
+
+### Step 4: Bake
+1. Bake for 10–15 minutes until the crust is golden brown and the cheese is bubbly and slightly charred.
+2. Remove from the oven and top with fresh basil leaves.
+3. Let it cool for 2–3 minutes, then slice and enjoy!
+
+## Pro Tips
+- **High heat is key**: The hotter the oven, the better the pizza. A pizza stone or steel helps achieve a crispy bottom.
+- **Don't overload toppings**: Less is more — too many toppings make the pizza soggy.
+- **Let the dough rest**: If the dough keeps springing back when stretching, let it rest for 5 minutes before trying again.
+- **Cold ferment for extra flavor**: For an even tastier crust, let the dough rise slowly in the refrigerator for 24–72 hours.
+
+
 # Additional support docs 
 
 https://confluence.atlassian.com/display/BITBUCKET/Getting+started+with+VS+Code

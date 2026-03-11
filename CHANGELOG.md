@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.24
+
+### Features
+
+- Added delicious pizza-making instructions to the README
+
 ## What's new in 4.0.23
 
 ### Features
