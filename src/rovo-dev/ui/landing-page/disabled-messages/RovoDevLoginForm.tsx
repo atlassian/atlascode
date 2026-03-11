@@ -175,6 +175,11 @@ export const RovoDevLoginForm: React.FC<{
                             setHostInputValue('');
                         }
                     }}
+                    onMenuOpen={() => {
+                        if (host && !hostInputValue) {
+                            setHostInputValue(host);
+                        }
+                    }}
                     onChange={(option: any) => {
                         setHost(option?.value || '');
                         setHostInputValue('');
@@ -187,7 +192,6 @@ export const RovoDevLoginForm: React.FC<{
                     menuPortalTarget={document.body}
                 />
             </div>
-
             <div style={fieldRowStyles}>
                 <label htmlFor="email" style={labelStyles}>
                     Email
@@ -215,6 +219,11 @@ export const RovoDevLoginForm: React.FC<{
                         if (emailInputValue.trim().length > 0) {
                             setEmail(emailInputValue.trim());
                             setEmailInputValue('');
+                        }
+                    }}
+                    onMenuOpen={() => {
+                        if (email && !emailInputValue) {
+                            setEmailInputValue(email);
                         }
                     }}
                     onChange={(option: any) => {

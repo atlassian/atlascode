@@ -29,6 +29,7 @@
 - **Rovo Dev**: Added support for /mcp command
 - **RovoDev**: Fixed chat message not appearing when clicking "Fix with Rovo Dev" before the chat view is fully initialized - now waits for the webview to be ready before executing the chat command
 - Fixed "Cannot read properties of undefined (reading 'initiateApiTokenAuth')" error
+- Fixed the bug that prevented users from editing selected values in the landing page for Rovo Dev.
 
 ## What's new in 4.0.22
 
