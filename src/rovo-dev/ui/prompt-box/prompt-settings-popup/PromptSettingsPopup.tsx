@@ -7,7 +7,7 @@ import Popup, { PopupComponentProps } from '@atlaskit/popup';
 import { Box } from '@atlaskit/primitives';
 import { token } from '@atlaskit/tokens';
 import Tooltip from '@atlaskit/tooltip';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { AgentMode, RovoDevModeInfo } from 'src/rovo-dev/client';
 
 import AgentModeSection from './AgentModeSection';
@@ -20,6 +20,16 @@ const styles = cssMap({
         marginBottom: token('space.100', '8px'),
     },
 });
+
+interface OtherSectionItem {
+    key: string;
+    icon: React.ReactElement;
+    label: string;
+    description: string;
+    action: () => void;
+    toggled: boolean;
+    isInternalOnly?: boolean;
+}
 
 interface PromptSettingsPopupProps {
     onDeepPlanToggled?: () => void;
@@ -76,6 +86,34 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
         [onAgentModeChange, onClose],
     );
 
+    const otherSectionItems = useMemo((): OtherSectionItem[] => {
+        const items: OtherSectionItem[] = [];
+        if (onFullContextToggled) {
+            items.push({
+                key: 'fullContext',
+                icon: <TelescopeIcon label="Full-Context mode" />,
+                label: 'Full-Context mode',
+                description:
+                    'Toggle Full-Context mode to enable the agent to research documents and historical data, helping it better understand the problem to solve.',
+                action: onFullContextToggled,
+                toggled: isFullContextEnabled,
+                isInternalOnly: true,
+            });
+        }
+        if (onYoloModeToggled) {
+            items.push({
+                key: 'yolo',
+                icon: <LockUnlockedIcon label="YOLO mode" />,
+                label: 'YOLO',
+                description:
+                    'Toggle yolo mode which runs all file CRUD operations and bash commands without confirmation. Use with caution!',
+                action: onYoloModeToggled,
+                toggled: isYoloModeEnabled,
+            });
+        }
+        return items;
+    }, [onFullContextToggled, onYoloModeToggled, isFullContextEnabled, isYoloModeEnabled]);
+
     if (!onDeepPlanToggled && !onYoloModeToggled && !onFullContextToggled) {
         return null;
     }
@@ -114,33 +152,29 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                         availableModes={availableAgentModes}
                         setAgentMode={handleAgentModeChange}
                     />
-                    <Box
-                        as="p"
-                        xcss={styles.sectionTitle}
-                        style={{
-                            fontSize: '12px',
-                        }}
-                    >
-                        Others
-                    </Box>
-                    {onFullContextToggled && (
-                        <PromptSettingsItem
-                            icon={<TelescopeIcon label="Full-Context mode" />}
-                            label="Full-Context mode"
-                            description="Toggle Full-Context mode to enable the agent to research documents and historical data, helping it better understand the problem to solve."
-                            action={onFullContextToggled}
-                            toggled={isFullContextEnabled}
-                            isInternalOnly={true}
-                        />
-                    )}
-                    {onYoloModeToggled && (
-                        <PromptSettingsItem
-                            icon={<LockUnlockedIcon label="YOLO mode" />}
-                            label="YOLO"
-                            description="Toggle yolo mode which runs all file CRUD operations and bash commands without confirmation. Use with caution!"
-                            action={onYoloModeToggled}
-                            toggled={isYoloModeEnabled}
-                        />
+                    {otherSectionItems.length > 0 && (
+                        <>
+                            <Box
+                                as="p"
+                                xcss={styles.sectionTitle}
+                                style={{
+                                    fontSize: '12px',
+                                }}
+                            >
+                                Others
+                            </Box>
+                            {otherSectionItems.map((item) => (
+                                <PromptSettingsItem
+                                    key={item.key}
+                                    icon={item.icon}
+                                    label={item.label}
+                                    description={item.description}
+                                    action={item.action}
+                                    toggled={item.toggled}
+                                    isInternalOnly={item.isInternalOnly}
+                                />
+                            ))}
+                        </>
                     )}
                 </div>
             )}

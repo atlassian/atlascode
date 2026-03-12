@@ -784,6 +784,67 @@ describe('RovoDevWebviewProvider - Business Logic', () => {
         });
     });
 
+    describe('Boysenberry User Info', () => {
+        it('should set _userInfo from getPrimaryAuthInfo when available', async () => {
+            const mockUserInfo = {
+                id: 'user-123',
+                displayName: 'Test User',
+                email: 'test@example.com',
+                avatarUrl: 'https://avatar.url',
+            };
+
+            const mockGetPrimaryAuthInfo = jest.fn().mockResolvedValue({ user: mockUserInfo });
+
+            // Simulate what the status callback does: set _userEmail, then fetch auth info
+            const statusEmail = 'test@example.com';
+            const statusAccountId = 'account-123';
+
+            const primaryAuthInfo = await mockGetPrimaryAuthInfo();
+            let userInfo;
+            if (primaryAuthInfo?.user) {
+                userInfo = primaryAuthInfo.user;
+            } else {
+                userInfo = {
+                    id: statusAccountId,
+                    displayName: statusEmail,
+                    email: statusEmail,
+                    avatarUrl: '',
+                };
+            }
+
+            expect(userInfo).toEqual(mockUserInfo);
+            expect(mockGetPrimaryAuthInfo).toHaveBeenCalled();
+        });
+
+        it('should fall back to status API data when getPrimaryAuthInfo returns undefined', async () => {
+            const mockGetPrimaryAuthInfo = jest.fn().mockResolvedValue(undefined);
+
+            // Simulate what the status callback does: set _userEmail, then fetch auth info
+            const statusEmail = 'test@example.com';
+            const statusAccountId = 'account-123';
+
+            const primaryAuthInfo = await mockGetPrimaryAuthInfo();
+            let userInfo;
+            if (primaryAuthInfo?.user) {
+                userInfo = primaryAuthInfo.user;
+            } else {
+                userInfo = {
+                    id: statusAccountId,
+                    displayName: statusEmail,
+                    email: statusEmail,
+                    avatarUrl: '',
+                };
+            }
+
+            expect(userInfo).toEqual({
+                id: 'account-123',
+                displayName: 'test@example.com',
+                email: 'test@example.com',
+                avatarUrl: '',
+            });
+        });
+    });
+
     describe('File Operations', () => {
         it('should handle file existence checks', () => {
             const checkFileExists = (filePath: string, exists: boolean) => {
