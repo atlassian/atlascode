@@ -533,6 +533,14 @@ export class CredentialManager implements Disposable {
             return undefined;
         }
 
+        // Skip refresh if credentials are already invalidated
+        if (credentials.state === AuthInfoState.Invalid) {
+            Logger.debug(
+                `Skipping token refresh for credentialID: ${site.credentialId} - credentials already invalidated`,
+            );
+            return undefined;
+        }
+
         const failedRefresh = this._failedRefreshCache.get(site.credentialId);
         if (failedRefresh) {
             const RETRY_DELAY = 5 * Time.MINUTES;
@@ -574,32 +582,26 @@ export class CredentialManager implements Disposable {
                     this._failedRefreshCache.delete(site.credentialId);
                 }
                 Logger.debug(`Successfully saved refreshed tokens for credentialId: ${site.credentialId}`);
-            } else if (tokenResponse.shouldInvalidate || tokenResponse.shouldSlowDown) {
-                if (tokenResponse.shouldSlowDown) {
-                    const newAttemptsCount = (this._failedRefreshCache.get(site.credentialId)?.attemptsCount ?? 0) + 1;
-                    this._failedRefreshCache.set(site.credentialId, {
-                        attemptsCount: newAttemptsCount,
-                        lastAttemptAt: new Date(),
-                    });
-                    // Only log error after hitting retry limit
-                    if (newAttemptsCount >= 5) {
-                        Logger.error(
-                            new Error(
-                                `Token refresh failed after ${newAttemptsCount} attempts for credentialId: ${site.credentialId}`,
-                            ),
-                        );
-                    }
-                    // Do not invalidate on transient errors (e.g. network) - credentials stay valid for retry later
-                }
-                if (tokenResponse.shouldInvalidate) {
+            } else if (tokenResponse.shouldSlowDown) {
+                const newAttemptsCount = (this._failedRefreshCache.get(site.credentialId)?.attemptsCount ?? 0) + 1;
+                this._failedRefreshCache.set(site.credentialId, {
+                    attemptsCount: newAttemptsCount,
+                    lastAttemptAt: new Date(),
+                });
+                // Only log error after hitting retry limit
+                if (newAttemptsCount >= 5) {
                     Logger.error(
                         new Error(
-                            `Token refresh failed - credentials invalidated for credentialId: ${site.credentialId}`,
+                            `Token refresh failed after ${newAttemptsCount} attempts for credentialId: ${site.credentialId}`,
                         ),
                     );
-                    credentials.state = AuthInfoState.Invalid;
-                    await this.saveAuthInfo(site, credentials);
                 }
+            } else if (tokenResponse.shouldInvalidate) {
+                Logger.error(
+                    new Error(`Token refresh failed - credentials invalidated for credentialId: ${site.credentialId}`),
+                );
+                credentials.state = AuthInfoState.Invalid;
+                await this.saveAuthInfo(site, credentials);
             }
         }
     }
