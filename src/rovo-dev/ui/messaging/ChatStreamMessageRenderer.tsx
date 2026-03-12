@@ -18,7 +18,6 @@ interface ChatStreamMessageRendererProps {
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
         onRestartProcess: () => void;
-        onOpenLogFile: () => void;
         onError: (error: Error, errorMessage: string) => void;
     };
     onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionChoice) => void;
