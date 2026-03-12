@@ -82,25 +82,25 @@ echo "Checking CHANGELOG.md..."
 third_line=$(sed -n '3p' CHANGELOG.md)
 expected_header="## What's new in $VERSION"
 
-if [ "$third_line" = "$expected_header" ]; then
-  echo "CHANGELOG.md already has latest version entry ✓"
-else
-  echo "CHANGELOG.md needs update. Adding version entry..."
+# if [ "$third_line" = "$expected_header" ]; then
+#   echo "CHANGELOG.md already has latest version entry ✓"
+# else
+#   echo "CHANGELOG.md needs update. Adding version entry..."
   
-  # Add the new version entry after line 2 (after the blank line)
-  {
-    head -2 CHANGELOG.md
-    echo "## What's new in $VERSION"
-    echo ""
-    tail -n +3 CHANGELOG.md
-  } > CHANGELOG.md.tmp && mv CHANGELOG.md.tmp CHANGELOG.md
+#   # Add the new version entry after line 2 (after the blank line)
+#   {
+#     head -2 CHANGELOG.md
+#     echo "## What's new in $VERSION"
+#     echo ""
+#     tail -n +3 CHANGELOG.md
+#   } > CHANGELOG.md.tmp && mv CHANGELOG.md.tmp CHANGELOG.md
   
-  echo "Added '## What's new in $VERSION' to CHANGELOG.md ✓"
+#   echo "Added '## What's new in $VERSION' to CHANGELOG.md ✓"
   
-  # Commit the changelog update
-  git add CHANGELOG.md
-  git commit -m "chore: update CHANGELOG for v$VERSION"
-fi
+#   # Commit the changelog update
+#   git add CHANGELOG.md
+#   git commit -m "chore: update CHANGELOG for v$VERSION"
+# fi
 
 # Add v to the beginning of the version number for tag
 VERSION_TAG="v$VERSION"
