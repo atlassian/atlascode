@@ -5,7 +5,7 @@ import InformationCircleIcon from '@atlaskit/icon/core/information-circle';
 import { setGlobalTheme } from '@atlaskit/tokens';
 import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import * as React from 'react';
 import {
     AgentMode,
@@ -97,6 +97,7 @@ const RovoDevView: React.FC = () => {
     } | null>(null);
     const [deepPlanCreated, setDeepPlanCreated] = useState<string | null>(null);
     const [currentAgentModel, setCurrentAgentModel] = useState<RovoDevAgentModel | undefined>(undefined);
+    const hasPendingDeferredActionRef = useRef(false);
     const [availableAgentModels, setAvailableAgentModels] = useState<RovoDevAgentModel[]>([]);
 
     // Initialize atlaskit theme for proper token support
@@ -264,12 +265,34 @@ const RovoDevView: React.FC = () => {
     );
 
     const setSummaryMessageInHistory = useCallback(() => {
+        if (hasPendingDeferredActionRef.current) {
+            hasPendingDeferredActionRef.current = false;
+            return;
+        }
         setHistory((prev) => {
             const lastMessage = prev[prev.length - 1];
 
             if (lastMessage && !Array.isArray(lastMessage) && lastMessage.event_kind === 'text') {
                 const summaryMessage = { ...lastMessage, isSummary: true };
                 return [...prev.slice(0, -1), summaryMessage];
+            }
+            return prev;
+        });
+    }, []);
+
+    const clearSummaryMessageInHistory = useCallback(() => {
+        setHistory((prev) => {
+            const lastMessage = prev[prev.length - 1];
+
+            if (
+                lastMessage &&
+                !Array.isArray(lastMessage) &&
+                lastMessage.event_kind === 'text' &&
+                lastMessage.isSummary
+            ) {
+                // eslint-disable-next-line no-unused-vars
+                const { isSummary, ...clearedMessage } = lastMessage;
+                return [...prev.slice(0, -1), clearedMessage];
             }
             return prev;
         });
@@ -524,9 +547,13 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.ShowDeferredAskUserQuestions:
+                    hasPendingDeferredActionRef.current = true;
+                    clearSummaryMessageInHistory();
                     setAskUserQuestionsToolArgs({ toolCallId: event.toolCallId, args: event.args });
                     break;
                 case RovoDevProviderMessageType.ShowDeferredExitPlanMode:
+                    hasPendingDeferredActionRef.current = true;
+                    clearSummaryMessageInHistory();
                     const plan = `\n${event.args.plan}`; // Precede plan with a newline for better formatting in the chat
                     const chatMessage: Response = {
                         event_kind: '_RovoDevExitPlanMode',
@@ -557,7 +584,13 @@ const RovoDevView: React.FC = () => {
                     break;
             }
         },
-        [handleAppendResponse, currentState.state, setSummaryMessageInHistory, clearChatHistory],
+        [
+            handleAppendResponse,
+            currentState.state,
+            setSummaryMessageInHistory,
+            clearSummaryMessageInHistory,
+            clearChatHistory,
+        ],
     );
 
     const { postMessage, postMessagePromise, setState } = useMessagingApi<
