@@ -1,0 +1,23 @@
+src/rovo-dev/ui/common/DialogMessage.tsx
+  3c2bd985ab07e0f4 52,70-74,202-218,220-226,228-230,232-235,237-246,248
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.10",
+  "base_commit_sha": "c196742bb3e9580fffb63eb92b8638a818ea4df9",
+  "prompts": {
+    "3c2bd985ab07e0f4": {
+      "agent_id": {
+        "tool": "rovodev-cli",
+        "id": "rovodev-session",
+        "model": "anthropic:claude-haiku-4-5@20251001"
+      },
+      "human_author": "Bryan Wieger <bwieger@atlassian.com>",
+      "messages": [],
+      "total_additions": 101,
+      "total_deletions": 124,
+      "accepted_lines": 54,
+      "overriden_lines": 0
+    }
+  }
+}
