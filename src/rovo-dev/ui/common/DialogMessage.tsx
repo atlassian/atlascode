@@ -219,10 +219,18 @@ export const DialogMessageItem: React.FC<{
                                 {msg.rovoDevLogs && msg.rovoDevLogs.length > 0 && (
                                     <div
                                         style={{
-                                            position: 'absolute',
+                                            position: 'sticky',
                                             top: '8px',
                                             right: '8px',
                                             zIndex: 10,
+                                            display: 'flex',
+                                            justifyContent: 'flex-end',
+                                            paddingRight: '8px',
+                                            paddingTop: '8px',
+                                            backgroundColor: 'var(--vscode-editor-background)',
+                                            marginLeft: 'auto',
+                                            width: 'fit-content',
+                                            marginRight: '0',
                                         }}
                                     >
                                         <Tooltip
