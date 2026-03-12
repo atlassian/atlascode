@@ -116,7 +116,7 @@ export const ChatMessageItem: React.FC<{
                             </button>
                         </Tooltip>
                     </div>
-                    {msg.event_kind === '_RovoDevExitPlanMode' && onGeneratePlanClick && (
+                    {msg.event_kind === '_RovoDevExitPlanMode' && onGeneratePlanClick && deepPlanCreated !== null && (
                         <CodePlanButton
                             execute={(e: boolean) => onGeneratePlanClick(msg.toolCallId, e)}
                             disabled={!canGeneratePlan}
