@@ -1126,9 +1126,7 @@ describe('CredentialManager', () => {
 
             expect(result).toBeUndefined();
             expect(mockRefresher.getNewTokens).not.toHaveBeenCalled();
-            expect(Logger.debug).toHaveBeenCalledWith(
-                expect.stringContaining('permanent previous failure'),
-            );
+            expect(Logger.debug).toHaveBeenCalledWith(expect.stringContaining('permanent previous failure'));
         });
 
         it('should skip token refresh when credentials state is Invalid', async () => {
@@ -1139,7 +1137,10 @@ describe('CredentialManager', () => {
                 state: AuthInfoState.Invalid,
             };
 
-            const getAuthInfoForProductSpy = jest.spyOn(credentialManager as any, 'getAuthInfoForProductAndCredentialId');
+            const getAuthInfoForProductSpy = jest.spyOn(
+                credentialManager as any,
+                'getAuthInfoForProductAndCredentialId',
+            );
             getAuthInfoForProductSpy.mockResolvedValue(invalidOAuthInfo);
             const softRefreshSpy = jest.spyOn(credentialManager as any, 'softRefreshOAuth');
             softRefreshSpy.mockImplementation(async (site: DetailedSiteInfo, authInfo: AuthInfo) => {
