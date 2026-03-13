@@ -3,13 +3,17 @@ import { commands, window } from 'vscode';
 
 import { Commands } from '../constants';
 import { Logger } from '../logger';
-import { AuthInfoState, DetailedSiteInfo } from './authInfo';
+import { AuthInfoState, DetailedSiteInfo, ProductBitbucket } from './authInfo';
 import { AuthInterceptor } from './authInterceptor';
 import { CredentialManager } from './authStore';
 
+/** Callback when 401/403 is received for OAuth (e.g. evict cached client so next request triggers refresh). */
+export type OnOAuthUnauthorized = (site: DetailedSiteInfo) => void;
+
 /**
- * BasicInterceptor detects any 401 or 403 responses from the REST service and blocks any further requests until the
- * user has updated their password.
+ * BasicInterceptor detects any 401 or 403 responses from the REST service and blocks further requests with the same
+ * client. For basic/API token auth, credentials are marked Invalid and persisted. For OAuth, Invalid is not persisted;
+ * optional onOAuthUnauthorized evicts cached client so the next request triggers token refresh.
  */
 export class BasicInterceptor implements AuthInterceptor {
     private _requestInterceptor: (config: AxiosRequestConfig) => any;
@@ -20,6 +24,7 @@ export class BasicInterceptor implements AuthInterceptor {
     constructor(
         private site: DetailedSiteInfo,
         private authStore: CredentialManager,
+        private onOAuthUnauthorized?: OnOAuthUnauthorized,
     ) {
         this._responseInterceptor = (value: AxiosResponse<any>) => {
             return value;
@@ -38,10 +43,9 @@ export class BasicInterceptor implements AuthInterceptor {
                 Logger.debug(`Received ${e.response?.status} - marking credentials as invalid`);
                 this.showError();
                 this._invalidCredentials = true;
-                this.authStore.getAuthInfo(this.site).then((authInfo) => {
-                    if (authInfo) {
-                        authInfo.state = AuthInfoState.Invalid;
-                        this.authStore.saveAuthInfo(this.site, authInfo);
+                this.authStore.handleApiUnauthorized(this.site).then(({ isOAuth }) => {
+                    if (isOAuth) {
+                        this.onOAuthUnauthorized?.(this.site);
                     }
                 });
             }
@@ -61,11 +65,13 @@ export class BasicInterceptor implements AuthInterceptor {
     }
 
     showError() {
+        const authCommand =
+            this.site.product.key === ProductBitbucket.key ? Commands.ShowBitbucketAuth : Commands.ShowJiraAuth;
         window
             .showErrorMessage(`Credentials refused for ${this.site.baseApiUrl}`, { modal: false }, `Update Credentials`)
             .then((userChoice) => {
                 if (userChoice === 'Update Credentials') {
-                    commands.executeCommand(Commands.ShowJiraAuth);
+                    commands.executeCommand(authCommand);
                 }
             });
     }

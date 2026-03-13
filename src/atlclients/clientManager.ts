@@ -307,6 +307,7 @@ export class ClientManager implements Disposable {
 
                 return new ClientError(response.statusText, errString);
             },
+            new BasicInterceptor(site, Container.credentialManager, (s) => this.removeClient(s)),
         );
     }
 

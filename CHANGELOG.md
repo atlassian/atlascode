@@ -22,6 +22,7 @@
 
 ### Bug Fixes
 
+- **Bitbucket (and Jira) Cloud OAuth**: Fixed repeated disconnections after one or two operations. OAuth API clients were not using the auth interceptor, so when the access token expired (e.g. after ~1 hour) every request returned 401 and the cached client was reused until TTL expired. The OAuth HTTP client now uses the same interceptor; on 401/403 the cached client is evicted so the next request creates a new client and refreshes the token automatically instead of staying disconnected.
 - Bitbucket DC: Fixed PRs list pagination
 - Bitbucket DC: Fixed emoji size in PR description and comments
 

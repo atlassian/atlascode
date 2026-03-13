@@ -798,6 +798,42 @@ describe('CredentialManager', () => {
         });
     });
 
+    describe('handleApiUnauthorized', () => {
+        it('should return isOAuth true and not persist Invalid when credentials are OAuth', async () => {
+            const oauthInfo: OAuthInfo = {
+                user: { id: 'user-id', displayName: 'User Name', email: 'user@example.com', avatarUrl: '' },
+                state: AuthInfoState.Valid,
+                access: 'access-token',
+                refresh: 'refresh-token',
+                expirationDate: Date.now() + Time.HOURS,
+                recievedAt: Date.now(),
+            };
+            (Container.context.secrets.get as jest.Mock).mockResolvedValue(JSON.stringify(oauthInfo));
+            const memStore = (credentialManager as any)._memStore;
+            memStore.get(ProductJira.key).set(mockJiraSite.credentialId, oauthInfo);
+
+            const saveAuthInfoSpy = jest.spyOn(credentialManager as any, 'saveAuthInfo');
+
+            const result = await credentialManager.handleApiUnauthorized(mockJiraSite);
+
+            expect(result).toEqual({ isOAuth: true });
+            expect(saveAuthInfoSpy).not.toHaveBeenCalled();
+        });
+
+        it('should persist Invalid and return isOAuth false when credentials are basic/API token', async () => {
+            (Container.context.secrets.get as jest.Mock).mockResolvedValue(JSON.stringify(mockAuthInfo));
+            const memStore = (credentialManager as any)._memStore;
+            memStore.get(ProductJira.key).set(mockJiraSite.credentialId, mockAuthInfo);
+
+            const result = await credentialManager.handleApiUnauthorized(mockJiraSite);
+
+            expect(result).toEqual({ isOAuth: false });
+            expect(Container.context.secrets.store).toHaveBeenCalled();
+            const storedJson = (Container.context.secrets.store as jest.Mock).mock.calls[0][1];
+            expect(JSON.parse(storedJson).state).toBe(AuthInfoState.Invalid);
+        });
+    });
+
     describe('removeAuthInfo', () => {
         it('should remove auth info from memory and secret storage', async () => {
             // Setup memory store with auth info
