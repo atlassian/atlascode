@@ -24,7 +24,7 @@
 
 - Bitbucket DC: Fixed PRs list pagination
 - Bitbucket DC: Fixed emoji size in PR description and comments
-
+- **RovoDev**: Removed dependnecy between Jira auth and RovoDev auth
 - **RovoDev**: Fixed JSON parsing errors in ToolReturnMessage handling - added type checking before JSON.parse() to prevent "Input data should be a String" and invalid JSON errors
 - **Rovo Dev**: Unsupported slash commands now show a helpful warning instead of an error dialog
 - **Rovo Dev**: Added support for /mcp command
