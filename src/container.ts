@@ -235,7 +235,7 @@ export class Container {
             // refresh Rovo Dev when Jira gets enabled or disabled
             context.subscriptions.push(
                 configuration.onDidChange(async (e) => {
-                    if (configuration.changed(e, 'jira.enabled') || configuration.changed(e, 'rovodev.enabled')) {
+                    if (configuration.changed(e, 'rovodev.enabled')) {
                         await this.refreshRovoDev(context);
                         await this._rovoDevEntitlementChecker.triggerEntitlementNotification();
                     }
@@ -328,7 +328,7 @@ export class Container {
     }
 
     private static async refreshRovoDev(context: ExtensionContext) {
-        const shouldEnableRovoDev = (this.config.rovodev.enabled && this.config.jira.enabled) || this.isBoysenberryMode;
+        const shouldEnableRovoDev = this.config.rovodev.enabled || this.isBoysenberryMode;
 
         if (shouldEnableRovoDev) {
             await this.enableRovoDev(context);
