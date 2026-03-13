@@ -1678,8 +1678,23 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             // this is intentionally not awaiting because the API is pretty slow
             this.rovoDevApiClient
                 ?.status()
-                .then((response) => {
+                .then(async (response) => {
                     this._userEmail = response.account.email;
+
+                    // Try to get full user info from Jira site auth (includes displayName)
+                    // Fall back to status API data if unavailable
+                    const primaryAuthInfo = await this.extensionApi.auth.getPrimaryAuthInfo();
+                    if (primaryAuthInfo?.user) {
+                        this._userInfo = primaryAuthInfo.user;
+                    } else {
+                        this._userInfo = {
+                            id: response.account.accountId,
+                            displayName: response.account.email,
+                            email: response.account.email,
+                            avatarUrl: '',
+                        };
+                    }
+
                     if (this._webviewReady) {
                         this.sendProviderReadyEvent(response.account.email);
                     }

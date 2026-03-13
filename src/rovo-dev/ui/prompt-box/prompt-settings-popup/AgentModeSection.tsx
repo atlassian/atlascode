@@ -85,7 +85,7 @@ const AgentModeSection: React.FC<AgentModeSectionProps> = ({
     return (
         <Box xcss={styles.sectionWrapper}>
             <Box as="p" xcss={styles.sectionTitle} style={{ fontSize: '12px' }}>
-                Reasoning
+                Agent Mode
             </Box>
             <Box xcss={styles.modesContainer}>
                 {agentModes.map((modeInfo) => {

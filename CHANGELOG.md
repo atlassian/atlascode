@@ -45,6 +45,7 @@
 ### Bug Fixes
 
 - Bitbucket DC: Fixed PRs list pagination
+- Bitbucket DC: Fixed emoji size in PR description and comments
 
 - **RovoDev**: Fixed JSON parsing errors in ToolReturnMessage handling - added type checking before JSON.parse() to prevent "Input data should be a String" and invalid JSON errors
 - **Rovo Dev**: Unsupported slash commands now show a helpful warning instead of an error dialog
@@ -52,6 +53,7 @@
 - **RovoDev**: Fixed chat message not appearing when clicking "Fix with Rovo Dev" before the chat view is fully initialized - now waits for the webview to be ready before executing the chat command
 - Fixed "Cannot read properties of undefined (reading 'initiateApiTokenAuth')" error
 - Fixed the bug that prevented users from editing selected values in the landing page for Rovo Dev.
+- **RovoDev**: Hide chat action buttons during plan workflows and remove the Generate Code button when a plan is scrapped
 
 ## What's new in 4.0.22
 
