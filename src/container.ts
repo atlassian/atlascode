@@ -232,7 +232,7 @@ export class Container {
                 await this._rovoDevEntitlementChecker.triggerEntitlementNotification();
             });
 
-            // refresh Rovo Dev when Jira gets enabled or disabled
+            // refreshes Rovo Dev
             context.subscriptions.push(
                 configuration.onDidChange(async (e) => {
                     if (configuration.changed(e, 'rovodev.enabled')) {
