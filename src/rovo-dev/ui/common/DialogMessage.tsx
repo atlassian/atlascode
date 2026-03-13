@@ -216,41 +216,40 @@ export const DialogMessageItem: React.FC<{
                                     border: '1px solid var(--vscode-editorGroup-border)',
                                 }}
                             >
-                                {msg.rovoDevLogs && msg.rovoDevLogs.length > 0 && (
-                                    <div
-                                        style={{
-                                            position: 'sticky',
-                                            top: '8px',
-                                            right: '8px',
-                                            zIndex: 10,
-                                            display: 'flex',
-                                            justifyContent: 'flex-end',
-                                            paddingRight: '8px',
-                                            paddingTop: '8px',
-                                            backgroundColor: 'var(--vscode-editor-background)',
-                                            marginLeft: 'auto',
-                                            width: 'fit-content',
-                                            marginRight: '0',
-                                        }}
+                                <div
+                                    style={{
+                                        position: 'sticky',
+                                        top: '8px',
+                                        right: '8px',
+                                        zIndex: 10,
+                                        display: 'flex',
+                                        justifyContent: 'flex-end',
+                                        paddingRight: '8px',
+                                        paddingTop: '8px',
+                                        backgroundColor: 'var(--vscode-editor-background)',
+                                        marginLeft: 'auto',
+                                        width: 'fit-content',
+                                        marginRight: '0',
+                                    }}
+                                >
+                                    <Tooltip
+                                        key={isCopied ? 'copied' : 'copy'}
+                                        content={isCopied ? 'Copied!' : 'Copy to clipboard'}
                                     >
-                                        <Tooltip
-                                            key={isCopied ? 'copied' : 'copy'}
-                                            content={isCopied ? 'Copied!' : 'Copy to clipboard'}
+                                        <button
+                                            aria-label="copy-details-button"
+                                            className={`chat-message-action copy-button ${isCopied ? 'copied' : ''}`}
+                                            onClick={copyToClipboard}
                                         >
-                                            <button
-                                                aria-label="copy-details-button"
-                                                className={`chat-message-action copy-button ${isCopied ? 'copied' : ''}`}
-                                                onClick={copyToClipboard}
-                                            >
-                                                {isCopied ? (
-                                                    <CheckCircleIcon label="Copied!" spacing="none" />
-                                                ) : (
-                                                    <CopyIcon label="Copy to clipboard" spacing="none" />
-                                                )}
-                                            </button>
-                                        </Tooltip>
-                                    </div>
-                                )}
+                                            {isCopied ? (
+                                                <CheckCircleIcon label="Copied!" spacing="none" />
+                                            ) : (
+                                                <CopyIcon label="Copy to clipboard" spacing="none" />
+                                            )}
+                                        </button>
+                                    </Tooltip>
+                                </div>
+
                                 {errorDetailsText}
                             </div>
                         </div>
