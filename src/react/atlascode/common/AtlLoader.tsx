@@ -19,7 +19,12 @@ const styles = {
         },
     },
     spinnerContainer: {
-        height: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
+        height: '100%',
+        minHeight: '200px',
     },
     spinner: {
         width: '48px',
@@ -52,19 +57,9 @@ export const AtlLoader: React.FunctionComponent<AtlLoaderProps> = ({ variant = '
 
     if (variant === 'rovoDev') {
         return (
-            <Container maxWidth="xl" className={classes.spinnerContainer}>
-                <Grid
-                    container
-                    direction="column"
-                    justifyContent="center"
-                    alignItems="center"
-                    style={{ height: '100%' }}
-                >
-                    <Grid item>
-                        <div className={classes.spinner} />
-                    </Grid>
-                </Grid>
-            </Container>
+            <div className={classes.spinnerContainer}>
+                <div className={classes.spinner} />
+            </div>
         );
     }
 
