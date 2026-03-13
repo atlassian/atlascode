@@ -8,6 +8,7 @@ import AtlGlobalStyles from './atlascode/common/AtlGlobalStyles';
 import { AtlLoader } from './atlascode/common/AtlLoader';
 import { ErrorControllerContext, ErrorStateContext, useErrorController } from './atlascode/common/errorController';
 import { PMFControllerContext, PMFStateContext, usePMFController } from './atlascode/common/pmf/pmfController';
+import { RovoDevSpinner } from './atlascode/common/RovoDevSpinner';
 import { atlascodeTheme } from './atlascode/theme/atlascodeTheme';
 import { attachImageErrorHandler } from './imageErrorHandler';
 import { computeStyles, VSCodeStylesContext } from './vscode/theme/styles';
@@ -54,8 +55,11 @@ const root = document.getElementById('root') as HTMLElement;
 
 attachImageErrorHandler();
 
+const viewContent = view.getAttribute('content')!;
+const isRovoDevView = viewContent === 'atlascodeRovoDev';
+
 const App = () => {
-    const Page = routes[view.getAttribute('content')!];
+    const Page = routes[viewContent];
     const [errorState, errorController] = useErrorController();
     const [pmfState, pmfController] = usePMFController();
     const [vscStyles, setVscStyles] = useState(computeStyles());
@@ -77,8 +81,10 @@ const App = () => {
         };
     }, [themeObserver]);
 
+    const suspenseFallback = isRovoDevView ? <RovoDevSpinner /> : <AtlLoader />;
+
     return (
-        <React.Suspense fallback={<AtlLoader />}>
+        <React.Suspense fallback={suspenseFallback}>
             <VSCodeStylesContext.Provider value={vscStyles}>
                 <ThemeProvider theme={currentTheme}>
                     <ErrorControllerContext.Provider value={errorController}>
