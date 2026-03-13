@@ -80,18 +80,25 @@ export class ClientManager implements Disposable {
     /*
      * Method called when another process requests that a sites tokens be refreshed.
      */
-    public requestSite(site: DetailedSiteInfo) {
+    public async requestSite(site: DetailedSiteInfo) {
         const tag = Math.floor(Math.random() * 1000);
 
         Logger.debug(`${tag}: clientManager requestSite ${site.baseApiUrl}`);
 
         if (site.isCloud) {
+            const wasAlreadyFailed =
+                this._failedSites.has(this.keyForSite(site)) || this._failedCredentials.has(site.credentialId);
+            if (wasAlreadyFailed) {
+                Logger.warn(`${tag}: skipping request for previously failed site ${site.baseApiUrl}`);
+                return;
+            }
+
             if (site.product.key === ProductJira.key) {
                 Logger.debug(`${tag}: requesting Jira site due to another process`);
-                this.jiraClient(site);
+                await this.jiraClient(site);
             } else {
                 Logger.debug(`${tag}: requesting Bitbucket site due to another process`);
-                this.bbClient(site);
+                await this.bbClient(site);
             }
             Logger.debug(`${tag}: finished requesting`);
         }

@@ -17,6 +17,7 @@ import {
     jiraTokenAuthProvider,
     oauthJiraTransportFactory,
 } from '../jira/jira-client/providers';
+import { Logger } from '../logger';
 import { PipelineApiImpl } from '../pipelines/pipelines';
 import { SitesAvailableUpdateEvent } from '../siteManager';
 import { CacheMap } from '../util/cachemap';
@@ -232,31 +233,64 @@ describe('ClientManager', () => {
     });
 
     describe('requestSite', () => {
-        it('should request Jira cloud site', () => {
+        it('should request Jira cloud site', async () => {
             const jiraClientSpy = jest.spyOn(clientManager, 'jiraClient').mockResolvedValue({} as any);
 
-            clientManager.requestSite(mockCloudSite);
+            await clientManager.requestSite(mockCloudSite);
 
             expect(jiraClientSpy).toHaveBeenCalledWith(mockCloudSite);
         });
 
-        it('should request Bitbucket cloud site', () => {
+        it('should request Bitbucket cloud site', async () => {
             const bitbucketSite = { ...mockCloudSite, product: ProductBitbucket };
             const bbClientSpy = jest.spyOn(clientManager, 'bbClient').mockResolvedValue({} as any);
 
-            clientManager.requestSite(bitbucketSite);
+            await clientManager.requestSite(bitbucketSite);
 
             expect(bbClientSpy).toHaveBeenCalledWith(bitbucketSite);
         });
 
-        it('should not request server sites', () => {
+        it('should not request server sites', async () => {
             const jiraClientSpy = jest.spyOn(clientManager, 'jiraClient').mockResolvedValue({} as any);
             const bbClientSpy = jest.spyOn(clientManager, 'bbClient').mockResolvedValue({} as any);
 
-            clientManager.requestSite(mockServerSite);
+            await clientManager.requestSite(mockServerSite);
 
             expect(jiraClientSpy).not.toHaveBeenCalled();
             expect(bbClientSpy).not.toHaveBeenCalled();
+        });
+
+        it('should log a warning and not call jiraClient when site was already failed', async () => {
+            const siteKey = `${mockCloudSite.credentialId} - ${mockCloudSite.baseApiUrl}`;
+            (clientManager as any)._failedSites.add(siteKey);
+            const jiraClientSpy = jest.spyOn(clientManager, 'jiraClient').mockResolvedValue({} as any);
+
+            await expect(clientManager.requestSite(mockCloudSite)).resolves.toBeUndefined();
+            expect(jiraClientSpy).not.toHaveBeenCalled();
+            expect(Logger.warn).toHaveBeenCalledWith(
+                expect.stringContaining(`skipping request for previously failed site ${mockCloudSite.baseApiUrl}`),
+            );
+        });
+
+        it('should log a warning and not call bbClient when credential was already failed', async () => {
+            (clientManager as any)._failedCredentials.add(mockCloudSite.credentialId);
+            const bitbucketSite = { ...mockCloudSite, product: ProductBitbucket };
+            const bbClientSpy = jest.spyOn(clientManager, 'bbClient').mockResolvedValue({} as any);
+
+            await expect(clientManager.requestSite(bitbucketSite)).resolves.toBeUndefined();
+            expect(bbClientSpy).not.toHaveBeenCalled();
+            expect(Logger.warn).toHaveBeenCalledWith(
+                expect.stringContaining(`skipping request for previously failed site ${bitbucketSite.baseApiUrl}`),
+            );
+        });
+
+        it('should rethrow without logging when jiraClient fails for the first time', async () => {
+            // No pre-population of failed sets - this is a first-time failure, jiraClient handles logging
+            const error = new Error('Network error');
+            jest.spyOn(clientManager, 'jiraClient').mockRejectedValue(error);
+
+            await expect(clientManager.requestSite(mockCloudSite)).rejects.toThrow('Network error');
+            expect(Logger.warn).not.toHaveBeenCalled();
         });
     });
 
