@@ -605,6 +605,24 @@ export class CredentialManager implements Disposable {
     }
 
     /**
+     * Handles 401/403 from an API call (not the token endpoint). For basic/API token auth, marks credentials
+     * Invalid and persists. For OAuth, does not persist (expired access token can be refreshed on next getAuthInfo).
+     * @returns { isOAuth: true } when credentials are OAuth (caller may evict cached client to trigger refresh).
+     */
+    public async handleApiUnauthorized(site: DetailedSiteInfo): Promise<{ isOAuth: boolean }> {
+        const authInfo = await this.getAuthInfoForProductAndCredentialId(site, true);
+        if (!authInfo) {
+            return { isOAuth: false };
+        }
+        if (isOAuthInfo(authInfo)) {
+            return { isOAuth: true };
+        }
+        authInfo.state = AuthInfoState.Invalid;
+        await this.saveAuthInfo(site, authInfo);
+        return { isOAuth: false };
+    }
+
+    /**
      * Removes an auth item from both the in-memory store and the secretstorage.
      */
     public async removeAuthInfo(site: DetailedSiteInfo): Promise<boolean> {

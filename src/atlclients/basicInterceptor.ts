@@ -3,7 +3,7 @@ import { commands, window } from 'vscode';
 
 import { Commands } from '../constants';
 import { Logger } from '../logger';
-import { AuthInfoState, DetailedSiteInfo, isOAuthInfo, ProductBitbucket } from './authInfo';
+import { AuthInfoState, DetailedSiteInfo, ProductBitbucket } from './authInfo';
 import { AuthInterceptor } from './authInterceptor';
 import { CredentialManager } from './authStore';
 
@@ -43,14 +43,8 @@ export class BasicInterceptor implements AuthInterceptor {
                 Logger.debug(`Received ${e.response?.status} - marking credentials as invalid`);
                 this.showError();
                 this._invalidCredentials = true;
-                this.authStore.getAuthInfo(this.site).then((authInfo) => {
-                    if (authInfo && !isOAuthInfo(authInfo)) {
-                        // Only persist Invalid for basic/API token auth. For OAuth, 401/403 often means
-                        // expired access token; the refresh token may still be valid and the next
-                        // getAuthInfo will refresh. Persisting Invalid here would force unnecessary re-login.
-                        authInfo.state = AuthInfoState.Invalid;
-                        this.authStore.saveAuthInfo(this.site, authInfo);
-                    } else if (authInfo && isOAuthInfo(authInfo)) {
+                this.authStore.handleApiUnauthorized(this.site).then(({ isOAuth }) => {
+                    if (isOAuth) {
                         this.onOAuthUnauthorized?.(this.site);
                     }
                 });
