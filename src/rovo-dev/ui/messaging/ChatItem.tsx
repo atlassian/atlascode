@@ -23,7 +23,6 @@ interface ChatItemProps {
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
         onRestartProcess: () => void;
-        onOpenLogFile: () => void;
         onError: (error: Error, errorMessage: string) => void;
     };
     drawerOpen: boolean;
@@ -104,7 +103,6 @@ export const ChatItem = React.memo<ChatItemProps>(
                     onRestartProcess={renderProps.onRestartProcess}
                     onToolPermissionChoice={onToolPermissionChoice}
                     customButton={customButton}
-                    onOpenLogFile={renderProps.onOpenLogFile}
                     onLinkClick={onLinkClick}
                 />
             );
