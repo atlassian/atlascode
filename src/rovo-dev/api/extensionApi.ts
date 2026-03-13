@@ -6,6 +6,7 @@ import { Commands } from 'src/constants';
 import { Container } from 'src/container';
 import { Logger } from 'src/logger';
 import { SearchJiraHelper } from 'src/views/jira/searchJiraHelper';
+import { isExpectedAuthError } from 'src/views/jira/treeViews/utils';
 import { getHtmlForView } from 'src/webview/common/getHtmlForView';
 import { commands, ConfigurationChangeEvent, Uri } from 'vscode';
 
@@ -36,9 +37,11 @@ export class JiraApi {
             try {
                 assignedIssuesForSite = await this.fetchWorkItemsFromApi(site);
             } catch (error) {
-                // If API fails (e.g., scoped token limitations), return empty array
-                // The UI will handle hiding the section when empty
-                Logger.error(error, 'Failed to fetch work items from API:' + error.message);
+                if (isExpectedAuthError(error)) {
+                    Logger.warn('Failed to fetch work items from API:' + (error as Error).message);
+                } else {
+                    Logger.error(error, 'Failed to fetch work items from API:' + (error as Error).message);
+                }
                 return [];
             }
         }

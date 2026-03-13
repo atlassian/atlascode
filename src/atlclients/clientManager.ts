@@ -54,7 +54,6 @@ export class ClientManager implements Disposable {
     private _agentChanged: boolean = false;
     private hasWarnedOfFailure = false;
     private _failedSites: Set<string> = new Set(); // Track sites that have failed
-    private _failedCredentials: Set<string> = new Set(); // Track credentials (by credentialId) that have failed to avoid duplicate errors
 
     constructor(context: ExtensionContext) {
         context.subscriptions.push(
@@ -68,13 +67,11 @@ export class ClientManager implements Disposable {
     dispose() {
         this._clients.clear();
         this._failedSites.clear();
-        this._failedCredentials.clear();
     }
 
     private onAuthChange() {
-        // When credentials change, clear all failed sites and credentials to give them a fresh chance
+        // When credentials change, clear all failed sites to give them a fresh chance
         this._failedSites.clear();
-        this._failedCredentials.clear();
     }
 
     /*
@@ -86,8 +83,7 @@ export class ClientManager implements Disposable {
         Logger.debug(`${tag}: clientManager requestSite ${site.baseApiUrl}`);
 
         if (site.isCloud) {
-            const wasAlreadyFailed =
-                this._failedSites.has(this.keyForSite(site)) || this._failedCredentials.has(site.credentialId);
+            const wasAlreadyFailed = this._failedSites.has(this.keyForSite(site));
             if (wasAlreadyFailed) {
                 Logger.warn(`${tag}: skipping request for previously failed site ${site.baseApiUrl}`);
                 return;
@@ -171,14 +167,6 @@ export class ClientManager implements Disposable {
     public async jiraClient(site: DetailedSiteInfo): Promise<JiraClient<DetailedSiteInfo>> {
         const tag = Math.floor(Math.random() * 1000);
 
-        // If this credential has failed before across any site, don't retry to avoid duplicate errors
-        if (this._failedCredentials.has(site.credentialId)) {
-            Logger.debug(`Skipping jiraClient for ${site.host} - credential ${site.credentialId} previously failed`);
-            return Promise.reject(
-                new Error(`Unable to connect to ${site.product.name}. Please sign in again to continue.`),
-            );
-        }
-
         // If this specific site has failed before, don't retry either
         const siteKey = this.keyForSite(site);
         if (this._failedSites.has(siteKey)) {
@@ -232,9 +220,8 @@ export class ClientManager implements Disposable {
             });
         } catch (e) {
             Logger.error(e as Error, `${tag}: Error creating Jira client for ${site.baseApiUrl}`);
-            // Mark both the site and the credential as failed to avoid repeated errors
+            // Mark this site as failed to avoid repeated errors
             this._failedSites.add(siteKey);
-            this._failedCredentials.add(site.credentialId);
             throw e;
         }
 
@@ -244,16 +231,14 @@ export class ClientManager implements Disposable {
                 await newClient.getCurrentUser();
             } catch (e) {
                 Logger.warn(e as Error, `${tag}: getCurrentUser failed for ${site.baseApiUrl}`);
-                // Mark both the site and credential as failed
+                // Mark this site as failed
                 this._failedSites.add(siteKey);
-                this._failedCredentials.add(site.credentialId);
                 throw e;
             }
         }
 
-        // Success - clear any previous failure status for both site and credential
+        // Success - clear any previous failure status for this site
         this._failedSites.delete(siteKey);
-        this._failedCredentials.delete(site.credentialId);
         return newClient;
     }
 

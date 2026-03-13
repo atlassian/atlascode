@@ -21,7 +21,7 @@ export interface TreeViewIssue extends MinimalIssue<DetailedSiteInfo> {
     children: TreeViewIssue[];
 }
 
-function isExpectedAuthError(error: unknown): boolean {
+export function isExpectedAuthError(error: unknown): boolean {
     const message = error instanceof Error ? error.message : String(error);
     const normalizedMessage = message.toLowerCase();
     const expectedAuthErrorMessages = ['site previously failed authentication', 'please sign in again to continue'];

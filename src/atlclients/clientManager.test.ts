@@ -272,18 +272,6 @@ describe('ClientManager', () => {
             );
         });
 
-        it('should log a warning and not call bbClient when credential was already failed', async () => {
-            (clientManager as any)._failedCredentials.add(mockCloudSite.credentialId);
-            const bitbucketSite = { ...mockCloudSite, product: ProductBitbucket };
-            const bbClientSpy = jest.spyOn(clientManager, 'bbClient').mockResolvedValue({} as any);
-
-            await expect(clientManager.requestSite(bitbucketSite)).resolves.toBeUndefined();
-            expect(bbClientSpy).not.toHaveBeenCalled();
-            expect(Logger.warn).toHaveBeenCalledWith(
-                expect.stringContaining(`skipping request for previously failed site ${bitbucketSite.baseApiUrl}`),
-            );
-        });
-
         it('should rethrow without logging when jiraClient fails for the first time', async () => {
             // No pre-population of failed sets - this is a first-time failure, jiraClient handles logging
             const error = new Error('Network error');
@@ -538,7 +526,7 @@ describe('ClientManager', () => {
             );
         });
 
-        it('should skip retry and silently reject when credential has previously failed', async () => {
+        it('should skip retry and silently reject when site has previously failed', async () => {
             mockCredentialManager.getAuthInfo.mockResolvedValue(null);
             mockCacheMap.getItem.mockReturnValue(null);
 
@@ -552,47 +540,16 @@ describe('ClientManager', () => {
             mockCredentialManager.getAuthInfo.mockResolvedValue(null);
             mockCacheMap.getItem.mockReturnValue(null);
 
-            // Second call with same credential should reject immediately without retry
+            // Second call for same site should reject immediately without retry
             await expect(clientManager.jiraClient(mockCloudSite)).rejects.toThrow(
-                'Unable to connect to Jira. Please sign in again to continue.',
+                'Site previously failed authentication',
             );
 
-            // Verify getAuthInfo was not called (early rejection based on credential cache)
+            // Verify getAuthInfo was not called (early rejection based on failed site cache)
             expect(mockCredentialManager.getAuthInfo).not.toHaveBeenCalledWith(mockCloudSite, expect.anything());
         });
 
-        it('should skip retry for all sites using failed credential', async () => {
-            const anotherSite = {
-                ...mockCloudSite,
-                id: 'another-site-id',
-                name: 'Another Site',
-                host: 'another.atlassian.net',
-                baseApiUrl: 'https://another.atlassian.net',
-                baseLinkUrl: 'https://another.atlassian.net',
-                credentialId: mockCloudSite.credentialId, // Same credential
-            };
-
-            mockCredentialManager.getAuthInfo.mockResolvedValue(null);
-            mockCacheMap.getItem.mockReturnValue(null);
-
-            // First site with this credential fails
-            await expect(clientManager.jiraClient(mockCloudSite)).rejects.toThrow(
-                'Unable to connect to Jira. Please sign in again to continue.',
-            );
-
-            jest.clearAllMocks();
-            mockCredentialManager.getAuthInfo.mockResolvedValue(null);
-            mockCacheMap.getItem.mockReturnValue(null);
-
-            // Second site with same credential should also be skipped
-            await expect(clientManager.jiraClient(anotherSite)).rejects.toThrow(
-                'Unable to connect to Jira. Please sign in again to continue.',
-            );
-
-            expect(mockCredentialManager.getAuthInfo).not.toHaveBeenCalled();
-        });
-
-        it('should clear failed credentials when onAuthChange is triggered', async () => {
+        it('should clear failed sites when onAuthChange is triggered', async () => {
             mockCredentialManager.getAuthInfo.mockResolvedValue(null);
             mockCacheMap.getItem.mockReturnValue(null);
 
@@ -610,7 +567,7 @@ describe('ClientManager', () => {
                 getCurrentUser: jest.fn().mockResolvedValue(mockUser),
             }));
 
-            // After auth change, same credential should retry without early rejection
+            // After auth change, same site should retry without early rejection
             await clientManager.jiraClient(mockCloudSite);
 
             // getAuthInfo should have been called (no early rejection)
