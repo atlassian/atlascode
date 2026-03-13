@@ -47,21 +47,7 @@ module.exports = {
                 },
                 atlaskit: {
                     name: 'atlaskit',
-                    test: (module) => {
-                        if (!module.resource) {
-                            return false;
-                        }
-                        // Keep @atlaskit/spinner and its dependencies in the main bundle
-                        // so they're available synchronously for the React Suspense fallback
-                        if (
-                            /[\\/]node_modules[\\/]@atlaskit[\\/](spinner|interaction-context|theme|tokens)[\\/]/.test(
-                                module.resource,
-                            )
-                        ) {
-                            return false;
-                        }
-                        return /[\\/]node_modules[\\/]@atlaskit[\\/]/.test(module.resource);
-                    },
+                    test: /[\\/]node_modules[\\/]@atlaskit[\\/]/,
                     chunks: 'all',
                     priority: 20,
                 },
