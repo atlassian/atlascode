@@ -437,6 +437,25 @@ export const appendResponse = (
 
             return [...prev, appendedMessage];
         }
+
+        // Group consecutive _RovoDevDialog messages when thinking blocks are enabled
+        if (
+            thinkingBlockEnabled &&
+            latest?.event_kind === '_RovoDevDialog' &&
+            response?.event_kind === '_RovoDevDialog'
+        ) {
+            const prevGroup = prev.pop();
+            // If previous message is also a thinking group, merge them
+            if (prevGroup !== undefined) {
+                if (Array.isArray(prevGroup)) {
+                    return [...prev, [...prevGroup, latest, response]];
+                } else {
+                    return [...prev, prevGroup, [latest, response]];
+                }
+            }
+            return [...prev, [latest, response]];
+        }
+
         // Group tool return with previous message if applicable
         if (response.event_kind === 'tool-return' || response.event_kind === 'retry-prompt') {
             if (response.event_kind === 'tool-return') {
@@ -469,6 +488,12 @@ export const appendResponse = (
             }
         }
     } else {
+        // Add consecutive _RovoDevDialog to existing thinking block if latest is already a thinking block array
+        if (thinkingBlockEnabled && response?.event_kind === '_RovoDevDialog') {
+            latest.push(response);
+            return [...prev, latest];
+        }
+
         if (response.event_kind === 'tool-return' || response.event_kind === 'retry-prompt') {
             if (response.event_kind === 'tool-return') {
                 handleAppendModifiedFileToolReturns(response);
