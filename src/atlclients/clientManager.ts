@@ -54,6 +54,7 @@ export class ClientManager implements Disposable {
     private _agentChanged: boolean = false;
     private hasWarnedOfFailure = false;
     private _failedSites: Set<string> = new Set(); // Track sites that have failed
+    private _failedCredentials: Set<string> = new Set(); // Track credentials (by credentialId) that have failed to avoid duplicate errors
 
     constructor(context: ExtensionContext) {
         context.subscriptions.push(
@@ -67,28 +68,37 @@ export class ClientManager implements Disposable {
     dispose() {
         this._clients.clear();
         this._failedSites.clear();
+        this._failedCredentials.clear();
     }
 
     private onAuthChange() {
-        // When credentials change, clear all failed sites to give them a fresh chance
+        // When credentials change, clear all failed sites and credentials to give them a fresh chance
         this._failedSites.clear();
+        this._failedCredentials.clear();
     }
 
     /*
      * Method called when another process requests that a sites tokens be refreshed.
      */
-    public requestSite(site: DetailedSiteInfo) {
+    public async requestSite(site: DetailedSiteInfo) {
         const tag = Math.floor(Math.random() * 1000);
 
         Logger.debug(`${tag}: clientManager requestSite ${site.baseApiUrl}`);
 
         if (site.isCloud) {
+            const wasAlreadyFailed =
+                this._failedSites.has(this.keyForSite(site)) || this._failedCredentials.has(site.credentialId);
+            if (wasAlreadyFailed) {
+                Logger.warn(`${tag}: skipping request for previously failed site ${site.baseApiUrl}`);
+                return;
+            }
+
             if (site.product.key === ProductJira.key) {
                 Logger.debug(`${tag}: requesting Jira site due to another process`);
-                this.jiraClient(site);
+                await this.jiraClient(site);
             } else {
                 Logger.debug(`${tag}: requesting Bitbucket site due to another process`);
-                this.bbClient(site);
+                await this.bbClient(site);
             }
             Logger.debug(`${tag}: finished requesting`);
         }
@@ -161,11 +171,18 @@ export class ClientManager implements Disposable {
     public async jiraClient(site: DetailedSiteInfo): Promise<JiraClient<DetailedSiteInfo>> {
         const tag = Math.floor(Math.random() * 1000);
 
-        // If this site has failed before, don't retry - silently reject to avoid spam
+        // If this credential has failed before across any site, don't retry to avoid duplicate errors
+        if (this._failedCredentials.has(site.credentialId)) {
+            Logger.debug(`Skipping jiraClient for ${site.host} - credential ${site.credentialId} previously failed`);
+            return Promise.reject(
+                new Error(`Unable to connect to ${site.product.name}. Please sign in again to continue.`),
+            );
+        }
+
+        // If this specific site has failed before, don't retry either
         const siteKey = this.keyForSite(site);
         if (this._failedSites.has(siteKey)) {
-            Logger.debug(`Skipping jiraClient for ${site.host} - previously failed`);
-            // Return rejected promise without logging error - caller's catch block will handle it
+            Logger.debug(`Skipping jiraClient for ${site.host} - site previously failed`);
             return Promise.reject(new Error(`Site previously failed authentication`));
         }
 
@@ -215,8 +232,9 @@ export class ClientManager implements Disposable {
             });
         } catch (e) {
             Logger.error(e as Error, `${tag}: Error creating Jira client for ${site.baseApiUrl}`);
-            // Mark this site as failed - don't retry until credentials change
+            // Mark both the site and the credential as failed to avoid repeated errors
             this._failedSites.add(siteKey);
+            this._failedCredentials.add(site.credentialId);
             throw e;
         }
 
@@ -226,14 +244,16 @@ export class ClientManager implements Disposable {
                 await newClient.getCurrentUser();
             } catch (e) {
                 Logger.warn(e as Error, `${tag}: getCurrentUser failed for ${site.baseApiUrl}`);
-                // Mark this site as failed
+                // Mark both the site and credential as failed
                 this._failedSites.add(siteKey);
+                this._failedCredentials.add(site.credentialId);
                 throw e;
             }
         }
 
-        // Success - clear any previous failure status
+        // Success - clear any previous failure status for both site and credential
         this._failedSites.delete(siteKey);
+        this._failedCredentials.delete(site.credentialId);
         return newClient;
     }
 
