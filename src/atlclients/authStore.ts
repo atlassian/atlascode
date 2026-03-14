@@ -49,13 +49,19 @@ export type CheckedScopes = {
     checkedScopes: { [key: string]: boolean };
 };
 
+type FailedRefreshEntry = {
+    attemptsCount: number;
+    lastAttemptAt: Date;
+    permanentFailure?: boolean;
+};
+
 export class CredentialManager implements Disposable {
     private _memStore: Map<string, Map<string, AuthInfo>> = new Map<string, Map<string, AuthInfo>>();
     private _queue = new PQueue({ concurrency: 1 });
     private _refresher = new OAuthRefesher();
     private negotiator: Negotiator;
     private _refreshInFlight = new Map<string, Promise<void>>();
-    private _failedRefreshCache = new Map<string, { attemptsCount: number; lastAttemptAt: Date }>();
+    private _failedRefreshCache = new Map<string, FailedRefreshEntry>();
 
     constructor(
         context: ExtensionContext,
@@ -366,6 +372,12 @@ export class CredentialManager implements Disposable {
         if (!isOAuthInfo(credentials)) {
             return authInfo; // not an OAuth info, no need to refresh
         }
+
+        if (credentials.state === AuthInfoState.Invalid) {
+            Logger.debug(`Skipping token refresh for ${site.baseApiUrl}; credentials are invalid.`);
+            return credentials;
+        }
+
         const GRACE_PERIOD = 30 * Time.MINUTES;
 
         if (credentials.expirationDate) {
@@ -535,6 +547,13 @@ export class CredentialManager implements Disposable {
 
         const failedRefresh = this._failedRefreshCache.get(site.credentialId);
         if (failedRefresh) {
+            if (failedRefresh.permanentFailure) {
+                Logger.debug(
+                    `Skipping token refresh for credentialID: ${site.credentialId} due to permanent previous failure.`,
+                );
+                return undefined;
+            }
+
             const RETRY_DELAY = 5 * Time.MINUTES;
             if (failedRefresh.attemptsCount > 5) {
                 const timeSinceLastAttempt = Date.now() - failedRefresh.lastAttemptAt.getTime();
@@ -592,6 +611,12 @@ export class CredentialManager implements Disposable {
                     // Do not invalidate on transient errors (e.g. network) - credentials stay valid for retry later
                 }
                 if (tokenResponse.shouldInvalidate) {
+                    this._failedRefreshCache.set(site.credentialId, {
+                        attemptsCount: (this._failedRefreshCache.get(site.credentialId)?.attemptsCount ?? 0) + 1,
+                        lastAttemptAt: new Date(),
+                        permanentFailure: true,
+                    });
+
                     Logger.error(
                         new Error(
                             `Token refresh failed - credentials invalidated for credentialId: ${site.credentialId}`,
