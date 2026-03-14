@@ -4,15 +4,9 @@ import { appendResponse, ChatMessage, parseToolReturnMessage } from './utils';
 import { Response } from './utils';
 
 describe('appendResponse', () => {
-    const mockHandleAppendModifiedFileToolReturns = jest.fn();
-
-    beforeEach(() => {
-        jest.clearAllMocks();
-    });
-
     it('should return prev when response is null', () => {
         const prev: Response[] = [{ event_kind: '_RovoDevUserPrompt', content: 'test' }];
-        const result = appendResponse(prev, null, mockHandleAppendModifiedFileToolReturns, true);
+        const result = appendResponse(prev, null, true);
         expect(result).toEqual(prev);
     });
 
@@ -20,7 +14,7 @@ describe('appendResponse', () => {
         const prev: Response[] = [{ event_kind: 'text', content: 'Hello ', index: 0 }];
         const response = { event_kind: 'text', content: 'world', index: 0 } as const;
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
+        const result = appendResponse(prev, response, true);
 
         expect(result).toHaveLength(1);
         expect(result[0]).toEqual({ event_kind: 'text', content: 'Hello world', index: 0 });
@@ -30,7 +24,7 @@ describe('appendResponse', () => {
         const prev: Response[] = [{ event_kind: '_RovoDevUserPrompt', content: 'Hello' }];
         const response = { event_kind: 'text', content: 'world', index: 0 } as const;
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
+        const result = appendResponse(prev, response, true);
 
         expect(result).toHaveLength(2);
         expect(result[0]).toEqual({ event_kind: '_RovoDevUserPrompt', content: 'Hello' });
@@ -70,9 +64,8 @@ describe('appendResponse', () => {
             toolCallMessage: toolCallMessage2,
         };
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
+        const result = appendResponse(prev, response, true);
 
-        expect(mockHandleAppendModifiedFileToolReturns).toHaveBeenCalledWith(response);
         expect(result).toHaveLength(1);
         expect(Array.isArray(result[0])).toBe(true);
         expect(result[0]).toHaveLength(2);
@@ -96,7 +89,7 @@ describe('appendResponse', () => {
             toolCallMessage,
         };
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
+        const result = appendResponse(prev, response, true);
 
         expect(result).toHaveLength(2);
         expect(result[0]).toEqual({ event_kind: '_RovoDevUserPrompt', content: 'user message' });
@@ -130,7 +123,7 @@ describe('appendResponse', () => {
             toolCallMessage,
         };
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
+        const result = appendResponse(prev, response, true);
 
         expect(result).toHaveLength(2);
         expect(Array.isArray(result[1])).toBe(true);
@@ -184,7 +177,7 @@ describe('appendResponse', () => {
             toolCallMessage: toolCallMessage3,
         };
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
+        const result = appendResponse(prev, response, true);
 
         expect(result).toHaveLength(1);
         expect(Array.isArray(result[0])).toBe(true);
@@ -212,7 +205,7 @@ describe('appendResponse', () => {
             },
         ] as const;
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
+        const result = appendResponse(prev, response, true);
 
         expect(result).toHaveLength(2);
         expect(result[0]).toEqual({ event_kind: '_RovoDevUserPrompt', content: 'previous' });
@@ -225,7 +218,7 @@ describe('appendResponse', () => {
             { event_kind: 'tool-call', tool_name: 'grep', args: 'args1', tool_call_id: 'id1' },
         ] as const;
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
+        const result = appendResponse(prev, response, true);
 
         expect(result).toHaveLength(1);
         expect(result[0]).toEqual(response[0]);
@@ -238,7 +231,7 @@ describe('appendResponse', () => {
         const prev: Response[] = [existingArray];
         const response = { event_kind: 'text', content: 'new message', index: 0 } as const;
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
+        const result = appendResponse(prev, response, true);
 
         expect(result).toHaveLength(2);
         expect(result[0]).toEqual(existingArray);
@@ -277,9 +270,8 @@ describe('appendResponse', () => {
             toolCallMessage: toolCallMessage2,
         };
 
-        const result = appendResponse([prev], response, mockHandleAppendModifiedFileToolReturns, false);
+        const result = appendResponse([prev], response, false);
 
-        expect(mockHandleAppendModifiedFileToolReturns).toHaveBeenCalledWith(response);
         expect(result).toHaveLength(2);
         expect(result[0]).toEqual(prev);
         expect(result[1]).toEqual(response);

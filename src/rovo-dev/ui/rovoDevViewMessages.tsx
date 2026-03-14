@@ -43,7 +43,6 @@ export const enum RovoDevViewResponseType {
     SetAgentMode = 'setAgentMode',
     SetAgentModel = 'setAgentModel',
     GetCurrentAgentMode = 'getCurrentAgentMode',
-    FilterModifiedFilesByContent = 'filterModifiedFilesByContent',
     OpenExternalLink = 'openExternalLink',
     MessageRendered = 'messageRendered',
     ReportRenderError = 'reportRenderError',
@@ -53,6 +52,7 @@ export const enum RovoDevViewResponseType {
     FetchSavedPrompts = 'fetchSavedPrompts',
     AskUserQuestionsSubmit = 'askUserQuestionsSubmit',
     ExitPlanModeSubmit = 'exitPlanModeSubmit',
+    RefreshModifiedFiles = 'refreshModifiedFiles',
 }
 
 export type FileOperationType = 'modify' | 'create' | 'delete';
@@ -107,7 +107,6 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.SetAgentMode, { mode: AgentMode }>
     | ReducerAction<RovoDevViewResponseType.SetAgentModel, { model: RovoDevAgentModel }>
     | ReducerAction<RovoDevViewResponseType.GetCurrentAgentMode>
-    | ReducerAction<RovoDevViewResponseType.FilterModifiedFilesByContent, { files: ModifiedFile[] }>
     | ReducerAction<RovoDevViewResponseType.OpenExternalLink, { href: string }>
     | ReducerAction<RovoDevViewResponseType.MessageRendered, { promptId: string }>
     | ReducerAction<
@@ -124,4 +123,5 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.ShowSessionHistory>
     | ReducerAction<RovoDevViewResponseType.FetchSavedPrompts>
     | ReducerAction<RovoDevViewResponseType.AskUserQuestionsSubmit, AskUserQuestionsResultMessage>
-    | ReducerAction<RovoDevViewResponseType.ExitPlanModeSubmit, ExitPlanModeResultMessage>;
+    | ReducerAction<RovoDevViewResponseType.ExitPlanModeSubmit, ExitPlanModeResultMessage>
+    | ReducerAction<RovoDevViewResponseType.RefreshModifiedFiles>;
