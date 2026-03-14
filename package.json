@@ -1234,7 +1234,7 @@
                 "atlascode.rovodev.enabled": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Rovo Dev Agentic AI enabled.\nIt requires Jira to be enabled.",
+                    "description": "Rovo Dev Agentic AI enabled.",
                     "scope": "window",
                     "order": 1
                 },
