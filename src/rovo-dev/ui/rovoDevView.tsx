@@ -1162,7 +1162,6 @@ const RovoDevView: React.FC = () => {
                             isRetryAfterErrorButtonEnabled,
                             retryPromptAfterError,
                             onRestartProcess: handleRestartProcess,
-                            onOpenLogFile: () => postMessage({ type: RovoDevViewResponseType.OpenRovoDevLogFile }),
                             onError,
                         }}
                         messagingApi={{

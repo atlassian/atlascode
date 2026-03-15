@@ -26,7 +26,6 @@ interface ChatStreamProps {
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
         onRestartProcess: () => void;
-        onOpenLogFile: () => void;
         onError: (error: Error, errorMessage: string) => void;
     };
     messagingApi: ReturnType<
@@ -272,7 +271,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             retryAfterError={renderProps.retryPromptAfterError}
                             onRestartProcess={renderProps.onRestartProcess}
                             onToolPermissionChoice={onToolPermissionChoice}
-                            onOpenLogFile={renderProps.onOpenLogFile}
                             onLinkClick={onLinkClick}
                         />
                     ))}
