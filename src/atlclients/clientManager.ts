@@ -61,6 +61,7 @@ export class ClientManager implements Disposable {
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
             Container.credentialManager.onDidAuthChange(this.onAuthChange, this),
         );
+        Container.credentialManager.setOnOAuthApiUnauthorized((site) => this.removeClient(site));
         this.onConfigurationChanged(configuration.initializingChangeEvent);
     }
 
@@ -307,7 +308,7 @@ export class ClientManager implements Disposable {
 
                 return new ClientError(response.statusText, errString);
             },
-            new BasicInterceptor(site, Container.credentialManager, (s) => this.removeClient(s)),
+            new BasicInterceptor(site, Container.credentialManager),
         );
     }
 

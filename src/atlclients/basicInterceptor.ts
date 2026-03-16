@@ -7,13 +7,10 @@ import { AuthInfoState, DetailedSiteInfo, ProductBitbucket } from './authInfo';
 import { AuthInterceptor } from './authInterceptor';
 import { CredentialManager } from './authStore';
 
-/** Callback when 401/403 is received for OAuth (e.g. evict cached client so next request triggers refresh). */
-export type OnOAuthUnauthorized = (site: DetailedSiteInfo) => void;
-
 /**
  * BasicInterceptor detects any 401 or 403 responses from the REST service and blocks further requests with the same
- * client. For basic/API token auth, credentials are marked Invalid and persisted. For OAuth, Invalid is not persisted;
- * optional onOAuthUnauthorized evicts cached client so the next request triggers token refresh.
+ * client. It delegates to CredentialManager.handleApiUnauthorized; the auth store decides whether to persist Invalid
+ * and takes care of evicting cached clients for OAuth so the next request triggers token refresh.
  */
 export class BasicInterceptor implements AuthInterceptor {
     private _requestInterceptor: (config: AxiosRequestConfig) => any;
@@ -24,7 +21,6 @@ export class BasicInterceptor implements AuthInterceptor {
     constructor(
         private site: DetailedSiteInfo,
         private authStore: CredentialManager,
-        private onOAuthUnauthorized?: OnOAuthUnauthorized,
     ) {
         this._responseInterceptor = (value: AxiosResponse<any>) => {
             return value;
@@ -43,11 +39,7 @@ export class BasicInterceptor implements AuthInterceptor {
                 Logger.debug(`Received ${e.response?.status} - marking credentials as invalid`);
                 this.showError();
                 this._invalidCredentials = true;
-                this.authStore.handleApiUnauthorized(this.site).then(({ isOAuth }) => {
-                    if (isOAuth) {
-                        this.onOAuthUnauthorized?.(this.site);
-                    }
-                });
+                this.authStore.handleApiUnauthorized(this.site);
             }
             return Promise.reject(e);
         };

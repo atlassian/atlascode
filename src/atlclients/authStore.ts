@@ -56,6 +56,7 @@ export class CredentialManager implements Disposable {
     private negotiator: Negotiator;
     private _refreshInFlight = new Map<string, Promise<void>>();
     private _failedRefreshCache = new Map<string, { attemptsCount: number; lastAttemptAt: Date }>();
+    private _onOAuthApiUnauthorized?: (site: DetailedSiteInfo) => void;
 
     constructor(
         context: ExtensionContext,
@@ -64,6 +65,14 @@ export class CredentialManager implements Disposable {
         this._memStore.set(ProductJira.key, new Map<string, AuthInfo>());
         this._memStore.set(ProductBitbucket.key, new Map<string, AuthInfo>());
         this.negotiator = new Negotiator(context.globalState);
+    }
+
+    /**
+     * Register a callback to run when an API 401/403 is handled for OAuth credentials. Used by ClientManager
+     * to evict the cached client so the next request creates a new one and triggers token refresh.
+     */
+    public setOnOAuthApiUnauthorized(callback: (site: DetailedSiteInfo) => void): void {
+        this._onOAuthApiUnauthorized = callback;
     }
 
     private _onDidAuthChange = new EventEmitter<AuthInfoEvent>();
@@ -606,8 +615,8 @@ export class CredentialManager implements Disposable {
 
     /**
      * Handles 401/403 from an API call (not the token endpoint). For basic/API token auth, marks credentials
-     * Invalid and persists. For OAuth, does not persist (expired access token can be refreshed on next getAuthInfo).
-     * @returns { isOAuth: true } when credentials are OAuth (caller may evict cached client to trigger refresh).
+     * Invalid and persists. For OAuth, does not persist and invokes the registered callback so cached clients
+     * can be evicted and the next request triggers token refresh.
      */
     public async handleApiUnauthorized(site: DetailedSiteInfo): Promise<{ isOAuth: boolean }> {
         const authInfo = await this.getAuthInfoForProductAndCredentialId(site, true);
@@ -615,6 +624,7 @@ export class CredentialManager implements Disposable {
             return { isOAuth: false };
         }
         if (isOAuthInfo(authInfo)) {
+            this._onOAuthApiUnauthorized?.(site);
             return { isOAuth: true };
         }
         authInfo.state = AuthInfoState.Invalid;

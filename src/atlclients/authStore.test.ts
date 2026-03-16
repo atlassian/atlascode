@@ -799,7 +799,7 @@ describe('CredentialManager', () => {
     });
 
     describe('handleApiUnauthorized', () => {
-        it('should return isOAuth true and not persist Invalid when credentials are OAuth', async () => {
+        it('should return isOAuth true, not persist Invalid, and invoke callback when credentials are OAuth', async () => {
             const oauthInfo: OAuthInfo = {
                 user: { id: 'user-id', displayName: 'User Name', email: 'user@example.com', avatarUrl: '' },
                 state: AuthInfoState.Valid,
@@ -813,11 +813,14 @@ describe('CredentialManager', () => {
             memStore.get(ProductJira.key).set(mockJiraSite.credentialId, oauthInfo);
 
             const saveAuthInfoSpy = jest.spyOn(credentialManager as any, 'saveAuthInfo');
+            const onOAuthApiUnauthorized = jest.fn();
+            credentialManager.setOnOAuthApiUnauthorized(onOAuthApiUnauthorized);
 
             const result = await credentialManager.handleApiUnauthorized(mockJiraSite);
 
             expect(result).toEqual({ isOAuth: true });
             expect(saveAuthInfoSpy).not.toHaveBeenCalled();
+            expect(onOAuthApiUnauthorized).toHaveBeenCalledWith(mockJiraSite);
         });
 
         it('should persist Invalid and return isOAuth false when credentials are basic/API token', async () => {

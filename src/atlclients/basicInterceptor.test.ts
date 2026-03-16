@@ -101,7 +101,7 @@ describe('BasicInterceptor', () => {
     });
 
     describe('error interceptor', () => {
-        it('should call handleApiUnauthorized on 401 and not call onOAuthUnauthorized when not OAuth', async () => {
+        it('should call handleApiUnauthorized on 401', async () => {
             mockAuthStore.handleApiUnauthorized.mockResolvedValue({ isOAuth: false });
 
             const interceptor = new BasicInterceptor(mockSite, mockAuthStore);
@@ -119,23 +119,6 @@ describe('BasicInterceptor', () => {
                 'Update Credentials',
             );
             expect(mockAuthStore.handleApiUnauthorized).toHaveBeenCalledWith(mockSite);
-        });
-
-        it('should call onOAuthUnauthorized when handleApiUnauthorized returns isOAuth true', async () => {
-            mockAuthStore.handleApiUnauthorized.mockResolvedValue({ isOAuth: true });
-            const onOAuthUnauthorized = jest.fn();
-
-            const interceptor = new BasicInterceptor(mockSite, mockAuthStore, onOAuthUnauthorized);
-            await interceptor.attachToAxios(mockAxiosInstance);
-
-            const errorInterceptor = mockResponseInterceptorUse.mock.calls[0][1];
-            const error401 = { response: { status: 401 } };
-
-            await expect(errorInterceptor(error401)).rejects.toBe(error401);
-
-            expect(mockAuthStore.handleApiUnauthorized).toHaveBeenCalledWith(mockSite);
-            await new Promise((r) => setImmediate(r));
-            expect(onOAuthUnauthorized).toHaveBeenCalledWith(mockSite);
         });
 
         it('should call handleApiUnauthorized on 403', async () => {
