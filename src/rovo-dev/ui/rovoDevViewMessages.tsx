@@ -45,7 +45,6 @@ export const enum RovoDevViewResponseType {
     GetCurrentAgentMode = 'getCurrentAgentMode',
     FilterModifiedFilesByContent = 'filterModifiedFilesByContent',
     OpenExternalLink = 'openExternalLink',
-    OpenRovoDevLogFile = 'openRovoDevLogFile',
     MessageRendered = 'messageRendered',
     ReportRenderError = 'reportRenderError',
     StartNewSession = 'startNewSession',
@@ -110,7 +109,6 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.GetCurrentAgentMode>
     | ReducerAction<RovoDevViewResponseType.FilterModifiedFilesByContent, { files: ModifiedFile[] }>
     | ReducerAction<RovoDevViewResponseType.OpenExternalLink, { href: string }>
-    | ReducerAction<RovoDevViewResponseType.OpenRovoDevLogFile>
     | ReducerAction<RovoDevViewResponseType.MessageRendered, { promptId: string }>
     | ReducerAction<
           RovoDevViewResponseType.ReportRenderError,

@@ -1,6 +1,6 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
-## What's new in 4.0.23
+## What's new in 4.0.25
 
 ### Features
 
@@ -25,13 +25,15 @@
 - **Rovo Dev**: Dismiss "Additional information required" support modal when creating a new chat session
 - **Rovo Dev**: Fix "Tool call results were provided, but the message history is empty" when sending first message after creating a new chat (clear pending deferred tool state on new session)
 - Bitbucket DC: Fixed PRs list pagination
-
+- Bitbucket DC: Fixed emoji size in PR description and comments
+- **RovoDev**: Removed dependency between Jira auth and RovoDev auth
 - **RovoDev**: Fixed JSON parsing errors in ToolReturnMessage handling - added type checking before JSON.parse() to prevent "Input data should be a String" and invalid JSON errors
 - **Rovo Dev**: Unsupported slash commands now show a helpful warning instead of an error dialog
 - **Rovo Dev**: Added support for /mcp command
 - **RovoDev**: Fixed chat message not appearing when clicking "Fix with Rovo Dev" before the chat view is fully initialized - now waits for the webview to be ready before executing the chat command
 - Fixed "Cannot read properties of undefined (reading 'initiateApiTokenAuth')" error
 - Fixed the bug that prevented users from editing selected values in the landing page for Rovo Dev.
+- **RovoDev**: Hide chat action buttons during plan workflows and remove the Generate Code button when a plan is scrapped
 
 ## What's new in 4.0.22
 
