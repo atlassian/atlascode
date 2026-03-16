@@ -846,6 +846,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         ) {
             this.refreshDebugPanel();
 
+            this._chatProvider.clearSessionState();
             await webview.postMessage({
                 type: RovoDevProviderMessageType.ClearChat,
             });
@@ -871,6 +872,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             const sessionId = await client.createSession();
             this._revertedChanges = [];
 
+            this._chatProvider.clearSessionState();
             await webview.postMessage({
                 type: RovoDevProviderMessageType.ClearChat,
             });
@@ -897,6 +899,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await RovoDevProcessManager.initializeRovoDev(this._context, true);
 
         this.refreshDebugPanel();
+        this._chatProvider.clearSessionState();
         await webview.postMessage({
             type: RovoDevProviderMessageType.ClearChat,
         });
