@@ -22,8 +22,6 @@
 
 ### Bug Fixes
 
-- **Rovo Dev**: Dismiss "Additional information required" support modal when creating a new chat session
-- **Rovo Dev**: Fix "Tool call results were provided, but the message history is empty" when sending first message after creating a new chat (clear pending deferred tool state on new session)
 - Bitbucket DC: Fixed PRs list pagination
 - Bitbucket DC: Fixed emoji size in PR description and comments
 - **RovoDev**: Removed dependency between Jira auth and RovoDev auth
