@@ -143,7 +143,20 @@ export class RovoDevChatProvider {
         this._lastMessageSentTime = undefined;
     }
 
+    /**
+     * Clears session-scoped state (e.g. pending deferred tool call) so the next
+     * prompt is sent as a normal message instead of tool call results. Call when
+     * starting a new session or clearing the chat so the backend is not sent
+     * tool_call_id + result when message history is empty.
+     */
+    public clearSessionState(): void {
+        this._pendingDeferredRequest = undefined;
+        this._currentPrompt = undefined;
+        this._pendingPrompt = undefined;
+    }
+
     public async clearChat(): Promise<void> {
+        this.clearSessionState();
         await this._webView!.postMessage({
             type: RovoDevProviderMessageType.ClearChat,
         });

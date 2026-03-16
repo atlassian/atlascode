@@ -178,6 +178,7 @@ const RovoDevView: React.FC = () => {
         setHistory([]);
         setTotalModifiedFiles([]);
         setDeepPlanCreated(null);
+        setAskUserQuestionsToolArgs(null);
         setIsFeedbackFormVisible(false);
         setPendingToolCallMessage('');
     }, [keepFiles, totalModifiedFiles]);
@@ -1162,7 +1163,6 @@ const RovoDevView: React.FC = () => {
                             isRetryAfterErrorButtonEnabled,
                             retryPromptAfterError,
                             onRestartProcess: handleRestartProcess,
-                            onOpenLogFile: () => postMessage({ type: RovoDevViewResponseType.OpenRovoDevLogFile }),
                             onError,
                         }}
                         messagingApi={{
