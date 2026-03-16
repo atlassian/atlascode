@@ -101,7 +101,7 @@ export interface ToolReturnParseResult {
     diff?: string;
     filePath?: string;
     title?: string;
-    type?: 'modify' | 'create' | 'delete' | 'open' | 'bash' | 'move';
+    type?: 'modify' | 'create' | 'delete' | 'open' | 'bash' | 'move' | 'subagents';
 }
 
 export type Response = ChatMessage | ChatMessage[] | null;
@@ -130,7 +130,7 @@ export interface ExitPlanModeResultMessage extends DeferredRequestResultMessage 
 
 interface ToolReturnInfo {
     title: string;
-    type: 'modify' | 'create' | 'delete' | 'open' | 'bash' | 'move';
+    type: 'modify' | 'create' | 'delete' | 'open' | 'bash' | 'move' | 'subagents';
 }
 
 export const modifyFileTitleMap: Record<string, ToolReturnInfo> = {
@@ -160,6 +160,12 @@ interface GrepArgs {
 
 interface McpToolArgs {
     tool_name?: string;
+}
+
+interface SubagentArgs {
+    subagent_names?: string[];
+    task_names?: string[];
+    task_descriptions?: string[];
 }
 
 /**
@@ -295,6 +301,18 @@ export function parseToolReturnMessage(
                     content: 'Exited plan mode',
                     type: 'modify',
                 });
+                break;
+            case 'invoke_subagents':
+                const subagentArgs = safeJsonParse<SubagentArgs>(msg.toolCallMessage.args);
+                const subagentNames = subagentArgs?.subagent_names || [];
+                const taskNames = subagentArgs?.task_names || [];
+                for (let i = 0; i < subagentNames.length; i++) {
+                    resp.push({
+                        content: `Subagent: ${subagentNames[i]}`,
+                        title: taskNames[i] || '',
+                        type: 'subagents',
+                    });
+                }
                 break;
             case 'mcp__atlassian__invoke_tool':
             case 'mcp__atlassian__get_tool_schema':

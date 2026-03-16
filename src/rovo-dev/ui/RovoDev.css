@@ -271,6 +271,25 @@ body {
     color: var(--vscode-input-placeholderForeground)
 }
 
+.subagent-task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 4px;
+    width: 100%;
+}
+
+.subagent-task-item code {
+    display: block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background-color: var(--vscode-textBlockQuote-background);
+    color: var(--vscode-input-placeholderForeground);
+    font-size: 0.9em;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
 .tool-return-file-path:hover {
     background-color: var(--vscode-list-hoverBackground);
     cursor: pointer;

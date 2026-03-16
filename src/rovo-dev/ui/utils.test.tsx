@@ -508,6 +508,62 @@ describe('parseToolReturnMessage', () => {
             expect(mockOnError).not.toHaveBeenCalled();
         });
 
+        it('should return individual subagent tasks for invoke_subagents tool', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'invoke_subagents',
+                args: '{"subagent_names": ["Explore", "General Purpose"], "task_names": ["Find UI components", "Fix auth bug"], "task_descriptions": ["desc1", "desc2"]}',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'invoke_subagents',
+                content: 'Subagent results here',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(2);
+            expect(result[0]).toEqual({
+                content: 'Subagent: Explore',
+                title: 'Find UI components',
+                type: 'subagents',
+            });
+            expect(result[1]).toEqual({
+                content: 'Subagent: General Purpose',
+                title: 'Fix auth bug',
+                type: 'subagents',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should return empty array for invoke_subagents with no args', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'invoke_subagents',
+                args: '{}',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'invoke_subagents',
+                content: '',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(0);
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
         it('should handle parse errors gracefully and call onError', () => {
             const toolCallMessage: RovoDevToolCallResponse = {
                 event_kind: 'tool-call',

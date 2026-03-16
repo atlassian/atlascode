@@ -26,6 +26,7 @@
 
 ### Features
 
+- **Rovo Dev**: Added UI support for `invoke_subagents` tool — displays delegated subagent tasks with names during execution
 - **Rovo Dev**: Support new `plan` mode with `deferred_request` handling
 - **RovoDev**: Added copy code button within the Rovo Dev chat for code blocks in the chat.
 
