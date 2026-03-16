@@ -403,7 +403,6 @@ export function extractLastNMessages(n: number, history: Response[]) {
 /**
  *
  * @param prev current state of response history
- /**
  * @returns updated response history
  */
 export const appendResponse = (
