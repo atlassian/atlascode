@@ -52,7 +52,7 @@ export class RovoDevChatContextProvider {
         // search for a Jira work item
         if (dragDropData.find((x) => x.includes('atlascode.views.jira.assignedWorkItemsTreeView'))) {
             const uri = URL.parse(dragDropData[0] || dragDropData[1]);
-            if (uri?.hostname.endsWith('.atlassian.net')) {
+            if (uri?.hostname.endsWith('.atlassian.net') || uri?.hostname.endsWith('.jira.com')) {
                 const urlString = uri.toString();
                 await this.addContextItem({
                     contextType: 'jiraWorkItem',
