@@ -32,7 +32,6 @@ export const enum RovoDevProviderMessageType {
     GetCurrentBranchNameComplete = 'getCurrentBranchNameComplete',
     SetChatContext = 'setChatContext',
     CheckGitChangesComplete = 'checkGitChangesComplete',
-    FilterModifiedFilesByContentComplete = 'filterModifiedFilesByContentComplete',
     ForceStop = 'forceStop',
     ShowFeedbackForm = 'showFeedbackForm',
     SetDebugPanel = 'setDebugPanel',
@@ -52,6 +51,7 @@ export const enum RovoDevProviderMessageType {
     ShowDeferredExitPlanMode = 'showDeferredExitPlanMode',
     UpdateAgentModels = 'updateAgentModels',
     AgentModelChanged = 'agentModelChanged',
+    SetModifiedFiles = 'setModifiedFiles',
 }
 
 export type RovoDevDisabledReason = DisabledState['subState'];
@@ -114,7 +114,6 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.GetCurrentBranchNameComplete, { data: { branchName?: string } }>
     | ReducerAction<RovoDevProviderMessageType.SetChatContext, { context: RovoDevContextItem[] }>
     | ReducerAction<RovoDevProviderMessageType.CheckGitChangesComplete, { hasChanges: boolean }>
-    | ReducerAction<RovoDevProviderMessageType.FilterModifiedFilesByContentComplete, { filteredFiles: ModifiedFile[] }>
     | ReducerAction<RovoDevProviderMessageType.ForceStop>
     | ReducerAction<RovoDevProviderMessageType.ShowFeedbackForm>
     | ReducerAction<
@@ -154,4 +153,5 @@ export type RovoDevProviderMessage =
           { toolCallId: string; args: RovoDevExitPlanModeToolArgs }
       >
     | ReducerAction<RovoDevProviderMessageType.UpdateAgentModels, { models: RovoDevAgentModel[] }>
-    | ReducerAction<RovoDevProviderMessageType.AgentModelChanged, RovoDevAgentModel>;
+    | ReducerAction<RovoDevProviderMessageType.AgentModelChanged, RovoDevAgentModel>
+    | ReducerAction<RovoDevProviderMessageType.SetModifiedFiles, { files: ModifiedFile[] }>;
