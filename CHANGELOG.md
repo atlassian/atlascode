@@ -37,6 +37,7 @@
 
 ### Improvements
 
+- **RovoDev**: Replaced the giant Atlassian logo loader with a standard Atlaskit Spinner for the Rovo Dev tab, and removed the "Loading data…" text. The spinner is eagerly loaded in the main webpack bundle to avoid race conditions with chunk loading.
 - **RovoDev**: Fixed prompt input performance degradation after extended idle periods by properly disposing Monaco editor resources and event listeners on component cleanup
 - **RovoDev**: Refactored JSON parsing logic with `safeJsonParse` helper function to reduce code duplication and improve maintainability
 - **RovoDev**: Centered text within tool call statements in RovoDev chat.
