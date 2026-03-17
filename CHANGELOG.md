@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.27
+
+### Bug Fixes
+
+- Fixed "Please log in again" error message for disabled products so Jira-only and Bitbucket-only users do not see the other product's connection error on startup
+
 ## What's new in 4.0.25
 
 ### Improvements

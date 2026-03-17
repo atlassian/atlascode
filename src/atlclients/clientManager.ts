@@ -33,6 +33,7 @@ import {
     isBasicAuthInfo,
     isOAuthInfo,
     isPATAuthInfo,
+    ProductBitbucket,
     ProductJira,
 } from './authInfo';
 import { BasicInterceptor } from './basicInterceptor';
@@ -359,7 +360,10 @@ export class ClientManager implements Disposable {
         const credentials = await Container.credentialManager.getAuthInfo(site, false);
 
         if (credentials?.state === AuthInfoState.Invalid) {
-            if (!this.hasWarnedOfFailure) {
+            const isProductDisabled =
+                (site.product.key === ProductJira.key && Container.config?.jira?.enabled === false) ||
+                (site.product.key === ProductBitbucket.key && Container.config?.bitbucket?.enabled === false);
+            if (!isProductDisabled && !this.hasWarnedOfFailure) {
                 window
                     .showErrorMessage(
                         `There was an error connecting to ${site.name}. Please log in again.`,
