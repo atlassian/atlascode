@@ -8,6 +8,28 @@
 
 ## What's new in 4.0.25
 
+### Improvements
+
+- **RovoDev**: Replaced `executeKeepFiles` with `invalidateFileCache` API call to eliminate manual file-system-based cache removal
+- **RovoDev**: Replaced tool-return-based file list with `listCachedFiles` API - eliminates fragile client-side heuristic parsing and provides authoritative file list from server; files now refresh after prompt completion, undo, and keep actions
+
+## What's new in 4.0.24
+
+### Improvements
+
+- **RovoDev**: Enhanced "Fix by Rovo Dev" and "Explain by Rovo Dev" code actions with rich context extraction - now includes actual code content, surrounding code, import statements, and structured diagnostics for significantly better AI responses
+
+### Bug Fixes
+
+- **RovoDev**: Fixed chat message not appearing when clicking "Fix with Rovo Dev" before the chat view is fully initialized - now waits for the webview to be ready before executing the chat command
+
+### Features
+
+- **RovoDev**: Added copy code button within the Rovo Dev chat for code blocks in the chat.
+
+
+## What's new in 4.0.23
+
 ### Features
 
 - **Rovo Dev**: Support new `plan` mode with `deferred_request` handling
@@ -21,6 +43,7 @@
 
 ### Improvements
 
+- **RovoDev**: Replaced the giant Atlassian logo loader with a standard Atlaskit Spinner for the Rovo Dev tab, and removed the "Loading data…" text. The spinner is eagerly loaded in the main webpack bundle to avoid race conditions with chunk loading.
 - **RovoDev**: Fixed prompt input performance degradation after extended idle periods by properly disposing Monaco editor resources and event listeners on component cleanup
 - **RovoDev**: Refactored JSON parsing logic with `safeJsonParse` helper function to reduce code duplication and improve maintainability
 - **RovoDev**: Centered text within tool call statements in RovoDev chat.

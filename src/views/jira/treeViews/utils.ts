@@ -21,6 +21,14 @@ export interface TreeViewIssue extends MinimalIssue<DetailedSiteInfo> {
     children: TreeViewIssue[];
 }
 
+export function isExpectedAuthError(error: unknown): boolean {
+    const message = error instanceof Error ? error.message : String(error);
+    const normalizedMessage = message.toLowerCase();
+    const expectedAuthErrorMessages = ['site previously failed authentication', 'please sign in again to continue'];
+
+    return expectedAuthErrorMessages.some((expectedMessage) => normalizedMessage.includes(expectedMessage));
+}
+
 /** This function returns a Promise that never rejects. */
 export async function executeJqlQuery(jqlEntry: JQLEntry): Promise<TreeViewIssue[]> {
     try {
@@ -50,7 +58,12 @@ export async function executeJqlQuery(jqlEntry: JQLEntry): Promise<TreeViewIssue
             }
         }
     } catch (e) {
-        Logger.error(e, 'Failed to execute default JQL query for site', jqlEntry.siteId);
+        if (isExpectedAuthError(e)) {
+            const message = e instanceof Error ? e.message : String(e);
+            Logger.warn('Failed to execute default JQL query for site', jqlEntry.siteId, message);
+        } else {
+            Logger.error(e as Error, 'Failed to execute default JQL query for site', jqlEntry.siteId);
+        }
     }
 
     return [];

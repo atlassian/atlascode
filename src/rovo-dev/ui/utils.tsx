@@ -403,19 +403,16 @@ export function extractLastNMessages(n: number, history: Response[]) {
 /**
  *
  * @param prev current state of response history
- * @param response new incoming response
- * @param handleAppendModifiedFileToolReturns function to handle appending modified file tool returns
  * @returns updated response history
  */
 export const appendResponse = (
     prev: Response[],
     response: Response | Response[],
-    handleAppendModifiedFileToolReturns: (tr: RovoDevToolReturnResponse) => void,
     thinkingBlockEnabled: boolean,
 ): Response[] => {
     if (Array.isArray(response)) {
         for (const _resp of response) {
-            prev = appendResponse(prev, _resp, handleAppendModifiedFileToolReturns, thinkingBlockEnabled);
+            prev = appendResponse(prev, _resp, thinkingBlockEnabled);
         }
         return prev;
     }
@@ -458,9 +455,6 @@ export const appendResponse = (
 
         // Group tool return with previous message if applicable
         if (response.event_kind === 'tool-return' || response.event_kind === 'retry-prompt') {
-            if (response.event_kind === 'tool-return') {
-                handleAppendModifiedFileToolReturns(response);
-            }
             if (thinkingBlockEnabled) {
                 // Do not group if User, Error message, or Pull Request message is the latest
                 const canGroup =
@@ -495,9 +489,6 @@ export const appendResponse = (
         }
 
         if (response.event_kind === 'tool-return' || response.event_kind === 'retry-prompt') {
-            if (response.event_kind === 'tool-return') {
-                handleAppendModifiedFileToolReturns(response);
-            }
             if (thinkingBlockEnabled) {
                 latest.push(response);
                 return [...prev, latest];

@@ -1,6 +1,9 @@
 import { RovoDevTelemetryProvider } from '../rovoDevTelemetryProvider';
 import {
     AgentMode,
+    CachedFileEntry,
+    InvalidateCacheResponse,
+    RestoreFromCacheResponse,
     RovoDevAvailableModesResponse,
     RovoDevCancelResponse,
     RovoDevChatRequest,
@@ -368,5 +371,34 @@ export class RovoDevApiClient {
 
         const jsonResponse = (await response.json()) as RovoDevSavedPromptsResponse;
         return jsonResponse;
+    }
+
+    /** Invokes the GET `/v3/cache-file-path` API.
+     * @returns {Promise<CachedFileEntry[]>} An array of cached file entries.
+     */
+    public async listCachedFiles(): Promise<CachedFileEntry[]> {
+        const response = await this.fetchApi('/v3/cache-file-path', 'GET');
+        const data = await response.json();
+        return data.cached_files;
+    }
+
+    /** Invokes the POST `/v3/restore-from-file-cache` API.
+     * @param {string[]?} filePaths Optional array of file paths to restore from cache.
+     * @returns {Promise<RestoreFromCacheResponse>} An object representing the API response.
+     */
+    public async restoreFromFileCache(filePaths?: string[]): Promise<RestoreFromCacheResponse> {
+        const body = filePaths ? JSON.stringify({ file_paths: filePaths }) : JSON.stringify({});
+        const response = await this.fetchApi('/v3/restore-from-file-cache', 'POST', body);
+        return await response.json();
+    }
+
+    /** Invokes the POST `/v3/invalidate-file-cache` API.
+     * @param {string[]?} filePaths Optional array of file paths to invalidate from cache.
+     * @returns {Promise<InvalidateCacheResponse>} An object representing the API response.
+     */
+    public async invalidateFileCache(filePaths?: string[]): Promise<InvalidateCacheResponse> {
+        const body = filePaths ? JSON.stringify({ file_paths: filePaths }) : JSON.stringify({});
+        const response = await this.fetchApi('/v3/invalidate-file-cache', 'POST', body);
+        return await response.json();
     }
 }
