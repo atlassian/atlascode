@@ -27,7 +27,7 @@ import {
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import path from 'path';
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { AnalyticsView } from 'src/analyticsTypes';
 
 import { User } from '../../../bitbucket/model';
