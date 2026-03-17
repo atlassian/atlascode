@@ -1,4 +1,4 @@
-import { User } from '@atlassianlabs/jira-pi-common-models';
+import { User } from '@atlassian-pi/jira-pi-common-models';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 

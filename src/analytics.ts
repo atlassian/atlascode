@@ -2,15 +2,15 @@ import { Uri } from 'vscode';
 
 import { ScreenEvent, TrackEvent, UIEvent } from './analytics-node-client/src/types';
 import {
-    AnalyticRequiredFieldInfo,
-    CreateIssueExitReason,
     CreateIssueSource,
     CreatePRAttributes,
     CreatePRButtonClickedEventAttributes,
     CreatePrTerminalSelection,
     ErrorProductArea,
     FeedbackSentEvent,
+    IssueAbandonedAnalyticsData,
     UIErrorInfo,
+    WorkItemAbandonedAnalyticsData,
 } from './analyticsTypes';
 import {
     DetailedSiteInfo,
@@ -28,6 +28,7 @@ import { QuickFlowAnalyticsEvent } from './onboarding/quickFlow/types';
 import { RovoDevCommonParams, RovodevPerformanceTag } from './rovo-dev/analytics/events';
 import { NotificationSurface, NotificationType } from './views/notifications/notificationManager';
 import { NotificationSource } from './views/notifications/notificationSources';
+import { CreateIssueAnalyticsData } from './webviews/createIssueWebview';
 
 // IMPORTANT
 // Make sure there is a corresponding event with the correct attributes in the Data Portal for any event created here.
@@ -248,7 +249,7 @@ export function performanceEvent(
 export async function performanceEvent(
     tag: JiraPerfEvents,
     measure: number,
-    params?: JiraIssueTypeParams,
+    params?: JiraIssueTypeParams | CreateIssueAnalyticsData,
 ): Promise<TrackEvent>;
 export function performanceEvent(tag: string, measure: number, params?: Record<string, any>): Promise<TrackEvent> {
     return trackEvent('performanceEvent', 'atlascode', {
@@ -266,8 +267,13 @@ export function rovoDevEntitlementCheckEvent(isEntitled: boolean, type: string, 
 
 // Jira issue events
 
-export async function issueCreatedEvent(site: DetailedSiteInfo, issueKey: string): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'created', 'issue', { actionSubjectId: issueKey });
+export async function issueCreatedEvent(
+    site: DetailedSiteInfo,
+    issueKey: string,
+    additionalAttributes?: Record<string, unknown>,
+): Promise<TrackEvent> {
+    const eventProps = { actionSubjectId: issueKey, attributes: additionalAttributes };
+    return instanceTrackEvent(site, 'created', 'issue', eventProps);
 }
 
 export async function issueTransitionedEvent(
@@ -314,31 +320,23 @@ export async function issueUpdatedEvent(
     });
 }
 
-export async function startIssueCreationEvent(source: CreateIssueSource, product: Product): Promise<TrackEvent> {
-    return trackEvent('createFromSource', 'issue', { attributes: { source: source, hostProduct: product.name } });
+export async function startIssueCreationEvent(
+    creationSource: CreateIssueSource,
+    product: Product,
+): Promise<TrackEvent> {
+    return trackEvent('createFromSource', 'issue', { attributes: { creationSource, hostProduct: product.name } });
 }
 
 export async function createIssueAbandonedEvent(
-    site: DetailedSiteInfo,
-    exitReason: CreateIssueExitReason,
-    filledFields: string[],
-    missedRequiredFields: AnalyticRequiredFieldInfo[],
-    hadValidationError: boolean,
-    apiError?: unknown,
-    submitAttempt?: number,
-    errorBannerDetails?: string | { message?: string; title?: string } | undefined,
+    data: IssueAbandonedAnalyticsData | WorkItemAbandonedAnalyticsData,
 ): Promise<TrackEvent> {
+    const { site, apiError, ...attributes } = data;
     const apiErrorMessage = apiError instanceof Error ? apiError.message : apiError ? String(apiError) : undefined;
 
     return instanceTrackEvent(site, 'abandoned', 'createIssue', {
         attributes: {
-            exitReason,
-            filledFields,
-            missedRequiredFields,
-            hadValidationError,
             apiErrorMessage,
-            submitAttempt: submitAttempt ?? 0,
-            errorBannerDetails,
+            ...attributes,
         },
     });
 }
@@ -478,6 +476,7 @@ export async function viewScreenEvent(
     screenName: string,
     site?: DetailedSiteInfo,
     product?: Product,
+    additionalAttributes?: Record<string, unknown>,
 ): Promise<ScreenEvent> {
     let screenEvent = instanceType(
         {
@@ -491,7 +490,7 @@ export async function viewScreenEvent(
     if (screenName === 'atlascodeWelcomeScreen') {
         screenEvent = excludeFromActivity(screenEvent);
     }
-
+    screenEvent.attributes = { ...screenEvent.attributes, ...(additionalAttributes || {}) };
     const e = {
         tenantIdType: null,
         name: screenName,

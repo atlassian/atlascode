@@ -1,11 +1,7 @@
 import * as React from 'react';
 import { RovodevStaticConfig } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
-import {
-    RovoDevFeatures,
-    RovoDevProviderMessage,
-    RovoDevProviderMessageType,
-} from 'src/rovo-dev/rovoDevWebviewProviderMessages';
+import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
 import { DetailedSiteInfo, MinimalIssue } from '../../api/extensionApiTypes';
 import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc, OpenJiraFunc } from '../common/common';
@@ -15,7 +11,6 @@ import { CredentialHint } from '../landing-page/disabled-messages/RovoDevLoginFo
 import { RovoDevLanding } from '../landing-page/RovoDevLanding';
 import { useMessagingApi } from '../messagingApi';
 import { McpConsentChoice, RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
-import { CodePlanButton } from '../technical-plan/CodePlanButton';
 import { ToolCallItem } from '../tools/ToolCallItem';
 import { ConnectionTimeout, DialogMessage, PullRequestMessage, Response, scrollToEnd } from '../utils';
 import { ChatStreamMessageRenderer } from './ChatStreamMessageRenderer';
@@ -31,15 +26,13 @@ interface ChatStreamProps {
         isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
         retryPromptAfterError: () => void;
         onRestartProcess: () => void;
-        onOpenLogFile: () => void;
         onError: (error: Error, errorMessage: string) => void;
     };
     messagingApi: ReturnType<
         typeof useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>
     >;
     pendingToolCall: string;
-    deepPlanCreated: boolean;
-    executeCodePlan: () => void;
+    deepPlanCreated: string | null;
     currentState: State;
     onChangesGitPushed: (msg: PullRequestMessage, pullRequestCreated: boolean) => void;
     onCollapsiblePanelExpanded: () => void;
@@ -54,7 +47,7 @@ interface ChatStreamProps {
     onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionDialogChoice | 'enableYolo') => void;
     onLinkClick: (href: string) => void;
     credentialHints?: CredentialHint[];
-    features?: RovoDevFeatures;
+    onGeneratePlanClick?: (planId: string, proceed: boolean) => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -63,7 +56,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     renderProps,
     pendingToolCall,
     deepPlanCreated,
-    executeCodePlan,
     currentState,
     messagingApi,
     onChangesGitPushed,
@@ -79,7 +71,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     onToolPermissionChoice,
     onLinkClick,
     credentialHints,
-    features,
+    onGeneratePlanClick,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -233,7 +225,8 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
-            {!RovodevStaticConfig.isBBY && (
+            {(!RovodevStaticConfig.isBBY ||
+                (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance')) && (
                 <RovoDevLanding
                     currentState={currentState}
                     isHistoryEmpty={chatHistory.length === 0}
@@ -246,7 +239,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     onJiraItemClick={onJiraItemClick}
                     onLinkClick={onLinkClick}
                     credentialHints={credentialHints}
-                    features={features}
                 />
             )}
             {!isChatHistoryDisabled && (
@@ -259,6 +251,8 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
                     renderProps={renderProps}
                     onLinkClick={onLinkClick}
+                    deepPlanCreated={deepPlanCreated}
+                    onGeneratePlanClick={onGeneratePlanClick}
                 />
             )}
 
@@ -277,7 +271,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                             retryAfterError={renderProps.retryPromptAfterError}
                             onRestartProcess={renderProps.onRestartProcess}
                             onToolPermissionChoice={onToolPermissionChoice}
-                            onOpenLogFile={renderProps.onOpenLogFile}
                             onLinkClick={onLinkClick}
                         />
                     ))}
@@ -304,7 +297,6 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
             {!isChatHistoryDisabled && currentState.state === 'WaitingForPrompt' && (
                 <FollowUpActionFooter>
-                    {deepPlanCreated && <CodePlanButton execute={executeCodePlan} />}
                     {canCreatePR && !deepPlanCreated && hasChangesInGit && (
                         <PullRequestForm
                             onCancel={() => {

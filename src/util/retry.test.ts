@@ -1,6 +1,12 @@
+import { Logger } from '../logger';
 import { categorizeNetworkError, retryWithBackoff } from './retry';
 
+jest.mock('../logger');
+
 describe('retryWithBackoff', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
     it('should succeed on first attempt if no error', async () => {
         const mockOperation = jest.fn().mockResolvedValue('success');
 
@@ -51,6 +57,38 @@ describe('retryWithBackoff', () => {
             }),
         ).rejects.toEqual(authError);
 
+        expect(mockOperation).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not log errors when retries are exhausted (caller responsible)', async () => {
+        const mockError = new Error('ENOTFOUND api.bitbucket.org');
+        const mockOperation = jest.fn().mockRejectedValue(mockError);
+
+        await expect(
+            retryWithBackoff(mockOperation, {
+                maxAttempts: 3,
+                initialDelayMs: 10,
+            }),
+        ).rejects.toThrow();
+
+        // Verify Logger.error was NOT called - caller is responsible for logging
+        expect(Logger.error).not.toHaveBeenCalled();
+        expect(mockOperation).toHaveBeenCalledTimes(3);
+    });
+
+    it('should not log errors for non-retryable errors (caller responsible)', async () => {
+        const authError = { response: { status: 401 }, message: 'Unauthorized' };
+        const mockOperation = jest.fn().mockRejectedValue(authError);
+
+        await expect(
+            retryWithBackoff(mockOperation, {
+                maxAttempts: 3,
+                initialDelayMs: 10,
+            }),
+        ).rejects.toEqual(authError);
+
+        // Verify Logger.error was NOT called - caller is responsible for logging
+        expect(Logger.error).not.toHaveBeenCalled();
         expect(mockOperation).toHaveBeenCalledTimes(1);
     });
 });

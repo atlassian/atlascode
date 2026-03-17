@@ -105,12 +105,22 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async nextPage(paginatedPullRequests: PaginatedPullRequests): Promise<PaginatedPullRequests> {
-        if (!paginatedPullRequests.next) {
-            return { ...paginatedPullRequests, next: undefined };
-        }
-        const { data } = await this.client.get(paginatedPullRequests.next);
+        const nextPageUrl = paginatedPullRequests.next;
+        let next: string | undefined = undefined;
 
-        const prs: PullRequest[] = data.values!.map((pr: any) =>
+        if (!nextPageUrl) {
+            return { ...paginatedPullRequests, next };
+        }
+        const { data } = await this.client.get(nextPageUrl);
+        const { isLastPage, nextPageStart, values } = data;
+
+        if (isLastPage === false && nextPageStart !== undefined) {
+            const url = new URL(nextPageUrl);
+            url.searchParams.set('start', `${nextPageStart}`);
+            next = url.href;
+        }
+
+        const prs: PullRequest[] = values!.map((pr: any) =>
             ServerPullRequestApi.toPullRequestModel(
                 pr,
                 0,
@@ -118,7 +128,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                 paginatedPullRequests.workspaceRepo,
             ),
         );
-        return { ...paginatedPullRequests, data: prs, next: undefined };
+        return { ...paginatedPullRequests, data: prs, next };
     }
 
     async getLatest(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {

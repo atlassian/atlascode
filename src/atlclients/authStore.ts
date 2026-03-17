@@ -49,13 +49,19 @@ export type CheckedScopes = {
     checkedScopes: { [key: string]: boolean };
 };
 
+type FailedRefreshEntry = {
+    attemptsCount: number;
+    lastAttemptAt: Date;
+    permanentFailure?: boolean;
+};
+
 export class CredentialManager implements Disposable {
     private _memStore: Map<string, Map<string, AuthInfo>> = new Map<string, Map<string, AuthInfo>>();
     private _queue = new PQueue({ concurrency: 1 });
     private _refresher = new OAuthRefesher();
     private negotiator: Negotiator;
     private _refreshInFlight = new Map<string, Promise<void>>();
-    private _failedRefreshCache = new Map<string, { attemptsCount: number; lastAttemptAt: Date }>();
+    private _failedRefreshCache = new Map<string, FailedRefreshEntry>();
 
     constructor(
         context: ExtensionContext,
@@ -87,7 +93,7 @@ export class CredentialManager implements Disposable {
 
     public async checkScopes(site: DetailedSiteInfo, scopes: string[]): Promise<CheckedScopes | undefined> {
         // Scopes are only applicable to cloud sites
-        if (!site.host.endsWith('.atlassian.net')) {
+        if (!site.host.endsWith('.atlassian.net') && !site.host.endsWith('.jira.com')) {
             return undefined;
         }
 
@@ -120,7 +126,7 @@ export class CredentialManager implements Disposable {
 
     async getApiTokenIfExists(site: DetailedSiteInfo): Promise<BasicAuthInfo | undefined> {
         // Only applicable to cloud sites
-        if (!site.host.endsWith('.atlassian.net')) {
+        if (!site.host.endsWith('.atlassian.net') && !site.host.endsWith('.jira.com')) {
             return undefined;
         }
 
@@ -144,7 +150,7 @@ export class CredentialManager implements Disposable {
     async findApiTokenForSite(site?: DetailedSiteInfo | string): Promise<BasicAuthInfo | undefined> {
         const siteToCheck = typeof site === 'string' ? Container.siteManager.getSiteForId(ProductJira, site) : site;
 
-        if (!siteToCheck || !siteToCheck.host.endsWith('.atlassian.net')) {
+        if (!siteToCheck || (!siteToCheck.host.endsWith('.atlassian.net') && !siteToCheck.host.endsWith('.jira.com'))) {
             return undefined;
         }
 
@@ -153,7 +159,7 @@ export class CredentialManager implements Disposable {
 
         // For a cloud site - check if we have another cloud site with the same user and API key
         const promises = sites
-            .filter((site) => site.host.endsWith('.atlassian.net'))
+            .filter((site) => site.host.endsWith('.atlassian.net') || site.host.endsWith('.jira.com'))
             .map(async (site) => {
                 const authInfo = await this.getAuthInfo(site);
                 if (authInfo?.user.email === selectedSiteEmail && isBasicAuthInfo(authInfo)) {
@@ -366,7 +372,13 @@ export class CredentialManager implements Disposable {
         if (!isOAuthInfo(credentials)) {
             return authInfo; // not an OAuth info, no need to refresh
         }
-        const GRACE_PERIOD = 10 * Time.MINUTES;
+
+        if (credentials.state === AuthInfoState.Invalid) {
+            Logger.debug(`Skipping token refresh for ${site.baseApiUrl}; credentials are invalid.`);
+            return credentials;
+        }
+
+        const GRACE_PERIOD = 30 * Time.MINUTES;
 
         if (credentials.expirationDate) {
             const diff = credentials.expirationDate - Date.now();
@@ -535,6 +547,13 @@ export class CredentialManager implements Disposable {
 
         const failedRefresh = this._failedRefreshCache.get(site.credentialId);
         if (failedRefresh) {
+            if (failedRefresh.permanentFailure) {
+                Logger.debug(
+                    `Skipping token refresh for credentialID: ${site.credentialId} due to permanent previous failure.`,
+                );
+                return undefined;
+            }
+
             const RETRY_DELAY = 5 * Time.MINUTES;
             if (failedRefresh.attemptsCount > 5) {
                 const timeSinceLastAttempt = Date.now() - failedRefresh.lastAttemptAt.getTime();
@@ -576,13 +595,36 @@ export class CredentialManager implements Disposable {
                 Logger.debug(`Successfully saved refreshed tokens for credentialId: ${site.credentialId}`);
             } else if (tokenResponse.shouldInvalidate || tokenResponse.shouldSlowDown) {
                 if (tokenResponse.shouldSlowDown) {
+                    const newAttemptsCount = (this._failedRefreshCache.get(site.credentialId)?.attemptsCount ?? 0) + 1;
+                    this._failedRefreshCache.set(site.credentialId, {
+                        attemptsCount: newAttemptsCount,
+                        lastAttemptAt: new Date(),
+                    });
+                    // Only log error after hitting retry limit
+                    if (newAttemptsCount >= 5) {
+                        Logger.error(
+                            new Error(
+                                `Token refresh failed after ${newAttemptsCount} attempts for credentialId: ${site.credentialId}`,
+                            ),
+                        );
+                    }
+                    // Do not invalidate on transient errors (e.g. network) - credentials stay valid for retry later
+                }
+                if (tokenResponse.shouldInvalidate) {
                     this._failedRefreshCache.set(site.credentialId, {
                         attemptsCount: (this._failedRefreshCache.get(site.credentialId)?.attemptsCount ?? 0) + 1,
                         lastAttemptAt: new Date(),
+                        permanentFailure: true,
                     });
+
+                    Logger.error(
+                        new Error(
+                            `Token refresh failed - credentials invalidated for credentialId: ${site.credentialId}`,
+                        ),
+                    );
+                    credentials.state = AuthInfoState.Invalid;
+                    await this.saveAuthInfo(site, credentials);
                 }
-                credentials.state = AuthInfoState.Invalid;
-                await this.saveAuthInfo(site, credentials);
             }
         }
     }

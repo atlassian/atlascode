@@ -1,4 +1,4 @@
-import { JiraClient, JiraCloudClient, JiraServerClient } from '@atlassianlabs/jira-pi-client';
+import { JiraClient, JiraCloudClient, JiraServerClient } from '@atlassian-pi/jira-pi-client';
 import PQueue from 'p-queue';
 import { ConfigurationChangeEvent, ExtensionContext } from 'vscode';
 import { commands, window } from 'vscode';
@@ -17,6 +17,7 @@ import {
     jiraTokenAuthProvider,
     oauthJiraTransportFactory,
 } from '../jira/jira-client/providers';
+import { Logger } from '../logger';
 import { PipelineApiImpl } from '../pipelines/pipelines';
 import { SitesAvailableUpdateEvent } from '../siteManager';
 import { CacheMap } from '../util/cachemap';
@@ -34,8 +35,8 @@ import { ClientManager } from './clientManager';
 import { Negotiator } from './negotiate';
 
 // Mock all external dependencies
-jest.mock('@atlassianlabs/jira-pi-client');
-jest.mock('@atlassianlabs/pi-client-common', () => ({
+jest.mock('@atlassian-pi/jira-pi-client');
+jest.mock('@atlassian-pi/pi-client-common', () => ({
     getProxyHostAndPort: jest.fn().mockReturnValue(['localhost', 8080]),
 }));
 jest.mock('p-queue');
@@ -141,6 +142,7 @@ describe('ClientManager', () => {
         mockCredentialManager = {
             getAuthInfo: jest.fn(),
             refreshAccessToken: jest.fn(),
+            onDidAuthChange: jest.fn().mockReturnValue({ dispose: jest.fn() }),
         };
 
         // Mock Container
@@ -219,7 +221,7 @@ describe('ClientManager', () => {
         it('should register configuration and site manager event handlers', () => {
             expect(configuration.onDidChange).toHaveBeenCalled();
             expect(mockSiteManager.onDidSitesAvailableChange).toHaveBeenCalled();
-            expect(mockContext.subscriptions).toHaveLength(2);
+            expect(mockContext.subscriptions).toHaveLength(3);
         });
     });
 
@@ -231,31 +233,52 @@ describe('ClientManager', () => {
     });
 
     describe('requestSite', () => {
-        it('should request Jira cloud site', () => {
+        it('should request Jira cloud site', async () => {
             const jiraClientSpy = jest.spyOn(clientManager, 'jiraClient').mockResolvedValue({} as any);
 
-            clientManager.requestSite(mockCloudSite);
+            await clientManager.requestSite(mockCloudSite);
 
             expect(jiraClientSpy).toHaveBeenCalledWith(mockCloudSite);
         });
 
-        it('should request Bitbucket cloud site', () => {
+        it('should request Bitbucket cloud site', async () => {
             const bitbucketSite = { ...mockCloudSite, product: ProductBitbucket };
             const bbClientSpy = jest.spyOn(clientManager, 'bbClient').mockResolvedValue({} as any);
 
-            clientManager.requestSite(bitbucketSite);
+            await clientManager.requestSite(bitbucketSite);
 
             expect(bbClientSpy).toHaveBeenCalledWith(bitbucketSite);
         });
 
-        it('should not request server sites', () => {
+        it('should not request server sites', async () => {
             const jiraClientSpy = jest.spyOn(clientManager, 'jiraClient').mockResolvedValue({} as any);
             const bbClientSpy = jest.spyOn(clientManager, 'bbClient').mockResolvedValue({} as any);
 
-            clientManager.requestSite(mockServerSite);
+            await clientManager.requestSite(mockServerSite);
 
             expect(jiraClientSpy).not.toHaveBeenCalled();
             expect(bbClientSpy).not.toHaveBeenCalled();
+        });
+
+        it('should log a warning and not call jiraClient when site was already failed', async () => {
+            const siteKey = `${mockCloudSite.credentialId} - ${mockCloudSite.baseApiUrl}`;
+            (clientManager as any)._failedSites.add(siteKey);
+            const jiraClientSpy = jest.spyOn(clientManager, 'jiraClient').mockResolvedValue({} as any);
+
+            await expect(clientManager.requestSite(mockCloudSite)).resolves.toBeUndefined();
+            expect(jiraClientSpy).not.toHaveBeenCalled();
+            expect(Logger.warn).toHaveBeenCalledWith(
+                expect.stringContaining(`skipping request for previously failed site ${mockCloudSite.baseApiUrl}`),
+            );
+        });
+
+        it('should rethrow without logging when jiraClient fails for the first time', async () => {
+            // No pre-population of failed sets - this is a first-time failure, jiraClient handles logging
+            const error = new Error('Network error');
+            jest.spyOn(clientManager, 'jiraClient').mockRejectedValue(error);
+
+            await expect(clientManager.requestSite(mockCloudSite)).rejects.toThrow('Network error');
+            expect(Logger.warn).not.toHaveBeenCalled();
         });
     });
 
@@ -501,6 +524,54 @@ describe('ClientManager', () => {
             await expect(clientManager.jiraClient(mockCloudSite)).rejects.toThrow(
                 'Unable to connect to Jira. Please sign in again to continue.',
             );
+        });
+
+        it('should skip retry and silently reject when site has previously failed', async () => {
+            mockCredentialManager.getAuthInfo.mockResolvedValue(null);
+            mockCacheMap.getItem.mockReturnValue(null);
+
+            // First call fails
+            await expect(clientManager.jiraClient(mockCloudSite)).rejects.toThrow(
+                'Unable to connect to Jira. Please sign in again to continue.',
+            );
+
+            // Reset mocks to track second call
+            jest.clearAllMocks();
+            mockCredentialManager.getAuthInfo.mockResolvedValue(null);
+            mockCacheMap.getItem.mockReturnValue(null);
+
+            // Second call for same site should reject immediately without retry
+            await expect(clientManager.jiraClient(mockCloudSite)).rejects.toThrow(
+                'Site previously failed authentication',
+            );
+
+            // Verify getAuthInfo was not called (early rejection based on failed site cache)
+            expect(mockCredentialManager.getAuthInfo).not.toHaveBeenCalledWith(mockCloudSite, expect.anything());
+        });
+
+        it('should clear failed sites when onAuthChange is triggered', async () => {
+            mockCredentialManager.getAuthInfo.mockResolvedValue(null);
+            mockCacheMap.getItem.mockReturnValue(null);
+
+            // First call fails
+            await expect(clientManager.jiraClient(mockCloudSite)).rejects.toThrow();
+
+            // Trigger auth change
+            const onAuthChangeHandler = (mockCredentialManager.onDidAuthChange as jest.Mock).mock.calls[0][0];
+            onAuthChangeHandler.call(clientManager);
+
+            jest.clearAllMocks();
+            mockCredentialManager.getAuthInfo.mockResolvedValue(mockOAuthInfo);
+            mockCacheMap.getItem.mockReturnValue(null);
+            (jiraCloudClientConstructor as jest.Mock).mockImplementation(() => ({
+                getCurrentUser: jest.fn().mockResolvedValue(mockUser),
+            }));
+
+            // After auth change, same site should retry without early rejection
+            await clientManager.jiraClient(mockCloudSite);
+
+            // getAuthInfo should have been called (no early rejection)
+            expect(mockCredentialManager.getAuthInfo).toHaveBeenCalled();
         });
     });
 });

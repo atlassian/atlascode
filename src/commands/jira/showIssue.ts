@@ -5,7 +5,7 @@ import {
     isMinimalIssue,
     MinimalIssue,
     MinimalIssueOrKeyAndSite,
-} from '@atlassianlabs/jira-pi-common-models';
+} from '@atlassian-pi/jira-pi-common-models';
 import * as vscode from 'vscode';
 
 import { DetailedSiteInfo, emptySiteInfo, ProductJira } from '../../atlclients/authInfo';

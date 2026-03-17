@@ -1,4 +1,4 @@
-import { isMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { isMinimalIssue, MinimalIssue } from '@atlassian-pi/jira-pi-common-models';
 import axios, { CancelToken, CancelTokenSource } from 'axios';
 import pSettle, { PromiseFulfilledResult } from 'p-settle';
 import * as vscode from 'vscode';

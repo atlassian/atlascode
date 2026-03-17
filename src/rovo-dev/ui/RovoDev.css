@@ -260,6 +260,13 @@ body {
     word-break: break-all;
 }
 
+.tool-return-content p {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;;
+}
+
 .tool-call-item span {
     color: var(--vscode-input-placeholderForeground)
 }
@@ -289,7 +296,6 @@ body {
 .code-plan-button-container {
     display: flex;
     justify-content: flex-start;
-    margin-bottom: 8px;
 }
   
 .code-plan-button {
@@ -308,9 +314,21 @@ body {
     cursor: pointer;
 }
 
+.code-plan-button:disabled {
+    border: 1px solid var(--vscode-editorWidget-border);
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-input-placeholderForeground);
+    cursor: not-allowed;
+}
+
+.code-plan-button:disabled:hover {
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-input-placeholderForeground);
+    cursor: not-allowed;
+}
+
 .code-plan-button span {
     font-size: 14px;
-    color: var(--vscode-button-secondaryForeground);
 }
 
 /* Messaging styles */
@@ -336,6 +354,7 @@ body {
     align-items: center;
     gap: 0;
     margin-bottom: 8px;
+    justify-content: space-between;
 }
 
 .chat-message-action {
@@ -424,7 +443,8 @@ body {
 
 /* Code blocks and quotes */
 .user-message .message-content pre,
-.user-message .message-content code {
+.user-message .message-content code,
+.user-message .message-content blockquote {
     background-color: var(--ds-background-inverse-subtle) !important;
     color: var(--ds-text-inverse) !important;
 }
@@ -874,6 +894,18 @@ body {
     padding: 8px;
 }
 
+.agent-model-selector-item {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    padding: 8px;
+    cursor: pointer;
+}
+
+.agent-model-selector-item:hover {
+    background-color: var(--vscode-list-hoverBackground);
+}
+
 .prompt-settings-action {
     --ds-icon-inverse: var(--vscode-sideBar-background);
     margin-left: auto;
@@ -1004,4 +1036,55 @@ body {
 
 .vscode-high-contrast .rovodev-markdown-link {
     color: inherit;
+}
+/* Code block copy button styles */
+.code-block-wrapper {
+    position: relative;
+    display: block;
+}
+
+.code-block-wrapper-inline {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+.code-copy-button-container {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+}
+
+.code-block-wrapper-inline .code-copy-button-container {
+    position: static;
+    top: unset;
+    right: unset;
+}
+
+.code-copy-button {
+    background-color: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    border: 1px solid var(--vscode-button-border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.code-copy-button:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+.code-copy-button:active {
+    background-color: var(--vscode-button-background);
+}
+
+.code-copy-button.copied {
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
 }

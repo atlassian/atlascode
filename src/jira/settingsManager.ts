@@ -1,6 +1,6 @@
-import { EpicFieldInfo, getEpicFieldInfo, IssueLinkType } from '@atlassianlabs/jira-pi-common-models';
-import { Fields, readField } from '@atlassianlabs/jira-pi-meta-models';
-import { IssueCreateMetadata } from '@atlassianlabs/jira-pi-meta-models';
+import { EpicFieldInfo, getEpicFieldInfo, IssueLinkType } from '@atlassian-pi/jira-pi-common-models';
+import { Fields, readField } from '@atlassian-pi/jira-pi-meta-models';
+import { IssueCreateMetadata } from '@atlassian-pi/jira-pi-meta-models';
 import { Disposable } from 'vscode';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';

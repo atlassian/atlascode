@@ -1,8 +1,10 @@
+import * as path from 'path';
+
 import { BitbucketContext } from '../../bitbucket/bbContext';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketSite, PaginatedPullRequests, WorkspaceRepo } from '../../bitbucket/model';
 import { Logger } from '../../logger';
-import { categorizeNetworkError, retryWithBackoff } from '../../util/retry';
+import { categorizeNetworkError } from '../../util/retry';
 import { PullRequestCreatedMonitor } from './pullRequestCreatedMonitor';
 
 jest.mock('../../bitbucket/bbUtils');
@@ -16,6 +18,7 @@ jest.mock('../../logger', () => ({
     },
 }));
 jest.mock('../../bitbucket/bbLogger');
+jest.mock('path');
 
 const flushPromises = () => new Promise((resolve) => setImmediate(resolve));
 
@@ -29,6 +32,8 @@ describe('PullRequestCreatedMonitor', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+
+        (path.basename as jest.Mock).mockImplementation((p: string) => p.split('/').pop() || p);
 
         mockSite = {
             details: { isCloud: true },
@@ -51,31 +56,10 @@ describe('PullRequestCreatedMonitor', () => {
             getBitbucketRepositories: jest.fn().mockReturnValue([mockRepo]),
         } as unknown as BitbucketContext;
 
-        (retryWithBackoff as jest.Mock).mockImplementation((operation) => operation());
-
         monitor = new PullRequestCreatedMonitor(mockBbContext);
     });
 
-    describe('retry mechanism', () => {
-        it('should use retryWithBackoff with correct configuration', async () => {
-            const mockPRData: PaginatedPullRequests = {
-                workspaceRepo: mockRepo,
-                site: mockSite,
-                data: [],
-            };
-
-            mockPullRequestApi.getLatest.mockResolvedValue(mockPRData);
-
-            monitor.checkForNewActivity();
-            await flushPromises();
-
-            expect(retryWithBackoff).toHaveBeenCalledWith(expect.any(Function), {
-                maxAttempts: 3,
-                initialDelayMs: 1000,
-                maxDelayMs: 5000,
-            });
-        });
-
+    describe('successful fetch', () => {
         it('should reset consecutive failures on successful fetch', async () => {
             monitor['_consecutiveFailures'].set(mockRepo.rootUri, 3);
 
@@ -97,7 +81,7 @@ describe('PullRequestCreatedMonitor', () => {
     describe('error tracking', () => {
         it('should increment consecutive failures counter on error', async () => {
             const mockError = new Error('ETIMEDOUT');
-            (retryWithBackoff as jest.Mock).mockRejectedValue(mockError);
+            mockPullRequestApi.getLatest.mockRejectedValue(mockError);
             (categorizeNetworkError as jest.Mock).mockReturnValue({
                 category: 'timeout',
                 message: 'Request timeout',
@@ -114,7 +98,7 @@ describe('PullRequestCreatedMonitor', () => {
 
         it('should categorize errors for analytics', async () => {
             const mockError = new Error('ENOTFOUND api.bitbucket.org');
-            (retryWithBackoff as jest.Mock).mockRejectedValue(mockError);
+            mockPullRequestApi.getLatest.mockRejectedValue(mockError);
             (categorizeNetworkError as jest.Mock).mockReturnValue({
                 category: 'dns',
                 message: 'DNS resolution failed',
@@ -128,7 +112,7 @@ describe('PullRequestCreatedMonitor', () => {
 
         it('should handle errors correctly when never had successful fetch', async () => {
             const mockError = new Error('Network error');
-            (retryWithBackoff as jest.Mock).mockRejectedValue(mockError);
+            mockPullRequestApi.getLatest.mockRejectedValue(mockError);
             (categorizeNetworkError as jest.Mock).mockReturnValue({
                 category: 'network',
                 message: 'Network error',
@@ -146,7 +130,7 @@ describe('PullRequestCreatedMonitor', () => {
             monitor['_lastSuccessfulFetch'].set(mockRepo.rootUri, pastTime);
 
             const mockError = new Error('Network error');
-            (retryWithBackoff as jest.Mock).mockRejectedValue(mockError);
+            mockPullRequestApi.getLatest.mockRejectedValue(mockError);
             (categorizeNetworkError as jest.Mock).mockReturnValue({
                 category: 'network',
                 message: 'Network error',
@@ -161,7 +145,7 @@ describe('PullRequestCreatedMonitor', () => {
 
         it('should log warning after 5 consecutive failures', async () => {
             const mockError = new Error('ENOTFOUND api.bitbucket.org');
-            (retryWithBackoff as jest.Mock).mockRejectedValue(mockError);
+            mockPullRequestApi.getLatest.mockRejectedValue(mockError);
             (categorizeNetworkError as jest.Mock).mockReturnValue({
                 category: 'dns',
                 message: 'DNS resolution failed',
@@ -178,7 +162,7 @@ describe('PullRequestCreatedMonitor', () => {
 
         it('should not log warning if failures below threshold', async () => {
             const mockError = new Error('Network error');
-            (retryWithBackoff as jest.Mock).mockRejectedValue(mockError);
+            mockPullRequestApi.getLatest.mockRejectedValue(mockError);
             (categorizeNetworkError as jest.Mock).mockReturnValue({
                 category: 'network',
                 message: 'Network error',
@@ -190,6 +174,213 @@ describe('PullRequestCreatedMonitor', () => {
             await flushPromises();
 
             expect(Logger.warn).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('credential skipping optimization', () => {
+        let mockRepo2: WorkspaceRepo;
+        let mockRepo3: WorkspaceRepo;
+        let mockSite2: BitbucketSite;
+
+        beforeEach(() => {
+            // Repo 2 with same credential as repo 1
+            mockSite2 = {
+                details: { isCloud: true, credentialId: 'cred-1' },
+                ownerSlug: 'test-owner2',
+                repoSlug: 'test-repo2',
+            } as BitbucketSite;
+
+            mockRepo2 = {
+                rootUri: '/path/to/repo2',
+                mainSiteRemote: {
+                    site: mockSite2,
+                },
+            } as WorkspaceRepo;
+
+            // Repo 3 with different credential
+            mockRepo3 = {
+                rootUri: '/path/to/repo3',
+                mainSiteRemote: {
+                    site: {
+                        details: { isCloud: true, credentialId: 'cred-2' },
+                        ownerSlug: 'test-owner3',
+                        repoSlug: 'test-repo3',
+                    } as BitbucketSite,
+                },
+            } as WorkspaceRepo;
+
+            // Update mockSite to have same credential as mockSite2
+            mockSite.details = { isCloud: true, credentialId: 'cred-1' } as any;
+        });
+
+        it('should skip repos with same credential after first failure', async () => {
+            mockBbContext.getBitbucketRepositories = jest.fn().mockReturnValue([mockRepo, mockRepo2, mockRepo3]);
+
+            let callCount = 0;
+            const mockError = new Error('Auth failed');
+            mockPullRequestApi.getLatest.mockImplementation(() => {
+                callCount++;
+                if (callCount === 1) {
+                    // First call (repo1 with cred-1) fails
+                    return Promise.reject(mockError);
+                }
+                // Second call (repo3 with cred-2) succeeds
+                return Promise.resolve({
+                    workspaceRepo: mockRepo3,
+                    site: mockRepo3.mainSiteRemote.site!,
+                    data: [],
+                });
+            });
+
+            (categorizeNetworkError as jest.Mock).mockReturnValue({
+                category: 'auth',
+                message: 'Authentication failed',
+            });
+
+            monitor.checkForNewActivity();
+            await flushPromises();
+
+            // Should have been called only twice: once for repo1 (fails), once for repo3 (different credential)
+            // repo2 should be skipped
+            expect(mockPullRequestApi.getLatest).toHaveBeenCalledTimes(2);
+            expect(Logger.debug).toHaveBeenCalledWith(
+                expect.stringContaining('Skipping repo2 - credential cred-1 already failed this cycle'),
+            );
+        });
+
+        it('should mark credential as failed for systemic errors', async () => {
+            const systemicErrors = [
+                { category: 'auth', message: 'Auth failed' },
+                { category: 'network', message: 'Network error' },
+                { category: 'dns', message: 'DNS failed' },
+                { category: 'timeout', message: 'Timeout' },
+            ];
+
+            for (const errorInfo of systemicErrors) {
+                jest.clearAllMocks();
+                monitor = new PullRequestCreatedMonitor(mockBbContext);
+                mockBbContext.getBitbucketRepositories = jest.fn().mockReturnValue([mockRepo, mockRepo2]);
+
+                const mockError = new Error(errorInfo.message);
+                let callCount = 0;
+                mockPullRequestApi.getLatest.mockImplementation(() => {
+                    callCount++;
+                    if (callCount === 1) {
+                        return Promise.reject(mockError);
+                    }
+                    throw new Error('Should not be called for second repo');
+                });
+                (categorizeNetworkError as jest.Mock).mockReturnValue(errorInfo);
+
+                monitor.checkForNewActivity();
+                await flushPromises();
+
+                // Second repo should be skipped
+                expect(Logger.debug).toHaveBeenCalledWith(
+                    expect.stringContaining('credential cred-1 already failed this cycle'),
+                );
+                expect(mockPullRequestApi.getLatest).toHaveBeenCalledTimes(1);
+            }
+        });
+
+        it('should not mark credential as failed for non-systemic errors', async () => {
+            mockBbContext.getBitbucketRepositories = jest.fn().mockReturnValue([mockRepo, mockRepo2]);
+
+            const mockError = new Error('Unknown error');
+            mockPullRequestApi.getLatest.mockRejectedValue(mockError);
+            (categorizeNetworkError as jest.Mock).mockReturnValue({
+                category: 'unknown',
+                message: 'Unknown error',
+            });
+
+            monitor.checkForNewActivity();
+            await flushPromises();
+
+            // Both repos should be tried since unknown error doesn't mark credential as failed
+            expect(mockPullRequestApi.getLatest).toHaveBeenCalledTimes(2);
+            expect(Logger.debug).not.toHaveBeenCalledWith(
+                expect.stringContaining('credential cred-1 already failed this cycle'),
+            );
+        });
+
+        it('should clear failed credentials on each new check cycle', async () => {
+            mockBbContext.getBitbucketRepositories = jest.fn().mockReturnValue([mockRepo, mockRepo2]);
+
+            // First cycle - auth failure
+            const mockError = new Error('Auth failed');
+            mockPullRequestApi.getLatest.mockImplementation(() => {
+                return Promise.reject(mockError);
+            });
+            (categorizeNetworkError as jest.Mock).mockReturnValue({
+                category: 'auth',
+                message: 'Authentication failed',
+            });
+
+            monitor.checkForNewActivity();
+            await flushPromises();
+
+            expect(mockPullRequestApi.getLatest).toHaveBeenCalledTimes(1); // Only repo1 tried, repo2 skipped
+
+            // Second cycle - should retry both repos
+            jest.clearAllMocks();
+            const mockPRData: PaginatedPullRequests = {
+                workspaceRepo: mockRepo,
+                site: mockSite,
+                data: [],
+            };
+            mockPullRequestApi.getLatest.mockResolvedValue(mockPRData);
+
+            monitor.checkForNewActivity();
+            await flushPromises();
+
+            // Both repos should be tried since credentials were cleared
+            expect(mockPullRequestApi.getLatest).toHaveBeenCalledTimes(2);
+        });
+
+        it('should process repos with different credentials independently', async () => {
+            mockBbContext.getBitbucketRepositories = jest.fn().mockReturnValue([mockRepo, mockRepo3]);
+
+            const mockError = new Error('Auth failed');
+            mockPullRequestApi.getLatest.mockRejectedValueOnce(mockError);
+            (categorizeNetworkError as jest.Mock).mockReturnValueOnce({
+                category: 'auth',
+                message: 'Authentication failed',
+            });
+
+            // Repo3 should succeed
+            const mockPRData: PaginatedPullRequests = {
+                workspaceRepo: mockRepo3,
+                site: mockRepo3.mainSiteRemote.site!,
+                data: [],
+            };
+            mockPullRequestApi.getLatest.mockResolvedValueOnce(mockPRData);
+
+            monitor.checkForNewActivity();
+            await flushPromises();
+
+            // Both repos should be tried (different credentials)
+            expect(mockPullRequestApi.getLatest).toHaveBeenCalledTimes(2);
+            expect(monitor['_consecutiveFailures'].get(mockRepo.rootUri)).toBe(1);
+            expect(monitor['_consecutiveFailures'].get(mockRepo3.rootUri)).toBe(0);
+        });
+
+        it('should skip repos when pullrequests API is unavailable without marking as failure', async () => {
+            const mockBbApiWithoutPR = {};
+            (clientForSite as jest.Mock).mockResolvedValue(mockBbApiWithoutPR);
+
+            monitor['_consecutiveFailures'].set(mockRepo.rootUri, 2);
+
+            monitor.checkForNewActivity();
+            await flushPromises();
+
+            // Should log warning
+            expect(Logger.warn).toHaveBeenCalledWith(expect.stringContaining('Pull requests API not available'));
+
+            // Should NOT increment failure counter
+            expect(monitor['_consecutiveFailures'].get(mockRepo.rootUri)).toBe(2);
+
+            // Should NOT mark last successful fetch
+            expect(monitor['_lastSuccessfulFetch'].get(mockRepo.rootUri)).toBeUndefined();
         });
     });
 });

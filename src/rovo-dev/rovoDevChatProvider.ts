@@ -1,30 +1,31 @@
 import { Logger } from 'src/logger';
 import { RovoDevViewResponse } from 'src/rovo-dev/ui/rovoDevViewMessages';
 import { v4 } from 'uuid';
+import { Event, EventEmitter } from 'vscode';
 
 import { ExtensionApi } from './api/extensionApi';
 import {
     AgentMode,
     RovoDevApiClient,
     RovoDevApiError,
+    RovoDevAskUserQuestionsToolArgs,
     RovoDevChatRequest,
     RovoDevChatRequestContext,
     RovoDevChatRequestContextFileEntry,
     RovoDevChatRequestContextOtherEntry,
+    RovoDevDeferredToolCallResponse,
+    RovoDevExitPlanModeToolArgs,
     RovoDevResponse,
     RovoDevResponseParser,
+    RovoDevToolCallResponse,
+    RovoDevToolName,
     ToolPermissionChoice,
 } from './client';
 import { buildErrorDetails, buildExceptionDetails } from './errorDetailsBuilder';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
+import { RovoDevContextItem, RovoDevFileContext, RovoDevJiraContext, RovoDevPrompt } from './rovoDevTypes';
 import {
-    RovoDevContextItem,
-    RovoDevFileContext,
-    RovoDevJiraContext,
-    RovoDevPrompt,
-    TechnicalPlan,
-} from './rovoDevTypes';
-import {
+    modelsJsonResponseToMarkdown,
     parseCustomCliTagsForMarkdown,
     promptsJsonResponseToMarkdown,
     readLastNLogLines,
@@ -40,12 +41,35 @@ import {
 
 type StreamingApi = 'chat' | 'replay';
 
+const FILE_MODIFYING_TOOLS: ReadonlySet<RovoDevToolName> = new Set<RovoDevToolName>([
+    'create_file',
+    'delete_file',
+    'move_file',
+    'find_and_replace_code',
+]);
+
 export class RovoDevChatProvider {
     private readonly extensionApi = new ExtensionApi();
     private readonly isDebugging = this.extensionApi.metadata.isDebugging();
 
+    private _onAgentModelChanged = new EventEmitter<void>();
+    public get onAgentModelChanged(): Event<void> {
+        return this._onAgentModelChanged.event;
+    }
+
+    private _onPromptComplete = new EventEmitter<void>();
+    public get onPromptComplete(): Event<void> {
+        return this._onPromptComplete.event;
+    }
+
+    private _onFileModifyingToolReturn = new EventEmitter<void>();
+    public get onFileModifyingToolReturn(): Event<void> {
+        return this._onFileModifyingToolReturn.event;
+    }
+
     private _pendingToolConfirmation: Record<string, ToolPermissionChoice | 'undecided'> = {};
     private _pendingToolConfirmationLeft = 0;
+    private _pendingDeferredRequest: string | undefined;
     private _pendingPrompt: RovoDevPrompt | undefined;
     private _currentPrompt: RovoDevPrompt | undefined;
     private _rovoDevApiClient: RovoDevApiClient | undefined;
@@ -137,7 +161,20 @@ export class RovoDevChatProvider {
         this._lastMessageSentTime = undefined;
     }
 
+    /**
+     * Clears session-scoped state (e.g. pending deferred tool call) so the next
+     * prompt is sent as a normal message instead of tool call results. Call when
+     * starting a new session or clearing the chat so the backend is not sent
+     * tool_call_id + result when message history is empty.
+     */
+    public clearSessionState(): void {
+        this._pendingDeferredRequest = undefined;
+        this._currentPrompt = undefined;
+        this._pendingPrompt = undefined;
+    }
+
     public async clearChat(): Promise<void> {
+        this.clearSessionState();
         await this._webView!.postMessage({
             type: RovoDevProviderMessageType.ClearChat,
         });
@@ -148,7 +185,7 @@ export class RovoDevChatProvider {
     }
 
     private async internalExecuteChat(
-        { text, enable_deep_plan, context }: RovoDevPrompt,
+        { text, context }: RovoDevPrompt,
         revertedFiles: string[],
         flushingPendingPrompt: boolean,
     ) {
@@ -161,28 +198,38 @@ export class RovoDevChatProvider {
 
         const isCommand = text.trim().startsWith('/');
         if (isCommand) {
-            enable_deep_plan = false;
             context = [];
         }
 
         // when flushing a pending prompt, we don't want to echo the prompt in chat again
-        await this.signalPromptSent({ text, enable_deep_plan, context }, !flushingPendingPrompt);
+        await this.signalPromptSent({ text, context }, !flushingPendingPrompt);
 
         if (!this._rovoDevApiClient) {
-            this._pendingPrompt = { text, enable_deep_plan, context };
+            this._pendingPrompt = { text, context };
             return;
         }
 
         this._currentPrompt = {
             text,
-            enable_deep_plan,
             context,
         };
 
         const requestPayload = this.preparePayloadForChatRequest(this._currentPrompt);
 
+        // if there's a pending deferred tool call, attach the tool_call_id and the result to the next prompt payload to bypass
+        if (this._pendingDeferredRequest) {
+            requestPayload.message = {
+                tool_call_id: this._pendingDeferredRequest,
+                result: {
+                    proceed: false,
+                    followUp: text,
+                },
+            };
+            this._pendingDeferredRequest = undefined;
+        }
+
         if (!isCommand) {
-            if (this.fullContextMode) {
+            if (this.fullContextMode && typeof requestPayload.message === 'string') {
                 requestPayload.message = `use fullcontext: ${requestPayload.message}`;
             }
 
@@ -206,12 +253,22 @@ export class RovoDevChatProvider {
         await this.sendPromptToRovoDev(requestPayload);
     }
 
+    public async executeDeferredToolCall(payload: RovoDevDeferredToolCallResponse) {
+        const chatRequestPayload: RovoDevChatRequest = {
+            message: payload,
+            context: [],
+        };
+        this._pendingDeferredRequest = undefined;
+        await this.sendPromptToRovoDev(chatRequestPayload);
+    }
+
     private async sendPromptToRovoDev(requestPayload: RovoDevChatRequest) {
         this.beginNewPrompt();
 
         const fetchOp = async (client: RovoDevApiClient) => {
             this._abortController?.abort();
             this._abortController = new AbortController();
+
             // Boysenberry is always in YOLO mode
             const response = await client.chat(requestPayload, !this._isBoysenberry, this._abortController.signal);
 
@@ -220,7 +277,6 @@ export class RovoDevChatProvider {
                 subject: 'atlascode',
                 attributes: {
                     promptId: this._currentPromptId,
-                    deepPlanEnabled: !!requestPayload.enable_deep_plan,
                 },
             });
 
@@ -407,6 +463,11 @@ export class RovoDevChatProvider {
         for (const msg of parser.flush()) {
             await this.processRovoDevResponse(sourceApi, msg);
         }
+
+        // Rovo Dev can change agent mid-response to a fallback model when the main one is troublesome.
+        // While we should handle such events in real time, this is meant to capture anything that we
+        // may have missed, and make sure the agent selector is always in sync with Rovo Dev
+        this._onAgentModelChanged.fire();
     }
 
     private async processRovoDevReplayResponse(responses: RovoDevResponse[]): Promise<void> {
@@ -444,46 +505,63 @@ export class RovoDevChatProvider {
         await flush();
     }
 
-    private async processRovoDevResponse(sourceApi: StreamingApi, response: RovoDevResponse): Promise<void> {
-        const fireTelemetry = sourceApi === 'chat';
+    private async processDeferredToolCallResponse(deferredTool: RovoDevToolCallResponse): Promise<void> {
         const webview = this._webView!;
 
-        if (
-            fireTelemetry &&
-            response.event_kind === 'tool-return' &&
-            response.tool_name === 'create_technical_plan' &&
-            response.parsedContent
-        ) {
-            this._telemetryProvider.perfLogger.promptTechnicalPlanReceived(this._currentPromptId);
-
-            const parsedContent = response.parsedContent as TechnicalPlan;
-            const stepsCount = parsedContent.logicalChanges.length;
-            const filesCount = parsedContent.logicalChanges.reduce((p, c) => p + c.filesToChange.length, 0);
-            const questionsCount = parsedContent.logicalChanges.reduce(
-                (p, c) => p + c.filesToChange.reduce((p2, c2) => p2 + (c2.clarifyingQuestionIfAny ? 1 : 0), 0),
-                0,
-            );
-
-            this._telemetryProvider.fireTelemetryEvent({
-                action: 'rovoDevTechnicalPlanningShown',
-                subject: 'atlascode',
-                attributes: {
-                    promptId: this._currentPromptId,
-                    stepsCount,
-                    filesCount,
-                    questionsCount,
-                },
+        try {
+            this._pendingDeferredRequest = deferredTool.tool_call_id;
+            switch (deferredTool.tool_name) {
+                case 'ask_user_questions':
+                    const askUserQuestionsArgs = JSON.parse(deferredTool.args) as RovoDevAskUserQuestionsToolArgs;
+                    await webview.postMessage({
+                        type: RovoDevProviderMessageType.ShowDeferredAskUserQuestions,
+                        toolCallId: deferredTool.tool_call_id,
+                        args: askUserQuestionsArgs,
+                    });
+                    break;
+                case 'exit_plan_mode':
+                    const exitPlanModeArgs = JSON.parse(deferredTool.args) as RovoDevExitPlanModeToolArgs;
+                    await webview.postMessage({
+                        type: RovoDevProviderMessageType.ShowDeferredExitPlanMode,
+                        toolCallId: deferredTool.tool_call_id,
+                        args: exitPlanModeArgs,
+                    });
+                    break;
+                default:
+                    throw new Error(`Unknown deferred tool call: ${deferredTool.tool_name}`);
+            }
+        } catch (error) {
+            const err =
+                error instanceof Error ? error : new Error('Failed to process the deferred tool call response.');
+            await this.processError(err);
+            // If parsing deferred tool request failed, we should still send a response to Rovo Dev to avoid blocking the agent's execution
+            await this.executeDeferredToolCall({
+                tool_call_id: deferredTool.tool_call_id,
+                result: err.message,
             });
         }
+    }
+
+    private async processRovoDevResponse(sourceApi: StreamingApi, response: RovoDevResponse): Promise<void> {
+        const webview = this._webView!;
 
         switch (response.event_kind) {
             case 'text':
             case 'tool-call':
+                await webview.postMessage({
+                    type: RovoDevProviderMessageType.RovoDevResponseMessage,
+                    message: response,
+                });
+                break;
+
             case 'tool-return':
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.RovoDevResponseMessage,
                     message: response,
                 });
+                if (FILE_MODIFYING_TOOLS.has(response.tool_name as RovoDevToolName)) {
+                    this._onFileModifyingToolReturn.fire();
+                }
                 break;
 
             case 'retry-prompt':
@@ -500,10 +578,9 @@ export class RovoDevChatProvider {
                     const { text, context } = this.parseUserPromptReplay(response.content || '');
                     this._currentPrompt = {
                         text: text,
-                        enable_deep_plan: false,
                         context: context,
                     };
-                    await this.signalPromptSent({ text, enable_deep_plan: false, context }, true);
+                    await this.signalPromptSent({ text, context }, true);
                 }
                 break;
 
@@ -512,6 +589,27 @@ export class RovoDevChatProvider {
                 break;
 
             case 'exception': {
+                // Handle InvalidPromptError for unsupported slash commands as a warning instead of an error
+                if (
+                    response.type.toLowerCase().includes('invalidprompt') &&
+                    response.message.includes('Unknown command:')
+                ) {
+                    // Extract the command name from the message (e.g., "Unknown command: /model" -> "/model")
+                    const commandMatch = response.message.match(/Unknown command:\s*(\/\S+)/);
+                    const command = commandMatch ? commandMatch[1] : 'the command you entered';
+
+                    await webview.postMessage({
+                        type: RovoDevProviderMessageType.ShowDialog,
+                        message: {
+                            event_kind: '_RovoDevDialog',
+                            type: 'warning',
+                            title: 'Unsupported Command',
+                            text: `The command ${command} is not supported.`,
+                        },
+                    });
+                    break;
+                }
+
                 RovoDevTelemetryProvider.logError(
                     new Error(`${response.type} ${response.message}`),
                     response.title || undefined,
@@ -606,6 +704,10 @@ export class RovoDevChatProvider {
                 }
                 break;
 
+            case 'deferred_request':
+                const deferredTool = response.tools[0]; // currently we only support one deferred tool call at a time, so we take the first one from the array
+                this.processDeferredToolCallResponse(deferredTool);
+                break;
             case 'status':
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.ShowDialog,
@@ -656,6 +758,27 @@ export class RovoDevChatProvider {
                 });
                 break;
 
+            case 'models':
+                const parsedModelsResponse = modelsJsonResponseToMarkdown(response);
+                if (parsedModelsResponse) {
+                    await webview.postMessage({
+                        type: RovoDevProviderMessageType.ShowDialog,
+                        message: {
+                            type: 'info',
+                            title: parsedModelsResponse.title,
+                            text: parsedModelsResponse.text,
+                            event_kind: '_RovoDevDialog',
+                        },
+                    });
+
+                    if (parsedModelsResponse.agentModelChanged) {
+                        this._onAgentModelChanged.fire();
+                    }
+                } else {
+                    this.processError(new Error('Invalid models response'));
+                }
+                break;
+
             case 'close':
                 // response terminated
                 break;
@@ -672,8 +795,9 @@ export class RovoDevChatProvider {
             default:
                 // this should really never happen, as unknown messages are caugh and wrapped into the
                 // message `_parsing_error`
-                const error = new Error(`Rovo Dev response error: unknown event kind: ${(response as any).event_kind}`);
-                RovoDevTelemetryProvider.logError(error, 'Unexpected event kind in Rovo Dev response');
+                // @ts-expect-error ts(2339) - response here should be 'never'
+                const error = new Error(`Rovo Dev response error: unknown event kind: ${response.event_kind}`);
+                RovoDevTelemetryProvider.logError(error);
                 throw error;
         }
     }
@@ -805,6 +929,9 @@ export class RovoDevChatProvider {
             type: RovoDevProviderMessageType.CompleteMessage,
             promptId: this._currentPromptId,
         });
+
+        // Signal that the prompt is complete so listeners can refresh data
+        this._onPromptComplete.fire();
     }
 
     private async processError(
@@ -835,13 +962,12 @@ export class RovoDevChatProvider {
         }
     }
 
-    private async signalPromptSent({ text, enable_deep_plan, context }: RovoDevPrompt, echoMessage: boolean) {
+    private async signalPromptSent({ text, context }: RovoDevPrompt, echoMessage: boolean) {
         const webview = this._webView!;
         return await webview.postMessage({
             type: RovoDevProviderMessageType.SignalPromptSent,
             echoMessage,
             text,
-            enable_deep_plan,
             context,
         });
     }
@@ -865,7 +991,6 @@ export class RovoDevChatProvider {
 
         return {
             message: prompt.text,
-            enable_deep_plan: prompt.enable_deep_plan,
             context: Array<RovoDevChatRequestContext>().concat(fileContext).concat(jiraContext),
         };
     }

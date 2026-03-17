@@ -1,4 +1,4 @@
-import { MinimalIssue, readSearchResults } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue, readSearchResults } from '@atlassian-pi/jira-pi-common-models';
 import { DetailedSiteInfo, ProductJira } from 'src/atlclients/authInfo';
 import { Container } from 'src/container';
 
@@ -17,8 +17,8 @@ jest.mock('src/container', () => ({
     },
 }));
 
-jest.mock('@atlassianlabs/jira-pi-common-models', () => ({
-    ...jest.requireActual('@atlassianlabs/jira-pi-common-models'),
+jest.mock('@atlassian-pi/jira-pi-common-models', () => ({
+    ...jest.requireActual('@atlassian-pi/jira-pi-common-models'),
     readSearchResults: jest.fn(),
 }));
 

@@ -1,4 +1,4 @@
-import { User } from '@atlassianlabs/jira-pi-common-models';
+import { User } from '@atlassian-pi/jira-pi-common-models';
 import { commands, QuickPick, window } from 'vscode';
 
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';

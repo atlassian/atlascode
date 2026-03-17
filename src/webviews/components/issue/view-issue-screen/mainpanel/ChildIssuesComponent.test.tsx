@@ -1,4 +1,4 @@
-import { IssueType } from '@atlassianlabs/jira-pi-common-models';
+import { IssueType } from '@atlassian-pi/jira-pi-common-models';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 

@@ -8,6 +8,7 @@ export default class NavItem extends React.Component<
         text: string;
         href?: string;
         iconUrl?: string;
+        issueTypeName?: string;
         onItemClick?: () => void;
         onCopy?: () => void;
     },
@@ -18,6 +19,7 @@ export default class NavItem extends React.Component<
             <div className="ac-icon-with-text">
                 {this.props.iconUrl && <img style={{ paddingRight: '5px' }} src={this.props.iconUrl} />}
                 <div className="jira-issue-key">
+                    {this.props.issueTypeName && <span className="jira-issue-type">{this.props.issueTypeName} |</span>}
                     <Button
                         className="ac-link-button"
                         appearance="link"

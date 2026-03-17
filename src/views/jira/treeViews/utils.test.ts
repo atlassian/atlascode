@@ -1,4 +1,4 @@
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue } from '@atlassian-pi/jira-pi-common-models';
 import { cloneDeep } from 'lodash';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { JQLEntry } from 'src/config/model';
@@ -130,6 +130,44 @@ describe('utils', () => {
                 'Failed to execute default JQL query for site',
                 'site-id-guid',
             );
+        });
+
+        it('logs a warning instead of an error for "Site previously failed authentication"', async () => {
+            const error = new Error('Site previously failed authentication');
+            const jqlEntry = expansionCastTo<JQLEntry>({
+                id: 'id1',
+                query: 'assignee = currentUser()',
+                siteId: 'site-id-guid',
+            });
+            jest.spyOn(issuesForJQL, 'issuesForJQL').mockRejectedValue(error);
+
+            const issues = await executeJqlQuery(jqlEntry);
+            expect(issues).toHaveLength(0);
+            expect(Logger.warn).toHaveBeenCalledWith(
+                'Failed to execute default JQL query for site',
+                'site-id-guid',
+                'Site previously failed authentication',
+            );
+            expect(Logger.error).not.toHaveBeenCalled();
+        });
+
+        it('logs a warning instead of an error for "Please sign in again to continue"', async () => {
+            const error = new Error('Unable to connect to Jira. Please sign in again to continue.');
+            const jqlEntry = expansionCastTo<JQLEntry>({
+                id: 'id1',
+                query: 'assignee = currentUser()',
+                siteId: 'site-id-guid',
+            });
+            jest.spyOn(issuesForJQL, 'issuesForJQL').mockRejectedValue(error);
+
+            const issues = await executeJqlQuery(jqlEntry);
+            expect(issues).toHaveLength(0);
+            expect(Logger.warn).toHaveBeenCalledWith(
+                'Failed to execute default JQL query for site',
+                'site-id-guid',
+                'Unable to connect to Jira. Please sign in again to continue.',
+            );
+            expect(Logger.error).not.toHaveBeenCalled();
         });
 
         it('returns empty array and logs warning for incomplete query without operators', async () => {

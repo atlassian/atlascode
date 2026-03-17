@@ -26,16 +26,19 @@ import {
 } from 'vscode';
 
 import { GitErrorCodes } from '../typings/git';
-import { FeatureFlagClient } from '../util/featureFlags/featureFlagClient';
-import { Features } from '../util/features';
 import { RovodevCommandContext, RovodevCommands } from './api/componentApi';
 import { DetailedSiteInfo, ExtensionApi, MinimalIssue } from './api/extensionApi';
-import { AgentMode, RovoDevApiClient, RovoDevApiError, RovoDevHealthcheckResponse } from './client';
+import {
+    AgentMode,
+    RovoDevApiClient,
+    RovoDevApiError,
+    RovoDevDeferredToolCallResponse,
+    RovoDevHealthcheckResponse,
+} from './client';
 import { buildErrorDetails } from './errorDetailsBuilder';
 import { createValidatedRovoDevAuthInfo } from './rovoDevAuthValidator';
 import { RovoDevChatContextProvider } from './rovoDevChatContextProvider';
 import { RovoDevChatProvider } from './rovoDevChatProvider';
-import { RovoDevContentTracker } from './rovoDevContentTracker';
 import { RovoDevDwellTracker } from './rovoDevDwellTracker';
 import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
 import { RovoDevJiraItemsProvider } from './rovoDevJiraItemsProvider';
@@ -44,8 +47,9 @@ import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevSessionManager } from './rovoDevSessionManager';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import { RovoDevContextItem } from './rovoDevTypes';
-import { readLastNLogLines } from './rovoDevUtils';
+import { readLastNLogLines, removeCustomCliTags } from './rovoDevUtils';
 import {
+    RovoDevAgentModel,
     RovoDevDisabledReason,
     RovoDevEntitlementCheckFailedDetail,
     RovoDevProviderMessage,
@@ -53,7 +57,6 @@ import {
     RovoDevWebviewState,
 } from './rovoDevWebviewProviderMessages';
 import { ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './ui/rovoDevViewMessages';
-import { modifyFileTitleMap } from './ui/utils';
 
 export interface TypedWebview<MessageOut, MessageIn> extends Webview {
     readonly onDidReceiveMessage: Event<MessageIn>;
@@ -105,13 +108,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     // prompt informing Rovo Dev that those files has been reverted
     private _revertedChanges: string[] = [];
 
+    /** Workspace-relative paths of files currently in Rovo Dev's cache. */
+    private _trackedFiles: Set<string> = new Set();
+    private _modifiedFilesPollTimer?: ReturnType<typeof setInterval>;
+
     /** Agent mode selected by the user before healthcheck completed; applied after setReady. */
     private _pendingAgentMode?: AgentMode;
 
     private _disposables: Disposable[] = [];
 
     private _dwellTracker?: RovoDevDwellTracker;
-    private _contentTracker?: RovoDevContentTracker;
 
     private _extensionPath: string;
     private _extensionUri: Uri;
@@ -196,6 +202,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         );
 
         this._chatProvider = new RovoDevChatProvider(this.isBoysenberry, this._telemetryProvider);
+        this._chatProvider.onAgentModelChanged(() => this.refreshAgentModel());
+        this._chatProvider.onPromptComplete(() => this.refreshModifiedFiles());
+        this._chatProvider.onFileModifyingToolReturn(() => this.refreshModifiedFiles());
+
         this._chatContextprovider = new RovoDevChatContextProvider();
 
         this._yoloMode = this.loadYoloModeFromStorage();
@@ -284,6 +294,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             stylesUri: codiconsUri,
         });
 
+        // Refresh modified files when panel becomes visible
+        webviewView.onDidChangeVisibility(() => {
+            if (webviewView.visible && this._trackedFiles.size > 0) {
+                this.refreshModifiedFiles();
+            }
+        });
+
         webview.onDidReceiveMessage(async (e) => {
             try {
                 switch (e.type) {
@@ -309,10 +326,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                     case RovoDevViewResponseType.UndoFileChanges:
                         await this.executeUndoFiles(e.files);
+                        await this.refreshModifiedFiles();
                         break;
 
                     case RovoDevViewResponseType.KeepFileChanges:
                         await this.executeKeepFiles(e.files);
+                        await this.refreshModifiedFiles();
+                        break;
+
+                    case RovoDevViewResponseType.RefreshModifiedFiles:
+                        await this.refreshModifiedFiles();
                         break;
 
                     case RovoDevViewResponseType.CreatePR:
@@ -384,10 +407,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             type: RovoDevProviderMessageType.CheckGitChangesComplete,
                             hasChanges: hasChanges,
                         });
-                        break;
-
-                    case RovoDevViewResponseType.FilterModifiedFilesByContent:
-                        await this.executeFilterModifiedFilesByContent(e.files);
                         break;
 
                     case RovoDevViewResponseType.ReportThinkingDrawerExpanded:
@@ -547,14 +566,17 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         }
                         break;
 
+                    case RovoDevViewResponseType.SetAgentModel:
+                        await this.setAgentModel(e.model);
+                        break;
+
                     case RovoDevViewResponseType.OpenExternalLink:
                         await env.openExternal(Uri.parse(e.href));
                         break;
 
-                    case RovoDevViewResponseType.OpenRovoDevLogFile:
-                        await commands.executeCommand(RovodevCommands.OpenRovoDevLogFile);
+                    case RovoDevViewResponseType.OpenMcpConfiguration:
+                        await commands.executeCommand(RovodevCommands.OpenRovoDevMcpJson);
                         break;
-
                     case RovoDevViewResponseType.StartNewSession:
                         await this.executeNewSession();
                         break;
@@ -598,6 +620,27 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             savedPrompts: prompts,
                         });
                         break;
+
+                    case RovoDevViewResponseType.AskUserQuestionsSubmit:
+                    case RovoDevViewResponseType.ExitPlanModeSubmit:
+                        const deferredToolResponse: RovoDevDeferredToolCallResponse = {
+                            tool_call_id: e.toolCallId,
+                            result: e.result,
+                        };
+
+                        const switchToDefaultMode =
+                            e.type === RovoDevViewResponseType.ExitPlanModeSubmit && e.result.proceed === true;
+                        if (switchToDefaultMode) {
+                            await this._chatProvider.setAgentMode('default');
+                            await webview.postMessage({
+                                type: RovoDevProviderMessageType.SetAgentModeComplete,
+                                mode: 'default',
+                            });
+                        }
+                        await this._chatProvider.executeDeferredToolCall(deferredToolResponse);
+
+                        break;
+
                     default:
                         // @ts-expect-error ts(2339) - e here should be 'never'
                         this.processError(new Error(`Unknown message type: ${e.type}`));
@@ -611,7 +654,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private async sendProviderReadyEvent(userEmail: string | undefined) {
         const yoloMode = this._yoloMode;
-        const featureFlagClient = FeatureFlagClient.getInstance();
 
         await this._webView!.postMessage({
             type: RovoDevProviderMessageType.ProviderReady,
@@ -619,9 +661,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             workspacePath: workspace.workspaceFolders?.[0]?.uri.fsPath,
             homeDir: process.env.HOME || process.env.USERPROFILE,
             yoloMode,
-            features: {
-                dedicatedRovoDevAuth: featureFlagClient.checkGate(Features.DedicatedRovoDevAuth),
-            },
         });
 
         // Send existing Jira credentials for autocomplete
@@ -681,6 +720,20 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 this._chatContextprovider.forceUserFocusUpdate(event.textEditor);
             }),
         );
+    }
+
+    private _startModifiedFilesPoll() {
+        this._stopModifiedFilesPoll();
+        this._modifiedFilesPollTimer = setInterval(() => {
+            if (this._trackedFiles.size > 0 && this._webviewView?.visible) {
+                this.refreshModifiedFiles();
+            }
+        }, 30_000);
+    }
+
+    private _stopModifiedFilesPoll() {
+        clearInterval(this._modifiedFilesPollTimer);
+        this._modifiedFilesPollTimer = undefined;
     }
 
     private processError(
@@ -819,6 +872,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         ) {
             this.refreshDebugPanel();
 
+            this._chatProvider.clearSessionState();
             await webview.postMessage({
                 type: RovoDevProviderMessageType.ClearChat,
             });
@@ -843,7 +897,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
             const sessionId = await client.createSession();
             this._revertedChanges = [];
+            this._trackedFiles = new Set();
 
+            this._chatProvider.clearSessionState();
             await webview.postMessage({
                 type: RovoDevProviderMessageType.ClearChat,
             });
@@ -870,11 +926,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await RovoDevProcessManager.initializeRovoDev(this._context, true);
 
         this.refreshDebugPanel();
+        this._chatProvider.clearSessionState();
         await webview.postMessage({
             type: RovoDevProviderMessageType.ClearChat,
         });
 
         this._revertedChanges = [];
+        this._trackedFiles = new Set();
         return this._telemetryProvider.fireTelemetryEvent({
             action: 'rovoDevRestartProcessAction',
             subject: 'atlascode',
@@ -996,6 +1054,62 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
+    private async initializeAgentModels() {
+        if (!this.rovoDevApiClient || !this._webView) {
+            return;
+        }
+
+        const availableModelsData = await this.rovoDevApiClient.getAvailableAgentModels();
+        const availableModels = availableModelsData.models ?? [];
+        const availableModelsForWebview = availableModels.map((model) => ({
+            modelId: model.model_id,
+            modelName: removeCustomCliTags(model.name),
+            creditMultiplier: model.credit_multiplier,
+        }));
+
+        this._webView.postMessage({
+            type: RovoDevProviderMessageType.UpdateAgentModels,
+            models: availableModelsForWebview,
+        });
+    }
+
+    private async refreshAgentModel() {
+        if (!this.rovoDevApiClient || !this._webView) {
+            return;
+        }
+
+        const currentModelInfo = await this.rovoDevApiClient.getAgentModel();
+        this._webView.postMessage({
+            type: RovoDevProviderMessageType.AgentModelChanged,
+            modelId: currentModelInfo.model_id,
+            modelName: currentModelInfo.model_name,
+            creditMultiplier: currentModelInfo.credit_multiplier,
+        });
+    }
+
+    private async setAgentModel(model: RovoDevAgentModel) {
+        if (!this.rovoDevApiClient || !this._webView) {
+            return;
+        }
+
+        const response = await this.rovoDevApiClient.setAgentModel(model.modelId);
+
+        this._webView.postMessage({
+            type: RovoDevProviderMessageType.ShowDialog,
+            message: {
+                type: 'info',
+                text: response.message,
+                title: 'Agent model changed',
+                event_kind: '_RovoDevDialog',
+            },
+        });
+
+        this._webView.postMessage({
+            type: RovoDevProviderMessageType.AgentModelChanged,
+            ...model,
+        });
+    }
+
     private async executeOpenFile(
         filePath: string,
         tryShowDiff: boolean,
@@ -1014,10 +1128,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         const resolvedPath = this.makeRelativePathAbsolute(filePath);
 
         if (cachedFilePath && fs.existsSync(cachedFilePath)) {
+            const fileIsDeleted = !fs.existsSync(resolvedPath);
+            // For deleted files, use an untitled empty URI so VS Code can show the diff
+            // without trying to read a nonexistent file from disk
+            const rightUri = fileIsDeleted ? Uri.parse(`untitled:${resolvedPath}`) : Uri.file(resolvedPath);
+            const diffTitle = fileIsDeleted ? `${filePath} (Deleted by Rovo Dev)` : `${filePath} (Rovo Dev)`;
+
             await this.extensionApi.commands.showDiff({
                 left: Uri.file(cachedFilePath),
-                right: Uri.file(resolvedPath),
-                title: `${filePath} (Rovo Dev)`,
+                right: rightUri,
+                title: diffTitle,
             });
             this._dwellTracker?.startDwellTimer();
         } else {
@@ -1052,21 +1172,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async executeUndoFiles(files: ModifiedFile[]) {
-        const promises = files.map(async (file) => {
-            const resolvedPath = this.makeRelativePathAbsolute(file.filePath);
-            await getFsPromise((callback) => fs.rm(resolvedPath, { force: true }, callback));
+        const filePaths = files.map((f) => f.filePath);
+        await this.rovoDevApiClient!.restoreFromFileCache(filePaths);
 
-            if (file.type !== 'create') {
-                const cachedFilePath = await this.rovoDevApiClient!.getCacheFilePath(file.filePath);
-                await getFsPromise((callback) => fs.copyFile(cachedFilePath, resolvedPath, callback));
-                await getFsPromise((callback) => fs.rm(cachedFilePath, callback));
-            }
-        });
-
-        await Promise.all(promises);
-
-        const paths = files.map((x) => x.filePath);
-        this._revertedChanges.push(...paths);
+        this._revertedChanges.push(...files.map((x) => x.filePath));
 
         this._telemetryProvider.fireTelemetryEvent({
             action: 'rovoDevFileChangedAction',
@@ -1080,12 +1189,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private async executeKeepFiles(files: ModifiedFile[]) {
-        const promises = files.map(async (file) => {
-            const cachedFilePath = await this.rovoDevApiClient!.getCacheFilePath(file.filePath);
-            await getFsPromise((callback) => fs.rm(cachedFilePath, callback));
-        });
-
-        await Promise.all(promises);
+        const filePaths = files.map((f) => f.filePath);
+        await this.rovoDevApiClient!.invalidateFileCache(filePaths);
 
         this._telemetryProvider.fireTelemetryEvent({
             action: 'rovoDevFileChangedAction',
@@ -1096,6 +1201,57 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 filesCount: files.length,
             },
         });
+    }
+
+    private async refreshModifiedFiles() {
+        const webview = this._webView!;
+        if (!this.rovoDevApiClient) {
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.SetModifiedFiles,
+                files: [],
+            });
+            this._trackedFiles = new Set();
+            return;
+        }
+
+        try {
+            const cachedFiles = await this.rovoDevApiClient.listCachedFiles();
+
+            const statusToType: Record<string, 'create' | 'modify' | 'delete'> = {
+                added: 'create',
+                modified: 'modify',
+                deleted: 'delete',
+            };
+
+            const files: ModifiedFile[] = cachedFiles.map((entry) => ({
+                filePath: entry.original_path,
+                type: statusToType[entry.status] || 'modify',
+            }));
+
+            // Normalize paths to workspace-relative if they're absolute
+            const workspaceRoot = workspace.workspaceFolders?.[0]?.uri.fsPath;
+            const normalizedFiles: ModifiedFile[] = files.map((file) => ({
+                filePath:
+                    workspaceRoot && path.isAbsolute(file.filePath)
+                        ? path.relative(workspaceRoot, file.filePath)
+                        : file.filePath,
+                type: file.type,
+            }));
+
+            this._trackedFiles = new Set(normalizedFiles.map((f) => f.filePath));
+
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.SetModifiedFiles,
+                files: normalizedFiles,
+            });
+        } catch (error) {
+            Logger.debug('Error refreshing modified files:', error);
+            this._trackedFiles = new Set();
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.SetModifiedFiles,
+                files: [],
+            });
+        }
     }
 
     public async executeTriggerFeedback() {
@@ -1117,43 +1273,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await this.handleRovoDevLogout();
     }
 
-    private async executeFilterModifiedFilesByContent(files: ModifiedFile[]) {
-        const webview = this._webView!;
-
-        if (!this._contentTracker) {
-            // If content tracker is not available, return all files (fallback behavior)
-            await webview.postMessage({
-                type: RovoDevProviderMessageType.FilterModifiedFilesByContentComplete,
-                filteredFiles: files,
-            });
-            return;
-        }
-
-        try {
-            const filePaths = files.map((file) => file.filePath);
-            const filesWithContentChanges = await this._contentTracker.filterFilesWithChanges(filePaths);
-
-            const filteredFiles = files.filter(
-                (file) =>
-                    filesWithContentChanges.includes(file.filePath) ||
-                    file.type === modifyFileTitleMap.created.type ||
-                    file.type === modifyFileTitleMap.deleted.type,
-            );
-
-            await webview.postMessage({
-                type: RovoDevProviderMessageType.FilterModifiedFilesByContentComplete,
-                filteredFiles: filteredFiles,
-            });
-        } catch (error) {
-            // On error, return all files
-            Logger.debug('Error filtering files by content:', error);
-            await webview.postMessage({
-                type: RovoDevProviderMessageType.FilterModifiedFilesByContentComplete,
-                filteredFiles: files,
-            });
-        }
-    }
-
     private async createPR(commitMessage?: string, branchName?: string): Promise<void> {
         const prHandler = this._prHandler;
 
@@ -1173,10 +1292,18 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 },
             });
         } catch (e) {
-            await this.processError(e);
+            const gitErrorCode = e.gitErrorCode;
+
+            // Don't log user configuration/input errors - these are expected and user needs to fix them
+            const isUserConfigError =
+                gitErrorCode === GitErrorCodes.NoUserNameConfigured ||
+                gitErrorCode === GitErrorCodes.NoUserEmailConfigured ||
+                e.message?.includes('Commit message is required') ||
+                e.message?.includes('Branch name is required');
+
+            await this.processError(e, { skipLogError: isUserConfigError });
 
             const errorMessage = e.message;
-            const gitErrorCode = e.gitErrorCode;
 
             await webview.postMessage({
                 type: RovoDevProviderMessageType.CreatePRComplete,
@@ -1228,10 +1355,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // Always focus on the specific vscode view, even if disabled (so user can see the login prompt)
         await this.extensionApi.commands.focusRovodevView();
 
-        // Wait for the webview to initialize, up to 5 seconds
+        // Wait for the webview to be ready to receive messages, up to 5 seconds
         const initialized = await safeWaitFor({
             condition: (value) => !!value,
-            check: () => !!this._webView,
+            check: () => (this._webviewReady ? this._webView : undefined),
             timeout: 5000,
             interval: 50,
         });
@@ -1249,10 +1376,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // Actually invoke the rovodev service, feed responses to the webview as normal
         const revertedChanges = this._revertedChanges;
         this._revertedChanges = [];
-        await this._chatProvider.executeChat(
-            { text: prompt, enable_deep_plan: false, context: context || [] },
-            revertedChanges,
-        );
+        await this._chatProvider.executeChat({ text: prompt, context: context || [] }, revertedChanges);
     }
 
     /**
@@ -1292,6 +1416,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     private _dispose() {
+        this._stopModifiedFilesPoll();
         this._disposables.forEach((d) => d.dispose());
         this._disposables = [];
         if (this._webView) {
@@ -1500,24 +1625,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             const mcp_servers = result.mcp_servers || {};
             const serversToReview = Object.keys(mcp_servers).filter((x) => mcp_servers[x] === 'pending user review');
 
-            if (this.isBoysenberry) {
-                await this.signalRovoDevDisabled('Other');
-                await this.processError(
-                    new Error(`Cannot start third party MCP servers:${serversToReview.map((name) => `\n- ${name}`)}`),
-                    { title: 'Failed to initialize Rovo Dev', skipLogError: true },
+            if (serversToReview.length === 0) {
+                await this.signalProcessFailedToInitialize(
+                    'Failed to initialize Rovo Dev, something went wrong with the MCP servers acceptance flow.',
                 );
             } else {
-                if (serversToReview.length === 0) {
-                    await this.signalProcessFailedToInitialize(
-                        'Failed to initialize Rovo Dev, something went wrong with the MCP servers acceptance flow.',
-                    );
-                } else {
-                    await webView.postMessage({
-                        type: RovoDevProviderMessageType.SetMcpAcceptanceRequired,
-                        isPromptPending: this._chatProvider.isPromptPending,
-                        mcpIds: serversToReview,
-                    });
-                }
+                await webView.postMessage({
+                    type: RovoDevProviderMessageType.SetMcpAcceptanceRequired,
+                    isPromptPending: this._chatProvider.isPromptPending,
+                    mcpIds: serversToReview,
+                });
             }
 
             return;
@@ -1528,6 +1645,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             // @ts-expect-error ts(2339) - result.status here should be 'never'
             throw new Error(`Invalid healthcheck's response: "${result.status.toString()}".`);
         }
+
+        this.refreshAgentModel();
+        this.initializeAgentModels();
 
         setCommandContext(RovodevCommandContext.RovoDevApiReady, true);
         this.beginNewSession(result.sessionId || null, 'init');
@@ -1540,6 +1660,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
 
         await this._chatProvider.setReady(rovoDevClient, this._pendingAgentMode);
+        this._startModifiedFilesPoll();
         if (this._pendingAgentMode) {
             await webView.postMessage({
                 type: RovoDevProviderMessageType.SetAgentModeComplete,
@@ -1555,8 +1676,23 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             // this is intentionally not awaiting because the API is pretty slow
             this.rovoDevApiClient
                 ?.status()
-                .then((response) => {
+                .then(async (response) => {
                     this._userEmail = response.account.email;
+
+                    // Try to get full user info from Jira site auth (includes displayName)
+                    // Fall back to status API data if unavailable
+                    const primaryAuthInfo = await this.extensionApi.auth.getPrimaryAuthInfo();
+                    if (primaryAuthInfo?.user) {
+                        this._userInfo = primaryAuthInfo.user;
+                    } else {
+                        this._userInfo = {
+                            id: response.account.accountId,
+                            displayName: response.account.email,
+                            email: response.account.email,
+                            avatarUrl: '',
+                        };
+                    }
+
                     if (this._webviewReady) {
                         this.sendProviderReadyEvent(response.account.email);
                     }
@@ -1573,10 +1709,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
             await this._chatProvider.executeReplay();
         }
-
-        // Initialize content tracker with the API client
-        this._contentTracker?.dispose();
-        this._contentTracker = new RovoDevContentTracker(this._rovoDevApiClient);
 
         // extra sanity checks here
 
@@ -1728,8 +1860,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._telemetryProvider.shutdown();
         this._dwellTracker?.dispose();
         this._dwellTracker = undefined;
-        this._contentTracker?.dispose();
-        this._contentTracker = undefined;
 
         return this.refreshDebugPanel();
     }

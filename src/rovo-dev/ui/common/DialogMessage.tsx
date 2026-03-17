@@ -1,6 +1,5 @@
 import CheckCircleIcon from '@atlaskit/icon/core/check-circle';
 import CopyIcon from '@atlaskit/icon/core/copy';
-import LinkExternalIcon from '@atlaskit/icon/core/link-external';
 import StatusErrorIcon from '@atlaskit/icon/core/status-error';
 import StatusInfoIcon from '@atlaskit/icon/core/status-information';
 import StatusWarningIcon from '@atlaskit/icon/core/status-warning';
@@ -18,7 +17,18 @@ import {
 } from '../rovoDevViewStyles';
 import { DialogMessage } from '../utils';
 import { MarkedDown } from './common';
-import { ExpandableSection } from './ExpandableSection';
+
+/**
+ * Safely parses JSON string or returns the value if it's already an object.
+ * @param value - The value to parse (string or already parsed object)
+ * @returns Parsed object or empty object if value is falsy
+ */
+function safeJsonParse<T = any>(value: string | T | null | undefined): T {
+    if (!value) {
+        return {} as T;
+    }
+    return typeof value === 'string' ? JSON.parse(value) : value;
+}
 
 export const DialogMessageItem: React.FC<{
     msg: DialogMessage;
@@ -26,7 +36,6 @@ export const DialogMessageItem: React.FC<{
     retryAfterError?: () => void;
     onToolPermissionChoice?: (toolCallId: string, choice: ToolPermissionChoice) => void;
     customButton?: { text: string; onClick?: () => void };
-    onOpenLogFile?: () => void;
     onLinkClick: (href: string) => void;
     onRestartProcess?: () => void;
 }> = ({
@@ -35,17 +44,12 @@ export const DialogMessageItem: React.FC<{
     retryAfterError,
     onToolPermissionChoice,
     customButton,
-    onOpenLogFile,
     onLinkClick,
     onRestartProcess,
 }) => {
-    const [isDetailsExpanded, setIsDetailsExpanded] = React.useState(false);
-    const [isStackTraceExpanded, setIsStackTraceExpanded] = React.useState(false);
-    const [isStderrExpanded, setIsStderrExpanded] = React.useState(false);
-    const [isLogsExpanded, setIsLogsExpanded] = React.useState(false);
     const [isCopied, setIsCopied] = React.useState(false);
 
-    const copyToClipboard = () => {
+    const errorDetailsText = React.useMemo(() => {
         const parts = [];
         parts.push(`${msg.title || 'Error'}`);
         if (msg.text) {
@@ -57,13 +61,17 @@ export const DialogMessageItem: React.FC<{
         if (msg.stackTrace) {
             parts.push(`\n\nExtension Stack Trace:\n${msg.stackTrace}`);
         }
-        if (msg.stderr) {
-            parts.push(`\n\nRovo Dev Stderr:\n${msg.stderr}`);
-        }
         if (msg.rovoDevLogs && msg.rovoDevLogs.length > 0) {
             parts.push(`\n\nRovo Dev Logs:\n${msg.rovoDevLogs.join('\n')}`);
         }
-        navigator.clipboard.writeText(parts.join(''));
+        if (msg.stderr) {
+            parts.push(`\n\nRovo Dev Stderr:\n${msg.stderr}`);
+        }
+        return parts.join('');
+    }, [msg.title, msg.text, msg.statusCode, msg.stackTrace, msg.stderr, msg.rovoDevLogs]);
+
+    const copyToClipboard = () => {
+        navigator.clipboard.writeText(errorDetailsText);
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 3000);
     };
@@ -190,73 +198,38 @@ export const DialogMessageItem: React.FC<{
                         </div>
                     )}
 
-                    {msg.statusCode && <div style={{ fontSize: 'smaller', textAlign: 'right' }}>{msg.statusCode}</div>}
-
                     {(msg.stackTrace || msg.stderr || (msg.rovoDevLogs && msg.rovoDevLogs.length > 0)) && (
-                        <ExpandableSection
-                            title="Details"
-                            isExpanded={isDetailsExpanded}
-                            onToggle={() => setIsDetailsExpanded(!isDetailsExpanded)}
-                        >
-                            <div style={{ marginLeft: '20px' }}>
-                                {msg.stackTrace && (
-                                    <ExpandableSection
-                                        title="Extension Stack Trace"
-                                        isExpanded={isStackTraceExpanded}
-                                        onToggle={() => setIsStackTraceExpanded(!isStackTraceExpanded)}
-                                    >
-                                        {msg.stackTrace}
-                                    </ExpandableSection>
-                                )}
-
-                                {msg.stderr && (
-                                    <ExpandableSection
-                                        title="Rovo Dev Stderr"
-                                        isExpanded={isStderrExpanded}
-                                        onToggle={() => setIsStderrExpanded(!isStderrExpanded)}
-                                    >
-                                        {msg.stderr}
-                                    </ExpandableSection>
-                                )}
-
-                                {msg.rovoDevLogs && msg.rovoDevLogs.length > 0 && (
-                                    <ExpandableSection
-                                        title="Rovo Dev Logs"
-                                        isExpanded={isLogsExpanded}
-                                        onToggle={() => setIsLogsExpanded(!isLogsExpanded)}
-                                        headerActions={
-                                            onOpenLogFile && (
-                                                <Tooltip content="Open log file in editor">
-                                                    <button
-                                                        aria-label="open-log-file-button"
-                                                        className="chat-message-action"
-                                                        onClick={onOpenLogFile}
-                                                        style={{
-                                                            background: 'none',
-                                                            border: 'none',
-                                                            cursor: 'pointer',
-                                                            padding: '4px',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            color: 'var(--vscode-foreground)',
-                                                        }}
-                                                    >
-                                                        <LinkExternalIcon label="Open log file" spacing="none" />
-                                                    </button>
-                                                </Tooltip>
-                                            )
-                                        }
-                                    >
-                                        {msg.rovoDevLogs.join('\n')}
-                                    </ExpandableSection>
-                                )}
-
+                        <div style={{ marginTop: '12px' }}>
+                            <div
+                                style={{
+                                    position: 'relative',
+                                    height: '300px',
+                                    overflow: 'auto',
+                                    backgroundColor: 'var(--vscode-editor-background)',
+                                    color: 'var(--vscode-editor-foreground)',
+                                    padding: '8px',
+                                    fontFamily: 'monospace',
+                                    fontSize: '12px',
+                                    whiteSpace: 'pre-wrap',
+                                    wordWrap: 'break-word',
+                                    borderRadius: '4px',
+                                    border: '1px solid var(--vscode-editorGroup-border)',
+                                }}
+                            >
                                 <div
                                     style={{
+                                        position: 'sticky',
+                                        top: '8px',
+                                        right: '8px',
+                                        zIndex: 10,
                                         display: 'flex',
                                         justifyContent: 'flex-end',
-                                        width: '100%',
-                                        marginTop: '12px',
+                                        paddingRight: '8px',
+                                        paddingTop: '8px',
+                                        backgroundColor: 'var(--vscode-editor-background)',
+                                        marginLeft: 'auto',
+                                        width: 'fit-content',
+                                        marginRight: '0',
                                     }}
                                 >
                                     <Tooltip
@@ -276,8 +249,10 @@ export const DialogMessageItem: React.FC<{
                                         </button>
                                     </Tooltip>
                                 </div>
+
+                                {errorDetailsText}
                             </div>
-                        </ExpandableSection>
+                        </div>
                     )}
                 </div>
             </div>
@@ -325,11 +300,12 @@ const friendlyToolName: Record<RovoDevToolName, string> = {
     expand_folder: 'Expand folder',
     grep: 'Search for',
     bash: 'Run command',
-    create_technical_plan: 'Create a technical plan',
     mcp_invoke_tool: "Invoke an MCP server's tool",
     mcp__atlassian__invoke_tool: "Invoke an Atlassian MCP server's tool",
     mcp__atlassian__get_tool_schema: "Get an Atlassian MCP server's tool schema",
     mcp__scout__invoke_tool: "Invoke an MCP server's tool",
+    ask_user_questions: 'Ask user questions',
+    exit_plan_mode: 'Exit plan mode',
 };
 
 const ToolCall: React.FC<{
@@ -339,7 +315,7 @@ const ToolCall: React.FC<{
 }> = ({ toolName, toolArgs, mcpServer }) => {
     const jsonArgs = React.useMemo(() => {
         try {
-            return toolArgs ? JSON.parse(toolArgs) : {};
+            return safeJsonParse(toolArgs);
         } catch {
             return {};
         }
@@ -369,8 +345,6 @@ const ToolCallBody: React.FC<{
         );
     } else if (toolName === 'grep') {
         return <code style={{ maxWidth: '100%' }}>{jsonArgs.content_pattern}</code>;
-    } else if (toolName === 'create_technical_plan') {
-        return null;
     } else if (toolName === 'mcp_invoke_tool') {
         return (
             <table style={{ border: '0' }}>

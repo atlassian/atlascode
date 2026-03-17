@@ -1,18 +1,12 @@
 import { RovoDevToolCallResponse, RovoDevToolReturnResponse } from 'src/rovo-dev/client';
 
-import { appendResponse, ChatMessage } from './utils';
+import { appendResponse, ChatMessage, parseToolReturnMessage } from './utils';
 import { Response } from './utils';
 
 describe('appendResponse', () => {
-    const mockHandleAppendModifiedFileToolReturns = jest.fn();
-
-    beforeEach(() => {
-        jest.clearAllMocks();
-    });
-
     it('should return prev when response is null', () => {
         const prev: Response[] = [{ event_kind: '_RovoDevUserPrompt', content: 'test' }];
-        const result = appendResponse(prev, null, mockHandleAppendModifiedFileToolReturns, true);
+        const result = appendResponse(prev, null, true);
         expect(result).toEqual(prev);
     });
 
@@ -20,7 +14,7 @@ describe('appendResponse', () => {
         const prev: Response[] = [{ event_kind: 'text', content: 'Hello ', index: 0 }];
         const response = { event_kind: 'text', content: 'world', index: 0 } as const;
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
+        const result = appendResponse(prev, response, true);
 
         expect(result).toHaveLength(1);
         expect(result[0]).toEqual({ event_kind: 'text', content: 'Hello world', index: 0 });
@@ -30,7 +24,7 @@ describe('appendResponse', () => {
         const prev: Response[] = [{ event_kind: '_RovoDevUserPrompt', content: 'Hello' }];
         const response = { event_kind: 'text', content: 'world', index: 0 } as const;
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
+        const result = appendResponse(prev, response, true);
 
         expect(result).toHaveLength(2);
         expect(result[0]).toEqual({ event_kind: '_RovoDevUserPrompt', content: 'Hello' });
@@ -70,9 +64,8 @@ describe('appendResponse', () => {
             toolCallMessage: toolCallMessage2,
         };
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
+        const result = appendResponse(prev, response, true);
 
-        expect(mockHandleAppendModifiedFileToolReturns).toHaveBeenCalledWith(response);
         expect(result).toHaveLength(1);
         expect(Array.isArray(result[0])).toBe(true);
         expect(result[0]).toHaveLength(2);
@@ -96,7 +89,7 @@ describe('appendResponse', () => {
             toolCallMessage,
         };
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
+        const result = appendResponse(prev, response, true);
 
         expect(result).toHaveLength(2);
         expect(result[0]).toEqual({ event_kind: '_RovoDevUserPrompt', content: 'user message' });
@@ -130,35 +123,11 @@ describe('appendResponse', () => {
             toolCallMessage,
         };
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
+        const result = appendResponse(prev, response, true);
 
         expect(result).toHaveLength(2);
         expect(Array.isArray(result[1])).toBe(true);
         expect(result[1]).toHaveLength(1);
-    });
-
-    it('should handle create_technical_plan as separate message', () => {
-        const toolCallMessage: RovoDevToolCallResponse = {
-            event_kind: 'tool-call',
-            tool_name: 'create_technical_plan',
-            args: 'args1',
-            tool_call_id: 'id1',
-        };
-
-        const prev: Response[] = [{ event_kind: 'text', content: 'previous', index: 0 }];
-        const response: RovoDevToolReturnResponse = {
-            event_kind: 'tool-return',
-            tool_name: 'create_technical_plan',
-            content: 'plan',
-            tool_call_id: 'id1',
-            timestamp: '0',
-            toolCallMessage,
-        };
-
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
-
-        expect(result).toHaveLength(2);
-        expect(result[1]).toEqual(response);
     });
 
     it('should merge with existing thinking group', () => {
@@ -208,37 +177,11 @@ describe('appendResponse', () => {
             toolCallMessage: toolCallMessage3,
         };
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
+        const result = appendResponse(prev, response, true);
 
         expect(result).toHaveLength(1);
         expect(Array.isArray(result[0])).toBe(true);
         expect(result[0]).toHaveLength(3);
-    });
-
-    it('should handle create_technical_plan when latest is array', () => {
-        const toolCallMessage: RovoDevToolCallResponse = {
-            event_kind: 'tool-call',
-            tool_name: 'create_technical_plan',
-            args: 'args1',
-            tool_call_id: 'id2',
-        };
-        const existingArray: ChatMessage[] = [
-            { event_kind: 'tool-call', tool_name: 'grep', args: 'args1', tool_call_id: 'id1' },
-        ];
-        const prev: Response[] = [existingArray];
-        const response: RovoDevToolReturnResponse = {
-            event_kind: 'tool-return',
-            tool_name: 'create_technical_plan',
-            content: 'plan',
-            tool_call_id: 'id2',
-            timestamp: '0',
-            toolCallMessage,
-        };
-
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
-
-        expect(result).toHaveLength(2);
-        expect(result[1]).toEqual(response);
     });
 
     it('should handle array response when latest exists', () => {
@@ -262,7 +205,7 @@ describe('appendResponse', () => {
             },
         ] as const;
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
+        const result = appendResponse(prev, response, true);
 
         expect(result).toHaveLength(2);
         expect(result[0]).toEqual({ event_kind: '_RovoDevUserPrompt', content: 'previous' });
@@ -275,7 +218,7 @@ describe('appendResponse', () => {
             { event_kind: 'tool-call', tool_name: 'grep', args: 'args1', tool_call_id: 'id1' },
         ] as const;
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
+        const result = appendResponse(prev, response, true);
 
         expect(result).toHaveLength(1);
         expect(result[0]).toEqual(response[0]);
@@ -288,7 +231,7 @@ describe('appendResponse', () => {
         const prev: Response[] = [existingArray];
         const response = { event_kind: 'text', content: 'new message', index: 0 } as const;
 
-        const result = appendResponse(prev, response, mockHandleAppendModifiedFileToolReturns, true);
+        const result = appendResponse(prev, response, true);
 
         expect(result).toHaveLength(2);
         expect(result[0]).toEqual(existingArray);
@@ -327,11 +270,271 @@ describe('appendResponse', () => {
             toolCallMessage: toolCallMessage2,
         };
 
-        const result = appendResponse([prev], response, mockHandleAppendModifiedFileToolReturns, false);
+        const result = appendResponse([prev], response, false);
 
-        expect(mockHandleAppendModifiedFileToolReturns).toHaveBeenCalledWith(response);
         expect(result).toHaveLength(2);
         expect(result[0]).toEqual(prev);
         expect(result[1]).toEqual(response);
+    });
+});
+
+describe('parseToolReturnMessage', () => {
+    const mockOnError = jest.fn();
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    describe('JSON parsing with type safety', () => {
+        it('should handle bash tool with string args', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'bash',
+                args: '{"command": "npm test"}',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'bash',
+                content: 'output',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                title: 'npm test',
+                content: 'Executed command',
+                type: 'bash',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should handle bash tool with pre-parsed object args', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'bash',
+                args: { command: 'npm test' } as any, // Simulating pre-parsed object
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'bash',
+                content: 'output',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                title: 'npm test',
+                content: 'Executed command',
+                type: 'bash',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should handle expand_folder tool with string args', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'expand_folder',
+                args: '{"folder_path": "/src/components"}',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'expand_folder',
+                content: 'expanded',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                title: '/src/components',
+                content: 'Expanded folder',
+                type: 'open',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should handle expand_folder tool with pre-parsed object args', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'expand_folder',
+                args: { folder_path: '/src/components' } as any,
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'expand_folder',
+                content: 'expanded',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                title: '/src/components',
+                content: 'Expanded folder',
+                type: 'open',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should handle grep tool with string args', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'grep',
+                args: '{"content_pattern": "TODO", "path_glob": "**/*.ts"}',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'grep',
+                content: 'file1.ts:10: TODO: fix this\nfile2.ts:25: TODO: refactor',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                title: '2 matches found',
+                content: 'Searched for `TODO` in files matching `**/*.ts`',
+                type: 'open',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should handle grep tool with pre-parsed object args', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'grep',
+                args: { content_pattern: 'TODO', path_glob: '**/*.ts' } as any,
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'grep',
+                content: 'file1.ts:10: TODO: fix this',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                title: '1 match found',
+                content: 'Searched for `TODO` in files matching `**/*.ts`',
+                type: 'open',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should handle MCP tools with string args', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'mcp__atlassian__invoke_tool',
+                args: '{"tool_name": "jira_search"}',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'mcp__atlassian__invoke_tool',
+                content: 'results',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                content: 'Invoked MCP tool: `jira_search`',
+                type: 'bash',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should handle MCP tools with pre-parsed object args', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'mcp__scout__invoke_tool',
+                args: { tool_name: 'search_code' } as any,
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'mcp__scout__invoke_tool',
+                content: 'results',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                content: 'Invoked MCP tool: `search_code`',
+                type: 'bash',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should handle parse errors gracefully and call onError', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'bash',
+                args: 'invalid json{',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'bash',
+                content: 'output',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                content: 'bash',
+            });
+            expect(mockOnError).toHaveBeenCalledWith(
+                expect.any(Error),
+                'Error parsing ToolReturnMessage for tool bash',
+            );
+        });
     });
 });

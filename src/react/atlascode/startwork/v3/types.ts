@@ -1,4 +1,4 @@
-import { Transition } from '@atlassianlabs/jira-pi-common-models';
+import { Transition } from '@atlassian-pi/jira-pi-common-models';
 
 import { RepoData } from '../../../../lib/ipc/toUI/startWork';
 import { Branch } from '../../../../typings/git';

@@ -76,90 +76,120 @@ export const createMonacoPromptEditor = (container: HTMLElement) => {
 interface SlashCommand {
     label: string;
     insertText: string;
+    disabled?: boolean;
     description?: string;
     command?: monaco.languages.Command;
 }
 
-export const SLASH_COMMANDS: SlashCommand[] = [
-    {
-        label: '/clear',
-        insertText: '/clear',
-        description: 'Clear the chat',
-        command: { title: 'Clear', id: 'rovo-dev.clearChat', tooltip: 'Clear the chat' },
-    },
-    {
-        label: '/copy',
-        insertText: '/copy',
-        description: 'Copy the last response to clipboard',
-        command: { title: 'Copy', id: 'rovo-dev.copyResponse', tooltip: 'Copy the last response to clipboard' },
-    },
-    {
-        label: '/feedback',
-        insertText: '/feedback',
-        description: 'Provide feedback on Rovo Dev',
-        command: { title: 'Feedback', id: 'rovo-dev.triggerFeedback', tooltip: 'Provide feedback on Rovo Dev' },
-    },
-    {
-        label: '/memory',
-        insertText: '/memory',
-        description: 'Show agent memory',
-        command: { title: 'Agent Memory', id: 'rovo-dev.agentMemory', tooltip: 'Show agent memory' },
-    },
-    {
-        label: '/prompts',
-        insertText: '!',
-        description: 'Show saved prompts',
-        command: {
-            title: 'Prompts',
-            id: 'rovo-dev.triggerPrompts',
-            tooltip: 'Show saved prompts',
+export function getSlashCommands(isBBY: boolean): SlashCommand[] {
+    return [
+        {
+            label: '/clear',
+            insertText: '/clear',
+            description: 'Clear the chat',
+            command: { title: 'Clear', id: 'rovo-dev.clearChat', tooltip: 'Clear the chat' },
         },
-    },
-    {
-        label: '/prune',
-        insertText: '/prune',
-        description: 'Prune the chat',
-        command: { title: 'Prune', id: 'rovo-dev.pruneChat', tooltip: 'Prune the chat' },
-    },
-    {
-        label: '/status',
-        insertText: '/status',
-        description: 'Show Rovo Dev status including version, account details and model',
-        command: {
-            title: 'Status',
-            id: 'rovo-dev.triggerStatus',
-            tooltip: 'Show Rovo Dev status including version, account details and model',
+        {
+            label: '/copy',
+            insertText: '/copy',
+            description: 'Copy the last response to clipboard',
+            command: { title: 'Copy', id: 'rovo-dev.copyResponse', tooltip: 'Copy the last response to clipboard' },
         },
-    },
-    {
-        label: '/usage',
-        insertText: '/usage',
-        description: 'Show Rovo Dev credit usage',
-        command: {
-            title: 'Usage',
-            id: 'rovo-dev.triggerUsage',
-            tooltip: 'Show Rovo Dev credit usage',
+        {
+            label: '/feedback',
+            insertText: '/feedback',
+            description: 'Provide feedback on Rovo Dev',
+            command: { title: 'Feedback', id: 'rovo-dev.triggerFeedback', tooltip: 'Provide feedback on Rovo Dev' },
         },
-    },
-    {
-        label: '/yolo',
-        insertText: '/yolo',
-        description: 'Toggle tool confirmations',
-        command: { title: 'Yolo Mode', id: 'rovo-dev.toggleYoloMode', tooltip: 'Toggle tool confirmations' },
-    },
-    {
-        label: '/ask',
-        insertText: '/ask ',
-        description: 'Ask a question in read-only mode (no file changes or terminal access)',
-        command: { title: 'Ask Mode', id: 'rovo-dev.invokeAskMode', tooltip: 'Invoke Ask mode' },
-    },
-    {
-        label: '/sessions',
-        insertText: '/sessions',
-        description: 'View and manage your agent sessions',
-        command: { title: 'Sessions', id: 'rovo-dev.triggerSessions', tooltip: 'View and manage your agent sessions' },
-    },
-];
+        {
+            label: '/mcp',
+            insertText: '',
+            description: 'Open the MCP configuration file',
+            command: {
+                title: 'MCP configuration',
+                id: 'rovo-dev.mcpConfiguration',
+                tooltip: 'Open the MCP configuration file',
+            },
+            disabled: isBBY,
+        },
+        {
+            label: '/memory',
+            insertText: '/memory',
+            description: 'Show agent memory',
+            command: { title: 'Agent Memory', id: 'rovo-dev.agentMemory', tooltip: 'Show agent memory' },
+        },
+        {
+            label: '/models',
+            insertText: '/models',
+            description: 'Show available agent models',
+            command: {
+                title: 'Models',
+                id: 'rovo-dev.triggerAgentModels',
+                tooltip: 'Show available agent models',
+            },
+        },
+        {
+            label: '/prompts',
+            insertText: '!',
+            description: 'Show saved prompts',
+            command: {
+                title: 'Prompts',
+                id: 'rovo-dev.triggerPrompts',
+                tooltip: 'Show saved prompts',
+            },
+        },
+        {
+            label: '/prune',
+            insertText: '/prune',
+            description: 'Prune the chat',
+            command: { title: 'Prune', id: 'rovo-dev.pruneChat', tooltip: 'Prune the chat' },
+        },
+        {
+            label: '/status',
+            insertText: '/status',
+            description: 'Show Rovo Dev status including version, account details and model',
+            command: {
+                title: 'Status',
+                id: 'rovo-dev.triggerStatus',
+                tooltip: 'Show Rovo Dev status including version, account details and model',
+            },
+        },
+        {
+            label: '/usage',
+            insertText: '/usage',
+            description: 'Show Rovo Dev credit usage',
+            command: {
+                title: 'Usage',
+                id: 'rovo-dev.triggerUsage',
+                tooltip: 'Show Rovo Dev credit usage',
+            },
+        },
+        {
+            label: '/yolo',
+            insertText: '/yolo',
+            description: 'Toggle tool confirmations',
+            command: { title: 'Yolo Mode', id: 'rovo-dev.toggleYoloMode', tooltip: 'Toggle tool confirmations' },
+            disabled: isBBY,
+        },
+        {
+            label: '/ask',
+            insertText: '/ask ',
+            description: 'Ask a question in read-only mode (no file changes or terminal access)',
+            command: { title: 'Ask Mode', id: 'rovo-dev.invokeAskMode', tooltip: 'Invoke Ask mode' },
+        },
+        {
+            label: '/sessions',
+            insertText: '/sessions',
+            description: 'View and manage your agent sessions',
+            command: {
+                title: 'Sessions',
+                id: 'rovo-dev.triggerSessions',
+                tooltip: 'View and manage your agent sessions',
+            },
+            disabled: isBBY,
+        },
+    ];
+}
 
 export const createSlashCommandProvider = (commands: SlashCommand[]): monaco.languages.CompletionItemProvider => {
     return {
@@ -269,71 +299,117 @@ export function setupMonacoCommands(
     editor: monaco.editor.IStandaloneCodeEditor,
     onSend: (text: string) => boolean,
     onCopy: () => void,
+    handleMcpConfigurationCommand: () => void,
     handleMemoryCommand: () => void,
     handleTriggerFeedbackCommand: () => void,
     handleSessionCommand?: () => void,
     onYoloModeToggled?: () => void,
-) {
-    monaco.editor.registerCommand('rovo-dev.clearChat', () => {
-        if (onSend('/clear')) {
+): monaco.IDisposable {
+    const disposables: monaco.IDisposable[] = [];
+
+    disposables.push(
+        monaco.editor.registerCommand('rovo-dev.clearChat', () => {
+            if (onSend('/clear')) {
+                editor.setValue('');
+            }
+        }),
+    );
+
+    disposables.push(
+        monaco.editor.registerCommand('rovo-dev.pruneChat', () => {
+            if (onSend('/prune')) {
+                editor.setValue('');
+            }
+        }),
+    );
+
+    disposables.push(
+        monaco.editor.registerCommand('rovo-dev.copyResponse', () => {
             editor.setValue('');
-        }
-    });
+            onCopy();
+        }),
+    );
 
-    monaco.editor.registerCommand('rovo-dev.pruneChat', () => {
-        if (onSend('/prune')) {
+    disposables.push(
+        monaco.editor.registerCommand('rovo-dev.agentMemory', () => {
+            handleMemoryCommand();
             editor.setValue('');
-        }
-    });
+        }),
+    );
 
-    monaco.editor.registerCommand('rovo-dev.copyResponse', () => {
-        editor.setValue('');
-        onCopy();
-    });
-
-    monaco.editor.registerCommand('rovo-dev.agentMemory', () => {
-        handleMemoryCommand();
-        editor.setValue('');
-    });
-
-    monaco.editor.registerCommand('rovo-dev.triggerPrompts', () => {
-        // Trigger suggestions for saved prompts
-        editor.trigger('keyboard', 'editor.action.triggerSuggest', { auto: true });
-    });
-
-    monaco.editor.registerCommand('rovo-dev.triggerStatus', () => {
-        if (onSend('/status')) {
+    disposables.push(
+        monaco.editor.registerCommand('rovo-dev.mcpConfiguration', () => {
+            handleMcpConfigurationCommand();
             editor.setValue('');
-        }
-    });
+        }),
+    );
 
-    monaco.editor.registerCommand('rovo-dev.triggerUsage', () => {
-        if (onSend('/usage')) {
-            editor.setValue('');
-        }
-    });
+    disposables.push(
+        monaco.editor.registerCommand('rovo-dev.triggerPrompts', () => {
+            // Trigger suggestions for saved prompts
+            editor.trigger('keyboard', 'editor.action.triggerSuggest', { auto: true });
+        }),
+    );
+
+    disposables.push(
+        monaco.editor.registerCommand('rovo-dev.triggerStatus', () => {
+            if (onSend('/status')) {
+                editor.setValue('');
+            }
+        }),
+    );
+
+    disposables.push(
+        monaco.editor.registerCommand('rovo-dev.triggerUsage', () => {
+            if (onSend('/usage')) {
+                editor.setValue('');
+            }
+        }),
+    );
+
+    disposables.push(
+        monaco.editor.registerCommand('rovo-dev.triggerAgentModels', () => {
+            if (onSend('/models')) {
+                editor.setValue('');
+            }
+        }),
+    );
 
     if (onYoloModeToggled) {
-        monaco.editor.registerCommand('rovo-dev.toggleYoloMode', () => {
-            onYoloModeToggled();
-            editor.setValue('');
-        });
+        disposables.push(
+            monaco.editor.registerCommand('rovo-dev.toggleYoloMode', () => {
+                onYoloModeToggled();
+                editor.setValue('');
+            }),
+        );
     }
 
-    monaco.editor.registerCommand('rovo-dev.triggerFeedback', () => {
-        handleTriggerFeedbackCommand();
-        editor.setValue('');
-    });
+    disposables.push(
+        monaco.editor.registerCommand('rovo-dev.triggerFeedback', () => {
+            handleTriggerFeedbackCommand();
+            editor.setValue('');
+        }),
+    );
 
     if (handleSessionCommand) {
-        monaco.editor.registerCommand('rovo-dev.triggerSessions', () => {
-            handleSessionCommand();
-            editor.setValue('');
-        });
+        disposables.push(
+            monaco.editor.registerCommand('rovo-dev.triggerSessions', () => {
+                handleSessionCommand();
+                editor.setValue('');
+            }),
+        );
     }
+
+    return {
+        dispose: () => {
+            disposables.forEach((d) => d?.dispose());
+        },
+    };
 }
 
 export function setupPromptKeyBindings(editor: monaco.editor.IStandaloneCodeEditor, handleSend: () => void) {
+    // Note: editor.addCommand() returns a string (command ID), not a disposable,
+    // so the commands are automatically cleaned up when the editor instance is disposed.
     editor.addCommand(monaco.KeyCode.Enter, () => handleSend(), '!suggestWidgetVisible'); // Only trigger if suggestions are not visible
 
     editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
@@ -387,7 +463,7 @@ export function setupPromptKeyBindings(editor: monaco.editor.IStandaloneCodeEdit
 }
 
 // Auto-resize functionality
-export function setupAutoResize(editor: monaco.editor.IStandaloneCodeEditor, maxHeight = 200) {
+export function setupAutoResize(editor: monaco.editor.IStandaloneCodeEditor, maxHeight = 200): monaco.IDisposable {
     const updateHeight = () => {
         const contentHeight = Math.min(maxHeight, editor.getContentHeight());
         const container = editor.getContainerDomNode();
@@ -395,6 +471,8 @@ export function setupAutoResize(editor: monaco.editor.IStandaloneCodeEditor, max
         editor.layout();
     };
 
-    editor.onDidContentSizeChange(updateHeight);
+    const disposable = editor.onDidContentSizeChange(updateHeight);
     updateHeight();
+
+    return disposable;
 }
