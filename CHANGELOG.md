@@ -4,6 +4,7 @@
 
 ### Improvements
 
+- **RovoDev**: Replaced giant Atlassian logo loader with a smaller spinner matching Atlaskit Spinner large size for the Rovo Dev tab
 - **RovoDev**: Replaced `executeKeepFiles` with `invalidateFileCache` API call to eliminate manual file-system-based cache removal
 - **RovoDev**: Replaced tool-return-based file list with `listCachedFiles` API - eliminates fragile client-side heuristic parsing and provides authoritative file list from server; files now refresh after prompt completion, undo, and keep actions
 
