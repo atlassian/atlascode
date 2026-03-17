@@ -93,7 +93,7 @@ export class CredentialManager implements Disposable {
 
     public async checkScopes(site: DetailedSiteInfo, scopes: string[]): Promise<CheckedScopes | undefined> {
         // Scopes are only applicable to cloud sites
-        if (!site.host.endsWith('.atlassian.net')) {
+        if (!site.host.endsWith('.atlassian.net') && !site.host.endsWith('.jira.com')) {
             return undefined;
         }
 
@@ -126,7 +126,7 @@ export class CredentialManager implements Disposable {
 
     async getApiTokenIfExists(site: DetailedSiteInfo): Promise<BasicAuthInfo | undefined> {
         // Only applicable to cloud sites
-        if (!site.host.endsWith('.atlassian.net')) {
+        if (!site.host.endsWith('.atlassian.net') && !site.host.endsWith('.jira.com')) {
             return undefined;
         }
 
@@ -150,7 +150,7 @@ export class CredentialManager implements Disposable {
     async findApiTokenForSite(site?: DetailedSiteInfo | string): Promise<BasicAuthInfo | undefined> {
         const siteToCheck = typeof site === 'string' ? Container.siteManager.getSiteForId(ProductJira, site) : site;
 
-        if (!siteToCheck || !siteToCheck.host.endsWith('.atlassian.net')) {
+        if (!siteToCheck || (!siteToCheck.host.endsWith('.atlassian.net') && !siteToCheck.host.endsWith('.jira.com'))) {
             return undefined;
         }
 
@@ -159,7 +159,7 @@ export class CredentialManager implements Disposable {
 
         // For a cloud site - check if we have another cloud site with the same user and API key
         const promises = sites
-            .filter((site) => site.host.endsWith('.atlassian.net'))
+            .filter((site) => site.host.endsWith('.atlassian.net') || site.host.endsWith('.jira.com'))
             .map(async (site) => {
                 const authInfo = await this.getAuthInfo(site);
                 if (authInfo?.user.email === selectedSiteEmail && isBasicAuthInfo(authInfo)) {
