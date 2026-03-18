@@ -84,7 +84,6 @@ export class OAuthRefesher implements Disposable {
                     `Auth error (${err.response.status}) while refreshing tokens. Credentials will be invalidated.`,
                 );
                 response.shouldInvalidate = true;
-                response.shouldSlowDown = true;
             } else {
                 // Log as debug - authStore will log as error if retries exhausted
                 Logger.debug(`Error while refreshing tokens` + responseStatusDescription + axiosErrorData);
