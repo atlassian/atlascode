@@ -91,7 +91,7 @@ describe('OAuthRefresher', () => {
             expect(Logger.debug).toHaveBeenCalledWith(expect.stringContaining('Auth error (401)'));
             expect(Logger.error).not.toHaveBeenCalled();
             expect(result.shouldInvalidate).toBe(true);
-            expect(result.shouldSlowDown).toBe(true);
+            expect(result.shouldSlowDown).toBeUndefined();
             expect(result.tokens).toBeUndefined();
         });
 
@@ -112,7 +112,7 @@ describe('OAuthRefresher', () => {
             expect(Logger.debug).toHaveBeenCalledWith(expect.stringContaining('Auth error (403)'));
             expect(Logger.error).not.toHaveBeenCalled();
             expect(result.shouldInvalidate).toBe(true);
-            expect(result.shouldSlowDown).toBe(true);
+            expect(result.shouldSlowDown).toBeUndefined();
         });
 
         it('should log debug for other HTTP errors', async () => {
