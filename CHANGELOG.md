@@ -5,6 +5,7 @@
 ### Bug Fixes
 
 - Fixed "Please log in again" error message for disabled products so Jira-only and Bitbucket-only users do not see the other product's connection error on startup
+- Fixed duplicate remote creation when checking out PR branches from forked repositories - the extension now reuses existing remotes that point to the same repository
 
 ## What's new in 4.0.25
 
