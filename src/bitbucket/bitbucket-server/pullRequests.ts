@@ -47,7 +47,8 @@ export class ServerPullRequestApi implements PullRequestApi {
             avatarSize: 64,
             ...queryParams,
         });
-        const prs: PullRequest[] = data.values!.map((pr: any) =>
+        const values = Array.isArray(data.values) ? data.values : [];
+        const prs: PullRequest[] = values.map((pr: any) =>
             ServerPullRequestApi.toPullRequestModel(pr, 0, site, workspaceRepo),
         );
         const next =
@@ -1044,7 +1045,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                 version: data.version,
                 url: data.links.self[0].href,
                 author: this.toUser(site.details, data.author.user),
-                participants: data.reviewers.map((reviewer: any) => ({
+                participants: (Array.isArray(data.reviewers) ? data.reviewers : []).map((reviewer: any) => ({
                     ...this.toUser(site.details, reviewer.user),
                     role: reviewer.role,
                     status: reviewer.status === 'NEEDS_WORK' ? 'CHANGES_REQUESTED' : reviewer.status,
