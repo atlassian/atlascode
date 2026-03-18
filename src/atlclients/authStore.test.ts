@@ -961,6 +961,7 @@ describe('CredentialManager', () => {
                 getNewTokens: jest.fn(),
             };
             (credentialManager as any)._refresher = mockRefresher;
+            mockOAuthInfo.state = AuthInfoState.Valid;
         });
 
         it('should log error only after 5 failed attempts', async () => {
@@ -1127,6 +1128,33 @@ describe('CredentialManager', () => {
             expect(result).toBeUndefined();
             expect(mockRefresher.getNewTokens).not.toHaveBeenCalled();
             expect(Logger.debug).toHaveBeenCalledWith(expect.stringContaining('permanent previous failure'));
+        });
+
+        it('should skip refreshAccessToken when OAuth credentials are already invalid', async () => {
+            const Logger = require('../logger').Logger;
+            const site = { ...mockJiraSite, isCloud: true };
+            const invalidOAuthInfo: OAuthInfo = {
+                ...mockOAuthInfo,
+                state: AuthInfoState.Invalid,
+            };
+
+            const getAuthInfoSpy = jest.spyOn(credentialManager as any, 'getAuthInfoForProductAndCredentialId');
+            getAuthInfoSpy.mockResolvedValue(invalidOAuthInfo);
+            const saveAuthInfoSpy = jest.spyOn(credentialManager as any, 'saveAuthInfo');
+            saveAuthInfoSpy.mockResolvedValue(true);
+
+            Logger.debug.mockClear();
+            mockRefresher.getNewTokens.mockClear();
+
+            const result = await (credentialManager as any).refreshAccessToken(site);
+
+            expect(result).toBeUndefined();
+            expect(mockRefresher.getNewTokens).not.toHaveBeenCalled();
+            expect(saveAuthInfoSpy).not.toHaveBeenCalled();
+            expect(Logger.debug).toHaveBeenCalledWith(expect.stringContaining('credentials are invalid'));
+
+            const failedRefresh = (credentialManager as any)._failedRefreshCache.get(site.credentialId);
+            expect(failedRefresh?.permanentFailure).toBe(true);
         });
 
         it('should skip token refresh when credentials state is Invalid', async () => {
