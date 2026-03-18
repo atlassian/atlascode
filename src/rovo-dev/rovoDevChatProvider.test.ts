@@ -1043,5 +1043,75 @@ describe('RovoDevChatProvider', () => {
                 }),
             );
         });
+
+        it('should show prune warning dialog when context is automatically pruned', async () => {
+            const mockPrompt: RovoDevPrompt = {
+                text: 'Hello',
+                context: [],
+            };
+
+            const mockReadableStream = new ReadableStream({
+                start(controller) {
+                    controller.enqueue(
+                        new TextEncoder().encode(
+                            'event: prune\ndata: {"message": "Context has been automatically pruned to fit within the context window."}\n\n',
+                        ),
+                    );
+                    controller.enqueue(new TextEncoder().encode('event: close\ndata: \n\n'));
+                    controller.close();
+                },
+            });
+            const mockResponse = { body: mockReadableStream } as Response;
+            mockApiClient.chat.mockResolvedValue(mockResponse);
+
+            await chatProvider.executeChat(mockPrompt, []);
+
+            expect(mockWebview.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: RovoDevProviderMessageType.ShowDialog,
+                    message: expect.objectContaining({
+                        event_kind: '_RovoDevDialog',
+                        type: 'prune',
+                        title: 'Context limit reached\nRetrying using pruned message history',
+                        text: 'Context has been automatically pruned to fit within the context window.',
+                    }),
+                }),
+            );
+        });
+
+        it('should show info dialog when user manually prunes with /prune command', async () => {
+            const mockPrompt: RovoDevPrompt = {
+                text: '/prune',
+                context: [],
+            };
+
+            const mockReadableStream = new ReadableStream({
+                start(controller) {
+                    controller.enqueue(
+                        new TextEncoder().encode(
+                            'event: prune\ndata: {"message": "Message history has been pruned."}\n\n',
+                        ),
+                    );
+                    controller.enqueue(new TextEncoder().encode('event: close\ndata: \n\n'));
+                    controller.close();
+                },
+            });
+            const mockResponse = { body: mockReadableStream } as Response;
+            mockApiClient.chat.mockResolvedValue(mockResponse);
+
+            await chatProvider.executeChat(mockPrompt, []);
+
+            expect(mockWebview.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: RovoDevProviderMessageType.ShowDialog,
+                    message: expect.objectContaining({
+                        event_kind: '_RovoDevDialog',
+                        type: 'info',
+                        title: 'Context pruned',
+                        text: 'Message history has been pruned.',
+                    }),
+                }),
+            );
+        });
     });
 });

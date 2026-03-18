@@ -94,7 +94,15 @@ export interface ToolPermissionDialogMessage extends AbstractDialogMessage {
     toolCallId: string;
 }
 
-export type DialogMessage = ErrorDialogMessage | WarningInfoDialogMessage | ToolPermissionDialogMessage;
+export interface PruneDialogMessage extends AbstractDialogMessage {
+    type: 'prune';
+}
+
+export type DialogMessage =
+    | ErrorDialogMessage
+    | WarningInfoDialogMessage
+    | ToolPermissionDialogMessage
+    | PruneDialogMessage;
 
 export interface ToolReturnParseResult {
     content: string;

@@ -93,6 +93,10 @@ export const DialogMessageItem: React.FC<{
                 title = msg.title ?? 'Rovo Dev';
                 icon = <InfoIcon title={title} />;
                 return [title, icon];
+            case 'prune':
+                title = msg.title ?? 'Context limit reached\nRetrying using pruned message history';
+                icon = <WarningIcon title={title} />;
+                return [title, icon];
             case 'toolPermissionRequest':
                 title = msg.title ?? 'Permission required';
                 icon = <WarningIcon title={title} />;

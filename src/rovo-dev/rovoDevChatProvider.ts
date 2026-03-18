@@ -652,16 +652,26 @@ export class RovoDevChatProvider {
                 await this.clearChat();
                 break;
 
-            case 'prune':
+            case 'prune': {
+                const isManualPrune = this._currentPrompt?.text?.trim().startsWith('/prune');
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.ShowDialog,
-                    message: {
-                        type: 'info',
-                        text: response.message,
-                        event_kind: '_RovoDevDialog',
-                    },
+                    message: isManualPrune
+                        ? {
+                              type: 'info',
+                              title: 'Context pruned',
+                              text: response.message,
+                              event_kind: '_RovoDevDialog',
+                          }
+                        : {
+                              type: 'prune',
+                              title: 'Context limit reached\nRetrying using pruned message history',
+                              text: response.message,
+                              event_kind: '_RovoDevDialog',
+                          },
                 });
                 break;
+            }
 
             case 'on_call_tools_start':
                 this._pendingToolConfirmation = {};
