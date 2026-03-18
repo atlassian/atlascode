@@ -545,6 +545,16 @@ export class CredentialManager implements Disposable {
             return undefined;
         }
 
+        if (credentials.state === AuthInfoState.Invalid) {
+            Logger.debug(`Skipping token refresh for credentialID: ${site.credentialId}; credentials are invalid.`);
+            this._failedRefreshCache.set(site.credentialId, {
+                attemptsCount: this._failedRefreshCache.get(site.credentialId)?.attemptsCount ?? 0,
+                lastAttemptAt: new Date(),
+                permanentFailure: true,
+            });
+            return undefined;
+        }
+
         const failedRefresh = this._failedRefreshCache.get(site.credentialId);
         if (failedRefresh) {
             if (failedRefresh.permanentFailure) {
@@ -609,10 +619,10 @@ export class CredentialManager implements Disposable {
                         );
                     }
                     // Do not invalidate on transient errors (e.g. network) - credentials stay valid for retry later
-                }
-                if (tokenResponse.shouldInvalidate) {
+                } else if (tokenResponse.shouldInvalidate) {
+                    const newAttemptsCount = (this._failedRefreshCache.get(site.credentialId)?.attemptsCount ?? 0) + 1;
                     this._failedRefreshCache.set(site.credentialId, {
-                        attemptsCount: (this._failedRefreshCache.get(site.credentialId)?.attemptsCount ?? 0) + 1,
+                        attemptsCount: newAttemptsCount,
                         lastAttemptAt: new Date(),
                         permanentFailure: true,
                     });
