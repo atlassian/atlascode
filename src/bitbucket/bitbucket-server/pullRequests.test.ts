@@ -266,6 +266,40 @@ describe('ServerPullRequestApi', () => {
             expect(result.next).toBe('http://example.com/next-page');
             expect(mockGenerateUrl).toHaveBeenCalled();
         });
+
+        it('should return empty data when response values are missing', async () => {
+            const mockResponse = {
+                data: {
+                    isLastPage: true,
+                },
+            };
+
+            mockGet.mockResolvedValue(mockResponse);
+
+            const result = await api.getList(mockWorkspaceRepo);
+
+            expect(result.data).toEqual([]);
+        });
+
+        it('should not throw when pull request reviewers are missing', async () => {
+            const prWithoutReviewers = {
+                ...getPullRequestData,
+                reviewers: undefined,
+            };
+            const mockResponse = {
+                data: {
+                    values: [prWithoutReviewers],
+                    isLastPage: true,
+                },
+            };
+
+            mockGet.mockResolvedValue(mockResponse);
+
+            const result = await api.getList(mockWorkspaceRepo);
+
+            expect(result.data).toHaveLength(1);
+            expect(result.data[0].data.participants).toEqual([]);
+        });
     });
 
     describe('getListCreatedByMe', () => {
