@@ -15,20 +15,8 @@ import {
     inChatSecondaryButtonStyles,
     messageContentStyles,
 } from '../rovoDevViewStyles';
-import { DialogMessage } from '../utils';
+import { DialogMessage, safeJsonParse } from '../utils';
 import { MarkedDown } from './common';
-
-/**
- * Safely parses JSON string or returns the value if it's already an object.
- * @param value - The value to parse (string or already parsed object)
- * @returns Parsed object or empty object if value is falsy
- */
-function safeJsonParse<T = any>(value: string | T | null | undefined): T {
-    if (!value) {
-        return {} as T;
-    }
-    return typeof value === 'string' ? JSON.parse(value) : value;
-}
 
 export const DialogMessageItem: React.FC<{
     msg: DialogMessage;
@@ -315,7 +303,7 @@ const ToolCall: React.FC<{
 }> = ({ toolName, toolArgs, mcpServer }) => {
     const jsonArgs = React.useMemo(() => {
         try {
-            return safeJsonParse(toolArgs);
+            return safeJsonParse(toolArgs) ?? {};
         } catch {
             return {};
         }
