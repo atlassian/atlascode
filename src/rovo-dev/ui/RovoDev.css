@@ -1136,29 +1136,11 @@ body {
     text-align: center;
 }
 
-.todo-status-completed .todo-icon {
-    color: var(--vscode-testing-iconPassed);
-}
-
-.todo-status-in_progress .todo-icon {
-    color: var(--vscode-progressBar-foreground);
-    animation: spin 1s linear infinite;
-}
-
-.todo-status-pending .todo-icon {
-    color: var(--vscode-input-placeholderForeground);
-}
 .todo-content {
     flex: 1;
     display: flex;
     flex-direction: column;
     gap: 2px;
-}
-
-.todo-id {
-    font-weight: 600;
-    font-size: 0.9em;
-    color: var(--vscode-foreground);
 }
 
 .todo-description {
