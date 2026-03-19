@@ -71,16 +71,21 @@ echo "Creating release branch..."
 RELEASE_BRANCH="release/v$VERSION"
 git checkout -b $RELEASE_BRANCH
 
+if ! grep -q "## What's new in $VERSION" CHANGELOG.md; then
+  echo "CHANGELOG.md has not been updated. Please update CHANGELOG.md with the changes in this release."
+  exit 1
+fi
+  
 # Update CHANGELOG.md if needed
-echo ""
-echo "Checking CHANGELOG.md..."
+# echo ""
+# echo "Checking CHANGELOG.md..."
 
 # Check if the third line is "## What's new in $VERSION"
 # Line 1: ### [Report an Issue](...)
 # Line 2: (blank)
 # Line 3: ## What's new in $VERSION
-third_line=$(sed -n '3p' CHANGELOG.md)
-expected_header="## What's new in $VERSION"
+# third_line=$(sed -n '3p' CHANGELOG.md)
+# expected_header="## What's new in $VERSION"
 
 # if [ "$third_line" = "$expected_header" ]; then
 #   echo "CHANGELOG.md already has latest version entry ✓"
