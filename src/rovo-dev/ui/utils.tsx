@@ -171,7 +171,16 @@ export function safeJsonParse<T = any>(value: string | T | null | undefined): T 
     if (!value) {
         return null;
     }
-    return typeof value === 'string' ? JSON.parse(value) : value;
+
+    if (typeof value !== 'string') {
+        return value;
+    }
+
+    try {
+        return JSON.parse(value);
+    } catch {
+        return null;
+    }
 }
 
 /**

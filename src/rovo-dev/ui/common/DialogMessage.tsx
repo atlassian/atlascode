@@ -301,13 +301,7 @@ const ToolCall: React.FC<{
     toolArgs: string;
     mcpServer?: string;
 }> = ({ toolName, toolArgs, mcpServer }) => {
-    const jsonArgs = React.useMemo(() => {
-        try {
-            return safeJsonParse(toolArgs) ?? {};
-        } catch {
-            return {};
-        }
-    }, [toolArgs]);
+    const jsonArgs = React.useMemo(() => safeJsonParse(toolArgs) ?? {}, [toolArgs]);
 
     const toolFriendlyName = React.useMemo(() => friendlyToolName[toolName] ?? toolName, [toolName]);
 
