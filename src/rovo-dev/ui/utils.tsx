@@ -173,7 +173,7 @@ interface SubagentArgs {
  * @param value - The value to parse (string or already parsed object)
  * @returns Parsed object or the original value if already parsed, or null if value is falsy
  */
-function safeJsonParse<T = any>(value: string | T | null | undefined): T | null {
+export function safeJsonParse<T = any>(value: string | T | null | undefined): T | null {
     if (!value) {
         return null;
     }

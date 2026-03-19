@@ -42,6 +42,7 @@ import {
     processDropDataTransferItems,
     PullRequestMessage,
     Response,
+    safeJsonParse,
     ToolReturnParseResult,
 } from './utils';
 
@@ -267,18 +268,14 @@ const RovoDevView: React.FC = () => {
                     if (last?.event_kind === 'tool-call') {
                         setPendingToolCallMessage(parseToolCallMessage(last.tool_name));
                         if (last.tool_name === 'invoke_subagents') {
-                            try {
-                                const args = JSON.parse(last.args);
-                                const subagentNames: string[] = args.subagent_names || [];
-                                const taskNames: string[] = args.task_names || [];
-                                const tasks: SubagentInfo[] = subagentNames.map((name, i) => ({
-                                    subagentName: name,
-                                    taskName: taskNames[i] || '',
-                                }));
-                                setPendingSubagentTasks(tasks);
-                            } catch {
-                                setPendingSubagentTasks([]);
-                            }
+                            const args = safeJsonParse<{ subagent_names?: string[]; task_names?: string[] }>(last.args);
+                            const subagentNames: string[] = args?.subagent_names || [];
+                            const taskNames: string[] = args?.task_names || [];
+                            const tasks: SubagentInfo[] = subagentNames.map((name, i) => ({
+                                subagentName: name,
+                                taskName: taskNames[i] || '',
+                            }));
+                            setPendingSubagentTasks(tasks);
                         } else {
                             setPendingSubagentTasks([]);
                         }
