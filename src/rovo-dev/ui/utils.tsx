@@ -8,6 +8,7 @@ import {
 } from 'src/rovo-dev/client';
 
 import { RovoDevContextItem } from '../rovoDevTypes';
+import { TodoItem } from './tools/ToDoList';
 
 /**
  * Creates a keyboard event handler that triggers onClick when Enter or Space is pressed.
@@ -41,6 +42,7 @@ export type ChatMessage =
     | RovoDevTextResponse
     | RovoDevToolCallResponse
     | RovoDevToolReturnResponse
+    | RovoDevUpdateTodoResponse
     | RovoDevRetryPromptResponse
     | RovoDevExitPlanModeMessage;
 
@@ -93,6 +95,13 @@ export interface ToolPermissionDialogMessage extends AbstractDialogMessage {
     mcpServer?: string;
     toolCallId: string;
 }
+export interface RovoDevUpdateTodoResponse {
+    event_kind: 'update_todo';
+    todos: TodoItem[];
+    tool_call_id: string;
+    timestamp: string;
+    toolCallMessage: RovoDevToolCallResponse;
+}
 
 export type DialogMessage = ErrorDialogMessage | WarningInfoDialogMessage | ToolPermissionDialogMessage;
 
@@ -102,6 +111,7 @@ export interface ToolReturnParseResult {
     filePath?: string;
     title?: string;
     type?: 'modify' | 'create' | 'delete' | 'open' | 'bash' | 'move';
+    todoData?: TodoItem[];
 }
 
 export type Response = ChatMessage | ChatMessage[] | null;
@@ -309,6 +319,32 @@ export function parseToolReturnMessage(
                 // For other tool names, we just return the raw content
                 resp.push({
                     content: msg.tool_name,
+                });
+                break;
+            case 'update_todo':
+                let todoArr: TodoItem[] = [];
+                if (msg.parsedContent && typeof msg.parsedContent === 'object' && 'todos' in msg.parsedContent) {
+                    todoArr = (msg.parsedContent as any).todos;
+                } else if (msg.content) {
+                    // use regex to remove XML tags
+                    const todoRegex = /<todo>\s*([\s\S]*?)\s*<\/todo>/i;
+                    const match = msg.content.match(todoRegex);
+
+                    if (match && match[1]) {
+                        const todoLines = match[1]
+                            .trim()
+                            .split('\n')
+                            .filter((line) => line.trim());
+                        todoArr = todoLines.map((line) => {
+                            return JSON.parse(line.trim());
+                        });
+                    }
+                }
+
+                resp.push({
+                    content: 'Updated To-Do list',
+                    type: 'modify',
+                    todoData: todoArr,
                 });
                 break;
         }

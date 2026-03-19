@@ -7,6 +7,7 @@ import React, { useCallback, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 
 import { ChatMessageItem } from '../messaging/ChatMessageItem';
+import { ToDoList } from '../tools/ToDoList';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
 import { ChatMessage, onKeyDownHandler, parseToolReturnMessage } from '../utils';
 import { DialogMessageItem } from './DialogMessage';
@@ -215,6 +216,9 @@ export const renderChatHistory = (
         case 'tool-return':
             const parsedMessages = parseToolReturnMessage(msg, onError);
             return parsedMessages.map((message) => {
+                if (message.todoData) {
+                    return <ToDoList todos={message.todoData} />;
+                }
                 return <ToolReturnParsedItem msg={message} openFile={openFile} onLinkClick={onLinkClick} />;
             });
         case '_RovoDevDialog':

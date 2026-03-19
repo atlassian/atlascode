@@ -1088,3 +1088,84 @@ body {
     background-color: var(--vscode-button-background);
     color: var(--vscode-button-foreground);
 }
+
+/* Todo List Styles */
+.todo-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 2px;
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: var(--vscode-editor-background);
+}
+
+.todo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.todo-item {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border-radius: 2px;
+}
+
+.todo-status-pending {
+    border-left-color: var(--vscode-input-placeholderForeground);
+    opacity: 0.7;
+}
+
+.todo-status-in_progress {
+    border-left-color: var(--vscode-progressBar-foreground);
+    background-color: var(--vscode-list-hoverBackground);
+}
+
+.todo-status-completed {
+    border-left-color: var(--vscode-testing-iconPassed);
+    opacity: 0.6;
+}
+
+.todo-icon {
+    font-size: 1.2em;
+    min-width: 20px;
+    text-align: center;
+}
+
+.todo-status-completed .todo-icon {
+    color: var(--vscode-testing-iconPassed);
+}
+
+.todo-status-in_progress .todo-icon {
+    color: var(--vscode-progressBar-foreground);
+    animation: spin 1s linear infinite;
+}
+
+.todo-status-pending .todo-icon {
+    color: var(--vscode-input-placeholderForeground);
+}
+.todo-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.todo-id {
+    font-weight: 600;
+    font-size: 0.9em;
+    color: var(--vscode-foreground);
+}
+
+.todo-description {
+    font-size: 0.85em;
+    color: var(--vscode-descriptionForeground);
+}
+
+.todo-status-completed .todo-description {
+    text-decoration: line-through;
+}
