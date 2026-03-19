@@ -131,6 +131,49 @@ describe('ToolCallItem', () => {
         expect(container.querySelector('.subagent-task-list')).toBeNull();
     });
 
+    it('renders subagent task list with a single subagent', () => {
+        const toolMessage = parseToolCallMessage('invoke_subagents');
+        const subagentTasks: SubagentInfo[] = [{ subagentName: 'Domain Research', taskName: 'Investigate auth flow' }];
+
+        const { getByText } = render(
+            <ToolCallItem
+                toolMessage={toolMessage}
+                currentState={{ state: 'WaitingForPrompt' }}
+                subagentTasks={subagentTasks}
+            />,
+        );
+
+        expect(getByText('Delegating tasks to subagents')).toBeTruthy();
+        expect(getByText(/Subagent: Domain Research \(Investigate auth flow\)/)).toBeTruthy();
+    });
+
+    it('does not render subagent task list when subagentTasks is undefined', () => {
+        const toolMessage = parseToolCallMessage('invoke_subagents');
+
+        const { container } = render(
+            <ToolCallItem toolMessage={toolMessage} currentState={{ state: 'WaitingForPrompt' }} />,
+        );
+
+        expect(container.querySelector('.subagent-task-list')).toBeNull();
+    });
+
+    it('renders subagent tasks with special characters in names', () => {
+        const toolMessage = parseToolCallMessage('invoke_subagents');
+        const subagentTasks: SubagentInfo[] = [
+            { subagentName: 'General Purpose', taskName: 'Fix "auth" & <login> flow' },
+        ];
+
+        const { getByText } = render(
+            <ToolCallItem
+                toolMessage={toolMessage}
+                currentState={{ state: 'WaitingForPrompt' }}
+                subagentTasks={subagentTasks}
+            />,
+        );
+
+        expect(getByText(/Fix "auth" & <login> flow/)).toBeTruthy();
+    });
+
     it('renders with the loading icon', () => {
         const toolMessage = parseToolCallMessage('bash');
         render(<ToolCallItem toolMessage={toolMessage} currentState={{ state: 'WaitingForPrompt' }} />);
