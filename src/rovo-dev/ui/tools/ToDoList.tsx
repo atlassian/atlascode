@@ -4,7 +4,6 @@ export interface TodoItem {
     id: number;
     status: 'pending' | 'in_progress' | 'completed';
     content?: string;
-    active_form?: string;
 }
 
 export interface ToDoListProps {
