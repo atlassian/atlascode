@@ -259,7 +259,7 @@ export class OAuthDancer implements Disposable {
     }
 
     private maybeShutdown() {
-        if (this._authsInFlight.entries.length < 1) {
+        if (this._authsInFlight.size < 1) {
             if (this._shutdownCheck) {
                 clearInterval(this._shutdownCheck);
             }

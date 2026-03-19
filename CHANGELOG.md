@@ -1,5 +1,12 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.27
+
+### Bug Fixes
+
+- Fixed "Please log in again" error message for disabled products so Jira-only and Bitbucket-only users do not see the other product's connection error on startup
+- Fixed duplicate remote creation when checking out PR branches from forked repositories - the extension now reuses existing remotes that point to the same repository
+
 ## What's new in 4.0.25
 
 ### Improvements
@@ -38,6 +45,7 @@
 
 ### Improvements
 
+- **RovoDev**: Replaced the giant Atlassian logo loader with a standard Atlaskit Spinner for the Rovo Dev tab, and removed the "Loading data…" text. The spinner is eagerly loaded in the main webpack bundle to avoid race conditions with chunk loading.
 - **RovoDev**: Fixed prompt input performance degradation after extended idle periods by properly disposing Monaco editor resources and event listeners on component cleanup
 - **RovoDev**: Refactored JSON parsing logic with `safeJsonParse` helper function to reduce code duplication and improve maintainability
 - **RovoDev**: Centered text within tool call statements in RovoDev chat.
