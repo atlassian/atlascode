@@ -301,8 +301,9 @@ export function parseToolReturnMessage(
                 if (/^mcp__\w+__(?:invoke_tool|get_tool_schema)$/.test(msg.tool_name)) {
                     const mcpToolArgs = safeJsonParse<McpToolArgs>(msg.toolCallMessage.args);
                     const mcpToolCallResponse = safeJsonParse<RovoDevToolCallResponse>(msg.toolCallMessage);
+                    const mcpServer = mcpToolCallResponse?.mcp_server;
                     resp.push({
-                        content: `Invoked ${mcpToolCallResponse?.mcp_server} MCP tool: \`${mcpToolArgs?.tool_name || 'unknown tool'}\``,
+                        content: `Invoked ${mcpServer ? mcpServer + ' ' : ''}MCP tool: \`${mcpToolArgs?.tool_name || 'unknown tool'}\``,
                         type: 'bash',
                     });
                 } else {
