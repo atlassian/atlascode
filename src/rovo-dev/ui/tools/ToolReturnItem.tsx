@@ -6,6 +6,7 @@ import React from 'react';
 
 import { MarkedDown, OpenFileFunc } from '../common/common';
 import { ToolReturnParseResult } from '../utils';
+import { ToDoList } from './ToDoList';
 
 export const ToolReturnParsedItem: React.FC<{
     msg: ToolReturnParseResult;
@@ -34,6 +35,7 @@ export const ToolReturnParsedItem: React.FC<{
                     <MarkedDown value={msg.content ?? ''} onLinkClick={onLinkClick} />
                 </div>
                 {renderTitle(msg)}
+                {msg.todoData && msg.todoData.length > 0 && <ToDoList todos={msg.todoData} />}
             </div>
         </a>
     );
