@@ -181,7 +181,15 @@ function safeJsonParse<T = any>(value: string | T | null | undefined): T | null 
     if (!value) {
         return null;
     }
-    return typeof value === 'string' ? JSON.parse(value) : value;
+    if (typeof value === 'string') {
+        try {
+            return JSON.parse(value);
+        } catch (error) {
+            console.error('Failed to parse JSON:', error);
+            return null;
+        }
+    }
+    return value;
 }
 
 /**
@@ -335,9 +343,16 @@ export function parseToolReturnMessage(
                             .trim()
                             .split('\n')
                             .filter((line) => line.trim());
-                        todoArr = todoLines.map((line) => {
-                            return JSON.parse(line.trim());
-                        });
+                        todoArr = todoLines
+                            .map((line) => {
+                                try {
+                                    return JSON.parse(line.trim());
+                                } catch (error) {
+                                    console.error('Failed to parse todo JSON:', error, 'Line:', line);
+                                    return null;
+                                }
+                            })
+                            .filter((item) => item !== null) as TodoItem[];
                     }
                 }
 
