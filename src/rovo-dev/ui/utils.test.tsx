@@ -1,7 +1,26 @@
 import { RovoDevToolCallResponse, RovoDevToolReturnResponse } from 'src/rovo-dev/client';
 
-import { appendResponse, ChatMessage, parseToolReturnMessage } from './utils';
+import { appendResponse, ChatMessage, parseToolReturnMessage, safeJsonParse } from './utils';
 import { Response } from './utils';
+
+describe('safeJsonParse', () => {
+    it('returns parsed object for valid JSON string', () => {
+        expect(safeJsonParse<{ key: string }>('{"key":"value"}')).toEqual({ key: 'value' });
+    });
+
+    it('returns original object when value is already parsed', () => {
+        const value = { key: 'value' };
+        expect(safeJsonParse(value)).toBe(value);
+    });
+
+    it('returns null for malformed JSON string', () => {
+        expect(safeJsonParse('invalid json{')).toBeNull();
+    });
+
+    it('returns null for empty value', () => {
+        expect(safeJsonParse('')).toBeNull();
+    });
+});
 
 describe('appendResponse', () => {
     it('should return prev when response is null', () => {
@@ -508,7 +527,7 @@ describe('parseToolReturnMessage', () => {
             expect(mockOnError).not.toHaveBeenCalled();
         });
 
-        it('should handle parse errors gracefully and call onError', () => {
+        it('should safely handle malformed JSON args without throwing', () => {
             const toolCallMessage: RovoDevToolCallResponse = {
                 event_kind: 'tool-call',
                 tool_name: 'bash',
@@ -527,14 +546,8 @@ describe('parseToolReturnMessage', () => {
 
             const result = parseToolReturnMessage(msg, mockOnError);
 
-            expect(result).toHaveLength(1);
-            expect(result[0]).toEqual({
-                content: 'bash',
-            });
-            expect(mockOnError).toHaveBeenCalledWith(
-                expect.any(Error),
-                'Error parsing ToolReturnMessage for tool bash',
-            );
+            expect(result).toHaveLength(0);
+            expect(mockOnError).not.toHaveBeenCalled();
         });
     });
 });
