@@ -181,15 +181,7 @@ function safeJsonParse<T = any>(value: string | T | null | undefined): T | null 
     if (!value) {
         return null;
     }
-    if (typeof value === 'string') {
-        try {
-            return JSON.parse(value);
-        } catch (error) {
-            console.error('Failed to parse JSON:', error);
-            return null;
-        }
-    }
-    return value;
+    return typeof value === 'string' ? JSON.parse(value) : value;
 }
 
 /**
