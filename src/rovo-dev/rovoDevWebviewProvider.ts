@@ -1563,43 +1563,30 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         const result = healthcheckResult?.data;
 
-        // if result is undefined, it means we didn't manage to contact Rovo Dev within the allotted time
-        // TODO - this scenario needs a better handling
-        if (!result || result.status === 'unknown') {
-            let msg = result ? 'Rovo Dev service is unhealthy/unknown.' : 'Rovo Dev service is unreachable.';
+        // Check for unhealthy states (unreachable, unknown, or explicitly unhealthy)
+        if (!result || result.status === 'unknown' || result.status === 'unhealthy') {
+            let msg: string;
+            let skipMessage = false;
+
+            if (!result) {
+                msg = 'Rovo Dev service is unreachable.';
+            } else if (result.status === 'unknown') {
+                msg = 'Rovo Dev service is unhealthy/unknown.';
+            } else {
+                // unhealthy - means Rovo Dev failed during initialization (e.g., some MCP servers failed to start)
+                msg = 'Rovo Dev service is unhealthy.';
+                skipMessage = true;
+            }
+
             if (healthcheckResult?.httpStatus) {
                 msg += ` HTTP status code ${healthcheckResult?.httpStatus}.`;
             }
 
-            RovoDevTelemetryProvider.logError(new Error(msg));
-
-            if (this.isBoysenberry) {
-                await this.signalRovoDevDisabled('Other');
-                await this.processError(new Error(`${msg}\rTry closing and reopening the session to retry.`), {
-                    title: 'Failed to initialize Rovo Dev',
-                    skipLogError: true,
-                });
-            } else {
-                await this.signalProcessFailedToInitialize(msg);
-            }
-            return;
-        }
-
-        // if result is unhealthy, it means Rovo Dev has failed during initialization (e.g., some MCP servers failed to start)
-        // we can't continue - shutdown and set the process as terminated so the user can try again.
-        if (result.status === 'unhealthy') {
-            const msg = 'Rovo Dev service is unhealthy.';
-            RovoDevTelemetryProvider.logError(new Error(msg));
-
-            if (this.isBoysenberry) {
-                await this.signalRovoDevDisabled('Other');
-                await this.processError(
-                    new Error(`Rovo Dev service is unhealthy.\nTry closing and reopening the session to retry.`),
-                    { title: 'Failed to initialize Rovo Dev', skipLogError: true },
-                );
-            } else {
-                await this.signalProcessFailedToInitialize();
-            }
+            await this.handleInitializationFailure(
+                msg,
+                `${msg}\n${skipMessage ? '' : '\r'}Try closing and reopening the session to retry.`,
+                skipMessage,
+            );
             return;
         }
 
@@ -1781,7 +1768,42 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         return undefined;
     }
 
-    private async signalProcessFailedToInitialize(errorMessage?: string) {
+    private async handleInitializationFailure(
+        telemetryMessage: string,
+        userMessage: string,
+        skipMessageEnhancements?: boolean,
+    ): Promise<void> {
+        // Check if this is a known error with a user-friendly message
+        const refinedMessage = skipMessageEnhancements
+            ? undefined
+            : this.getRefinedInitializationErrorMessage(telemetryMessage);
+
+        // Only log to telemetry if it's not a known/refined error
+        if (!refinedMessage) {
+            RovoDevTelemetryProvider.logError(new Error(telemetryMessage));
+        }
+
+        if (this.isBoysenberry) {
+            await this.signalRovoDevDisabled('Other');
+            await this.processError(new Error(userMessage), {
+                title: 'Failed to initialize Rovo Dev',
+                skipLogError: true,
+            });
+        } else {
+            // Prepare the complete final message
+            let finalMessage: string;
+            if (refinedMessage) {
+                finalMessage = refinedMessage;
+            } else if (!skipMessageEnhancements && telemetryMessage) {
+                finalMessage = `${telemetryMessage}\nPlease start a new chat session to try again.`;
+            } else {
+                finalMessage = 'Please start a new chat session to try again.';
+            }
+            await this.signalProcessFailedToInitialize(finalMessage);
+        }
+    }
+
+    private async signalProcessFailedToInitialize(message?: string) {
         if (this._isProviderDisabled) {
             return;
         }
@@ -1790,15 +1812,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this.setRovoDevTerminated();
 
         const title = 'Failed to start Rovo Dev';
-        const refinedErrorMessage = this.getRefinedInitializationErrorMessage(errorMessage);
-        if (!refinedErrorMessage) {
-            errorMessage = errorMessage
-                ? `${errorMessage}\nPlease start a new chat session to try again.`
-                : 'Please start a new chat session to try again.';
-        } else {
-            errorMessage = refinedErrorMessage;
-        }
-        const error = new Error(errorMessage);
+        const finalMessage = message || 'Please start a new chat session to try again.';
+        const error = new Error(finalMessage);
 
         // we assume that the real error has been logged somehwere else, so we don't log this one
         await this.processError(error, { title, isProcessTerminated: true, skipLogError: true });
