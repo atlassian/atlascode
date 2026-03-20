@@ -323,8 +323,11 @@ export function parseToolReturnMessage(
                 break;
             case 'update_todo':
                 let todoArr: TodoItem[] = [];
+                //msg = object received from rovodev server. Content, parsedContont{todos} type
+                // parsedContent: Already parsed data o
+                // if message has parsedContent property, it already has todos array extracted and just can add regularly
                 if (msg.parsedContent && typeof msg.parsedContent === 'object' && 'todos' in msg.parsedContent) {
-                    todoArr = (msg.parsedContent as any).todos;
+                    todoArr = (msg.parsedContent as { todos: TodoItem[] }).todos;
                 } else if (msg.content) {
                     // use regex to remove XML tags
                     const todoRegex = /<todo>\s*([\s\S]*?)\s*<\/todo>/i;
