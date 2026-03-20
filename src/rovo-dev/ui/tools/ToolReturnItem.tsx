@@ -1,6 +1,7 @@
 import AngleBracketsIcon from '@atlaskit/icon/core/angle-brackets';
 import DeleteIcon from '@atlaskit/icon/core/delete';
 import FileIcon from '@atlaskit/icon/core/file';
+import PeopleGroupIcon from '@atlaskit/icon/core/people-group';
 import SearchIcon from '@atlaskit/icon/core/search';
 import React from 'react';
 
@@ -61,4 +62,5 @@ const iconMap: Record<string, React.JSX.Element> = {
     delete: <DeleteIcon label="Deleted file" />,
     open: <SearchIcon label="Opened file" />,
     bash: <AngleBracketsIcon label="Bash command" />,
+    subagents: <PeopleGroupIcon label="Subagent task" />,
 };

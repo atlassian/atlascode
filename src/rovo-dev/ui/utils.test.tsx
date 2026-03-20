@@ -508,6 +508,212 @@ describe('parseToolReturnMessage', () => {
             expect(mockOnError).not.toHaveBeenCalled();
         });
 
+        it('should return individual subagent tasks for invoke_subagents tool', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'invoke_subagents',
+                args: '{"subagent_names": ["Explore", "General Purpose"], "task_names": ["Find UI components", "Fix auth bug"], "task_descriptions": ["desc1", "desc2"]}',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'invoke_subagents',
+                content: 'Subagent results here',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(2);
+            expect(result[0]).toEqual({
+                content: 'Subagent: Explore',
+                title: 'Find UI components',
+                type: 'subagents',
+            });
+            expect(result[1]).toEqual({
+                content: 'Subagent: General Purpose',
+                title: 'Fix auth bug',
+                type: 'subagents',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should return empty array for invoke_subagents with no args', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'invoke_subagents',
+                args: '{}',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'invoke_subagents',
+                content: '',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(0);
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should handle invoke_subagents with a single subagent', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'invoke_subagents',
+                args: '{"subagent_names": ["Explore"], "task_names": ["Find config files"], "task_descriptions": ["Search for configuration"]}',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'invoke_subagents',
+                content: 'result',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                content: 'Subagent: Explore',
+                title: 'Find config files',
+                type: 'subagents',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should handle invoke_subagents with mismatched array lengths (more names than tasks)', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'invoke_subagents',
+                args: '{"subagent_names": ["Explore", "General Purpose", "Domain Research"], "task_names": ["Task 1"], "task_descriptions": ["desc1"]}',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'invoke_subagents',
+                content: 'result',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(3);
+            expect(result[0]).toEqual({
+                content: 'Subagent: Explore',
+                title: 'Task 1',
+                type: 'subagents',
+            });
+            expect(result[1]).toEqual({
+                content: 'Subagent: General Purpose',
+                title: '',
+                type: 'subagents',
+            });
+            expect(result[2]).toEqual({
+                content: 'Subagent: Domain Research',
+                title: '',
+                type: 'subagents',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should handle invoke_subagents with pre-parsed object args', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'invoke_subagents',
+                args: { subagent_names: ['Explore'], task_names: ['Analyze code'], task_descriptions: ['desc'] } as any,
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'invoke_subagents',
+                content: 'result',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                content: 'Subagent: Explore',
+                title: 'Analyze code',
+                type: 'subagents',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should handle invoke_subagents with empty arrays', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'invoke_subagents',
+                args: '{"subagent_names": [], "task_names": [], "task_descriptions": []}',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'invoke_subagents',
+                content: '',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(0);
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should handle invoke_subagents with only subagent_names (no task_names)', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'invoke_subagents',
+                args: '{"subagent_names": ["Explore", "General Purpose"]}',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'invoke_subagents',
+                content: 'result',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(2);
+            expect(result[0]).toEqual({
+                content: 'Subagent: Explore',
+                title: '',
+                type: 'subagents',
+            });
+            expect(result[1]).toEqual({
+                content: 'Subagent: General Purpose',
+                title: '',
+                type: 'subagents',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
         it('should handle parse errors gracefully and call onError', () => {
             const toolCallMessage: RovoDevToolCallResponse = {
                 event_kind: 'tool-call',
