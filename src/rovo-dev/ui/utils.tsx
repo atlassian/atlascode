@@ -337,12 +337,7 @@ export function parseToolReturnMessage(
                             .filter((line) => line.trim());
                         todoArr = todoLines
                             .map((line) => {
-                                try {
-                                    return JSON.parse(line.trim());
-                                } catch (error) {
-                                    console.error('Failed to parse todo JSON:', error, 'Line:', line);
-                                    return null;
-                                }
+                                return JSON.parse(line.trim());
                             })
                             .filter((item) => item !== null) as TodoItem[];
                     }
