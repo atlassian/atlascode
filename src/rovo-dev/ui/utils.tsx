@@ -161,6 +161,7 @@ interface GrepArgs {
 interface McpToolArgs {
     tool_name?: string;
 }
+// Used for when 'args' is exposed by MCP server (refer to RovoDevToolCallResponse interface)
 
 /**
  * Safely parses JSON string or returns the value if it's already an object.
@@ -296,20 +297,20 @@ export function parseToolReturnMessage(
                     type: 'modify',
                 });
                 break;
-            case 'mcp__atlassian__invoke_tool':
-            case 'mcp__atlassian__get_tool_schema':
-            case 'mcp__scout__invoke_tool':
-                const mcpToolData = safeJsonParse<McpToolArgs>(msg.toolCallMessage.args);
-                resp.push({
-                    content: `Invoked MCP tool: \`${mcpToolData?.tool_name || 'unknown tool'}\``,
-                    type: 'bash',
-                });
-                break;
             default:
-                // For other tool names, we just return the raw content
-                resp.push({
-                    content: msg.tool_name,
-                });
+                if (/^mcp__\w+__(?:invoke_tool|get_tool_schema)$/.test(msg.tool_name)) {
+                    const mcpToolArgs = safeJsonParse<McpToolArgs>(msg.toolCallMessage.args);
+                    const mcpToolCallResponse = safeJsonParse<RovoDevToolCallResponse>(msg.toolCallMessage);
+                    resp.push({
+                        content: `Invoked ${mcpToolCallResponse?.mcp_server} MCP tool: \`${mcpToolArgs?.tool_name || 'unknown tool'}\``,
+                        type: 'bash',
+                    });
+                } else {
+                    // For other tool names, we just return the raw content
+                    resp.push({
+                        content: msg.tool_name,
+                    });
+                }
                 break;
         }
     } catch (error) {
