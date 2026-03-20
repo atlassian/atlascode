@@ -215,11 +215,11 @@ export const renderChatHistory = (
     switch (msg.event_kind) {
         case 'tool-return':
             const parsedMessages = parseToolReturnMessage(msg, onError);
-            return parsedMessages.map((message) => {
+            return parsedMessages.map((message, index) => {
                 if (message.todoData) {
-                    return <ToDoList todos={message.todoData} />;
+                    return <ToDoList key={index} todos={message.todoData} />;
                 }
-                return <ToolReturnParsedItem msg={message} openFile={openFile} onLinkClick={onLinkClick} />;
+                return <ToolReturnParsedItem key={index} msg={message} openFile={openFile} onLinkClick={onLinkClick} />;
             });
         case '_RovoDevDialog':
             let customButton: { text: string; onClick: () => void } | undefined = undefined;
