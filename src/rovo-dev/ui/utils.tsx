@@ -212,7 +212,7 @@ export function parseToolReturnMessage(
 
                 for (const line of contentArray) {
                     if (typeof line !== 'string') {
-                        console.warn('Invalid line format in ToolReturnMessage: expected string, got', typeof line);
+                        console.warn('Invalid line format in ToolReturnMessage:', line);
                         continue;
                     }
 
@@ -340,7 +340,7 @@ export function parseToolReturnMessage(
                                 try {
                                     return JSON.parse(line.trim());
                                 } catch (error) {
-                                    console.error('Failed to parse todo JSON. Parse error:', error);
+                                    console.error('Failed to parse todo JSON:', error, 'Line:', line);
                                     return null;
                                 }
                             })
@@ -356,7 +356,7 @@ export function parseToolReturnMessage(
                 break;
         }
     } catch (error) {
-        console.error('Error parsing ToolReturnMessage for tool:', msg.tool_name, 'Error:', error);
+        console.error('Error parsing ToolReturnMessage:', error, msg);
         const errorMessage = `Error parsing ToolReturnMessage for tool ${msg.tool_name}`;
 
         onError(error as Error, errorMessage);

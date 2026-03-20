@@ -1,5 +1,5 @@
 import type { Config } from 'jest';
-import { baseConfigFor } from "./jest.config.ts";
+import { baseConfigFor } from "./jest.config";
 
 const config: Config = {
     ...baseConfigFor('react', 'tsx'),
