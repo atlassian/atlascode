@@ -14,26 +14,22 @@ echo "========================================="
 echo "Automated Stable Release Script"
 echo "========================================="
 
+# Always start from main and update from remote
+echo ""
+echo "Switching to main branch and updating..."
+git checkout main
+git fetch origin
+git pull origin main
+git fetch --tags --force
+
 # If no version provided, calculate it automatically
 if [ -z "$VERSION" ]; then
   echo ""
   echo "No version provided. Calculating next stable version..."
-  
-  # Step 1: Always start from main
+
+  # Calculate the latest version number
   echo ""
-  echo "Step 1: Switching to main branch..."
-  git checkout main
-  
-  # Step 2: Fetch and update from remote
-  echo ""
-  echo "Step 2: Fetching and updating from remote..."
-  git fetch origin
-  git pull origin main
-  git fetch --tags --force
-  
-  # Step 3: Calculate the latest version number
-  echo ""
-  echo "Step 3: Calculating next stable version..."
+  echo "Calculating next stable version..."
   latest_stable_version=$(./scripts/version/get-latest-stable.sh)
   echo "Latest stable version: $latest_stable_version"
   
@@ -50,14 +46,6 @@ if [ -z "$VERSION" ]; then
 else
   echo ""
   echo "Using provided version: $VERSION"
-  
-  # Ensure we're on main and up to date
-  echo ""
-  echo "Switching to main branch and updating..."
-  git checkout main
-  git fetch origin
-  git pull origin main
-  git fetch --tags --force
 fi
 
 # Validate the version is stable
@@ -65,65 +53,22 @@ echo ""
 echo "Validating version is stable..."
 ./scripts/version/assert-stable.sh $VERSION
 
-# Create release branch first (before CHANGELOG update)
-echo ""
-echo "Creating release branch..."
-RELEASE_BRANCH="release/v$VERSION"
-git checkout -b $RELEASE_BRANCH
-
-if ! grep -q "## What's new in $VERSION" CHANGELOG.md; then
-  echo "CHANGELOG.md has not been updated. Please update CHANGELOG.md with the changes in this release."
-  exit 1
-fi
-  
-# Update CHANGELOG.md if needed
-# echo ""
-# echo "Checking CHANGELOG.md..."
-
-# Check if the third line is "## What's new in $VERSION"
-# Line 1: ### [Report an Issue](...)
-# Line 2: (blank)
-# Line 3: ## What's new in $VERSION
-# third_line=$(sed -n '3p' CHANGELOG.md)
-# expected_header="## What's new in $VERSION"
-
-# if [ "$third_line" = "$expected_header" ]; then
-#   echo "CHANGELOG.md already has latest version entry ✓"
-# else
-#   echo "CHANGELOG.md needs update. Adding version entry..."
-  
-#   # Add the new version entry after line 2 (after the blank line)
-#   {
-#     head -2 CHANGELOG.md
-#     echo "## What's new in $VERSION"
-#     echo ""
-#     tail -n +3 CHANGELOG.md
-#   } > CHANGELOG.md.tmp && mv CHANGELOG.md.tmp CHANGELOG.md
-  
-#   echo "Added '## What's new in $VERSION' to CHANGELOG.md ✓"
-  
-#   # Commit the changelog update
-#   git add CHANGELOG.md
-#   git commit -m "chore: update CHANGELOG for v$VERSION"
-# fi
-
 # Add v to the beginning of the version number for tag
 VERSION_TAG="v$VERSION"
 MESSAGE=${3:-"Release $VERSION_TAG"}
 
-echo ""
-echo "Creating tag $VERSION_TAG..."
-git tag $VERSION_TAG -m "$MESSAGE"
-
 # Push to remote or show dry run message
 if [ "$DRY_RUN" = true ]; then
   echo ""
+  echo "Creating tag $VERSION_TAG..."
+  git tag $VERSION_TAG -m "$MESSAGE"
+
+  echo ""
   echo "========================================="
-  echo "DRY RUN - Branch and tag created locally"
+  echo "DRY RUN - Tag created locally"
   echo "========================================="
   echo ""
   echo "Created locally:"
-  echo "  - Branch: $RELEASE_BRANCH"
   echo "  - Tag: $VERSION_TAG"
   echo ""
   echo "To push to remote, run without 'dry' flag:"
@@ -132,11 +77,16 @@ if [ "$DRY_RUN" = true ]; then
   echo "  ./scripts/release.sh"
   echo ""
   echo "To clean up local artifacts, run:"
-  echo "  git checkout main && git branch -D $RELEASE_BRANCH && git tag -d $VERSION_TAG && git checkout CHANGELOG.md"
+  echo "  git tag -d $VERSION_TAG"
 else
+  if ! grep -q "## What's new in $VERSION" CHANGELOG.md; then
+    echo "CHANGELOG.md has not been updated. Please update CHANGELOG.md with the changes in this release."
+    exit 1
+  fi
+
   echo ""
   echo "Pushing to remote..."
-  git push origin $RELEASE_BRANCH
+  git tag $VERSION_TAG -m "$MESSAGE"
   git push origin $VERSION_TAG
   
   echo ""
@@ -144,14 +94,5 @@ else
   echo "✓ Release $VERSION_TAG completed!"
   echo "========================================="
   echo ""
-  echo "Release branch: $RELEASE_BRANCH"
   echo "Tag: $VERSION_TAG"
-  echo ""
-  echo "Next steps:"
-  echo "1. Create a PR from $RELEASE_BRANCH to main"
-  echo "2. Review and merge the PR"
-  echo "3. The GitHub release workflow will trigger automatically"
-  echo ""
-  echo "To create a draft PR, visit:"
-  echo "https://github.com/atlassian/atlascode/pull/new/$RELEASE_BRANCH"
 fi
