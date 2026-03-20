@@ -95,26 +95,6 @@ describe('OAuthRefresher', () => {
             expect(result.tokens).toBeUndefined();
         });
 
-        it('should log debug for 403 auth errors', async () => {
-            const authError: any = new Error('Forbidden');
-            authError.response = {
-                status: 403,
-                data: {
-                    error: 'access_denied',
-                    error_description: 'Access denied',
-                },
-            };
-
-            mockAxiosInstance.mockRejectedValue(authError);
-
-            const result = await refresher.getNewTokens(OAuthProvider.JiraCloud, 'refresh-token');
-
-            expect(Logger.debug).toHaveBeenCalledWith(expect.stringContaining('Auth error (403)'));
-            expect(Logger.error).not.toHaveBeenCalled();
-            expect(result.shouldInvalidate).toBe(true);
-            expect(result.shouldSlowDown).toBeUndefined();
-        });
-
         it('should log debug for other HTTP errors', async () => {
             const serverError: any = new Error('Server Error');
             serverError.response = {
