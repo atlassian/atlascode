@@ -161,7 +161,6 @@ interface GrepArgs {
 interface McpToolArgs {
     tool_name?: string;
 }
-// Used for when 'args' is exposed by MCP server (refer to RovoDevToolCallResponse interface)
 
 /**
  * Safely parses JSON string or returns the value if it's already an object.
