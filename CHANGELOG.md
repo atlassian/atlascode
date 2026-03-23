@@ -6,6 +6,7 @@
 
 - Fixed "Please log in again" error message for disabled products so Jira-only and Bitbucket-only users do not see the other product's connection error on startup
 - Fixed duplicate remote creation when checking out PR branches from forked repositories - the extension now reuses existing remotes that point to the same repository
+- **Bitbucket (and Jira) Cloud OAuth**: Fixed repeated disconnections after one or two operations. OAuth API clients were not using the auth interceptor
 
 ## What's new in 4.0.25
 
@@ -61,7 +62,7 @@
 - **RovoDev**: Fixed chat message not appearing when clicking "Fix with Rovo Dev" before the chat view is fully initialized - now waits for the webview to be ready before executing the chat command
 - Fixed "Cannot read properties of undefined (reading 'initiateApiTokenAuth')" error
 - Fixed the bug that prevented users from editing selected values in the landing page for Rovo Dev.
-- **RovoDev**: Hide chat action buttons during plan workflows and remove the Generate Code button when a plan is scrapped
+  **RovoDev**: Hide chat action buttons during plan workflows and remove the Generate Code button when a plan is scrapped
 
 ## What's new in 4.0.22
 
