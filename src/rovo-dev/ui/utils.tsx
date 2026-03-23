@@ -296,20 +296,21 @@ export function parseToolReturnMessage(
                     type: 'modify',
                 });
                 break;
-            case 'mcp__atlassian__invoke_tool':
-            case 'mcp__atlassian__get_tool_schema':
-            case 'mcp__scout__invoke_tool':
-                const mcpToolData = safeJsonParse<McpToolArgs>(msg.toolCallMessage.args);
-                resp.push({
-                    content: `Invoked MCP tool: \`${mcpToolData?.tool_name || 'unknown tool'}\``,
-                    type: 'bash',
-                });
-                break;
             default:
-                // For other tool names, we just return the raw content
-                resp.push({
-                    content: msg.tool_name,
-                });
+                if (/^mcp__\w+__(?:invoke_tool|get_tool_schema)$/.test(msg.tool_name)) {
+                    const mcpToolArgs = safeJsonParse<McpToolArgs>(msg.toolCallMessage.args);
+                    const mcpToolCallResponse = safeJsonParse<RovoDevToolCallResponse>(msg.toolCallMessage);
+                    const mcpServer = mcpToolCallResponse?.mcp_server;
+                    resp.push({
+                        content: `Invoked ${mcpServer ? mcpServer + ' ' : ''}MCP tool: \`${mcpToolArgs?.tool_name || 'unknown tool'}\``,
+                        type: 'bash',
+                    });
+                } else {
+                    // For other tool names, we just return the raw content
+                    resp.push({
+                        content: msg.tool_name,
+                    });
+                }
                 break;
         }
     } catch (error) {
