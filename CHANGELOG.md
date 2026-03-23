@@ -1,5 +1,12 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.28
+
+### Improvements
+
+- **RovoDev**: Generalized MCP tool parsing in chat UI to support any MCP toolset via regex matching (`mcp__<name>__invoke_tool` / `mcp__<name>__get_tool_schema`) instead of hardcoded tool names
+
+
 ## What's new in 4.0.27
 
 ### Bug Fixes

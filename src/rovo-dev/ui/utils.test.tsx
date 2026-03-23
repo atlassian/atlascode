@@ -1,4 +1,4 @@
-import { RovoDevToolCallResponse, RovoDevToolReturnResponse } from 'src/rovo-dev/client';
+import { RovoDevToolCallResponse, RovoDevToolName, RovoDevToolReturnResponse } from 'src/rovo-dev/client';
 
 import { appendResponse, ChatMessage, parseToolReturnMessage } from './utils';
 import { Response } from './utils';
@@ -459,6 +459,7 @@ describe('parseToolReturnMessage', () => {
                 event_kind: 'tool-call',
                 tool_name: 'mcp__atlassian__invoke_tool',
                 args: '{"tool_name": "jira_search"}',
+                mcp_server: 'atlassian',
                 tool_call_id: 'id1',
             };
 
@@ -475,7 +476,7 @@ describe('parseToolReturnMessage', () => {
 
             expect(result).toHaveLength(1);
             expect(result[0]).toEqual({
-                content: 'Invoked MCP tool: `jira_search`',
+                content: 'Invoked atlassian MCP tool: `jira_search`',
                 type: 'bash',
             });
             expect(mockOnError).not.toHaveBeenCalled();
@@ -486,6 +487,7 @@ describe('parseToolReturnMessage', () => {
                 event_kind: 'tool-call',
                 tool_name: 'mcp__scout__invoke_tool',
                 args: { tool_name: 'search_code' } as any,
+                mcp_server: 'scout',
                 tool_call_id: 'id1',
             };
 
@@ -502,8 +504,117 @@ describe('parseToolReturnMessage', () => {
 
             expect(result).toHaveLength(1);
             expect(result[0]).toEqual({
-                content: 'Invoked MCP tool: `search_code`',
+                content: 'Invoked scout MCP tool: `search_code`',
                 type: 'bash',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should handle any MCP invoke_tool via regex matching', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'mcp__google_calendar__invoke_tool' as RovoDevToolName,
+                args: '{"tool_name": "get_events"}',
+                mcp_server: 'google_calendar',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'mcp__google_calendar__invoke_tool' as RovoDevToolName,
+                content: 'events',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                content: 'Invoked google_calendar MCP tool: `get_events`',
+                type: 'bash',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should handle any MCP get_tool_schema via regex matching', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'mcp__slack__get_tool_schema' as RovoDevToolName,
+                args: '{"tool_name": "channel_create_message"}',
+                mcp_server: 'slack',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'mcp__slack__get_tool_schema' as RovoDevToolName,
+                content: 'schema',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                content: 'Invoked slack MCP tool: `channel_create_message`',
+                type: 'bash',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should handle MCP tools without mcp_server field gracefully', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'mcp__compass__invoke_tool' as RovoDevToolName,
+                args: '{"tool_name": "component_search"}',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'mcp__compass__invoke_tool' as RovoDevToolName,
+                content: 'results',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                content: 'Invoked MCP tool: `component_search`',
+                type: 'bash',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should not match non-MCP tool names with similar patterns', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'not_mcp__something__invoke_tool' as RovoDevToolName,
+                args: '{}',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'not_mcp__something__invoke_tool' as RovoDevToolName,
+                content: 'result',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                content: 'not_mcp__something__invoke_tool',
             });
             expect(mockOnError).not.toHaveBeenCalled();
         });
