@@ -5,10 +5,44 @@ import { ToolPermissionChoice } from 'src/rovo-dev/client';
 import { CheckFileExistsFunc, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
 import { PullRequestChatItem } from '../create-pr/PullRequestForm';
-import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
-import { parseToolReturnMessage, Response } from '../utils';
+import { GroupedOpenFilePill, ToolReturnParsedItem } from '../tools/ToolReturnItem';
+import { ToDoList } from '../tools/ToDoList';
+import { parseToolReturnMessage, Response, ToolReturnParseResult } from '../utils';
 import { ChatMessageItem } from './ChatMessageItem';
 import { MessageDrawer } from './MessageDrawer';
+
+/** Group consecutive "Opened file" pills into a single GroupedOpenFilePill */
+function renderToolReturnMessages(
+    messages: ToolReturnParseResult[],
+    openFile: OpenFileFunc,
+    onLinkClick: (href: string) => void,
+): React.ReactNode[] {
+    const result: React.ReactNode[] = [];
+    let openGroup: ToolReturnParseResult[] = [];
+    let groupKey = 0;
+
+    const flushOpenGroup = () => {
+        if (openGroup.length > 0) {
+            const key = `open-group-${groupKey++}`;
+            result.push(<GroupedOpenFilePill key={key} msgs={openGroup} openFile={openFile} />);
+            openGroup = [];
+        }
+    };
+
+    messages.forEach((msg, i) => {
+        if (msg.content === 'Opened file' && msg.type === 'open') {
+            openGroup.push(msg);
+        } else {
+            flushOpenGroup();
+            result.push(
+                <ToolReturnParsedItem key={i} msg={msg} openFile={openFile} onLinkClick={onLinkClick} />,
+            );
+        }
+    });
+
+    flushOpenGroup();
+    return result;
+}
 
 interface ChatItemProps {
     block: Response;
@@ -82,9 +116,7 @@ export const ChatItem = React.memo<ChatItemProps>(
         } else if (block.event_kind === 'tool-return') {
             const parsedMessages = parseToolReturnMessage(block, renderProps.onError);
 
-            return parsedMessages.map((message) => {
-                return <ToolReturnParsedItem msg={message} openFile={renderProps.openFile} onLinkClick={onLinkClick} />;
-            });
+            return renderToolReturnMessages(parsedMessages, renderProps.openFile, onLinkClick);
         } else if (block.event_kind === '_RovoDevDialog') {
             let customButton: { text: string; onClick: () => void } | undefined = undefined;
             if (block.ctaLink) {
@@ -105,6 +137,19 @@ export const ChatItem = React.memo<ChatItemProps>(
                     customButton={customButton}
                     onLinkClick={onLinkClick}
                 />
+            );
+        } else if (block.event_kind === 'update_todo') {
+            return (
+                <div className="tool-return-item-base tool-return-item tool-return-update-todo">
+                    <i className="codicon codicon-checklist" />
+                    <div className="tool-return-update-todo-content">
+                        {block.todos && block.todos.length > 0 ? (
+                            <ToDoList todos={block.todos} />
+                        ) : (
+                            <span className="tool-return-path">Updated To-Do list</span>
+                        )}
+                    </div>
+                </div>
             );
         } else if (block.event_kind === '_RovoDevPullRequest') {
             return <PullRequestChatItem msg={block} onLinkClick={onLinkClick} />;

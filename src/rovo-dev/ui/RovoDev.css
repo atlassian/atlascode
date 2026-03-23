@@ -297,6 +297,168 @@ body {
     display: flex;
     justify-content: flex-start;
 }
+
+/* Replace-code pill */
+.tool-return-replace-code {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    width: fit-content;
+    max-width: 100%;
+}
+
+.tool-return-replace-code-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+}
+
+.tool-return-replace-code-filelabel {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+    text-decoration: none;
+    color: var(--vscode-editor-foreground);
+}
+
+.tool-return-replace-code-filename {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tool-return-replace-code-diffstat {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    font-size: 0.8em;
+    font-family: var(--vscode-editor-font-family, monospace);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.diffstat-added {
+    color: var(--vscode-diffEditor-insertedTextBackground, #28a745);
+    color: var(--vscode-gitDecoration-addedResourceForeground, #28a745);
+}
+
+.diffstat-removed {
+    color: var(--vscode-diffEditor-removedTextBackground, #d73a49);
+    color: var(--vscode-gitDecoration-deletedResourceForeground, #d73a49);
+}
+
+.tool-return-replace-code-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.tool-return-icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--vscode-input-placeholderForeground);
+    padding: 2px 4px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.tool-return-icon-btn:hover {
+    color: var(--vscode-editor-foreground);
+    background-color: var(--vscode-list-hoverBackground);
+}
+
+.tool-return-diff-viewer {
+    margin-top: 6px;
+    border-top: 1px solid var(--vscode-editorWidget-border);
+    overflow-x: auto;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.tool-return-diff-viewer pre {
+    margin: 0;
+    background: none;
+}
+
+.tool-return-diff-code {
+    display: block;
+    font-family: var(--vscode-editor-font-family, monospace);
+    font-size: var(--vscode-editor-font-size, 12px);
+    white-space: pre;
+    padding: 4px;
+}
+
+/* Diff line coloring inside the viewer */
+.tool-return-diff-code .line-added,
+.tool-return-diff-viewer pre code {
+    /* base styles handled below via CSS descendant selectors on plain text */
+}
+
+/* Grouped open-files pill */
+.tool-return-group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    width: fit-content;
+    max-width: 100%;
+}
+
+.tool-return-group-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+}
+
+.tool-return-group-label {
+    flex: 1;
+    color: var(--vscode-input-placeholderForeground);
+    font-size: 0.9em;
+}
+
+.tool-return-group-files {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--vscode-editorWidget-border);
+}
+
+.tool-return-group-file {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    text-decoration: none;
+    color: var(--vscode-editor-foreground);
+    font-size: 0.85em;
+}
+
+/* Update-todo pill */
+.tool-return-update-todo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    width: fit-content;
+    max-width: 100%;
+}
+
+.tool-return-update-todo-content {
+    width: 100%;
+}
   
 .code-plan-button {
     display: flex;

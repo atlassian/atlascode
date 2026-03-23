@@ -216,7 +216,9 @@ export function parseToolReturnMessage(
                         continue;
                     }
 
-                    const trimmedLine = line.split('\n\n')[0].trim();
+                    const parts = line.split('\n\n');
+                    const trimmedLine = parts[0].trim();
+                    const diffContent = parts.slice(1).join('\n\n').trim() || undefined;
                     const matches = trimmedLine.match(
                         /^Successfully\s+(expanded code chunks|replaced code|opened|moved|created|deleted|updated)(?:\s+in)?\s+(.+)?$/,
                     );
@@ -237,6 +239,7 @@ export function parseToolReturnMessage(
                             filePath: filePath,
                             title: title,
                             type: content ? content.type : undefined,
+                            diff: toolReturnType === 'replaced code' ? diffContent : undefined,
                         });
                     }
                 }
