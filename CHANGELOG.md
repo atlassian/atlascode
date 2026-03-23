@@ -9,6 +9,10 @@
 
 ## What's new in 4.0.27
 
+### Improvements
+
+- **RovoDev**: Generalized MCP tool parsing in chat UI to support any MCP toolset via regex matching (`mcp__<name>__invoke_tool` / `mcp__<name>__get_tool_schema`) instead of hardcoded tool names
+
 ### Bug Fixes
 
 - Fixed "Please log in again" error message for disabled products so Jira-only and Bitbucket-only users do not see the other product's connection error on startup

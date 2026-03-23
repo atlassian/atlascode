@@ -82,6 +82,8 @@ export function parseToolCallMessage(msgToolName: RovoDevToolName): string {
             return 'Asking user questions';
         case 'exit_plan_mode':
             return 'Exiting plan mode';
+        case 'update_todo':
+            return 'Updating todo';
         default:
             // @ts-expect-error ts(2339) - msgToolName here should be 'never'
             return msgToolName.toString();
