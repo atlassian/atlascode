@@ -166,6 +166,13 @@ describe('errorReporting', () => {
                 );
             });
 
+            it('capturedBy unhandledRejectionHandler should NOT send to analytics', () => {
+                const error = createError('Error1');
+                errorlistener!({ error, capturedBy: 'process.unhandledRejectionHandler' });
+
+                expect(analytics.errorEvent).not.toHaveBeenCalled();
+            });
+
             it('with productArea', () => {
                 const error = createError('Error1');
                 errorlistener!({ error, productArea: 'RovoDev' });

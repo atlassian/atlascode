@@ -18,6 +18,7 @@ import {
     RovoDevResponse,
     RovoDevResponseParser,
     RovoDevToolCallResponse,
+    RovoDevToolName,
     ToolPermissionChoice,
 } from './client';
 import { buildErrorDetails, buildExceptionDetails } from './errorDetailsBuilder';
@@ -40,6 +41,13 @@ import {
 
 type StreamingApi = 'chat' | 'replay';
 
+const FILE_MODIFYING_TOOLS: ReadonlySet<RovoDevToolName> = new Set<RovoDevToolName>([
+    'create_file',
+    'delete_file',
+    'move_file',
+    'find_and_replace_code',
+]);
+
 export class RovoDevChatProvider {
     private readonly extensionApi = new ExtensionApi();
     private readonly isDebugging = this.extensionApi.metadata.isDebugging();
@@ -47,6 +55,16 @@ export class RovoDevChatProvider {
     private _onAgentModelChanged = new EventEmitter<void>();
     public get onAgentModelChanged(): Event<void> {
         return this._onAgentModelChanged.event;
+    }
+
+    private _onPromptComplete = new EventEmitter<void>();
+    public get onPromptComplete(): Event<void> {
+        return this._onPromptComplete.event;
+    }
+
+    private _onFileModifyingToolReturn = new EventEmitter<void>();
+    public get onFileModifyingToolReturn(): Event<void> {
+        return this._onFileModifyingToolReturn.event;
     }
 
     private _pendingToolConfirmation: Record<string, ToolPermissionChoice | 'undecided'> = {};
@@ -143,7 +161,20 @@ export class RovoDevChatProvider {
         this._lastMessageSentTime = undefined;
     }
 
+    /**
+     * Clears session-scoped state (e.g. pending deferred tool call) so the next
+     * prompt is sent as a normal message instead of tool call results. Call when
+     * starting a new session or clearing the chat so the backend is not sent
+     * tool_call_id + result when message history is empty.
+     */
+    public clearSessionState(): void {
+        this._pendingDeferredRequest = undefined;
+        this._currentPrompt = undefined;
+        this._pendingPrompt = undefined;
+    }
+
     public async clearChat(): Promise<void> {
+        this.clearSessionState();
         await this._webView!.postMessage({
             type: RovoDevProviderMessageType.ClearChat,
         });
@@ -517,11 +548,20 @@ export class RovoDevChatProvider {
         switch (response.event_kind) {
             case 'text':
             case 'tool-call':
+                await webview.postMessage({
+                    type: RovoDevProviderMessageType.RovoDevResponseMessage,
+                    message: response,
+                });
+                break;
+
             case 'tool-return':
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.RovoDevResponseMessage,
                     message: response,
                 });
+                if (FILE_MODIFYING_TOOLS.has(response.tool_name as RovoDevToolName)) {
+                    this._onFileModifyingToolReturn.fire();
+                }
                 break;
 
             case 'retry-prompt':
@@ -889,6 +929,9 @@ export class RovoDevChatProvider {
             type: RovoDevProviderMessageType.CompleteMessage,
             promptId: this._currentPromptId,
         });
+
+        // Signal that the prompt is complete so listeners can refresh data
+        this._onPromptComplete.fire();
     }
 
     private async processError(

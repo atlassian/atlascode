@@ -1,6 +1,35 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.27
+
+### Bug Fixes
+
+- Fixed "Please log in again" error message for disabled products so Jira-only and Bitbucket-only users do not see the other product's connection error on startup
+- Fixed duplicate remote creation when checking out PR branches from forked repositories - the extension now reuses existing remotes that point to the same repository
+
 ## What's new in 4.0.25
+
+### Improvements
+
+- **RovoDev**: Replaced `executeKeepFiles` with `invalidateFileCache` API call to eliminate manual file-system-based cache removal
+- **RovoDev**: Replaced tool-return-based file list with `listCachedFiles` API - eliminates fragile client-side heuristic parsing and provides authoritative file list from server; files now refresh after prompt completion, undo, and keep actions
+
+## What's new in 4.0.24
+
+### Improvements
+
+- **RovoDev**: Enhanced "Fix by Rovo Dev" and "Explain by Rovo Dev" code actions with rich context extraction - now includes actual code content, surrounding code, import statements, and structured diagnostics for significantly better AI responses
+
+### Bug Fixes
+
+- **RovoDev**: Fixed chat message not appearing when clicking "Fix with Rovo Dev" before the chat view is fully initialized - now waits for the webview to be ready before executing the chat command
+
+### Features
+
+- **RovoDev**: Added copy code button within the Rovo Dev chat for code blocks in the chat.
+
+
+## What's new in 4.0.23
 
 ### Features
 
@@ -15,6 +44,7 @@
 
 ### Improvements
 
+- **RovoDev**: Replaced the giant Atlassian logo loader with a standard Atlaskit Spinner for the Rovo Dev tab, and removed the "Loading data…" text. The spinner is eagerly loaded in the main webpack bundle to avoid race conditions with chunk loading.
 - **RovoDev**: Fixed prompt input performance degradation after extended idle periods by properly disposing Monaco editor resources and event listeners on component cleanup
 - **RovoDev**: Refactored JSON parsing logic with `safeJsonParse` helper function to reduce code duplication and improve maintainability
 - **RovoDev**: Centered text within tool call statements in RovoDev chat.
@@ -22,7 +52,6 @@
 
 ### Bug Fixes
 
-- **Bitbucket (and Jira) Cloud OAuth**: Fixed repeated disconnections after one or two operations. OAuth API clients were not using the auth interceptor, so when the access token expired (e.g. after ~1 hour) every request returned 401 and the cached client was reused until TTL expired. The OAuth HTTP client now uses the same interceptor; on 401/403 the cached client is evicted so the next request creates a new client and refreshes the token automatically instead of staying disconnected.
 - Bitbucket DC: Fixed PRs list pagination
 - Bitbucket DC: Fixed emoji size in PR description and comments
 - **RovoDev**: Removed dependency between Jira auth and RovoDev auth
@@ -32,7 +61,6 @@
 - **RovoDev**: Fixed chat message not appearing when clicking "Fix with Rovo Dev" before the chat view is fully initialized - now waits for the webview to be ready before executing the chat command
 - Fixed "Cannot read properties of undefined (reading 'initiateApiTokenAuth')" error
 - Fixed the bug that prevented users from editing selected values in the landing page for Rovo Dev.
-- **RovoDev**: Hide chat action buttons during plan workflows and remove the Generate Code button when a plan is scrapped
 
 ## What's new in 4.0.22
 

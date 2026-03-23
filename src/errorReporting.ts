@@ -17,6 +17,8 @@ let _logger_onError_eventRegistration: Disposable | undefined = undefined;
 let analyticsClient: AnalyticsClient | undefined;
 let eventQueue: Promise<TrackEvent>[] = [];
 
+const filteredExceptions = ['uncaughtexception', 'unhandledrejection'];
+
 function safeExecute(body: () => void, finallyBody?: () => void): void {
     try {
         body();
@@ -45,15 +47,18 @@ function unhandledRejectionHandler(error: Error | string): void {
     errorHandlerWithFilter(undefined, error, 'NodeJS.unhandledRejection');
 }
 
+function shouldSkipAnalyticsForNodeGlobalError(capturedBy?: string): boolean {
+    if (!capturedBy) {
+        return false;
+    }
+
+    const capturedByLower = capturedBy.toLowerCase();
+    return filteredExceptions.some((exception) => capturedByLower.includes(exception));
+}
+
 function errorHandlerWithFilter(productArea: ErrorProductArea, error: Error | string, capturedBy: string): void {
     safeExecute(() => {
-        // Don't send uncaughtException or unhandledRejection errors to Amplitude
-        // These are handled by extension.ts and logged via Logger.error
-        const filteredExceptions = ['uncaughtexception', 'unhandledrejection'];
-        const capturedByLower = capturedBy.toLowerCase();
-        const isNodeJsGlobalError = filteredExceptions.some((exception) => capturedByLower.includes(exception));
-
-        if (isNodeJsGlobalError) {
+        if (shouldSkipAnalyticsForNodeGlobalError(capturedBy)) {
             return;
         }
 
@@ -107,18 +112,20 @@ export function registerErrorReporting(): void {
         process.addListener('uncaughtExceptionMonitor', uncaughtExceptionMonitorHandler);
         process.addListener('unhandledRejection', unhandledRejectionHandler);
 
-        _logger_onError_eventRegistration = Logger.onError(
-            (data) =>
-                errorHandler(
-                    data.productArea,
-                    data.error,
-                    data.errorMessage,
-                    data.params,
-                    data.rovoDevParams,
-                    data.capturedBy,
-                ),
-            undefined,
-        );
+        _logger_onError_eventRegistration = Logger.onError((data) => {
+            if (shouldSkipAnalyticsForNodeGlobalError(data.capturedBy)) {
+                return;
+            }
+
+            errorHandler(
+                data.productArea,
+                data.error,
+                data.errorMessage,
+                data.params,
+                data.rovoDevParams,
+                data.capturedBy,
+            );
+        }, undefined);
     });
 }
 

@@ -79,12 +79,11 @@ export class OAuthRefesher implements Disposable {
             if (!err.response && err.code === 'ENOTFOUND') {
                 Logger.debug(`Network error while refreshing tokens. Hostname: "${err.hostname}". Will retry later.`);
                 response.shouldSlowDown = true;
-            } else if (err.response?.status === 401 || err.response?.status === 403) {
+            } else if (err.response?.status === 401) {
                 Logger.debug(
                     `Auth error (${err.response.status}) while refreshing tokens. Credentials will be invalidated.`,
                 );
                 response.shouldInvalidate = true;
-                response.shouldSlowDown = true;
             } else {
                 // Log as debug - authStore will log as error if retries exhausted
                 Logger.debug(`Error while refreshing tokens` + responseStatusDescription + axiosErrorData);

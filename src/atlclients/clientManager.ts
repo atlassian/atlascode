@@ -33,6 +33,7 @@ import {
     isBasicAuthInfo,
     isOAuthInfo,
     isPATAuthInfo,
+    ProductBitbucket,
     ProductJira,
 } from './authInfo';
 import { BasicInterceptor } from './basicInterceptor';
@@ -78,18 +79,24 @@ export class ClientManager implements Disposable {
     /*
      * Method called when another process requests that a sites tokens be refreshed.
      */
-    public requestSite(site: DetailedSiteInfo) {
+    public async requestSite(site: DetailedSiteInfo) {
         const tag = Math.floor(Math.random() * 1000);
 
         Logger.debug(`${tag}: clientManager requestSite ${site.baseApiUrl}`);
 
         if (site.isCloud) {
+            const wasAlreadyFailed = this._failedSites.has(this.keyForSite(site));
+            if (wasAlreadyFailed) {
+                Logger.warn(`${tag}: skipping request for previously failed site ${site.baseApiUrl}`);
+                return;
+            }
+
             if (site.product.key === ProductJira.key) {
                 Logger.debug(`${tag}: requesting Jira site due to another process`);
-                this.jiraClient(site);
+                await this.jiraClient(site);
             } else {
                 Logger.debug(`${tag}: requesting Bitbucket site due to another process`);
-                this.bbClient(site);
+                await this.bbClient(site);
             }
             Logger.debug(`${tag}: finished requesting`);
         }
@@ -162,11 +169,10 @@ export class ClientManager implements Disposable {
     public async jiraClient(site: DetailedSiteInfo): Promise<JiraClient<DetailedSiteInfo>> {
         const tag = Math.floor(Math.random() * 1000);
 
-        // If this site has failed before, don't retry - silently reject to avoid spam
+        // If this specific site has failed before, don't retry either
         const siteKey = this.keyForSite(site);
         if (this._failedSites.has(siteKey)) {
-            Logger.debug(`Skipping jiraClient for ${site.host} - previously failed`);
-            // Return rejected promise without logging error - caller's catch block will handle it
+            Logger.debug(`Skipping jiraClient for ${site.host} - site previously failed`);
             return Promise.reject(new Error(`Site previously failed authentication`));
         }
 
@@ -216,7 +222,7 @@ export class ClientManager implements Disposable {
             });
         } catch (e) {
             Logger.error(e as Error, `${tag}: Error creating Jira client for ${site.baseApiUrl}`);
-            // Mark this site as failed - don't retry until credentials change
+            // Mark this site as failed to avoid repeated errors
             this._failedSites.add(siteKey);
             throw e;
         }
@@ -233,7 +239,7 @@ export class ClientManager implements Disposable {
             }
         }
 
-        // Success - clear any previous failure status
+        // Success - clear any previous failure status for this site
         this._failedSites.delete(siteKey);
         return newClient;
     }
@@ -356,7 +362,10 @@ export class ClientManager implements Disposable {
         const credentials = await Container.credentialManager.getAuthInfo(site, false);
 
         if (credentials?.state === AuthInfoState.Invalid) {
-            if (!this.hasWarnedOfFailure) {
+            const isProductDisabled =
+                (site.product.key === ProductJira.key && Container.config?.jira?.enabled === false) ||
+                (site.product.key === ProductBitbucket.key && Container.config?.bitbucket?.enabled === false);
+            if (!isProductDisabled && !this.hasWarnedOfFailure) {
                 window
                     .showErrorMessage(
                         `There was an error connecting to ${site.name}. Please log in again.`,
