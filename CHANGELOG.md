@@ -1,5 +1,13 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.28
+
+### Improvements
+
+- **RovoDev**: "Replaced code" pills now show only the filename and diff stat (+N/-N); added copy-diff and expand-diff buttons with an inline diff viewer
+- **RovoDev**: Consecutive "Opened file" tool calls are now grouped into a single expandable pill to reduce chat clutter
+- **RovoDev**: `update_todo` pill now renders the full to-do list with status icons instead of showing a plain label
+
 ## What's new in 4.0.27
 
 ### Improvements
