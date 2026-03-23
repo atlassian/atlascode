@@ -292,6 +292,7 @@ const friendlyToolName: Record<RovoDevToolName, string> = {
     mcp__atlassian__invoke_tool: "Invoke an Atlassian MCP server's tool",
     mcp__atlassian__get_tool_schema: "Get an Atlassian MCP server's tool schema",
     mcp__scout__invoke_tool: "Invoke an MCP server's tool",
+    update_todo: 'Update todo list',
     ask_user_questions: 'Ask user questions',
     exit_plan_mode: 'Exit plan mode',
 };
