@@ -3,13 +3,14 @@ import { commands, window } from 'vscode';
 
 import { Commands } from '../constants';
 import { Logger } from '../logger';
-import { AuthInfoState, DetailedSiteInfo } from './authInfo';
+import { AuthInfoState, DetailedSiteInfo, ProductBitbucket } from './authInfo';
 import { AuthInterceptor } from './authInterceptor';
 import { CredentialManager } from './authStore';
 
 /**
- * BasicInterceptor detects any 401 or 403 responses from the REST service and blocks any further requests until the
- * user has updated their password.
+ * BasicInterceptor detects any 401 or 403 responses from the REST service and blocks further requests with the same
+ * client. It delegates to CredentialManager.handleApiUnauthorized; the auth store decides whether to persist Invalid
+ * and takes care of evicting cached clients for OAuth so the next request triggers token refresh.
  */
 export class BasicInterceptor implements AuthInterceptor {
     private _requestInterceptor: (config: AxiosRequestConfig) => any;
@@ -38,12 +39,7 @@ export class BasicInterceptor implements AuthInterceptor {
                 Logger.debug(`Received ${e.response?.status} - marking credentials as invalid`);
                 this.showError();
                 this._invalidCredentials = true;
-                this.authStore.getAuthInfo(this.site).then((authInfo) => {
-                    if (authInfo) {
-                        authInfo.state = AuthInfoState.Invalid;
-                        this.authStore.saveAuthInfo(this.site, authInfo);
-                    }
-                });
+                this.authStore.handleApiUnauthorized(this.site);
             }
             return Promise.reject(e);
         };
@@ -61,11 +57,13 @@ export class BasicInterceptor implements AuthInterceptor {
     }
 
     showError() {
+        const authCommand =
+            this.site.product.key === ProductBitbucket.key ? Commands.ShowBitbucketAuth : Commands.ShowJiraAuth;
         window
             .showErrorMessage(`Credentials refused for ${this.site.baseApiUrl}`, { modal: false }, `Update Credentials`)
             .then((userChoice) => {
                 if (userChoice === 'Update Credentials') {
-                    commands.executeCommand(Commands.ShowJiraAuth);
+                    commands.executeCommand(authCommand);
                 }
             });
     }
