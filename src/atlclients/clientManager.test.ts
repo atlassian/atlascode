@@ -142,6 +142,7 @@ describe('ClientManager', () => {
             getAuthInfo: jest.fn(),
             refreshAccessToken: jest.fn(),
             onDidAuthChange: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+            setOnOAuthApiUnauthorized: jest.fn(),
         };
 
         // Mock Container
