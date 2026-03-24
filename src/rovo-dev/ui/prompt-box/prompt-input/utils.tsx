@@ -2,6 +2,11 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { SavedPrompt } from '../../utils';
 
+export interface WorkspaceFile {
+    path: string;
+    name: string;
+}
+
 export const createMonacoPromptEditor = (container: HTMLElement) => {
     /* Disable web workers in Monaco by providing a dummy implementation 
         Monaco web workers cannot be instantiated in vscode webview */
@@ -282,6 +287,65 @@ export function createPromptCompletionProvider(
     };
 }
 
+export function createFileCompletionProvider(
+    fetch: (query?: string) => Promise<WorkspaceFile[]>,
+    canFetch: boolean,
+    onFileSelected?: (filePath: string) => void,
+): monaco.languages.CompletionItemProvider {
+    return {
+        triggerCharacters: ['#'],
+        provideCompletionItems: async (model, position) => {
+            const textUntilPosition = model.getValueInRange({
+                startLineNumber: 1,
+                startColumn: 1,
+                endLineNumber: position.lineNumber,
+                endColumn: position.column,
+            });
+
+            const match = textUntilPosition.match(/(?:^|\s)#[\w\-\.\/]*$/);
+            if (!match) {
+                return { suggestions: [] };
+            }
+
+            const startColumn = position.column - match[0].trimStart().length;
+            const query = match[0].trimStart().substring(1); // Remove the # prefix
+
+            let files: WorkspaceFile[] = [];
+            if (!canFetch) {
+                files = [{ name: 'Initializing...', path: '' }];
+            } else {
+                files = await fetch(query);
+            }
+
+            const suggestions: monaco.languages.CompletionItem[] = files.map((file, index) => ({
+                label: file.name === 'Initializing...' ? 'Initializing...' : `#${file.name}`,
+                kind: monaco.languages.CompletionItemKind.File,
+                insertText: file.name === 'Initializing...' ? '' : '',
+                documentation: file.path,
+                range: {
+                    startLineNumber: position.lineNumber,
+                    endLineNumber: position.lineNumber,
+                    startColumn: startColumn,
+                    endColumn: position.column,
+                },
+                sortText: `0${index}`,
+                filterText: `#${file.path}`,
+                detail: file.path,
+                command:
+                    file.name !== 'Initializing...' && onFileSelected
+                        ? {
+                              id: 'rovo-dev.attachFile',
+                              title: 'Attach File',
+                              arguments: [file.path],
+                          }
+                        : undefined,
+            }));
+
+            return { suggestions };
+        },
+    };
+}
+
 export function removeMonacoStyles() {
     Array.from(document.styleSheets).forEach((stylesheet) => {
         try {
@@ -304,8 +368,17 @@ export function setupMonacoCommands(
     handleTriggerFeedbackCommand: () => void,
     handleSessionCommand?: () => void,
     onYoloModeToggled?: () => void,
+    onFileSelected?: (filePath: string) => void,
 ): monaco.IDisposable {
     const disposables: monaco.IDisposable[] = [];
+
+    if (onFileSelected) {
+        disposables.push(
+            monaco.editor.registerCommand('rovo-dev.attachFile', (accessor, filePath: string) => {
+                onFileSelected(filePath);
+            }),
+        );
+    }
 
     disposables.push(
         monaco.editor.registerCommand('rovo-dev.clearChat', () => {

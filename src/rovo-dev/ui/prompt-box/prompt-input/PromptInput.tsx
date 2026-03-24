@@ -20,6 +20,7 @@ import PromptContextPopup from '../prompt-context-popup/PromptContextPopup';
 import { getAgentModeIcon } from '../prompt-settings-popup/AgentModeSection';
 import PromptSettingsPopup from '../prompt-settings-popup/PromptSettingsPopup';
 import {
+    createFileCompletionProvider,
     createMonacoPromptEditor,
     createPromptCompletionProvider,
     createSlashCommandProvider,
@@ -28,6 +29,7 @@ import {
     setupAutoResize,
     setupMonacoCommands,
     setupPromptKeyBindings,
+    WorkspaceFile,
 } from './utils';
 
 type NonDisabledState = Exclude<State, DisabledState>;
@@ -54,6 +56,7 @@ interface PromptInputBoxProps {
     onSend: (text: string) => boolean;
     onCancel: () => void;
     onAddContext: () => void;
+    onFileSelected?: (filePath: string) => void;
     onCopy: () => void;
     handleMcpConfigurationCommand: () => void;
     handleMemoryCommand: () => void;
@@ -63,6 +66,9 @@ interface PromptInputBoxProps {
     onPromptTextSet?: () => void;
     handleFetchSavedPrompts?: () => Promise<SavedPrompt[]>;
     canFetchSavedPrompts?: boolean;
+    handleFetchWorkspaceFiles?: (query?: string) => Promise<WorkspaceFile[]>;
+    canFetchWorkspaceFiles?: boolean;
+    workspacePath?: string;
 }
 
 const TextAreaMessages: Record<NonDisabledState['state'], string> = {
@@ -127,6 +133,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     onSend,
     onCancel,
     onAddContext,
+    onFileSelected,
     onCopy,
     handleMcpConfigurationCommand,
     handleMemoryCommand,
@@ -136,13 +143,41 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     onPromptTextSet,
     handleFetchSavedPrompts,
     canFetchSavedPrompts = false,
+    handleFetchWorkspaceFiles,
+    canFetchWorkspaceFiles = false,
+    workspacePath,
 }) => {
     const [editor, setEditor] = React.useState<ReturnType<typeof createEditor>>(undefined);
     const [isEmpty, setIsEmpty] = React.useState(true);
     const promptCompletionProviderRef = React.useRef<monaco.IDisposable | null>(null);
+    const fileCompletionProviderRef = React.useRef<monaco.IDisposable | null>(null);
     const contentChangeListenerRef = React.useRef<monaco.IDisposable | null>(null);
     const autoResizeRef = React.useRef<monaco.IDisposable | null>(null);
     const commandsRef = React.useRef<monaco.IDisposable | null>(null);
+
+    // Handle file selection from autocomplete
+    const handleFileSelected = React.useCallback(
+        (filePath: string) => {
+            if (!editor) {
+                return;
+            }
+
+            // Remove the #filepath text from the editor
+            const model = editor.getModel();
+            if (model) {
+                const value = editor.getValue();
+                const match = value.match(/(?:^|\s)#[\w\-\.\/]*$/);
+                if (match) {
+                    const newValue = value.substring(0, value.length - match[0].length);
+                    editor.setValue(newValue);
+                }
+            }
+
+            // Call the parent's onFileSelected callback
+            onFileSelected?.(filePath);
+        },
+        [editor, onFileSelected],
+    );
 
     // create the editor only once - use onAddContext hook to retry
     React.useEffect(() => setEditor((prev) => prev ?? createEditor(setIsEmpty)), [onAddContext]);
@@ -201,6 +236,26 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     }, [canFetchSavedPrompts, editor, handleFetchSavedPrompts]);
 
     React.useEffect(() => {
+        if (editor && handleFetchWorkspaceFiles) {
+            if (fileCompletionProviderRef.current) {
+                fileCompletionProviderRef.current.dispose();
+            }
+
+            fileCompletionProviderRef.current = monaco.languages.registerCompletionItemProvider(
+                'plaintext',
+                createFileCompletionProvider(handleFetchWorkspaceFiles, canFetchWorkspaceFiles, handleFileSelected),
+            );
+        }
+
+        return () => {
+            if (fileCompletionProviderRef.current) {
+                fileCompletionProviderRef.current.dispose();
+                fileCompletionProviderRef.current = null;
+            }
+        };
+    }, [canFetchWorkspaceFiles, editor, handleFetchWorkspaceFiles, handleFileSelected]);
+
+    React.useEffect(() => {
         // Remove Monaco's color stylesheet
         removeMonacoStyles();
     }, [editor]);
@@ -232,6 +287,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             handleTriggerFeedbackCommand,
             handleSessionCommand,
             onYoloModeToggled,
+            handleFileSelected,
         );
 
         return () => {
@@ -247,6 +303,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
         handleTriggerFeedbackCommand,
         onYoloModeToggled,
         handleSessionCommand,
+        handleFileSelected,
     ]);
 
     // Handle setting prompt text from external source
