@@ -50,6 +50,7 @@ export const enum RovoDevViewResponseType {
     RestartProcess = 'restartProcess',
     ShowSessionHistory = 'showSessionHistory',
     FetchSavedPrompts = 'fetchSavedPrompts',
+    FetchWorkspaceFiles = 'fetchWorkspaceFiles',
     AskUserQuestionsSubmit = 'askUserQuestionsSubmit',
     ExitPlanModeSubmit = 'exitPlanModeSubmit',
     RefreshModifiedFiles = 'refreshModifiedFiles',
@@ -122,6 +123,7 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.RestartProcess>
     | ReducerAction<RovoDevViewResponseType.ShowSessionHistory>
     | ReducerAction<RovoDevViewResponseType.FetchSavedPrompts>
+    | ReducerAction<RovoDevViewResponseType.FetchWorkspaceFiles, { query?: string }>
     | ReducerAction<RovoDevViewResponseType.AskUserQuestionsSubmit, AskUserQuestionsResultMessage>
     | ReducerAction<RovoDevViewResponseType.ExitPlanModeSubmit, ExitPlanModeResultMessage>
     | ReducerAction<RovoDevViewResponseType.RefreshModifiedFiles>;
