@@ -11,7 +11,7 @@ import { CredentialHint } from '../landing-page/disabled-messages/RovoDevLoginFo
 import { RovoDevLanding } from '../landing-page/RovoDevLanding';
 import { useMessagingApi } from '../messagingApi';
 import { McpConsentChoice, RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
-import { ToolCallItem } from '../tools/ToolCallItem';
+import { SubagentInfo, ToolCallItem } from '../tools/ToolCallItem';
 import { ConnectionTimeout, DialogMessage, PullRequestMessage, Response, scrollToEnd } from '../utils';
 import { ChatStreamMessageRenderer } from './ChatStreamMessageRenderer';
 import { DropdownButton } from './dropdown-button/DropdownButton';
@@ -32,6 +32,7 @@ interface ChatStreamProps {
         typeof useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>
     >;
     pendingToolCall: string;
+    pendingSubagentTasks?: SubagentInfo[];
     deepPlanCreated: string | null;
     currentState: State;
     onChangesGitPushed: (msg: PullRequestMessage, pullRequestCreated: boolean) => void;
@@ -55,6 +56,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     modalDialogs,
     renderProps,
     pendingToolCall,
+    pendingSubagentTasks,
     deepPlanCreated,
     currentState,
     messagingApi,
@@ -258,7 +260,11 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
             {!isChatHistoryDisabled && shouldShowToolCall && pendingToolCall && (
                 <div style={{ marginBottom: '16px' }}>
-                    <ToolCallItem toolMessage={pendingToolCall} currentState={currentState} />
+                    <ToolCallItem
+                        toolMessage={pendingToolCall}
+                        currentState={currentState}
+                        subagentTasks={pendingSubagentTasks}
+                    />
                 </div>
             )}
 
