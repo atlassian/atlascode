@@ -155,14 +155,12 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     const autoResizeRef = React.useRef<monaco.IDisposable | null>(null);
     const commandsRef = React.useRef<monaco.IDisposable | null>(null);
 
-    // Handle file selection from autocomplete
     const handleFileSelected = React.useCallback(
         (filePath: string) => {
             if (!editor) {
                 return;
             }
 
-            // Remove the #filepath text from the editor
             const model = editor.getModel();
             if (model) {
                 const value = editor.getValue();
@@ -173,7 +171,6 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                 }
             }
 
-            // Call the parent's onFileSelected callback
             onFileSelected?.(filePath);
         },
         [editor, onFileSelected],

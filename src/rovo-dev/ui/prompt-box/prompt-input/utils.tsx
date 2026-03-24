@@ -287,6 +287,7 @@ export function createPromptCompletionProvider(
     };
 }
 
+// This function is pretty similar to createPromptCompletionProvider - we could probably combine them and make it more generic if needed in the future
 export function createFileCompletionProvider(
     fetch: (query?: string) => Promise<WorkspaceFile[]>,
     canFetch: boolean,
