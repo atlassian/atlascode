@@ -1,4 +1,5 @@
 import { truncate } from 'lodash';
+import { Container } from 'src/container';
 import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import * as vscode from 'vscode';
 
@@ -23,7 +24,7 @@ export class RovoDevFeedbackManager {
         isBBY: boolean = false,
     ): Promise<void> {
         const transport = getAxiosInstance();
-        const context = this.getContext(isBBY, feedback.rovoDevSessionId);
+        const context = await this.getContext(isBBY, feedback.rovoDevSessionId);
 
         let userEmail = 'do-not-reply@atlassian.com';
         let userName = 'unknown';
@@ -97,13 +98,23 @@ export class RovoDevFeedbackManager {
         }
     }
 
-    private static getContext(isBBY: boolean = false, rovoDevSessionId?: string): any {
+    private static async getContext(isBBY: boolean = false, rovoDevSessionId?: string): Promise<any> {
         const extensionApi = new ExtensionApi();
+
+        let entitlementType: string = 'unknown';
+        try {
+            const entitlement = await Container.rovoDevEntitlementChecker.checkEntitlement();
+            entitlementType = entitlement.type;
+        } catch {
+            entitlementType = 'unknown';
+        }
+
         return {
             component: isBBY ? 'Boysenberry - vscode' : 'IDE - vscode',
             extensionVersion: extensionApi.metadata.version(),
             vscodeVersion: vscode.version,
             rovoDevVersion: MIN_SUPPORTED_ROVODEV_VERSION,
+            entitlementType,
             ...(rovoDevSessionId && { rovoDevSessionId }),
         };
     }

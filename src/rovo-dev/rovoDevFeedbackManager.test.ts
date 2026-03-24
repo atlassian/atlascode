@@ -1,6 +1,16 @@
 jest.mock('src/logger');
 jest.mock('vscode');
 
+const mockCheckEntitlement = jest.fn();
+
+jest.mock('src/container', () => ({
+    Container: {
+        rovoDevEntitlementChecker: {
+            checkEntitlement: mockCheckEntitlement,
+        },
+    },
+}));
+
 const mockExtensionApiInstance = {
     metadata: {
         version: jest.fn(),
@@ -41,6 +51,7 @@ describe('RovoDevFeedbackManager', () => {
 
         // Default return values
         mockExtensionApiInstance.metadata.version.mockReturnValue('1.0.0');
+        mockCheckEntitlement.mockResolvedValue({ isEntitled: true, type: 'ROVO_DEV_STANDARD' });
     });
 
     describe('submitFeedback', () => {
@@ -241,6 +252,84 @@ describe('RovoDevFeedbackManager', () => {
                         fields: expect.arrayContaining([
                             expect.objectContaining({ id: 'email', value: 'do-not-reply@atlassian.com' }),
                             expect.objectContaining({ id: 'customfield_10045', value: 'unknown' }),
+                        ]),
+                    }),
+                }),
+            );
+        });
+
+        it('should include entitlement type in context', async () => {
+            mockCheckEntitlement.mockResolvedValue({ isEntitled: true, type: 'ROVO_DEV_EVERYWHERE' });
+
+            const feedback = {
+                feedbackType: 'general' as const,
+                feedbackMessage: 'Test feedback',
+                canContact: false,
+            };
+
+            await RovoDevFeedbackManager.submitFeedback(feedback);
+
+            expect(mockTransport).toHaveBeenCalledWith(
+                expect.any(String),
+                expect.objectContaining({
+                    data: expect.objectContaining({
+                        fields: expect.arrayContaining([
+                            expect.objectContaining({
+                                id: 'customfield_10047',
+                                value: expect.stringContaining('"entitlementType": "ROVO_DEV_EVERYWHERE"'),
+                            }),
+                        ]),
+                    }),
+                }),
+            );
+        });
+
+        it('should include entitlement type for non-entitled users', async () => {
+            mockCheckEntitlement.mockResolvedValue({ isEntitled: false, type: 'NO_ACTIVE_PRODUCT' });
+
+            const feedback = {
+                feedbackType: 'bug' as const,
+                feedbackMessage: 'Bug with entitlement',
+                canContact: false,
+            };
+
+            await RovoDevFeedbackManager.submitFeedback(feedback);
+
+            expect(mockTransport).toHaveBeenCalledWith(
+                expect.any(String),
+                expect.objectContaining({
+                    data: expect.objectContaining({
+                        fields: expect.arrayContaining([
+                            expect.objectContaining({
+                                id: 'customfield_10047',
+                                value: expect.stringContaining('"entitlementType": "NO_ACTIVE_PRODUCT"'),
+                            }),
+                        ]),
+                    }),
+                }),
+            );
+        });
+
+        it('should default entitlement type to unknown when entitlement check fails', async () => {
+            mockCheckEntitlement.mockRejectedValue(new Error('Entitlement check failed'));
+
+            const feedback = {
+                feedbackType: 'general' as const,
+                feedbackMessage: 'Test feedback',
+                canContact: false,
+            };
+
+            await RovoDevFeedbackManager.submitFeedback(feedback);
+
+            expect(mockTransport).toHaveBeenCalledWith(
+                expect.any(String),
+                expect.objectContaining({
+                    data: expect.objectContaining({
+                        fields: expect.arrayContaining([
+                            expect.objectContaining({
+                                id: 'customfield_10047',
+                                value: expect.stringContaining('"entitlementType": "unknown"'),
+                            }),
                         ]),
                     }),
                 }),

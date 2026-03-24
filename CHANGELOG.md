@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.28
+
+### Improvements
+
+- **RovoDev**: Added user entitlement type (RDS/RDE paid or unpaid seat) to the feedback collector context, enabling better triage and analysis of feedback by seat type
+
 ## What's new in 4.0.27
 
 ### Bug Fixes
