@@ -110,7 +110,7 @@ export interface ToolReturnParseResult {
     diff?: string;
     filePath?: string;
     title?: string;
-    type?: 'modify' | 'create' | 'delete' | 'open' | 'bash' | 'move';
+    type?: 'modify' | 'create' | 'delete' | 'open' | 'bash' | 'move' | 'subagents';
     todoData?: TodoItem[];
 }
 
@@ -140,7 +140,7 @@ export interface ExitPlanModeResultMessage extends DeferredRequestResultMessage 
 
 interface ToolReturnInfo {
     title: string;
-    type: 'modify' | 'create' | 'delete' | 'open' | 'bash' | 'move';
+    type: 'modify' | 'create' | 'delete' | 'open' | 'bash' | 'move' | 'subagents';
 }
 
 export const modifyFileTitleMap: Record<string, ToolReturnInfo> = {
@@ -170,6 +170,12 @@ interface GrepArgs {
 
 interface McpToolArgs {
     tool_name?: string;
+}
+
+interface SubagentArgs {
+    subagent_names?: string[];
+    task_names?: string[];
+    task_descriptions?: string[];
 }
 
 /**
@@ -315,19 +321,15 @@ export function parseToolReturnMessage(
                     type: 'modify',
                 });
                 break;
-            default:
-                if (/^mcp__\w+__(?:invoke_tool|get_tool_schema)$/.test(msg.tool_name)) {
-                    const mcpToolArgs = safeJsonParse<McpToolArgs>(msg.toolCallMessage.args);
-                    const mcpToolCallResponse = safeJsonParse<RovoDevToolCallResponse>(msg.toolCallMessage);
-                    const mcpServer = mcpToolCallResponse?.mcp_server;
+            case 'invoke_subagents':
+                const subagentArgs = safeJsonParse<SubagentArgs>(msg.toolCallMessage.args);
+                const subagentNames = subagentArgs?.subagent_names || [];
+                const taskNames = subagentArgs?.task_names || [];
+                for (let i = 0; i < subagentNames.length; i++) {
                     resp.push({
-                        content: `Invoked ${mcpServer ? mcpServer + ' ' : ''}MCP tool: \`${mcpToolArgs?.tool_name || 'unknown tool'}\``,
-                        type: 'bash',
-                    });
-                } else {
-                    // For other tool names, we just return the raw content
-                    resp.push({
-                        content: msg.tool_name,
+                        content: `Subagent: ${subagentNames[i]}`,
+                        title: taskNames[i] || '',
+                        type: 'subagents',
                     });
                 }
                 break;
@@ -358,6 +360,22 @@ export function parseToolReturnMessage(
                     type: 'modify',
                     todoData: todoArr,
                 });
+                break;
+            default:
+                if (/^mcp__\w+__(?:invoke_tool|get_tool_schema)$/.test(msg.tool_name)) {
+                    const mcpToolArgs = safeJsonParse<McpToolArgs>(msg.toolCallMessage.args);
+                    const mcpToolCallResponse = safeJsonParse<RovoDevToolCallResponse>(msg.toolCallMessage);
+                    const mcpServer = mcpToolCallResponse?.mcp_server;
+                    resp.push({
+                        content: `Invoked ${mcpServer ? mcpServer + ' ' : ''}MCP tool: \`${mcpToolArgs?.tool_name || 'unknown tool'}\``,
+                        type: 'bash',
+                    });
+                } else {
+                    // For other tool names, we just return the raw content
+                    resp.push({
+                        content: msg.tool_name,
+                    });
+                }
                 break;
         }
     } catch (error) {
