@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.28
+
+### Features
+
+- **RovoDev**: Added file picker autocomplete in chat prompt using `#` trigger - users can now type `#` to get autocomplete suggestions for workspace files and automatically attach them as context. Supports searching by filename (e.g., `#analytics`) or folder path (e.g., `#src/` to see all files in src folder)
+
 ## What's new in 4.0.27
 
 ### Bug Fixes
@@ -27,7 +33,6 @@
 ### Features
 
 - **RovoDev**: Added copy code button within the Rovo Dev chat for code blocks in the chat.
-
 
 ## What's new in 4.0.23
 
