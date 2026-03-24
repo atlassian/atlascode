@@ -47,6 +47,7 @@ export const enum RovoDevProviderMessageType {
     GetCurrentAgentModeComplete = 'getCurrentAgentModeComplete',
     SetAgentModeComplete = 'setAgentModeComplete',
     UpdateSavedPrompts = 'updateSavedPrompts',
+    UpdateWorkspaceFiles = 'updateWorkspaceFiles',
     ShowDeferredAskUserQuestions = 'showDeferredAskUserQuestions',
     ShowDeferredExitPlanMode = 'showDeferredExitPlanMode',
     UpdateAgentModels = 'updateAgentModels',
@@ -143,6 +144,10 @@ export type RovoDevProviderMessage =
     | ReducerAction<
           RovoDevProviderMessageType.UpdateSavedPrompts,
           { savedPrompts: { name: string; description: string; content_file: string }[] | undefined }
+      >
+    | ReducerAction<
+          RovoDevProviderMessageType.UpdateWorkspaceFiles,
+          { files: { path: string; name: string }[] | undefined }
       >
     | ReducerAction<
           RovoDevProviderMessageType.ShowDeferredAskUserQuestions,
