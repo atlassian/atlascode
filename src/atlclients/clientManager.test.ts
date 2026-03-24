@@ -143,6 +143,7 @@ describe('ClientManager', () => {
             getAuthInfo: jest.fn(),
             refreshAccessToken: jest.fn(),
             onDidAuthChange: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+            setOnOAuthApiUnauthorized: jest.fn(),
         };
 
         // Mock Container
@@ -464,6 +465,7 @@ describe('ClientManager', () => {
                 `Bearer ${mockOAuthInfo.access}`,
                 expect.any(Object),
                 expect.any(Function),
+                expect.any(BasicInterceptor),
             );
         });
 
