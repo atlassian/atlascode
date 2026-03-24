@@ -48,6 +48,21 @@ export class RovoDevChatContextProvider {
         await this.addContextItem(picked);
     }
 
+    public async handleFetchWorkspaceFiles(query?: string): Promise<{ path: string; name: string }[] | undefined> {
+        try {
+            const pattern = query ? `**/*${query}*` : '**/*';
+            const items = await this.fetchFileContextItems(pattern, 100);
+
+            return items.map((item) => ({
+                path: item.relativePath,
+                name: item.name,
+            }));
+        } catch (error) {
+            console.error('Failed to fetch workspace files:', error);
+            return undefined;
+        }
+    }
+
     public async processDragDropData(dragDropData: string[]) {
         // search for a Jira work item
         if (dragDropData.find((x) => x.includes('atlascode.views.jira.assignedWorkItemsTreeView'))) {
