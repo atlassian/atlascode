@@ -315,34 +315,61 @@ export function createFileCompletionProvider(
             if (!canFetch) {
                 files = [{ name: 'Initializing...', path: '' }];
             } else {
+                // Show loading state while fetching
+                if (!files.length) {
+                    files = [{ name: 'Loading files...', path: '' }];
+                }
                 files = await fetch(query);
             }
 
-            const suggestions: monaco.languages.CompletionItem[] = files.map((file, index) => ({
-                label: file.name === 'Initializing...' ? 'Initializing...' : `#${file.name}`,
-                kind: monaco.languages.CompletionItemKind.File,
-                insertText: file.name === 'Initializing...' ? '' : '',
-                documentation: file.path,
-                range: {
-                    startLineNumber: position.lineNumber,
-                    endLineNumber: position.lineNumber,
-                    startColumn: startColumn,
-                    endColumn: position.column,
-                },
-                sortText: `0${index}`,
-                filterText: `#${file.path}`,
-                detail: file.path,
-                command:
-                    file.name !== 'Initializing...' && onFileSelected
-                        ? {
-                              id: 'rovo-dev.attachFile',
-                              title: 'Attach File',
-                              arguments: [file.path],
-                          }
-                        : undefined,
-            }));
+            const suggestions: monaco.languages.CompletionItem[] = files.map((file, index) => {
+                // Monaco built-in sort doesn't prioritize exact matches and prefix matches, so we need to add custom sort
+                let sortPrefix = '2';
+                const isLoadingState = file.name === 'Initializing...' || file.name === 'Loading files...';
+                if (query && !isLoadingState) {
+                    const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+                    const lowerNameNoExt = nameWithoutExt.toLowerCase();
+                    const lowerQuery = query.toLowerCase();
 
-            return { suggestions };
+                    if (lowerNameNoExt === lowerQuery) {
+                        sortPrefix = '0'; // Exact match
+                    } else if (file.name.toLowerCase().startsWith(lowerQuery)) {
+                        sortPrefix = '1';
+                    }
+                }
+
+                return {
+                    label: isLoadingState ? file.name : `#${file.name}`,
+                    kind: isLoadingState
+                        ? monaco.languages.CompletionItemKind.Text
+                        : monaco.languages.CompletionItemKind.File,
+                    insertText: isLoadingState ? '' : '',
+                    documentation: file.path,
+                    range: {
+                        startLineNumber: position.lineNumber,
+                        endLineNumber: position.lineNumber,
+                        startColumn: startColumn,
+                        endColumn: position.column,
+                    },
+                    sortText: `${sortPrefix}_${file.name}`,
+                    filterText: `#${file.name}`,
+                    detail: file.path,
+                    command:
+                        !isLoadingState && onFileSelected
+                            ? {
+                                  id: 'rovo-dev.attachFile',
+                                  title: 'Attach File',
+                                  arguments: [file.path],
+                              }
+                            : undefined,
+                };
+            });
+
+            return {
+                suggestions,
+                // Incomplete tells Monaco to keep calling this provider as user types more characters
+                incomplete: true,
+            };
         },
     };
 }
