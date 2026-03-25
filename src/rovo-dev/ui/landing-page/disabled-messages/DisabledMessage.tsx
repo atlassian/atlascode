@@ -24,8 +24,18 @@ export const DisabledMessage: React.FC<{
     onOpenFolder: () => void;
     onLinkClick: (url: string) => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
+    onRestartProcess: () => void;
     credentialHints?: CredentialHint[];
-}> = ({ currentState, onLoginClick, onRovoDevAuthSubmit, onOpenFolder, onLinkClick, onMcpChoice, credentialHints }) => {
+}> = ({
+    currentState,
+    onLoginClick,
+    onRovoDevAuthSubmit,
+    onOpenFolder,
+    onLinkClick,
+    onMcpChoice,
+    onRestartProcess,
+    credentialHints,
+}) => {
     if (currentState.state === 'Disabled' && currentState.subState === 'NeedAuth') {
         return (
             <div style={loginFormContainerStyles}>
@@ -75,6 +85,12 @@ export const DisabledMessage: React.FC<{
                 text,
                 onClick: () => onLinkClick(link),
             };
+        } else {
+            // If no CTA link, show Refresh button
+            customButton = {
+                text: 'Refresh',
+                onClick: onRestartProcess,
+            };
         }
 
         const message = currentState.detail.payload.message.replace('{ctaLink}', '').trim();
@@ -107,6 +123,10 @@ export const DisabledMessage: React.FC<{
                         title: 'Unsupported architecture',
                         text: `Sorry, Rovo Dev is not supported for the following architecture: ${process.platform}/${process.arch}.`,
                         uid: '',
+                    }}
+                    customButton={{
+                        text: 'Refresh',
+                        onClick: onRestartProcess,
                     }}
                     onLinkClick={onLinkClick}
                 />

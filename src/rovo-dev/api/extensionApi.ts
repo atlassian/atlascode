@@ -106,6 +106,9 @@ export class ExtensionApi {
         isThinkingBlockEnabled: (): boolean => {
             return Container.config.rovodev.thinkingBlockEnabled;
         },
+        isJiraEnabled: (): boolean => {
+            return Container.config.jira.enabled;
+        },
         onDidChange: (listener: (e: ConfigurationChangeEvent) => any, thisArg?: any) => {
             return configuration.onDidChange(listener, thisArg);
         },
