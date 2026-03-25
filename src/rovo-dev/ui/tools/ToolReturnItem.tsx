@@ -1,11 +1,13 @@
 import AngleBracketsIcon from '@atlaskit/icon/core/angle-brackets';
 import DeleteIcon from '@atlaskit/icon/core/delete';
 import FileIcon from '@atlaskit/icon/core/file';
+import PeopleGroupIcon from '@atlaskit/icon/core/people-group';
 import SearchIcon from '@atlaskit/icon/core/search';
 import React from 'react';
 
 import { MarkedDown, OpenFileFunc } from '../common/common';
 import { ToolReturnParseResult } from '../utils';
+import { ToDoList } from './ToDoList';
 
 export const ToolReturnParsedItem: React.FC<{
     msg: ToolReturnParseResult;
@@ -34,6 +36,7 @@ export const ToolReturnParsedItem: React.FC<{
                     <MarkedDown value={msg.content ?? ''} onLinkClick={onLinkClick} />
                 </div>
                 {renderTitle(msg)}
+                {msg.todoData && msg.todoData.length > 0 && <ToDoList todos={msg.todoData} />}
             </div>
         </a>
     );
@@ -61,4 +64,5 @@ const iconMap: Record<string, React.JSX.Element> = {
     delete: <DeleteIcon label="Deleted file" />,
     open: <SearchIcon label="Opened file" />,
     bash: <AngleBracketsIcon label="Bash command" />,
+    subagents: <PeopleGroupIcon label="Subagent task" />,
 };

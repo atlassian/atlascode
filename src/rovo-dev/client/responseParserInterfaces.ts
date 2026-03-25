@@ -188,10 +188,12 @@ export type RovoDevToolName =
     | 'expand_folder'
     | 'grep'
     | 'bash'
+    | 'invoke_subagents'
     | 'mcp_invoke_tool'
     | 'mcp__atlassian__invoke_tool'
     | 'mcp__atlassian__get_tool_schema'
     | 'mcp__scout__invoke_tool'
+    | 'update_todo'
     | RovoDevDeferredToolCallName;
 
 export type RovoDevToolPemissionScenario = 'ASK' | 'ALLOWED' | 'DENIED';

@@ -5,13 +5,23 @@
 ### Improvements
 
 - **RovoDev**: Added user entitlement type (RDS/RDE paid or unpaid seat) to the feedback collector context, enabling better triage and analysis of feedback by seat type
+- **RovoDev**: Generalized MCP tool parsing in chat UI to support any MCP toolset via regex matching (`mcp__<name>__invoke_tool` / `mcp__<name>__get_tool_schema`) instead of hardcoded tool names
 
 ## What's new in 4.0.27
+
+### Improvements
+
+- **RovoDev**: Generalized MCP tool parsing in chat UI to support any MCP toolset via regex matching (`mcp__<name>__invoke_tool` / `mcp__<name>__get_tool_schema`) instead of hardcoded tool names
 
 ### Bug Fixes
 
 - Fixed "Please log in again" error message for disabled products so Jira-only and Bitbucket-only users do not see the other product's connection error on startup
 - Fixed duplicate remote creation when checking out PR branches from forked repositories - the extension now reuses existing remotes that point to the same repository
+- **Bitbucket (and Jira) Cloud OAuth**: Fixed repeated disconnections after one or two operations. OAuth API clients were not using the auth interceptor
+
+### Features
+
+- **Rovo Dev**: Added UI support for `invoke_subagents` tool — displays delegated subagent tasks with names during execution
 
 ## What's new in 4.0.25
 
@@ -67,7 +77,7 @@
 - **RovoDev**: Fixed chat message not appearing when clicking "Fix with Rovo Dev" before the chat view is fully initialized - now waits for the webview to be ready before executing the chat command
 - Fixed "Cannot read properties of undefined (reading 'initiateApiTokenAuth')" error
 - Fixed the bug that prevented users from editing selected values in the landing page for Rovo Dev.
-- **RovoDev**: Hide chat action buttons during plan workflows and remove the Generate Code button when a plan is scrapped
+  **RovoDev**: Hide chat action buttons during plan workflows and remove the Generate Code button when a plan is scrapped
 
 ## What's new in 4.0.22
 

@@ -8,6 +8,7 @@ import {
 } from 'src/rovo-dev/client';
 
 import { RovoDevContextItem } from '../rovoDevTypes';
+import { TodoItem } from './tools/ToDoList';
 
 /**
  * Creates a keyboard event handler that triggers onClick when Enter or Space is pressed.
@@ -41,6 +42,7 @@ export type ChatMessage =
     | RovoDevTextResponse
     | RovoDevToolCallResponse
     | RovoDevToolReturnResponse
+    | RovoDevUpdateTodoResponse
     | RovoDevRetryPromptResponse
     | RovoDevExitPlanModeMessage;
 
@@ -93,6 +95,13 @@ export interface ToolPermissionDialogMessage extends AbstractDialogMessage {
     mcpServer?: string;
     toolCallId: string;
 }
+export interface RovoDevUpdateTodoResponse {
+    event_kind: 'update_todo';
+    todos: TodoItem[];
+    tool_call_id: string;
+    timestamp: string;
+    toolCallMessage: RovoDevToolCallResponse;
+}
 
 export type DialogMessage = ErrorDialogMessage | WarningInfoDialogMessage | ToolPermissionDialogMessage;
 
@@ -101,7 +110,8 @@ export interface ToolReturnParseResult {
     diff?: string;
     filePath?: string;
     title?: string;
-    type?: 'modify' | 'create' | 'delete' | 'open' | 'bash' | 'move';
+    type?: 'modify' | 'create' | 'delete' | 'open' | 'bash' | 'move' | 'subagents';
+    todoData?: TodoItem[];
 }
 
 export type Response = ChatMessage | ChatMessage[] | null;
@@ -130,7 +140,7 @@ export interface ExitPlanModeResultMessage extends DeferredRequestResultMessage 
 
 interface ToolReturnInfo {
     title: string;
-    type: 'modify' | 'create' | 'delete' | 'open' | 'bash' | 'move';
+    type: 'modify' | 'create' | 'delete' | 'open' | 'bash' | 'move' | 'subagents';
 }
 
 export const modifyFileTitleMap: Record<string, ToolReturnInfo> = {
@@ -162,12 +172,18 @@ interface McpToolArgs {
     tool_name?: string;
 }
 
+interface SubagentArgs {
+    subagent_names?: string[];
+    task_names?: string[];
+    task_descriptions?: string[];
+}
+
 /**
  * Safely parses JSON string or returns the value if it's already an object.
  * @param value - The value to parse (string or already parsed object)
  * @returns Parsed object or the original value if already parsed, or null if value is falsy
  */
-function safeJsonParse<T = any>(value: string | T | null | undefined): T | null {
+export function safeJsonParse<T = any>(value: string | T | null | undefined): T | null {
     if (!value) {
         return null;
     }
@@ -296,20 +312,61 @@ export function parseToolReturnMessage(
                     type: 'modify',
                 });
                 break;
-            case 'mcp__atlassian__invoke_tool':
-            case 'mcp__atlassian__get_tool_schema':
-            case 'mcp__scout__invoke_tool':
-                const mcpToolData = safeJsonParse<McpToolArgs>(msg.toolCallMessage.args);
+            case 'invoke_subagents':
+                const subagentArgs = safeJsonParse<SubagentArgs>(msg.toolCallMessage.args);
+                const subagentNames = subagentArgs?.subagent_names || [];
+                const taskNames = subagentArgs?.task_names || [];
+                for (let i = 0; i < subagentNames.length; i++) {
+                    resp.push({
+                        content: `Subagent: ${subagentNames[i]}`,
+                        title: taskNames[i] || '',
+                        type: 'subagents',
+                    });
+                }
+                break;
+            case 'update_todo':
+                let todoArr: TodoItem[] = [];
+                if (msg.parsedContent && typeof msg.parsedContent === 'object' && 'todos' in msg.parsedContent) {
+                    todoArr = (msg.parsedContent as { todos: TodoItem[] }).todos;
+                } else if (msg.content) {
+                    // use regex to remove XML tags
+                    const todoRegex = /<todo>\s*([\s\S]*?)\s*<\/todo>/i;
+                    const match = msg.content.match(todoRegex);
+
+                    if (match && match[1]) {
+                        const todoLines = match[1]
+                            .trim()
+                            .split('\n')
+                            .filter((line) => line.trim());
+                        todoArr = todoLines
+                            .map((line) => {
+                                return JSON.parse(line.trim());
+                            })
+                            .filter((item) => item !== null) as TodoItem[];
+                    }
+                }
+
                 resp.push({
-                    content: `Invoked MCP tool: \`${mcpToolData?.tool_name || 'unknown tool'}\``,
-                    type: 'bash',
+                    content: 'Updated To-Do list',
+                    type: 'modify',
+                    todoData: todoArr,
                 });
                 break;
             default:
-                // For other tool names, we just return the raw content
-                resp.push({
-                    content: msg.tool_name,
-                });
+                if (/^mcp__\w+__(?:invoke_tool|get_tool_schema)$/.test(msg.tool_name)) {
+                    const mcpToolArgs = safeJsonParse<McpToolArgs>(msg.toolCallMessage.args);
+                    const mcpToolCallResponse = safeJsonParse<RovoDevToolCallResponse>(msg.toolCallMessage);
+                    const mcpServer = mcpToolCallResponse?.mcp_server;
+                    resp.push({
+                        content: `Invoked ${mcpServer ? mcpServer + ' ' : ''}MCP tool: \`${mcpToolArgs?.tool_name || 'unknown tool'}\``,
+                        type: 'bash',
+                    });
+                } else {
+                    // For other tool names, we just return the raw content
+                    resp.push({
+                        content: msg.tool_name,
+                    });
+                }
                 break;
         }
     } catch (error) {

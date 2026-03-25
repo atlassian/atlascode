@@ -31,7 +31,7 @@ import { RovoDevErrorBoundary } from './RovoDevErrorBoundary';
 import { McpConsentChoice, ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
 import { AskUserQuestionsComponent } from './technical-plan/AskUserQuestionsComponent';
 import { DebugPanel } from './tools/DebugPanel';
-import { parseToolCallMessage } from './tools/ToolCallItem';
+import { parseToolCallMessage, SubagentInfo } from './tools/ToolCallItem';
 import {
     appendResponse,
     AskUserQuestionsResultMessage,
@@ -42,6 +42,7 @@ import {
     processDropDataTransferItems,
     PullRequestMessage,
     Response,
+    safeJsonParse,
     ToolReturnParseResult,
 } from './utils';
 
@@ -50,6 +51,7 @@ const DEFAULT_LOADING_MESSAGE: string = 'Rovo dev is working';
 const RovoDevView: React.FC = () => {
     const [currentState, setCurrentState] = useState<State>({ state: 'WaitingForPrompt' });
     const [pendingToolCallMessage, setPendingToolCallMessage] = useState('');
+    const [pendingSubagentTasks, setPendingSubagentTasks] = useState<SubagentInfo[]>([]);
     const [retryAfterErrorEnabled, setRetryAfterErrorEnabled] = useState('');
     const [totalModifiedFiles, setTotalModifiedFiles] = useState<ToolReturnParseResult[]>([]);
     const [isDeepPlanToggled, setIsDeepPlanToggled] = useState(false);
@@ -167,6 +169,7 @@ const RovoDevView: React.FC = () => {
         setAskUserQuestionsToolArgs(null);
         setIsFeedbackFormVisible(false);
         setPendingToolCallMessage('');
+        setPendingSubagentTasks([]);
     }, [keepFiles, totalModifiedFiles]);
 
     const onError = useCallback(
@@ -264,8 +267,21 @@ const RovoDevView: React.FC = () => {
                     const last = messages.at(-1);
                     if (last?.event_kind === 'tool-call') {
                         setPendingToolCallMessage(parseToolCallMessage(last.tool_name));
+                        if (last.tool_name === 'invoke_subagents') {
+                            const args = safeJsonParse<{ subagent_names?: string[]; task_names?: string[] }>(last.args);
+                            const subagentNames: string[] = args?.subagent_names || [];
+                            const taskNames: string[] = args?.task_names || [];
+                            const tasks: SubagentInfo[] = subagentNames.map((name, i) => ({
+                                subagentName: name,
+                                taskName: taskNames[i] || '',
+                            }));
+                            setPendingSubagentTasks(tasks);
+                        } else {
+                            setPendingSubagentTasks([]);
+                        }
                     } else if (last?.event_kind === 'tool-return') {
                         setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE); // Clear pending tool call
+                        setPendingSubagentTasks([]);
                     }
 
                     // tool calls are used only to set the pending tool call message, so we don't need to append them
@@ -284,6 +300,7 @@ const RovoDevView: React.FC = () => {
                     }
                     setSummaryMessageInHistory();
                     setPendingToolCallMessage('');
+                    setPendingSubagentTasks([]);
                     setModalDialogs([]);
                     break;
 
@@ -1085,6 +1102,7 @@ const RovoDevView: React.FC = () => {
                             setState,
                         }}
                         pendingToolCall={pendingToolCallMessage}
+                        pendingSubagentTasks={pendingSubagentTasks}
                         deepPlanCreated={deepPlanCreated}
                         currentState={currentState}
                         onChangesGitPushed={onChangesGitPushed}

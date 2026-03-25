@@ -2,10 +2,16 @@ import React, { useCallback } from 'react';
 import { RovoDevToolName } from 'src/rovo-dev/client';
 import { InitializingDownladingState, InitializingState, State } from 'src/rovo-dev/rovoDevTypes';
 
+export interface SubagentInfo {
+    subagentName: string;
+    taskName: string;
+}
+
 export const ToolCallItem: React.FC<{
     toolMessage: string;
     currentState: State;
-}> = ({ toolMessage, currentState }) => {
+    subagentTasks?: SubagentInfo[];
+}> = ({ toolMessage, currentState, subagentTasks }) => {
     const getMessage = useCallback(
         () => (currentState.state === 'Initializing' ? getInitStatusMessage(currentState) : toolMessage),
         [toolMessage, currentState],
@@ -17,6 +23,17 @@ export const ToolCallItem: React.FC<{
                 <i className="codicon codicon-loading codicon-modifier-spin" />
                 <span>{getMessage()}</span>
             </div>
+            {subagentTasks && subagentTasks.length > 0 && (
+                <div className="subagent-task-list">
+                    {subagentTasks.map((task, index) => (
+                        <div key={index} className="subagent-task-item">
+                            <code>
+                                Subagent: {task.subagentName} ({task.taskName})
+                            </code>
+                        </div>
+                    ))}
+                </div>
+            )}
             {currentState.state === 'Initializing' &&
                 currentState.subState === 'UpdatingBinaries' &&
                 currentState.totalBytes > 0 && (
@@ -59,10 +76,14 @@ export function parseToolCallMessage(msgToolName: RovoDevToolName): string {
         case 'mcp__atlassian__get_tool_schema':
         case 'mcp__scout__invoke_tool':
             return "Invoking MCP server's tool";
+        case 'invoke_subagents':
+            return 'Delegating tasks to subagents';
         case 'ask_user_questions':
             return 'Asking user questions';
         case 'exit_plan_mode':
             return 'Exiting plan mode';
+        case 'update_todo':
+            return 'Updating todo';
         default:
             // @ts-expect-error ts(2339) - msgToolName here should be 'never'
             return msgToolName.toString();
