@@ -343,7 +343,7 @@ export function createFileCompletionProvider(
                     kind: isLoadingState
                         ? monaco.languages.CompletionItemKind.Text
                         : monaco.languages.CompletionItemKind.File,
-                    insertText: isLoadingState ? '' : '',
+                    insertText: '',
                     documentation: file.path,
                     range: {
                         startLineNumber: position.lineNumber,
