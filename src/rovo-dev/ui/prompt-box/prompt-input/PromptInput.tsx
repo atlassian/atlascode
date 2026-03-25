@@ -233,7 +233,12 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     }, [canFetchSavedPrompts, editor, handleFetchSavedPrompts]);
 
     React.useEffect(() => {
-        if (editor && handleFetchWorkspaceFiles) {
+        if (!editor) {
+            return;
+        }
+
+        // Register file completion provider
+        if (handleFetchWorkspaceFiles) {
             if (fileCompletionProviderRef.current) {
                 fileCompletionProviderRef.current.dispose();
             }
@@ -244,11 +249,36 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
             );
         }
 
+        // Re-trigger autocomplete when editing within # context
+        const contentChangeDisposable = editor.onDidChangeModelContent(() => {
+            const position = editor.getPosition();
+            if (!position) {
+                return;
+            }
+
+            const model = editor.getModel();
+            if (!model) {
+                return;
+            }
+
+            const textUntilPosition = model.getValueInRange({
+                startLineNumber: 1,
+                startColumn: 1,
+                endLineNumber: position.lineNumber,
+                endColumn: position.column,
+            });
+
+            if (/(?:^|\s)#[\w\-\.\/]*$/.test(textUntilPosition)) {
+                editor.trigger('keyboard', 'editor.action.triggerSuggest', {});
+            }
+        });
+
         return () => {
             if (fileCompletionProviderRef.current) {
                 fileCompletionProviderRef.current.dispose();
                 fileCompletionProviderRef.current = null;
             }
+            contentChangeDisposable.dispose();
         };
     }, [canFetchWorkspaceFiles, editor, handleFetchWorkspaceFiles, handleFileSelected]);
 
