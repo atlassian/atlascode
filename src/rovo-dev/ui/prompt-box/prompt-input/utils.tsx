@@ -367,7 +367,6 @@ export function createFileCompletionProvider(
 
             return {
                 suggestions,
-                // Incomplete tells Monaco to keep calling this provider as user types more characters
                 incomplete: true,
             };
         },

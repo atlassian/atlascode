@@ -278,7 +278,9 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                 fileCompletionProviderRef.current.dispose();
                 fileCompletionProviderRef.current = null;
             }
-            contentChangeDisposable.dispose();
+            if (contentChangeDisposable) {
+                contentChangeDisposable.dispose();
+            }
         };
     }, [canFetchWorkspaceFiles, editor, handleFetchWorkspaceFiles, handleFileSelected]);
 
