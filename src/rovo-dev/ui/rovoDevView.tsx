@@ -5,6 +5,7 @@ import InformationCircleIcon from '@atlaskit/icon/core/information-circle';
 import { setGlobalTheme } from '@atlaskit/tokens';
 import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
+import path from 'path';
 import { useCallback, useRef, useState } from 'react';
 import * as React from 'react';
 import { AgentMode, RovoDevAskUserQuestionsToolArgs, RovoDevModeInfo } from 'src/rovo-dev/client';
@@ -873,7 +874,7 @@ const RovoDevView: React.FC = () => {
                 contextItem: {
                     contextType: 'file',
                     file: {
-                        name: filePath.split('/').pop() || filePath,
+                        name: path.basename(filePath),
                         absolutePath: workspacePath && filePath ? `${workspacePath}/${filePath}` : filePath,
                     },
                     isFocus: false,
