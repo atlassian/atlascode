@@ -339,7 +339,7 @@ export function createFileCompletionProvider(
                 }
 
                 return {
-                    label: isLoadingState ? file.name : `#${file.name}`,
+                    label: file.name,
                     kind: isLoadingState
                         ? monaco.languages.CompletionItemKind.Text
                         : monaco.languages.CompletionItemKind.File,
