@@ -210,6 +210,12 @@ const RovoDevView: React.FC = () => {
                 const summaryMessage = { ...lastMessage, isSummary: true };
                 return [...prev.slice(0, -1), summaryMessage];
             }
+
+            if (lastMessage && Array.isArray(lastMessage)) {
+                const emptySummary: Response = { event_kind: 'text', content: '', index: -1, isSummary: true };
+                return [...prev, emptySummary];
+            }
+
             return prev;
         });
     }, []);
@@ -224,6 +230,9 @@ const RovoDevView: React.FC = () => {
                 lastMessage.event_kind === 'text' &&
                 lastMessage.isSummary
             ) {
+                if (lastMessage.index === -1) {
+                    return prev.slice(0, -1);
+                }
                 // eslint-disable-next-line no-unused-vars
                 const { isSummary, ...clearedMessage } = lastMessage;
                 return [...prev.slice(0, -1), clearedMessage];

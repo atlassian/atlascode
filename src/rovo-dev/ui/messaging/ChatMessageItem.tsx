@@ -102,19 +102,24 @@ export const ChatMessageItem: React.FC<{
                                 <ThumbsDownIcon label="thumbs-down" spacing="none" />
                             </button>
                         </Tooltip>
-                        <Tooltip key={isCopied ? 'copied' : 'copy'} content={isCopied ? 'Copied!' : 'Copy response'}>
-                            <button
-                                aria-label="copy-button"
-                                className={`chat-message-action copy-button ${isCopied ? 'copied' : ''}`}
-                                onClick={handleCopyClick}
+                        {msg.content && (
+                            <Tooltip
+                                key={isCopied ? 'copied' : 'copy'}
+                                content={isCopied ? 'Copied!' : 'Copy response'}
                             >
-                                {isCopied ? (
-                                    <CheckCircleIcon label="Copied!" spacing="none" />
-                                ) : (
-                                    <CopyIcon label="Copy button" spacing="none" />
-                                )}
-                            </button>
-                        </Tooltip>
+                                <button
+                                    aria-label="copy-button"
+                                    className={`chat-message-action copy-button ${isCopied ? 'copied' : ''}`}
+                                    onClick={handleCopyClick}
+                                >
+                                    {isCopied ? (
+                                        <CheckCircleIcon label="Copied!" spacing="none" />
+                                    ) : (
+                                        <CopyIcon label="Copy button" spacing="none" />
+                                    )}
+                                </button>
+                            </Tooltip>
+                        )}
                     </div>
                     {msg.event_kind === '_RovoDevExitPlanMode' && onGeneratePlanClick && deepPlanCreated !== null && (
                         <CodePlanButton

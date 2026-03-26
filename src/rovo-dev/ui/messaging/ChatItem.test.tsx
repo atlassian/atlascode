@@ -20,7 +20,11 @@ jest.mock('../tools/ToolReturnItem', () => ({
 }));
 
 jest.mock('./ChatMessageItem', () => ({
-    ChatMessageItem: ({ msg }: any) => <div data-testid="chat-message">{msg.content}</div>,
+    ChatMessageItem: ({ msg, enableActions }: any) => (
+        <div data-testid="chat-message" data-enable-actions={enableActions}>
+            {msg.content}
+        </div>
+    ),
 }));
 
 jest.mock('./MessageDrawer', () => ({
@@ -122,5 +126,18 @@ describe('ChatItem', () => {
 
         const { container } = render(<ChatItem {...defaultProps} block={block} />);
         expect(container.firstChild).toBeNull();
+    });
+
+    it('enables actions for empty summary text message (thinking-only response)', () => {
+        const block: Response = {
+            event_kind: 'text',
+            content: '',
+            index: -1,
+            isSummary: true,
+        } as Response;
+
+        render(<ChatItem {...defaultProps} block={block} />);
+        const chatMessage = screen.getByTestId('chat-message');
+        expect(chatMessage.getAttribute('data-enable-actions')).toBe('true');
     });
 });
