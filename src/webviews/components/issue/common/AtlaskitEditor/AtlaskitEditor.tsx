@@ -1,8 +1,10 @@
 import './AtlaskitEditor.css';
 
+import { Transformer } from '@atlaskit/editor-common/types';
 import { ComposableEditor, EditorNextProps } from '@atlaskit/editor-core/composable-editor';
 import { createDefaultPreset } from '@atlaskit/editor-core/preset-default';
 import { usePreset } from '@atlaskit/editor-core/use-preset';
+import { JSONTransformer } from '@atlaskit/editor-json-transformer';
 import { contentInsertionPlugin } from '@atlaskit/editor-plugin-content-insertion';
 import { editorDisabledPlugin } from '@atlaskit/editor-plugin-editor-disabled';
 import { gridPlugin } from '@atlaskit/editor-plugin-grid';
@@ -13,8 +15,39 @@ import { mentionsPlugin } from '@atlaskit/editor-plugin-mentions';
 import { tasksAndDecisionsPlugin } from '@atlaskit/editor-plugin-tasks-and-decisions';
 import { textColorPlugin } from '@atlaskit/editor-plugin-text-color';
 import { toolbarListsIndentationPlugin } from '@atlaskit/editor-plugin-toolbar-lists-indentation';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { Schema } from '@atlaskit/editor-prosemirror/model';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 import React from 'react';
+
+// Custom transformer that wraps JSONTransformer and handles string conversion
+class StringADFTransformer implements Transformer<string> {
+    private jsonTransformer: JSONTransformer;
+
+    constructor(schema: Schema) {
+        this.jsonTransformer = new JSONTransformer(schema);
+    }
+
+    encode(node: any): string {
+        const adfDoc = this.jsonTransformer.encode(node);
+        return JSON.stringify(adfDoc);
+    }
+
+    parse(content: string): any {
+        try {
+            const adfDoc = JSON.parse(content);
+            return this.jsonTransformer.parse(adfDoc);
+        } catch (error) {
+            console.error('Failed to parse ADF content:', error);
+            // Return empty document if parsing fails
+            return this.jsonTransformer.parse({
+                version: 1,
+                type: 'doc',
+                content: [],
+            });
+        }
+    }
+}
 
 interface AtlaskitEditorProps extends Omit<Partial<EditorNextProps>, 'onChange' | 'onSave'> {
     onSave?: (content: any) => void; // Can be string or ADF object for v3 API
@@ -98,15 +131,19 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
             }
 
             return new Promise((resolve) => {
-                editorApi.core.actions.requestDocument((document) => {
-                    if (!document) {
-                        resolve(null);
-                        return;
-                    }
-
-                    // TODO: fix type to be ADF format on upper levels when we migrate to rest v3
-                    resolve(document);
-                });
+                editorApi.core.actions.requestDocument(
+                    (document) => {
+                        if (!document) {
+                            resolve(null);
+                            return;
+                        }
+                        // For v3 API: Return ADF object directly, not stringified
+                        resolve(document);
+                    },
+                    {
+                        transformer: editorApi.core.actions.createTransformer((scheme) => new JSONTransformer(scheme)),
+                    },
+                );
             });
         } catch (error) {
             console.error(error);
@@ -156,13 +193,19 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                 throw new Error('editorApi is not available');
             }
 
-            editorApi.core.actions.requestDocument((document) => {
-                if (!document) {
-                    throw new Error('document is not available');
-                }
-                // TODO: fix type to be ADF format on upper levels when we migrated to rest v3
-                onSave?.(document);
-            });
+            editorApi.core.actions.requestDocument(
+                (document) => {
+                    if (!document) {
+                        throw new Error('document is not available');
+                    }
+                    // For v3 API: Send ADF object directly, not stringified
+                    // The v3 API expects an object, not a JSON string
+                    onSave?.(document);
+                },
+                {
+                    transformer: editorApi.core.actions.createTransformer((scheme) => new JSONTransformer(scheme)),
+                },
+            );
         } catch (error) {
             console.error(error);
         }
@@ -188,6 +231,10 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                 assistiveLabel="Rich text editor for comments"
                 preset={preset}
                 defaultValue={defaultValue}
+                contentTransformerProvider={(schema) => {
+                    // Transform between ADF JSON string and ProseMirror nodes
+                    return new StringADFTransformer(schema);
+                }}
                 mentionProvider={mentionProvider}
             />
             {(onSave || onCancel) && (
