@@ -402,8 +402,6 @@ const RovoDevView: React.FC = () => {
                     setPromptContextCollection(event.context);
                     break;
 
-                case RovoDevProviderMessageType.CreatePRComplete:
-                case RovoDevProviderMessageType.GetCurrentBranchNameComplete:
                 case RovoDevProviderMessageType.CheckGitChangesComplete:
                 case RovoDevProviderMessageType.UpdateSavedPrompts:
                     break; // This is handled elsewhere

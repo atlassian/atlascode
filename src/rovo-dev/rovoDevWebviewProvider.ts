@@ -338,16 +338,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await this.refreshModifiedFiles();
                         break;
 
-                    case RovoDevViewResponseType.CreatePR:
-                        await this.createPR(e.payload.commitMessage, e.payload.branchName);
-                        break;
-
                     case RovoDevViewResponseType.RetryPromptAfterError:
                         await this._chatProvider.executeRetryPromptAfterError();
-                        break;
-
-                    case RovoDevViewResponseType.GetCurrentBranchName:
-                        await this.getCurrentBranchName();
                         break;
 
                     case RovoDevViewResponseType.ForceUserFocusUpdate:
@@ -418,16 +410,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             },
                         });
                         break;
-                    case RovoDevViewResponseType.ReportCreatePrButtonClicked:
-                        this._telemetryProvider.fireTelemetryEvent({
-                            subject: 'rovoDevCreatePrButton',
-                            action: 'clicked',
-                            attributes: {
-                                promptId: this._chatProvider.currentPromptId,
-                            },
-                        });
-                        break;
-
                     case RovoDevViewResponseType.WebviewReady:
                         this._webviewReady = true;
                         this.refreshDebugPanel(true);
@@ -1271,69 +1253,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
 
         await this.handleRovoDevLogout();
-    }
-
-    private async createPR(commitMessage?: string, branchName?: string): Promise<void> {
-        const prHandler = this._prHandler;
-
-        let prLink: string | undefined;
-        const webview = this._webView!;
-        try {
-            if (!branchName || branchName.trim() === '') {
-                throw new Error('Branch name is required to create a PR');
-            }
-
-            prLink = await prHandler!.createPR(branchName, commitMessage);
-
-            await webview.postMessage({
-                type: RovoDevProviderMessageType.CreatePRComplete,
-                data: {
-                    url: prLink,
-                },
-            });
-        } catch (e) {
-            const gitErrorCode = e.gitErrorCode;
-
-            // Don't log user configuration/input errors - these are expected and user needs to fix them
-            const isUserConfigError =
-                gitErrorCode === GitErrorCodes.NoUserNameConfigured ||
-                gitErrorCode === GitErrorCodes.NoUserEmailConfigured ||
-                e.message?.includes('Commit message is required') ||
-                e.message?.includes('Branch name is required');
-
-            await this.processError(e, { skipLogError: isUserConfigError });
-
-            const errorMessage = e.message;
-
-            await webview.postMessage({
-                type: RovoDevProviderMessageType.CreatePRComplete,
-                data: {
-                    error: e.message
-                        ? `${errorMessage}${gitErrorCode ? ` (Error code: ${gitErrorCode})` : ''}`
-                        : 'Unknown error occurred while creating PR',
-                },
-            });
-        }
-    }
-
-    private async getCurrentBranchName(): Promise<void> {
-        const webview = this._webView;
-        const prHandler = this._prHandler;
-
-        try {
-            if (!webview) {
-                throw new Error('Webview not initialized');
-            }
-            const branchName = await prHandler!.getCurrentBranchName();
-            await webview.postMessage({
-                type: RovoDevProviderMessageType.GetCurrentBranchNameComplete,
-                data: {
-                    branchName,
-                },
-            });
-        } catch (e) {
-            await this.processError(e);
-        }
     }
 
     private async executeApiWithErrorHandling<T>(
