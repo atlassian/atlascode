@@ -41,6 +41,7 @@ import {
     MentionInfo,
 } from '../AbstractIssueEditorPage';
 import { AtlascodeMentionProvider } from '../common/AtlaskitEditor/AtlascodeMentionsProvider';
+import { AtlaskitMediaProvider } from '../common/AtlaskitEditor/AtlaskitEditor';
 import { MissingScopesBanner } from '../common/missing-scopes-banner/MissingScopesBanner';
 import { Development } from '../Development';
 import NavItem from '../NavItem';
@@ -91,6 +92,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     private advancedMainFields: FieldUI[] = [];
     private attachingInProgress = false;
     private mentionProvider: AtlascodeMentionProvider;
+    private mediaProvider: AtlaskitMediaProvider;
 
     constructor(props: any) {
         super(props);
@@ -218,6 +220,25 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 }
                 case 'copyImage': {
                     this.handleImageCopy();
+                    break;
+                }
+                case 'mediaToken': {
+                    if (e.readToken && e.readToken?.tokensWithFiles?.length > 0) {
+                        console.debug('Received media read token', e.readToken);
+                        const authProviderConfigResponse = {
+                            token: e.readToken.tokensWithFiles[0].token,
+                            clientId: e.readToken.clientId,
+                            baseUrl: 'https://api.media.atlassian.com',
+                        };
+                        console.debug('authProviderConfigResponse', authProviderConfigResponse);
+                        this.mediaProvider = Promise.resolve({
+                            viewMediaClientConfig: {
+                                authProvider: () => Promise.resolve(authProviderConfigResponse),
+                            },
+                        });
+                    }
+                    // e.readToken && this.mentionProvider.setMediaReadToken(e.readToken);
+                    // e.writeToken && this.mentionProvider.setMediaWriteToken(e.writeToken);
                     break;
                 }
             }
@@ -811,6 +832,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     isAtlaskitEditorEnabled={this.state.showAtlaskitEditor}
                     onIssueUpdate={this.handleChildIssueUpdate}
                     mentionProvider={this.mentionProvider}
+                    mediaProvider={this.mediaProvider}
                     handleEditorFocus={this.handleEditorFocus}
                 />
                 {this.advancedMain()}
@@ -860,6 +882,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                     isEditingComment={this.state.isEditingComment}
                                     onEditingCommentChange={this.handleCommentEditingChange}
                                     mentionProvider={this.mentionProvider}
+                                    // mediaProvider={this.mediaProvider}
                                     handleEditorFocus={this.handleEditorFocus}
                                 />
                             </div>
@@ -1032,7 +1055,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         this.postMessage({ action: 'webviewReady' });
         this.postMessage({ action: 'getFeatureFlags' });
         this.postMessage({ action: 'checkRovoDevEntitlement' });
-        this.postMessage({ action: 'fetchMediaToken' });
     }
     override shouldComponentUpdate(_nextProps: Readonly<{}>, nextState: Readonly<ViewState>): boolean {
         const prevIssueKey = this.state.key;
@@ -1040,6 +1062,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
         if (prevIssueKey !== currentIssueKey) {
             this.setState({ vsCodeContext: JSON.stringify({ viewKey: currentIssueKey }) });
+            this.postMessage({ action: 'fetchMediaToken', issueKey: currentIssueKey });
         }
         return true;
     }

@@ -12,7 +12,7 @@ import { AttachmentList } from '../../AttachmentList';
 import { AttachmentsModal } from '../../AttachmentsModal';
 import { convertAdfToWikimarkup, convertWikimarkupToAdf } from '../../common/adfToWikimarkup';
 import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
-import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
+import AtlaskitEditor, { AtlaskitMediaProvider } from '../../common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
 import { WorklogFormDialog } from '../../WorklogFormDialog';
 import Worklogs from '../../Worklogs';
@@ -43,6 +43,7 @@ type Props = {
     onIssueUpdate?: (issueKey: string, fieldKey: string, newValue: any) => void;
     isAtlaskitEditorEnabled?: boolean;
     mentionProvider: AtlascodeMentionProvider;
+    mediaProvider: AtlaskitMediaProvider;
     handleEditorFocus: (isFocused: boolean) => void;
 };
 
@@ -67,6 +68,7 @@ const IssueMainPanel: React.FC<Props> = ({
     onIssueUpdate,
     isAtlaskitEditorEnabled,
     mentionProvider,
+    mediaProvider,
     handleEditorFocus,
 }) => {
     const attachments = fields['attachment'] && fieldValues['attachment'] ? fieldValues['attachment'] : undefined;
@@ -249,6 +251,7 @@ const IssueMainPanel: React.FC<Props> = ({
                                     setDescriptionText(content);
                                 }}
                                 mentionProvider={Promise.resolve(mentionProvider)}
+                                mediaProvider={mediaProvider}
                                 onFocus={() => handleEditorFocus(true)}
                                 onBlur={() => handleEditorFocus(false)}
                             />

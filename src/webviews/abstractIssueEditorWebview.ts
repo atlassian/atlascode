@@ -241,24 +241,52 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                 break;
                             }
 
-                            const mediaRead =
+                            const mediaReadScope =
                                 readTokenName in checkScopesResult.checkedScopes
                                     ? checkScopesResult.checkedScopes[readTokenName]
                                     : false;
-                            const mediaWrite =
+                            const mediaWriteScope =
                                 writeTokenName in checkScopesResult.checkedScopes
                                     ? checkScopesResult.checkedScopes[writeTokenName]
                                     : false;
                             const message = {
                                 type: 'scopeCheckResult',
                                 checkedScopes: {
-                                    mediaRead,
-                                    mediaWrite,
+                                    mediaRead: mediaReadScope,
+                                    mediaWrite: mediaWriteScope,
                                 },
                                 isApiToken: checkScopesResult.isApiToken,
                             };
+
                             this.postMessage(message);
                             // Fetch and post message with media token here
+
+                            const client = await Container.clientManager.jiraClient(this.siteOrUndefined);
+                            try {
+                                if (msg.issueKey) {
+                                    let readToken: string = '';
+                                    let writeToken: string = '';
+                                    if (mediaReadScope) {
+                                        readToken = await client.getMediaReadToken(msg.issueKey);
+                                    }
+                                    if (mediaWriteScope) {
+                                        writeToken = await client.getMediaWriteToken(msg.issueKey);
+                                    }
+                                    this.postMessage({
+                                        type: 'mediaToken',
+                                        readToken,
+                                        writeToken,
+                                    });
+                                } else {
+                                    throw new Error('Issue key is missing for media token fetch');
+                                }
+                            } catch (error) {
+                                Logger.error(
+                                    new Error('Error fetching media token'),
+                                    'Error fetching media token',
+                                    error,
+                                );
+                            }
                         }
                         break;
                     }
