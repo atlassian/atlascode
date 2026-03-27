@@ -5,7 +5,8 @@ import { OAuthStrategyData, StrategyProps } from './strategyData';
 export function strategyForProvider(provider: OAuthProvider): Strategy {
     switch (provider) {
         case OAuthProvider.JiraCloud: {
-            return new JiraStrategy(OAuthStrategyData.JiraProd);
+            return new JiraFirstPartyStrategy(OAuthStrategyData.JiraProdFirstParty);
+            //return new JiraStrategy(OAuthStrategyData.JiraProd);
         }
         case OAuthProvider.JiraCloudStaging: {
             return new JiraStrategy(OAuthStrategyData.JiraStaging);
@@ -97,6 +98,38 @@ class JiraStrategy extends Strategy {
             redirect_uri: this.data.callbackURL,
             client_id: this.data.clientID,
             code_verifier: this.verifier,
+        });
+        return data;
+    }
+
+    public tokenRefreshData(refreshToken: string): string {
+        const dataString = JSON.stringify({
+            grant_type: 'refresh_token',
+            client_id: this.data.clientID,
+            refresh_token: refreshToken,
+        });
+        return dataString;
+    }
+
+    public refreshHeaders() {
+        return {
+            'Content-Type': 'application/json',
+        };
+    }
+}
+
+class JiraFirstPartyStrategy extends Strategy {
+    public constructor(data: StrategyProps) {
+        super(data);
+    }
+    public authorizeUrl(): string {
+        return this.data.authorizationURL;
+    }
+    public tokenAuthorizationData(code: string): string {
+        const data = JSON.stringify({
+            client_id: this.data.clientID,
+            grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+            device_code: code,
         });
         return data;
     }

@@ -127,6 +127,76 @@ export class OAuthDancer implements Disposable {
         };
     }
 
+    public async doFirstPartyAuthDance(
+        provider: OAuthProvider,
+        site: SiteInfo,
+        callback: string,
+        strategy: Strategy & { authorizeUrl: () => string },
+    ): Promise<OAuthResponse> {
+        let intervalId: NodeJS.Timeout;
+        const cancelPromise = new PCancelable<OAuthResponse>(async (resolve, reject, onCancel) => {
+            const authorizeUrl = strategy.authorizeUrl();
+            try {
+                const response = await this._axios.post(authorizeUrl, {
+                    client_id: strategy.data.clientID,
+                });
+                const verificationUriComplete = response.data.verification_uri_complete;
+                const interval = response.data.interval;
+                const deviceCode = response.data.device_code;
+                vscode.env.openExternal(vscode.Uri.parse(verificationUriComplete));
+
+                intervalId = setInterval(async () => {
+                    try {
+                        const res = await this._axios.post(strategy.tokenUrl(), {
+                            client_id: strategy.data.clientID,
+                            grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+                            device_code: deviceCode,
+                        });
+                        if (res.status === 200) {
+                            clearInterval(intervalId);
+                            resolve(res.data);
+                        }
+                    } catch (error) {
+                        if (error.status === 400) {
+                            const responseDataError = error?.response?.data?.error;
+                            if (responseDataError === 'authorization_pending') {
+                                //ignore and keep polling
+                            } else if (responseDataError === 'slow_down') {
+                                //TODO: Implement recreating the interval.
+                            } else {
+                                clearInterval(intervalId);
+                                reject(new Error(`Error during device auth flow: ${error.message}`));
+                            }
+                            console.debug(`Token polling error: ${error.message}`);
+                        } else {
+                            clearInterval(intervalId);
+                            reject(new Error(`Error during device auth flow: ${error.message}`));
+                        }
+                    }
+                }, interval * 1000);
+            } catch (error) {
+                reject(new Error(`Error during device auth flow: ${error.message}`));
+            }
+
+            onCancel(() => {
+                this._authsInFlight.delete(provider);
+                if (intervalId) {
+                    clearInterval(intervalId);
+                }
+            });
+        });
+
+        this._authsInFlight.set(provider, cancelPromise);
+        return pTimeout<OAuthResponse, OAuthResponse>(
+            cancelPromise,
+            this._browserTimeout,
+            (): Promise<OAuthResponse> => {
+                vscode.env.openExternal(vscode.Uri.parse(`http://127.0.0.1:31415/timeout?provider=${provider}`));
+                return Promise.reject(`'Authorization did not complete in the time allotted for '${provider}'`);
+            },
+        );
+    }
+
     public async doDance(provider: OAuthProvider, site: SiteInfo, callback: string): Promise<OAuthResponse> {
         const currentlyInflight = this._authsInFlight.get(provider);
         if (currentlyInflight) {
@@ -135,7 +205,16 @@ export class OAuthDancer implements Disposable {
         }
 
         const strategy = strategyForProvider(provider);
-        this._strategiesInFlight.set(provider, strategy);
+        const strategyProvider = strategy.provider();
+        this._strategiesInFlight.set(strategyProvider, strategy);
+        if (strategyProvider === OAuthProvider.JiraCloudFirstParty) {
+            return this.doFirstPartyAuthDance(
+                provider,
+                site,
+                callback,
+                strategy as Strategy & { authorizeUrl: () => string },
+            );
+        }
 
         const state = v4();
         const cancelPromise = new PCancelable<OAuthResponse>((resolve, reject, onCancel) => {
