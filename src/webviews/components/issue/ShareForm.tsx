@@ -189,7 +189,7 @@ const ShareForm: React.FC<Props> = ({ onShare, onCancel, fetchUsers, isLoading =
                             }}
                             renderInput={(params) => <MuiTextField {...params} placeholder="Enter more" size="small" />}
                             renderTags={(value, getTagProps) =>
-                                value.map((option, index) => {
+                                (Array.isArray(value) ? value : []).map((option, index) => {
                                     const { key, ...tagProps } = getTagProps({ index });
                                     return (
                                         <Chip

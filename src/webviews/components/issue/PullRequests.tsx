@@ -28,7 +28,8 @@ export default class PullRequests extends React.Component<
     }
 
     override render() {
-        return this.props.pullRequests.map((pr: PullRequestData) => {
+        const pullRequests = Array.isArray(this.props.pullRequests) ? this.props.pullRequests : [];
+        return pullRequests.map((pr: PullRequestData) => {
             const title = `${pr.destination!.repo!.displayName} - Pull request #${pr.id}`;
             return (
                 <Tooltip content={`${pr.author.displayName}: ${title}`}>
