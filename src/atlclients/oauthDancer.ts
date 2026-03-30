@@ -130,68 +130,69 @@ export class OAuthDancer implements Disposable {
     public async doFirstPartyAuthDance(
         provider: OAuthProvider,
         site: SiteInfo,
-        callback: string,
         strategy: Strategy & { authorizeUrl: () => string },
     ): Promise<OAuthResponse> {
-        let intervalId: NodeJS.Timeout;
-        const cancelPromise = new PCancelable<OAuthResponse>(async (resolve, reject, onCancel) => {
-            const authorizeUrl = strategy.authorizeUrl();
-            try {
-                const response = await this._axios.post(authorizeUrl, {
-                    client_id: strategy.data.clientID,
-                });
-                const verificationUriComplete = response.data.verification_uri_complete;
-                const interval = response.data.interval;
-                const deviceCode = response.data.device_code;
-                vscode.env.openExternal(vscode.Uri.parse(verificationUriComplete));
+        const cancelPromise = new PCancelable<OAuthResponse>(
+            async (cancelPromiseResolve, cancelPromiseReject, onCancel) => {
+                try {
+                    const authorizeUrl = strategy.authorizeUrl();
+                    // make the initial request to get the device code and verification URL
+                    const response = await this._axios.post(authorizeUrl, {
+                        client_id: strategy.data.clientID,
+                    });
 
-                intervalId = setInterval(async () => {
-                    try {
-                        const res = await this._axios.post(strategy.tokenUrl(), {
-                            client_id: strategy.data.clientID,
-                            grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
-                            device_code: deviceCode,
-                        });
-                        if (res.status === 200) {
-                            clearInterval(intervalId);
-                            resolve(res.data);
-                        }
-                    } catch (error) {
-                        if (error.status === 400) {
-                            const responseDataError = error?.response?.data?.error;
-                            if (responseDataError === 'authorization_pending') {
-                                //ignore and keep polling
-                            } else if (responseDataError === 'slow_down') {
-                                //TODO: Implement recreating the interval.
-                            } else {
-                                clearInterval(intervalId);
-                                reject(new Error(`Error during device auth flow: ${error.message}`));
-                            }
-                            console.debug(`Token polling error: ${error.message}`);
-                        } else {
-                            clearInterval(intervalId);
-                            reject(new Error(`Error during device auth flow: ${error.message}`));
-                        }
+                    const {
+                        verification_uri_complete: verificationUriComplete,
+                        interval,
+                        device_code: deviceCode,
+                    } = response.data || {};
+
+                    const agent = getAgent(site);
+                    const responseHandler = responseHandlerForStrategy(strategy, agent, this._axios);
+                    if (typeof responseHandler?.setIntervalPeriod === 'function') {
+                        responseHandler.setIntervalPeriod(interval);
+                    } else {
+                        throw new Error('Unexpected response handler that does not have setIntervalPeriod function.');
                     }
-                }, interval * 1000);
-            } catch (error) {
-                reject(new Error(`Error during device auth flow: ${error.message}`));
-            }
 
-            onCancel(() => {
-                this._authsInFlight.delete(provider);
-                if (intervalId) {
-                    clearInterval(intervalId);
+                    // open the browser to navigate user to consent screen
+                    vscode.env.openExternal(vscode.Uri.parse(verificationUriComplete));
+
+                    // start polling for the token using the device code
+                    const tokens = await responseHandler.tokens(deviceCode);
+
+                    const accessibleResources = await responseHandler.accessibleResources(tokens.accessToken);
+                    if (accessibleResources.length === 0) {
+                        cancelPromiseReject(new Error(`No accessible resources found for ${provider}`));
+                    }
+                    const user = await responseHandler.user(tokens.accessToken, accessibleResources[0]);
+                    this._strategiesInFlight.delete(provider);
+                    const oauthResponse: OAuthResponse = {
+                        access: tokens.accessToken,
+                        refresh: tokens.refreshToken!,
+                        receivedAt: tokens.receivedAt,
+                        user: user,
+                        accessibleResources: accessibleResources,
+                        scopes: tokens.scopes,
+                    };
+                    onCancel(() => {
+                        this._authsInFlight.delete(provider);
+                        if (typeof responseHandler?.clearCurrentInterval === 'function') {
+                            responseHandler.clearCurrentInterval();
+                        }
+                    });
+                    cancelPromiseResolve(oauthResponse);
+                } catch (error) {
+                    cancelPromiseReject(new Error(`Error during device auth flow: ${error.message}`));
                 }
-            });
-        });
+            },
+        );
 
         this._authsInFlight.set(provider, cancelPromise);
         return pTimeout<OAuthResponse, OAuthResponse>(
             cancelPromise,
             this._browserTimeout,
             (): Promise<OAuthResponse> => {
-                vscode.env.openExternal(vscode.Uri.parse(`http://127.0.0.1:31415/timeout?provider=${provider}`));
                 return Promise.reject(`'Authorization did not complete in the time allotted for '${provider}'`);
             },
         );
@@ -208,12 +209,7 @@ export class OAuthDancer implements Disposable {
         const strategyProvider = strategy.provider();
         this._strategiesInFlight.set(strategyProvider, strategy);
         if (strategyProvider === OAuthProvider.JiraCloudFirstParty) {
-            return this.doFirstPartyAuthDance(
-                provider,
-                site,
-                callback,
-                strategy as Strategy & { authorizeUrl: () => string },
-            );
+            return this.doFirstPartyAuthDance(provider, site, strategy as Strategy & { authorizeUrl: () => string });
         }
 
         const state = v4();
