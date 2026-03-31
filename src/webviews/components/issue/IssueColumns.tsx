@@ -60,7 +60,7 @@ export const AssigneeColumn = (data: ItemData) => {
         [searchText],
     );
 
-    const users = fetchUsersResult.result || [];
+    const users = Array.isArray(fetchUsersResult.result) ? fetchUsersResult.result : [];
     const isLoading = fetchUsersResult.loading;
     const hasError = fetchUsersResult.error !== undefined;
 
