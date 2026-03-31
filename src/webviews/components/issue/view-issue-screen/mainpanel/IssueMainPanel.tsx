@@ -295,7 +295,7 @@ const IssueMainPanel: React.FC<Props> = ({
                             className="ac-inline-input-view-p"
                         >
                             {isAtlaskitEditorEnabled ? (
-                                <AdfAwareContent content={descriptionText} mentionProvider={mentionProvider} />
+                                <AdfAwareContent content={defaultDescription} mentionProvider={mentionProvider} />
                             ) : renderedDescription ? (
                                 <RenderedContent html={renderedDescription} fetchImage={fetchImage} />
                             ) : (

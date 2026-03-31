@@ -882,7 +882,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                     isEditingComment={this.state.isEditingComment}
                                     onEditingCommentChange={this.handleCommentEditingChange}
                                     mentionProvider={this.mentionProvider}
-                                    // mediaProvider={this.mediaProvider}
+                                    mediaProvider={this.mediaProvider}
                                     handleEditorFocus={this.handleEditorFocus}
                                 />
                             </div>

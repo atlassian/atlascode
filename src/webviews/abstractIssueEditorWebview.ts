@@ -1,3 +1,4 @@
+import { JiraCloudClient } from '@atlassian-pi/jira-pi-client';
 import {
     isAutocompleteSuggestionsResult,
     isGroupPickerResult,
@@ -8,6 +9,7 @@ import {
     IssuePickerResult,
 } from '@atlassian-pi/jira-pi-common-models';
 import { ValueType } from '@atlassian-pi/jira-pi-meta-models';
+import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { Features } from 'src/util/features';
 
 import { showIssue } from '../commands/jira/showIssue';
@@ -255,7 +257,9 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                             this.postMessage(message);
                             // Fetch and post message with media token here
 
-                            const client = await Container.clientManager.jiraClient(this.siteOrUndefined);
+                            const client = (await Container.clientManager.jiraClient(
+                                this.siteOrUndefined,
+                            )) as JiraCloudClient<DetailedSiteInfo>;
                             try {
                                 if (msg.issueKey) {
                                     let readToken: string = '';

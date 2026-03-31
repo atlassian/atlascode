@@ -61,7 +61,7 @@ import { AttachmentForm } from './AttachmentForm';
 import CascadingSelectField, { CascadingSelectOption } from './CascadingSelectField';
 import { convertAdfToWikimarkup } from './common/adfToWikimarkup';
 import { AtlascodeMentionProvider } from './common/AtlaskitEditor/AtlascodeMentionsProvider';
-import AtlaskitEditor from './common/AtlaskitEditor/AtlaskitEditor';
+import AtlaskitEditor, { AtlaskitMediaProvider } from './common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from './common/JiraIssueTextArea';
 import { EditRenderedTextArea } from './EditRenderedTextArea';
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
@@ -113,6 +113,7 @@ export interface CommonEditorViewState extends Message {
     loggedOutSiteName?: string;
     showEditorMissedScopeBanner: boolean;
     showAtlaskitEditor: boolean;
+    mediaProvider: AtlaskitMediaProvider | undefined;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -138,6 +139,7 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     loggedOutSiteName: undefined,
     showEditorMissedScopeBanner: false,
     showAtlaskitEditor: false,
+    mediaProvider: undefined,
 };
 
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
@@ -367,6 +369,25 @@ export abstract class AbstractIssueEditorPage<
                     this.setState({
                         showEditorMissedScopeBanner,
                         showAtlaskitEditor,
+                    });
+                }
+                break;
+            }
+            case 'mediaToken': {
+                if (e.readToken && e.readToken?.tokensWithFiles?.length > 0) {
+                    console.debug('Received media read token', e.readToken);
+                    const authProviderConfigResponse = {
+                        token: e.readToken.tokensWithFiles[0].token,
+                        clientId: e.readToken.clientId,
+                        baseUrl: 'https://api.media.atlassian.com',
+                    };
+                    console.debug('authProviderConfigResponse', authProviderConfigResponse);
+                    this.setState({
+                        mediaProvider: Promise.resolve({
+                            viewMediaClientConfig: {
+                                authProvider: () => Promise.resolve(authProviderConfigResponse),
+                            },
+                        }),
                     });
                 }
                 break;
@@ -715,6 +736,7 @@ export abstract class AbstractIssueEditorPage<
                                             onFocus={() => this.handleEditorFocus(true)}
                                             onSave={(content) => this.handleInlineEdit(field, content)}
                                             mentionProvider={Promise.resolve(this.getMentionProvider())}
+                                            mediaProvider={this.state.mediaProvider}
                                         />
                                     ) : (
                                         <JiraIssueTextAreaEditor

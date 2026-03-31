@@ -89,7 +89,16 @@ const renderWithEditorProvider = (component: React.ReactElement) => {
 };
 // Mock mention provider for regular tests
 const mockMentionProvider = AtlascodeMentionProvider.init({ url: '' }, jest.fn().mockResolvedValue([]));
-
+const mockMediaProvider = Promise.resolve({
+    viewMediaClientConfig: {
+        authProvider: () =>
+            Promise.resolve({
+                clientId: 'mock-client-id',
+                token: 'mock-token',
+                baseUrl: 'mock-base-url',
+            }),
+    },
+});
 describe('IssueMainPanel', () => {
     beforeAll(() => {
         disableConsole('warn', 'error');
@@ -116,6 +125,7 @@ describe('IssueMainPanel', () => {
                     isAtlaskitEditorEnabled={false}
                     mentionProvider={mockMentionProvider}
                     handleEditorFocus={mockHandleEditorFocus}
+                    mediaProvider={mockMediaProvider}
                 />,
             ),
         );
@@ -144,6 +154,7 @@ describe('IssueMainPanel', () => {
                     isAtlaskitEditorEnabled={false}
                     mentionProvider={mockMentionProvider}
                     handleEditorFocus={mockHandleEditorFocus}
+                    mediaProvider={mockMediaProvider}
                 />,
             ),
         );
@@ -222,6 +233,7 @@ describe('IssueMainPanel', () => {
                         isAtlaskitEditorEnabled={false}
                         mentionProvider={mockMentionProvider}
                         handleEditorFocus={mockHandleEditorFocus}
+                        mediaProvider={mockMediaProvider}
                     />,
                 ),
             );
@@ -251,6 +263,7 @@ describe('IssueMainPanel', () => {
                         isAtlaskitEditorEnabled={false}
                         mentionProvider={mockMentionProvider}
                         handleEditorFocus={mockHandleEditorFocus}
+                        mediaProvider={mockMediaProvider}
                     />,
                 ),
             );
@@ -289,6 +302,7 @@ describe('IssueMainPanel', () => {
                         isAtlaskitEditorEnabled={false}
                         mentionProvider={mockMentionProvider}
                         handleEditorFocus={mockHandleEditorFocus}
+                        mediaProvider={mockMediaProvider}
                     />,
                 ),
             );
@@ -334,6 +348,7 @@ describe('IssueMainPanel', () => {
                         isAtlaskitEditorEnabled={false}
                         mentionProvider={mockMentionProvider}
                         handleEditorFocus={mockHandleEditorFocus}
+                        mediaProvider={mockMediaProvider}
                     />,
                 ),
             );
@@ -424,6 +439,7 @@ describe('IssueMainPanel', () => {
                         isAtlaskitEditorEnabled={false}
                         mentionProvider={mockMentionProvider}
                         handleEditorFocus={mockHandleEditorFocus}
+                        mediaProvider={mockMediaProvider}
                     />,
                 ),
             );
@@ -454,6 +470,7 @@ describe('IssueMainPanel', () => {
                         isAtlaskitEditorEnabled={false}
                         mentionProvider={mockMentionProvider}
                         handleEditorFocus={mockHandleEditorFocus}
+                        mediaProvider={mockMediaProvider}
                     />,
                 ),
             );
@@ -483,6 +500,7 @@ describe('IssueMainPanel', () => {
                         isAtlaskitEditorEnabled={false}
                         mentionProvider={mockMentionProvider}
                         handleEditorFocus={mockHandleEditorFocus}
+                        mediaProvider={mockMediaProvider}
                     />,
                 ),
             );
@@ -512,6 +530,7 @@ describe('IssueMainPanel', () => {
                         isAtlaskitEditorEnabled={false}
                         mentionProvider={mockMentionProvider}
                         handleEditorFocus={mockHandleEditorFocus}
+                        mediaProvider={mockMediaProvider}
                     />,
                 ),
             );
