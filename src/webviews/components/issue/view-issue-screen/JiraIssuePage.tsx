@@ -701,7 +701,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 )}
                 <div className="ac-page-header">
                     <div className="ac-breadcrumbs">
-                        {this.state.hierarchy && this.state.hierarchy.length > 0 && (
+                        {Array.isArray(this.state.hierarchy) && this.state.hierarchy.length > 0 && (
                             <>
                                 {this.state.hierarchyLoading && this.state.hierarchy.length <= 1 && (
                                     <>
@@ -750,7 +750,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 })}
                             </>
                         )}
-                        {!this.state.hierarchy ||
+                        {!Array.isArray(this.state.hierarchy) ||
                             (this.state.hierarchy.length === 0 && (
                                 <Tooltip
                                     content={`Created on ${

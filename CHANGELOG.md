@@ -4,6 +4,7 @@
 
 ### Improvements
 
+- **RovoDev**: Upgraded Rovo Dev to v0.13.63
 - **RovoDev**: Generalized MCP tool parsing in chat UI to support any MCP toolset via regex matching (`mcp__<name>__invoke_tool` / `mcp__<name>__get_tool_schema`) instead of hardcoded tool names
 
 ### Bug Fixes

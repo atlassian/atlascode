@@ -190,11 +190,12 @@ export default class Worklogs extends React.Component<WorklogsProps, WorklogsSta
     };
 
     override render() {
+        const worklogs = Array.isArray(this.props.worklogs?.worklogs) ? this.props.worklogs.worklogs : [];
         return (
             <TableTree
                 columns={[Author, Comment, TimeSpent, Created, Actions]}
                 columnWidths={['100%', '100%', '170px', '300px', '50px']}
-                items={this.props.worklogs.worklogs.map((worklog) => {
+                items={worklogs.map((worklog) => {
                     return {
                         id: worklog.id,
                         content: {

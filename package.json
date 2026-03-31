@@ -47,7 +47,7 @@
     ],
     "main": "./build/extension/extension",
     "rovoDev": {
-        "version": "0.13.59"
+        "version": "0.13.63"
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
@@ -1736,9 +1736,9 @@
         "@atlaskit/width-detector": "^5.0.4",
         "@atlassianlabs/guipi-core-components": "^3.2.0",
         "@atlassianlabs/guipi-jira-components": "^3.2.0",
-        "@atlassian-pi/jira-metaui-client": "^3.0.0",
+        "@atlassian-pi/jira-metaui-client": "^3.0.2",
         "@atlassian-pi/jira-metaui-transformer": "^3.0.0",
-        "@atlassian-pi/jira-pi-client": "^3.0.1",
+        "@atlassian-pi/jira-pi-client": "^3.0.2",
         "@atlassian-pi/jira-pi-common-models": "^3.0.0",
         "@atlassian-pi/jira-pi-meta-models": "^3.0.0",
         "@atlassian-pi/pi-client-common": "^3.0.0",
