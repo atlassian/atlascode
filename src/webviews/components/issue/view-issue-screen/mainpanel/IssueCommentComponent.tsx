@@ -395,6 +395,7 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
     mentionProvider,
     handleEditorFocus,
 }) => {
+    const commentList = Array.isArray(comments) ? comments : [];
     return (
         <Box
             data-testid="issue.comments-section"
@@ -413,7 +414,7 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
                 mentionProvider={mentionProvider}
                 handleEditorFocus={handleEditorFocus}
             />
-            {comments
+            {commentList
                 .sort((a, b) => (a.created > b.created ? -1 : 1))
                 .map((comment: JiraComment) => (
                     <CommentComponent
