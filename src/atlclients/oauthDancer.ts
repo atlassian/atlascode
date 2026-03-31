@@ -127,6 +127,77 @@ export class OAuthDancer implements Disposable {
         };
     }
 
+    public async doFirstPartyAuthDance(
+        provider: OAuthProvider,
+        site: SiteInfo,
+        strategy: Strategy & { authorizeUrl: () => string },
+    ): Promise<OAuthResponse> {
+        const cancelPromise = new PCancelable<OAuthResponse>(
+            async (cancelPromiseResolve, cancelPromiseReject, onCancel) => {
+                try {
+                    const authorizeUrl = strategy.authorizeUrl();
+                    // make the initial request to get the device code and verification URL
+                    const response = await this._axios.post(authorizeUrl, {
+                        client_id: strategy.data.clientID,
+                    });
+
+                    const {
+                        verification_uri_complete: verificationUriComplete,
+                        interval,
+                        device_code: deviceCode,
+                    } = response.data || {};
+
+                    const agent = getAgent(site);
+                    const responseHandler = responseHandlerForStrategy(strategy, agent, this._axios);
+                    if (typeof responseHandler?.setIntervalPeriod === 'function') {
+                        responseHandler.setIntervalPeriod(interval);
+                    } else {
+                        throw new Error('Unexpected response handler that does not have setIntervalPeriod function.');
+                    }
+
+                    // open the browser to navigate user to consent screen
+                    vscode.env.openExternal(vscode.Uri.parse(verificationUriComplete));
+
+                    // start polling for the token using the device code
+                    const tokens = await responseHandler.tokens(deviceCode);
+
+                    const accessibleResources = await responseHandler.accessibleResources(tokens.accessToken);
+                    if (accessibleResources.length === 0) {
+                        cancelPromiseReject(new Error(`No accessible resources found for ${provider}`));
+                    }
+                    const user = await responseHandler.user(tokens.accessToken, accessibleResources[0]);
+                    this._strategiesInFlight.delete(provider);
+                    const oauthResponse: OAuthResponse = {
+                        access: tokens.accessToken,
+                        refresh: tokens.refreshToken!,
+                        receivedAt: tokens.receivedAt,
+                        user: user,
+                        accessibleResources: accessibleResources,
+                        scopes: tokens.scopes,
+                    };
+                    onCancel(() => {
+                        this._authsInFlight.delete(provider);
+                        if (typeof responseHandler?.clearCurrentInterval === 'function') {
+                            responseHandler.clearCurrentInterval();
+                        }
+                    });
+                    cancelPromiseResolve(oauthResponse);
+                } catch (error) {
+                    cancelPromiseReject(new Error(`Error during device auth flow: ${error.message}`));
+                }
+            },
+        );
+
+        this._authsInFlight.set(provider, cancelPromise);
+        return pTimeout<OAuthResponse, OAuthResponse>(
+            cancelPromise,
+            this._browserTimeout,
+            (): Promise<OAuthResponse> => {
+                return Promise.reject(`'Authorization did not complete in the time allotted for '${provider}'`);
+            },
+        );
+    }
+
     public async doDance(provider: OAuthProvider, site: SiteInfo, callback: string): Promise<OAuthResponse> {
         const currentlyInflight = this._authsInFlight.get(provider);
         if (currentlyInflight) {
@@ -135,7 +206,11 @@ export class OAuthDancer implements Disposable {
         }
 
         const strategy = strategyForProvider(provider);
-        this._strategiesInFlight.set(provider, strategy);
+        const strategyProvider = strategy.provider();
+        this._strategiesInFlight.set(strategyProvider, strategy);
+        if (strategyProvider === OAuthProvider.JiraCloudFirstParty) {
+            return this.doFirstPartyAuthDance(provider, site, strategy as Strategy & { authorizeUrl: () => string });
+        }
 
         const state = v4();
         const cancelPromise = new PCancelable<OAuthResponse>((resolve, reject, onCancel) => {
