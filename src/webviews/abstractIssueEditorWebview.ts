@@ -225,12 +225,11 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                 break;
                             }
 
-                            const readTokenName = 'read:media-credentials:jira';
-                            const writeTokenName = 'write:media-credentials:jira';
+                            const jiraExternalTokenName = 'jira:atlassian-external';
 
                             const checkScopesResult = await Container.credentialManager.checkScopes(
                                 this.siteOrUndefined,
-                                [readTokenName, writeTokenName],
+                                [jiraExternalTokenName],
                             );
 
                             if (!checkScopesResult) {
@@ -241,19 +240,14 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                 break;
                             }
 
-                            const mediaReadScope =
-                                readTokenName in checkScopesResult.checkedScopes
-                                    ? checkScopesResult.checkedScopes[readTokenName]
-                                    : false;
-                            const mediaWriteScope =
-                                writeTokenName in checkScopesResult.checkedScopes
-                                    ? checkScopesResult.checkedScopes[writeTokenName]
+                            const jiraExternalScope =
+                                jiraExternalTokenName in checkScopesResult.checkedScopes
+                                    ? checkScopesResult.checkedScopes[jiraExternalTokenName]
                                     : false;
                             const message = {
                                 type: 'scopeCheckResult',
                                 checkedScopes: {
-                                    mediaRead: mediaReadScope,
-                                    mediaWrite: mediaWriteScope,
+                                    jiraExternal: jiraExternalScope,
                                 },
                                 isApiToken: checkScopesResult.isApiToken,
                             };
@@ -266,10 +260,8 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                 if (msg.issueKey) {
                                     let readToken: string = '';
                                     let writeToken: string = '';
-                                    if (mediaReadScope) {
+                                    if (jiraExternalScope) {
                                         readToken = await client.getMediaReadToken(msg.issueKey);
-                                    }
-                                    if (mediaWriteScope) {
                                         writeToken = await client.getMediaWriteToken(msg.issueKey);
                                     }
                                     this.postMessage({

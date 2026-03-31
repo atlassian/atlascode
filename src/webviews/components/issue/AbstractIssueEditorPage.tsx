@@ -359,14 +359,11 @@ export abstract class AbstractIssueEditorPage<
                 break;
             }
             case 'scopeCheckResult': {
-                if (e.checkedScopes?.mediaRead !== undefined && e.checkedScopes?.mediaWrite !== undefined) {
+                if (e.checkedScopes?.jiraExternal !== undefined) {
                     const showEditorMissedScopeBanner =
-                        this.state.isAtlaskitEditorEnabled &&
-                        !e.isApiToken &&
-                        !e.checkedScopes.mediaRead &&
-                        !e.checkedScopes.mediaWrite;
+                        this.state.isAtlaskitEditorEnabled && !e.isApiToken && !e.checkedScopes.jiraExternal;
                     const showAtlaskitEditor =
-                        this.state.isAtlaskitEditorEnabled && !e.isApiToken && e.checkedScopes.mediaRead;
+                        this.state.isAtlaskitEditorEnabled && !e.isApiToken && e.checkedScopes.jiraExternal;
                     this.setState({
                         showEditorMissedScopeBanner,
                         showAtlaskitEditor,
