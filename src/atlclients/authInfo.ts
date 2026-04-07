@@ -44,6 +44,7 @@ export enum OAuthProvider {
     JiraCloud = 'jiracloud',
     JiraCloudStaging = 'jiracloudstaging',
     JiraCloudRemote = 'jiracloudremote',
+    JiraCloudFirstParty = 'jiracloudfirstparty',
 }
 
 export interface OAuthResponse {

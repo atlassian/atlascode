@@ -323,7 +323,11 @@ export const Development: React.FC<DevelopmentProps> = ({ developmentInfo, onOpe
     const [isOpen, setIsOpen] = React.useState<boolean>(false);
     const [openModal, setOpenModal] = React.useState<'branches' | 'commits' | 'pullRequests' | 'builds' | null>(null);
 
-    const { branches, commits, pullRequests, builds } = developmentInfo;
+    const ensureArray = (value: any) => (Array.isArray(value) ? value : []);
+    const branches = ensureArray(developmentInfo.branches);
+    const commits = ensureArray(developmentInfo.commits);
+    const pullRequests = ensureArray(developmentInfo.pullRequests);
+    const builds = ensureArray(developmentInfo.builds);
 
     const totalCount =
         (branches?.length || 0) + (commits?.length || 0) + (pullRequests?.length || 0) + (builds?.length || 0);

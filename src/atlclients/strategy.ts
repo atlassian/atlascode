@@ -1,3 +1,6 @@
+import { Container } from 'src/container';
+import { Features } from 'src/react/atlascode/common/FeatureFlagContext';
+
 import { OAuthProvider } from './authInfo';
 import { base64URLEncode, basicAuth, createVerifier, sha256 } from './strategyCrypto';
 import { OAuthStrategyData, StrategyProps } from './strategyData';
@@ -5,7 +8,12 @@ import { OAuthStrategyData, StrategyProps } from './strategyData';
 export function strategyForProvider(provider: OAuthProvider): Strategy {
     switch (provider) {
         case OAuthProvider.JiraCloud: {
-            return new JiraStrategy(OAuthStrategyData.JiraProd);
+            const isEditor = Container.featureFlagClient.checkGate(Features.AtlaskitEditor);
+            if (isEditor) {
+                return new JiraFirstPartyStrategy(OAuthStrategyData.JiraProdFirstParty);
+            } else {
+                return new JiraStrategy(OAuthStrategyData.JiraProd);
+            }
         }
         case OAuthProvider.JiraCloudStaging: {
             return new JiraStrategy(OAuthStrategyData.JiraStaging);
@@ -59,7 +67,7 @@ export abstract class Strategy {
     }
 
     abstract authorizeUrl(state: string): string;
-    abstract tokenAuthorizationData(code: string): string;
+    abstract tokenAuthorizationData(code: string): string | Record<string, string>;
     abstract refreshHeaders(): any;
     abstract tokenRefreshData(refreshToken: string): string;
 }
@@ -98,6 +106,38 @@ class JiraStrategy extends Strategy {
             client_id: this.data.clientID,
             code_verifier: this.verifier,
         });
+        return data;
+    }
+
+    public tokenRefreshData(refreshToken: string): string {
+        const dataString = JSON.stringify({
+            grant_type: 'refresh_token',
+            client_id: this.data.clientID,
+            refresh_token: refreshToken,
+        });
+        return dataString;
+    }
+
+    public refreshHeaders() {
+        return {
+            'Content-Type': 'application/json',
+        };
+    }
+}
+
+class JiraFirstPartyStrategy extends Strategy {
+    public constructor(data: StrategyProps) {
+        super(data);
+    }
+    public authorizeUrl(): string {
+        return this.data.authorizationURL;
+    }
+    public tokenAuthorizationData(code: string): Record<string, string> {
+        const data = {
+            client_id: this.data.clientID,
+            grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+            device_code: code,
+        };
         return data;
     }
 

@@ -216,9 +216,10 @@ export const LinkedIssues: React.FunctionComponent<LinkedIssuesProps> = ({
     onAssigneeChange,
     fetchUsers,
 }) => {
+    const links = Array.isArray(issuelinks) ? issuelinks : [];
     return (
         <div>
-            {issuelinks.map((issuelink) => (
+            {links.map((issuelink) => (
                 <LinkedIssueRow
                     key={issuelink.id}
                     issuelink={issuelink}

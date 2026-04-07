@@ -5,6 +5,7 @@
 ### Improvements
 
 - **RovoDev**: Added user entitlement type (RDS/RDE paid or unpaid seat) to the feedback collector context, enabling better triage and analysis of feedback by seat type
+- **RovoDev**: Upgraded Rovo Dev to v0.13.63
 - **RovoDev**: Generalized MCP tool parsing in chat UI to support any MCP toolset via regex matching (`mcp__<name>__invoke_tool` / `mcp__<name>__get_tool_schema`) instead of hardcoded tool names
 
 ## What's new in 4.0.27
@@ -43,7 +44,6 @@
 ### Features
 
 - **RovoDev**: Added copy code button within the Rovo Dev chat for code blocks in the chat.
-
 
 ## What's new in 4.0.23
 
