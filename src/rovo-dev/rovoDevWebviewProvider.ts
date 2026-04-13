@@ -338,6 +338,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await this.refreshModifiedFiles();
                         break;
 
+                    case RovoDevViewResponseType.StartLivePreview:
+                        await this.extensionApi.commands.showPreviewPanel();
+                        await this._chatProvider.executeChat(
+                            { text: 'Start a live preview for this project using configure_live_preview.', context: [] },
+                            [],
+                        );
+                        break;
+
                     case RovoDevViewResponseType.CreatePR:
                         await this.createPR(e.payload.commitMessage, e.payload.branchName);
                         break;

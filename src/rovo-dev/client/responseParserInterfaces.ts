@@ -108,6 +108,10 @@ export interface RovoDevIgnoredResponse {
     event_kind: '_ignored';
 }
 
+export interface RovoDevUiChangesDetectedResponse {
+    event_kind: 'ui_changes_detected';
+}
+
 export interface RovoDevUsageResponse {
     event_kind: 'usage';
     data: {
@@ -176,7 +180,8 @@ export type RovoDevResponse =
     | RovoDevModelsResponse
     | RovoDevCloseResponse
     | RovoDevReplayEndResponse
-    | RovoDevIgnoredResponse;
+    | RovoDevIgnoredResponse
+    | RovoDevUiChangesDetectedResponse;
 
 export type RovoDevToolName =
     | 'create_file'

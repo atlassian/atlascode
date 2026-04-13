@@ -17,6 +17,7 @@ import {
     RovoDevToolName,
     RovoDevToolPemissionScenario,
     RovoDevToolReturnResponse,
+    RovoDevUiChangesDetectedResponse,
     RovoDevUsageResponse,
     RovoDevUserPromptResponse,
     RovoDevWarningResponse,
@@ -179,6 +180,10 @@ interface RovoDevThinkingChunk {
     event_kind: 'thinking';
 }
 
+interface RovoDevUiChangesDetectedChunk {
+    event_kind: 'ui_changes_detected';
+}
+
 type RovoDevSingleResponseRaw =
     | RovoDevUserPromptResponseRaw
     | RovoDevTextResponseRaw
@@ -211,7 +216,8 @@ type RovoDevSingleChunk =
     | RovoDevCloseChunk
     | RovoDevReplayEndChunk
     | RovoDevRequestUsageChunk
-    | RovoDevThinkingChunk;
+    | RovoDevThinkingChunk
+    | RovoDevUiChangesDetectedChunk;
 
 // https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.PartStartEvent
 interface RovoDevPartStartResponseRaw {
@@ -593,9 +599,10 @@ export class RovoDevResponseParser {
             // events with no payload
             case 'close':
             case 'replay_end':
+            case 'ui_changes_detected':
                 return buffer
                     ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
-                    : { event_kind: chunk.event_kind };
+                    : ({ event_kind: chunk.event_kind } as RovoDevUiChangesDetectedResponse | { event_kind: 'close' } | { event_kind: 'replay_end' });
 
             default:
                 // @ts-expect-error ts(2339) - chunk here should be 'never'

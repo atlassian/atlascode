@@ -798,5 +798,56 @@ describe('RovoDevResponseParser', () => {
                 });
             });
         });
+
+        describe('ui_changes_detected events', () => {
+            it('should parse ui_changes_detected event', () => {
+                const input = 'event: ui_changes_detected\ndata: {}\n\n';
+
+                const results = Array.from(parser.parse(input));
+
+                expect(results).toHaveLength(1);
+                expect(results[0]).toEqual({
+                    event_kind: 'ui_changes_detected',
+                });
+            });
+
+            it('should parse ui_changes_detected event with extra data fields', () => {
+                const input = 'event: ui_changes_detected\ndata: {"some_field": "some_value"}\n\n';
+
+                const results = Array.from(parser.parse(input));
+
+                expect(results).toHaveLength(1);
+                expect(results[0].event_kind).toBe('ui_changes_detected');
+            });
+
+            it('should handle ui_changes_detected followed by close', () => {
+                const input =
+                    'event: ui_changes_detected\ndata: {}\n\n' +
+                    'event: close\ndata: \n\n';
+
+                const results = Array.from(parser.parse(input));
+
+                expect(results).toHaveLength(2);
+                expect(results[0].event_kind).toBe('ui_changes_detected');
+                expect(results[1].event_kind).toBe('close');
+            });
+
+            it('should not buffer ui_changes_detected (flush previous part_start when encountered)', () => {
+                const allResults: RovoDevResponse[] = [];
+
+                // Start with part_start for user-prompt
+                const input1 =
+                    'event: part_start\ndata: {"part": {"part_kind": "user-prompt", "content": "Hello", "timestamp": "2025-07-02T12:00:00Z"}}\n\n';
+                allResults.push(...Array.from(parser.parse(input1)));
+
+                // ui_changes_detected should flush the buffered user-prompt first
+                const input2 = 'event: ui_changes_detected\ndata: {}\n\n';
+                allResults.push(...Array.from(parser.parse(input2)));
+
+                expect(allResults).toHaveLength(2);
+                expect(allResults[0].event_kind).toBe('user-prompt');
+                expect(allResults[1].event_kind).toBe('ui_changes_detected');
+            });
+        });
     });
 });
