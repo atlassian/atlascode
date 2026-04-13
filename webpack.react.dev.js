@@ -4,10 +4,8 @@ const webpack = require('webpack');
 const ForkTsCheckerNotifierWebpackPlugin = require('fork-ts-checker-notifier-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 const autoprefixer = require('autoprefixer');
-const { CompiledExtractPlugin } = require('@compiled/webpack-loader');
 const { createEnvPlugin } = require('./webpack.env.config');
 
 const appDirectory = fs.realpathSync(process.cwd());
@@ -83,13 +81,6 @@ module.exports = {
         },
     },
     plugins: [
-        new MiniCssExtractPlugin({
-            filename: '[name].css',
-            ignoreOrder: true,
-        }),
-        new CompiledExtractPlugin({
-            sortShorthand: true,
-        }),
         new WebpackManifestPlugin({
             fileName: 'asset-manifest.json',
         }),
@@ -128,7 +119,10 @@ module.exports = {
                         loader: '@compiled/webpack-loader',
                         options: {
                             transformerBabelPlugins: ['@atlaskit/tokens/babel-plugin'],
-                            extract: true,
+                            // extract: false so CSS is inlined as <style> tags via style-loader
+                            // rather than extracted into separate CSS chunk files that Firefox
+                            // cannot dynamically load in VSCode webviews.
+                            extract: false,
                             inlineCss: true,
                         },
                     },
@@ -136,20 +130,18 @@ module.exports = {
             },
 
             {
+                // Use style-loader instead of MiniCssExtractPlugin.loader so that CSS is injected
+                // as <style> tags rather than dynamically fetched as separate CSS chunk files.
+                // Firefox-based webview engines (e.g. code-server) cannot load dynamically
+                // inserted <link> elements for CSS chunks on vscode-resource URLs.
+                // The CSP allows 'unsafe-inline' for style-src, so <style> tag injection works fine.
                 test: /compiled(-css)?\.css$/i,
-                use: [MiniCssExtractPlugin.loader, 'css-loader'],
+                use: ['style-loader', 'css-loader'],
             },
             {
                 test: /(?<!compiled-css)(?<!\.compiled)\.css$/i,
                 use: [
-                    {
-                        loader: MiniCssExtractPlugin.loader,
-                        options: {
-                            // you can specify a publicPath here
-                            // by default it uses publicPath in webpackOptions.output
-                            publicPath: '../',
-                        },
-                    },
+                    'style-loader',
                     {
                         loader: require.resolve('css-loader'),
                         options: {

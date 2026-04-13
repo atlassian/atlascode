@@ -7,6 +7,10 @@
 - **RovoDev**: Upgraded Rovo Dev to v0.13.63
 - **RovoDev**: Generalized MCP tool parsing in chat UI to support any MCP toolset via regex matching (`mcp__<name>__invoke_tool` / `mcp__<name>__get_tool_schema`) instead of hardcoded tool names
 
+### Bug Fixes
+
+- **Webview**: Fixed `ChunkLoadError` for CSS chunks (e.g. `atlascodeRovoDev`, `compiled-css`) when running with a Firefox-based webview engine (e.g. code-server). Switched from `MiniCssExtractPlugin` to `style-loader` in the React webpack bundles so CSS is injected as `<style>` tags instead of being dynamically fetched as separate files, which Firefox cannot do for `vscode-resource` URLs.
+
 
 ## What's new in 4.0.27
 
