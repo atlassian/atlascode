@@ -1734,14 +1734,14 @@
         "@atlaskit/tokens": "^6.1.1",
         "@atlaskit/tooltip": "^20.4.3",
         "@atlaskit/width-detector": "^5.0.4",
-        "@atlassianlabs/guipi-core-components": "^3.2.0",
-        "@atlassianlabs/guipi-jira-components": "^3.2.0",
         "@atlassian-pi/jira-metaui-client": "^3.0.2",
         "@atlassian-pi/jira-metaui-transformer": "^3.0.0",
         "@atlassian-pi/jira-pi-client": "^3.0.2",
         "@atlassian-pi/jira-pi-common-models": "^3.0.0",
         "@atlassian-pi/jira-pi-meta-models": "^3.0.0",
         "@atlassian-pi/pi-client-common": "^3.0.0",
+        "@atlassianlabs/guipi-core-components": "^3.2.0",
+        "@atlassianlabs/guipi-jira-components": "^3.2.0",
         "@emotion/react": "^11.14.0",
         "@emotion/styled": "^11.14.1",
         "@mui/icons-material": "^5.18.0",
@@ -1855,7 +1855,7 @@
         "autoprefixer": "^10.4.20",
         "concurrently": "^9.1.2",
         "css-loader": "^7.1.2",
-        "css-minimizer-webpack-plugin": "^7.0.2",
+        "css-minimizer-webpack-plugin": "^8.0.0",
         "dotenv": "^17.2.3",
         "eslint": "^9.27.0",
         "eslint-import-resolver-typescript": "^4.4.1",
@@ -1898,10 +1898,10 @@
     },
     "overrides": {
         "@sentry/node": {
-            "minimatch": "10.2.2"
+            "minimatch": "^10.2.5"
         },
         "vscode-languageclient": {
-            "minimatch": "10.2.2"
+            "minimatch": "^10.2.5"
         },
         "@atlaskit/analytics-next-stable-react-context": {
             "react": "^18.3.1"
