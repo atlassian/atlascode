@@ -86,4 +86,30 @@ describe('ChatMessageItem', () => {
             );
         }).not.toThrow();
     });
+
+    it('renders feedback buttons but not copy button for empty summary message (thinking-only response)', () => {
+        const emptySummaryMessage = {
+            event_kind: 'text' as const,
+            content: '',
+            index: -1,
+            isSummary: true,
+        };
+
+        render(
+            <ChatMessageItem
+                msg={emptySummaryMessage}
+                enableActions={true}
+                onCopy={jest.fn()}
+                onFeedback={jest.fn()}
+                openFile={jest.fn()}
+                openJira={jest.fn()}
+                onLinkClick={jest.fn()}
+            />,
+        );
+
+        expect(screen.getByLabelText('like-response-button')).toBeTruthy();
+        expect(screen.getByLabelText('dislike-response-button')).toBeTruthy();
+        // Copy button should not appear when there is no content to copy
+        expect(screen.queryByLabelText('copy-button')).toBeNull();
+    });
 });
