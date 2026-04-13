@@ -5,6 +5,7 @@ import InformationCircleIcon from '@atlaskit/icon/core/information-circle';
 import { setGlobalTheme } from '@atlaskit/tokens';
 import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
+import path from 'path';
 import { useCallback, useRef, useState } from 'react';
 import * as React from 'react';
 import { AgentMode, RovoDevAskUserQuestionsToolArgs, RovoDevModeInfo } from 'src/rovo-dev/client';
@@ -406,6 +407,7 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.GetCurrentBranchNameComplete:
                 case RovoDevProviderMessageType.CheckGitChangesComplete:
                 case RovoDevProviderMessageType.UpdateSavedPrompts:
+                case RovoDevProviderMessageType.UpdateWorkspaceFiles:
                     break; // This is handled elsewhere
 
                 case RovoDevProviderMessageType.CheckFileExistsComplete:
@@ -865,6 +867,24 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
+    const onFileSelected = useCallback(
+        (filePath: string) => {
+            postMessage({
+                type: RovoDevViewResponseType.AddContext,
+                contextItem: {
+                    contextType: 'file',
+                    file: {
+                        name: path.basename(filePath),
+                        absolutePath: workspacePath && filePath ? `${workspacePath}/${filePath}` : filePath,
+                    },
+                    isFocus: false,
+                    enabled: true,
+                },
+            });
+        },
+        [postMessage, workspacePath],
+    );
+
     const onRemoveContext = useCallback(
         (item: RovoDevContextItem) => {
             postMessage({
@@ -1028,6 +1048,21 @@ const RovoDevView: React.FC = () => {
         );
         return response.savedPrompts || [];
     }, [postMessagePromise]);
+
+    const handleFetchWorkspaceFiles = React.useCallback(
+        async (query?: string) => {
+            const response = await postMessagePromise(
+                {
+                    type: RovoDevViewResponseType.FetchWorkspaceFiles,
+                    query,
+                },
+                RovoDevProviderMessageType.UpdateWorkspaceFiles,
+                ConnectionTimeout,
+            );
+            return response.files || [];
+        },
+        [postMessagePromise],
+    );
 
     React.useEffect(() => {
         postMessage({
@@ -1207,6 +1242,7 @@ const RovoDevView: React.FC = () => {
                                             onSend={sendPrompt}
                                             onCancel={cancelResponse}
                                             onAddContext={onAddContext}
+                                            onFileSelected={onFileSelected}
                                             onCopy={handleCopyResponse}
                                             handleMcpConfigurationCommand={executeOpenMcpConfigurationFile}
                                             handleMemoryCommand={executeGetAgentMemory}
@@ -1216,6 +1252,9 @@ const RovoDevView: React.FC = () => {
                                             handleSessionCommand={handleShowSessionsCommand}
                                             handleFetchSavedPrompts={handleFetchSavedPrompts}
                                             canFetchSavedPrompts={canFetchSavedPrompts}
+                                            handleFetchWorkspaceFiles={handleFetchWorkspaceFiles}
+                                            canFetchWorkspaceFiles={true}
+                                            workspacePath={workspacePath}
                                         />
                                     </div>
                                 </div>

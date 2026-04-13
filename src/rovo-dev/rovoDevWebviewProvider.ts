@@ -641,6 +641,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                         break;
 
+                    case RovoDevViewResponseType.FetchWorkspaceFiles:
+                        const workspaceFiles = await this._chatContextprovider.handleFetchWorkspaceFiles(e.query);
+                        await webview.postMessage({
+                            type: RovoDevProviderMessageType.UpdateWorkspaceFiles,
+                            files: workspaceFiles,
+                        });
+                        break;
+
                     default:
                         // @ts-expect-error ts(2339) - e here should be 'never'
                         this.processError(new Error(`Unknown message type: ${e.type}`));

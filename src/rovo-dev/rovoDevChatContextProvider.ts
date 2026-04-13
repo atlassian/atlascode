@@ -48,6 +48,29 @@ export class RovoDevChatContextProvider {
         await this.addContextItem(picked);
     }
 
+    private async searchWorkspaceFiles(query?: string): Promise<FileContextQuickPickItem[]> {
+        try {
+            const pattern = query ?? '**/*';
+            return await this.fetchFileContextItems(pattern, 100);
+        } catch (error) {
+            console.error('Failed to search workspace files:', error);
+            return [];
+        }
+    }
+
+    public async handleFetchWorkspaceFiles(query?: string): Promise<{ path: string; name: string }[] | undefined> {
+        try {
+            const items = await this.searchWorkspaceFiles(`**/*${query}*`);
+            return items.map((item) => ({
+                path: item.relativePath,
+                name: item.name,
+            }));
+        } catch (error) {
+            console.error('Failed to fetch workspace files:', error);
+            return undefined;
+        }
+    }
+
     public async processDragDropData(dragDropData: string[]) {
         // search for a Jira work item
         if (dragDropData.find((x) => x.includes('atlascode.views.jira.assignedWorkItemsTreeView'))) {
@@ -143,7 +166,7 @@ export class RovoDevChatContextProvider {
     }
 
     private async selectContextItem(): Promise<RovoDevContextItem | undefined> {
-        const initItems = await this.fetchFileContextItems('**/*', 100);
+        const initItems = await this.searchWorkspaceFiles();
 
         if (!initItems.length) {
             window.showInformationMessage('No files found in workspace to add as context.');
@@ -157,7 +180,7 @@ export class RovoDevChatContextProvider {
 
         const debouncedFetch = debounce(async (value: string) => {
             contextQuickPick.busy = true;
-            const filteredItems = await this.fetchFileContextItems(`**/*${value}*`, 100);
+            const filteredItems = await this.searchWorkspaceFiles(`**/*${value}*`);
 
             contextQuickPick.items = filteredItems;
             contextQuickPick.busy = false;

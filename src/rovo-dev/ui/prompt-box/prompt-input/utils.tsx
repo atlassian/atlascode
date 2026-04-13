@@ -2,6 +2,11 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { SavedPrompt } from '../../utils';
 
+export interface WorkspaceFile {
+    path: string;
+    name: string;
+}
+
 export const createMonacoPromptEditor = (container: HTMLElement) => {
     /* Disable web workers in Monaco by providing a dummy implementation 
         Monaco web workers cannot be instantiated in vscode webview */
@@ -282,6 +287,92 @@ export function createPromptCompletionProvider(
     };
 }
 
+// This function is pretty similar to createPromptCompletionProvider - we could probably combine them and make it more generic if needed in the future
+export function createFileCompletionProvider(
+    fetch: (query?: string) => Promise<WorkspaceFile[]>,
+    canFetch: boolean,
+    onFileSelected?: (filePath: string) => void,
+): monaco.languages.CompletionItemProvider {
+    return {
+        triggerCharacters: ['#'],
+        provideCompletionItems: async (model, position) => {
+            const textUntilPosition = model.getValueInRange({
+                startLineNumber: 1,
+                startColumn: 1,
+                endLineNumber: position.lineNumber,
+                endColumn: position.column,
+            });
+
+            const match = textUntilPosition.match(/(?:^|\s)#[\w\-\.\/]*$/);
+            if (!match) {
+                return { suggestions: [] };
+            }
+
+            const startColumn = position.column - match[0].trimStart().length;
+            const query = match[0].trimStart().substring(1); // Remove the # prefix
+
+            let files: WorkspaceFile[] = [];
+            if (!canFetch) {
+                files = [{ name: 'Initializing...', path: '' }];
+            } else {
+                // Show loading state while fetching
+                if (!files.length) {
+                    files = [{ name: 'Loading files...', path: '' }];
+                }
+                files = await fetch(query);
+            }
+
+            const suggestions: monaco.languages.CompletionItem[] = files.map((file, index) => {
+                // Monaco built-in sort doesn't prioritize exact matches and prefix matches, so we need to add custom sort
+                let sortPrefix = '2';
+                const isLoadingState = file.name === 'Initializing...' || file.name === 'Loading files...';
+                if (query && !isLoadingState) {
+                    const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+                    const lowerNameNoExt = nameWithoutExt.toLowerCase();
+                    const lowerQuery = query.toLowerCase();
+
+                    if (lowerNameNoExt === lowerQuery) {
+                        sortPrefix = '0'; // Exact match
+                    } else if (file.name.toLowerCase().startsWith(lowerQuery)) {
+                        sortPrefix = '1';
+                    }
+                }
+
+                return {
+                    label: file.name,
+                    kind: isLoadingState
+                        ? monaco.languages.CompletionItemKind.Text
+                        : monaco.languages.CompletionItemKind.File,
+                    insertText: '',
+                    documentation: file.path,
+                    range: {
+                        startLineNumber: position.lineNumber,
+                        endLineNumber: position.lineNumber,
+                        startColumn: startColumn,
+                        endColumn: position.column,
+                    },
+                    sortText: `${sortPrefix}_${file.name}`,
+                    filterText: `#${file.name}`,
+                    detail: file.path,
+                    command:
+                        !isLoadingState && onFileSelected
+                            ? {
+                                  id: 'rovo-dev.attachFile',
+                                  title: 'Attach File',
+                                  arguments: [file.path],
+                              }
+                            : undefined,
+                };
+            });
+
+            return {
+                suggestions,
+                incomplete: true,
+            };
+        },
+    };
+}
+
 export function removeMonacoStyles() {
     Array.from(document.styleSheets).forEach((stylesheet) => {
         try {
@@ -304,8 +395,17 @@ export function setupMonacoCommands(
     handleTriggerFeedbackCommand: () => void,
     handleSessionCommand?: () => void,
     onYoloModeToggled?: () => void,
+    onFileSelected?: (filePath: string) => void,
 ): monaco.IDisposable {
     const disposables: monaco.IDisposable[] = [];
+
+    if (onFileSelected) {
+        disposables.push(
+            monaco.editor.registerCommand('rovo-dev.attachFile', (accessor, filePath: string) => {
+                onFileSelected(filePath);
+            }),
+        );
+    }
 
     disposables.push(
         monaco.editor.registerCommand('rovo-dev.clearChat', () => {

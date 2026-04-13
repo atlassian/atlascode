@@ -2,11 +2,14 @@
 
 ## What's new in 4.0.28
 
+### Features
+
+- **RovoDev**: Added file picker autocomplete in chat prompt using `#` trigger - users can now type `#` to get autocomplete suggestions for workspace files and automatically attach them as context. Supports searching by filename (e.g., `#analytics`) or folder path (e.g., `#src/` to see all files in src folder)
+
 ### Improvements
 
 - **RovoDev**: Upgraded Rovo Dev to v0.13.63
 - **RovoDev**: Generalized MCP tool parsing in chat UI to support any MCP toolset via regex matching (`mcp__<name>__invoke_tool` / `mcp__<name>__get_tool_schema`) instead of hardcoded tool names
-
 
 ## What's new in 4.0.27
 
@@ -44,7 +47,6 @@
 ### Features
 
 - **RovoDev**: Added copy code button within the Rovo Dev chat for code blocks in the chat.
-
 
 ## What's new in 4.0.23
 
