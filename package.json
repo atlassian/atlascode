@@ -386,6 +386,11 @@
                 "category": "Jira"
             },
             {
+                "command": "atlascode.jira.getActiveIssue",
+                "title": "Get Active Jira Issue Key",
+                "category": "Jira"
+            },
+            {
                 "command": "atlascode.jira.transitionIssue",
                 "title": "Transition Issue...",
                 "category": "Jira"
