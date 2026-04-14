@@ -95,4 +95,27 @@ export class Backend {
 
         throw new Error('Unable to determine the pull request');
     }
+
+    /**
+     * Get the repository's main branch name.
+     * Falls back to 'master' if the main branch cannot be determined.
+     */
+    public async findMainBranch(): Promise<string> {
+        const wsRepo = this.findRepository();
+        const site = wsRepo.mainSiteRemote.site;
+        if (!site) {
+            return 'master';
+        }
+        try {
+            const bbApi = await clientForSite(site);
+            const repo = await bbApi.repositories.get(site);
+            if (repo.mainbranch) {
+                return repo.mainbranch;
+            }
+        } catch (e) {
+            // Fall back to default if unable to fetch
+            console.warn('Failed to fetch main branch from API:', e instanceof Error ? e.message : String(e));
+        }
+        return 'master';
+    }
 }
