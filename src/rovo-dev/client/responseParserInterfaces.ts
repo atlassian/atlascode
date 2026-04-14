@@ -198,7 +198,7 @@ export type RovoDevToolName =
 
 export type RovoDevToolPemissionScenario = 'ASK' | 'ALLOWED' | 'DENIED';
 
-export type RovoDevDeferredToolCallName = 'ask_user_questions' | 'exit_plan_mode';
+export type RovoDevDeferredToolCallName = 'ask_user_questions' | 'exit_plan_mode' | 'ui_changes_complete';
 
 export interface RovoDevAskUserQuestionsToolArgs {
     questions: {

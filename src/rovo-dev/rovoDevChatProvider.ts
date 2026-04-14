@@ -527,6 +527,17 @@ export class RovoDevChatProvider {
                         args: exitPlanModeArgs,
                     });
                     break;
+                case 'ui_changes_complete':
+                    await webview.postMessage({
+                        type: RovoDevProviderMessageType.ShowLivePreviewButton,
+                    });
+                    // Immediately acknowledge the deferred tool call so the agent is not blocked
+                    this._pendingDeferredRequest = undefined;
+                    await this.executeDeferredToolCall({
+                        tool_call_id: deferredTool.tool_call_id,
+                        result: 'UI changes acknowledged.',
+                    });
+                    break;
                 default:
                     throw new Error(`Unknown deferred tool call: ${deferredTool.tool_name}`);
             }

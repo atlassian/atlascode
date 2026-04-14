@@ -18,6 +18,7 @@ export const RovodevCommands = {
     RovodevOpenHelp: 'atlascode.rovodev.openHelp',
     RovodevEnable: 'atlascode.rovodev.enable',
     RovodevOpenChat: 'atlascode.rovodev.openChat',
+    ShowPreviewPanel: 'atlascode.rovodev.showPreviewPanel',
 } as const;
 
 /**
