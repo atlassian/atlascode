@@ -2,6 +2,11 @@
 
 ## What's new in 4.0.28
 
+### Bug Fixes
+
+- **RovoDev**: Fixed `{title}` placeholder not being resolved in the rate limit exceeded message
+
+
 ### Improvements
 
 - **RovoDev**: Upgraded Rovo Dev to v0.13.63
