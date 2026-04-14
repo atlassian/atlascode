@@ -7,6 +7,7 @@ import { DetailedSiteInfo, MinimalIssue } from '../../api/extensionApiTypes';
 import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
 import { PullRequestForm } from '../create-pr/PullRequestForm';
+import { LivePreviewButton } from '../live-preview/LivePreviewButton';
 import { CredentialHint } from '../landing-page/disabled-messages/RovoDevLoginForm';
 import { RovoDevLanding } from '../landing-page/RovoDevLanding';
 import { useMessagingApi } from '../messagingApi';
@@ -49,6 +50,7 @@ interface ChatStreamProps {
     onLinkClick: (href: string) => void;
     credentialHints?: CredentialHint[];
     onGeneratePlanClick?: (planId: string, proceed: boolean) => void;
+    showLivePreviewButton?: boolean;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -74,6 +76,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     onLinkClick,
     credentialHints,
     onGeneratePlanClick,
+    showLivePreviewButton,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -303,6 +306,9 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
             {!isChatHistoryDisabled && currentState.state === 'WaitingForPrompt' && (
                 <FollowUpActionFooter>
+                    {showLivePreviewButton && (
+                        <LivePreviewButton messagingApi={messagingApi} />
+                    )}
                     {canCreatePR && !deepPlanCreated && hasChangesInGit && (
                         <PullRequestForm
                             onCancel={() => {

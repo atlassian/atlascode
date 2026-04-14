@@ -87,6 +87,7 @@ const RovoDevView: React.FC = () => {
     const [currentAgentModel, setCurrentAgentModel] = useState<RovoDevAgentModel | undefined>(undefined);
     const hasPendingDeferredActionRef = useRef(false);
     const [availableAgentModels, setAvailableAgentModels] = useState<RovoDevAgentModel[]>([]);
+    const [showLivePreviewButton, setShowLivePreviewButton] = useState(false);
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -170,6 +171,7 @@ const RovoDevView: React.FC = () => {
         setIsFeedbackFormVisible(false);
         setPendingToolCallMessage('');
         setPendingSubagentTasks([]);
+        setShowLivePreviewButton(false);
     }, [keepFiles, totalModifiedFiles]);
 
     const onError = useCallback(
@@ -513,6 +515,10 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.UpdateAgentModels:
                     setAvailableAgentModels(event.models);
+                    break;
+
+                case RovoDevProviderMessageType.ShowLivePreviewButton:
+                    setShowLivePreviewButton(true);
                     break;
 
                 default:
@@ -1119,6 +1125,7 @@ const RovoDevView: React.FC = () => {
                         onLinkClick={onLinkClick}
                         credentialHints={credentialHints}
                         onGeneratePlanClick={(e: string, proceed: boolean) => handleExitPlanMode(proceed, e)}
+                        showLivePreviewButton={showLivePreviewButton}
                     />
                     {!hidePromptBox && (
                         <div className="input-section-container">

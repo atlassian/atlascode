@@ -46,7 +46,7 @@ import { RovoDevProcessManager, RovoDevProcessState } from './rovoDevProcessMana
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevSessionManager } from './rovoDevSessionManager';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
-import { RovoDevContextItem } from './rovoDevTypes';
+import { RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
 import { readLastNLogLines, removeCustomCliTags } from './rovoDevUtils';
 import {
     RovoDevAgentModel,
@@ -618,6 +618,20 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await webview.postMessage({
                             type: RovoDevProviderMessageType.UpdateSavedPrompts,
                             savedPrompts: prompts,
+                        });
+                        break;
+
+                    case RovoDevViewResponseType.CreateLivePreview:
+                        await this.executeCreateLivePreview();
+                        break;
+
+                    case RovoDevViewResponseType.ReportCreateLivePreviewButtonClicked:
+                        this._telemetryProvider.fireTelemetryEvent({
+                            action: 'rovoDevCreateLivePreviewButtonClicked',
+                            subject: 'atlascode',
+                            attributes: {
+                                promptId: this._chatProvider.currentPromptId,
+                            },
                         });
                         break;
 
@@ -1271,6 +1285,21 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
 
         await this.handleRovoDevLogout();
+    }
+
+    private async executeCreateLivePreview(): Promise<void> {
+        try {
+            // Immediately switch VSCode to preview mode with loading spinner
+            await commands.executeCommand(RovodevCommands.ShowPreviewPanel);
+            // Send a prompt to the agent to start a live preview
+            const prompt: RovoDevPrompt = {
+                text: 'Start a live preview for this project.',
+                context: [],
+            };
+            await this._chatProvider.executeChat(prompt, []);
+        } catch (e) {
+            await this.processError(e);
+        }
     }
 
     private async createPR(commitMessage?: string, branchName?: string): Promise<void> {
