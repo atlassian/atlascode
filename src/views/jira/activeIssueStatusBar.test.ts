@@ -14,6 +14,9 @@ import { JiraActiveIssueStatusBar } from './activeIssueStatusBar';
 jest.mock('../../constants', () => ({
     AssignedJiraItemsViewId: 'assignedJiraItemsView',
     JiraEnabledKey: 'jira.enabled',
+    Commands: {
+        JiraGetActiveIssue: 'atlascode.jira.getActiveIssue',
+    },
 }));
 
 // Mock Container
@@ -332,6 +335,20 @@ describe('JiraActiveIssueStatusBar', () => {
 
             // Verify analytics were sent
             expect(Container.analyticsClient.sendUIEvent).toHaveBeenCalledWith({ name: 'open-active-issue' });
+        });
+
+        it('should register and return active issue key from command', async () => {
+            activeIssueStatusBar = new JiraActiveIssueStatusBar(mockBitbucketContext);
+            await activeIssueStatusBar.handleActiveIssueChange();
+
+            const commandRegistration = (commands.registerCommand as jest.Mock).mock.calls.find(
+                (call) => call[0] === 'atlascode.jira.getActiveIssue',
+            );
+
+            expect(commandRegistration).toBeTruthy();
+
+            const commandHandler = commandRegistration[1];
+            await expect(commandHandler()).resolves.toBe('TEST-123');
         });
     });
 });

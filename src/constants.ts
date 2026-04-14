@@ -61,6 +61,7 @@ export const enum Commands {
     ShowIssueForKey = 'atlascode.jira.showIssueForKey',
     ShowIssueForSiteIdAndKey = 'atlascode.jira.showIssueForSiteIdAndKey',
     ShowIssueForURL = 'atlascode.jira.showIssueForURL',
+    JiraGetActiveIssue = 'atlascode.jira.getActiveIssue',
     ShowConfigPage = 'atlascode.showConfigPage',
     ShowConfigPageV3 = 'atlascode.showConfigPageV3',
     ShowConfigPageFromExtensionContext = 'atlascode.extensionContext.showConfigPage',

@@ -15,7 +15,7 @@ import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { BitbucketContext } from '../../bitbucket/bbContext';
 import { showIssue } from '../../commands/jira/showIssue';
 import { configuration } from '../../config/configuration';
-import { AssignedJiraItemsViewId, JiraEnabledKey } from '../../constants';
+import { AssignedJiraItemsViewId, Commands, JiraEnabledKey } from '../../constants';
 import { Container } from '../../container';
 import { getCachedIssue } from '../../jira/fetchIssue';
 import { issueForKey } from '../../jira/issueForKey';
@@ -37,6 +37,7 @@ export class JiraActiveIssueStatusBar implements Disposable {
         Container.context.subscriptions.push(
             configuration.onDidChange((e) => this.handleConfigurationChange(e)),
             bbCtx.onDidChangeBitbucketContext(() => this.handleRepoChange()),
+            commands.registerCommand(Commands.JiraGetActiveIssue, () => this.activeIssue?.key),
         );
         void this.handleConfigurationChange(configuration.initializingChangeEvent);
     }
