@@ -1,3 +1,4 @@
+import { DateTimeMocker } from 'testsutil/dateTimeMocker';
 import { expansionCastTo } from 'testsutil/miscFunctions';
 import * as vscode from 'vscode';
 
@@ -9,6 +10,8 @@ import { Commit, FileDiff, PaginatedComments, PullRequest, Task } from '../../bi
 import { Container } from '../../container';
 import { Resources } from '../../resources';
 import { DescriptionNode, NextPageNode, PullRequestContextValue, PullRequestTitlesNode } from './pullRequestNode';
+
+DateTimeMocker.initialize(new Date(2026, 1, 1));
 
 // Mock all the dependencies
 jest.mock('../../bitbucket/bbUtils');

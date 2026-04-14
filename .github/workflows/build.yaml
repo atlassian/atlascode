@@ -35,16 +35,14 @@ jobs:
             npm-${{ runner.os }}-
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --no-audit
 
       - name: Run vulnerability audit
         # We allow low severity vulnerabilities to not block the build, 
         # but we should be diligent and fix them when they are discovered
         # We also skip the audit for dev dependencies, since they don't
         # end up on the distributed package.
-
-        # TODO AXON-1932 - setting to critical for now to unblock the build
-        run: npm audit --audit-level=critical --omit=dev
+        run: npm audit --audit-level=moderate --omit=dev
 
       - name: Compress node_modules
         run: tar -czf node_modules.tar.gz node_modules

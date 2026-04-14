@@ -6,11 +6,9 @@
 # @global-owner1 and @global-owner2 will be requested for
 # review when someone opens a pull request.
 # AXON TEAM: @bwieger-atlassian-com @sdzh-atlassian @cabella-dot @marcomura @jwang19-atlassian @teg-atlassian
-# SOFTSERVE TEAM: @om-ukr @sky-ocean-spirits @BHulovatyi
-# BBY FOLKS: @Blastoplex @mattcolman @matt-lassian @dchiew-atl @amarg-at @ccallcottstevens
-# DevInfra Folks: @ssinha2598 @asifmujteba
+# BBY FOLKS: @Blastoplex @mattcolman @matt-lassian @dchiew-atl @amarg-at @ccallcottstevens @cindy-atl
 
-*       @asifmujteba @ssinha2598 @bwieger-atlassian-com @sdzh-atlassian @cabella-dot @marcomura @jwang19-atlassian @teg-atlassian @om-ukr @sky-ocean-spirits @BHulovatyi @Blastoplex @mattcolman @matt-lassian @dchiew-atl @amarg-at @ccallcottstevens @cindy-atl
+*       @bwieger-atlassian-com @sdzh-atlassian @cabella-dot @marcomura @jwang19-atlassian @teg-atlassian @Blastoplex @mattcolman @matt-lassian @dchiew-atl @amarg-at @ccallcottstevens @cindy-atl
 
 # Order is important; the last matching pattern takes the most
 # precedence. When someone opens a pull request that only
