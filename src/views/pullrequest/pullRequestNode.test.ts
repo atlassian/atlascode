@@ -188,7 +188,7 @@ describe('PullRequestTitlesNode', () => {
         expect(vscode.TreeItem).toHaveBeenCalledWith(mockDraftPR.data.title, vscode.TreeItemCollapsibleState.Collapsed);
         expect(mockTreeItem.tooltip).toContain(mockDraftPR.data.title);
         expect(mockTreeItem.tooltip).toContain('#123 Test PR | Draft');
-        expect(mockTreeItem.description).toBe('Draft | updated about 3 years ago');
+        expect(mockTreeItem.description).toMatch(/^Draft \| updated .* ago$/);
     });
 
     test('getPR returns the PR object', () => {
