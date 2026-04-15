@@ -15,7 +15,6 @@ export const LivePreviewButton: React.FC<LivePreviewButtonProps> = ({ messagingA
 
     const handleClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
-        postMessage({ type: RovoDevViewResponseType.ReportCreateLivePreviewButtonClicked });
         setIsLoading(true);
         postMessage({ type: RovoDevViewResponseType.CreateLivePreview });
     };

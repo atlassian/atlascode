@@ -623,9 +623,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                     case RovoDevViewResponseType.CreateLivePreview:
                         await this.executeCreateLivePreview();
-                        break;
-
-                    case RovoDevViewResponseType.ReportCreateLivePreviewButtonClicked:
                         this._telemetryProvider.fireTelemetryEvent({
                             action: 'rovoDevCreateLivePreviewButtonClicked',
                             subject: 'atlascode',

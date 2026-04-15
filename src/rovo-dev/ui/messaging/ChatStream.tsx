@@ -7,9 +7,9 @@ import { DetailedSiteInfo, MinimalIssue } from '../../api/extensionApiTypes';
 import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
 import { PullRequestForm } from '../create-pr/PullRequestForm';
-import { LivePreviewButton } from '../live-preview/LivePreviewButton';
 import { CredentialHint } from '../landing-page/disabled-messages/RovoDevLoginForm';
 import { RovoDevLanding } from '../landing-page/RovoDevLanding';
+import { LivePreviewButton } from '../live-preview/LivePreviewButton';
 import { useMessagingApi } from '../messagingApi';
 import { McpConsentChoice, RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import { SubagentInfo, ToolCallItem } from '../tools/ToolCallItem';
@@ -306,9 +306,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
             {!isChatHistoryDisabled && currentState.state === 'WaitingForPrompt' && (
                 <FollowUpActionFooter>
-                    {showLivePreviewButton && (
-                        <LivePreviewButton messagingApi={messagingApi} />
-                    )}
+                    {showLivePreviewButton && <LivePreviewButton messagingApi={messagingApi} />}
                     {canCreatePR && !deepPlanCreated && hasChangesInGit && (
                         <PullRequestForm
                             onCancel={() => {

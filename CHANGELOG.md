@@ -4,7 +4,6 @@
 
 ### Improvements
 
-- **RovoDev**: Added "Create live preview" button in the chat sidebar — appears after the agent calls `ui_changes_complete`, immediately switches VSCode to preview mode and sends a prompt to start a live preview server (e.g. Storybook)
 - **RovoDev**: Upgraded Rovo Dev to v0.13.63
 - **RovoDev**: Generalized MCP tool parsing in chat UI to support any MCP toolset via regex matching (`mcp__<name>__invoke_tool` / `mcp__<name>__get_tool_schema`) instead of hardcoded tool names
 
