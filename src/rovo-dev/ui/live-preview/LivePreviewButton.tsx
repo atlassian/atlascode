@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { RovoDevProviderMessage } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
+import { RovoDevProviderMessage } from '../../rovoDevWebviewProviderMessages';
 import { useMessagingApi } from '../messagingApi';
 import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 
@@ -15,13 +15,17 @@ export const LivePreviewButton: React.FC<LivePreviewButtonProps> = ({ messagingA
 
     const handleClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
-        postMessage({ type: RovoDevViewResponseType.ReportCreateLivePreviewButtonClicked });
         setIsLoading(true);
         postMessage({ type: RovoDevViewResponseType.CreateLivePreview });
     };
 
     return (
-        <button className="pull-request-button" onClick={handleClick} title="Create live preview" disabled={isLoading}>
+        <button
+            className="chat-action-button secondary"
+            onClick={handleClick}
+            title="Create live preview"
+            disabled={isLoading}
+        >
             {isLoading ? (
                 <i className="codicon codicon-loading codicon-modifier-spin" />
             ) : (

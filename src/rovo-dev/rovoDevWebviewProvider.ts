@@ -25,6 +25,7 @@ import {
     workspace,
 } from 'vscode';
 
+import { Commands } from '../constants';
 import { GitErrorCodes } from '../typings/git';
 import { RovodevCommandContext, RovodevCommands } from './api/componentApi';
 import { DetailedSiteInfo, ExtensionApi, MinimalIssue } from './api/extensionApi';
@@ -45,7 +46,7 @@ import { RovoDevJiraItemsProvider } from './rovoDevJiraItemsProvider';
 import { RovoDevProcessManager, RovoDevProcessState } from './rovoDevProcessManager';
 import { RovoDevSessionManager } from './rovoDevSessionManager';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
-import { RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
+import { RovoDevContextItem } from './rovoDevTypes';
 import { readLastNLogLines, removeCustomCliTags } from './rovoDevUtils';
 import {
     RovoDevAgentModel,
@@ -576,9 +577,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                     case RovoDevViewResponseType.CreateLivePreview:
                         await this.executeCreateLivePreview();
-                        break;
-
-                    case RovoDevViewResponseType.ReportCreateLivePreviewButtonClicked:
                         this._telemetryProvider.fireTelemetryEvent({
                             action: 'rovoDevCreateLivePreviewButtonClicked',
                             subject: 'atlascode',
@@ -1243,13 +1241,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private async executeCreateLivePreview(): Promise<void> {
         try {
             // Immediately switch VSCode to preview mode with loading spinner
-            await commands.executeCommand(RovodevCommands.ShowPreviewPanel);
-            // Send a prompt to the agent to start a live preview
-            const prompt: RovoDevPrompt = {
-                text: 'Start a live preview for this project.',
-                context: [],
-            };
-            await this._chatProvider.executeChat(prompt, []);
+            await commands.executeCommand(Commands.BoysenberryShowPreviewPanel);
+            // Call the agent API directly to start a live preview
+            await this.executeApiWithErrorHandling(async (client) => {
+                await client.createLivePreview();
+            }, false);
         } catch (e) {
             await this.processError(e);
         }

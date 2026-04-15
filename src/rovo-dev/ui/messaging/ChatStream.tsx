@@ -4,11 +4,12 @@ import { State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
 import { DetailedSiteInfo, MinimalIssue } from '../../api/extensionApiTypes';
-import { CheckFileExistsFunc, OpenFileFunc, OpenJiraFunc } from '../common/common';
+import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
 import { LivePreviewButton } from '../live-preview/LivePreviewButton';
 import { CredentialHint } from '../landing-page/disabled-messages/RovoDevLoginForm';
 import { RovoDevLanding } from '../landing-page/RovoDevLanding';
+import { LivePreviewButton } from '../live-preview/LivePreviewButton';
 import { useMessagingApi } from '../messagingApi';
 import { McpConsentChoice, RovoDevViewResponse } from '../rovoDevViewMessages';
 import { SubagentInfo, ToolCallItem } from '../tools/ToolCallItem';
@@ -198,6 +199,9 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         currentState.state !== 'WaitingForPrompt' &&
         (currentState.state !== 'Initializing' || currentState.isPromptPending);
 
+    const showActionFooter =
+        !isChatHistoryDisabled && currentState.state === 'WaitingForPrompt' && showLivePreviewButton;
+
     return (
         <div ref={chatEndRef} className="chat-message-container">
             {(!RovodevStaticConfig.isBBY ||
@@ -274,11 +278,9 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                 </div>
             )}
 
-            {!isChatHistoryDisabled && currentState.state === 'WaitingForPrompt' && (
+            {showActionFooter && (
                 <FollowUpActionFooter>
-                    {showLivePreviewButton && (
-                        <LivePreviewButton messagingApi={messagingApi} />
-                    )}
+                    <LivePreviewButton messagingApi={messagingApi} />
                 </FollowUpActionFooter>
             )}
             <div id="sentinel" ref={sentinelRef} style={{ height: '10px', width: '100%', pointerEvents: 'none' }} />

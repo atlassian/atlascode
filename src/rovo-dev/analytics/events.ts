@@ -123,6 +123,17 @@ export namespace Track {
         };
     };
 
+    export type CreateLivePreviewButtonClicked = {
+        action: 'rovoDevCreateLivePreviewButtonClicked';
+        subject: 'atlascode';
+        attributes: {
+            rovoDevEnv: RovoDevEnv;
+            appInstanceId: string;
+            sessionId: string;
+            promptId: string;
+        };
+    };
+
     export type RestoreSessionClicked = {
         action: 'clicked';
         subject: 'rovoDevRestoreSession';
