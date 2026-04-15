@@ -37,7 +37,6 @@ export const ConnectionTimeout = 30 * Time.SECONDS;
 
 export type ChatMessage =
     | UserPromptMessage
-    | PullRequestMessage
     | DialogMessage
     | RovoDevTextResponse
     | RovoDevToolCallResponse
@@ -56,11 +55,6 @@ export interface RovoDevExitPlanModeMessage {
     event_kind: '_RovoDevExitPlanMode';
     toolCallId: string;
     content: string;
-}
-
-export interface PullRequestMessage {
-    event_kind: '_RovoDevPullRequest';
-    text: string;
 }
 
 export interface AbstractDialogMessage {
@@ -517,8 +511,7 @@ export const appendResponse = (
                 const canGroup =
                     latest &&
                     latest.event_kind !== '_RovoDevUserPrompt' &&
-                    latest.event_kind !== '_RovoDevDialog' &&
-                    latest.event_kind !== '_RovoDevPullRequest';
+                    latest.event_kind !== '_RovoDevDialog';
 
                 if (canGroup) {
                     const prevGroup = prev.pop();
