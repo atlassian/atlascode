@@ -40,7 +40,6 @@ import {
     extractLastNMessages,
     modifyFileTitleMap,
     processDropDataTransferItems,
-    PullRequestMessage,
     Response,
     safeJsonParse,
     ToolReturnParseResult,
@@ -402,9 +401,6 @@ const RovoDevView: React.FC = () => {
                     setPromptContextCollection(event.context);
                     break;
 
-                case RovoDevProviderMessageType.CreatePRComplete:
-                case RovoDevProviderMessageType.GetCurrentBranchNameComplete:
-                case RovoDevProviderMessageType.CheckGitChangesComplete:
                 case RovoDevProviderMessageType.UpdateSavedPrompts:
                     break; // This is handled elsewhere
 
@@ -736,22 +732,6 @@ const RovoDevView: React.FC = () => {
             type: RovoDevViewResponseType.RestartProcess,
         });
     }, [postMessage]);
-
-    const onChangesGitPushed = useCallback(
-        (msg: PullRequestMessage, pullRequestCreated: boolean) => {
-            if (totalModifiedFiles.length > 0) {
-                keepFiles(totalModifiedFiles);
-            }
-
-            handleAppendResponse(msg);
-
-            postMessage({
-                type: RovoDevViewResponseType.ReportChangesGitPushed,
-                pullRequestCreated,
-            });
-        },
-        [totalModifiedFiles, handleAppendResponse, postMessage, keepFiles],
-    );
 
     const onCollapsiblePanelExpanded = useCallback(() => {
         postMessage({
@@ -1105,7 +1085,6 @@ const RovoDevView: React.FC = () => {
                         pendingSubagentTasks={pendingSubagentTasks}
                         deepPlanCreated={deepPlanCreated}
                         currentState={currentState}
-                        onChangesGitPushed={onChangesGitPushed}
                         onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
                         handleFeedbackTrigger={handleFeedbackTrigger}
                         onLoginClick={onLoginClick}
