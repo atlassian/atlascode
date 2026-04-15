@@ -509,9 +509,7 @@ export const appendResponse = (
             if (thinkingBlockEnabled) {
                 // Do not group if User, Error message, or Pull Request message is the latest
                 const canGroup =
-                    latest &&
-                    latest.event_kind !== '_RovoDevUserPrompt' &&
-                    latest.event_kind !== '_RovoDevDialog';
+                    latest && latest.event_kind !== '_RovoDevUserPrompt' && latest.event_kind !== '_RovoDevDialog';
 
                 if (canGroup) {
                     const prevGroup = prev.pop();

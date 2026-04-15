@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { RovodevStaticConfig } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
-import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
+import { RovoDevProviderMessage } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
 import { DetailedSiteInfo, MinimalIssue } from '../../api/extensionApiTypes';
 import { CheckFileExistsFunc, OpenFileFunc, OpenJiraFunc } from '../common/common';
@@ -9,9 +9,9 @@ import { DialogMessageItem } from '../common/DialogMessage';
 import { CredentialHint } from '../landing-page/disabled-messages/RovoDevLoginForm';
 import { RovoDevLanding } from '../landing-page/RovoDevLanding';
 import { useMessagingApi } from '../messagingApi';
-import { McpConsentChoice, RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
+import { McpConsentChoice, RovoDevViewResponse } from '../rovoDevViewMessages';
 import { SubagentInfo, ToolCallItem } from '../tools/ToolCallItem';
-import { ConnectionTimeout, DialogMessage, Response, scrollToEnd } from '../utils';
+import { DialogMessage, Response, scrollToEnd } from '../utils';
 import { ChatStreamMessageRenderer } from './ChatStreamMessageRenderer';
 import { DropdownButton } from './dropdown-button/DropdownButton';
 
