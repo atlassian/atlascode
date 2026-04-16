@@ -190,7 +190,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._registerEditorListeners();
 
         if (this.isBoysenberry) {
-            this._prHandler = new RovoDevPullRequestHandler();
+            // Initialize PR handler asynchronously - it will validate git repositories
+            RovoDevPullRequestHandler.create()
+                .then((handler) => {
+                    (this as any)._prHandler = handler;
+                })
+                .catch((error) => {
+                    Logger.warn('Failed to initialize PR handler:', error.message);
+                });
             this.appInstanceId = process.env.ROVODEV_SANDBOX_ID as string;
         } else {
             this.appInstanceId = this.extensionApi.metadata.appInstanceId();
@@ -1279,11 +1286,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         let prLink: string | undefined;
         const webview = this._webView!;
         try {
+            if (!prHandler) {
+                throw new Error('No Git repositories in workspace');
+            }
+
             if (!branchName || branchName.trim() === '') {
                 throw new Error('Branch name is required to create a PR');
             }
 
-            prLink = await prHandler!.createPR(branchName, commitMessage);
+            prLink = await prHandler.createPR(branchName, commitMessage);
 
             await webview.postMessage({
                 type: RovoDevProviderMessageType.CreatePRComplete,
@@ -1324,7 +1335,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             if (!webview) {
                 throw new Error('Webview not initialized');
             }
-            const branchName = await prHandler!.getCurrentBranchName();
+            if (!prHandler) {
+                throw new Error('No Git repositories in workspace');
+            }
+            const branchName = await prHandler.getCurrentBranchName();
             await webview.postMessage({
                 type: RovoDevProviderMessageType.GetCurrentBranchNameComplete,
                 data: {

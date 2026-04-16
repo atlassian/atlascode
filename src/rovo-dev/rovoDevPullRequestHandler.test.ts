@@ -21,9 +21,26 @@ jest.mock('./rovoDevTelemetryProvider', () => ({
 jest.mock('child_process');
 const mockExec = exec as jest.MockedFunction<typeof exec>;
 
-const mockGitApi = jest.fn().mockReturnValue({
-    repositories: [],
-});
+let currentMockRepositories: any[] = [
+    {
+        rootUri: { fsPath: '/mock/repo/path' },
+        state: {
+            HEAD: { name: 'main', ahead: 0 },
+            workingTreeChanges: [],
+            indexChanges: [],
+            mergeChanges: [],
+        },
+        commit: jest.fn(),
+        createBranch: jest.fn(),
+        fetch: jest.fn(),
+    },
+];
+
+const mockGitApi = jest.fn().mockImplementation(() => ({
+    get repositories() {
+        return currentMockRepositories;
+    },
+}));
 
 jest.mock('vscode', () => {
     const originalModule = jest.requireActual('jest-mock-vscode');
@@ -51,8 +68,8 @@ describe('RovoDevPullRequestHandler', () => {
     let handler: RovoDevPullRequestHandler;
     let findPRLink: (output: string) => string | undefined;
 
-    beforeEach(() => {
-        handler = new RovoDevPullRequestHandler();
+    beforeEach(async () => {
+        handler = await RovoDevPullRequestHandler.create();
         findPRLink = (output) => handler['findPRLink'](output);
     });
 
@@ -199,9 +216,7 @@ To unknown-host.com:atlassian/atlascode.git
                 fetch: mockFetch,
             };
 
-            mockGitApi.mockReturnValue({
-                repositories: [mockRepo],
-            });
+            currentMockRepositories = [mockRepo];
 
             (mockExec as any).mockImplementation((command: string, options: any, callback: any) => {
                 if (typeof options === 'function') {

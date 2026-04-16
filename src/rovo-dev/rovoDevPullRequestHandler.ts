@@ -12,7 +12,7 @@ export class RovoDevPullRequestHandler {
     private readonly gitExtensionPromise: Thenable<GitExtension>;
     private gitApiCache: API | undefined;
 
-    constructor() {
+    private constructor() {
         const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
         if (!gitExtension) {
             const error = new Error('vscode.git extension not found');
@@ -21,6 +21,22 @@ export class RovoDevPullRequestHandler {
         }
 
         this.gitExtensionPromise = gitExtension.activate();
+    }
+
+    /**
+     * Creates a new RovoDevPullRequestHandler instance.
+     * @throws Error if git extension is not available or no repositories exist
+     */
+    public static async create(): Promise<RovoDevPullRequestHandler> {
+        const handler = new RovoDevPullRequestHandler();
+        const gitApi = await handler.getGitAPI();
+
+        if (gitApi.repositories.length === 0) {
+            const error = new Error('No Git repositories in workspace');
+            throw error;
+        }
+
+        return handler;
     }
 
     private async getGitAPI(): Promise<API> {
@@ -35,12 +51,7 @@ export class RovoDevPullRequestHandler {
     private async getGitRepository(): Promise<Repository> {
         const gitApi = await this.getGitAPI();
 
-        if (gitApi.repositories.length === 0) {
-            const error = new Error('No Git repositories found');
-            RovoDevTelemetryProvider.logError(error, 'No Git repositories in workspace');
-            throw error;
-        }
-
+        // Assumes validateGitRepositories() has been called
         // TODO: what do we want to do in case of multiple repositories?
         return gitApi.repositories[0];
     }
