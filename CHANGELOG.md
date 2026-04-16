@@ -2,6 +2,10 @@
 
 ## What's new in 4.0.28
 
+### Features
+
+- **RovoDev**: Added "Create live preview" button in chat sidebar — when the agent detects UI-related file changes, a button appears that switches VSCode to preview mode and sends a prompt to the agent to start a live preview server
+
 ### Improvements
 
 - **RovoDev**: Upgraded Rovo Dev to v0.13.63

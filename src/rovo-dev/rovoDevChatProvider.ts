@@ -779,6 +779,12 @@ export class RovoDevChatProvider {
                 }
                 break;
 
+            case 'ui_changes_detected':
+                await webview.postMessage({
+                    type: RovoDevProviderMessageType.ShowLivePreviewButton,
+                });
+                break;
+
             case 'close':
                 // response terminated
                 break;

@@ -202,6 +202,75 @@ describe('RovoDevChatProvider', () => {
         });
     });
 
+    describe('ui_changes_detected SSE event', () => {
+        beforeEach(async () => {
+            await chatProvider.setReady(mockApiClient);
+        });
+
+        it('should post ShowLivePreviewButton message when ui_changes_detected event is received', async () => {
+            const mockReadableStream = new ReadableStream({
+                start(controller) {
+                    controller.enqueue(
+                        new TextEncoder().encode('event: ui_changes_detected\ndata: {}\n\n'),
+                    );
+                    controller.enqueue(new TextEncoder().encode('event: close\ndata: \n\n'));
+                    controller.close();
+                },
+            });
+            mockApiClient.chat.mockResolvedValue({ body: mockReadableStream } as Response);
+
+            const mockPrompt = { text: 'make some UI changes', context: [] };
+            await chatProvider.executeChat(mockPrompt, []);
+
+            expect(mockWebview.postMessage).toHaveBeenCalledWith({
+                type: RovoDevProviderMessageType.ShowLivePreviewButton,
+            });
+        });
+
+        it('should post ShowLivePreviewButton before CompleteMessage', async () => {
+            const mockReadableStream = new ReadableStream({
+                start(controller) {
+                    controller.enqueue(
+                        new TextEncoder().encode('event: ui_changes_detected\ndata: {}\n\n'),
+                    );
+                    controller.enqueue(new TextEncoder().encode('event: close\ndata: \n\n'));
+                    controller.close();
+                },
+            });
+            mockApiClient.chat.mockResolvedValue({ body: mockReadableStream } as Response);
+
+            const mockPrompt = { text: 'make some UI changes', context: [] };
+            await chatProvider.executeChat(mockPrompt, []);
+
+            const calls = mockWebview.postMessage.mock.calls.map((c) => c[0].type);
+            const livePreviewIdx = calls.indexOf(RovoDevProviderMessageType.ShowLivePreviewButton);
+            const completeIdx = calls.indexOf(RovoDevProviderMessageType.CompleteMessage);
+
+            expect(livePreviewIdx).toBeGreaterThanOrEqual(0);
+            expect(completeIdx).toBeGreaterThanOrEqual(0);
+            expect(livePreviewIdx).toBeLessThan(completeIdx);
+        });
+
+        it('should not post ShowLivePreviewButton when event is absent', async () => {
+            const mockReadableStream = new ReadableStream({
+                start(controller) {
+                    controller.enqueue(
+                        new TextEncoder().encode('event: text\ndata: {"index": 0, "content": "Hello"}\n\n'),
+                    );
+                    controller.enqueue(new TextEncoder().encode('event: close\ndata: \n\n'));
+                    controller.close();
+                },
+            });
+            mockApiClient.chat.mockResolvedValue({ body: mockReadableStream } as Response);
+
+            const mockPrompt = { text: 'write some text', context: [] };
+            await chatProvider.executeChat(mockPrompt, []);
+
+            const calls = mockWebview.postMessage.mock.calls.map((c) => c[0].type);
+            expect(calls).not.toContain(RovoDevProviderMessageType.ShowLivePreviewButton);
+        });
+    });
+
     describe('executeRetryPromptAfterError', () => {
         it('should not execute if no current prompt exists', async () => {
             await chatProvider.setReady(mockApiClient);

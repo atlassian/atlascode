@@ -87,6 +87,7 @@ const RovoDevView: React.FC = () => {
     const [currentAgentModel, setCurrentAgentModel] = useState<RovoDevAgentModel | undefined>(undefined);
     const hasPendingDeferredActionRef = useRef(false);
     const [availableAgentModels, setAvailableAgentModels] = useState<RovoDevAgentModel[]>([]);
+    const [showLivePreviewButton, setShowLivePreviewButton] = useState(false);
 
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
@@ -170,6 +171,7 @@ const RovoDevView: React.FC = () => {
         setIsFeedbackFormVisible(false);
         setPendingToolCallMessage('');
         setPendingSubagentTasks([]);
+        setShowLivePreviewButton(false);
     }, [keepFiles, totalModifiedFiles]);
 
     const onError = useCallback(
@@ -513,6 +515,10 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.UpdateAgentModels:
                     setAvailableAgentModels(event.models);
+                    break;
+
+                case RovoDevProviderMessageType.ShowLivePreviewButton:
+                    setShowLivePreviewButton(true);
                     break;
 
                 default:
@@ -1014,6 +1020,12 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
+    const startLivePreview = useCallback(() => {
+        setShowLivePreviewButton(false);
+        setCurrentState({ state: 'GeneratingResponse' });
+        postMessage({ type: RovoDevViewResponseType.StartLivePreview });
+    }, [postMessage]);
+
     const handleShowSessionsCommand = React.useCallback(() => {
         postMessage({ type: RovoDevViewResponseType.ShowSessionHistory });
     }, [postMessage]);
@@ -1120,6 +1132,32 @@ const RovoDevView: React.FC = () => {
                         credentialHints={credentialHints}
                         onGeneratePlanClick={(e: string, proceed: boolean) => handleExitPlanMode(proceed, e)}
                     />
+                    {showLivePreviewButton && currentState.state === 'WaitingForPrompt' && (
+                        <div style={{ padding: '8px 16px' }}>
+                            <button
+                                className="rovo-dev-live-preview-button"
+                                onClick={startLivePreview}
+                                style={{
+                                    width: '100%',
+                                    padding: '8px 16px',
+                                    cursor: 'pointer',
+                                    backgroundColor: 'var(--vscode-button-background)',
+                                    color: 'var(--vscode-button-foreground)',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    fontSize: '13px',
+                                    fontWeight: 500,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '6px',
+                                }}
+                            >
+                                <span className="codicon codicon-eye"></span>
+                                Create live preview
+                            </button>
+                        </div>
+                    )}
                     {!hidePromptBox && (
                         <div className="input-section-container">
                             {isFeedbackFormVisible && (

@@ -215,6 +215,9 @@ export class ExtensionApi {
                 await commands.executeCommand(Commands.ShowJiraAuth);
             }
         },
+        showPreviewPanel: async (): Promise<void> => {
+            await commands.executeCommand('atlascode.rovodev.showPreviewPanel');
+        },
         showDiff: async (args: { left: Uri; right: Uri; title: string }) => {
             await commands.executeCommand('vscode.diff', args.left, args.right, args.title);
         },
