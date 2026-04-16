@@ -4,6 +4,7 @@ import { ToolPermissionChoice } from 'src/rovo-dev/client';
 
 import { CheckFileExistsFunc, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
+import { PullRequestChatItem } from '../create-pr/PullRequestForm';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
 import { parseToolReturnMessage, Response } from '../utils';
 import { ChatMessageItem } from './ChatMessageItem';
@@ -105,6 +106,8 @@ export const ChatItem = React.memo<ChatItemProps>(
                     onLinkClick={onLinkClick}
                 />
             );
+        } else if (block.event_kind === '_RovoDevPullRequest') {
+            return <PullRequestChatItem msg={block} onLinkClick={onLinkClick} />;
         } else if (block.event_kind === 'retry-prompt') {
             return (
                 <ChatMessageItem

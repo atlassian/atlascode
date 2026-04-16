@@ -1,17 +1,18 @@
 import * as React from 'react';
 import { RovodevStaticConfig } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
-import { RovoDevProviderMessage } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
+import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
 import { DetailedSiteInfo, MinimalIssue } from '../../api/extensionApiTypes';
-import { CheckFileExistsFunc, OpenFileFunc, OpenJiraFunc } from '../common/common';
+import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
+import { PullRequestForm } from '../create-pr/PullRequestForm';
 import { CredentialHint } from '../landing-page/disabled-messages/RovoDevLoginForm';
 import { RovoDevLanding } from '../landing-page/RovoDevLanding';
 import { useMessagingApi } from '../messagingApi';
-import { McpConsentChoice, RovoDevViewResponse } from '../rovoDevViewMessages';
+import { McpConsentChoice, RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import { SubagentInfo, ToolCallItem } from '../tools/ToolCallItem';
-import { DialogMessage, Response, scrollToEnd } from '../utils';
+import { ConnectionTimeout, DialogMessage, PullRequestMessage, Response, scrollToEnd } from '../utils';
 import { ChatStreamMessageRenderer } from './ChatStreamMessageRenderer';
 import { DropdownButton } from './dropdown-button/DropdownButton';
 
@@ -34,6 +35,7 @@ interface ChatStreamProps {
     pendingSubagentTasks?: SubagentInfo[];
     deepPlanCreated: string | null;
     currentState: State;
+    onChangesGitPushed: (msg: PullRequestMessage, pullRequestCreated: boolean) => void;
     onCollapsiblePanelExpanded: () => void;
     handleFeedbackTrigger: (isPositive: boolean) => void;
     onLoginClick: (openApiTokenLogin: boolean) => void;
@@ -58,6 +60,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     deepPlanCreated,
     currentState,
     messagingApi,
+    onChangesGitPushed,
     onCollapsiblePanelExpanded,
     handleFeedbackTrigger,
     onLoginClick,
@@ -75,6 +78,18 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
     const prevChatHistoryLengthRef = React.useRef(chatHistory.length);
+    const [canCreatePR, setCanCreatePR] = React.useState(false);
+    const [hasChangesInGit, setHasChangesInGit] = React.useState(false);
+    const [isFormVisible, setIsFormVisible] = React.useState(false);
+
+    const checkGitChanges = React.useCallback(async () => {
+        const response = await messagingApi.postMessagePromise(
+            { type: RovoDevViewResponseType.CheckGitChanges },
+            RovoDevProviderMessageType.CheckGitChangesComplete,
+            ConnectionTimeout,
+        );
+        setHasChangesInGit(response.hasChanges);
+    }, [messagingApi]);
     const [autoScrollEnabled, setAutoScrollEnabled] = React.useState(true);
 
     // Helper to perform auto-scroll when enabled
@@ -172,10 +187,25 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     React.useEffect(performAutoScroll, [
         chatHistory,
         modalDialogs,
+        isFormVisible,
         pendingToolCall,
         autoScrollEnabled,
         performAutoScroll,
     ]);
+
+    // Other state management effect
+    if (RovodevStaticConfig.isBBY) {
+        React.useEffect(() => {
+            if (currentState.state === 'WaitingForPrompt') {
+                const canCreatePR = chatHistory.length > 0;
+                setCanCreatePR(canCreatePR);
+                if (canCreatePR) {
+                    // Only check git changes if there's something in the chat
+                    checkGitChanges();
+                }
+            }
+        }, [currentState, chatHistory, isFormVisible, checkGitChanges]);
+    }
 
     const handleCopyResponse = React.useCallback((text: string) => {
         if (!navigator.clipboard) {
@@ -271,6 +301,36 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                 </div>
             )}
 
+            {!isChatHistoryDisabled && currentState.state === 'WaitingForPrompt' && (
+                <FollowUpActionFooter>
+                    {canCreatePR && !deepPlanCreated && hasChangesInGit && (
+                        <PullRequestForm
+                            onCancel={() => {
+                                setCanCreatePR(false);
+                                setIsFormVisible(false);
+                            }}
+                            messagingApi={messagingApi}
+                            onPullRequestCreated={(url, branchName) => {
+                                setCanCreatePR(false);
+                                setIsFormVisible(false);
+
+                                const pullRequestCreated = !!url;
+                                onChangesGitPushed(
+                                    {
+                                        event_kind: '_RovoDevPullRequest',
+                                        text: url
+                                            ? `Successfully pushed changes to the remote repository with branch "${branchName}". Click to create PR: ${url}`
+                                            : `Successfully pushed changes to the remote repository with branch "${branchName}".`,
+                                    },
+                                    pullRequestCreated,
+                                );
+                            }}
+                            isFormVisible={isFormVisible}
+                            setFormVisible={setIsFormVisible}
+                        />
+                    )}
+                </FollowUpActionFooter>
+            )}
             <div id="sentinel" ref={sentinelRef} style={{ height: '10px', width: '100%', pointerEvents: 'none' }} />
         </div>
     );

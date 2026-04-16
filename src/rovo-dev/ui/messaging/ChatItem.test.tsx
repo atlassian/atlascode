@@ -11,6 +11,10 @@ jest.mock('../common/DialogMessage', () => ({
     DialogMessageItem: ({ msg }: any) => <div data-testid="dialog-message">{msg.event_kind}</div>,
 }));
 
+jest.mock('../create-pr/PullRequestForm', () => ({
+    PullRequestChatItem: ({ msg }: any) => <div data-testid="pr-chat-item">{msg.event_kind}</div>,
+}));
+
 jest.mock('../tools/ToolReturnItem', () => ({
     ToolReturnParsedItem: ({ msg }: any) => <div data-testid="tool-return-parsed">{msg.content}</div>,
 }));
@@ -100,6 +104,15 @@ describe('ChatItem', () => {
 
         render(<ChatItem {...defaultProps} block={block} />);
         expect(screen.getByTestId('dialog-message')).toBeTruthy();
+    });
+
+    it('renders PullRequestChatItem for _RovoDevPullRequest event', () => {
+        const block: Response = {
+            event_kind: '_RovoDevPullRequest',
+        } as Response;
+
+        render(<ChatItem {...defaultProps} block={block} />);
+        expect(screen.getByTestId('pr-chat-item')).toBeTruthy();
     });
 
     it('returns null for unknown event kinds', () => {

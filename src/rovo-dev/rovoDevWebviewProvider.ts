@@ -43,6 +43,7 @@ import { RovoDevDwellTracker } from './rovoDevDwellTracker';
 import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
 import { RovoDevJiraItemsProvider } from './rovoDevJiraItemsProvider';
 import { RovoDevProcessManager, RovoDevProcessState } from './rovoDevProcessManager';
+import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevSessionManager } from './rovoDevSessionManager';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import { RovoDevContextItem } from './rovoDevTypes';
@@ -81,6 +82,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private readonly isBoysenberry = this.extensionApi.metadata.isBoysenberry();
     private readonly appInstanceId: string;
 
+    private readonly _prHandler: RovoDevPullRequestHandler | undefined;
     private readonly _telemetryProvider: RovoDevTelemetryProvider;
     private readonly _jiraItemsProvider: RovoDevJiraItemsProvider;
     private readonly _chatProvider: RovoDevChatProvider;
@@ -188,6 +190,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._registerEditorListeners();
 
         if (this.isBoysenberry) {
+            this._prHandler = new RovoDevPullRequestHandler();
             this.appInstanceId = process.env.ROVODEV_SANDBOX_ID as string;
         } else {
             this.appInstanceId = this.extensionApi.metadata.appInstanceId();
@@ -335,8 +338,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await this.refreshModifiedFiles();
                         break;
 
+                    case RovoDevViewResponseType.CreatePR:
+                        await this.createPR(e.payload.commitMessage, e.payload.branchName);
+                        break;
+
                     case RovoDevViewResponseType.RetryPromptAfterError:
                         await this._chatProvider.executeRetryPromptAfterError();
+                        break;
+
+                    case RovoDevViewResponseType.GetCurrentBranchName:
+                        await this.getCurrentBranchName();
                         break;
 
                     case RovoDevViewResponseType.ForceUserFocusUpdate:
@@ -372,6 +383,32 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         });
                         break;
 
+                    case RovoDevViewResponseType.ReportChangesGitPushed:
+                        this._telemetryProvider.fireTelemetryEvent({
+                            action: 'rovoDevGitPushAction',
+                            subject: 'atlascode',
+                            attributes: {
+                                promptId: this._chatProvider.currentPromptId,
+                                prCreated: e.pullRequestCreated,
+                            },
+                        });
+                        break;
+
+                    case RovoDevViewResponseType.CheckGitChanges:
+                        if (!this._prHandler) {
+                            await webview.postMessage({
+                                type: RovoDevProviderMessageType.CheckGitChangesComplete,
+                                hasChanges: false,
+                            });
+                            break;
+                        }
+                        const hasChanges = await this._prHandler.hasChangesOrUnpushedCommits();
+                        await webview.postMessage({
+                            type: RovoDevProviderMessageType.CheckGitChangesComplete,
+                            hasChanges: hasChanges,
+                        });
+                        break;
+
                     case RovoDevViewResponseType.ReportThinkingDrawerExpanded:
                         this._telemetryProvider.fireTelemetryEvent({
                             subject: 'atlascode',
@@ -381,6 +418,16 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             },
                         });
                         break;
+                    case RovoDevViewResponseType.ReportCreatePrButtonClicked:
+                        this._telemetryProvider.fireTelemetryEvent({
+                            subject: 'rovoDevCreatePrButton',
+                            action: 'clicked',
+                            attributes: {
+                                promptId: this._chatProvider.currentPromptId,
+                            },
+                        });
+                        break;
+
                     case RovoDevViewResponseType.WebviewReady:
                         this._webviewReady = true;
                         this.refreshDebugPanel(true);
@@ -1224,6 +1271,69 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
 
         await this.handleRovoDevLogout();
+    }
+
+    private async createPR(commitMessage?: string, branchName?: string): Promise<void> {
+        const prHandler = this._prHandler;
+
+        let prLink: string | undefined;
+        const webview = this._webView!;
+        try {
+            if (!branchName || branchName.trim() === '') {
+                throw new Error('Branch name is required to create a PR');
+            }
+
+            prLink = await prHandler!.createPR(branchName, commitMessage);
+
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.CreatePRComplete,
+                data: {
+                    url: prLink,
+                },
+            });
+        } catch (e) {
+            const gitErrorCode = e.gitErrorCode;
+
+            // Don't log user configuration/input errors - these are expected and user needs to fix them
+            const isUserConfigError =
+                gitErrorCode === GitErrorCodes.NoUserNameConfigured ||
+                gitErrorCode === GitErrorCodes.NoUserEmailConfigured ||
+                e.message?.includes('Commit message is required') ||
+                e.message?.includes('Branch name is required');
+
+            await this.processError(e, { skipLogError: isUserConfigError });
+
+            const errorMessage = e.message;
+
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.CreatePRComplete,
+                data: {
+                    error: e.message
+                        ? `${errorMessage}${gitErrorCode ? ` (Error code: ${gitErrorCode})` : ''}`
+                        : 'Unknown error occurred while creating PR',
+                },
+            });
+        }
+    }
+
+    private async getCurrentBranchName(): Promise<void> {
+        const webview = this._webView;
+        const prHandler = this._prHandler;
+
+        try {
+            if (!webview) {
+                throw new Error('Webview not initialized');
+            }
+            const branchName = await prHandler!.getCurrentBranchName();
+            await webview.postMessage({
+                type: RovoDevProviderMessageType.GetCurrentBranchNameComplete,
+                data: {
+                    branchName,
+                },
+            });
+        } catch (e) {
+            await this.processError(e);
+        }
     }
 
     private async executeApiWithErrorHandling<T>(
