@@ -246,5 +246,79 @@ describe('RovoDevFeedbackManager', () => {
                 }),
             );
         });
+
+        it('should include entitlementType in context when provided', async () => {
+            const feedback = {
+                feedbackType: 'general' as const,
+                feedbackMessage: 'Test feedback',
+                canContact: false,
+                entitlementType: 'ROVO_DEV_STANDARD',
+            };
+
+            await RovoDevFeedbackManager.submitFeedback(feedback);
+
+            expect(mockTransport).toHaveBeenCalledWith(
+                expect.any(String),
+                expect.objectContaining({
+                    data: expect.objectContaining({
+                        fields: expect.arrayContaining([
+                            expect.objectContaining({
+                                id: 'customfield_10047',
+                                value: expect.stringContaining('"entitlementType": "ROVO_DEV_STANDARD"'),
+                            }),
+                        ]),
+                    }),
+                }),
+            );
+        });
+
+        it('should not include entitlementType in context when not provided', async () => {
+            const feedback = {
+                feedbackType: 'general' as const,
+                feedbackMessage: 'Test feedback',
+                canContact: false,
+            };
+
+            await RovoDevFeedbackManager.submitFeedback(feedback);
+
+            expect(mockTransport).toHaveBeenCalledWith(
+                expect.any(String),
+                expect.objectContaining({
+                    data: expect.objectContaining({
+                        fields: expect.arrayContaining([
+                            expect.objectContaining({
+                                id: 'customfield_10047',
+                                value: expect.not.stringContaining('entitlementType'),
+                            }),
+                        ]),
+                    }),
+                }),
+            );
+        });
+
+        it('should include not_entitled entitlementType in context when user is not entitled', async () => {
+            const feedback = {
+                feedbackType: 'bug' as const,
+                feedbackMessage: 'Test bug',
+                canContact: false,
+                entitlementType: 'not_entitled:CREDENTIAL_ERROR',
+            };
+
+            await RovoDevFeedbackManager.submitFeedback(feedback);
+
+            expect(mockTransport).toHaveBeenCalledWith(
+                expect.any(String),
+                expect.objectContaining({
+                    data: expect.objectContaining({
+                        fields: expect.arrayContaining([
+                            expect.objectContaining({
+                                id: 'customfield_10047',
+                                value: expect.stringContaining('"entitlementType": "not_entitled:CREDENTIAL_ERROR"'),
+                            }),
+                        ]),
+                    }),
+                }),
+            );
+        });
     });
 });

@@ -4,6 +4,7 @@
 
 ### Improvements
 
+- **RovoDev**: Include user's RDS/RDE entitlement type (paid/unpaid seat) as an attribute in the feedback collector context, helping identify which product tier users are on when they submit feedback
 - **RovoDev**: Upgraded Rovo Dev to v0.13.63
 - **RovoDev**: Generalized MCP tool parsing in chat UI to support any MCP toolset via regex matching (`mcp__<name>__invoke_tool` / `mcp__<name>__get_tool_schema`) instead of hardcoded tool names
 

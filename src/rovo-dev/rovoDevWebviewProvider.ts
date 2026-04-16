@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import path from 'path';
 import { setCommandContext } from 'src/commandContext';
+import { Container } from 'src/container';
 import { Logger } from 'src/logger';
 import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import { getFsPromise } from 'src/rovo-dev/util/fsPromises';
@@ -472,7 +473,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await this.executeTriggerFeedback();
                         break;
 
-                    case RovoDevViewResponseType.SendFeedback:
+                    case RovoDevViewResponseType.SendFeedback: {
+                        const entitlementResult = await Container.rovoDevEntitlementChecker.checkEntitlement();
                         await RovoDevFeedbackManager.submitFeedback(
                             {
                                 feedbackType: e.feedbackType,
@@ -480,11 +482,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                                 canContact: e.canContact,
                                 lastTenMessages: e.lastTenMessages,
                                 rovoDevSessionId: process.env.SANDBOX_SESSION_ID,
+                                entitlementType: entitlementResult.isEntitled
+                                    ? entitlementResult.type
+                                    : `not_entitled:${entitlementResult.type}`,
                             },
                             this._userInfo,
                             !!this.isBoysenberry,
                         );
                         break;
+                    }
 
                     case RovoDevViewResponseType.LaunchJiraAuth:
                         await this.extensionApi.commands.showUserAuthentication({
