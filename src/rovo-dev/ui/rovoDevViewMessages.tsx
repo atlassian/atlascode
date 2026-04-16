@@ -15,18 +15,13 @@ export const enum RovoDevViewResponseType {
     OpenFolder = 'openFolder',
     UndoFileChanges = 'undoFileChanges',
     KeepFileChanges = 'keepFileChanges',
-    CreatePR = 'createPR',
     RetryPromptAfterError = 'retryPromptAfterError',
-    GetCurrentBranchName = 'getCurrentBranchName',
     AddContext = 'addContext',
     RemoveContext = 'removeContext',
     ToggleContextFocus = 'toggleContextFocus',
     ForceUserFocusUpdate = 'forceUserFocusUpdate',
     ReportChangedFilesPanelShown = 'reportChangedFilesPanelShown',
-    ReportChangesGitPushed = 'reportChangesGitPushed',
     ReportThinkingDrawerExpanded = 'reportThinkingDrawerExpanded',
-    ReportCreatePrButtonClicked = 'reportCreatePrButtonClicked',
-    CheckGitChanges = 'checkGitChanges',
     WebviewReady = 'webviewReady',
     OpenMcpConfiguration = 'openMcpConfiguration',
     GetAgentMemory = 'getAgentMemory',
@@ -73,18 +68,13 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.OpenFolder>
     | ReducerAction<RovoDevViewResponseType.UndoFileChanges, { files: ModifiedFile[] }>
     | ReducerAction<RovoDevViewResponseType.KeepFileChanges, { files: ModifiedFile[] }>
-    | ReducerAction<RovoDevViewResponseType.CreatePR, { payload: { branchName: string; commitMessage?: string } }>
     | ReducerAction<RovoDevViewResponseType.RetryPromptAfterError>
-    | ReducerAction<RovoDevViewResponseType.GetCurrentBranchName>
     | ReducerAction<RovoDevViewResponseType.AddContext, { dragDropData?: string[]; contextItem?: RovoDevContextItem }>
     | ReducerAction<RovoDevViewResponseType.RemoveContext, { item: RovoDevContextItem }>
     | ReducerAction<RovoDevViewResponseType.ToggleContextFocus, { enabled: boolean }>
     | ReducerAction<RovoDevViewResponseType.ForceUserFocusUpdate>
     | ReducerAction<RovoDevViewResponseType.ReportChangedFilesPanelShown, { filesCount: number }>
-    | ReducerAction<RovoDevViewResponseType.ReportChangesGitPushed, { pullRequestCreated: boolean }>
     | ReducerAction<RovoDevViewResponseType.ReportThinkingDrawerExpanded>
-    | ReducerAction<RovoDevViewResponseType.ReportCreatePrButtonClicked>
-    | ReducerAction<RovoDevViewResponseType.CheckGitChanges>
     | ReducerAction<RovoDevViewResponseType.WebviewReady>
     | ReducerAction<RovoDevViewResponseType.OpenMcpConfiguration>
     | ReducerAction<RovoDevViewResponseType.GetAgentMemory>

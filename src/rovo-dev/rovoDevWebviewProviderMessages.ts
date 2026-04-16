@@ -28,10 +28,7 @@ export const enum RovoDevProviderMessageType {
     SetMcpAcceptanceRequired = 'setMcpAcceptanceRequired',
     RovoDevReady = 'rovoDevReady',
     CancelFailed = 'cancelFailed',
-    CreatePRComplete = 'createPRComplete',
-    GetCurrentBranchNameComplete = 'getCurrentBranchNameComplete',
     SetChatContext = 'setChatContext',
-    CheckGitChangesComplete = 'checkGitChangesComplete',
     ForceStop = 'forceStop',
     ShowFeedbackForm = 'showFeedbackForm',
     SetDebugPanel = 'setDebugPanel',
@@ -110,10 +107,7 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.SetMcpAcceptanceRequired, { isPromptPending: boolean; mcpIds: string[] }>
     | ReducerAction<RovoDevProviderMessageType.RovoDevReady, { isPromptPending: boolean }>
     | ReducerAction<RovoDevProviderMessageType.CancelFailed>
-    | ReducerAction<RovoDevProviderMessageType.CreatePRComplete, { data: { url?: string; error?: string } }>
-    | ReducerAction<RovoDevProviderMessageType.GetCurrentBranchNameComplete, { data: { branchName?: string } }>
     | ReducerAction<RovoDevProviderMessageType.SetChatContext, { context: RovoDevContextItem[] }>
-    | ReducerAction<RovoDevProviderMessageType.CheckGitChangesComplete, { hasChanges: boolean }>
     | ReducerAction<RovoDevProviderMessageType.ForceStop>
     | ReducerAction<RovoDevProviderMessageType.ShowFeedbackForm>
     | ReducerAction<

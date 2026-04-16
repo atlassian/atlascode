@@ -104,14 +104,6 @@ jest.mock('./rovoDevJiraItemsProvider', () => ({
     })),
 }));
 
-jest.mock('./rovoDevPullRequestHandler', () => ({
-    RovoDevPullRequestHandler: jest.fn().mockImplementation(() => ({
-        hasChangesOrUnpushedCommits: jest.fn(),
-        createPR: jest.fn(),
-        getCurrentBranchName: jest.fn(),
-    })),
-}));
-
 jest.mock('./rovoDevDwellTracker', () => ({
     RovoDevDwellTracker: jest.fn().mockImplementation(() => ({
         startDwellTimer: jest.fn(),
