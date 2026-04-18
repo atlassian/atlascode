@@ -36,8 +36,9 @@ import { TypedWebview } from './rovoDevWebviewProvider';
 import {
     RovoDevProviderMessage,
     RovoDevProviderMessageType,
-    RovoDevResponseMessageType,
+    RovoDevWebviewState,
 } from './rovoDevWebviewProviderMessages';
+import { appendResponse, Response as ChatResponse, UserPromptMessage } from './ui/utils';
 
 type StreamingApi = 'chat' | 'replay';
 
@@ -473,36 +474,63 @@ export class RovoDevChatProvider {
     private async processRovoDevReplayResponse(responses: RovoDevResponse[]): Promise<void> {
         const webview = this._webView!;
 
-        let group: RovoDevResponseMessageType[] = [];
+        // Build the complete chat history from replay responses and send it
+        // all at once via RestoreState. This avoids streaming/re-rendering each
+        // message individually, which caused the slow replay UX where users
+        // could not type until the replay finished.
+        let history: ChatResponse[] = [];
 
-        const flush = async () => {
-            if (group.length > 0) {
-                await webview.postMessage({
-                    type: RovoDevProviderMessageType.RovoDevResponseMessage,
-                    message: group,
-                });
-                group = [];
-            }
-        };
-
-        // group all contiguous messages of type 'text', 'tool-call', 'tool-return',
-        // and send them in batch. send all other type of messages normally.
         for (const response of responses) {
             switch (response.event_kind) {
                 case 'text':
-                case 'tool-call':
                 case 'tool-return':
-                    group.push(response);
+                    history = appendResponse(history, response, true);
+                    break;
+
+                case 'tool-call':
+                    // tool calls are used only to set the pending tool call message in the UI,
+                    // they are not appended to chat history (consistent with live chat behavior)
+                    break;
+
+                case 'user-prompt': {
+                    const { text, context } = this.parseUserPromptReplay(response.content || '');
+                    this._currentPrompt = { text, context };
+                    const userMessage: UserPromptMessage = {
+                        event_kind: '_RovoDevUserPrompt',
+                        content: text,
+                        context,
+                    };
+                    history = appendResponse(history, userMessage, true);
+                    break;
+                }
+
+                case 'retry-prompt':
+                    if (this.isRetryPromptEnabled) {
+                        history = appendResponse(history, response, true);
+                    }
+                    break;
+
+                case 'replay_end':
+                case '_ignored':
+                case 'close':
+                    // Skip these events during replay history building
                     break;
 
                 default:
-                    await flush();
-                    await this.processRovoDevResponse('replay', response);
+                    // For other event types (exceptions, warnings, etc.), skip during replay
                     break;
             }
         }
 
-        await flush();
+        // Send the entire replay history in a single message so the UI
+        // renders it instantly without streaming, and the user can immediately
+        // start typing a new prompt.
+        await webview.postMessage({
+            type: RovoDevProviderMessageType.RestoreState,
+            state: {
+                history,
+            } as RovoDevWebviewState,
+        });
     }
 
     private async processDeferredToolCallResponse(deferredTool: RovoDevToolCallResponse): Promise<void> {
