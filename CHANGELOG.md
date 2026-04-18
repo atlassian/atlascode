@@ -4,6 +4,8 @@
 
 ### Improvements
 
+- **RovoDev**: Improved chat replay performance when restoring a previous session. The entire conversation history is now loaded instantly in a single render instead of streaming messages one-by-one, allowing users to immediately type a new message without waiting for the replay to finish.
+
 - **RovoDev**: Upgraded Rovo Dev to v0.13.63
 - **RovoDev**: Generalized MCP tool parsing in chat UI to support any MCP toolset via regex matching (`mcp__<name>__invoke_tool` / `mcp__<name>__get_tool_schema`) instead of hardcoded tool names
 
