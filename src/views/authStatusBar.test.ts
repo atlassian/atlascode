@@ -321,6 +321,18 @@ describe('AuthStatusBar', () => {
 
             expect(mockStatusBarItem.hide).toHaveBeenCalled();
         });
+
+        it('should hide unauthenticated status bar in Boysenberry mode', async () => {
+            Container.config.jira.enabled = true;
+            Container.config.jira.statusbar.enabled = true;
+            jest.spyOn(Container, 'isBoysenberryMode', 'get').mockReturnValue(true);
+            const spy = jest.spyOn(authStatusBar as any, 'updateStatusBarItem').mockResolvedValue(undefined);
+
+            await (authStatusBar as any).updateAuthenticationStatusBar(ProductJira, undefined);
+
+            expect(spy).not.toHaveBeenCalled();
+            expect(mockStatusBarItem.hide).toHaveBeenCalled();
+        });
     });
 
     describe('updateStatusBarItem', () => {
