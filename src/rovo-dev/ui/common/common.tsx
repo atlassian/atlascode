@@ -186,22 +186,6 @@ export interface OpenJiraFunc {
 
 export type CheckFileExistsFunc = (filePath: string) => boolean | null;
 
-export const FollowUpActionFooter: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
-    return (
-        <div
-            style={{
-                display: 'flex',
-                flexDirection: 'row',
-                justifyContent: 'flex-start',
-                marginTop: '8px',
-                marginBottom: '8px',
-            }}
-        >
-            {children}
-        </div>
-    );
-};
-
 export const renderChatHistory = (
     msg: ChatMessage,
     openFile: OpenFileFunc,
