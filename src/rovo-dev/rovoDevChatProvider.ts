@@ -3,6 +3,8 @@ import { RovoDevViewResponse } from 'src/rovo-dev/ui/rovoDevViewMessages';
 import { v4 } from 'uuid';
 import { commands, Event, EventEmitter } from 'vscode';
 
+import { Container } from '../container';
+import { Features } from '../util/features';
 import { ExtensionApi } from './api/extensionApi';
 import {
     AgentMode,
@@ -797,6 +799,10 @@ export class RovoDevChatProvider {
                 break;
 
             case 'ui_changes_detected':
+                if (!Container.isBoysenberryMode || !Container.featureFlagClient.checkGate(Features.BbyLivePreview)) {
+                    return;
+                }
+
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.ShowLivePreviewButton,
                 });

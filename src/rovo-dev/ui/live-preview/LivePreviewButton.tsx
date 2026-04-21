@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { RovoDevProviderMessage } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
+import { RovoDevProviderMessage } from '../../rovoDevWebviewProviderMessages';
 import { useMessagingApi } from '../messagingApi';
 import { RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 
