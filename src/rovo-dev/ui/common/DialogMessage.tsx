@@ -308,6 +308,7 @@ const friendlyToolName: Record<RovoDevToolName, string> = {
     update_todo: 'Update todo list',
     ask_user_questions: 'Ask user questions',
     exit_plan_mode: 'Exit plan mode',
+    configure_live_preview: 'Configure live preview',
 };
 
 const ToolCall: React.FC<{
