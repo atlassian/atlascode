@@ -33,7 +33,7 @@ export class RovoDevLocalServer implements Disposable {
                 return;
             }
 
-            Logger.debug(`RovoDevLocalServer: received prompt via /axon/chat`);
+            Logger.debug(`RovoDevLocalServer: received prompt via /rovodev/chat`);
 
             // Check if the agent is already running before attempting to send the prompt.
             // This prevents a second request from corrupting the chat UI with a 409 error.
