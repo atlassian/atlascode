@@ -25,6 +25,7 @@ import {
     workspace,
 } from 'vscode';
 
+import { Commands } from '../constants';
 import { GitErrorCodes } from '../typings/git';
 import { RovodevCommandContext, RovodevCommands } from './api/componentApi';
 import { DetailedSiteInfo, ExtensionApi, MinimalIssue } from './api/extensionApi';
@@ -1240,7 +1241,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private async executeCreateLivePreview(): Promise<void> {
         try {
             // Immediately switch VSCode to preview mode with loading spinner
-            await commands.executeCommand(RovodevCommands.ShowPreviewPanel);
+            await commands.executeCommand(Commands.BoysenberryShowPreviewPanel);
             // Call the agent API directly to start a live preview
             await this.executeApiWithErrorHandling(async (client) => {
                 await client.createLivePreview();
