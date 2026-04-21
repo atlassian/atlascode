@@ -799,6 +799,7 @@ export class RovoDevChatProvider {
                 break;
 
             case 'ui_changes_detected':
+                // Only show live preview button in Boysenberry
                 if (!Container.isBoysenberryMode || !Container.featureFlagClient.checkGate(Features.BbyLivePreview)) {
                     return;
                 }
