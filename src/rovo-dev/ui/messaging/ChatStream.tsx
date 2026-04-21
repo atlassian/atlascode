@@ -3,6 +3,8 @@ import { RovodevStaticConfig } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
+import { Container } from '../../../container';
+import { Features } from '../../../util/features';
 import { DetailedSiteInfo, MinimalIssue } from '../../api/extensionApiTypes';
 import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
@@ -198,6 +200,13 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         currentState.state !== 'WaitingForPrompt' &&
         (currentState.state !== 'Initializing' || currentState.isPromptPending);
 
+    const shouldShowLivePreviewButton =
+        showLivePreviewButton &&
+        Container.isBoysenberryMode &&
+        Container.featureFlagClient.checkGate(Features.BbyLivePreview);
+    const showActionFooter =
+        !isChatHistoryDisabled && currentState.state === 'WaitingForPrompt' && shouldShowLivePreviewButton;
+
     return (
         <div ref={chatEndRef} className="chat-message-container">
             {(!RovodevStaticConfig.isBBY ||
@@ -274,9 +283,9 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                 </div>
             )}
 
-            {!isChatHistoryDisabled && currentState.state === 'WaitingForPrompt' && (
+            {showActionFooter && (
                 <FollowUpActionFooter>
-                    {showLivePreviewButton && <LivePreviewButton messagingApi={messagingApi} />}
+                    <LivePreviewButton messagingApi={messagingApi} />
                 </FollowUpActionFooter>
             )}
             <div id="sentinel" ref={sentinelRef} style={{ height: '10px', width: '100%', pointerEvents: 'none' }} />
