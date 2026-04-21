@@ -124,6 +124,10 @@ export class RovoDevChatProvider {
 
     private _abortController: AbortController | null = null;
 
+    public get isAgentRunning(): boolean {
+        return this._abortController !== null;
+    }
+
     constructor(
         private readonly _isBoysenberry: boolean,
         private _telemetryProvider: RovoDevTelemetryProvider,

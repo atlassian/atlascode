@@ -42,6 +42,7 @@ import { RovoDevChatProvider } from './rovoDevChatProvider';
 import { RovoDevDwellTracker } from './rovoDevDwellTracker';
 import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
 import { RovoDevJiraItemsProvider } from './rovoDevJiraItemsProvider';
+import { RovoDevLocalServer } from './rovoDevLocalServer';
 import { RovoDevProcessManager, RovoDevProcessState } from './rovoDevProcessManager';
 import { RovoDevSessionManager } from './rovoDevSessionManager';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
@@ -116,6 +117,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _disposables: Disposable[] = [];
 
     private _dwellTracker?: RovoDevDwellTracker;
+    private _localServer?: RovoDevLocalServer;
 
     private _extensionPath: string;
     private _extensionUri: Uri;
@@ -189,6 +191,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         if (this.isBoysenberry) {
             this.appInstanceId = process.env.ROVODEV_SANDBOX_ID as string;
+
+            // Start the local HTTP server so external services can
+            // send prompts to the Rovo Dev chat UI via POST /rovodev/chat.
+            this._localServer = new RovoDevLocalServer(
+                (prompt) => this.invokeRovoDevAskCommand(prompt),
+                () => this._chatProvider.isAgentRunning,
+            );
+            this._localServer.start();
         } else {
             this.appInstanceId = this.extensionApi.metadata.appInstanceId();
         }
@@ -1307,6 +1317,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private _dispose() {
         this._stopModifiedFilesPoll();
+        this._localServer?.dispose();
+        this._localServer = undefined;
         this._disposables.forEach((d) => d.dispose());
         this._disposables = [];
         if (this._webView) {
