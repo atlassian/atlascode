@@ -176,6 +176,7 @@ export type RovoDevResponse =
     | RovoDevModelsResponse
     | RovoDevCloseResponse
     | RovoDevReplayEndResponse
+    | RovoDevUiChangedDetectedResponse
     | RovoDevIgnoredResponse;
 
 export type RovoDevToolName =
@@ -198,7 +199,11 @@ export type RovoDevToolName =
 
 export type RovoDevToolPemissionScenario = 'ASK' | 'ALLOWED' | 'DENIED';
 
-export type RovoDevDeferredToolCallName = 'ask_user_questions' | 'exit_plan_mode' | 'ui_changes_detected';
+export type RovoDevDeferredToolCallName = 'ask_user_questions' | 'exit_plan_mode';
+
+export interface RovoDevUiChangedDetectedResponse {
+    event_kind: 'ui_changes_detected';
+}
 
 export interface RovoDevAskUserQuestionsToolArgs {
     questions: {

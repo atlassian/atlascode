@@ -1290,7 +1290,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             await commands.executeCommand(RovodevCommands.ShowPreviewPanel);
             // Send a prompt to the agent to start a live preview
             const prompt: RovoDevPrompt = {
-                text: 'Start a live preview for this project.',
+                text: 'Start a live preview for this project using configure_live_preview.',
                 context: [],
             };
             await this._chatProvider.executeChat(prompt, []);
