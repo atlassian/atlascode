@@ -20,7 +20,12 @@ export const LivePreviewButton: React.FC<LivePreviewButtonProps> = ({ messagingA
     };
 
     return (
-        <button className="pull-request-button" onClick={handleClick} title="Create live preview" disabled={isLoading}>
+        <button
+            className="chat-action-button secondary"
+            onClick={handleClick}
+            title="Create live preview"
+            disabled={isLoading}
+        >
             {isLoading ? (
                 <i className="codicon codicon-loading codicon-modifier-spin" />
             ) : (

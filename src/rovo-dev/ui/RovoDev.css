@@ -479,7 +479,7 @@ body {
 }
 
 /* Pull Request button styles */
-.pull-request-button {
+.chat-action-button {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -490,7 +490,7 @@ body {
     border: 0;
     border-radius: 6px;
 }
-.pull-request-button:hover {
+.chat-action-button:hover {
     background-color: var(--vscode-button-hoverBackground);
     cursor: pointer;
 }

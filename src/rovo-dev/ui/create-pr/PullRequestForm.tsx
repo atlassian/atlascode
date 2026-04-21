@@ -12,7 +12,7 @@ const PullRequestButton: React.FC<{
     isLoading?: boolean;
 }> = ({ onClick, isLoading }) => {
     return (
-        <button className="pull-request-button" onClick={onClick} title="Create pull request">
+        <button className="chat-action-button" onClick={onClick} title="Create pull request">
             {isLoading ? (
                 <i className="codicon codicon-loading codicon-modifier-spin" />
             ) : (
