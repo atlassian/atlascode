@@ -527,7 +527,7 @@ export class RovoDevChatProvider {
                         args: exitPlanModeArgs,
                     });
                     break;
-                case 'ui_changes_complete':
+                case 'ui_changes_detected':
                     await webview.postMessage({
                         type: RovoDevProviderMessageType.ShowLivePreviewButton,
                     });
