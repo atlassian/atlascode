@@ -46,7 +46,7 @@ import { RovoDevProcessManager, RovoDevProcessState } from './rovoDevProcessMana
 import { RovoDevPullRequestHandler } from './rovoDevPullRequestHandler';
 import { RovoDevSessionManager } from './rovoDevSessionManager';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
-import { RovoDevContextItem, RovoDevPrompt } from './rovoDevTypes';
+import { RovoDevContextItem } from './rovoDevTypes';
 import { readLastNLogLines, removeCustomCliTags } from './rovoDevUtils';
 import {
     RovoDevAgentModel,
@@ -1288,12 +1288,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         try {
             // Immediately switch VSCode to preview mode with loading spinner
             await commands.executeCommand(RovodevCommands.ShowPreviewPanel);
-            // Send a prompt to the agent to start a live preview
-            const prompt: RovoDevPrompt = {
-                text: 'Start a live preview for this project using configure_live_preview.',
-                context: [],
-            };
-            await this._chatProvider.executeChat(prompt, []);
+            // Call the agent API directly to start a live preview
+            await this.executeApiWithErrorHandling(async (client) => {
+                await client.createLivePreview();
+            }, false);
         } catch (e) {
             await this.processError(e);
         }
