@@ -10,7 +10,7 @@ export enum Features {
     RovoDevLspEnabled = 'atlascode-enable-rovodev-lsp',
     SentryLogging = 'atlascode-sentry-logging',
     RequireDedicatedRovoDevAuth = 'atlascode-require-dedicated-rovodev-auth',
-    BbyLivePreview = 'rovodev_live_preview_v1',
+    BbyLivePreview = 'rovodev_live_preview_chat_integration',
 }
 
 /**
