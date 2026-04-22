@@ -84,7 +84,10 @@ export function parseToolCallMessage(msgToolName: RovoDevToolName): string {
             return 'Exiting plan mode';
         case 'update_todo':
             return 'Updating todo';
+        case 'configure_live_preview':
+            return 'Configuring live preview';
         default:
+            // @ts-expect-error ts(2339) - msgToolName here should be 'never'
             return msgToolName.toString();
     }
 }
