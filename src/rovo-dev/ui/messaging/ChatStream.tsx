@@ -6,7 +6,6 @@ import { RovoDevProviderMessage } from 'src/rovo-dev/rovoDevWebviewProviderMessa
 import { DetailedSiteInfo, MinimalIssue } from '../../api/extensionApiTypes';
 import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
-import { LivePreviewButton } from '../live-preview/LivePreviewButton';
 import { CredentialHint } from '../landing-page/disabled-messages/RovoDevLoginForm';
 import { RovoDevLanding } from '../landing-page/RovoDevLanding';
 import { LivePreviewButton } from '../live-preview/LivePreviewButton';
