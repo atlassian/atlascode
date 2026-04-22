@@ -27,6 +27,7 @@ export type TelemetryEvent =
     | PartialEvent<Track.GitPushAction>
     | PartialEvent<Track.DetailsExpanded>
     | PartialEvent<Track.CreatePrButtonClicked>
+    | PartialEvent<Track.CreateLivePreviewButtonClicked>
     | PartialEvent<Track.AiResultViewed>
     | PartialEvent<Track.RestartProcessAction>
     | PartialEvent<Track.RestoreSessionClicked>

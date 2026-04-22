@@ -48,6 +48,7 @@ export const enum RovoDevViewResponseType {
     AskUserQuestionsSubmit = 'askUserQuestionsSubmit',
     ExitPlanModeSubmit = 'exitPlanModeSubmit',
     RefreshModifiedFiles = 'refreshModifiedFiles',
+    CreateLivePreview = 'createLivePreview',
 }
 
 export type FileOperationType = 'modify' | 'create' | 'delete';
@@ -112,6 +113,7 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.RestartProcess>
     | ReducerAction<RovoDevViewResponseType.ShowSessionHistory>
     | ReducerAction<RovoDevViewResponseType.FetchSavedPrompts>
+    | ReducerAction<RovoDevViewResponseType.CreateLivePreview>
     | ReducerAction<RovoDevViewResponseType.AskUserQuestionsSubmit, AskUserQuestionsResultMessage>
     | ReducerAction<RovoDevViewResponseType.ExitPlanModeSubmit, ExitPlanModeResultMessage>
     | ReducerAction<RovoDevViewResponseType.RefreshModifiedFiles>;

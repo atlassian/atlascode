@@ -49,6 +49,7 @@ export const enum RovoDevProviderMessageType {
     UpdateAgentModels = 'updateAgentModels',
     AgentModelChanged = 'agentModelChanged',
     SetModifiedFiles = 'setModifiedFiles',
+    ShowLivePreviewButton = 'showLivePreviewButton',
 }
 
 export type RovoDevDisabledReason = DisabledState['subState'];
@@ -148,4 +149,5 @@ export type RovoDevProviderMessage =
       >
     | ReducerAction<RovoDevProviderMessageType.UpdateAgentModels, { models: RovoDevAgentModel[] }>
     | ReducerAction<RovoDevProviderMessageType.AgentModelChanged, RovoDevAgentModel>
-    | ReducerAction<RovoDevProviderMessageType.SetModifiedFiles, { files: ModifiedFile[] }>;
+    | ReducerAction<RovoDevProviderMessageType.SetModifiedFiles, { files: ModifiedFile[] }>
+    | ReducerAction<RovoDevProviderMessageType.ShowLivePreviewButton>;
