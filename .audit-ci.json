@@ -1,9 +1,8 @@
 {
   "$schema": "https://github.com/IBM/audit-ci/raw/main/docs/schema.json",
   "package-manager": "npm",
-  "moderate": true,
-  "skip-dev": true,
   "allowlist": ["GHSA-w5hq-g745-h8pq"],
+  "low": true,
   "show-not-found": true,
   "output-format": "text",
   "report-type": "summary"

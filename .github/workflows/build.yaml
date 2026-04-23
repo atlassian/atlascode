@@ -42,9 +42,13 @@ jobs:
         # but we should be diligent and fix them when they are discovered
         # We also skip the audit for dev dependencies, since they don't
         # end up on the distributed package.
-        # Configuration (severity threshold, allowlisted advisories, etc.)
-        # is defined in .audit-ci.json.
-        run: npx audit-ci --config .audit-ci.json
+        # Allowlisted advisories are listed inline below (NOT loaded from a
+        # config file) so that bypassing the audit requires modifying this
+        # CODEOWNERS-protected workflow file.
+        # Allowlisted advisories:
+        #   - GHSA-w5hq-g745-h8pq: uuid <14.0.0 - missing buffer bounds check
+        #     (transitive dep via @atlaskit/editor-*; fix requires breaking upgrade)
+        run: npx audit-ci --moderate --skip-dev --allowlist GHSA-w5hq-g745-h8pq
 
       - name: Compress node_modules
         run: tar -czf node_modules.tar.gz node_modules
