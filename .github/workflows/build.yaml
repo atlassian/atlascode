@@ -1,229 +1,226 @@
 name: Build
 permissions:
-    contents: read
-    packages: read
-    actions: write
+  contents: read
+  packages: read
+  actions: write
 
 on:
-    pull_request:
-        types: [opened, synchronize, reopened, ready_for_review]
-        branches:
-            - main
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - main
 
 concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-    setup-dependencies:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
+  setup-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+        
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
 
-            - uses: actions/setup-node@v4
-              with:
-                  node-version: 20
+      - name: Install dependencies
+        run: npm ci --no-audit
 
-            - name: Cache npm dependencies
-              uses: actions/cache@v4
-              with:
-                  path: |
-                      ~/.npm
-                      node_modules
-                  key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-                  restore-keys: |
-                      npm-${{ runner.os }}-
+      - name: Run vulnerability audit
+        # We allow low severity vulnerabilities to not block the build, 
+        # but we should be diligent and fix them when they are discovered
+        # We also skip the audit for dev dependencies, since they don't
+        # end up on the distributed package.
+        # Allowlisted advisories are listed inline below to avoid bypass.
+        #   - GHSA-w5hq-g745-h8pq: uuid <14.0.0 - missing buffer bounds check
+        #     (transitive dep via @atlaskit/editor-*; fix requires breaking upgrade)
+        run: npm audit --audit-level=moderate --omit=dev  --allowlist GHSA-w5hq-g745-h8pq
 
-            - name: Install dependencies
-              run: npm ci --no-audit
+      - name: Compress node_modules
+        run: tar -czf node_modules.tar.gz node_modules
 
-            - name: Run vulnerability audit
-              # We allow low severity vulnerabilities to not block the build,
-              # but we should be diligent and fix them when they are discovered
-              # We also skip the audit for dev dependencies, since they don't
-              # end up on the distributed package.
-              # Allowlisted advisories are listed inline below (NOT loaded from a
-              # config file) so that bypassing the audit requires modifying this
-              # CODEOWNERS-protected workflow file.
-              # Allowlisted advisories:
-              #   - GHSA-w5hq-g745-h8pq: uuid <14.0.0 - missing buffer bounds check
-              #     (transitive dep via @atlaskit/editor-*; fix requires breaking upgrade)
-              run: npm audit --audit-level=moderate --omit=dev  --allowlist GHSA-w5hq-g745-h8pq
+      - name: Upload node_modules for reuse
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-modules
+          path: node_modules.tar.gz
+          retention-days: 1
 
-            - name: Compress node_modules
-              run: tar -czf node_modules.tar.gz node_modules
+  lint:
+    needs: [setup-dependencies]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
 
-            - name: Upload node_modules for reuse
-              uses: actions/upload-artifact@v4
-              with:
-                  name: node-modules
-                  path: node_modules.tar.gz
-                  retention-days: 1
+      - name: Extract node_modules
+        run: tar -xzf node_modules.tar.gz
 
-    lint:
-        needs: [setup-dependencies]
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
+      - name: Run linter
+        run: npm run lint
 
-            - uses: actions/setup-node@v4
-              with:
-                  node-version: 20
+  test-unit:
+    needs: [setup-dependencies]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
 
-            - name: Download node_modules
-              uses: actions/download-artifact@v4
-              with:
-                  name: node-modules
+      - name: Extract node_modules
+        run: tar -xzf node_modules.tar.gz
 
-            - name: Extract node_modules
-              run: tar -xzf node_modules.tar.gz
+      - name: Run unit tests
+        run: npm test
 
-            - name: Run linter
-              run: npm run lint
+  build-extension:
+    needs: [setup-dependencies]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
 
-    test-unit:
-        needs: [setup-dependencies]
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
+      - name: Extract node_modules
+        run: tar -xzf node_modules.tar.gz
 
-            - uses: actions/setup-node@v4
-              with:
-                  node-version: 20
+      - name: Package the extension
+        run: npm run extension:package
 
-            - name: Download node_modules
-              uses: actions/download-artifact@v4
-              with:
-                  name: node-modules
+      - name: Upload extension package
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-package
+          path: atlascode-*.vsix
+          retention-days: 1
 
-            - name: Extract node_modules
-              run: tar -xzf node_modules.tar.gz
+  test-e2e:
+    needs: [build-extension]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - jira-cloud
+          - jira-dc
+          - bitbucket-cloud
+          - bitbucket-dc
 
-            - name: Run unit tests
-              run: npm test
+    env:
+      ATLASCODE_FX3_API_KEY: ${{ secrets.ATLASCODE_FX3_API_KEY }}
+      ATLASCODE_FX3_ENVIRONMENT: ${{ vars.ATLASCODE_FX3_ENVIRONMENT }}
+      ATLASCODE_FX3_TARGET_APP: ${{ vars.ATLASCODE_FX3_TARGET_APP }}
+      ATLASCODE_FX3_TIMEOUT: ${{ vars.ATLASCODE_FX3_TIMEOUT }}
+      SENTRY_DSN: ${{ vars.SENTRY_DSN }}
+      SENTRY_ENABLED: ${{ vars.SENTRY_ENABLED }}
+      SENTRY_ENVIRONMENT: ${{ vars.SENTRY_ENVIRONMENT }}
+      SENTRY_SAMPLE_RATE: ${{ vars.SENTRY_SAMPLE_RATE }}
 
-    build-extension:
-        needs: [setup-dependencies]
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Download node_modules
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
 
-            - uses: actions/setup-node@v4
-              with:
-                  node-version: 20
+      - name: Extract node_modules
+        run: tar -xzf node_modules.tar.gz
 
-            - name: Download node_modules
-              uses: actions/download-artifact@v4
-              with:
-                  name: node-modules
+      - name: Download extension package
+        uses: actions/download-artifact@v4
+        with:
+          name: extension-package
 
-            - name: Extract node_modules
-              run: tar -xzf node_modules.tar.gz
+      - name: Generate SSL certs for E2E test
+        run: npm run test:e2e:sslcerts
 
-            - name: Package the extension
-              run: npm run extension:package
+      - name: Fetch E2E image
+        run: |
+          docker pull ghcr.io/atlassian/atlascode-e2e:latest
+          docker tag ghcr.io/atlassian/atlascode-e2e:latest atlascode-e2e
 
-            - name: Upload extension package
-              uses: actions/upload-artifact@v4
-              with:
-                  name: extension-package
-                  path: atlascode-*.vsix
-                  retention-days: 1
-
-    test-e2e:
-        needs: [build-extension]
-        runs-on: ubuntu-latest
-        strategy:
-            fail-fast: false
-            matrix:
-                target:
-                    - jira-cloud
-                    - jira-dc
-                    - bitbucket-cloud
-                    - bitbucket-dc
-
+      - name: Run E2E (${{ matrix.target }})
+        run: npm run test:e2e:docker
         env:
-            ATLASCODE_FX3_API_KEY: ${{ secrets.ATLASCODE_FX3_API_KEY }}
-            ATLASCODE_FX3_ENVIRONMENT: ${{ vars.ATLASCODE_FX3_ENVIRONMENT }}
-            ATLASCODE_FX3_TARGET_APP: ${{ vars.ATLASCODE_FX3_TARGET_APP }}
-            ATLASCODE_FX3_TIMEOUT: ${{ vars.ATLASCODE_FX3_TIMEOUT }}
-            SENTRY_DSN: ${{ vars.SENTRY_DSN }}
-            SENTRY_ENABLED: ${{ vars.SENTRY_ENABLED }}
-            SENTRY_ENVIRONMENT: ${{ vars.SENTRY_ENVIRONMENT }}
-            SENTRY_SAMPLE_RATE: ${{ vars.SENTRY_SAMPLE_RATE }}
+          TARGET: ${{ matrix.target }}
 
-        steps:
-            - uses: actions/checkout@v4
-
-            - uses: actions/setup-node@v4
-              with:
-                  node-version: 20
-
-            - name: Download node_modules
-              uses: actions/download-artifact@v4
-              with:
-                  name: node-modules
-
-            - name: Extract node_modules
-              run: tar -xzf node_modules.tar.gz
-
-            - name: Download extension package
-              uses: actions/download-artifact@v4
-              with:
-                  name: extension-package
-
-            - name: Generate SSL certs for E2E test
-              run: npm run test:e2e:sslcerts
-
-            - name: Fetch E2E image
-              run: |
-                  docker pull ghcr.io/atlassian/atlascode-e2e:latest
-                  docker tag ghcr.io/atlassian/atlascode-e2e:latest atlascode-e2e
-
-            - name: Run E2E (${{ matrix.target }})
-              run: npm run test:e2e:docker
-              env:
-                  TARGET: ${{ matrix.target }}
-
-            - name: Upload E2E artifacts (${{ matrix.target }})
-              if: always()
-              uses: actions/upload-artifact@v4
-              with:
-                  name: e2e-test-results-${{ matrix.target }}
-                  path: ./test-results
-                  retention-days: 1
-                  if-no-files-found: ignore
-
-    finalize:
-        needs: [setup-dependencies, lint, test-unit, build-extension, test-e2e]
-        runs-on: ubuntu-latest
+      - name: Upload E2E artifacts (${{ matrix.target }})
         if: always()
-        steps:
-            - name: Delete node_modules artifact
-              if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
-              uses: geekyeggo/delete-artifact@v5
-              with:
-                  name: node-modules
-                  failOnError: false
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results-${{ matrix.target }}
+          path: ./test-results
+          retention-days: 1
+          if-no-files-found: ignore
 
-            - name: Delete extension package artifact
-              if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
-              uses: geekyeggo/delete-artifact@v5
-              with:
-                  name: extension-package
-                  failOnError: false
+  finalize:
+    needs: [setup-dependencies, lint, test-unit, build-extension, test-e2e]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Delete node_modules artifact
+        if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: node-modules
+          failOnError: false
 
-            - name: Check if all jobs succeeded
-              run: |
-                  results='${{ toJSON(needs.*.result) }}'
-                  if echo "$results" | jq -e 'any(. != "success")' > /dev/null; then
-                    echo "One or more jobs failed:"
-                    echo "  setup-dependencies: ${{ needs.setup-dependencies.result }}"
-                    echo "  lint: ${{ needs.lint.result }}"
-                    echo "  test-unit: ${{ needs.test-unit.result }}"
-                    echo "  build-extension: ${{ needs.build-extension.result }}"
-                    echo "  test-e2e: ${{ needs.test-e2e.result }}"
-                    echo "Artifacts are retained for 1 day to allow rerunning failed jobs"
-                    exit 1
-                  fi
-                  echo "All steps completed successfully"
+      - name: Delete extension package artifact
+        if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: extension-package
+          failOnError: false
+
+      - name: Check if all jobs succeeded
+        run: |
+          results='${{ toJSON(needs.*.result) }}'
+          if echo "$results" | jq -e 'any(. != "success")' > /dev/null; then
+            echo "One or more jobs failed:"
+            echo "  setup-dependencies: ${{ needs.setup-dependencies.result }}"
+            echo "  lint: ${{ needs.lint.result }}"
+            echo "  test-unit: ${{ needs.test-unit.result }}"
+            echo "  build-extension: ${{ needs.build-extension.result }}"
+            echo "  test-e2e: ${{ needs.test-e2e.result }}"
+            echo "Artifacts are retained for 1 day to allow rerunning failed jobs"
+            exit 1
+          fi
+          echo "All steps completed successfully"
