@@ -3,7 +3,9 @@ import * as http from 'http';
 import { Logger } from 'src/logger';
 import { Disposable } from 'vscode';
 
-export const ROVODEV_LOCAL_SERVER_PORT = 9999;
+export const ROVODEV_LOCAL_SERVER_PORT = process.env.ROVODEV_LOCAL_SERVER_PORT
+    ? parseInt(process.env.ROVODEV_LOCAL_SERVER_PORT, 10)
+    : 9999;
 
 /**
  * A local HTTP server that allows external services (e.g. DevAI Sandbox) to send prompts

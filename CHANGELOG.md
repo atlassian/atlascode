@@ -1,12 +1,5 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
-## What's new in 4.0.29
-
-### Features
-
-- **RovoDev (BBY)**: Exposed a local HTTP endpoint `POST http://127.0.0.1:9999/rovodev/chat` that allows external services (e.g. DevAI Sandbox) to send prompts to the Rovo Dev chat UI. Returns `200` on success or `409` if the agent is already busy.
-- **RovoDev (BBY)**: Added `GET http://127.0.0.1:9999/rovodev/health` healthcheck endpoint that returns server status and whether the agent is currently busy.
-
 ## What's new in 4.0.28
 
 ### Improvements
