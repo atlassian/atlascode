@@ -279,6 +279,14 @@ export class JiraIssueWebview
             }
             this._editUIData.recentPullRequests = [];
 
+            // const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+            // console.debug('client', client);
+            // try {
+            //     const token = await client.getMediaReadToken(this._issue.key);
+            //     console.debug('Fetched media token', token);
+            // } catch (error) {
+            //     console.error('Error fetching media token', error);
+            // }
             const msg = this._editUIData;
             msg.type = 'update';
 
