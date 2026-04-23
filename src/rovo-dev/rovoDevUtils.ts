@@ -181,7 +181,15 @@ export function usageJsonResponseToMarkdown(response: RovoDevUsageResponse): {
         }
     }
 
-    return { usage_response: buffer, alert_message: data.exceeded_message };
+    let alert_message = data.exceeded_message;
+    if (alert_message?.message) {
+        alert_message = {
+            ...alert_message,
+            message: alert_message.message.replace('{title}', data.title),
+        };
+    }
+
+    return { usage_response: buffer, alert_message };
 }
 
 export function promptsJsonResponseToMarkdown(response: RovoDevPromptsResponse): string {
