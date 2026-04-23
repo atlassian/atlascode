@@ -38,11 +38,13 @@ jobs:
         run: npm ci --no-audit
 
       - name: Run vulnerability audit
-        # We allow low severity vulnerabilities to not block the build, 
+        # We allow low severity vulnerabilities to not block the build,
         # but we should be diligent and fix them when they are discovered
         # We also skip the audit for dev dependencies, since they don't
         # end up on the distributed package.
-        run: npm audit --audit-level=moderate --omit=dev
+        # Configuration (severity threshold, allowlisted advisories, etc.)
+        # is defined in .audit-ci.json.
+        run: npx audit-ci --config .audit-ci.json
 
       - name: Compress node_modules
         run: tar -czf node_modules.tar.gz node_modules
