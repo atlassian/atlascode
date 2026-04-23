@@ -1,8 +1,10 @@
 import { Logger } from 'src/logger';
 import { RovoDevViewResponse } from 'src/rovo-dev/ui/rovoDevViewMessages';
 import { v4 } from 'uuid';
-import { Event, EventEmitter } from 'vscode';
+import { commands, Event, EventEmitter } from 'vscode';
 
+import { Container } from '../container';
+import { Features } from '../util/features';
 import { ExtensionApi } from './api/extensionApi';
 import {
     AgentMode,
@@ -547,11 +549,28 @@ export class RovoDevChatProvider {
 
         switch (response.event_kind) {
             case 'text':
+                await webview.postMessage({
+                    type: RovoDevProviderMessageType.RovoDevResponseMessage,
+                    message: response,
+                });
+                break;
+
             case 'tool-call':
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.RovoDevResponseMessage,
                     message: response,
                 });
+
+                if (response.tool_name === 'configure_live_preview') {
+                    try {
+                        const args = JSON.parse(response.args);
+                        if (args.port) {
+                            await commands.executeCommand('workbench.action.launchLivePreview', args.port);
+                        }
+                    } catch (e) {
+                        Logger.debug('Failed to parse configure_live_preview args:', e);
+                    }
+                }
                 break;
 
             case 'tool-return':
@@ -777,6 +796,17 @@ export class RovoDevChatProvider {
                 } else {
                     this.processError(new Error('Invalid models response'));
                 }
+                break;
+
+            case 'ui_changes_detected':
+                // Only show live preview button in Boysenberry
+                if (!Container.isBoysenberryMode || !Container.featureFlagClient.checkGate(Features.BbyLivePreview)) {
+                    return;
+                }
+
+                await webview.postMessage({
+                    type: RovoDevProviderMessageType.ShowLivePreviewButton,
+                });
                 break;
 
             case 'close':

@@ -105,6 +105,9 @@ export const enum Commands {
 
     // Extension management commands
     AddRecommendedExtension = 'atlascode.addRecommendedExtension',
+
+    // Boysenberry-only commands
+    BoysenberryShowPreviewPanel = 'workbench.action.showPreviewPanel',
 }
 
 // Jira projects field pagination

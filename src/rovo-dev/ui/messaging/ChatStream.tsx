@@ -4,10 +4,11 @@ import { State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
 import { DetailedSiteInfo, MinimalIssue } from '../../api/extensionApiTypes';
-import { CheckFileExistsFunc, OpenFileFunc, OpenJiraFunc } from '../common/common';
+import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc, OpenJiraFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
 import { CredentialHint } from '../landing-page/disabled-messages/RovoDevLoginForm';
 import { RovoDevLanding } from '../landing-page/RovoDevLanding';
+import { LivePreviewButton } from '../live-preview/LivePreviewButton';
 import { useMessagingApi } from '../messagingApi';
 import { McpConsentChoice, RovoDevViewResponse } from '../rovoDevViewMessages';
 import { SubagentInfo, ToolCallItem } from '../tools/ToolCallItem';
@@ -47,6 +48,7 @@ interface ChatStreamProps {
     onLinkClick: (href: string) => void;
     credentialHints?: CredentialHint[];
     onGeneratePlanClick?: (planId: string, proceed: boolean) => void;
+    showLivePreviewButton?: boolean;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -71,6 +73,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     onLinkClick,
     credentialHints,
     onGeneratePlanClick,
+    showLivePreviewButton,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -195,6 +198,9 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
         currentState.state !== 'WaitingForPrompt' &&
         (currentState.state !== 'Initializing' || currentState.isPromptPending);
 
+    const showActionFooter =
+        !isChatHistoryDisabled && currentState.state === 'WaitingForPrompt' && showLivePreviewButton;
+
     return (
         <div ref={chatEndRef} className="chat-message-container">
             {(!RovodevStaticConfig.isBBY ||
@@ -271,6 +277,11 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                 </div>
             )}
 
+            {showActionFooter && (
+                <FollowUpActionFooter>
+                    <LivePreviewButton messagingApi={messagingApi} />
+                </FollowUpActionFooter>
+            )}
             <div id="sentinel" ref={sentinelRef} style={{ height: '10px', width: '100%', pointerEvents: 'none' }} />
         </div>
     );

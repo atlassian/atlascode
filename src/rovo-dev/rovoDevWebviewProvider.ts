@@ -25,6 +25,7 @@ import {
     workspace,
 } from 'vscode';
 
+import { Commands } from '../constants';
 import { GitErrorCodes } from '../typings/git';
 import { RovodevCommandContext, RovodevCommands } from './api/componentApi';
 import { DetailedSiteInfo, ExtensionApi, MinimalIssue } from './api/extensionApi';
@@ -571,6 +572,17 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await webview.postMessage({
                             type: RovoDevProviderMessageType.UpdateSavedPrompts,
                             savedPrompts: prompts,
+                        });
+                        break;
+
+                    case RovoDevViewResponseType.CreateLivePreview:
+                        await this.executeCreateLivePreview();
+                        this._telemetryProvider.fireTelemetryEvent({
+                            action: 'rovoDevCreateLivePreviewButtonClicked',
+                            subject: 'atlascode',
+                            attributes: {
+                                promptId: this._chatProvider.currentPromptId,
+                            },
                         });
                         break;
 
@@ -1224,6 +1236,19 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
 
         await this.handleRovoDevLogout();
+    }
+
+    private async executeCreateLivePreview(): Promise<void> {
+        try {
+            // Immediately switch VSCode to preview mode with loading spinner
+            await commands.executeCommand(Commands.BoysenberryShowPreviewPanel);
+            // Call the agent API directly to start a live preview
+            await this.executeApiWithErrorHandling(async (client) => {
+                await client.createLivePreview();
+            }, false);
+        } catch (e) {
+            await this.processError(e);
+        }
     }
 
     private async executeApiWithErrorHandling<T>(

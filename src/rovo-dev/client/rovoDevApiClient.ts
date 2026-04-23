@@ -401,4 +401,9 @@ export class RovoDevApiClient {
         const response = await this.fetchApi('/v3/invalidate-file-cache', 'POST', body);
         return await response.json();
     }
+
+    /** Invokes the POST `/v3/live-preview` API to start a live preview for the current project. */
+    public async createLivePreview(): Promise<void> {
+        await this.fetchApi('/v3/live-preview', 'POST', JSON.stringify({}));
+    }
 }
