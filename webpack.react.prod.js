@@ -77,6 +77,7 @@ module.exports = {
         plugins: [new TsconfigPathsPlugin({ configFile: resolveApp('./tsconfig.notest.json') })],
         fallback: {
             path: require.resolve('path-browserify'),
+            buffer: require.resolve('buffer'),
         },
         alias: {
             // Resolve ProseMirror conflicts by using unified versions
@@ -121,6 +122,7 @@ module.exports = {
         createEnvPlugin({ nodeEnv: 'production', isBrowser: true }),
         new webpack.ProvidePlugin({
             process: 'process/browser',
+            Buffer: ['buffer', 'Buffer'],
         }),
     ],
     performance: {
