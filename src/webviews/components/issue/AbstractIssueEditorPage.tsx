@@ -1478,7 +1478,10 @@ export abstract class AbstractIssueEditorPage<
                                                     },
                                                 )}
                                                 loadOptions={async (input: any) =>
-                                                    await this.loadSelectOptionsForField(field as SelectFieldUI, input || " ")
+                                                    await this.loadSelectOptionsForField(
+                                                        field as SelectFieldUI,
+                                                        input || ' ',
+                                                    )
                                                 }
                                                 onMenuClose={() => {
                                                     if (this.state.loadingField === field.key) {
