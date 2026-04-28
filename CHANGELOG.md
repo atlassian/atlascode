@@ -29,6 +29,7 @@
 ### Features
 
 - **Rovo Dev**: Added UI support for `invoke_subagents` tool — displays delegated subagent tasks with names during execution
+- **Rovo Dev**: Added Refresh button to error dialogs to easily continue after configuration changes
 
 ## What's new in 4.0.25
 
