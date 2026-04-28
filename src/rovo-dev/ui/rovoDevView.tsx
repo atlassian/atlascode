@@ -88,6 +88,8 @@ const RovoDevView: React.FC = () => {
     const [availableAgentModels, setAvailableAgentModels] = useState<RovoDevAgentModel[]>([]);
     const [showLivePreviewButton, setShowLivePreviewButton] = useState(false);
 
+    console.log('RovoDevView currentState======', currentState);
+
     // Initialize atlaskit theme for proper token support
     React.useEffect(() => {
         const initializeTheme = () => {
@@ -248,6 +250,7 @@ const RovoDevView: React.FC = () => {
         (event: RovoDevProviderMessage): void => {
             switch (event.type) {
                 case RovoDevProviderMessageType.SignalPromptSent:
+                    setCurrentState({ state: 'GeneratingResponse' });
                     setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE);
                     if (event.echoMessage) {
                         handleAppendResponse({
