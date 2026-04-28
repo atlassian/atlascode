@@ -1,7 +1,7 @@
 import { ButtonGroup } from '@atlaskit/button';
 import Button from '@atlaskit/button';
 import Comment from '@atlaskit/comment';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { RenderedContent } from '../RenderedContent';
 import { TextAreaEditor } from './TextAreaEditor';
@@ -24,6 +24,12 @@ export const EditRenderedTextArea: React.FC<Props> = ({
     const [editing, setEditing] = useState(false);
     const [commentInputValue, setCommentInputValue] = useState(text ?? '');
     const [isSaving, setIsSaving] = useState(false);
+
+    useEffect(() => {
+        if (!editing) {
+            setCommentInputValue(text ?? '');
+        }
+    }, [text, editing]);
 
     const handleSave = async () => {
         try {
