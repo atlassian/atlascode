@@ -1469,7 +1469,7 @@ export abstract class AbstractIssueEditorPage<
                                                     this.state.loadingField !== field.key
                                                 }
                                                 isClearable={this.isClearableSelect(selectField)}
-                                                defaultOptions={this.state.selectFieldOptions[field.key]}
+                                                defaultOptions
                                                 isLoading={this.state.loadingField === field.key}
                                                 onChange={FieldValidators.chain(
                                                     fieldArgs.fieldProps.onChange,
@@ -1478,7 +1478,10 @@ export abstract class AbstractIssueEditorPage<
                                                     },
                                                 )}
                                                 loadOptions={async (input: any) =>
-                                                    await this.loadSelectOptionsForField(field as SelectFieldUI, input)
+                                                    await this.loadSelectOptionsForField(
+                                                        field as SelectFieldUI,
+                                                        input || ' ',
+                                                    )
                                                 }
                                                 onMenuClose={() => {
                                                     if (this.state.loadingField === field.key) {
