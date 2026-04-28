@@ -61,7 +61,7 @@ export class RovoDevLocalServer implements Disposable {
                     res.status(503).json({ success: false, error: 'provider_not_ready' });
                 }
             } catch (err: any) {
-                RovoDevTelemetryProvider.logError(
+                this._telemetryProvider.logError(
                     err instanceof Error ? err : new Error(String(err)),
                     'RovoDevLocalServer: error invoking RovoDev ask',
                 );
