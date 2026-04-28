@@ -15,7 +15,7 @@ export class RovoDevLocalServer implements Disposable {
     private _server: http.Server | undefined;
 
     constructor(
-        private readonly _invokeRovoDevAsk: (prompt: string) => Promise<void>,
+        private readonly _invokeRovoDevAsk: (prompt: string) => Promise<boolean>,
         private readonly _isAgentRunning: () => boolean,
     ) {}
 
@@ -45,8 +45,14 @@ export class RovoDevLocalServer implements Disposable {
             }
 
             try {
-                await this._invokeRovoDevAsk(message.trim());
-                res.status(200).json({ success: true });
+                // Await until the chat has been triggered (webview ready, auth checked, prompt dispatched),
+                // but not until the full agent response completes — streaming is fire-and-forget.
+                const triggered = await this._invokeRovoDevAsk(message.trim());
+                if (triggered) {
+                    res.status(202).json({ success: true });
+                } else {
+                    res.status(503).json({ success: false, error: 'provider_not_ready' });
+                }
             } catch (err: any) {
                 Logger.debug(`RovoDevLocalServer: error invoking RovoDev ask: ${err}`);
                 res.status(500).json({ success: false, error: 'internal_error' });

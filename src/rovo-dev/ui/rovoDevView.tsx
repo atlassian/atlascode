@@ -248,6 +248,7 @@ const RovoDevView: React.FC = () => {
         (event: RovoDevProviderMessage): void => {
             switch (event.type) {
                 case RovoDevProviderMessageType.SignalPromptSent:
+                    setCurrentState({ state: 'GeneratingResponse' });
                     setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE);
                     if (event.echoMessage) {
                         handleAppendResponse({
