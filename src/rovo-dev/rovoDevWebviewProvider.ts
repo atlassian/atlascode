@@ -1287,7 +1287,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         prompt: string,
         context?: RovoDevContextItem[],
         fireAndForget?: boolean,
-    ): Promise<void> {
+    ): Promise<boolean> {
         // Always focus on the specific vscode view, even if disabled (so user can see the login prompt)
         await this.extensionApi.commands.focusRovodevView();
 
@@ -1300,13 +1300,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
 
         if (!initialized) {
-            return;
+            return false;
         }
 
         // If disabled, we still want to show the webview but don't execute the chat
         // The webview will show the appropriate login prompt
         if (this.isDisabled) {
-            return;
+            return false;
         }
 
         // Actually invoke the rovodev service, feed responses to the webview as normal
@@ -1315,10 +1315,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         const chatPromise = this._chatProvider.executeChat({ text: prompt, context: context || [] }, revertedChanges);
 
         if (fireAndForget) {
-            return chatPromise;
+            chatPromise.catch((err) => {
+                Logger.debug(`RovoDevWebviewProvider: error executing chat: ${err}`);
+            });
+            return true;
         }
 
         await chatPromise;
+        return true;
     }
 
     /**
