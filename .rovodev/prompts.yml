@@ -2,3 +2,9 @@ prompts:
   - name: bump-version
     description: Bump version
     content_file: bump-version.md
+  - name: error-handling
+    description: Error handling and logging guidelines
+    content_file: error-handling.md
+  - name: sentry-logged-errors-fix
+    description: Retrieve errors from Sentry, analyze root causes, fix code, and create PRs
+    content_file: sentry_logged_errors_fix.md
