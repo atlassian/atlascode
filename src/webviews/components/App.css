@@ -1213,7 +1213,7 @@ div[role='dialog'],
 .ac-form-select__control {
     background: var(--vscode-input-background) !important;
     color: var(--vscode-dropdown-foreground) !important;
-    border: 1px solid var(--vscode-editor-background) !important;
+    border: 1px solid var(--vscode-settings-textInputBorder) !important;
 }
 
 .ac-form-select__control--is-focused,
