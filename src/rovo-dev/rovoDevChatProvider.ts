@@ -4,7 +4,6 @@ import { v4 } from 'uuid';
 import { commands, Event, EventEmitter } from 'vscode';
 
 import { Container } from '../container';
-import { Features } from '../util/features';
 import { ExtensionApi } from './api/extensionApi';
 import {
     AgentMode,
@@ -804,7 +803,19 @@ export class RovoDevChatProvider {
 
             case 'ui_changes_detected':
                 // Only show live preview button in Boysenberry
-                if (!Container.isBoysenberryMode || !Container.featureFlagClient.checkGate(Features.BbyLivePreview)) {
+                if (!Container.isBoysenberryMode) {
+                    return;
+                }
+                // Check feature flag enabled for live preview
+                let isLivePreviewFeatureEnabled = false;
+                if ('SANDBOX_ENABLE_LIVE_PREVIEW' in process.env && process.env.SANDBOX_ENABLE_LIVE_PREVIEW) {
+                    try {
+                        isLivePreviewFeatureEnabled = Boolean(JSON.parse(process.env.SANDBOX_ENABLE_LIVE_PREVIEW));
+                    } catch {
+                        // ignore parsing error and treat it as the feature being disabled
+                    }
+                }
+                if (!isLivePreviewFeatureEnabled) {
                     return;
                 }
 
