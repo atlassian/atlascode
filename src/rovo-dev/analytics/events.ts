@@ -193,6 +193,16 @@ export namespace Track {
         };
     };
 
+    export type LocalServerPromptReceived = {
+        action: 'rovoDevLocalServerPromptReceived';
+        subject: 'atlascode';
+        attributes: {
+            rovoDevEnv: RovoDevEnv;
+            appInstanceId: string;
+            result: 'triggered' | 'agent_busy' | 'provider_not_ready' | 'error' | 'invalid_request';
+        };
+    };
+
     // TODO: rovodev metadata fields here are different from other events, reconcile later?
     export type PerformanceEvent = {
         action: 'performanceEvent';
@@ -220,4 +230,5 @@ export type TrackEvent =
     | Track.AiResultViewed
     | Track.RestartProcessAction
     | Track.ReplayCompleted
-    | Track.PerformanceEvent;
+    | Track.PerformanceEvent
+    | Track.LocalServerPromptReceived;

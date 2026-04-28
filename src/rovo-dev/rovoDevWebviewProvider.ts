@@ -192,14 +192,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         if (this.isBoysenberry) {
             this.appInstanceId = process.env.ROVODEV_SANDBOX_ID as string;
-
-            // Start the local HTTP server so external services can
-            // send prompts to the Rovo Dev chat UI via POST /rovodev/chat.
-            this._localServer = new RovoDevLocalServer(
-                (prompt) => this.invokeRovoDevAskCommand(prompt, undefined, true),
-                () => this._chatProvider.isAgentRunning,
-            );
-            this._localServer.start();
         } else {
             this.appInstanceId = this.extensionApi.metadata.appInstanceId();
         }
@@ -208,6 +200,17 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             this.isBoysenberry ? 'Boysenberry' : 'IDE',
             this.appInstanceId,
         );
+
+        if (this.isBoysenberry) {
+            // Start the local HTTP server so external services can
+            // send prompts to the Rovo Dev chat UI via POST /rovodev/chat.
+            this._localServer = new RovoDevLocalServer(
+                (prompt) => this.invokeRovoDevAskCommand(prompt, undefined, true),
+                () => this._chatProvider.isAgentRunning,
+                this._telemetryProvider,
+            );
+            this._localServer.start();
+        }
 
         this._chatProvider = new RovoDevChatProvider(this.isBoysenberry, this._telemetryProvider);
         this._chatProvider.onAgentModelChanged(() => this.refreshAgentModel());
