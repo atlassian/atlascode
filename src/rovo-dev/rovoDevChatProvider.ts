@@ -761,7 +761,9 @@ export class RovoDevChatProvider {
                         message: {
                             type: 'warning',
                             title: "You've reached your Rovo Dev credit limit",
-                            text: alert_message.message.replace('{ctaLink}', ''),
+                            text: alert_message.message
+                                .replace('{title}', response.data.content.title)
+                                .replace('{ctaLink}', ''),
                             event_kind: '_RovoDevDialog',
                             ctaLink: alert_message.ctaLink,
                         },
