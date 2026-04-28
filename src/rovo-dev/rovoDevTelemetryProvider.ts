@@ -33,7 +33,8 @@ export type TelemetryEvent =
     | PartialEvent<Track.RestoreSessionClicked>
     | PartialEvent<Track.ForkSessionClicked>
     | PartialEvent<Track.DeleteSessionClicked>
-    | PartialEvent<Track.ReplayCompleted>;
+    | PartialEvent<Track.ReplayCompleted>
+    | PartialEvent<Track.LocalServerPromptReceived>;
 
 export type TelemetryScreenEvent = 'rovoDevSessionHistoryPicker';
 
@@ -115,6 +116,7 @@ export class RovoDevTelemetryProvider {
         if (
             event.action === 'rovoDevNewSessionAction' ||
             event.action === 'rovoDevReplayCompleted' ||
+            event.action === 'rovoDevLocalServerPromptReceived' ||
             event.subject === 'rovoDevRestoreSession' ||
             event.subject === 'rovoDevForkSession' ||
             event.subject === 'rovoDevDeleteSession' ||
