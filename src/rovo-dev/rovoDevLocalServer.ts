@@ -60,9 +60,9 @@ export class RovoDevLocalServer implements Disposable {
                     this._sendAnalytics('provider_not_ready');
                     res.status(503).json({ success: false, error: 'provider_not_ready' });
                 }
-            } catch (err: any) {
+            } catch (err: unknown) {
                 this._telemetryProvider.logError(
-                    err instanceof Error ? err : new Error(String(err)),
+                    err instanceof Error ? err : new Error('RovoDevLocalServer: unexpected throw', { cause: err }),
                     'RovoDevLocalServer: error invoking RovoDev ask',
                 );
                 this._sendAnalytics('error');
