@@ -27,7 +27,7 @@ export class RovoDevLocalServer implements Disposable {
             res.status(200).json({ status: 'ok', agentBusy: this._isAgentRunning() });
         });
 
-        app.post('/rovodev/chat', (req: Request, res: Response) => {
+        app.post('/rovodev/chat', async (req: Request, res: Response) => {
             const message: string | undefined = req.body?.message;
 
             if (!message || typeof message !== 'string' || message.trim() === '') {
@@ -44,13 +44,13 @@ export class RovoDevLocalServer implements Disposable {
                 return;
             }
 
-            // Respond immediately — callers are async and don't need to wait for the full agent response
-            res.status(202).json({ success: true });
-
-            // Fire-and-forget — errors are handled internally by the chat provider
-            this._invokeRovoDevAsk(message.trim()).catch((err) => {
+            try {
+                await this._invokeRovoDevAsk(message.trim());
+                res.status(202).json({ success: true });
+            } catch (err: any) {
                 Logger.debug(`RovoDevLocalServer: error invoking RovoDev ask: ${err}`);
-            });
+                res.status(500).json({ success: false, error: 'internal_error' });
+            }
         });
 
         this._server = http.createServer(app);

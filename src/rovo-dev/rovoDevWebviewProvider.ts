@@ -196,7 +196,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             // Start the local HTTP server so external services can
             // send prompts to the Rovo Dev chat UI via POST /rovodev/chat.
             this._localServer = new RovoDevLocalServer(
-                (prompt) => this.invokeRovoDevAskCommand(prompt),
+                (prompt) => this.invokeRovoDevAskCommand(prompt, undefined, true),
                 () => this._chatProvider.isAgentRunning,
             );
             this._localServer.start();
@@ -1276,7 +1276,18 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
-    public async invokeRovoDevAskCommand(prompt: string, context?: RovoDevContextItem[]): Promise<void> {
+    /**
+     * Invokes a RovoDev chat prompt.
+     *
+     * When `fireAndForget` is true, the chat promise is returned directly without being awaited,
+     * allowing the caller to decide whether to await it or not.
+     * When false (default), the chat is awaited before returning.
+     */
+    public async invokeRovoDevAskCommand(
+        prompt: string,
+        context?: RovoDevContextItem[],
+        fireAndForget?: boolean,
+    ): Promise<void> {
         // Always focus on the specific vscode view, even if disabled (so user can see the login prompt)
         await this.extensionApi.commands.focusRovodevView();
 
@@ -1301,7 +1312,13 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         // Actually invoke the rovodev service, feed responses to the webview as normal
         const revertedChanges = this._revertedChanges;
         this._revertedChanges = [];
-        await this._chatProvider.executeChat({ text: prompt, context: context || [] }, revertedChanges);
+        const chatPromise = this._chatProvider.executeChat({ text: prompt, context: context || [] }, revertedChanges);
+
+        if (fireAndForget) {
+            return chatPromise;
+        }
+
+        await chatPromise;
     }
 
     /**
