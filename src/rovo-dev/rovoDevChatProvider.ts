@@ -565,10 +565,20 @@ export class RovoDevChatProvider {
                 });
 
                 if (response.tool_name === 'configure_live_preview') {
+                    webview
+                        .postMessage({
+                            type: RovoDevProviderMessageType.ShowLivePreviewButton,
+                            show: false,
+                        })
+                        .then(null, (ex) => {
+                            Logger.debug('Error while sending hide live preview button message:', ex);
+                        });
                     try {
                         const args = JSON.parse(response.args);
                         if (args.port) {
-                            await commands.executeCommand('workbench.action.launchLivePreview', args.port);
+                            await commands.executeCommand('workbench.action.launchLivePreview', args.port, {
+                                showPreview: true,
+                            });
                         }
                     } catch (e) {
                         Logger.debug('Failed to parse configure_live_preview args:', e);
@@ -823,6 +833,7 @@ export class RovoDevChatProvider {
 
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.ShowLivePreviewButton,
+                    show: true,
                 });
                 break;
 

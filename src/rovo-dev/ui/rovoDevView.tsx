@@ -515,7 +515,7 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.ShowLivePreviewButton:
-                    setShowLivePreviewButton(true);
+                    setShowLivePreviewButton(event.show);
                     break;
 
                 default:

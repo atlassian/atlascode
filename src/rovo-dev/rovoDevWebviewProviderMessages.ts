@@ -150,4 +150,4 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.UpdateAgentModels, { models: RovoDevAgentModel[] }>
     | ReducerAction<RovoDevProviderMessageType.AgentModelChanged, RovoDevAgentModel>
     | ReducerAction<RovoDevProviderMessageType.SetModifiedFiles, { files: ModifiedFile[] }>
-    | ReducerAction<RovoDevProviderMessageType.ShowLivePreviewButton>;
+    | ReducerAction<RovoDevProviderMessageType.ShowLivePreviewButton, { show: boolean }>;
