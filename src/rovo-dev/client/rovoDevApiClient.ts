@@ -402,8 +402,13 @@ export class RovoDevApiClient {
         return await response.json();
     }
 
-    /** Invokes the POST `/v3/live-preview` API to start a live preview for the current project. */
-    public async createLivePreview(): Promise<void> {
-        await this.fetchApi('/v3/live-preview', 'POST', JSON.stringify({}));
+    /** Invokes the POST `/v3/live-preview` API to start a live preview for the current project.
+     * @param {AbortSignal?} abortSignal An optional AbortSignal to cancel the request.
+     * @returns {Promise<Response>} The streaming SSE response from the agent. The body must be
+     *   consumed by the caller (e.g. via the chat provider's response pipeline) — the agent
+     *   produces a full prompt-style stream of text/tool-call/tool-return events for this call.
+     */
+    public createLivePreview(abortSignal?: AbortSignal | null): Promise<Response> {
+        return this.fetchApi('/v3/live-preview', 'POST', JSON.stringify({}), abortSignal);
     }
 }

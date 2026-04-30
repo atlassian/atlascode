@@ -1031,18 +1031,46 @@ export class RovoDevChatProvider {
     }
 
     /**
-     * Signals to the webview that a synthetic prompt has been sent on behalf of the user
-     * (e.g. when the Live Preview button is clicked, which causes the agent to act as if a
-     * user prompt was submitted). The synthetic prompt is NOT echoed into chat history,
-     * but the chat enters the "agent is working" / listen state, so the UI is consistent
-     * with the agent stream that immediately follows.
+     * Triggers a live-preview request on the agent, then streams the agent's response into the
+     * chat exactly like a normal user-initiated chat would. Used by the Live Preview button —
+     * clicking that button causes the agent to behave as if the user had asked it to start a
+     * live preview, so we:
+     *   1. Begin a fresh prompt (new promptId + telemetry bucket).
+     *   2. Tell the webview to enter "GeneratingResponse" mode without echoing a user-message
+     *      bubble (echoMessage = false).
+     *   3. POST `/v3/live-preview` and pipe its SSE body through the same `processResponse`
+     *      pipeline used for `executeChat`, so text parts, tool-calls, and tool-returns all
+     *      render in the chat as they stream in.
      */
-    public async signalSyntheticPromptSent(): Promise<void> {
+    public async executeLivePreview(): Promise<void> {
+        if (!this._rovoDevApiClient) {
+            const error = new Error('Unable to start live preview. Rovo Dev failed to initialize');
+            RovoDevTelemetryProvider.logError(error, 'Cannot start live preview - Rovo Dev not initialized');
+            throw error;
+        }
         if (!this._webView) {
             return;
         }
+
         this.beginNewPrompt();
+
+        // Put the chat into "listen" mode (GeneratingResponse) without echoing a synthetic
+        // user-message bubble — the live-preview click is implicitly a prompt, but we don't
+        // want to display fake user text for it.
         await this.signalPromptSent({ text: '', context: [] }, false);
+
+        const fetchOp = async (client: RovoDevApiClient) => {
+            this._abortController?.abort();
+            this._abortController = new AbortController();
+
+            const response = client.createLivePreview(this._abortController.signal);
+            // 'chat' (not 'replay') — we want the SSE body parsed and dispatched live, not
+            // batched as historical replay.
+            return this.processResponse('chat', response);
+        };
+
+        await this.executeStreamingApiWithErrorHandling('chat', fetchOp);
+        this._abortController = null;
     }
 
     private preparePayloadForChatRequest(prompt: RovoDevPrompt): RovoDevChatRequest {
