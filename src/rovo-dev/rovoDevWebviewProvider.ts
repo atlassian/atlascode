@@ -1253,6 +1253,11 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
     private async executeCreateLivePreview(): Promise<void> {
         try {
+            // Clicking the Live Preview button causes the agent to send a prompt-equivalent
+            // request, so put the chat into "listen" (GeneratingResponse) mode immediately
+            // to keep the UI in sync with the agent stream that follows.
+            await this._chatProvider.signalSyntheticPromptSent();
+
             // Immediately switch VSCode to preview mode with loading spinner
             await commands.executeCommand(Commands.BoysenberryShowPreviewPanel);
             // Call the agent API directly to start a live preview

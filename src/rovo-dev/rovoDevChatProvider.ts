@@ -564,7 +564,7 @@ export class RovoDevChatProvider {
                     message: response,
                 });
 
-                if (response.tool_name === 'configure_live_preview') {
+                if (response.tool_name === 'configure_live_preview' && sourceApi !== 'replay') {
                     webview
                         .postMessage({
                             type: RovoDevProviderMessageType.ShowLivePreviewButton,
@@ -1028,6 +1028,21 @@ export class RovoDevChatProvider {
             text,
             context,
         });
+    }
+
+    /**
+     * Signals to the webview that a synthetic prompt has been sent on behalf of the user
+     * (e.g. when the Live Preview button is clicked, which causes the agent to act as if a
+     * user prompt was submitted). The synthetic prompt is NOT echoed into chat history,
+     * but the chat enters the "agent is working" / listen state, so the UI is consistent
+     * with the agent stream that immediately follows.
+     */
+    public async signalSyntheticPromptSent(): Promise<void> {
+        if (!this._webView) {
+            return;
+        }
+        this.beginNewPrompt();
+        await this.signalPromptSent({ text: '', context: [] }, false);
     }
 
     private preparePayloadForChatRequest(prompt: RovoDevPrompt): RovoDevChatRequest {
