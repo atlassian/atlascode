@@ -6,7 +6,7 @@
 
 - **RovoDev**: Removed the "Create pull request" button from the chat extension — PR creation is now handled via the new Pull Request button in the Session header
 
-- **RovoDev**: Upgraded Rovo Dev to v0.13.63
+- **RovoDev**: Upgraded Rovo Dev to 202604.30.2
 - **RovoDev**: Generalized MCP tool parsing in chat UI to support any MCP toolset via regex matching (`mcp__<name>__invoke_tool` / `mcp__<name>__get_tool_schema`) instead of hardcoded tool names
 
 ### Bug Fixes
