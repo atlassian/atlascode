@@ -588,8 +588,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         });
                         break;
 
-                    case RovoDevViewResponseType.CreateLivePreview:
-                        await this.executeCreateLivePreview();
+                    case RovoDevViewResponseType.CreateLivePreview: {
                         this._telemetryProvider.fireTelemetryEvent({
                             action: 'rovoDevCreateLivePreviewButtonClicked',
                             subject: 'atlascode',
@@ -597,7 +596,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                                 promptId: this._chatProvider.currentPromptId,
                             },
                         });
+                        await this.executeCreateLivePreview();
                         break;
+                    }
 
                     case RovoDevViewResponseType.AskUserQuestionsSubmit:
                     case RovoDevViewResponseType.ExitPlanModeSubmit:

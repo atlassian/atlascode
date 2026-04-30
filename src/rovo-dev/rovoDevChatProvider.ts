@@ -558,12 +558,11 @@ export class RovoDevChatProvider {
                 });
                 break;
 
-            case 'tool-call':
+            case 'tool-call': {
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.RovoDevResponseMessage,
                     message: response,
                 });
-
                 if (response.tool_name === 'configure_live_preview' && sourceApi !== 'replay') {
                     webview
                         .postMessage({
@@ -571,7 +570,7 @@ export class RovoDevChatProvider {
                             show: false,
                         })
                         .then(null, (ex) => {
-                            Logger.debug('Error while sending hide live preview button message:', ex);
+                            Logger.error(ex, 'Error while sending hide live preview button message');
                         });
                     try {
                         const args = JSON.parse(response.args);
@@ -581,11 +580,11 @@ export class RovoDevChatProvider {
                             });
                         }
                     } catch (e) {
-                        Logger.debug('Failed to parse configure_live_preview args:', e);
+                        Logger.error(e, 'Failed to parse configure_live_preview args');
                     }
                 }
                 break;
-
+            }
             case 'tool-return':
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.RovoDevResponseMessage,
@@ -1052,20 +1051,16 @@ export class RovoDevChatProvider {
             return;
         }
 
-        this.beginNewPrompt();
-
         // Put the chat into "listen" mode (GeneratingResponse) without echoing a synthetic
         // user-message bubble — the live-preview click is implicitly a prompt, but we don't
         // want to display fake user text for it.
-        await this.signalPromptSent({ text: '', context: [] }, false);
+        this.beginNewPrompt();
+        await this.signalPromptSent({ text: 'Start a live preview for this project', context: [] }, true);
 
         const fetchOp = async (client: RovoDevApiClient) => {
-            this._abortController?.abort();
             this._abortController = new AbortController();
 
             const response = client.createLivePreview(this._abortController.signal);
-            // 'chat' (not 'replay') — we want the SSE body parsed and dispatched live, not
-            // batched as historical replay.
             return this.processResponse('chat', response);
         };
 
