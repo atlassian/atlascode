@@ -30,6 +30,16 @@ function safeJsonParse<T = any>(value: string | T | null | undefined): T {
     return typeof value === 'string' ? JSON.parse(value) : value;
 }
 
+function toDisplayString(value: unknown): string {
+    if (typeof value === 'string') {
+        return value;
+    }
+    if (typeof value === 'number') {
+        return String(value);
+    }
+    return JSON.stringify(value);
+}
+
 export const DialogMessageItem: React.FC<{
     msg: DialogMessage;
     isRetryAfterErrorButtonEnabled?: (uid: string) => boolean;
@@ -343,7 +353,7 @@ const ToolCallBody: React.FC<{
     if (toolName === 'bash') {
         return (
             <pre style={{ margin: '0' }}>
-                <code style={{ maxWidth: '100%' }}>{jsonArgs.command}</code>
+                <code style={{ maxWidth: '100%' }}>{toDisplayString(jsonArgs.command)}</code>
             </pre>
         );
     } else if (toolName === 'grep') {
@@ -391,6 +401,6 @@ const ToolCallBody: React.FC<{
             </ul>
         );
     } else {
-        return <div>{toolArgs}</div>;
+        return <div>{toDisplayString(toolArgs)}</div>;
     }
 };
