@@ -558,20 +558,19 @@ export class RovoDevChatProvider {
                 });
                 break;
 
-            case 'tool-call':
+            case 'tool-call': {
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.RovoDevResponseMessage,
                     message: response,
                 });
-
-                if (response.tool_name === 'configure_live_preview') {
+                if (response.tool_name === 'configure_live_preview' && sourceApi !== 'replay') {
                     webview
                         .postMessage({
                             type: RovoDevProviderMessageType.ShowLivePreviewButton,
                             show: false,
                         })
                         .then(null, (ex) => {
-                            Logger.debug('Error while sending hide live preview button message:', ex);
+                            Logger.error(ex, 'Error while sending hide live preview button message');
                         });
                     try {
                         const args = JSON.parse(response.args);
@@ -581,11 +580,11 @@ export class RovoDevChatProvider {
                             });
                         }
                     } catch (e) {
-                        Logger.debug('Failed to parse configure_live_preview args:', e);
+                        Logger.error(e, 'Failed to parse configure_live_preview args');
                     }
                 }
                 break;
-
+            }
             case 'tool-return':
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.RovoDevResponseMessage,
@@ -1028,6 +1027,45 @@ export class RovoDevChatProvider {
             text,
             context,
         });
+    }
+
+    /**
+     * Triggers a live-preview request on the agent, then streams the agent's response into the
+     * chat exactly like a normal user-initiated chat would. Used by the Live Preview button —
+     * clicking that button causes the agent to behave as if the user had asked it to start a
+     * live preview, so we:
+     *   1. Begin a fresh prompt (new promptId + telemetry bucket).
+     *   2. Tell the webview to enter "GeneratingResponse" mode without echoing a user-message
+     *      bubble (echoMessage = false).
+     *   3. POST `/v3/live-preview` and pipe its SSE body through the same `processResponse`
+     *      pipeline used for `executeChat`, so text parts, tool-calls, and tool-returns all
+     *      render in the chat as they stream in.
+     */
+    public async executeLivePreview(): Promise<void> {
+        if (!this._rovoDevApiClient) {
+            const error = new Error('Unable to start live preview. Rovo Dev failed to initialize');
+            RovoDevTelemetryProvider.logError(error, 'Cannot start live preview - Rovo Dev not initialized');
+            throw error;
+        }
+        if (!this._webView) {
+            return;
+        }
+
+        // Put the chat into "listen" mode (GeneratingResponse) without echoing a synthetic
+        // user-message bubble — the live-preview click is implicitly a prompt, but we don't
+        // want to display fake user text for it.
+        this.beginNewPrompt();
+        await this.signalPromptSent({ text: 'Start a live preview for this project', context: [] }, true);
+
+        const fetchOp = async (client: RovoDevApiClient) => {
+            this._abortController = new AbortController();
+
+            const response = client.createLivePreview(this._abortController.signal);
+            return this.processResponse('chat', response);
+        };
+
+        await this.executeStreamingApiWithErrorHandling('chat', fetchOp);
+        this._abortController = null;
     }
 
     private preparePayloadForChatRequest(prompt: RovoDevPrompt): RovoDevChatRequest {
