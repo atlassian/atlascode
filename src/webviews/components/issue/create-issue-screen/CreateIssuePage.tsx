@@ -3,8 +3,8 @@ import Form, { ErrorMessage, Field, FormFooter, FormHeader, RequiredAsterisk } f
 import Page from '@atlaskit/page';
 import Select, { components } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
-import { IssueKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
-import { FieldUI, FieldValues, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { IssueKeyAndSite } from '@atlassian-pi/jira-pi-common-models';
+import { FieldUI, FieldValues, UIType, ValueType } from '@atlassian-pi/jira-pi-meta-models';
 import * as React from 'react';
 import { v4 } from 'uuid';
 

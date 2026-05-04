@@ -4,7 +4,7 @@ import {
     ErrorWithMessages,
     isErrorCollection,
     isErrorWithMessages,
-} from '@atlassianlabs/jira-pi-common-models';
+} from '@atlassian-pi/jira-pi-common-models';
 import * as React from 'react';
 
 export type ErrorDetails =

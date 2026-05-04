@@ -55,7 +55,6 @@ describe('RovoDevSessionManager', () => {
                 promptFirstByteReceived: jest.fn(),
                 promptFirstMessageReceived: jest.fn(),
                 promptLastMessageReceived: jest.fn(),
-                promptTechnicalPlanReceived: jest.fn(),
                 promptLastMessageRendered: jest.fn(),
             },
         } as any;

@@ -1,6 +1,9 @@
 import { RovoDevTelemetryProvider } from '../rovoDevTelemetryProvider';
 import {
     AgentMode,
+    CachedFileEntry,
+    InvalidateCacheResponse,
+    RestoreFromCacheResponse,
     RovoDevAvailableModesResponse,
     RovoDevCancelResponse,
     RovoDevChatRequest,
@@ -107,8 +110,8 @@ export class RovoDevApiClient {
         } catch (err) {
             const reason = err.cause?.code || err.message || err;
             const error = new RovoDevApiError(`Failed to fetch '${restApi} API: ${reason}'`, 0, undefined);
-            // Skip logging for healthcheck calls since they're polled frequently during startup
-            if (restApi !== '/healthcheck') {
+            // Skip logging for healthcheck and cache-file-path calls since they're polled frequently or expected to fail
+            if (restApi !== '/healthcheck' && !restApi.includes('/cache-file-path')) {
                 RovoDevTelemetryProvider.logError(error, String(reason));
             }
             throw error;
@@ -119,8 +122,8 @@ export class RovoDevApiClient {
         } else {
             const message = `Failed to fetch '${restApi} API: HTTP ${response.status}'`;
             const error = new RovoDevApiError(message, response.status, response);
-            // Skip logging for healthcheck calls since they're polled frequently during startup
-            if (restApi !== '/healthcheck') {
+            // Skip logging for healthcheck and cache-file-path calls since they're polled frequently or expected to fail
+            if (restApi !== '/healthcheck' && !restApi.includes('/cache-file-path')) {
                 RovoDevTelemetryProvider.logError(error, message);
             }
             throw error;
@@ -219,7 +222,7 @@ export class RovoDevApiClient {
 
         await this.fetchApi('/v3/set_chat_message', 'POST', JSON.stringify(message));
 
-        const qs = `pause_on_call_tools_start=${pause_on_call_tools_start ? 'true' : 'false'}`;
+        const qs = `pause_on_call_tools_start=${pause_on_call_tools_start ? 'true' : 'false'}&enable_deferred_tools=true`;
         return await this.fetchApi(`/v3/stream_chat?${qs}`, 'GET', undefined, abortSignal);
     }
 
@@ -368,5 +371,44 @@ export class RovoDevApiClient {
 
         const jsonResponse = (await response.json()) as RovoDevSavedPromptsResponse;
         return jsonResponse;
+    }
+
+    /** Invokes the GET `/v3/cache-file-path` API.
+     * @returns {Promise<CachedFileEntry[]>} An array of cached file entries.
+     */
+    public async listCachedFiles(): Promise<CachedFileEntry[]> {
+        const response = await this.fetchApi('/v3/cache-file-path', 'GET');
+        const data = await response.json();
+        return data.cached_files;
+    }
+
+    /** Invokes the POST `/v3/restore-from-file-cache` API.
+     * @param {string[]?} filePaths Optional array of file paths to restore from cache.
+     * @returns {Promise<RestoreFromCacheResponse>} An object representing the API response.
+     */
+    public async restoreFromFileCache(filePaths?: string[]): Promise<RestoreFromCacheResponse> {
+        const body = filePaths ? JSON.stringify({ file_paths: filePaths }) : JSON.stringify({});
+        const response = await this.fetchApi('/v3/restore-from-file-cache', 'POST', body);
+        return await response.json();
+    }
+
+    /** Invokes the POST `/v3/invalidate-file-cache` API.
+     * @param {string[]?} filePaths Optional array of file paths to invalidate from cache.
+     * @returns {Promise<InvalidateCacheResponse>} An object representing the API response.
+     */
+    public async invalidateFileCache(filePaths?: string[]): Promise<InvalidateCacheResponse> {
+        const body = filePaths ? JSON.stringify({ file_paths: filePaths }) : JSON.stringify({});
+        const response = await this.fetchApi('/v3/invalidate-file-cache', 'POST', body);
+        return await response.json();
+    }
+
+    /** Invokes the POST `/v3/live-preview` API to start a live preview for the current project.
+     * @param {AbortSignal?} abortSignal An optional AbortSignal to cancel the request.
+     * @returns {Promise<Response>} The streaming SSE response from the agent. The body must be
+     *   consumed by the caller (e.g. via the chat provider's response pipeline) — the agent
+     *   produces a full prompt-style stream of text/tool-call/tool-return events for this call.
+     */
+    public createLivePreview(abortSignal?: AbortSignal | null): Promise<Response> {
+        return this.fetchApi('/v3/live-preview', 'POST', JSON.stringify({}), abortSignal);
     }
 }

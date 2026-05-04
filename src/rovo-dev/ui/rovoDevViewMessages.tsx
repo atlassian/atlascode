@@ -4,6 +4,7 @@ import { AgentMode } from '../client';
 import { ReducerAction } from '../messaging';
 import { RovoDevAgentModel } from '../rovoDevWebviewProviderMessages';
 import { FeedbackType } from './feedback-form/FeedbackForm';
+import { AskUserQuestionsResultMessage, ExitPlanModeResultMessage } from './utils';
 
 export const enum RovoDevViewResponseType {
     Refresh = 'refresh',
@@ -14,19 +15,15 @@ export const enum RovoDevViewResponseType {
     OpenFolder = 'openFolder',
     UndoFileChanges = 'undoFileChanges',
     KeepFileChanges = 'keepFileChanges',
-    CreatePR = 'createPR',
     RetryPromptAfterError = 'retryPromptAfterError',
-    GetCurrentBranchName = 'getCurrentBranchName',
     AddContext = 'addContext',
     RemoveContext = 'removeContext',
     ToggleContextFocus = 'toggleContextFocus',
     ForceUserFocusUpdate = 'forceUserFocusUpdate',
     ReportChangedFilesPanelShown = 'reportChangedFilesPanelShown',
-    ReportChangesGitPushed = 'reportChangesGitPushed',
     ReportThinkingDrawerExpanded = 'reportThinkingDrawerExpanded',
-    ReportCreatePrButtonClicked = 'reportCreatePrButtonClicked',
-    CheckGitChanges = 'checkGitChanges',
     WebviewReady = 'webviewReady',
+    OpenMcpConfiguration = 'openMcpConfiguration',
     GetAgentMemory = 'getAgentMemory',
     TriggerFeedback = 'triggerFeedback',
     SendFeedback = 'sendFeedback',
@@ -41,15 +38,17 @@ export const enum RovoDevViewResponseType {
     SetAgentMode = 'setAgentMode',
     SetAgentModel = 'setAgentModel',
     GetCurrentAgentMode = 'getCurrentAgentMode',
-    FilterModifiedFilesByContent = 'filterModifiedFilesByContent',
     OpenExternalLink = 'openExternalLink',
-    OpenRovoDevLogFile = 'openRovoDevLogFile',
     MessageRendered = 'messageRendered',
     ReportRenderError = 'reportRenderError',
     StartNewSession = 'startNewSession',
     RestartProcess = 'restartProcess',
     ShowSessionHistory = 'showSessionHistory',
     FetchSavedPrompts = 'fetchSavedPrompts',
+    AskUserQuestionsSubmit = 'askUserQuestionsSubmit',
+    ExitPlanModeSubmit = 'exitPlanModeSubmit',
+    RefreshModifiedFiles = 'refreshModifiedFiles',
+    CreateLivePreview = 'createLivePreview',
 }
 
 export type FileOperationType = 'modify' | 'create' | 'delete';
@@ -70,19 +69,15 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.OpenFolder>
     | ReducerAction<RovoDevViewResponseType.UndoFileChanges, { files: ModifiedFile[] }>
     | ReducerAction<RovoDevViewResponseType.KeepFileChanges, { files: ModifiedFile[] }>
-    | ReducerAction<RovoDevViewResponseType.CreatePR, { payload: { branchName: string; commitMessage?: string } }>
     | ReducerAction<RovoDevViewResponseType.RetryPromptAfterError>
-    | ReducerAction<RovoDevViewResponseType.GetCurrentBranchName>
     | ReducerAction<RovoDevViewResponseType.AddContext, { dragDropData?: string[]; contextItem?: RovoDevContextItem }>
     | ReducerAction<RovoDevViewResponseType.RemoveContext, { item: RovoDevContextItem }>
     | ReducerAction<RovoDevViewResponseType.ToggleContextFocus, { enabled: boolean }>
     | ReducerAction<RovoDevViewResponseType.ForceUserFocusUpdate>
     | ReducerAction<RovoDevViewResponseType.ReportChangedFilesPanelShown, { filesCount: number }>
-    | ReducerAction<RovoDevViewResponseType.ReportChangesGitPushed, { pullRequestCreated: boolean }>
     | ReducerAction<RovoDevViewResponseType.ReportThinkingDrawerExpanded>
-    | ReducerAction<RovoDevViewResponseType.ReportCreatePrButtonClicked>
-    | ReducerAction<RovoDevViewResponseType.CheckGitChanges>
     | ReducerAction<RovoDevViewResponseType.WebviewReady>
+    | ReducerAction<RovoDevViewResponseType.OpenMcpConfiguration>
     | ReducerAction<RovoDevViewResponseType.GetAgentMemory>
     | ReducerAction<RovoDevViewResponseType.TriggerFeedback>
     | ReducerAction<
@@ -103,9 +98,7 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.SetAgentMode, { mode: AgentMode }>
     | ReducerAction<RovoDevViewResponseType.SetAgentModel, { model: RovoDevAgentModel }>
     | ReducerAction<RovoDevViewResponseType.GetCurrentAgentMode>
-    | ReducerAction<RovoDevViewResponseType.FilterModifiedFilesByContent, { files: ModifiedFile[] }>
     | ReducerAction<RovoDevViewResponseType.OpenExternalLink, { href: string }>
-    | ReducerAction<RovoDevViewResponseType.OpenRovoDevLogFile>
     | ReducerAction<RovoDevViewResponseType.MessageRendered, { promptId: string }>
     | ReducerAction<
           RovoDevViewResponseType.ReportRenderError,
@@ -119,4 +112,8 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.StartNewSession>
     | ReducerAction<RovoDevViewResponseType.RestartProcess>
     | ReducerAction<RovoDevViewResponseType.ShowSessionHistory>
-    | ReducerAction<RovoDevViewResponseType.FetchSavedPrompts>;
+    | ReducerAction<RovoDevViewResponseType.FetchSavedPrompts>
+    | ReducerAction<RovoDevViewResponseType.CreateLivePreview>
+    | ReducerAction<RovoDevViewResponseType.AskUserQuestionsSubmit, AskUserQuestionsResultMessage>
+    | ReducerAction<RovoDevViewResponseType.ExitPlanModeSubmit, ExitPlanModeResultMessage>
+    | ReducerAction<RovoDevViewResponseType.RefreshModifiedFiles>;

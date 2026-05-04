@@ -1,4 +1,4 @@
-import { MinimalIssue, minimalIssueFromJsonObject } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue, minimalIssueFromJsonObject } from '@atlassian-pi/jira-pi-common-models';
 import { expansionCastTo } from 'testsutil';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
@@ -6,7 +6,7 @@ import { Container } from '../container';
 import { fetchIssueWithTransitions, fetchMultipleIssuesWithTransitions } from './fetchIssueWithTransitions';
 
 jest.mock('../container');
-jest.mock('@atlassianlabs/jira-pi-common-models');
+jest.mock('@atlassian-pi/jira-pi-common-models');
 
 describe('fetchIssueWithTransitions', () => {
     const mockSiteDetails = expansionCastTo<DetailedSiteInfo>({

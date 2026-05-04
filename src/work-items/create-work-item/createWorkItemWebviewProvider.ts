@@ -1,6 +1,7 @@
-import { IssueType, JiraSiteInfo, Project } from '@atlassianlabs/jira-pi-common-models';
-import { isSelectFieldUI, IssueTypeUI, IssueTypeUIs } from '@atlassianlabs/jira-pi-meta-models';
+import { IssueType, JiraSiteInfo, Project } from '@atlassian-pi/jira-pi-common-models';
+import { isSelectFieldUI, IssueTypeUI, IssueTypeUIs } from '@atlassian-pi/jira-pi-meta-models';
 import path from 'path';
+import { createIssueAbandonedEvent, issueCreatedEvent } from 'src/analytics';
 import { DetailedSiteInfo, ProductJira } from 'src/atlclients/authInfo';
 import { setCommandContext } from 'src/commandContext';
 import { showIssue } from 'src/commands/jira/showIssue';
@@ -14,6 +15,7 @@ import {
 } from 'src/react/atlascode/create-work-item/createWorkItemWebviewMessages';
 import { TypedWebview } from 'src/rovo-dev/rovoDevWebviewProvider';
 import { getHtmlForView } from 'src/webview/common/getHtmlForView';
+import { CreateIssueAnalyticsData } from 'src/webviews/createIssueWebview';
 import {
     CancellationToken,
     commands,
@@ -58,12 +60,14 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
     private get _isWebviewReady(): boolean {
         return this._webviewReady;
     }
+    private _analyticsIssueCreatingData: CreateIssueAnalyticsData;
 
     constructor(context: ExtensionContext, extensionPath: string) {
         super(() => this.dispose());
         this._context = context;
         this._extensionPath = extensionPath;
         this._extensionUri = Uri.file(this._extensionPath);
+        this._analyticsIssueCreatingData = { creationSource: 'unknown', creationId: '', isWorkItemWebview: true };
         this._disposables.push(
             window.registerWebviewViewProvider('atlascode.views.jira.createWorkItemWebview', this, {
                 webviewOptions: {
@@ -97,7 +101,8 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
         );
     }
 
-    public async createOrShow(): Promise<void> {
+    public async createOrShow(analyticsData: CreateIssueAnalyticsData): Promise<void> {
+        this._analyticsIssueCreatingData = { ...analyticsData, isWorkItemWebview: true };
         setCommandContext('atlascode:showCreateWorkItemWebview', true);
         await commands.executeCommand('atlascode.views.jira.createWorkItemWebview.focus');
     }
@@ -157,6 +162,16 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
             }
             case CreateWorkItemWebviewResponseType.Cancel: {
                 setCommandContext('atlascode:showCreateWorkItemWebview', false);
+                if (this._selectedSite) {
+                    createIssueAbandonedEvent({
+                        site: this._selectedSite,
+                        creationSource: this._analyticsIssueCreatingData.creationSource,
+                        creationId: this._analyticsIssueCreatingData.creationId,
+                        apiError: '',
+                    }).then((e) => {
+                        Container.analyticsClient.sendTrackEvent(e);
+                    });
+                }
                 break;
             }
             case CreateWorkItemWebviewResponseType.OpenFullEditor: {
@@ -469,7 +484,13 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
 
                     const client = await Container.clientManager.jiraClient(this._selectedSite!);
                     const response = await client.createIssue({ fields: payload });
-
+                    if (this._selectedSite) {
+                        issueCreatedEvent(this._selectedSite!, response.key, this._analyticsIssueCreatingData).then(
+                            (e) => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            },
+                        );
+                    }
                     if (onCreateAction === 'startWork') {
                         await startWorkOnIssue({ key: response.key, siteDetails: this._selectedSite! });
                     } else if (onCreateAction === 'generateCode' && Container.config.rovodev.enabled) {
@@ -507,7 +528,12 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
             issueTypeId: this._selectedIssueType?.id,
         };
 
-        await Container.createIssueWebview.createOrShow(undefined, partialIssue);
+        // Since we opening regular create issue view, override the creation source to be more specific about where the user is coming from
+        const analyticsData: CreateIssueAnalyticsData = {
+            creationSource: 'moreOptionsButton(CreateWorkItem)',
+            creationId: Date.now().toString(),
+        };
+        await Container.createIssueWebview.createOrShow(undefined, partialIssue, undefined, undefined, analyticsData);
         setCommandContext('atlascode:showCreateWorkItemWebview', false);
     }
 

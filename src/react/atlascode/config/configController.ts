@@ -1,5 +1,5 @@
+import { FilterSearchResults, JQLErrors } from '@atlassian-pi/jira-pi-common-models';
 import { JqlAutocompleteRestData, Suggestion } from '@atlassianlabs/guipi-jira-components';
-import { FilterSearchResults, JQLErrors } from '@atlassianlabs/jira-pi-common-models';
 import React, { useCallback, useMemo, useReducer } from 'react';
 import { UIErrorInfo } from 'src/analyticsTypes';
 import { defaultActionGuard, defaultStateGuard, ReducerAction } from 'src/ipc/messaging';

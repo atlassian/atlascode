@@ -3,8 +3,8 @@ import {
     GroupPickerResult,
     IssuePickerResult,
     Project,
-} from '@atlassianlabs/jira-pi-common-models';
-import { ValueType } from '@atlassianlabs/jira-pi-meta-models';
+} from '@atlassian-pi/jira-pi-common-models';
+import { ValueType } from '@atlassian-pi/jira-pi-meta-models';
 import { expansionCastTo } from 'testsutil/miscFunctions';
 
 import { DetailedSiteInfo, emptySiteInfo, ProductJira } from '../atlclients/authInfo';

@@ -260,8 +260,34 @@ body {
     word-break: break-all;
 }
 
+.tool-return-content p {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;;
+}
+
 .tool-call-item span {
     color: var(--vscode-input-placeholderForeground)
+}
+
+.subagent-task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 4px;
+    width: 100%;
+}
+
+.subagent-task-item code {
+    display: block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background-color: var(--vscode-textBlockQuote-background);
+    color: var(--vscode-input-placeholderForeground);
+    font-size: 0.9em;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 .tool-return-file-path:hover {
@@ -289,7 +315,6 @@ body {
 .code-plan-button-container {
     display: flex;
     justify-content: flex-start;
-    margin-bottom: 8px;
 }
   
 .code-plan-button {
@@ -308,9 +333,21 @@ body {
     cursor: pointer;
 }
 
+.code-plan-button:disabled {
+    border: 1px solid var(--vscode-editorWidget-border);
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-input-placeholderForeground);
+    cursor: not-allowed;
+}
+
+.code-plan-button:disabled:hover {
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-input-placeholderForeground);
+    cursor: not-allowed;
+}
+
 .code-plan-button span {
     font-size: 14px;
-    color: var(--vscode-button-secondaryForeground);
 }
 
 /* Messaging styles */
@@ -336,6 +373,7 @@ body {
     align-items: center;
     gap: 0;
     margin-bottom: 8px;
+    justify-content: space-between;
 }
 
 .chat-message-action {
@@ -424,7 +462,8 @@ body {
 
 /* Code blocks and quotes */
 .user-message .message-content pre,
-.user-message .message-content code {
+.user-message .message-content code,
+.user-message .message-content blockquote {
     background-color: var(--ds-background-inverse-subtle) !important;
     color: var(--ds-text-inverse) !important;
 }
@@ -440,7 +479,7 @@ body {
 }
 
 /* Pull Request button styles */
-.pull-request-button {
+.chat-action-button {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -451,7 +490,7 @@ body {
     border: 0;
     border-radius: 6px;
 }
-.pull-request-button:hover {
+.chat-action-button:hover {
     background-color: var(--vscode-button-hoverBackground);
     cursor: pointer;
 }
@@ -1016,4 +1055,118 @@ body {
 
 .vscode-high-contrast .rovodev-markdown-link {
     color: inherit;
+}
+/* Code block copy button styles */
+.code-block-wrapper {
+    position: relative;
+    display: block;
+}
+
+.code-block-wrapper-inline {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+.code-copy-button-container {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+}
+
+.code-block-wrapper-inline .code-copy-button-container {
+    position: static;
+    top: unset;
+    right: unset;
+}
+
+.code-copy-button {
+    background-color: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    border: 1px solid var(--vscode-button-border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.code-copy-button:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+.code-copy-button:active {
+    background-color: var(--vscode-button-background);
+}
+
+.code-copy-button.copied {
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+}
+
+/* Todo List Styles */
+.todo-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 2px;
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: var(--vscode-editor-background);
+}
+
+.todo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.todo-item {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border-radius: 2px;
+}
+
+.todo-status-pending {
+    border-left-color: var(--vscode-input-placeholderForeground);
+    opacity: 0.7;
+}
+
+.todo-status-in_progress {
+    border-left-color: var(--vscode-progressBar-foreground);
+    background-color: var(--vscode-list-hoverBackground);
+}
+
+.todo-status-completed {
+    border-left-color: var(--vscode-testing-iconPassed);
+    opacity: 0.6;
+}
+
+.todo-icon {
+    font-size: 1.2em;
+    min-width: 20px;
+    text-align: center;
+}
+
+.todo-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.todo-description {
+    font-size: 0.85em;
+    color: var(--vscode-descriptionForeground);
+}
+
+.todo-status-completed .todo-description {
+    text-decoration: line-through;
 }

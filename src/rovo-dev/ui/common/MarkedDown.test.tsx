@@ -37,6 +37,23 @@ describe('MarkedDown', () => {
         expect(container.querySelector('span')).toBeTruthy();
     });
 
+    it('handles non-string values without crashing', () => {
+        expect(() => {
+            // Test with a number
+            render(<MarkedDown value={123 as any} onLinkClick={mockOnLinkClick} />);
+        }).not.toThrow();
+
+        expect(() => {
+            // Test with an object
+            render(<MarkedDown value={{ foo: 'bar' } as any} onLinkClick={mockOnLinkClick} />);
+        }).not.toThrow();
+
+        expect(() => {
+            // Test with an array
+            render(<MarkedDown value={[1, 2, 3] as any} onLinkClick={mockOnLinkClick} />);
+        }).not.toThrow();
+    });
+
     it('handles malformed markdown gracefully', () => {
         // Mock console.error to verify it's called
         const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();

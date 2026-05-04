@@ -16,7 +16,7 @@ import {
     IssueType,
     JsdInternalCommentVisibility,
     MinimalIssueOrKeyAndSite,
-} from '@atlassianlabs/jira-pi-common-models';
+} from '@atlassian-pi/jira-pi-common-models';
 import {
     FieldUI,
     FieldUIs,
@@ -26,7 +26,7 @@ import {
     SelectFieldUI,
     UIType,
     ValueType,
-} from '@atlassianlabs/jira-pi-meta-models';
+} from '@atlassian-pi/jira-pi-meta-models';
 import { Tooltip } from '@mui/material';
 import { formatDistanceToNow } from 'date-fns';
 import debounce from 'lodash.debounce';

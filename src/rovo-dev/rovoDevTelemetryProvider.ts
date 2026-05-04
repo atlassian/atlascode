@@ -21,19 +21,20 @@ export type PartialEvent<T extends { action: string; subject: string; attributes
 export type TelemetryEvent =
     | PartialEvent<Track.NewSessionAction>
     | PartialEvent<Track.PromptSent>
-    | PartialEvent<Track.TechnicalPlanningShown>
     | PartialEvent<Track.FilesSummaryShown>
     | PartialEvent<Track.FileChangedAction>
     | PartialEvent<Track.StopAction>
     | PartialEvent<Track.GitPushAction>
     | PartialEvent<Track.DetailsExpanded>
     | PartialEvent<Track.CreatePrButtonClicked>
+    | PartialEvent<Track.CreateLivePreviewButtonClicked>
     | PartialEvent<Track.AiResultViewed>
     | PartialEvent<Track.RestartProcessAction>
     | PartialEvent<Track.RestoreSessionClicked>
     | PartialEvent<Track.ForkSessionClicked>
     | PartialEvent<Track.DeleteSessionClicked>
-    | PartialEvent<Track.ReplayCompleted>;
+    | PartialEvent<Track.ReplayCompleted>
+    | PartialEvent<Track.LocalServerPromptReceived>;
 
 export type TelemetryScreenEvent = 'rovoDevSessionHistoryPicker';
 
@@ -115,6 +116,7 @@ export class RovoDevTelemetryProvider {
         if (
             event.action === 'rovoDevNewSessionAction' ||
             event.action === 'rovoDevReplayCompleted' ||
+            event.action === 'rovoDevLocalServerPromptReceived' ||
             event.subject === 'rovoDevRestoreSession' ||
             event.subject === 'rovoDevForkSession' ||
             event.subject === 'rovoDevDeleteSession' ||

@@ -12,7 +12,7 @@ jest.mock('../../resources', () => ({
     },
 }));
 
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue } from '@atlassian-pi/jira-pi-common-models';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { expansionCastTo } from 'testsutil';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';

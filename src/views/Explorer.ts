@@ -1,4 +1,4 @@
-import { Project } from '@atlassianlabs/jira-pi-common-models';
+import { Project } from '@atlassian-pi/jira-pi-common-models';
 import { Disposable, TreeDataProvider, TreeItem, TreeView, TreeViewVisibilityChangeEvent, window } from 'vscode';
 
 import { viewScreenEvent } from '../analytics';

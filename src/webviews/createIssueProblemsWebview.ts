@@ -1,4 +1,4 @@
-import { Project } from '@atlassianlabs/jira-pi-common-models';
+import { Project } from '@atlassian-pi/jira-pi-common-models';
 import { ViewColumn } from 'vscode';
 
 import { DetailedSiteInfo, Product, ProductJira } from '../atlclients/authInfo';

@@ -1,4 +1,4 @@
-import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalORIssueLink } from '@atlassian-pi/jira-pi-common-models';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { AssignedJiraItemsViewId, Commands } from 'src/constants';
 import { forceCastTo } from 'testsutil';
@@ -8,7 +8,7 @@ import { searchIssuesEvent } from '../../analytics';
 import { Container } from '../../container';
 import { SearchJiraHelper } from './searchJiraHelper';
 
-jest.mock('@atlassianlabs/jira-pi-common-models');
+jest.mock('@atlassian-pi/jira-pi-common-models');
 jest.mock('../../analytics', () => ({
     searchIssuesEvent: jest.fn(() => Promise.resolve({ eventName: 'searchIssues' })),
 }));

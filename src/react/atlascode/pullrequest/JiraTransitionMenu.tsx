@@ -1,4 +1,4 @@
-import { emptyTransition, MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { emptyTransition, MinimalIssue, Transition } from '@atlassian-pi/jira-pi-common-models';
 import { Box, Checkbox, MenuItem, TableCell, TableRow, TextField, Theme, Typography } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import React, { useCallback, useEffect, useState } from 'react';

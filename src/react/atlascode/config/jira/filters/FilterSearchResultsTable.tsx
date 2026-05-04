@@ -1,4 +1,4 @@
-import { FilterSearchResult, FilterSearchResults } from '@atlassianlabs/jira-pi-common-models';
+import { FilterSearchResult, FilterSearchResults } from '@atlassian-pi/jira-pi-common-models';
 import SearchIcon from '@mui/icons-material/Search';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';

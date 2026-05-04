@@ -1,8 +1,8 @@
 /**
  * @jest-environment jsdom
  */
-import { IssueType } from '@atlassianlabs/jira-pi-common-models';
-import { FieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { IssueType } from '@atlassian-pi/jira-pi-common-models';
+import { FieldUI, UIType, ValueType } from '@atlassian-pi/jira-pi-meta-models';
 import { render, waitFor } from '@testing-library/react';
 import React from 'react';
 import { DetailedSiteInfo, Product } from 'src/atlclients/authInfo';

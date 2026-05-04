@@ -1,5 +1,5 @@
-import { IssueType, Project } from '@atlassianlabs/jira-pi-common-models';
-import { FieldUI } from '@atlassianlabs/jira-pi-meta-models';
+import { IssueType, Project } from '@atlassian-pi/jira-pi-common-models';
+import { FieldUI } from '@atlassian-pi/jira-pi-meta-models';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 
 export enum CreateWorkItemWebviewProviderMessageType {

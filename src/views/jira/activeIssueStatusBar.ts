@@ -1,4 +1,4 @@
-import { isMinimalIssue, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
+import { isMinimalIssue, MinimalIssueOrKeyAndSite } from '@atlassian-pi/jira-pi-common-models';
 import fs from 'fs';
 import {
     commands,

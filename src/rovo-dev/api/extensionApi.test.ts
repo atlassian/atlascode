@@ -1,4 +1,5 @@
 import { Container } from 'src/container';
+import { Logger } from 'src/logger';
 
 import { ExtensionApi, JiraApi, ProductJira } from './extensionApi';
 
@@ -38,6 +39,14 @@ jest.mock('src/container', () => ({
 }));
 
 // Mock SearchJiraHelper
+jest.mock('src/logger', () => ({
+    Logger: {
+        error: jest.fn(),
+        warn: jest.fn(),
+        debug: jest.fn(),
+    },
+}));
+
 jest.mock('src/views/jira/searchJiraHelper', () => ({
     SearchJiraHelper: {
         getAssignedIssuesPerSite: jest.fn(),
@@ -45,7 +54,7 @@ jest.mock('src/views/jira/searchJiraHelper', () => ({
 }));
 
 // Mock jira-pi-common-models
-jest.mock('@atlassianlabs/jira-pi-common-models', () => ({
+jest.mock('@atlassian-pi/jira-pi-common-models', () => ({
     isMinimalIssue: jest.fn((issue) => true),
     readSearchResults: jest.fn().mockResolvedValue({ issues: [] }),
 }));
@@ -195,7 +204,7 @@ describe('ExtensionApi', () => {
         describe('fetchWorkItems', () => {
             const mockSite = { id: 'site-1', name: 'Test Site' } as any;
             const { SearchJiraHelper } = require('src/views/jira/searchJiraHelper');
-            const { isMinimalIssue, readSearchResults } = require('@atlassianlabs/jira-pi-common-models');
+            const { isMinimalIssue, readSearchResults } = require('@atlassian-pi/jira-pi-common-models');
 
             beforeEach(() => {
                 // Reset all mocks for each test
@@ -251,6 +260,64 @@ describe('ExtensionApi', () => {
                     0,
                 );
                 expect(result).toEqual(mockIssues);
+            });
+
+            it('should warn (not error) when fetchWorkItemsFromApi rejects with "Site previously failed authentication"', async () => {
+                SearchJiraHelper.getAssignedIssuesPerSite.mockReturnValue([]);
+                const authError = new Error('Site previously failed authentication');
+                (Container.clientManager.jiraClient as jest.Mock).mockRejectedValue(authError);
+
+                const result = await jiraApi.fetchWorkItems(mockSite);
+
+                expect(result).toEqual([]);
+                expect(Logger.warn).toHaveBeenCalledWith(
+                    expect.stringContaining('Failed to fetch work items from API:'),
+                );
+                expect(Logger.error).not.toHaveBeenCalled();
+            });
+
+            it('should warn (not error) when fetchWorkItemsFromApi rejects with "Please sign in again to continue"', async () => {
+                SearchJiraHelper.getAssignedIssuesPerSite.mockReturnValue([]);
+                const authError = new Error('Unable to connect to Jira. Please sign in again to continue.');
+                (Container.clientManager.jiraClient as jest.Mock).mockRejectedValue(authError);
+
+                const result = await jiraApi.fetchWorkItems(mockSite);
+
+                expect(result).toEqual([]);
+                expect(Logger.warn).toHaveBeenCalledWith(
+                    expect.stringContaining('Failed to fetch work items from API:'),
+                );
+                expect(Logger.error).not.toHaveBeenCalled();
+            });
+
+            it('should warn (not error) when API fails with "Site previously failed authentication"', async () => {
+                SearchJiraHelper.getAssignedIssuesPerSite.mockReturnValue([]);
+                (Container.clientManager.jiraClient as jest.Mock).mockRejectedValue(
+                    new Error('Site previously failed authentication'),
+                );
+
+                const result = await jiraApi.fetchWorkItems(mockSite);
+
+                expect(result).toEqual([]);
+                expect(Logger.warn).toHaveBeenCalledWith(
+                    expect.stringContaining('Failed to fetch work items from API:'),
+                );
+                expect(Logger.error).not.toHaveBeenCalled();
+            });
+
+            it('should warn (not error) when API fails with "Please sign in again to continue"', async () => {
+                SearchJiraHelper.getAssignedIssuesPerSite.mockReturnValue([]);
+                (Container.clientManager.jiraClient as jest.Mock).mockRejectedValue(
+                    new Error('Unable to connect to Jira. Please sign in again to continue.'),
+                );
+
+                const result = await jiraApi.fetchWorkItems(mockSite);
+
+                expect(result).toEqual([]);
+                expect(Logger.warn).toHaveBeenCalledWith(
+                    expect.stringContaining('Failed to fetch work items from API:'),
+                );
+                expect(Logger.error).not.toHaveBeenCalled();
             });
 
             it('should return empty array when API fails with scoped token', async () => {

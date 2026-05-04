@@ -2,6 +2,8 @@ import { DetailedSiteInfo, MinimalIssue } from './api/extensionApi';
 import {
     AgentMode,
     EntitlementCheckRovoDevHealthcheckResponse,
+    RovoDevAskUserQuestionsToolArgs,
+    RovoDevExitPlanModeToolArgs,
     RovoDevModeInfo,
     RovoDevRetryPromptResponse,
     RovoDevTextResponse,
@@ -26,11 +28,7 @@ export const enum RovoDevProviderMessageType {
     SetMcpAcceptanceRequired = 'setMcpAcceptanceRequired',
     RovoDevReady = 'rovoDevReady',
     CancelFailed = 'cancelFailed',
-    CreatePRComplete = 'createPRComplete',
-    GetCurrentBranchNameComplete = 'getCurrentBranchNameComplete',
     SetChatContext = 'setChatContext',
-    CheckGitChangesComplete = 'checkGitChangesComplete',
-    FilterModifiedFilesByContentComplete = 'filterModifiedFilesByContentComplete',
     ForceStop = 'forceStop',
     ShowFeedbackForm = 'showFeedbackForm',
     SetDebugPanel = 'setDebugPanel',
@@ -46,8 +44,12 @@ export const enum RovoDevProviderMessageType {
     GetCurrentAgentModeComplete = 'getCurrentAgentModeComplete',
     SetAgentModeComplete = 'setAgentModeComplete',
     UpdateSavedPrompts = 'updateSavedPrompts',
+    ShowDeferredAskUserQuestions = 'showDeferredAskUserQuestions',
+    ShowDeferredExitPlanMode = 'showDeferredExitPlanMode',
     UpdateAgentModels = 'updateAgentModels',
     AgentModelChanged = 'agentModelChanged',
+    SetModifiedFiles = 'setModifiedFiles',
+    ShowLivePreviewButton = 'showLivePreviewButton',
 }
 
 export type RovoDevDisabledReason = DisabledState['subState'];
@@ -106,11 +108,7 @@ export type RovoDevProviderMessage =
     | ReducerAction<RovoDevProviderMessageType.SetMcpAcceptanceRequired, { isPromptPending: boolean; mcpIds: string[] }>
     | ReducerAction<RovoDevProviderMessageType.RovoDevReady, { isPromptPending: boolean }>
     | ReducerAction<RovoDevProviderMessageType.CancelFailed>
-    | ReducerAction<RovoDevProviderMessageType.CreatePRComplete, { data: { url?: string; error?: string } }>
-    | ReducerAction<RovoDevProviderMessageType.GetCurrentBranchNameComplete, { data: { branchName?: string } }>
     | ReducerAction<RovoDevProviderMessageType.SetChatContext, { context: RovoDevContextItem[] }>
-    | ReducerAction<RovoDevProviderMessageType.CheckGitChangesComplete, { hasChanges: boolean }>
-    | ReducerAction<RovoDevProviderMessageType.FilterModifiedFilesByContentComplete, { filteredFiles: ModifiedFile[] }>
     | ReducerAction<RovoDevProviderMessageType.ForceStop>
     | ReducerAction<RovoDevProviderMessageType.ShowFeedbackForm>
     | ReducerAction<
@@ -141,5 +139,15 @@ export type RovoDevProviderMessage =
           RovoDevProviderMessageType.UpdateSavedPrompts,
           { savedPrompts: { name: string; description: string; content_file: string }[] | undefined }
       >
+    | ReducerAction<
+          RovoDevProviderMessageType.ShowDeferredAskUserQuestions,
+          { toolCallId: string; args: RovoDevAskUserQuestionsToolArgs }
+      >
+    | ReducerAction<
+          RovoDevProviderMessageType.ShowDeferredExitPlanMode,
+          { toolCallId: string; args: RovoDevExitPlanModeToolArgs }
+      >
     | ReducerAction<RovoDevProviderMessageType.UpdateAgentModels, { models: RovoDevAgentModel[] }>
-    | ReducerAction<RovoDevProviderMessageType.AgentModelChanged, RovoDevAgentModel>;
+    | ReducerAction<RovoDevProviderMessageType.AgentModelChanged, RovoDevAgentModel>
+    | ReducerAction<RovoDevProviderMessageType.SetModifiedFiles, { files: ModifiedFile[] }>
+    | ReducerAction<RovoDevProviderMessageType.ShowLivePreviewButton, { show: boolean }>;

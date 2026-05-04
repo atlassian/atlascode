@@ -11,14 +11,6 @@ jest.mock('../common/DialogMessage', () => ({
     DialogMessageItem: ({ msg }: any) => <div data-testid="dialog-message">{msg.event_kind}</div>,
 }));
 
-jest.mock('../create-pr/PullRequestForm', () => ({
-    PullRequestChatItem: ({ msg }: any) => <div data-testid="pr-chat-item">{msg.event_kind}</div>,
-}));
-
-jest.mock('../technical-plan/TechnicalPlanComponent', () => ({
-    TechnicalPlanComponent: ({ content }: any) => <div data-testid="technical-plan">{content}</div>,
-}));
-
 jest.mock('../tools/ToolReturnItem', () => ({
     ToolReturnParsedItem: ({ msg }: any) => <div data-testid="tool-return-parsed">{msg.content}</div>,
 }));
@@ -48,7 +40,6 @@ describe('ChatItem', () => {
             isRetryAfterErrorButtonEnabled: jest.fn(),
             retryPromptAfterError: jest.fn(),
             onRestartProcess: jest.fn(),
-            onOpenLogFile: jest.fn(),
             onError: jest.fn(),
         },
         currentState: { state: 'WaitingForPrompt' } as State,
@@ -91,18 +82,7 @@ describe('ChatItem', () => {
         expect(screen.getByTestId('chat-message')).toBeTruthy();
     });
 
-    it('renders TechnicalPlanComponent for tool-return with technical plan', () => {
-        const block: Response = {
-            event_kind: 'tool-return',
-        } as Response;
-
-        mockParseToolReturnMessage.mockReturnValue([{ technicalPlan: 'Technical plan content' }]);
-
-        render(<ChatItem {...defaultProps} block={block} />);
-        expect(screen.getByTestId('technical-plan')).toBeTruthy();
-    });
-
-    it('renders ToolReturnParsedItem for tool-return without technical plan', () => {
+    it('renders ToolReturnParsedItem for tool-return', () => {
         const block: Response = {
             event_kind: 'tool-return',
         } as Response;
@@ -120,15 +100,6 @@ describe('ChatItem', () => {
 
         render(<ChatItem {...defaultProps} block={block} />);
         expect(screen.getByTestId('dialog-message')).toBeTruthy();
-    });
-
-    it('renders PullRequestChatItem for _RovoDevPullRequest event', () => {
-        const block: Response = {
-            event_kind: '_RovoDevPullRequest',
-        } as Response;
-
-        render(<ChatItem {...defaultProps} block={block} />);
-        expect(screen.getByTestId('pr-chat-item')).toBeTruthy();
     });
 
     it('returns null for unknown event kinds', () => {

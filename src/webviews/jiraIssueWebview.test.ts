@@ -4,7 +4,7 @@ import {
     MinimalIssue,
     readSearchResults,
     User,
-} from '@atlassianlabs/jira-pi-common-models';
+} from '@atlassian-pi/jira-pi-common-models';
 import { attachAssigneesToIssues, collectAssigneesFromResponse } from 'src/jira/issueAssigneeUtils';
 import { expansionCastTo } from 'testsutil/miscFunctions';
 import { commands, env, WebviewPanel } from 'vscode';
@@ -68,8 +68,8 @@ jest.mock('../jira/transitionIssue', () => ({
 jest.mock('../commands/jira/postComment');
 jest.mock('../bitbucket/bbUtils');
 jest.mock('../commands/jira/startWorkOnIssue');
-jest.mock('@atlassianlabs/jira-pi-common-models', () => ({
-    ...jest.requireActual('@atlassianlabs/jira-pi-common-models'),
+jest.mock('@atlassian-pi/jira-pi-common-models', () => ({
+    ...jest.requireActual('@atlassian-pi/jira-pi-common-models'),
     readSearchResults: jest.fn(),
 }));
 jest.mock('../views/notifications/notificationManager', () => ({
@@ -450,7 +450,7 @@ describe('JiraIssueWebview', () => {
             mockJiraClient.searchForIssuesUsingJqlGet.mockResolvedValue(mockSearchResults);
 
             // Mock readSearchResults function
-            const readSearchResultsMock = require('@atlassianlabs/jira-pi-common-models').readSearchResults;
+            const readSearchResultsMock = require('@atlassian-pi/jira-pi-common-models').readSearchResults;
             readSearchResultsMock.mockResolvedValue(mockSearchResults);
 
             const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
@@ -1031,22 +1031,13 @@ describe('JiraIssueWebview', () => {
                 nonce: 'nonce-123',
             };
 
-            const mockTransport = jest.fn().mockResolvedValue({});
-            mockJiraClient.transportFactory.mockReturnValue(mockTransport);
-            mockJiraClient.authorizationProvider.mockResolvedValue('Bearer test-token');
-            mockJiraClient.apiVersion = '3';
+            mockJiraClient.deleteIssuelink = jest.fn().mockResolvedValue({});
 
             const postMessageSpy = jest.spyOn(jiraIssueWebview as any, 'postMessage');
 
             await jiraIssueWebview['onMessageReceived'](msg);
 
-            const expectedUrl = `${mockSiteDetails.baseApiUrl.replace(/\/rest$/, '')}/rest/api/3/issueLink/${linkId}`;
-            expect(mockTransport).toHaveBeenCalledWith(expectedUrl, {
-                method: 'DELETE',
-                headers: {
-                    Authorization: 'Bearer test-token',
-                },
-            });
+            expect(mockJiraClient.deleteIssuelink).toHaveBeenCalledWith(linkId);
             expect(jiraIssueWebview['_editUIData'].fieldValues['issuelinks']).toHaveLength(1);
             expect(jiraIssueWebview['_editUIData'].fieldValues['issuelinks'][0].id).toBe('link-2');
             expect(postMessageSpy).toHaveBeenCalled();
@@ -1378,7 +1369,9 @@ describe('JiraIssueWebview', () => {
 
                 await jiraIssueWebview['onMessageReceived'](msg);
 
-                expect(mockJiraClient.removeWatcher).toHaveBeenCalledWith(mockIssue.key, { username: watcher.key });
+                expect(mockJiraClient.removeWatcher).toHaveBeenCalledWith(mockIssue.key, {
+                    username: watcher.key,
+                });
                 expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchers).not.toContain(watcher);
                 expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].watchCount).toBe(0);
                 expect(jiraIssueWebview['_editUIData'].fieldValues['watches'].isWatching).toBe(false);

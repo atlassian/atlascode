@@ -1,4 +1,4 @@
-import { User } from '@atlassianlabs/jira-pi-common-models';
+import { User } from '@atlassian-pi/jira-pi-common-models';
 import { DetailedSiteInfo, ProductJira } from 'src/atlclients/authInfo';
 import { Container } from 'src/container';
 

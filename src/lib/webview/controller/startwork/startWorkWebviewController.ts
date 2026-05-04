@@ -133,6 +133,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
     public async onMessageReceived(msg: StartWorkAction) {
         switch (msg.type) {
             case StartWorkActionType.StartRequest: {
+                const inputNonce = msg.nonce;
                 try {
                     await this.api.assignAndTransitionIssue(
                         this.initData.issue,
@@ -152,6 +153,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                         transistionStatus: msg.transitionIssueEnabled ? msg.transition.to.name : undefined,
                         branch: msg.branchSetupEnabled ? msg.targetBranch : undefined,
                         upstream: msg.branchSetupEnabled ? msg.upstream : undefined,
+                        nonce: inputNonce,
                     });
                     this.analytics.fireIssueWorkStartedEvent(this.initData.issue.siteDetails, msg.pushBranchToRemote);
                 } catch (e) {
@@ -159,6 +161,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error executing start work action'),
+                        nonce: inputNonce,
                     });
                     this.analytics.fireIssueStartWorkErrorEvent(e.message, e?.stack);
                 }

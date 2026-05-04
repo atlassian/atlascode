@@ -1,4 +1,4 @@
-import { createEmptyMinimalIssue, createIssueNotFoundIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { createEmptyMinimalIssue, createIssueNotFoundIssue, MinimalIssue } from '@atlassian-pi/jira-pi-common-models';
 import * as vscode from 'vscode';
 
 import { DetailedSiteInfo, emptySiteInfo, ProductJira } from '../../atlclients/authInfo';
@@ -12,8 +12,8 @@ jest.mock('vscode');
 jest.mock('../../jira/fetchIssue');
 jest.mock('../../jira/issueForKey');
 jest.mock('../../container');
-jest.mock('@atlassianlabs/jira-pi-common-models', () => {
-    const actual = jest.requireActual('@atlassianlabs/jira-pi-common-models');
+jest.mock('@atlassian-pi/jira-pi-common-models', () => {
+    const actual = jest.requireActual('@atlassian-pi/jira-pi-common-models');
     return {
         ...actual,
         isMinimalIssue: jest.fn(),
@@ -37,7 +37,7 @@ describe('showIssue module', () => {
     const mockCreateOrShow = jest.fn();
 
     // Import the mocked functions to simplify type checks
-    const modelFunctions = require('@atlassianlabs/jira-pi-common-models');
+    const modelFunctions = require('@atlassian-pi/jira-pi-common-models');
 
     beforeEach(() => {
         jest.clearAllMocks();

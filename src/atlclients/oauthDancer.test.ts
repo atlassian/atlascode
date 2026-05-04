@@ -84,7 +84,7 @@ describe('OAuthDancer', () => {
 
         mockStrategy = expansionCastTo<Strategy>({
             authorizeUrl: jest.fn().mockReturnValue('https://auth.example.com'),
-            provider: jest.fn(),
+            provider: jest.fn().mockReturnValue(OAuthProvider.JiraCloud),
             tokenUrl: jest.fn(),
         });
 

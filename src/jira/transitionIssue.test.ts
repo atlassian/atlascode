@@ -1,4 +1,4 @@
-import { isIssueKeyAndSite, isMinimalIssue, MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { isIssueKeyAndSite, isMinimalIssue, MinimalIssue, Transition } from '@atlassian-pi/jira-pi-common-models';
 import { expansionCastTo, forceCastTo } from 'testsutil';
 import { commands } from 'vscode';
 
@@ -32,8 +32,8 @@ jest.mock('../logger', () => ({
 }));
 
 // Mock types for easier testing
-jest.mock('@atlassianlabs/jira-pi-common-models', () => {
-    const original = jest.requireActual('@atlassianlabs/jira-pi-common-models');
+jest.mock('@atlassian-pi/jira-pi-common-models', () => {
+    const original = jest.requireActual('@atlassian-pi/jira-pi-common-models');
     return {
         ...original,
         isMinimalIssue: jest.fn(),

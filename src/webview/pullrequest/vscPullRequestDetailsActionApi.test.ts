@@ -1,4 +1,4 @@
-import { isMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { isMinimalIssue, MinimalIssue } from '@atlassian-pi/jira-pi-common-models';
 import axios from 'axios';
 import pSettle, { PromiseFulfilledResult } from 'p-settle';
 import * as vscode from 'vscode';
@@ -42,7 +42,7 @@ import { VSCPullRequestDetailsActionApi } from './vscPullRequestDetailsActionApi
 // Mock dependencies
 jest.mock('axios');
 jest.mock('p-settle');
-jest.mock('@atlassianlabs/jira-pi-common-models', () => ({
+jest.mock('@atlassian-pi/jira-pi-common-models', () => ({
     isMinimalIssue: jest.fn(),
     createEmptyMinimalIssue: jest.fn().mockReturnValue({}),
 }));

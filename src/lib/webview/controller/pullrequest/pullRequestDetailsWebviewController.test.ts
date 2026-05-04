@@ -1,4 +1,4 @@
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue } from '@atlassian-pi/jira-pi-common-models';
 import Axios from 'axios';
 import { Logger } from 'src/logger';
 import { Uri } from 'vscode';

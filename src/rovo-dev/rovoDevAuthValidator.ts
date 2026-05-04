@@ -40,8 +40,8 @@ export async function createValidatedRovoDevAuthInfo(
     const normalizedHost = host.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
     // Validate that it's an atlassian.net domain
-    if (!normalizedHost.endsWith('.atlassian.net')) {
-        throw new Error('Please enter a valid Atlassian Cloud site (*.atlassian.net)');
+    if (!normalizedHost.endsWith('.atlassian.net') && !normalizedHost.endsWith('.jira.com')) {
+        throw new Error('Please enter a valid Atlassian Cloud site (*.atlassian.net or *.jira.com).');
     }
 
     // Fetch user information (validates credentials implicitly)

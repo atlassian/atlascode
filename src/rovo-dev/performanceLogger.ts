@@ -51,11 +51,6 @@ export class PerformanceLogger {
         await this.fireEvent('api.rovodev.chat.response.timeToFirstMessage', measure, promptId);
     }
 
-    public async promptTechnicalPlanReceived(promptId: string) {
-        const measure = Perf.measure(promptId);
-        await this.fireEvent('api.rovodev.chat.response.timeToTechPlan', measure, promptId);
-    }
-
     public async promptLastMessageReceived(promptId: string) {
         const measure = Perf.measure(promptId);
         Perf.clear(promptId);

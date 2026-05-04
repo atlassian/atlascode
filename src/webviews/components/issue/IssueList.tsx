@@ -1,7 +1,7 @@
 import Button from '@atlaskit/button';
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
-import { IssueLinkIssue, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
+import { IssueLinkIssue, MinimalIssueOrKeyAndSite } from '@atlassian-pi/jira-pi-common-models';
 import * as React from 'react';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
@@ -46,7 +46,7 @@ export default class IssueList extends React.Component<
             <TableTree
                 columns={[IssueKey, Summary, Priority, AssigneeColumn, StatusColumn]}
                 columnWidths={['100%', '100%', '20px', '100%', '150px']}
-                items={this.props.issues.map((issue) => {
+                items={(Array.isArray(this.props.issues) ? this.props.issues : []).map((issue) => {
                     return {
                         id: issue.key,
                         content: {

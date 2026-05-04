@@ -1,4 +1,4 @@
-import { MinimalIssue, readSearchResults } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue, readSearchResults } from '@atlassian-pi/jira-pi-common-models';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { Container } from 'src/container';
 import { attachAssigneesToIssues, collectAssigneesFromResponse } from 'src/jira/issueAssigneeUtils';

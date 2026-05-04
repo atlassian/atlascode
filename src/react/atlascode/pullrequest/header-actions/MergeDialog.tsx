@@ -1,5 +1,5 @@
+import { MinimalIssue, Transition } from '@atlassian-pi/jira-pi-common-models';
 import { InlineTextEditor, ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
-import { MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
 import {
     Box,
     Button,

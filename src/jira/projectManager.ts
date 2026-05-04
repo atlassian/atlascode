@@ -1,4 +1,4 @@
-import { emptyProject, Project } from '@atlassianlabs/jira-pi-common-models';
+import { emptyProject, Project } from '@atlassian-pi/jira-pi-common-models';
 import { Disposable } from 'vscode';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';

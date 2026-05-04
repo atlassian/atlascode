@@ -1,11 +1,11 @@
-import { MinimalIssue, readSearchResults } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue, readSearchResults } from '@atlassian-pi/jira-pi-common-models';
 import { expansionCastTo, forceCastTo } from 'testsutil';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { Container } from '../container';
 import { issuesForJQL, MAX_RESULTS } from './issuesForJql';
 
-jest.mock('@atlassianlabs/jira-pi-common-models', () => ({
+jest.mock('@atlassian-pi/jira-pi-common-models', () => ({
     readSearchResults: jest.fn(),
 }));
 

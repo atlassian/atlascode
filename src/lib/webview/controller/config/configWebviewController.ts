@@ -118,7 +118,11 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
         }
     }
 
-    public update(section: SectionChangeMessage) {
+    public update(section?: SectionChangeMessage) {
+        if (section === undefined) {
+            this.invalidate();
+            return;
+        }
         // Store the section data for potential invalidate calls
         this._initialSection = section;
 
@@ -138,10 +142,10 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 try {
                     await this.invalidate();
                 } catch (e) {
-                    this._logger.error(e, 'Error refeshing config');
+                    this._logger.error(e, 'Error refreshing config');
                     this.postMessage({
                         type: CommonMessageType.Error,
-                        reason: formatError(e, 'Error refeshing config'),
+                        reason: formatError(e, 'Error refreshing config'),
                     });
                 }
                 break;

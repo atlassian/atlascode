@@ -9,7 +9,11 @@
     },
     "bodyPatterns": [
       {
-        "matchesJsonPath": "$.fields.description",
+        "matchesJsonPath": "$.fields.description.type",
+        "equalTo": "doc"
+      },
+      {
+        "matchesJsonPath": "$.fields.description.content[0].content[0].text",
         "contains": "Add e2e test for this functionality"
       }
     ]

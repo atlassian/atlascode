@@ -70,6 +70,7 @@ const CollapsibleButton = ({
 };
 export const IssueSidebarCollapsible: React.FC<Props> = ({ label, items, defaultOpen = false }) => {
     const [isOpen, setIsOpen] = React.useState(defaultOpen);
+    const sidebarItems = Array.isArray(items) ? items : [];
 
     const toggleOpen = () => {
         setIsOpen(!isOpen);
@@ -90,7 +91,7 @@ export const IssueSidebarCollapsible: React.FC<Props> = ({ label, items, default
                         borderRadius: '0 0 3px 3px',
                     }}
                 >
-                    {items.map((item, index) => (
+                    {sidebarItems.map((item, index) => (
                         <Box
                             key={index}
                             style={{

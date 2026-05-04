@@ -1,4 +1,4 @@
-import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalORIssueLink } from '@atlassian-pi/jira-pi-common-models';
 import { commands, QuickPickItem, ThemeIcon, window } from 'vscode';
 
 import { searchIssuesEvent } from '../../analytics';

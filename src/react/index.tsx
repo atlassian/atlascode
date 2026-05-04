@@ -55,7 +55,9 @@ const root = document.getElementById('root') as HTMLElement;
 attachImageErrorHandler();
 
 const App = () => {
-    const Page = routes[view.getAttribute('content')!];
+    const viewContent = view.getAttribute('content')!;
+    const Page = routes[viewContent];
+    const isRovoDev = viewContent === 'atlascodeRovoDev';
     const [errorState, errorController] = useErrorController();
     const [pmfState, pmfController] = usePMFController();
     const [vscStyles, setVscStyles] = useState(computeStyles());
@@ -78,7 +80,7 @@ const App = () => {
     }, [themeObserver]);
 
     return (
-        <React.Suspense fallback={<AtlLoader />}>
+        <React.Suspense fallback={<AtlLoader variant={isRovoDev ? 'rovoDev' : 'default'} />}>
             <VSCodeStylesContext.Provider value={vscStyles}>
                 <ThemeProvider theme={currentTheme}>
                     <ErrorControllerContext.Provider value={errorController}>

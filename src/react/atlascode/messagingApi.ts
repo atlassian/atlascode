@@ -33,7 +33,7 @@ export function useMessagingApi<A, M extends ReducerAction<any, any>, R extends 
             action: A,
             waitForEvent: Z,
             timeout: number,
-            nonce?: string,
+            nonce?: string, // uniq identifier to correlate request and response
         ): Promise<Extract<R, { type: Z }>> => {
             apiRef.postMessage(action);
             return new Promise<Extract<R, { type: Z }>>((resolve, reject) => {

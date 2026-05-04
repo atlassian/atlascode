@@ -57,7 +57,7 @@ export class HelpDataProvider extends BaseTreeDataProvider {
                 ...(Container.isRovoDevEnabled && Container.siteManager.productHasAtLeastOneSite(ProductJira)
                     ? [
                           new InternalLinkNode('Rovo Dev', 'Chat with Atlassian coding agent', iconSet.ROVODEV, {
-                              command: 'workbench.view.extension.atlascode-rovo-dev',
+                              command: 'atlascode.views.rovoDev.webView.focus',
                               title: 'Open Rovo Dev Chat',
                           }),
                       ]
@@ -87,7 +87,7 @@ export class HelpDataProvider extends BaseTreeDataProvider {
                 ...(Container.isRovoDevEnabled && Container.siteManager.productHasAtLeastOneSite(ProductJira)
                     ? [
                           new InternalLinkNode('Rovo Dev', 'Chat with Atlassian coding agent', iconSet.ROVODEV, {
-                              command: 'workbench.view.extension.atlascode-rovo-dev',
+                              command: 'atlascode.views.rovoDev.webView.focus',
                               title: 'Open Rovo Dev Chat',
                           }),
                       ]

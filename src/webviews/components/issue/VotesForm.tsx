@@ -1,7 +1,7 @@
 import Avatar from '@atlaskit/avatar';
 import AvatarGroup from '@atlaskit/avatar-group';
 import ThumbsUpIcon from '@atlaskit/icon/core/thumbs-up';
-import { User, Votes } from '@atlassianlabs/jira-pi-common-models';
+import { User, Votes } from '@atlassian-pi/jira-pi-common-models';
 import * as React from 'react';
 
 type MyState = {
@@ -92,7 +92,8 @@ export default class VotesForm extends React.Component<MyProps, MyState> {
             return this.getEmptyVoters();
         }
 
-        const voterList = this.props.votes.voters.map((voter, index) => {
+        const voters = Array.isArray(this.props.votes.voters) ? this.props.votes.voters : [];
+        const voterList = voters.map((voter, index) => {
             const avatar = voter.avatarUrls && voter.avatarUrls['48x48'] ? voter.avatarUrls['48x48'] : '';
             return (
                 <div key={voter.accountId || index} className="ac-inline-watcher ac-inline-watcher-hover">

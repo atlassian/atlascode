@@ -60,6 +60,7 @@ export const AttachmentList: React.FunctionComponent<AttachmentListProps> = ({
     fetchImage,
 }) => {
     const [selectedAttachment, setSelectedAttachment] = useState<any>(undefined);
+    const attachmentList = Array.isArray(attachments) ? attachments : [];
 
     const Filename = (data: ItemData) =>
         previewableTypes.includes(data.attachment.mimeType) ? (
@@ -75,7 +76,7 @@ export const AttachmentList: React.FunctionComponent<AttachmentListProps> = ({
             <TableTree
                 columns={[Filename, ExternalLink, Size, Delete]}
                 columnWidths={['100%', '50px', '150px', '50px']}
-                items={attachments.map((attachment) => {
+                items={attachmentList.map((attachment) => {
                     return {
                         id: attachment.id,
                         content: {

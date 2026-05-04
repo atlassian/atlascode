@@ -1,4 +1,4 @@
-import { Transition } from '@atlassianlabs/jira-pi-common-models';
+import { Transition } from '@atlassian-pi/jira-pi-common-models';
 import { ReducerAction } from 'src/ipc/messaging';
 
 import { WorkspaceRepo } from '../../../bitbucket/model';
@@ -41,6 +41,7 @@ export interface StartRequestAction {
     targetBranch: string;
     upstream: string;
     pushBranchToRemote: boolean;
+    nonce: string;
 }
 
 export interface OpenSettingsAction {

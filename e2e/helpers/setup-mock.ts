@@ -1,4 +1,4 @@
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue } from '@atlassian-pi/jira-pi-common-models';
 import { APIRequestContext } from '@playwright/test';
 import fs from 'fs';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';

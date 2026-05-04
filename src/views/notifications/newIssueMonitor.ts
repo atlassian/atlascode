@@ -1,4 +1,4 @@
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue } from '@atlassian-pi/jira-pi-common-models';
 import { format } from 'date-fns';
 import pSettle from 'p-settle';
 import { JQLEntry } from 'src/config/model';

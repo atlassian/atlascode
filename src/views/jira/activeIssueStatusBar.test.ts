@@ -82,7 +82,7 @@ jest.mock('../../commands/jira/showIssue', () => ({
 }));
 
 // Mock isMinimalIssue function
-jest.mock('@atlassianlabs/jira-pi-common-models', () => ({
+jest.mock('@atlassian-pi/jira-pi-common-models', () => ({
     isMinimalIssue: jest.fn().mockReturnValue(true),
 }));
 

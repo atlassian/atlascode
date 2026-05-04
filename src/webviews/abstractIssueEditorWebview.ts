@@ -6,8 +6,8 @@ import {
     isProjectsResult,
     IssuePickerIssue,
     IssuePickerResult,
-} from '@atlassianlabs/jira-pi-common-models';
-import { ValueType } from '@atlassianlabs/jira-pi-meta-models';
+} from '@atlassian-pi/jira-pi-common-models';
+import { ValueType } from '@atlassian-pi/jira-pi-meta-models';
 import { Features } from 'src/util/features';
 
 import { showIssue } from '../commands/jira/showIssue';

@@ -394,24 +394,29 @@ describe('gitActions', () => {
 
     describe('addSourceRemoteIfNeededForPR', () => {
         beforeEach(() => {
-            mockParseGitUrl.mockReturnValue({
-                name: 'fork-repo',
-                owner: 'fork-owner',
-                full_name: 'fork-owner/fork-repo',
-                toString: jest.fn().mockReturnValue('git@bitbucket.org:fork-owner/fork-repo.git'),
-                protocol: 'ssh',
-            } as any);
+            mockParseGitUrl.mockImplementation((url: string) => {
+                const parsed = {
+                    name: 'repo',
+                    owner: 'fork-owner',
+                    full_name: 'fork-owner/repo',
+                    protocol: 'ssh',
+                    toString: function () {
+                        return `git@bitbucket.org:${this.owner}/${this.name}.git`;
+                    },
+                };
+                return parsed as any;
+            });
             mockUrlForRemote.mockReturnValue('git@bitbucket.org:owner/repo.git');
         });
 
         it('should add source remote for fork PR', async () => {
             await addSourceRemoteIfNeededForPR(mockPullRequest);
 
-            expect(mockParseGitUrl).toHaveBeenCalledTimes(2); // Once for main remote, once for source
+            expect(mockParseGitUrl).toHaveBeenCalledTimes(3); // Once for main remote, once for source, once in findRemoteByRepoUrl
             expect(mockUrlForRemote).toHaveBeenCalledWith(mockWorkspaceRepo.mainSiteRemote.remote);
             expect(mockRepository.addRemote).toHaveBeenCalledWith(
                 'fork-owner/repo',
-                'git@bitbucket.org:fork-owner/fork-repo.git',
+                'git@bitbucket.org:fork-owner/repo.git',
             );
             expect(mockRepository.fetch).toHaveBeenCalledWith('fork-owner/repo', 'feature-branch');
         });
@@ -435,7 +440,7 @@ describe('gitActions', () => {
 
             expect(mockRepository.addRemote).toHaveBeenCalledWith(
                 '__username/repo',
-                'git@bitbucket.org:fork-owner/fork-repo.git',
+                'git@bitbucket.org:fork-owner/repo.git',
             );
         });
 
@@ -509,7 +514,7 @@ describe('gitActions', () => {
 
             expect(mockRepository.addRemote).toHaveBeenCalledWith(
                 'fork-owner/repo',
-                'git@bitbucket.org:fork-owner/fork-repo.git',
+                'git@bitbucket.org:fork-owner/repo.git',
             );
             expect(mockRepository.fetch).toHaveBeenCalledWith('fork-owner/repo', 'feature-branch');
         });
@@ -562,6 +567,278 @@ describe('gitActions', () => {
                 'fork-owner/repo',
                 'https://bitbucket.org/fork-owner/fork-repo.git',
             );
+        });
+
+        describe('duplicate remote prevention', () => {
+            it('should reuse existing remote with different name but same URL', async () => {
+                // Setup: origin remote already points to fork repository
+                const newState = {
+                    ...mockRepository.state,
+                    remotes: [
+                        {
+                            name: 'origin',
+                            fetchUrl: 'git@bitbucket.org:fork-owner/fork-repo.git',
+                            pushUrl: 'git@bitbucket.org:fork-owner/fork-repo.git',
+                            isReadOnly: false,
+                        },
+                    ],
+                };
+                Object.defineProperty(mockRepository, 'state', {
+                    value: newState,
+                    writable: true,
+                });
+
+                // Mock parseGitUrl to return correct values based on URL input
+                mockParseGitUrl.mockImplementation((url: string) => {
+                    if (url.includes('fork-owner') && url.includes('repo')) {
+                        return {
+                            name: 'repo',
+                            owner: 'fork-owner',
+                            full_name: 'fork-owner/repo',
+                            resource: 'bitbucket.org',
+                            toString: jest.fn().mockReturnValue(url),
+                            protocol: 'ssh',
+                        } as any;
+                    }
+                    // For any other URL (main/destination repo)
+                    return {
+                        name: 'repo',
+                        owner: 'owner',
+                        full_name: 'owner/repo',
+                        resource: 'bitbucket.org',
+                        toString: jest.fn().mockReturnValue(url),
+                        protocol: 'ssh',
+                    } as any;
+                });
+
+                mockUrlForRemote.mockImplementation((remote: any) => {
+                    if (remote.name === 'origin') {
+                        return 'git@bitbucket.org:fork-owner/fork-repo.git';
+                    }
+                    return remote.fetchUrl;
+                });
+                mockRepository.getConfig.mockResolvedValue(''); // No remote with generated name
+
+                await addSourceRemoteIfNeededForPR(mockPullRequest);
+
+                // Should NOT add a new remote
+                expect(mockRepository.addRemote).not.toHaveBeenCalled();
+                // Should fetch from existing 'origin' remote
+                expect(mockRepository.fetch).toHaveBeenCalledWith('origin', 'feature-branch');
+            });
+
+            it('should reuse existing remote with different protocol (HTTPS vs SSH)', async () => {
+                // Setup: origin remote uses HTTPS
+                const newState = {
+                    ...mockRepository.state,
+                    remotes: [
+                        {
+                            name: 'origin',
+                            fetchUrl: 'https://bitbucket.org/fork-owner/fork-repo.git',
+                            pushUrl: 'https://bitbucket.org/fork-owner/fork-repo.git',
+                            isReadOnly: false,
+                        },
+                    ],
+                };
+                Object.defineProperty(mockRepository, 'state', {
+                    value: newState,
+                    writable: true,
+                });
+
+                // Mock parseGitUrl to normalize both SSH and HTTPS to same repo
+                mockParseGitUrl.mockImplementation((url: string) => {
+                    if (url.includes('fork-owner/fork-repo')) {
+                        return {
+                            name: 'fork-repo',
+                            owner: 'fork-owner',
+                            full_name: 'fork-owner/fork-repo',
+                            resource: 'bitbucket.org',
+                            toString: jest.fn().mockReturnValue(url),
+                            protocol: url.startsWith('https') ? 'https' : 'ssh',
+                        } as any;
+                    }
+                    // For destination repo URL
+                    return {
+                        name: 'repo',
+                        owner: 'owner',
+                        full_name: 'owner/repo',
+                        resource: 'bitbucket.org',
+                        toString: jest.fn().mockReturnValue(url),
+                        protocol: 'ssh',
+                    } as any;
+                });
+
+                mockUrlForRemote.mockImplementation((remote: any) => {
+                    if (remote.name === 'origin') {
+                        return 'https://bitbucket.org/fork-owner/fork-repo.git';
+                    }
+                    return remote.fetchUrl;
+                });
+                mockRepository.getConfig.mockResolvedValue(''); // No remote with generated name
+
+                await addSourceRemoteIfNeededForPR(mockPullRequest);
+
+                // Should NOT add a new remote
+                expect(mockRepository.addRemote).not.toHaveBeenCalled();
+                // Should fetch from existing 'origin' remote
+                expect(mockRepository.fetch).toHaveBeenCalledWith('origin', 'feature-branch');
+            });
+
+            it('should create new remote for different repository', async () => {
+                // Setup: origin remote points to different repository
+                const newState = {
+                    ...mockRepository.state,
+                    remotes: [
+                        {
+                            name: 'origin',
+                            fetchUrl: 'git@bitbucket.org:different-owner/different-repo.git',
+                            pushUrl: 'git@bitbucket.org:different-owner/different-repo.git',
+                            isReadOnly: false,
+                        },
+                    ],
+                };
+                Object.defineProperty(mockRepository, 'state', {
+                    value: newState,
+                    writable: true,
+                });
+
+                mockParseGitUrl.mockImplementation((url: string) => {
+                    let obj: any = {};
+
+                    if (url.includes('fork-owner/repo') && !url.includes('different-owner')) {
+                        obj = {
+                            name: 'repo',
+                            owner: 'fork-owner',
+                            full_name: 'fork-owner/repo',
+                            resource: 'bitbucket.org',
+                            protocol: 'ssh',
+                        };
+                    } else if (url.includes('different-owner/different-repo')) {
+                        obj = {
+                            name: 'different-repo',
+                            owner: 'different-owner',
+                            full_name: 'different-owner/different-repo',
+                            resource: 'bitbucket.org',
+                            protocol: 'ssh',
+                        };
+                    } else {
+                        // For destination repo URL
+                        obj = {
+                            name: 'repo',
+                            owner: 'owner',
+                            full_name: 'owner/repo',
+                            resource: 'bitbucket.org',
+                            protocol: 'ssh',
+                        };
+                    }
+
+                    // Add toString method that uses current state
+                    obj.toString = function () {
+                        return `git@bitbucket.org:${this.owner}/${this.name}.git`;
+                    };
+
+                    return obj as any;
+                });
+
+                mockUrlForRemote.mockImplementation((remote: any) => {
+                    // Always return the correct URL for mainSiteRemote
+                    return remote.fetchUrl;
+                });
+                mockRepository.getConfig.mockResolvedValue(''); // No remote with generated name
+
+                await addSourceRemoteIfNeededForPR(mockPullRequest);
+
+                // Should add a new remote since URLs point to different repos
+                expect(mockRepository.addRemote).toHaveBeenCalledWith(
+                    'fork-owner/repo',
+                    'git@bitbucket.org:fork-owner/repo.git',
+                );
+                expect(mockRepository.fetch).toHaveBeenCalledWith('fork-owner/repo', 'feature-branch');
+            });
+
+            it('should handle remotes with unparseable URLs gracefully', async () => {
+                // Setup: One remote with invalid URL, one valid remote
+                const newState = {
+                    ...mockRepository.state,
+                    remotes: [
+                        {
+                            name: 'weird',
+                            fetchUrl: 'invalid-url',
+                            pushUrl: 'invalid-url',
+                            isReadOnly: false,
+                        },
+                        {
+                            name: 'origin',
+                            fetchUrl: 'git@bitbucket.org:other-owner/other-repo.git',
+                            pushUrl: 'git@bitbucket.org:other-owner/other-repo.git',
+                            isReadOnly: false,
+                        },
+                    ],
+                };
+                Object.defineProperty(mockRepository, 'state', {
+                    value: newState,
+                    writable: true,
+                });
+
+                mockParseGitUrl.mockImplementation((url: string) => {
+                    if (url === 'invalid-url') {
+                        throw new Error('Cannot parse URL');
+                    }
+
+                    let obj: any = {};
+
+                    if (url.includes('fork-owner/repo') && !url.includes('other-owner')) {
+                        obj = {
+                            name: 'repo',
+                            owner: 'fork-owner',
+                            full_name: 'fork-owner/repo',
+                            resource: 'bitbucket.org',
+                            protocol: 'ssh',
+                        };
+                    } else if (url.includes('other-owner/other-repo')) {
+                        obj = {
+                            name: 'other-repo',
+                            owner: 'other-owner',
+                            full_name: 'other-owner/other-repo',
+                            resource: 'bitbucket.org',
+                            protocol: 'ssh',
+                        };
+                    } else {
+                        // For destination repo URL
+                        obj = {
+                            name: 'repo',
+                            owner: 'owner',
+                            full_name: 'owner/repo',
+                            resource: 'bitbucket.org',
+                            protocol: 'ssh',
+                        };
+                    }
+
+                    // Add toString method that uses current state
+                    obj.toString = function () {
+                        return `git@bitbucket.org:${this.owner}/${this.name}.git`;
+                    };
+
+                    return obj as any;
+                });
+
+                mockUrlForRemote.mockImplementation((remote: any) => {
+                    if (remote.name === 'weird') {
+                        return 'invalid-url';
+                    }
+                    return remote.fetchUrl;
+                });
+                mockRepository.getConfig.mockResolvedValue(''); // No remote with generated name
+
+                await addSourceRemoteIfNeededForPR(mockPullRequest);
+
+                // Should skip invalid URL and add new remote normally
+                expect(mockRepository.addRemote).toHaveBeenCalledWith(
+                    'fork-owner/repo',
+                    'git@bitbucket.org:fork-owner/repo.git',
+                );
+                expect(mockRepository.fetch).toHaveBeenCalledWith('fork-owner/repo', 'feature-branch');
+            });
         });
     });
 });

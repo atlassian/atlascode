@@ -201,12 +201,16 @@ export abstract class AbstractReactWebview implements ReactWebview {
             this.invalidate().then(() => {
                 if (!this._viewEventSent) {
                     this._viewEventSent = true;
-                    viewScreenEvent(this.id, this.siteOrUndefined, this.productOrUndefined).then((e) => {
-                        Container.analyticsClient.sendScreenEvent(e);
-                    });
+                    this.fireViewScreenEvent();
                 }
             });
         }
+    }
+
+    protected fireViewScreenEvent() {
+        viewScreenEvent(this.id, this.siteOrUndefined, this.productOrUndefined).then((e) => {
+            Container.analyticsClient.sendScreenEvent(e);
+        });
     }
 
     private onWindowReceiveFocus(windowState: WindowState) {

@@ -2,7 +2,7 @@ import { LoadingButton } from '@atlaskit/button';
 import DropdownMenu, { DropdownItem } from '@atlaskit/dropdown-menu';
 import ChevronDownIcon from '@atlaskit/icon/core/chevron-down';
 import Lozenge from '@atlaskit/lozenge';
-import { Status, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { Status, Transition } from '@atlassian-pi/jira-pi-common-models';
 import { Box } from '@mui/material';
 import React from 'react';
 
@@ -50,9 +50,10 @@ export const StatusTransitionMenu: React.FC<Props> = (props) => {
     const [isOpen, setIsOpen] = React.useState(false);
 
     const { border, background } = getDynamicStyles(props.currentStatus.statusCategory.colorName);
-    const hasTransitions = props?.transitions?.length > 0;
-    const transitionsSortedByCategory = sortTransitionsByStatusCategory(props.transitions);
-    const shouldShowTransitionName = props.transitions.some((t) => t.name !== t.to.name);
+    const transitions = Array.isArray(props.transitions) ? props.transitions : [];
+    const hasTransitions = transitions.length > 0;
+    const transitionsSortedByCategory = sortTransitionsByStatusCategory(transitions);
+    const shouldShowTransitionName = transitions.some((t) => t.name !== t.to.name);
 
     const dropdownContent = hasTransitions ? (
         <Box

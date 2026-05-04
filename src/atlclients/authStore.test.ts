@@ -226,7 +226,7 @@ describe('CredentialManager', () => {
         });
 
         it('should return OAuth info without refresh when token has plenty of time remaining', async () => {
-            const futureExpirationTime = Date.now() + 20 * Time.MINUTES; // Well beyond grace period
+            const futureExpirationTime = Date.now() + 40 * Time.MINUTES; // Well beyond 30-min grace period
             const oauthInfo: OAuthInfo = {
                 user: { id: 'user-id', displayName: 'User Name', email: 'user@example.com', avatarUrl: '' },
                 state: AuthInfoState.Valid,
@@ -798,6 +798,45 @@ describe('CredentialManager', () => {
         });
     });
 
+    describe('handleApiUnauthorized', () => {
+        it('should return isOAuth true, not persist Invalid, and invoke callback when credentials are OAuth', async () => {
+            const oauthInfo: OAuthInfo = {
+                user: { id: 'user-id', displayName: 'User Name', email: 'user@example.com', avatarUrl: '' },
+                state: AuthInfoState.Valid,
+                access: 'access-token',
+                refresh: 'refresh-token',
+                expirationDate: Date.now() + Time.HOURS,
+                recievedAt: Date.now(),
+            };
+            (Container.context.secrets.get as jest.Mock).mockResolvedValue(JSON.stringify(oauthInfo));
+            const memStore = (credentialManager as any)._memStore;
+            memStore.get(ProductJira.key).set(mockJiraSite.credentialId, oauthInfo);
+
+            const saveAuthInfoSpy = jest.spyOn(credentialManager as any, 'saveAuthInfo');
+            const onOAuthApiUnauthorized = jest.fn();
+            credentialManager.setOnOAuthApiUnauthorized(onOAuthApiUnauthorized);
+
+            const result = await credentialManager.handleApiUnauthorized(mockJiraSite);
+
+            expect(result).toEqual({ isOAuth: true });
+            expect(saveAuthInfoSpy).not.toHaveBeenCalled();
+            expect(onOAuthApiUnauthorized).toHaveBeenCalledWith(mockJiraSite);
+        });
+
+        it('should persist Invalid and return isOAuth false when credentials are basic/API token', async () => {
+            (Container.context.secrets.get as jest.Mock).mockResolvedValue(JSON.stringify(mockAuthInfo));
+            const memStore = (credentialManager as any)._memStore;
+            memStore.get(ProductJira.key).set(mockJiraSite.credentialId, mockAuthInfo);
+
+            const result = await credentialManager.handleApiUnauthorized(mockJiraSite);
+
+            expect(result).toEqual({ isOAuth: false });
+            expect(Container.context.secrets.store).toHaveBeenCalled();
+            const storedJson = (Container.context.secrets.store as jest.Mock).mock.calls[0][1];
+            expect(JSON.parse(storedJson).state).toBe(AuthInfoState.Invalid);
+        });
+    });
+
     describe('removeAuthInfo', () => {
         it('should remove auth info from memory and secret storage', async () => {
             // Setup memory store with auth info
@@ -961,6 +1000,7 @@ describe('CredentialManager', () => {
                 getNewTokens: jest.fn(),
             };
             (credentialManager as any)._refresher = mockRefresher;
+            mockOAuthInfo.state = AuthInfoState.Valid;
         });
 
         it('should log error only after 5 failed attempts', async () => {
@@ -1083,6 +1123,105 @@ describe('CredentialManager', () => {
 
             await (credentialManager as any).refreshAccessToken(site);
             expect((credentialManager as any)._failedRefreshCache.has(site.credentialId)).toBe(false);
+        });
+
+        it('should mark credential as permanent failure when shouldInvalidate is true', async () => {
+            const site = { ...mockJiraSite, isCloud: true };
+
+            const getAuthInfoSpy = jest.spyOn(credentialManager as any, 'getAuthInfoForProductAndCredentialId');
+            getAuthInfoSpy.mockResolvedValue(mockOAuthInfo);
+            const saveAuthInfoSpy = jest.spyOn(credentialManager as any, 'saveAuthInfo');
+            saveAuthInfoSpy.mockResolvedValue(true);
+
+            mockRefresher.getNewTokens.mockResolvedValue({
+                tokens: undefined,
+                shouldInvalidate: true,
+                shouldSlowDown: false,
+            });
+
+            await (credentialManager as any).refreshAccessToken(site);
+
+            const failedRefresh = (credentialManager as any)._failedRefreshCache.get(site.credentialId);
+            expect(failedRefresh).toBeDefined();
+            expect(failedRefresh?.permanentFailure).toBe(true);
+        });
+
+        it('should skip refresh when credential has permanent failure cached', async () => {
+            const Logger = require('../logger').Logger;
+            const site = { ...mockJiraSite, isCloud: true };
+
+            // Pre-populate cache with permanent failure
+            (credentialManager as any)._failedRefreshCache.set(site.credentialId, {
+                attemptsCount: 1,
+                lastAttemptAt: new Date(),
+                permanentFailure: true,
+            });
+
+            const getAuthInfoSpy = jest.spyOn(credentialManager as any, 'getAuthInfoForProductAndCredentialId');
+            getAuthInfoSpy.mockResolvedValue(mockOAuthInfo);
+
+            mockRefresher.getNewTokens.mockClear();
+            Logger.debug.mockClear();
+            const result = await (credentialManager as any).refreshAccessToken(site);
+
+            expect(result).toBeUndefined();
+            expect(mockRefresher.getNewTokens).not.toHaveBeenCalled();
+            expect(Logger.debug).toHaveBeenCalledWith(expect.stringContaining('permanent previous failure'));
+        });
+
+        it('should skip refreshAccessToken when OAuth credentials are already invalid', async () => {
+            const Logger = require('../logger').Logger;
+            const site = { ...mockJiraSite, isCloud: true };
+            const invalidOAuthInfo: OAuthInfo = {
+                ...mockOAuthInfo,
+                state: AuthInfoState.Invalid,
+            };
+
+            const getAuthInfoSpy = jest.spyOn(credentialManager as any, 'getAuthInfoForProductAndCredentialId');
+            getAuthInfoSpy.mockResolvedValue(invalidOAuthInfo);
+            const saveAuthInfoSpy = jest.spyOn(credentialManager as any, 'saveAuthInfo');
+            saveAuthInfoSpy.mockResolvedValue(true);
+
+            Logger.debug.mockClear();
+            mockRefresher.getNewTokens.mockClear();
+
+            const result = await (credentialManager as any).refreshAccessToken(site);
+
+            expect(result).toBeUndefined();
+            expect(mockRefresher.getNewTokens).not.toHaveBeenCalled();
+            expect(saveAuthInfoSpy).not.toHaveBeenCalled();
+            expect(Logger.debug).toHaveBeenCalledWith(expect.stringContaining('credentials are invalid'));
+
+            const failedRefresh = (credentialManager as any)._failedRefreshCache.get(site.credentialId);
+            expect(failedRefresh?.permanentFailure).toBe(true);
+        });
+
+        it('should skip token refresh when credentials state is Invalid', async () => {
+            const Logger = require('../logger').Logger;
+            const site = { ...mockJiraSite, isCloud: true };
+            const invalidOAuthInfo = {
+                ...mockOAuthInfo,
+                state: AuthInfoState.Invalid,
+            };
+
+            const getAuthInfoForProductSpy = jest.spyOn(
+                credentialManager as any,
+                'getAuthInfoForProductAndCredentialId',
+            );
+            getAuthInfoForProductSpy.mockResolvedValue(invalidOAuthInfo);
+            const softRefreshSpy = jest.spyOn(credentialManager as any, 'softRefreshOAuth');
+            softRefreshSpy.mockImplementation(async (site: DetailedSiteInfo, authInfo: AuthInfo) => {
+                if (!authInfo || authInfo.state === AuthInfoState.Invalid) {
+                    Logger.debug(`Skipping token refresh for ${site.baseApiUrl}; credentials are invalid.`);
+                    return authInfo;
+                }
+                return authInfo;
+            });
+
+            const result = await credentialManager.getAuthInfo(site);
+
+            expect(Logger.debug).toHaveBeenCalledWith(expect.stringContaining('credentials are invalid'));
+            expect(result?.state).toBe(AuthInfoState.Invalid);
         });
     });
 });

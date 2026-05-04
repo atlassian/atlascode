@@ -1,5 +1,5 @@
+import { JQLErrors } from '@atlassian-pi/jira-pi-common-models';
 import { JqlAutocompleteRestData, JQLInput, SiteSelector, Suggestion } from '@atlassianlabs/guipi-jira-components';
-import { JQLErrors } from '@atlassianlabs/jira-pi-common-models';
 import {
     Box,
     Button,

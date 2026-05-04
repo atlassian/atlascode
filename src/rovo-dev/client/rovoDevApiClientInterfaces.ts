@@ -15,10 +15,13 @@ export interface RovoDevChatRequestContextOtherEntry {
 
 export type RovoDevChatRequestContext = RovoDevChatRequestContextFileEntry | RovoDevChatRequestContextOtherEntry;
 
+export interface RovoDevDeferredToolCallResponse {
+    tool_call_id: string;
+    result: any;
+}
 export interface RovoDevChatRequest {
-    message: string;
+    message: string | RovoDevDeferredToolCallResponse;
     context: RovoDevChatRequestContext[];
-    enable_deep_plan?: boolean;
 }
 
 export interface BaicRovoDevHealthcheckResponse {
@@ -136,4 +139,20 @@ export interface RovoDevGetAvailableAgentModelsResponse {
         description: string;
         credit_multiplier: string;
     }[];
+}
+
+export interface CachedFileEntry {
+    original_path: string;
+    cached_hash: string;
+    cached_path: string;
+    status: 'added' | 'modified' | 'deleted';
+}
+
+export interface RestoreFromCacheResponse {
+    message: string;
+    restored_count: number;
+}
+
+export interface InvalidateCacheResponse {
+    message: string;
 }

@@ -7,8 +7,8 @@ import {
     MinimalIssueLink,
     MinimalIssueOrKeyAndSite,
     User,
-} from '@atlassianlabs/jira-pi-common-models';
-import { IssueLinkTypeSelectOption, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+} from '@atlassian-pi/jira-pi-common-models';
+import { IssueLinkTypeSelectOption, ValueType } from '@atlassian-pi/jira-pi-meta-models';
 import { Box } from '@mui/material';
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 import React from 'react';

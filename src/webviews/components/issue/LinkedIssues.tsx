@@ -2,7 +2,7 @@ import Button from '@atlaskit/button';
 import CrossIcon from '@atlaskit/icon/core/cross';
 import InlineDialog from '@atlaskit/inline-dialog';
 import Tooltip from '@atlaskit/tooltip';
-import { MinimalIssueLink, MinimalIssueOrKeyAndSite, User } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssueLink, MinimalIssueOrKeyAndSite, User } from '@atlassian-pi/jira-pi-common-models';
 import * as React from 'react';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
@@ -216,9 +216,10 @@ export const LinkedIssues: React.FunctionComponent<LinkedIssuesProps> = ({
     onAssigneeChange,
     fetchUsers,
 }) => {
+    const links = Array.isArray(issuelinks) ? issuelinks : [];
     return (
         <div>
-            {issuelinks.map((issuelink) => (
+            {links.map((issuelink) => (
                 <LinkedIssueRow
                     key={issuelink.id}
                     issuelink={issuelink}

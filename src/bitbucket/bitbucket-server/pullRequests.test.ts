@@ -266,6 +266,40 @@ describe('ServerPullRequestApi', () => {
             expect(result.next).toBe('http://example.com/next-page');
             expect(mockGenerateUrl).toHaveBeenCalled();
         });
+
+        it('should return empty data when response values are missing', async () => {
+            const mockResponse = {
+                data: {
+                    isLastPage: true,
+                },
+            };
+
+            mockGet.mockResolvedValue(mockResponse);
+
+            const result = await api.getList(mockWorkspaceRepo);
+
+            expect(result.data).toEqual([]);
+        });
+
+        it('should not throw when pull request reviewers are missing', async () => {
+            const prWithoutReviewers = {
+                ...getPullRequestData,
+                reviewers: undefined,
+            };
+            const mockResponse = {
+                data: {
+                    values: [prWithoutReviewers],
+                    isLastPage: true,
+                },
+            };
+
+            mockGet.mockResolvedValue(mockResponse);
+
+            const result = await api.getList(mockWorkspaceRepo);
+
+            expect(result.data).toHaveLength(1);
+            expect(result.data[0].data.participants).toEqual([]);
+        });
     });
 
     describe('getListCreatedByMe', () => {
@@ -825,7 +859,35 @@ describe('ServerPullRequestApi', () => {
     });
 
     describe('nextPage', () => {
-        it('should fetch next page of pull requests', async () => {
+        it('should fetch next page of pull requests and return next URL when more pages exist', async () => {
+            const mockPaginatedPullRequests = {
+                workspaceRepo: mockWorkspaceRepo,
+                site: mockSite,
+                data: [],
+                next: 'http://example.com/next-page?avatarSize=64&start=25',
+            };
+
+            const mockNextPageResponse = {
+                data: {
+                    isLastPage: false,
+                    nextPageStart: 50,
+                    limit: 25,
+                    size: 25,
+                    start: 25,
+                    values: [getPullRequestData],
+                },
+            };
+
+            mockGet.mockResolvedValue(mockNextPageResponse);
+
+            const result = await api.nextPage(mockPaginatedPullRequests);
+
+            expect(mockGet).toHaveBeenCalledWith('http://example.com/next-page?avatarSize=64&start=25');
+            expect(result.data).toHaveLength(1);
+            expect(result.next).toBe('http://example.com/next-page?avatarSize=64&start=50');
+        });
+
+        it('should fetch next page and return undefined next when last page', async () => {
             const mockPaginatedPullRequests = {
                 workspaceRepo: mockWorkspaceRepo,
                 site: mockSite,
@@ -833,13 +895,17 @@ describe('ServerPullRequestApi', () => {
                 next: 'http://example.com/next-page',
             };
 
-            const mockResponse = {
+            const mockLastPageResponse = {
                 data: {
+                    isLastPage: true,
+                    limit: 25,
+                    size: 5,
+                    start: 50,
                     values: [getPullRequestData],
                 },
             };
 
-            mockGet.mockResolvedValue(mockResponse);
+            mockGet.mockResolvedValue(mockLastPageResponse);
 
             const result = await api.nextPage(mockPaginatedPullRequests);
 

@@ -21,7 +21,6 @@ const mockRenderProps = {
     isRetryAfterErrorButtonEnabled: jest.fn(),
     retryPromptAfterError: jest.fn(),
     onRestartProcess: jest.fn(),
-    onOpenLogFile: jest.fn(),
     onError: jest.fn(),
 };
 

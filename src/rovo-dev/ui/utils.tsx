@@ -7,7 +7,8 @@ import {
     RovoDevToolReturnResponse,
 } from 'src/rovo-dev/client';
 
-import { RovoDevContextItem, TechnicalPlan } from '../rovoDevTypes';
+import { RovoDevContextItem } from '../rovoDevTypes';
+import { TodoItem } from './tools/ToDoList';
 
 /**
  * Creates a keyboard event handler that triggers onClick when Enter or Space is pressed.
@@ -36,12 +37,13 @@ export const ConnectionTimeout = 30 * Time.SECONDS;
 
 export type ChatMessage =
     | UserPromptMessage
-    | PullRequestMessage
     | DialogMessage
     | RovoDevTextResponse
     | RovoDevToolCallResponse
     | RovoDevToolReturnResponse
-    | RovoDevRetryPromptResponse;
+    | RovoDevUpdateTodoResponse
+    | RovoDevRetryPromptResponse
+    | RovoDevExitPlanModeMessage;
 
 export interface UserPromptMessage {
     event_kind: '_RovoDevUserPrompt';
@@ -49,9 +51,10 @@ export interface UserPromptMessage {
     context?: RovoDevContextItem[];
 }
 
-export interface PullRequestMessage {
-    event_kind: '_RovoDevPullRequest';
-    text: string;
+export interface RovoDevExitPlanModeMessage {
+    event_kind: '_RovoDevExitPlanMode';
+    toolCallId: string;
+    content: string;
 }
 
 export interface AbstractDialogMessage {
@@ -86,6 +89,13 @@ export interface ToolPermissionDialogMessage extends AbstractDialogMessage {
     mcpServer?: string;
     toolCallId: string;
 }
+export interface RovoDevUpdateTodoResponse {
+    event_kind: 'update_todo';
+    todos: TodoItem[];
+    tool_call_id: string;
+    timestamp: string;
+    toolCallMessage: RovoDevToolCallResponse;
+}
 
 export type DialogMessage = ErrorDialogMessage | WarningInfoDialogMessage | ToolPermissionDialogMessage;
 
@@ -94,8 +104,8 @@ export interface ToolReturnParseResult {
     diff?: string;
     filePath?: string;
     title?: string;
-    technicalPlan?: TechnicalPlan;
-    type?: 'modify' | 'create' | 'delete' | 'open' | 'bash';
+    type?: 'modify' | 'create' | 'delete' | 'open' | 'bash' | 'move' | 'subagents';
+    todoData?: TodoItem[];
 }
 
 export type Response = ChatMessage | ChatMessage[] | null;
@@ -109,9 +119,22 @@ export interface SavedPrompt {
 export interface SavedPromptsResponse {
     prompts: SavedPrompt[];
 }
+
+export interface DeferredRequestResultMessage {
+    toolCallId: string;
+}
+
+export interface AskUserQuestionsResultMessage extends DeferredRequestResultMessage {
+    result: { question: string; answer: string }[];
+}
+
+export interface ExitPlanModeResultMessage extends DeferredRequestResultMessage {
+    result: { proceed: boolean };
+}
+
 interface ToolReturnInfo {
     title: string;
-    type: 'modify' | 'create' | 'delete' | 'open' | 'bash';
+    type: 'modify' | 'create' | 'delete' | 'open' | 'bash' | 'move' | 'subagents';
 }
 
 export const modifyFileTitleMap: Record<string, ToolReturnInfo> = {
@@ -121,8 +144,45 @@ export const modifyFileTitleMap: Record<string, ToolReturnInfo> = {
     created: { title: 'Created file', type: 'create' },
     deleted: { title: 'Deleted file', type: 'delete' },
     updated: { title: 'Updated file', type: 'modify' },
+    moved: { title: 'Moved file', type: 'move' },
     expanded_folder: { title: 'Expanded folder', type: 'open' },
 };
+
+// Type definitions for parsed tool arguments
+interface FolderArgs {
+    folder_path?: string;
+}
+
+interface BashArgs {
+    command?: string;
+}
+
+interface GrepArgs {
+    content_pattern?: string;
+    path_glob?: string;
+}
+
+interface McpToolArgs {
+    tool_name?: string;
+}
+
+interface SubagentArgs {
+    subagent_names?: string[];
+    task_names?: string[];
+    task_descriptions?: string[];
+}
+
+/**
+ * Safely parses JSON string or returns the value if it's already an object.
+ * @param value - The value to parse (string or already parsed object)
+ * @returns Parsed object or the original value if already parsed, or null if value is falsy
+ */
+export function safeJsonParse<T = any>(value: string | T | null | undefined): T | null {
+    if (!value) {
+        return null;
+    }
+    return typeof value === 'string' ? JSON.parse(value) : value;
+}
 
 /**
  * Parses the content of a ToolReturnMessage and extracts relevant information.
@@ -143,6 +203,7 @@ export function parseToolReturnMessage(
             case 'open_files':
             case 'create_file':
             case 'delete_file':
+            case 'move_file':
                 const contentArray = msg.parsedContent ? msg.parsedContent : [msg.content];
                 if (!Array.isArray(contentArray)) {
                     console.warn('Invalid content format in ToolReturnMessage:', msg.content);
@@ -157,7 +218,7 @@ export function parseToolReturnMessage(
 
                     const trimmedLine = line.split('\n\n')[0].trim();
                     const matches = trimmedLine.match(
-                        /^Successfully\s+(expanded code chunks|replaced code|opened|created|deleted|updated)(?:\s+in)?\s+(.+)?$/,
+                        /^Successfully\s+(expanded code chunks|replaced code|opened|moved|created|deleted|updated)(?:\s+in)?\s+(.+)?$/,
                     );
                     if (matches && matches.length >= 3) {
                         let filePath = matches[2].trim();
@@ -182,7 +243,7 @@ export function parseToolReturnMessage(
                 break;
 
             case 'expand_folder':
-                const folder = msg.toolCallMessage.args && JSON.parse(msg.toolCallMessage.args);
+                const folder = safeJsonParse<FolderArgs>(msg.toolCallMessage.args);
                 if (folder?.folder_path) {
                     resp.push({
                         title: folder.folder_path,
@@ -198,7 +259,7 @@ export function parseToolReturnMessage(
                 break;
 
             case 'bash':
-                const args = msg.toolCallMessage.args && JSON.parse(msg.toolCallMessage.args);
+                const args = safeJsonParse<BashArgs>(msg.toolCallMessage.args);
                 if (args?.command) {
                     resp.push({
                         title: args.command,
@@ -209,9 +270,9 @@ export function parseToolReturnMessage(
                 break;
 
             case 'grep':
-                const toolCallArgs = msg.toolCallMessage.args;
-                const searchPattern = toolCallArgs ? JSON.parse(toolCallArgs).content_pattern : undefined;
-                const pathGlob = toolCallArgs ? JSON.parse(toolCallArgs).path_glob : undefined;
+                const grepArgs = safeJsonParse<GrepArgs>(msg.toolCallMessage.args);
+                const searchPattern = grepArgs?.content_pattern;
+                const pathGlob = grepArgs?.path_glob;
                 const matches = (msg.content ?? '').split('\n').filter((line) => line.trim() !== '');
                 let content = 'Searched files';
                 if (searchPattern && pathGlob) {
@@ -233,31 +294,73 @@ export function parseToolReturnMessage(
 
                 break;
 
-            case 'create_technical_plan':
-                // Use parsedContent if available (it's the parsed object), otherwise parse msg.content (string)
-                const planData: TechnicalPlan = msg.parsedContent ?? (msg.content ? JSON.parse(msg.content) : null);
-
+            case 'ask_user_questions':
                 resp.push({
-                    content: '',
-                    technicalPlan: planData,
+                    content: 'Asked user questions',
+                    type: 'open',
                 });
                 break;
-
-            case 'mcp__atlassian__invoke_tool':
-            case 'mcp__atlassian__get_tool_schema':
-            case 'mcp__scout__invoke_tool':
-                const mcpToolCallArgs = msg.toolCallMessage.args;
-                const mcpToolData = mcpToolCallArgs ? JSON.parse(mcpToolCallArgs) : undefined;
+            case 'exit_plan_mode':
                 resp.push({
-                    content: `Invoked MCP tool: \`${mcpToolData?.tool_name || 'unknown tool'}\``,
-                    type: 'bash',
+                    content: 'Exited plan mode',
+                    type: 'modify',
+                });
+                break;
+            case 'invoke_subagents':
+                const subagentArgs = safeJsonParse<SubagentArgs>(msg.toolCallMessage.args);
+                const subagentNames = subagentArgs?.subagent_names || [];
+                const taskNames = subagentArgs?.task_names || [];
+                for (let i = 0; i < subagentNames.length; i++) {
+                    resp.push({
+                        content: `Subagent: ${subagentNames[i]}`,
+                        title: taskNames[i] || '',
+                        type: 'subagents',
+                    });
+                }
+                break;
+            case 'update_todo':
+                let todoArr: TodoItem[] = [];
+                if (msg.parsedContent && typeof msg.parsedContent === 'object' && 'todos' in msg.parsedContent) {
+                    todoArr = (msg.parsedContent as { todos: TodoItem[] }).todos;
+                } else if (msg.content) {
+                    // use regex to remove XML tags
+                    const todoRegex = /<todo>\s*([\s\S]*?)\s*<\/todo>/i;
+                    const match = msg.content.match(todoRegex);
+
+                    if (match && match[1]) {
+                        const todoLines = match[1]
+                            .trim()
+                            .split('\n')
+                            .filter((line) => line.trim());
+                        todoArr = todoLines
+                            .map((line) => {
+                                return JSON.parse(line.trim());
+                            })
+                            .filter((item) => item !== null) as TodoItem[];
+                    }
+                }
+
+                resp.push({
+                    content: 'Updated To-Do list',
+                    type: 'modify',
+                    todoData: todoArr,
                 });
                 break;
             default:
-                // For other tool names, we just return the raw content
-                resp.push({
-                    content: msg.tool_name,
-                });
+                if (/^mcp__\w+__(?:invoke_tool|get_tool_schema)$/.test(msg.tool_name)) {
+                    const mcpToolArgs = safeJsonParse<McpToolArgs>(msg.toolCallMessage.args);
+                    const mcpToolCallResponse = safeJsonParse<RovoDevToolCallResponse>(msg.toolCallMessage);
+                    const mcpServer = mcpToolCallResponse?.mcp_server;
+                    resp.push({
+                        content: `Invoked ${mcpServer ? mcpServer + ' ' : ''}MCP tool: \`${mcpToolArgs?.tool_name || 'unknown tool'}\``,
+                        type: 'bash',
+                    });
+                } else {
+                    // For other tool names, we just return the raw content
+                    resp.push({
+                        content: msg.tool_name,
+                    });
+                }
                 break;
         }
     } catch (error) {
@@ -274,7 +377,7 @@ export function parseToolReturnMessage(
 }
 
 export const isCodeChangeTool = (toolName: string): boolean => {
-    return ['find_and_replace_code', 'create_file', 'delete_file'].includes(toolName);
+    return ['find_and_replace_code', 'create_file', 'delete_file', 'move_file'].includes(toolName);
 };
 
 export const CODE_PLAN_EXECUTE_PROMPT = 'Execute the code plan that you have created';
@@ -351,19 +454,16 @@ export function extractLastNMessages(n: number, history: Response[]) {
 /**
  *
  * @param prev current state of response history
- * @param response new incoming response
- * @param handleAppendModifiedFileToolReturns function to handle appending modified file tool returns
  * @returns updated response history
  */
 export const appendResponse = (
     prev: Response[],
     response: Response | Response[],
-    handleAppendModifiedFileToolReturns: (tr: RovoDevToolReturnResponse) => void,
     thinkingBlockEnabled: boolean,
 ): Response[] => {
     if (Array.isArray(response)) {
         for (const _resp of response) {
-            prev = appendResponse(prev, _resp, handleAppendModifiedFileToolReturns, thinkingBlockEnabled);
+            prev = appendResponse(prev, _resp, thinkingBlockEnabled);
         }
         return prev;
     }
@@ -385,18 +485,31 @@ export const appendResponse = (
 
             return [...prev, appendedMessage];
         }
+
+        // Group consecutive _RovoDevDialog messages when thinking blocks are enabled
+        if (
+            thinkingBlockEnabled &&
+            latest?.event_kind === '_RovoDevDialog' &&
+            response?.event_kind === '_RovoDevDialog'
+        ) {
+            const prevGroup = prev.pop();
+            // If previous message is also a thinking group, merge them
+            if (prevGroup !== undefined) {
+                if (Array.isArray(prevGroup)) {
+                    return [...prev, [...prevGroup, latest, response]];
+                } else {
+                    return [...prev, prevGroup, [latest, response]];
+                }
+            }
+            return [...prev, [latest, response]];
+        }
+
         // Group tool return with previous message if applicable
         if (response.event_kind === 'tool-return' || response.event_kind === 'retry-prompt') {
-            if (response.event_kind === 'tool-return') {
-                handleAppendModifiedFileToolReturns(response);
-            }
-            if (response.tool_name !== 'create_technical_plan' && thinkingBlockEnabled) {
+            if (thinkingBlockEnabled) {
                 // Do not group if User, Error message, or Pull Request message is the latest
                 const canGroup =
-                    latest &&
-                    latest.event_kind !== '_RovoDevUserPrompt' &&
-                    latest.event_kind !== '_RovoDevDialog' &&
-                    latest.event_kind !== '_RovoDevPullRequest';
+                    latest && latest.event_kind !== '_RovoDevUserPrompt' && latest.event_kind !== '_RovoDevDialog';
 
                 if (canGroup) {
                     const prevGroup = prev.pop();
@@ -413,20 +526,21 @@ export const appendResponse = (
                     return latest ? [...prev, latest, [response]] : [...prev, [response]];
                 }
             } else {
-                // create_technical_plan is always its own message
                 return latest ? [...prev, latest, response] : [...prev, response];
             }
         }
     } else {
+        // Add consecutive _RovoDevDialog to existing thinking block if latest is already a thinking block array
+        if (thinkingBlockEnabled && response?.event_kind === '_RovoDevDialog') {
+            latest.push(response);
+            return [...prev, latest];
+        }
+
         if (response.event_kind === 'tool-return' || response.event_kind === 'retry-prompt') {
-            if (response.event_kind === 'tool-return') {
-                handleAppendModifiedFileToolReturns(response);
-            }
-            if (response.tool_name !== 'create_technical_plan' && thinkingBlockEnabled) {
+            if (thinkingBlockEnabled) {
                 latest.push(response);
                 return [...prev, latest];
             } else {
-                // create_technical_plan is always its own message
                 return [...prev, latest, response];
             }
         }
@@ -458,3 +572,5 @@ export async function processDropDataTransferItems(
     const values = await Promise.all(promises);
     callback(values);
 }
+
+export const capitalizeFirst = (s: string): string => (s.length === 0 ? s : s.charAt(0).toUpperCase() + s.slice(1));

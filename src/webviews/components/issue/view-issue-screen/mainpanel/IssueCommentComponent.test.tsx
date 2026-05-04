@@ -1,4 +1,4 @@
-import { Comment as JiraComment, User } from '@atlassianlabs/jira-pi-common-models';
+import { Comment as JiraComment, User } from '@atlassian-pi/jira-pi-common-models';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { DetailedSiteInfo, Product } from 'src/atlclients/authInfo';

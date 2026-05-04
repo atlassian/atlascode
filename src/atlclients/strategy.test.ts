@@ -7,6 +7,14 @@ jest.mock('./strategyCrypto', () => {
     };
 });
 
+jest.mock('src/container', () => ({
+    Container: {
+        featureFlagClient: {
+            checkGate: jest.fn().mockReturnValue(false),
+        },
+    },
+}));
+
 // it.each is not found without this:
 import { it } from '@jest/globals';
 

@@ -18,12 +18,50 @@ const styles = {
             opacity: 0.1,
         },
     },
+    spinnerContainer: {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
+        height: '100%',
+        minHeight: '200px',
+    },
+    spinner: {
+        width: '48px',
+        height: '48px',
+        borderRadius: '50%',
+        background: `conic-gradient(from 0deg, transparent 0deg, transparent 126deg, #1868DB 126deg, #1868DB 360deg)`,
+        mask: 'radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px))',
+        '-webkit-mask': 'radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px))',
+        animation: '$spin 0.8s linear infinite',
+        boxSizing: 'border-box' as const,
+    },
+    ['@keyframes spin']: {
+        from: {
+            transform: 'rotate(0deg)',
+        },
+        to: {
+            transform: 'rotate(360deg)',
+        },
+    },
 };
 
 const useStyles = makeStyles(styles);
 
-export const AtlLoader: React.FunctionComponent = () => {
+interface AtlLoaderProps {
+    variant?: 'default' | 'rovoDev';
+}
+
+export const AtlLoader: React.FunctionComponent<AtlLoaderProps> = ({ variant = 'default' }) => {
     const classes = useStyles();
+
+    if (variant === 'rovoDev') {
+        return (
+            <div className={classes.spinnerContainer}>
+                <div className={classes.spinner} />
+            </div>
+        );
+    }
 
     return (
         <Container maxWidth="xl">

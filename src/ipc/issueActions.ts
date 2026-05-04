@@ -8,8 +8,8 @@ import {
     Project,
     Transition,
     User,
-} from '@atlassianlabs/jira-pi-common-models';
-import { FieldValues, IssueLinkTypeSelectOption, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+} from '@atlassian-pi/jira-pi-common-models';
+import { FieldValues, IssueLinkTypeSelectOption, ValueType } from '@atlassian-pi/jira-pi-meta-models';
 import { IssueSuggestionSettings, SimplifiedTodoIssueData } from 'src/config/model';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';

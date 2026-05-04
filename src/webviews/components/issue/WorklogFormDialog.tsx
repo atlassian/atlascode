@@ -1,5 +1,5 @@
 import Modal, { ModalBody, ModalTransition } from '@atlaskit/modal-dialog';
-import { Worklog } from '@atlassianlabs/jira-pi-common-models';
+import { Worklog } from '@atlassian-pi/jira-pi-common-models';
 import React from 'react';
 
 import WorklogForm from './WorklogForm';

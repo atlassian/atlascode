@@ -142,6 +142,19 @@ export class OAuthStrategyData {
         },
     };
 
+    static readonly JiraProdFirstParty: StrategyProps = {
+        provider: OAuthProvider.JiraCloudFirstParty,
+        product: ProductJira,
+        clientID: '4pwf2qw7hEq3FBYPY45f9ifP5JcShNHw',
+        authorizationURL: 'https://auth.atlassian.com/oauth/device/code',
+        tokenURL: 'https://auth.atlassian.com/oauth/token',
+        profileURL: 'https://api.atlassian.com/me',
+        accessibleResourcesURL: 'https://api.atlassian.com/oauth/token/accessible-resources',
+        apiURL: 'api.atlassian.com',
+        scope: 'write:pullrequest:bitbucket read:project:bitbucket confluence:atlassian-external write:component:compass read:pullrequest:bitbucket read:event:compass read:scorecard:compass write:pipeline:bitbucket read:repository:bitbucket admin:repository:bitbucket offline_access read:metric:compass search:rovodev read:me read:workspace:bitbucket jira:atlassian-external read:analytics:rovodev search:rovo:mcp read:component:compass chat:rovodev write:scorecard:compass read:user:bitbucket read:runner:bitbucket read:rovodev:limits read:account write:repository:bitbucket read:permission:bitbucket read:pipeline:bitbucket',
+        callbackURL: '',
+    };
+
     static readonly JiraStaging: StrategyProps = {
         provider: OAuthProvider.JiraCloudStaging,
         product: ProductJira,

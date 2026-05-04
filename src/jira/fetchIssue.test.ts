@@ -1,7 +1,7 @@
-import { createIssueUI, editIssueUI } from '@atlassianlabs/jira-metaui-client';
-import { DEFAULT_API_VERSION } from '@atlassianlabs/jira-pi-client';
-import * as jiraPiCommonModels from '@atlassianlabs/jira-pi-common-models';
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { createIssueUI, editIssueUI } from '@atlassian-pi/jira-metaui-client';
+import { DEFAULT_API_VERSION } from '@atlassian-pi/jira-pi-client';
+import * as jiraPiCommonModels from '@atlassian-pi/jira-pi-common-models';
+import { MinimalIssue } from '@atlassian-pi/jira-pi-common-models';
 import { expansionCastTo } from 'testsutil';
 
 import { DetailedSiteInfo } from '../atlclients/authInfo';
@@ -16,8 +16,8 @@ import {
 } from './fetchIssue';
 
 // Mock dependencies
-jest.mock('@atlassianlabs/jira-metaui-client');
-jest.mock('@atlassianlabs/jira-pi-common-models');
+jest.mock('@atlassian-pi/jira-metaui-client');
+jest.mock('@atlassian-pi/jira-pi-common-models');
 jest.mock('../container');
 jest.mock('../views/jira/searchJiraHelper');
 

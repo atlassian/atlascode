@@ -1,10 +1,10 @@
-jest.mock('@atlassianlabs/jira-pi-common-models', () => {
+jest.mock('@atlassian-pi/jira-pi-common-models', () => {
     return {
         isMinimalIssue: jest.fn(() => true),
     };
 });
 
-import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalORIssueLink } from '@atlassian-pi/jira-pi-common-models';
 import * as vscode from 'vscode';
 
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';

@@ -2,7 +2,7 @@ import DeleteIcon from '@atlaskit/icon/core/delete';
 import FileIcon from '@atlaskit/icon/core/file';
 import UploadIcon from '@atlaskit/icon/core/upload';
 import TableTree from '@atlaskit/table-tree';
-import { FieldUI } from '@atlassianlabs/jira-pi-meta-models';
+import { FieldUI } from '@atlassian-pi/jira-pi-meta-models';
 import { filesize } from 'filesize';
 import React, { useEffect, useReducer } from 'react';
 import { FileWithPath, useDropzone } from 'react-dropzone';

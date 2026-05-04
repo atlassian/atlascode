@@ -1,5 +1,5 @@
+import { FilterSearchResult } from '@atlassian-pi/jira-pi-common-models';
 import { SiteSelector } from '@atlassianlabs/guipi-jira-components';
-import { FilterSearchResult } from '@atlassianlabs/jira-pi-common-models';
 import {
     Box,
     Button,

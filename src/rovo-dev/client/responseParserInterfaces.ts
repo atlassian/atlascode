@@ -85,6 +85,11 @@ export interface RovoDevOnCallToolStartResponse {
     permissions: Record<string, RovoDevToolPemissionScenario>;
 }
 
+export interface RovoDevDeferredRequestResponse {
+    event_kind: 'deferred_request';
+    tools: RovoDevToolCallResponse[];
+}
+
 export interface RovoDevCloseResponse {
     event_kind: 'close';
 }
@@ -164,12 +169,14 @@ export type RovoDevResponse =
     | RovoDevClearResponse
     | RovoDevPruneResponse
     | RovoDevOnCallToolStartResponse
+    | RovoDevDeferredRequestResponse
     | RovoDevStatusResponse
     | RovoDevUsageResponse
     | RovoDevPromptsResponse
     | RovoDevModelsResponse
     | RovoDevCloseResponse
     | RovoDevReplayEndResponse
+    | RovoDevUiChangedDetectedResponse
     | RovoDevIgnoredResponse;
 
 export type RovoDevToolName =
@@ -182,10 +189,34 @@ export type RovoDevToolName =
     | 'expand_folder'
     | 'grep'
     | 'bash'
-    | 'create_technical_plan'
+    | 'invoke_subagents'
     | 'mcp_invoke_tool'
     | 'mcp__atlassian__invoke_tool'
     | 'mcp__atlassian__get_tool_schema'
-    | 'mcp__scout__invoke_tool';
+    | 'mcp__scout__invoke_tool'
+    | 'update_todo'
+    | 'configure_live_preview'
+    | RovoDevDeferredToolCallName;
 
 export type RovoDevToolPemissionScenario = 'ASK' | 'ALLOWED' | 'DENIED';
+
+export type RovoDevDeferredToolCallName = 'ask_user_questions' | 'exit_plan_mode';
+
+export interface RovoDevUiChangedDetectedResponse {
+    event_kind: 'ui_changes_detected';
+}
+
+export interface RovoDevAskUserQuestionsToolArgs {
+    questions: {
+        header: string;
+        question: string;
+        options: {
+            label: string;
+            description: string;
+        }[];
+    }[];
+}
+
+export interface RovoDevExitPlanModeToolArgs {
+    plan: string;
+}

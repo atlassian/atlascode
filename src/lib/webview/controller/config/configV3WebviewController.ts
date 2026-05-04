@@ -119,7 +119,11 @@ export class ConfigV3WebviewController implements WebviewController<SectionV3Cha
         }
     }
 
-    public update(section: SectionV3ChangeMessage) {
+    public update(section?: SectionV3ChangeMessage) {
+        if (section === undefined) {
+            this.invalidate();
+            return;
+        }
         // Store the section data for potential invalidate calls
         this._initialSection = section;
 
@@ -139,10 +143,10 @@ export class ConfigV3WebviewController implements WebviewController<SectionV3Cha
                 try {
                     await this.invalidate();
                 } catch (e) {
-                    this._logger.error(e, 'Error refeshing config');
+                    this._logger.error(e, 'Error refreshing config');
                     this.postMessage({
                         type: CommonMessageType.Error,
-                        reason: formatError(e, 'Error refeshing config'),
+                        reason: formatError(e, 'Error refreshing config'),
                     });
                 }
                 break;

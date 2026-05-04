@@ -123,6 +123,7 @@ const getActionText = (fieldDisplayName: string, field?: string): string => {
 };
 
 export const IssueHistory: React.FC<IssueHistoryProps> = ({ history, historyLoading }) => {
+    const historyEntries = Array.isArray(history) ? history : [];
     if (historyLoading) {
         return (
             <div style={{ padding: '20px', textAlign: 'center' }}>
@@ -131,7 +132,7 @@ export const IssueHistory: React.FC<IssueHistoryProps> = ({ history, historyLoad
         );
     }
 
-    if (history.length === 0) {
+    if (historyEntries.length === 0) {
         return (
             <div style={{ padding: '20px', textAlign: 'center', color: 'var(--vscode-descriptionForeground)' }}>
                 <span>No history available</span>
@@ -149,7 +150,7 @@ export const IssueHistory: React.FC<IssueHistoryProps> = ({ history, historyLoad
             }}
             data-testid="issue-history.ui.feed-container"
         >
-            {history.map((item) => (
+            {historyEntries.map((item) => (
                 <div
                     key={item.id}
                     style={{

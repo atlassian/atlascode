@@ -1,11 +1,107 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.28
+
+### Improvements
+
+- **RovoDev**: Removed the "Create pull request" button from the chat extension — PR creation is now handled via the new Pull Request button in the Session header
+
+- **RovoDev**: Upgraded Rovo Dev to 202604.30.2
+- **RovoDev**: Generalized MCP tool parsing in chat UI to support any MCP toolset via regex matching (`mcp__<name>__invoke_tool` / `mcp__<name>__get_tool_schema`) instead of hardcoded tool names
+
+### Bug Fixes
+
+- **Webview**: Fixed `ChunkLoadError` for CSS chunks (e.g. `atlascodeRovoDev`, `compiled-css`) when running with a Firefox-based webview engine (e.g. code-server). Switched from `MiniCssExtractPlugin` to `style-loader` in the React webpack bundles so CSS is injected as `<style>` tags instead of being dynamically fetched as separate files, which Firefox cannot do for `vscode-resource` URLs.
+- **RovoDev**: Fixed rate limit exceeded message showing a literal `{title}` placeholder instead of the actual credit type title
+
+
+## What's new in 4.0.27
+
+### Improvements
+
+- **RovoDev**: Generalized MCP tool parsing in chat UI to support any MCP toolset via regex matching (`mcp__<name>__invoke_tool` / `mcp__<name>__get_tool_schema`) instead of hardcoded tool names
+
+### Bug Fixes
+
+- Fixed "Please log in again" error message for disabled products so Jira-only and Bitbucket-only users do not see the other product's connection error on startup
+- Fixed duplicate remote creation when checking out PR branches from forked repositories - the extension now reuses existing remotes that point to the same repository
+- **Bitbucket (and Jira) Cloud OAuth**: Fixed repeated disconnections after one or two operations. OAuth API clients were not using the auth interceptor
+
+### Features
+
+- **Rovo Dev**: Added UI support for `invoke_subagents` tool — displays delegated subagent tasks with names during execution
+
+## What's new in 4.0.25
+
+### Improvements
+
+- **RovoDev**: Replaced `executeKeepFiles` with `invalidateFileCache` API call to eliminate manual file-system-based cache removal
+- **RovoDev**: Replaced tool-return-based file list with `listCachedFiles` API - eliminates fragile client-side heuristic parsing and provides authoritative file list from server; files now refresh after prompt completion, undo, and keep actions
+
+## What's new in 4.0.24
+
+### Improvements
+
+- **RovoDev**: Enhanced "Fix by Rovo Dev" and "Explain by Rovo Dev" code actions with rich context extraction - now includes actual code content, surrounding code, import statements, and structured diagnostics for significantly better AI responses
+
+### Bug Fixes
+
+- **RovoDev**: Fixed chat message not appearing when clicking "Fix with Rovo Dev" before the chat view is fully initialized - now waits for the webview to be ready before executing the chat command
+
+### Features
+
+- **RovoDev**: Added copy code button within the Rovo Dev chat for code blocks in the chat.
+
+
+## What's new in 4.0.23
+
+### Features
+
+- **Rovo Dev**: Support new `plan` mode with `deferred_request` handling
+- **RovoDev**: Added copy code button within the Rovo Dev chat for code blocks in the chat.
+
+- **Rovo Dev**: Added Rovo Dev icon to the editor title bar for quick access — clicking it focuses the existing Rovo Dev sidebar panel
+
+### Cleanup
+
+- **Rovo Dev**: Removed legacy `create_technical_plan` plan mode implementation in favor of new `deferred_request`-based plan mode
+
+### Improvements
+
+- **RovoDev**: Replaced the giant Atlassian logo loader with a standard Atlaskit Spinner for the Rovo Dev tab, and removed the "Loading data…" text. The spinner is eagerly loaded in the main webpack bundle to avoid race conditions with chunk loading.
+- **RovoDev**: Fixed prompt input performance degradation after extended idle periods by properly disposing Monaco editor resources and event listeners on component cleanup
+- **RovoDev**: Refactored JSON parsing logic with `safeJsonParse` helper function to reduce code duplication and improve maintainability
+- **RovoDev**: Centered text within tool call statements in RovoDev chat.
+- **RovoDev**: Enhanced "Fix by Rovo Dev" and "Explain by Rovo Dev" code actions with rich context extraction - now includes actual code content, surrounding code, import statements, and structured diagnostics for significantly better AI responses
+
+### Bug Fixes
+
+- Bitbucket DC: Fixed PRs list pagination
+- Bitbucket DC: Fixed emoji size in PR description and comments
+- **RovoDev**: Removed dependency between Jira auth and RovoDev auth
+- **RovoDev**: Fixed JSON parsing errors in ToolReturnMessage handling - added type checking before JSON.parse() to prevent "Input data should be a String" and invalid JSON errors
+- **Rovo Dev**: Unsupported slash commands now show a helpful warning instead of an error dialog
+- **Rovo Dev**: Added support for /mcp command
+- **RovoDev**: Fixed chat message not appearing when clicking "Fix with Rovo Dev" before the chat view is fully initialized - now waits for the webview to be ready before executing the chat command
+- Fixed "Cannot read properties of undefined (reading 'initiateApiTokenAuth')" error
+- Fixed the bug that prevented users from editing selected values in the landing page for Rovo Dev.
+  **RovoDev**: Hide chat action buttons during plan workflows and remove the Generate Code button when a plan is scrapped
 
 ## What's new in 4.0.22
 
 ### Features
 
 - Rovo Dev: Agent model selection both via /models command, and dedicated drop-down menu
+
+### Improvements
+
+- Jira and Bitbucket (OAuth): Longer session persistence – credentials are no longer invalidated on transient token-refresh failures (e.g. network errors). Re-login is only required when the refresh token is actually invalid (e.g. 401/403). OAuth refresh grace period increased from 10 to 30 minutes so access tokens are refreshed earlier and sessions stay valid longer.
+- Jira issue view: show issue type (e.g. Bug, Story, Task) before the issue key in the header/breadcrumb
+- Added the UI in the Rovo chat box for the moved file tool.
+
+### Bug Fixes
+
+- **RovoDev**: Fixed MCP server acceptance flow not showing in Boysenberry mode
 
 ## What's new in 4.0.21
 

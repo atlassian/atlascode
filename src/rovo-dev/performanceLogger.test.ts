@@ -152,40 +152,6 @@ describe('PerformanceLogger', () => {
         });
     });
 
-    describe('promptTechnicalPlanReceived', () => {
-        beforeEach(() => {
-            performanceLogger.sessionStarted('test-session-123');
-        });
-
-        it('should measure performance and send analytics event', async () => {
-            const rovoDevPromptId = 'test-prompt-123';
-            const measureValue = 300;
-
-            mockPerf.measure.mockReturnValue(measureValue);
-
-            await performanceLogger.promptTechnicalPlanReceived(rovoDevPromptId);
-
-            expect(mockPerf.measure).toHaveBeenCalledWith(rovoDevPromptId);
-            expect(mockLogger.debug).toHaveBeenCalledWith(
-                `Event fired: api.rovodev.chat.response.timeToTechPlan ${measureValue} ms`,
-            );
-
-            const expectedEvent: Track.PerformanceEvent = {
-                action: 'performanceEvent',
-                subject: 'atlascode',
-                attributes: {
-                    tag: 'api.rovodev.chat.response.timeToTechPlan',
-                    measure: measureValue,
-                    rovoDevEnv: 'IDE',
-                    appInstanceId: 'test-instance-id',
-                    rovoDevSessionId: 'test-session-123',
-                    rovoDevPromptId,
-                },
-            };
-            expect(mockAnalyticsClient.sendTrackEvent).toHaveBeenCalledWith(expectedEvent);
-        });
-    });
-
     describe('promptLastMessageReceived', () => {
         beforeEach(() => {
             performanceLogger.sessionStarted('test-session-123');
@@ -251,17 +217,13 @@ describe('PerformanceLogger', () => {
             await performanceLogger.promptFirstMessageReceived(rovoDevPromptId);
             expect(mockPerf.measure).toHaveBeenCalledWith(rovoDevPromptId);
 
-            // Receive technical plan
-            await performanceLogger.promptTechnicalPlanReceived(rovoDevPromptId);
-            expect(mockPerf.measure).toHaveBeenCalledWith(rovoDevPromptId);
-
             // Receive last message
             await performanceLogger.promptLastMessageReceived(rovoDevPromptId);
             expect(mockPerf.measure).toHaveBeenCalledWith(rovoDevPromptId);
             expect(mockPerf.clear).toHaveBeenCalledWith(rovoDevPromptId);
 
             // Verify all analytics events were sent
-            expect(mockAnalyticsClient.sendTrackEvent).toHaveBeenCalledTimes(4);
+            expect(mockAnalyticsClient.sendTrackEvent).toHaveBeenCalledTimes(3);
         });
 
         it('should handle multiple prompts in same session', async () => {

@@ -1,4 +1,5 @@
 import { ReducerAction } from 'src/ipc/messaging';
+import { FormattedError } from 'src/lib/webview/formatError';
 
 import { RovoDevEntitlementType } from '../../../util/rovo-dev-entitlement/rovoDevEntitlementChecker';
 
@@ -20,7 +21,8 @@ export type CommonMessage =
     | ReducerAction<CommonMessageType.RovoDevEntitlementBanner, RovoDevEntitlementBannerMessage>;
 
 export interface HostErrorMessage {
-    reason: string;
+    reason: string | FormattedError;
+    nonce?: string; // uniq identifier to correlate request and response
 }
 
 export interface PMFMessage {

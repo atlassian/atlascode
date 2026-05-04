@@ -47,7 +47,8 @@ export class ServerPullRequestApi implements PullRequestApi {
             avatarSize: 64,
             ...queryParams,
         });
-        const prs: PullRequest[] = data.values!.map((pr: any) =>
+        const values = Array.isArray(data.values) ? data.values : [];
+        const prs: PullRequest[] = values.map((pr: any) =>
             ServerPullRequestApi.toPullRequestModel(pr, 0, site, workspaceRepo),
         );
         const next =
@@ -105,12 +106,22 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async nextPage(paginatedPullRequests: PaginatedPullRequests): Promise<PaginatedPullRequests> {
-        if (!paginatedPullRequests.next) {
-            return { ...paginatedPullRequests, next: undefined };
-        }
-        const { data } = await this.client.get(paginatedPullRequests.next);
+        const nextPageUrl = paginatedPullRequests.next;
+        let next: string | undefined = undefined;
 
-        const prs: PullRequest[] = data.values!.map((pr: any) =>
+        if (!nextPageUrl) {
+            return { ...paginatedPullRequests, next };
+        }
+        const { data } = await this.client.get(nextPageUrl);
+        const { isLastPage, nextPageStart, values } = data;
+
+        if (isLastPage === false && nextPageStart !== undefined) {
+            const url = new URL(nextPageUrl);
+            url.searchParams.set('start', `${nextPageStart}`);
+            next = url.href;
+        }
+
+        const prs: PullRequest[] = values!.map((pr: any) =>
             ServerPullRequestApi.toPullRequestModel(
                 pr,
                 0,
@@ -118,7 +129,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                 paginatedPullRequests.workspaceRepo,
             ),
         );
-        return { ...paginatedPullRequests, data: prs, next: undefined };
+        return { ...paginatedPullRequests, data: prs, next };
     }
 
     async getLatest(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
@@ -1034,7 +1045,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                 version: data.version,
                 url: data.links.self[0].href,
                 author: this.toUser(site.details, data.author.user),
-                participants: data.reviewers.map((reviewer: any) => ({
+                participants: (Array.isArray(data.reviewers) ? data.reviewers : []).map((reviewer: any) => ({
                     ...this.toUser(site.details, reviewer.user),
                     role: reviewer.role,
                     status: reviewer.status === 'NEEDS_WORK' ? 'CHANGES_REQUESTED' : reviewer.status,

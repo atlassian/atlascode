@@ -1,4 +1,4 @@
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue } from '@atlassian-pi/jira-pi-common-models';
 import pTimeout from 'p-timeout';
 import { expansionCastTo } from 'testsutil';
 

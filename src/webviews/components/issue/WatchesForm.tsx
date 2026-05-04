@@ -3,8 +3,8 @@ import AvatarGroup from '@atlaskit/avatar-group';
 import EyeOpenIcon from '@atlaskit/icon/core/eye-open';
 import EyeOpenFilledIcon from '@atlaskit/icon/core/eye-open-filled';
 import { AsyncSelect } from '@atlaskit/select';
-import { User, Watches } from '@atlassianlabs/jira-pi-common-models';
-import { ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { User, Watches } from '@atlassian-pi/jira-pi-common-models';
+import { ValueType } from '@atlassian-pi/jira-pi-meta-models';
 import debounce from 'lodash.debounce';
 import * as React from 'react';
 
@@ -98,7 +98,8 @@ export default class WatchesForm extends React.Component<MyProps, MyState> {
             return this.getEmptyWatchers();
         }
 
-        const watcherList = this.props.watches.watchers.map((watcher, index) => {
+        const watchers = Array.isArray(this.props.watches.watchers) ? this.props.watches.watchers : [];
+        const watcherList = watchers.map((watcher, index) => {
             const avatar = watcher.avatarUrls && watcher.avatarUrls['48x48'] ? watcher.avatarUrls['48x48'] : '';
             return (
                 <div key={index} className="ac-inline-watcher ac-inline-watcher-hover">

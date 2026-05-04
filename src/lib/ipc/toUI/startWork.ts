@@ -1,4 +1,4 @@
-import { createEmptyMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { createEmptyMinimalIssue, MinimalIssue } from '@atlassian-pi/jira-pi-common-models';
 import { ReducerAction } from 'src/ipc/messaging';
 
 import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
@@ -34,6 +34,7 @@ export interface StartWorkResponseMessage {
     transistionStatus?: string;
     branch?: string;
     upstream?: string;
+    nonce: string;
 }
 
 export interface BranchType {

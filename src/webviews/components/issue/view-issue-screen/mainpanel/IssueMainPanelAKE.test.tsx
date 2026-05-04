@@ -1,4 +1,4 @@
-import { FieldUI } from '@atlassianlabs/jira-pi-meta-models';
+import { FieldUI } from '@atlassian-pi/jira-pi-meta-models';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { DetailedSiteInfo, Product } from 'src/atlclients/authInfo';

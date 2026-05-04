@@ -49,13 +49,20 @@ export type CheckedScopes = {
     checkedScopes: { [key: string]: boolean };
 };
 
+type FailedRefreshEntry = {
+    attemptsCount: number;
+    lastAttemptAt: Date;
+    permanentFailure?: boolean;
+};
+
 export class CredentialManager implements Disposable {
     private _memStore: Map<string, Map<string, AuthInfo>> = new Map<string, Map<string, AuthInfo>>();
     private _queue = new PQueue({ concurrency: 1 });
     private _refresher = new OAuthRefesher();
     private negotiator: Negotiator;
     private _refreshInFlight = new Map<string, Promise<void>>();
-    private _failedRefreshCache = new Map<string, { attemptsCount: number; lastAttemptAt: Date }>();
+    private _failedRefreshCache = new Map<string, FailedRefreshEntry>();
+    private _onOAuthApiUnauthorized?: (site: DetailedSiteInfo) => void;
 
     constructor(
         context: ExtensionContext,
@@ -64,6 +71,14 @@ export class CredentialManager implements Disposable {
         this._memStore.set(ProductJira.key, new Map<string, AuthInfo>());
         this._memStore.set(ProductBitbucket.key, new Map<string, AuthInfo>());
         this.negotiator = new Negotiator(context.globalState);
+    }
+
+    /**
+     * Register a callback to run when an API 401/403 is handled for OAuth credentials. Used by ClientManager
+     * to evict the cached client so the next request creates a new one and triggers token refresh.
+     */
+    public setOnOAuthApiUnauthorized(callback: (site: DetailedSiteInfo) => void): void {
+        this._onOAuthApiUnauthorized = callback;
     }
 
     private _onDidAuthChange = new EventEmitter<AuthInfoEvent>();
@@ -87,7 +102,7 @@ export class CredentialManager implements Disposable {
 
     public async checkScopes(site: DetailedSiteInfo, scopes: string[]): Promise<CheckedScopes | undefined> {
         // Scopes are only applicable to cloud sites
-        if (!site.host.endsWith('.atlassian.net')) {
+        if (!site.host.endsWith('.atlassian.net') && !site.host.endsWith('.jira.com')) {
             return undefined;
         }
 
@@ -120,7 +135,7 @@ export class CredentialManager implements Disposable {
 
     async getApiTokenIfExists(site: DetailedSiteInfo): Promise<BasicAuthInfo | undefined> {
         // Only applicable to cloud sites
-        if (!site.host.endsWith('.atlassian.net')) {
+        if (!site.host.endsWith('.atlassian.net') && !site.host.endsWith('.jira.com')) {
             return undefined;
         }
 
@@ -144,7 +159,7 @@ export class CredentialManager implements Disposable {
     async findApiTokenForSite(site?: DetailedSiteInfo | string): Promise<BasicAuthInfo | undefined> {
         const siteToCheck = typeof site === 'string' ? Container.siteManager.getSiteForId(ProductJira, site) : site;
 
-        if (!siteToCheck || !siteToCheck.host.endsWith('.atlassian.net')) {
+        if (!siteToCheck || (!siteToCheck.host.endsWith('.atlassian.net') && !siteToCheck.host.endsWith('.jira.com'))) {
             return undefined;
         }
 
@@ -153,7 +168,7 @@ export class CredentialManager implements Disposable {
 
         // For a cloud site - check if we have another cloud site with the same user and API key
         const promises = sites
-            .filter((site) => site.host.endsWith('.atlassian.net'))
+            .filter((site) => site.host.endsWith('.atlassian.net') || site.host.endsWith('.jira.com'))
             .map(async (site) => {
                 const authInfo = await this.getAuthInfo(site);
                 if (authInfo?.user.email === selectedSiteEmail && isBasicAuthInfo(authInfo)) {
@@ -366,7 +381,13 @@ export class CredentialManager implements Disposable {
         if (!isOAuthInfo(credentials)) {
             return authInfo; // not an OAuth info, no need to refresh
         }
-        const GRACE_PERIOD = 10 * Time.MINUTES;
+
+        if (credentials.state === AuthInfoState.Invalid) {
+            Logger.debug(`Skipping token refresh for ${site.baseApiUrl}; credentials are invalid.`);
+            return credentials;
+        }
+
+        const GRACE_PERIOD = 30 * Time.MINUTES;
 
         if (credentials.expirationDate) {
             const diff = credentials.expirationDate - Date.now();
@@ -533,8 +554,25 @@ export class CredentialManager implements Disposable {
             return undefined;
         }
 
+        if (credentials.state === AuthInfoState.Invalid) {
+            Logger.debug(`Skipping token refresh for credentialID: ${site.credentialId}; credentials are invalid.`);
+            this._failedRefreshCache.set(site.credentialId, {
+                attemptsCount: this._failedRefreshCache.get(site.credentialId)?.attemptsCount ?? 0,
+                lastAttemptAt: new Date(),
+                permanentFailure: true,
+            });
+            return undefined;
+        }
+
         const failedRefresh = this._failedRefreshCache.get(site.credentialId);
         if (failedRefresh) {
+            if (failedRefresh.permanentFailure) {
+                Logger.debug(
+                    `Skipping token refresh for credentialID: ${site.credentialId} due to permanent previous failure.`,
+                );
+                return undefined;
+            }
+
             const RETRY_DELAY = 5 * Time.MINUTES;
             if (failedRefresh.attemptsCount > 5) {
                 const timeSinceLastAttempt = Date.now() - failedRefresh.lastAttemptAt.getTime();
@@ -589,18 +627,44 @@ export class CredentialManager implements Disposable {
                             ),
                         );
                     }
-                }
-                if (tokenResponse.shouldInvalidate) {
+                    // Do not invalidate on transient errors (e.g. network) - credentials stay valid for retry later
+                } else if (tokenResponse.shouldInvalidate) {
+                    const newAttemptsCount = (this._failedRefreshCache.get(site.credentialId)?.attemptsCount ?? 0) + 1;
+                    this._failedRefreshCache.set(site.credentialId, {
+                        attemptsCount: newAttemptsCount,
+                        lastAttemptAt: new Date(),
+                        permanentFailure: true,
+                    });
+
                     Logger.error(
                         new Error(
                             `Token refresh failed - credentials invalidated for credentialId: ${site.credentialId}`,
                         ),
                     );
+                    credentials.state = AuthInfoState.Invalid;
+                    await this.saveAuthInfo(site, credentials);
                 }
-                credentials.state = AuthInfoState.Invalid;
-                await this.saveAuthInfo(site, credentials);
             }
         }
+    }
+
+    /**
+     * Handles 401/403 from an API call (not the token endpoint). For basic/API token auth, marks credentials
+     * Invalid and persists. For OAuth, does not persist and invokes the registered callback so cached clients
+     * can be evicted and the next request triggers token refresh.
+     */
+    public async handleApiUnauthorized(site: DetailedSiteInfo): Promise<{ isOAuth: boolean }> {
+        const authInfo = await this.getAuthInfoForProductAndCredentialId(site, true);
+        if (!authInfo) {
+            return { isOAuth: false };
+        }
+        if (isOAuthInfo(authInfo)) {
+            this._onOAuthApiUnauthorized?.(site);
+            return { isOAuth: true };
+        }
+        authInfo.state = AuthInfoState.Invalid;
+        await this.saveAuthInfo(site, authInfo);
+        return { isOAuth: false };
     }
 
     /**

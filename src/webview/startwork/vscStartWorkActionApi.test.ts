@@ -1,4 +1,4 @@
-import { MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue, Transition } from '@atlassian-pi/jira-pi-common-models';
 
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';

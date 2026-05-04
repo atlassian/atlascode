@@ -1,4 +1,4 @@
-import { UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { UIType, ValueType } from '@atlassian-pi/jira-pi-meta-models';
 import { render } from '@testing-library/react';
 import React from 'react';
 import { DetailedSiteInfo, Product } from 'src/atlclients/authInfo';

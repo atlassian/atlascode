@@ -1,4 +1,4 @@
-import { Worklog } from '@atlassianlabs/jira-pi-common-models';
+import { Worklog } from '@atlassian-pi/jira-pi-common-models';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 

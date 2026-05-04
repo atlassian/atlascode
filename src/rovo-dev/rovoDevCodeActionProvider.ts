@@ -1,8 +1,10 @@
 import path from 'path';
+import { Logger } from 'src/logger';
 import * as vscode from 'vscode';
 
 import { RovodevCommands } from './api/componentApi';
 import { ExtensionApi } from './api/extensionApi';
+import { buildContextualPrompt, extractCodeContext } from './rovoDevContextExtractor';
 
 export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
     private readonly extensionApi = new ExtensionApi();
@@ -24,14 +26,7 @@ export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
         }
 
         return [
-            this.generateCommand(
-                'Explain by Rovo Dev',
-                'Please explain what is the problem with this code',
-                document,
-                range,
-                context,
-            ),
-            this.generateCommand('Fix by Rovo Dev', 'Please fix problem with this code', document, range, context),
+            this.generateCommand('Fix with Rovo Dev', 'Please fix problem with this code', document, range, context),
             {
                 title: 'Rovo Dev: Add to Context',
                 command: {
@@ -39,6 +34,13 @@ export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
                     title: 'Add to Rovo Dev Context',
                 },
             },
+            this.generateCommand(
+                'Explain with Rovo Dev',
+                'Please explain what is the problem with this code',
+                document,
+                range,
+                context,
+            ),
         ];
     }
 
@@ -53,15 +55,17 @@ export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
         const baseName = document.fileName.split(path.sep).pop() || '';
         const action = new vscode.CodeAction(title, vscode.CodeActionKind.QuickFix);
 
-        const finalPrompt = context.diagnostics.length
-            ? `${prompt}\nAdditional problem context:\n${context.diagnostics.map((d) => d.message).join('\n')}`
-            : prompt;
+        // Determine intent based on title
+        const intent = title.toLowerCase().includes('fix') ? 'fix' : 'explain';
+
+        // Build enhanced prompt synchronously with available data
+        const enhancedPrompt = this.buildEnhancedPromptSync(prompt, document, range, context.diagnostics, intent);
 
         action.command = {
             command: RovodevCommands.RovodevAsk,
             title: 'Ask Rovo Dev',
             arguments: [
-                finalPrompt,
+                enhancedPrompt,
                 [
                     {
                         file: {
@@ -82,5 +86,27 @@ export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
             ],
         };
         return action;
+    }
+
+    private buildEnhancedPromptSync(
+        basePrompt: string,
+        document: vscode.TextDocument,
+        range: vscode.Range,
+        diagnostics: readonly vscode.Diagnostic[],
+        intent: 'fix' | 'explain',
+    ): string {
+        try {
+            // Extract rich context synchronously
+            const extractedContext = extractCodeContext(document, range, diagnostics);
+
+            // Build contextual prompt
+            return buildContextualPrompt(basePrompt, extractedContext, intent);
+        } catch (error) {
+            // Fallback to basic prompt if context extraction fails
+            Logger.warn('Failed to extract context for Rovo Dev:', error);
+            // Sanitize diagnostic messages to prevent JSON parsing errors
+            const sanitizedMessages = diagnostics.map((d) => d.message.replace(/[\r\n]+/g, ' ').trim()).join('\n');
+            return diagnostics.length ? `${basePrompt}\nAdditional problem context:\n${sanitizedMessages}` : basePrompt;
+        }
     }
 }

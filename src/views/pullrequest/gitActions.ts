@@ -77,18 +77,64 @@ async function checkoutRemote(rootUri: string, remote: string): Promise<boolean>
 }
 
 async function addSourceRemote(scm: Repository, name: string, fetchUrl: string, ref: string) {
-    await scm
+    // First, check if a remote with this exact name exists
+    const existingByName = await scm
         .getConfig(`remote.${name}.url`)
-        .then(async (url) => {
-            if (!url) {
-                await scm.addRemote(name, fetchUrl!);
-            }
-        })
-        .catch(async (_) => {
-            await scm.addRemote(name, fetchUrl!);
-        });
+        .then((url) => (url ? name : undefined))
+        .catch((_) => undefined);
 
+    if (existingByName) {
+        // Remote with this name already exists, use it
+        await scm.fetch(existingByName, ref);
+        return;
+    }
+
+    // Check if any existing remote points to the same repository
+    const existingByUrl = findRemoteByRepoUrl(scm, fetchUrl);
+
+    if (existingByUrl) {
+        // Reuse existing remote instead of creating duplicate
+        await scm.fetch(existingByUrl, ref);
+        return;
+    }
+
+    // No existing remote found, create new one
+    await scm.addRemote(name, fetchUrl);
     await scm.fetch(name, ref);
+}
+
+/**
+ * Finds an existing remote that points to the same repository as the given URL.
+ * Compares based on hostname and owner/repo path, ignoring protocol differences.
+ *
+ * @param scm Git repository instance
+ * @param targetUrl URL to search for
+ * @returns Existing remote name if found, undefined otherwise
+ */
+function findRemoteByRepoUrl(scm: Repository, targetUrl: string): string | undefined {
+    const targetParsed = parseGitUrl(targetUrl);
+
+    for (const remote of scm.state.remotes) {
+        const remoteUrl = urlForRemote(remote);
+        if (!remoteUrl) {
+            continue;
+        }
+
+        try {
+            const remoteParsed = parseGitUrl(remoteUrl);
+
+            // Compare by resource (hostname) and full_name (owner/repo)
+            if (remoteParsed.resource === targetParsed.resource && remoteParsed.full_name === targetParsed.full_name) {
+                return remote.name;
+            }
+            // eslint-disable-next-line no-unused-vars
+        } catch (e) {
+            // Skip remotes with unparseable URLs
+            continue;
+        }
+    }
+
+    return undefined;
 }
 
 function sourceRemoteForPullRequest(pr: PullRequest): Remote | undefined {
