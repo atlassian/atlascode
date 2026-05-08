@@ -2,6 +2,11 @@
 
 ## What's new in 4.0.28
 
+### Bug Fixes
+
+- **RovoDev**: Fixed `{title}` placeholder not being resolved in the rate limit exceeded message
+
+
 ### Improvements
 
 - **RovoDev**: Removed the "Create pull request" button from the chat extension — PR creation is now handled via the new Pull Request button in the Session header
