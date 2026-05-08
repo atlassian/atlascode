@@ -2,7 +2,9 @@
 
 ## What's new in 4.0.28
 
-### Improvements
+- Hide unauthenticated Atlassian status bar entries in Boysenberry mode so the Copilot footer icon does not appear.
+
+...
 
 - **RovoDev**: Removed the "Create pull request" button from the chat extension — PR creation is now handled via the new Pull Request button in the Session header
 
