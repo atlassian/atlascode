@@ -174,9 +174,16 @@ export class Logger {
             promptId: promptId,
             ...(metadata.veryLargeRepo ? { veryLargeRepo: metadata.veryLargeRepo } : {}),
         };
+        const sentryExtraTags: Record<string, string> = {
+            ...metadata,
+            veryLargeRepo: metadata.veryLargeRepo ? 'true' : '',
+        };
+        if (!metadata.veryLargeRepo) {
+            delete sentryExtraTags.veryLargeRepo;
+        }
 
         this.Instance.errorInternal('RovoDev', ex, capturedBy, errorMessage, rovoDevParams, ...params);
-        this.Instance.logSentry('RovoDev', ex, capturedBy, errorMessage, metadata, { promptId, params });
+        this.Instance.logSentry('RovoDev', ex, capturedBy, errorMessage, sentryExtraTags, { promptId, params });
     }
 
     /** DO NOT CALL this function directly. It's meant to be called only by `BitbucketLogger`. */
