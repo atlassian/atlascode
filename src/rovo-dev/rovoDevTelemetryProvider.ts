@@ -2,7 +2,6 @@ import { Logger, retrieveCallerName } from 'src/logger';
 
 import { Track, TrackEvent } from './analytics/events';
 import { ExtensionApi, RovoDevEnv } from './api/extensionApi';
-import { RovodevStaticConfig } from './api/rovodevStaticConfig';
 import { PerformanceLogger } from './performanceLogger';
 
 // Common attributes that appear in most events
@@ -75,10 +74,11 @@ export class RovoDevTelemetryProvider {
     constructor(
         private readonly rovoDevEnv: RovoDevEnv,
         private readonly appInstanceId: string,
+        private readonly veryLargeRepo: boolean,
     ) {
         RovoDevTelemetryProvider.Instance = this;
 
-        this._perfLogger = new PerformanceLogger(this.rovoDevEnv, this.appInstanceId);
+        this._perfLogger = new PerformanceLogger(this.rovoDevEnv, this.appInstanceId, this.veryLargeRepo);
     }
 
     public startNewSession(chatSessionId: string, source: 'init' | 'manuallyCreated' | 'restored'): Promise<void> {
@@ -189,7 +189,7 @@ export class RovoDevTelemetryProvider {
             rovoDevEnv: this.rovoDevEnv,
             appInstanceId: this.appInstanceId,
             sessionId: this._chatSessionId,
-            ...(RovodevStaticConfig.isSandboxVeryLargeRepo ? { veryLargeRepo: true } : {}),
+            ...(this.veryLargeRepo ? { veryLargeRepo: true } : {}),
         };
     }
 }
