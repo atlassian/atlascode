@@ -2,6 +2,7 @@ import { Logger, retrieveCallerName } from 'src/logger';
 
 import { Track, TrackEvent } from './analytics/events';
 import { ExtensionApi, RovoDevEnv } from './api/extensionApi';
+import { RovodevStaticConfig } from './api/rovodevStaticConfig';
 import { PerformanceLogger } from './performanceLogger';
 
 // Common attributes that appear in most events
@@ -9,6 +10,7 @@ export type RovoDevCommonSessionAttributes = {
     rovoDevEnv: RovoDevEnv;
     appInstanceId: string;
     sessionId: string;
+    veryLargeRepo?: boolean;
 };
 
 export type PartialEvent<T extends { action: string; subject: string; attributes: object }> = Pick<
@@ -187,6 +189,7 @@ export class RovoDevTelemetryProvider {
             rovoDevEnv: this.rovoDevEnv,
             appInstanceId: this.appInstanceId,
             sessionId: this._chatSessionId,
+            ...(RovodevStaticConfig.isSandboxVeryLargeRepo ? { veryLargeRepo: true } : {}),
         };
     }
 }

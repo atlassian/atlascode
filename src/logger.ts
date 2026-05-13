@@ -172,6 +172,7 @@ export class Logger {
             appInstanceId: metadata.appInstanceId,
             sessionId: metadata.sessionId,
             promptId: promptId,
+            ...(metadata.veryLargeRepo ? { veryLargeRepo: metadata.veryLargeRepo } : {}),
         };
 
         this.Instance.errorInternal('RovoDev', ex, capturedBy, errorMessage, rovoDevParams, ...params);

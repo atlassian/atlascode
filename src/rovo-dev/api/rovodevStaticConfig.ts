@@ -8,4 +8,5 @@ export const RovodevStaticConfig = {
 
     /** User ID override for BBY environment */
     bbyUserIdOverride: process.env.BBY_USERID || undefined,
+    isSandboxVeryLargeRepo: process.env.SANDBOX_VERY_LARGE_REPO === 'true',
 };
