@@ -1,5 +1,6 @@
 // interfaces for the raw responses from the rovo dev agent
 
+import { isOsError, parseOsErrorMessage } from './osErrorParser';
 import {
     RovoDevClearResponse,
     RovoDevDeferredRequestResponse,
@@ -327,6 +328,16 @@ function parseResponseRetryPrompt(
 }
 
 function parseResponseException(data: RovoDevExceptionResponseRaw): RovoDevExceptionResponse {
+    try {
+        if (isOsError(data.type, data.message)) {
+            const parsedOsError = parseOsErrorMessage(data.type, data.message, data.title);
+            if (parsedOsError) {
+                return parsedOsError;
+            }
+        }
+    } catch {
+        // Fall through to the unparsed exception response below.
+    }
     return {
         event_kind: 'exception',
         message: data.message,

@@ -60,6 +60,7 @@ export interface RovoDevExceptionResponse {
     message: string;
     title?: string;
     type: string;
+    params?: string[];
 }
 
 export interface RovoDevWarningResponse {
