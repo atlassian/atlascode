@@ -518,7 +518,9 @@ export class RovoDevChatProvider {
             switch (deferredTool.tool_name) {
                 case 'ask_user_questions':
                     const askUserQuestionsArgs = (
-                        (deferredTool.args && typeof deferredTool.args === 'string') ? JSON.parse(deferredTool.args) : deferredTool.args
+                        deferredTool.args && typeof deferredTool.args === 'string'
+                            ? JSON.parse(deferredTool.args)
+                            : deferredTool.args
                     ) as RovoDevAskUserQuestionsToolArgs;
                     await webview.postMessage({
                         type: RovoDevProviderMessageType.ShowDeferredAskUserQuestions,
