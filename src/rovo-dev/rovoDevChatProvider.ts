@@ -644,6 +644,7 @@ export class RovoDevChatProvider {
                 RovoDevTelemetryProvider.logError(
                     new Error(`${response.type} ${response.message}`),
                     response.title || undefined,
+                    ...(response.params || []),
                 );
 
                 const { text, link } = this.parseExceptionMessage(response.message);
