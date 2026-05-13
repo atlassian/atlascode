@@ -641,10 +641,29 @@ export class RovoDevChatProvider {
                     break;
                 }
 
-                RovoDevTelemetryProvider.logError(
-                    new Error(`${response.type} ${response.message}`),
-                    response.title || undefined,
-                );
+                if (response.parsedOsError) {
+                    // For OS-level errors, log a low-cardinality message and attach the
+                    // filename(s) as additional context params, so telemetry can group
+                    // these errors together regardless of the path involved.
+                    const { errnoCode, sanitizedMessage, sourcePath, destinationPath } = response.parsedOsError;
+                    const extraParams: string[] = [];
+                    if (sourcePath) {
+                        extraParams.push(`filename=${sourcePath}`);
+                    }
+                    if (destinationPath) {
+                        extraParams.push(`destinationFilename=${destinationPath}`);
+                    }
+                    RovoDevTelemetryProvider.logError(
+                        new Error(`${response.type} [${errnoCode}] ${sanitizedMessage}`),
+                        response.title || undefined,
+                        ...extraParams,
+                    );
+                } else {
+                    RovoDevTelemetryProvider.logError(
+                        new Error(`${response.type} ${response.message}`),
+                        response.title || undefined,
+                    );
+                }
 
                 const { text, link } = this.parseExceptionMessage(response.message);
                 await webview.postMessage({

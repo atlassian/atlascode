@@ -13,6 +13,22 @@ export function buildExceptionDetails(response: RovoDevExceptionResponse): strin
         sections.push(`Message: ${response.message}`);
     }
 
+    // Surface structured details for OS-level errors so users / support can see them clearly
+    if (response.parsedOsError) {
+        const { errno, errnoCode, errorDescription, sourcePath, destinationPath } = response.parsedOsError;
+        const osDetails: string[] = [
+            `Errno: ${errno} (${errnoCode})`,
+            `Description: ${errorDescription}`,
+        ];
+        if (sourcePath) {
+            osDetails.push(`Path: ${sourcePath}`);
+        }
+        if (destinationPath) {
+            osDetails.push(`Destination Path: ${destinationPath}`);
+        }
+        sections.push(osDetails.join('\n'));
+    }
+
     return sections.join('\n\n');
 }
 

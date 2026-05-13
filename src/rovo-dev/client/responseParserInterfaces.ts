@@ -1,5 +1,6 @@
 // abstracted responses' interfaces
 
+import { ParsedOsError } from './osErrorParser';
 import { RovoDevStatusAPIResponse } from './rovoDevApiClientInterfaces';
 
 export interface RovoDevMessageWithCtaLink {
@@ -60,6 +61,12 @@ export interface RovoDevExceptionResponse {
     message: string;
     title?: string;
     type: string;
+    /**
+     * If the exception is an OS-level CLI error (e.g. OSError [Errno 24] Too many open files: '...'),
+     * this contains the structured / parsed details with filenames extracted out so they can be
+     * surfaced separately from the (low-cardinality) message.
+     */
+    parsedOsError?: ParsedOsError;
 }
 
 export interface RovoDevWarningResponse {
