@@ -2,6 +2,10 @@
 
 ## What's new in 4.0.28
 
+### Bug Fixes
+
+- **RovoDev (Boysenberry)**: Fixed `[object Object] is not valid json` error in chat when the server sends tool call `args` as a pre-parsed object instead of a JSON string
+
 ### Improvements
 
 - **RovoDev**: Removed the "Create pull request" button from the chat extension — PR creation is now handled via the new Pull Request button in the Session header

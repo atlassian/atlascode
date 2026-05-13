@@ -517,7 +517,9 @@ export class RovoDevChatProvider {
             this._pendingDeferredRequest = deferredTool.tool_call_id;
             switch (deferredTool.tool_name) {
                 case 'ask_user_questions':
-                    const askUserQuestionsArgs = JSON.parse(deferredTool.args) as RovoDevAskUserQuestionsToolArgs;
+                    const askUserQuestionsArgs = (
+                        typeof deferredTool.args === 'string' ? JSON.parse(deferredTool.args) : deferredTool.args
+                    ) as RovoDevAskUserQuestionsToolArgs;
                     await webview.postMessage({
                         type: RovoDevProviderMessageType.ShowDeferredAskUserQuestions,
                         toolCallId: deferredTool.tool_call_id,
@@ -525,7 +527,9 @@ export class RovoDevChatProvider {
                     });
                     break;
                 case 'exit_plan_mode':
-                    const exitPlanModeArgs = JSON.parse(deferredTool.args) as RovoDevExitPlanModeToolArgs;
+                    const exitPlanModeArgs = (
+                        typeof deferredTool.args === 'string' ? JSON.parse(deferredTool.args) : deferredTool.args
+                    ) as RovoDevExitPlanModeToolArgs;
                     await webview.postMessage({
                         type: RovoDevProviderMessageType.ShowDeferredExitPlanMode,
                         toolCallId: deferredTool.tool_call_id,
@@ -573,7 +577,7 @@ export class RovoDevChatProvider {
                             Logger.error(ex, 'Error while sending hide live preview button message');
                         });
                     try {
-                        const args = JSON.parse(response.args);
+                        const args = typeof response.args === 'string' ? JSON.parse(response.args) : response.args;
                         if (args.port) {
                             await commands.executeCommand('workbench.action.launchLivePreview', args.port, {
                                 showPreview: true,
