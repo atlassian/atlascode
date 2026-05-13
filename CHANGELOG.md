@@ -6,6 +6,10 @@
 
 - **RovoDev (Boysenberry)**: Fixed `[object Object] is not valid json` error in chat when the server sends tool call `args` as a pre-parsed object instead of a JSON string
 
+### Internal
+
+- **Tests**: Fixed Jest config resolution failure on Node 22 by disabling Node's native TypeScript strip-types loader for test scripts, allowing Jest to use jiti for TypeScript config file resolution
+
 ### Improvements
 
 - **RovoDev**: Removed the "Create pull request" button from the chat extension — PR creation is now handled via the new Pull Request button in the Session header
