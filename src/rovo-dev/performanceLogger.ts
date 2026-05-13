@@ -3,6 +3,7 @@ import { Logger } from 'src/logger';
 import Perf from '../util/perf';
 import { RovoDevEnv, RovodevPerformanceTag } from './analytics/events';
 import { ExtensionApi } from './api/extensionApi';
+import { RovodevStaticConfig } from './api/rovodevStaticConfig';
 
 export class PerformanceLogger {
     private currentSessionId: string = '';
@@ -36,6 +37,7 @@ export class PerformanceLogger {
                 appInstanceId: this.appInstanceId,
                 rovoDevSessionId: this.currentSessionId,
                 rovoDevPromptId: promptId,
+                ...(RovodevStaticConfig.isSandboxVeryLargeRepo ? { veryLargeRepo: true } : {}),
             },
         });
         Logger.debug(`Event fired: ${tag} ${measure} ms`);
