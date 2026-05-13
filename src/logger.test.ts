@@ -585,6 +585,66 @@ describe('Logger', () => {
             // Should still log to output channel
             expect(mockOutputChannel.appendLine).toHaveBeenCalled();
         });
+
+        it('should propagate veryLargeRepo to Sentry tags and ErrorEvent params when present in metadata', () => {
+            const errorHandlerSpy = jest.fn();
+            const eventRegistration = Logger.onError(errorHandlerSpy);
+
+            try {
+                const testError = new Error('RovoDev error');
+                const metadata = {
+                    rovoDevEnv: 'IDE' as const,
+                    appInstanceId: 'test-instance-123',
+                    sessionId: 'test-session-456',
+                    veryLargeRepo: true,
+                };
+
+                Logger.rovoDevErrorInternal(testError, 'testFunction', 'RovoDev failed', metadata, 'prompt-789');
+
+                // Sentry: metadata is passed as tags via captureException
+                expect(mockSentryService.captureException).toHaveBeenCalledWith(
+                    testError,
+                    expect.objectContaining({
+                        tags: expect.objectContaining({
+                            veryLargeRepo: true,
+                        }),
+                    }),
+                );
+
+                // ErrorEvent: rovoDevParams should also include the flag
+                expect(errorHandlerSpy).toHaveBeenCalled();
+                const errorEvent = errorHandlerSpy.mock.calls[0][0];
+                expect(errorEvent.rovoDevParams).toEqual(
+                    expect.objectContaining({
+                        veryLargeRepo: true,
+                    }),
+                );
+            } finally {
+                eventRegistration.dispose();
+            }
+        });
+
+        it('should not include veryLargeRepo in rovoDevParams when not set in metadata', () => {
+            const errorHandlerSpy = jest.fn();
+            const eventRegistration = Logger.onError(errorHandlerSpy);
+
+            try {
+                const testError = new Error('RovoDev error');
+                const metadata = {
+                    rovoDevEnv: 'IDE' as const,
+                    appInstanceId: 'test-instance-123',
+                    sessionId: 'test-session-456',
+                };
+
+                Logger.rovoDevErrorInternal(testError, 'testFunction', 'RovoDev failed', metadata, 'prompt-789');
+
+                expect(errorHandlerSpy).toHaveBeenCalled();
+                const errorEvent = errorHandlerSpy.mock.calls[0][0];
+                expect(errorEvent.rovoDevParams).not.toHaveProperty('veryLargeRepo');
+            } finally {
+                eventRegistration.dispose();
+            }
+        });
     });
 
     describe('bitBucketErrorInternal', () => {

@@ -197,6 +197,30 @@ describe('PerformanceLogger', () => {
         });
     });
 
+    describe('veryLargeRepo flag', () => {
+        it('should not include veryLargeRepo attribute when flag is false (default)', async () => {
+            performanceLogger = new PerformanceLogger('IDE', 'test-instance-id');
+            performanceLogger.sessionStarted('test-session-123');
+            mockPerf.measure.mockReturnValue(100);
+
+            await performanceLogger.promptFirstByteReceived('test-prompt-123');
+
+            const sentEvent = mockAnalyticsClient.sendTrackEvent.mock.calls[0][0] as Track.PerformanceEvent;
+            expect(sentEvent.attributes).not.toHaveProperty('veryLargeRepo');
+        });
+
+        it('should include veryLargeRepo: true when constructed with the flag set', async () => {
+            performanceLogger = new PerformanceLogger('IDE', 'test-instance-id', true);
+            performanceLogger.sessionStarted('test-session-123');
+            mockPerf.measure.mockReturnValue(100);
+
+            await performanceLogger.promptFirstByteReceived('test-prompt-123');
+
+            const sentEvent = mockAnalyticsClient.sendTrackEvent.mock.calls[0][0] as Track.PerformanceEvent;
+            expect(sentEvent.attributes).toMatchObject({ veryLargeRepo: true });
+        });
+    });
+
     describe('integration scenarios', () => {
         it('should handle complete prompt lifecycle', async () => {
             const rovoDevSessionId = 'integration-session-123';

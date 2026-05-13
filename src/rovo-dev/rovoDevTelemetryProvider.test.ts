@@ -669,4 +669,30 @@ describe('RovoDevTelemetryProvider error logging', () => {
             expect(secondCall[3].rovoDevEnv).toBe('IDE');
         });
     });
+
+    describe('veryLargeRepo flag', () => {
+        it('should not include veryLargeRepo in metadata when flag is false (default)', () => {
+            const provider = new RovoDevTelemetryProvider('IDE', appInstanceId);
+            provider.startNewSession(mockSessionId, 'init');
+            provider.startNewPrompt(mockPromptId);
+
+            jest.clearAllMocks();
+            provider.logError(new Error('err'));
+
+            const call = (Logger.rovoDevErrorInternal as jest.Mock).mock.calls[0];
+            expect(call[3]).not.toHaveProperty('veryLargeRepo');
+        });
+
+        it('should include veryLargeRepo: true in metadata when constructed with the flag set', () => {
+            const provider = new RovoDevTelemetryProvider('IDE', appInstanceId, true);
+            provider.startNewSession(mockSessionId, 'init');
+            provider.startNewPrompt(mockPromptId);
+
+            jest.clearAllMocks();
+            provider.logError(new Error('err'));
+
+            const call = (Logger.rovoDevErrorInternal as jest.Mock).mock.calls[0];
+            expect(call[3]).toMatchObject({ veryLargeRepo: true });
+        });
+    });
 });

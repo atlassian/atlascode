@@ -317,6 +317,55 @@ describe('SentryService', () => {
             expect(mockScope.setTag).toHaveBeenCalledWith('tag2', 'value2');
             expect(mockScope.setTag).toHaveBeenCalledWith('tag3', 'value3');
         });
+
+        describe('veryLargeRepo tag', () => {
+            const captureWithMockScope = (mockScope: { setTag: jest.Mock; setContext: jest.Mock }) => {
+                mockCaptureException.mockImplementation((_error, scopeCallback) => {
+                    if (scopeCallback) {
+                        // @ts-ignore
+                        scopeCallback(mockScope);
+                    }
+                    return 'event-id';
+                });
+            };
+
+            it('should not set veryLargeRepo tag when config flag is not set', async () => {
+                // Re-init without veryLargeRepo
+                (SentryService as any)._instance = undefined;
+                const svc = SentryService.getInstance();
+                await svc.initialize({
+                    enabled: true,
+                    featureFlagEnabled: true,
+                    dsn: 'https://test@sentry.io/123456',
+                });
+
+                const mockScope = { setTag: jest.fn(), setContext: jest.fn() };
+                captureWithMockScope(mockScope);
+
+                svc.captureException(new Error('Test error'));
+
+                const veryLargeRepoCall = mockScope.setTag.mock.calls.find((c) => c[0] === 'veryLargeRepo');
+                expect(veryLargeRepoCall).toBeUndefined();
+            });
+
+            it('should set veryLargeRepo tag to "true" when config flag is set', async () => {
+                (SentryService as any)._instance = undefined;
+                const svc = SentryService.getInstance();
+                await svc.initialize({
+                    enabled: true,
+                    featureFlagEnabled: true,
+                    dsn: 'https://test@sentry.io/123456',
+                    veryLargeRepo: true,
+                });
+
+                const mockScope = { setTag: jest.fn(), setContext: jest.fn() };
+                captureWithMockScope(mockScope);
+
+                svc.captureException(new Error('Test error'));
+
+                expect(mockScope.setTag).toHaveBeenCalledWith('veryLargeRepo', 'true');
+            });
+        });
     });
 
     describe('isInitialized', () => {

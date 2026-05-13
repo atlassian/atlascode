@@ -276,6 +276,7 @@ export class Container {
             machineId: this.machineId,
             appInstanceId: this.appInstanceId,
             sandboxSessionId: this.isBoysenberryMode ? process.env.SANDBOX_SESSION_ID : undefined,
+            veryLargeRepo: RovodevStaticConfig.isSandboxVeryLargeRepo,
         };
         await SentryService.getInstance().initialize(sentryConfig, (error: string) => {
             this.analyticsApi.fireSentryCapturedExceptionFailedEvent({ error });

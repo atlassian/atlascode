@@ -22,6 +22,7 @@ export interface SentryConfig {
     machineId?: string; // VS Code machine ID for tracking
     appInstanceId?: string; // Extension instance ID for tracking
     sandboxSessionId?: string; // Boysenberry session ID for BBY environment tracking
+    veryLargeRepo?: boolean; // True when running against a very large repo when in BBY environment
 }
 
 export interface ErrorContext {
@@ -125,6 +126,9 @@ export class SentryService {
                 }
                 if (this.config?.sandboxSessionId) {
                     scope.setTag('sandboxSessionId', this.config.sandboxSessionId);
+                }
+                if (this.config?.veryLargeRepo) {
+                    scope.setTag('veryLargeRepo', 'true');
                 }
 
                 scope.setTag('rovoDevEnv', RovodevStaticConfig.isBBY ? 'BBY' : 'IDE');
