@@ -35,7 +35,7 @@ describe('PerformanceLogger', () => {
             analytics: mockAnalyticsClient,
         }));
 
-        performanceLogger = new PerformanceLogger('IDE', 'test-instance-id');
+        performanceLogger = new PerformanceLogger('IDE', 'test-instance-id', false);
 
         // Setup default mock returns
         mockPerf.measure.mockReturnValue(100);
@@ -198,8 +198,8 @@ describe('PerformanceLogger', () => {
     });
 
     describe('veryLargeRepo flag', () => {
-        it('should not include veryLargeRepo attribute when flag is false (default)', async () => {
-            performanceLogger = new PerformanceLogger('IDE', 'test-instance-id');
+        it('should not include veryLargeRepo attribute when flag is false', async () => {
+            performanceLogger = new PerformanceLogger('IDE', 'test-instance-id', false);
             performanceLogger.sessionStarted('test-session-123');
             mockPerf.measure.mockReturnValue(100);
 

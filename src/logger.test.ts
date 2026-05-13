@@ -602,11 +602,12 @@ describe('Logger', () => {
                 Logger.rovoDevErrorInternal(testError, 'testFunction', 'RovoDev failed', metadata, 'prompt-789');
 
                 // Sentry: metadata is passed as tags via captureException
+                // (boolean values are stringified by the tag-building layer in Logger)
                 expect(mockSentryService.captureException).toHaveBeenCalledWith(
                     testError,
                     expect.objectContaining({
                         tags: expect.objectContaining({
-                            veryLargeRepo: true,
+                            veryLargeRepo: 'true',
                         }),
                     }),
                 );
