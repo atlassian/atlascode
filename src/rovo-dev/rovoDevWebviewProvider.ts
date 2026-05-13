@@ -29,6 +29,7 @@ import { Commands } from '../constants';
 import { GitErrorCodes } from '../typings/git';
 import { RovodevCommandContext, RovodevCommands } from './api/componentApi';
 import { DetailedSiteInfo, ExtensionApi, MinimalIssue } from './api/extensionApi';
+import { RovodevStaticConfig } from './api/rovodevStaticConfig';
 import {
     AgentMode,
     RovoDevApiClient,
@@ -199,6 +200,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._telemetryProvider = new RovoDevTelemetryProvider(
             this.isBoysenberry ? 'Boysenberry' : 'IDE',
             this.appInstanceId,
+            RovodevStaticConfig.isSandboxVeryLargeRepo,
         );
 
         if (this.isBoysenberry) {

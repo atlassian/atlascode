@@ -35,7 +35,7 @@ describe('PerformanceLogger', () => {
             analytics: mockAnalyticsClient,
         }));
 
-        performanceLogger = new PerformanceLogger('IDE', 'test-instance-id');
+        performanceLogger = new PerformanceLogger('IDE', 'test-instance-id', false);
 
         // Setup default mock returns
         mockPerf.measure.mockReturnValue(100);
@@ -194,6 +194,30 @@ describe('PerformanceLogger', () => {
                 'Analytics error',
             );
             expect(mockPerf.clear).toHaveBeenCalledWith(rovoDevPromptId);
+        });
+    });
+
+    describe('veryLargeRepo flag', () => {
+        it('should not include veryLargeRepo attribute when flag is false', async () => {
+            performanceLogger = new PerformanceLogger('IDE', 'test-instance-id', false);
+            performanceLogger.sessionStarted('test-session-123');
+            mockPerf.measure.mockReturnValue(100);
+
+            await performanceLogger.promptFirstByteReceived('test-prompt-123');
+
+            const sentEvent = mockAnalyticsClient.sendTrackEvent.mock.calls[0][0] as Track.PerformanceEvent;
+            expect(sentEvent.attributes).not.toHaveProperty('veryLargeRepo');
+        });
+
+        it('should include veryLargeRepo: true when constructed with the flag set', async () => {
+            performanceLogger = new PerformanceLogger('IDE', 'test-instance-id', true);
+            performanceLogger.sessionStarted('test-session-123');
+            mockPerf.measure.mockReturnValue(100);
+
+            await performanceLogger.promptFirstByteReceived('test-prompt-123');
+
+            const sentEvent = mockAnalyticsClient.sendTrackEvent.mock.calls[0][0] as Track.PerformanceEvent;
+            expect(sentEvent.attributes).toMatchObject({ veryLargeRepo: true });
         });
     });
 

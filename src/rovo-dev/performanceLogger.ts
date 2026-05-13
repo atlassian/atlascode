@@ -11,6 +11,7 @@ export class PerformanceLogger {
     constructor(
         private readonly rovoDevEnv: RovoDevEnv,
         private readonly appInstanceId: string,
+        private readonly veryLargeRepo: boolean,
     ) {}
 
     public sessionStarted(sessionId: string) {
@@ -36,6 +37,7 @@ export class PerformanceLogger {
                 appInstanceId: this.appInstanceId,
                 rovoDevSessionId: this.currentSessionId,
                 rovoDevPromptId: promptId,
+                ...(this.veryLargeRepo ? { veryLargeRepo: true } : {}),
             },
         });
         Logger.debug(`Event fired: ${tag} ${measure} ms`);

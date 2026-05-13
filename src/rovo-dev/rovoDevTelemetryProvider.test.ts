@@ -53,14 +53,14 @@ describe('Rovo Dev events', () => {
         setProcessPlatform('win32');
         mockedData.getFirstAAID_value = 'some-user-id';
         mockSendTrackEvent.mockClear();
-        telemetryProvider = new RovoDevTelemetryProvider('IDE', appInstanceId);
+        telemetryProvider = new RovoDevTelemetryProvider('IDE', appInstanceId, false);
         telemetryProvider.startNewSession(mockSessionId, 'init');
     });
 
     it.each(RovoDevEnvironments)(
         'should create rovoDevNewSessionActionEvent with session information',
         async (rovoDevEnv) => {
-            telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId);
+            telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId, false);
             mockSendTrackEvent.mockClear();
             await telemetryProvider.startNewSession(mockSessionId, 'manuallyCreated');
 
@@ -79,7 +79,7 @@ describe('Rovo Dev events', () => {
     it.each(RovoDevEnvironments)(
         'should create rovoDevPromptSentEvent with session and prompt IDs',
         async (rovoDevEnv) => {
-            telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId);
+            telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId, false);
             await telemetryProvider.startNewSession(mockSessionId, 'init');
             mockSendTrackEvent.mockClear();
 
@@ -107,7 +107,7 @@ describe('Rovo Dev events', () => {
         'should create rovoDevFilesSummaryShownEvent for new files summary',
         async (rovoDevEnv) => {
             const filesCount = 4;
-            telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId);
+            telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId, false);
             await telemetryProvider.startNewSession(mockSessionId, 'init');
             mockSendTrackEvent.mockClear();
 
@@ -136,7 +136,7 @@ describe('Rovo Dev events', () => {
     it.each(RovoDevEnvironments)('should create rovoDevFileChangedActionEvent for undo action', async (rovoDevEnv) => {
         const action = 'undo';
         const filesCount = 3;
-        telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId);
+        telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId, false);
         await telemetryProvider.startNewSession(mockSessionId, 'init');
         mockSendTrackEvent.mockClear();
 
@@ -166,7 +166,7 @@ describe('Rovo Dev events', () => {
     it.each(RovoDevEnvironments)('should create rovoDevFileChangedActionEvent for keep action', async (rovoDevEnv) => {
         const action = 'keep';
         const filesCount = 2;
-        telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId);
+        telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId, false);
         await telemetryProvider.startNewSession(mockSessionId, 'init');
         mockSendTrackEvent.mockClear();
 
@@ -194,7 +194,7 @@ describe('Rovo Dev events', () => {
     });
 
     it.each(RovoDevEnvironments)('should create rovoDevStopActionEvent when successful', async (rovoDevEnv) => {
-        telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId);
+        telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId, false);
         await telemetryProvider.startNewSession(mockSessionId, 'init');
         mockSendTrackEvent.mockClear();
 
@@ -220,7 +220,7 @@ describe('Rovo Dev events', () => {
 
     it.each(RovoDevEnvironments)('should create rovoDevStopActionEvent when failed', async (rovoDevEnv) => {
         const failed = true;
-        telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId);
+        telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId, false);
         await telemetryProvider.startNewSession(mockSessionId, 'init');
         mockSendTrackEvent.mockClear();
 
@@ -247,7 +247,7 @@ describe('Rovo Dev events', () => {
 
     it.each(RovoDevEnvironments)('should create rovoDevGitPushActionEvent when PR is created', async (rovoDevEnv) => {
         const prCreated = true;
-        telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId);
+        telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId, false);
         await telemetryProvider.startNewSession(mockSessionId, 'init');
         mockSendTrackEvent.mockClear();
 
@@ -276,7 +276,7 @@ describe('Rovo Dev events', () => {
         'should create rovoDevGitPushActionEvent when PR is not created',
         async (rovoDevEnv) => {
             const prCreated = false;
-            telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId);
+            telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId, false);
             await telemetryProvider.startNewSession(mockSessionId, 'init');
             mockSendTrackEvent.mockClear();
 
@@ -303,7 +303,7 @@ describe('Rovo Dev events', () => {
     );
 
     it.each(RovoDevEnvironments)('should create rovoDevDetailsExpandedEvent', async (rovoDevEnv) => {
-        telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId);
+        telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId, false);
         await telemetryProvider.startNewSession(mockSessionId, 'init');
         mockSendTrackEvent.mockClear();
 
@@ -327,7 +327,7 @@ describe('Rovo Dev events', () => {
     });
 
     it.each(RovoDevEnvironments)('should create rovoDevCreatePrButtonClickedEvent', async (rovoDevEnv) => {
-        telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId);
+        telemetryProvider = new RovoDevTelemetryProvider(rovoDevEnv, appInstanceId, false);
         await telemetryProvider.startNewSession(mockSessionId, 'init');
         mockSendTrackEvent.mockClear();
 
@@ -362,7 +362,7 @@ describe('RovoDevTelemetryProvider error logging', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         retrieveCallerName.mockReturnValue('testCallerFunction');
-        telemetryProvider = new RovoDevTelemetryProvider('IDE', appInstanceId);
+        telemetryProvider = new RovoDevTelemetryProvider('IDE', appInstanceId, false);
         telemetryProvider.startNewSession(mockSessionId, 'init');
         telemetryProvider.startNewPrompt(mockPromptId);
     });
@@ -390,7 +390,7 @@ describe('RovoDevTelemetryProvider error logging', () => {
         });
 
         it('should call Logger.rovoDevErrorInternal with correct metadata for Boysenberry environment', () => {
-            const bbyTelemetryProvider = new RovoDevTelemetryProvider('Boysenberry', 'bby-instance-456');
+            const bbyTelemetryProvider = new RovoDevTelemetryProvider('Boysenberry', 'bby-instance-456', false);
             bbyTelemetryProvider.startNewSession('bby-session-789', 'init');
             bbyTelemetryProvider.startNewPrompt('bby-prompt-012');
 
@@ -667,6 +667,32 @@ describe('RovoDevTelemetryProvider error logging', () => {
             telemetryProvider.logError(testError);
             const secondCall = (Logger.rovoDevErrorInternal as jest.Mock).mock.calls[0];
             expect(secondCall[3].rovoDevEnv).toBe('IDE');
+        });
+    });
+
+    describe('veryLargeRepo flag', () => {
+        it('should not include veryLargeRepo in metadata when flag is false', () => {
+            const provider = new RovoDevTelemetryProvider('IDE', appInstanceId, false);
+            provider.startNewSession(mockSessionId, 'init');
+            provider.startNewPrompt(mockPromptId);
+
+            jest.clearAllMocks();
+            provider.logError(new Error('err'));
+
+            const call = (Logger.rovoDevErrorInternal as jest.Mock).mock.calls[0];
+            expect(call[3]).not.toHaveProperty('veryLargeRepo');
+        });
+
+        it('should include veryLargeRepo: true in metadata when constructed with the flag set', () => {
+            const provider = new RovoDevTelemetryProvider('IDE', appInstanceId, true);
+            provider.startNewSession(mockSessionId, 'init');
+            provider.startNewPrompt(mockPromptId);
+
+            jest.clearAllMocks();
+            provider.logError(new Error('err'));
+
+            const call = (Logger.rovoDevErrorInternal as jest.Mock).mock.calls[0];
+            expect(call[3]).toMatchObject({ veryLargeRepo: true });
         });
     });
 });

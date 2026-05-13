@@ -9,6 +9,7 @@ export type RovoDevCommonSessionAttributes = {
     rovoDevEnv: RovoDevEnv;
     appInstanceId: string;
     sessionId: string;
+    veryLargeRepo?: boolean;
 };
 
 export type PartialEvent<T extends { action: string; subject: string; attributes: object }> = Pick<
@@ -73,10 +74,11 @@ export class RovoDevTelemetryProvider {
     constructor(
         private readonly rovoDevEnv: RovoDevEnv,
         private readonly appInstanceId: string,
+        private readonly veryLargeRepo: boolean,
     ) {
         RovoDevTelemetryProvider.Instance = this;
 
-        this._perfLogger = new PerformanceLogger(this.rovoDevEnv, this.appInstanceId);
+        this._perfLogger = new PerformanceLogger(this.rovoDevEnv, this.appInstanceId, this.veryLargeRepo);
     }
 
     public startNewSession(chatSessionId: string, source: 'init' | 'manuallyCreated' | 'restored'): Promise<void> {
@@ -187,6 +189,7 @@ export class RovoDevTelemetryProvider {
             rovoDevEnv: this.rovoDevEnv,
             appInstanceId: this.appInstanceId,
             sessionId: this._chatSessionId,
+            ...(this.veryLargeRepo ? { veryLargeRepo: true } : {}),
         };
     }
 }

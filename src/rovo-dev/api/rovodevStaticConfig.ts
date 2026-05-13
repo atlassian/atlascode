@@ -8,4 +8,7 @@ export const RovodevStaticConfig = {
 
     /** User ID override for BBY environment */
     bbyUserIdOverride: process.env.BBY_USERID || undefined,
+
+    /** Has this sandbox been set up to accommodate a very large repo? Defaults to false */
+    isSandboxVeryLargeRepo: process.env.SANDBOX_VERY_LARGE_REPO === 'true',
 };
