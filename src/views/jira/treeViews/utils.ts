@@ -21,6 +21,30 @@ export interface TreeViewIssue extends MinimalIssue<DetailedSiteInfo> {
     children: TreeViewIssue[];
 }
 
+const _failedJqlSiteIds = new Set<string>();
+
+export function clearFailedJqlSites(): void {
+    _failedJqlSiteIds.clear();
+}
+
+const _failedDevInfoSiteIds = new Set<string>();
+
+export function clearFailedDevInfoSites(): void {
+    _failedDevInfoSiteIds.clear();
+}
+
+export function isFailedDevInfoSite(siteId: string): boolean {
+    return _failedDevInfoSiteIds.has(siteId);
+}
+
+export function markFailedDevInfoSite(siteId: string): void {
+    _failedDevInfoSiteIds.add(siteId);
+}
+
+export function is401Error(e: unknown): boolean {
+    return (e as any)?.response?.status === 401;
+}
+
 export function isExpectedAuthError(error: unknown): boolean {
     const message = error instanceof Error ? error.message : String(error);
     const normalizedMessage = message.toLowerCase();
@@ -33,6 +57,10 @@ export function isExpectedAuthError(error: unknown): boolean {
 export async function executeJqlQuery(jqlEntry: JQLEntry): Promise<TreeViewIssue[]> {
     try {
         if (jqlEntry) {
+            if (_failedJqlSiteIds.has(jqlEntry.siteId)) {
+                return [];
+            }
+
             const trimmedQuery = jqlEntry.query.trim();
             const hasOperator = /(=|!=|<|>|<=|>=|~|!~|\b(IN|NOT\s+IN|IS|IS\s+NOT|AND|OR)\b)/i.test(trimmedQuery);
             if (!hasOperator) {
@@ -58,7 +86,10 @@ export async function executeJqlQuery(jqlEntry: JQLEntry): Promise<TreeViewIssue
             }
         }
     } catch (e) {
-        if (isExpectedAuthError(e)) {
+        if (is401Error(e)) {
+            _failedJqlSiteIds.add(jqlEntry.siteId);
+            // 401 is silently suppressed - site is now blocked until auth changes
+        } else if (isExpectedAuthError(e)) {
             const message = e instanceof Error ? e.message : String(e);
             Logger.warn('Failed to execute default JQL query for site', jqlEntry.siteId, message);
         } else {
