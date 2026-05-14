@@ -74,7 +74,6 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
             this._panel = window.createWebviewPanel(viewType, '', column ? column : ViewColumn.Active, {
                 retainContextWhenHidden: true,
                 enableFindWidget: true,
-                enableCommandUris: true,
                 enableScripts: true,
                 localResourceRoots: [
                     Uri.file(path.join(this._extensionPath, 'build')),

@@ -172,7 +172,6 @@ describe('SingleWebview', () => {
             expect(window.createWebviewPanel).toHaveBeenCalledWith('react', '', column, {
                 retainContextWhenHidden: true,
                 enableFindWidget: true,
-                enableCommandUris: true,
                 enableScripts: true,
                 localResourceRoots: [
                     { scheme: 'file', path: '/test' },
