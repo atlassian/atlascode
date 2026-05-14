@@ -23,7 +23,8 @@ export async function downloadAndUnzip(
         responseType: 'stream',
     });
 
-    const totalLength = parseInt(response.headers['content-length'] || '0', 10);
+    const contentLengthHeaderValue = (response.headers['content-length'] as string) || '0';
+    const totalLength = parseInt(contentLengthHeaderValue, 10);
     let downloaded = 0;
 
     if (!fs.existsSync(downloadPath)) {
