@@ -107,9 +107,17 @@ const mdParser = new MarkdownParser(schema, defaultMarkdownParser.tokenizer, {
  * IMPORTANT: outer div's "suggestion-item-list" class is mandatory. The plugin uses this class for querying.
  * IMPORTANT: inner div's "suggestion-item" class is mandatory too for the same reasons
  */
+const escapeHtml = (str: string): string =>
+    str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+
 const getMentionSuggestionsHTML = (items: any[]) =>
     '<div class="suggestion-item-list">' +
-    items.map((i) => '<div class="suggestion-item">' + i.name + '</div>').join('') +
+    items.map((i) => '<div class="suggestion-item">' + escapeHtml(i.name) + '</div>').join('') +
     '</div>';
 
 const reactPropsKey = new PluginKey('reactProps');

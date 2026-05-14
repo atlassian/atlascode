@@ -108,7 +108,6 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 {
                     retainContextWhenHidden: true,
                     enableFindWidget: true,
-                    enableCommandUris: true,
                     enableScripts: true,
                     localResourceRoots: [
                         Uri.file(path.join(this._extensionPath, 'build')),
