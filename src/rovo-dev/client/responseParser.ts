@@ -50,7 +50,8 @@ interface RovoDevTextChunk {
 // https://ai.pydantic.dev/api/messages/#pydantic_ai.messages.ToolCallPart
 interface RovoDevToolCallResponseRaw {
     tool_name: RovoDevToolName;
-    args?: string;
+    // The server may send `args` as a JSON string or as a pre-parsed object
+    args?: string | object;
     args_delta?: string;
     /** sets when the tool is being exposed by an MCP server */
     mcp_server?: string;
@@ -278,10 +279,15 @@ function parseResponseToolCall(
         buffer.args += data.args_delta || '';
         return buffer;
     } else {
+        // The server may send `args` as a pre-parsed object rather than a JSON string.
+        // Normalize to a string here so downstream JSON.parse() calls don't receive an object,
+        // which would be coerced to "[object Object]" and throw a SyntaxError.
+        const rawArgs = data.args ?? '';
+        const args = typeof rawArgs === 'string' ? rawArgs : JSON.stringify(rawArgs);
         return {
             event_kind: 'tool-call',
             tool_name: data.tool_name,
-            args: data.args || '',
+            args,
             mcp_server: data.mcp_server,
             tool_call_id: data.tool_call_id,
         };
