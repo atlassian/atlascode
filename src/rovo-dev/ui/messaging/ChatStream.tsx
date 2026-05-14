@@ -216,6 +216,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     jiraWorkItems={jiraWorkItems}
                     onJiraItemClick={onJiraItemClick}
                     onLinkClick={onLinkClick}
+                    onRestartProcess={renderProps.onRestartProcess}
                     credentialHints={credentialHints}
                 />
             )}

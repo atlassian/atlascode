@@ -38,6 +38,7 @@ export const RovoDevLanding: React.FC<{
     jiraWorkItems: MinimalIssue<DetailedSiteInfo>[] | undefined;
     onJiraItemClick: (issue: MinimalIssue<DetailedSiteInfo>) => void;
     onLinkClick: (url: string) => void;
+    onRestartProcess: () => void;
     credentialHints?: CredentialHint[];
 }> = ({
     currentState,
@@ -50,6 +51,7 @@ export const RovoDevLanding: React.FC<{
     jiraWorkItems,
     onJiraItemClick,
     onLinkClick,
+    onRestartProcess,
     credentialHints,
 }) => {
     const shouldHideSuggestions = React.useMemo(
@@ -95,6 +97,7 @@ export const RovoDevLanding: React.FC<{
                 onMcpChoice={onMcpChoice}
                 onOpenFolder={onOpenFolder}
                 onLinkClick={onLinkClick}
+                onRestartProcess={onRestartProcess}
                 credentialHints={credentialHints}
             />
         </div>
