@@ -12,7 +12,6 @@ import { RovoDevContextItem, State, ToolPermissionDialogChoice } from 'src/rovo-
 import { v4 } from 'uuid';
 
 import { DetailedSiteInfo, MinimalIssue } from '../api/extensionApiTypes';
-import { RovodevStaticConfig } from '../api/rovodevStaticConfig';
 import {
     RovoDevAgentModel,
     RovoDevProviderMessage,
@@ -54,7 +53,7 @@ const RovoDevView: React.FC = () => {
     const [retryAfterErrorEnabled, setRetryAfterErrorEnabled] = useState('');
     const [totalModifiedFiles, setTotalModifiedFiles] = useState<ToolReturnParseResult[]>([]);
     const [isDeepPlanToggled, setIsDeepPlanToggled] = useState(false);
-    const [isYoloModeToggled, setIsYoloModeToggled] = useState(RovodevStaticConfig.isBBY); // Yolo mode is default in Boysenberry
+    const [isYoloModeToggled, setIsYoloModeToggled] = useState(false);
     const [isFullContextModeToggled, setIsFullContextModeToggled] = useState(false);
     const [workspacePath, setWorkspacePath] = useState<string>('');
     const [homeDir, setHomeDir] = useState<string>('');
@@ -329,7 +328,7 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.ProviderReady:
                     setWorkspacePath(event.workspacePath || '');
                     setHomeDir(event.homeDir || '');
-                    if (!RovodevStaticConfig.isBBY && event.yoloMode !== undefined) {
+                    if (event.yoloMode !== undefined) {
                         setIsYoloModeToggled(event.yoloMode);
                     }
                     setIsAtlassianUser(event.isAtlassianUser);
@@ -1183,11 +1182,9 @@ const RovoDevView: React.FC = () => {
                                             onAgentModeChange={onAgentModeChange}
                                             onAgentModelChange={onAgentModelChange}
                                             onDeepPlanToggled={() => setIsDeepPlanToggled((prev) => !prev)}
-                                            onYoloModeToggled={
-                                                RovodevStaticConfig.isBBY ? undefined : () => onYoloModeToggled()
-                                            }
+                                            onYoloModeToggled={() => onYoloModeToggled()}
                                             onFullContextToggled={
-                                                isAtlassianUser && !RovodevStaticConfig.isBBY
+                                                isAtlassianUser
                                                     ? () => onFullContextModeToggled()
                                                     : undefined
                                             }

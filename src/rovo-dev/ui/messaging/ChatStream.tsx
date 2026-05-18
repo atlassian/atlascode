@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { RovodevStaticConfig } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { State, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
@@ -203,22 +202,19 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
-            {(!RovodevStaticConfig.isBBY ||
-                (currentState.state === 'Initializing' && currentState.subState === 'MCPAcceptance')) && (
-                <RovoDevLanding
-                    currentState={currentState}
-                    isHistoryEmpty={chatHistory.length === 0}
-                    onLoginClick={onLoginClick}
-                    onRovoDevAuthSubmit={onRovoDevAuthSubmit}
-                    onOpenFolder={onOpenFolder}
-                    onMcpChoice={onMcpChoice}
-                    setPromptText={setPromptText}
-                    jiraWorkItems={jiraWorkItems}
-                    onJiraItemClick={onJiraItemClick}
-                    onLinkClick={onLinkClick}
-                    credentialHints={credentialHints}
-                />
-            )}
+            <RovoDevLanding
+                currentState={currentState}
+                isHistoryEmpty={chatHistory.length === 0}
+                onLoginClick={onLoginClick}
+                onRovoDevAuthSubmit={onRovoDevAuthSubmit}
+                onOpenFolder={onOpenFolder}
+                onMcpChoice={onMcpChoice}
+                setPromptText={setPromptText}
+                jiraWorkItems={jiraWorkItems}
+                onJiraItemClick={onJiraItemClick}
+                onLinkClick={onLinkClick}
+                credentialHints={credentialHints}
+            />
             {!isChatHistoryDisabled && (
                 <ChatStreamMessageRenderer
                     chatHistory={chatHistory}
