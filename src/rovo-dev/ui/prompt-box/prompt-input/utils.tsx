@@ -76,12 +76,11 @@ export const createMonacoPromptEditor = (container: HTMLElement) => {
 interface SlashCommand {
     label: string;
     insertText: string;
-    disabled?: boolean;
     description?: string;
     command?: monaco.languages.Command;
 }
 
-export function getSlashCommands(isBBY: boolean): SlashCommand[] {
+export function getSlashCommands(): SlashCommand[] {
     return [
         {
             label: '/clear',
@@ -110,7 +109,6 @@ export function getSlashCommands(isBBY: boolean): SlashCommand[] {
                 id: 'rovo-dev.mcpConfiguration',
                 tooltip: 'Open the MCP configuration file',
             },
-            disabled: isBBY,
         },
         {
             label: '/memory',
@@ -169,7 +167,6 @@ export function getSlashCommands(isBBY: boolean): SlashCommand[] {
             insertText: '/yolo',
             description: 'Toggle tool confirmations',
             command: { title: 'Yolo Mode', id: 'rovo-dev.toggleYoloMode', tooltip: 'Toggle tool confirmations' },
-            disabled: isBBY,
         },
         {
             label: '/ask',
@@ -186,7 +183,6 @@ export function getSlashCommands(isBBY: boolean): SlashCommand[] {
                 id: 'rovo-dev.triggerSessions',
                 tooltip: 'View and manage your agent sessions',
             },
-            disabled: isBBY,
         },
     ];
 }

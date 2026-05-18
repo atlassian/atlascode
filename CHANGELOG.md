@@ -2,6 +2,10 @@
 
 ## What's new in 4.0.28
 
+### Improvements
+
+- **RovoDev (Boysenberry)**: Cleaned up `bby_chat_via_atlascode_enabled` feature flag — RovoDev chat features (slash commands, yolo mode, session history, MCP configuration, full-context mode) are now uniformly available in both standard IDE and Boysenberry environments
+
 ### Bug Fixes
 
 - **RovoDev (Boysenberry)**: Fixed `[object Object] is not valid json` error in chat when the server sends tool call `args` as a pre-parsed object instead of a JSON string

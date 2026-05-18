@@ -8,7 +8,6 @@ import { token } from '@atlaskit/tokens';
 import Tooltip from '@atlaskit/tooltip';
 import * as monaco from 'monaco-editor';
 import React from 'react';
-import { RovodevStaticConfig } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { AgentMode, RovoDevModeInfo } from 'src/rovo-dev/client';
 import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevAgentModel } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
@@ -84,9 +83,9 @@ const getTextAreaPlaceholder = (isGeneratingResponse: boolean, currentState: Non
 
 let monacoInitialized = false;
 
-function initMonaco(isBBY: boolean) {
+function initMonaco() {
     if (!monacoInitialized) {
-        const commands = getSlashCommands(isBBY).filter((command) => !command.disabled);
+        const commands = getSlashCommands();
         monaco.languages.registerCompletionItemProvider('plaintext', createSlashCommandProvider(commands));
 
         monacoInitialized = true;
@@ -99,7 +98,7 @@ function createEditor(setIsEmpty: (isEmpty: boolean) => void) {
         return undefined;
     }
 
-    initMonaco(RovodevStaticConfig.isBBY);
+    initMonaco();
 
     const editor = createMonacoPromptEditor(container);
 
