@@ -2,7 +2,7 @@ import { IssueKeyRegEx, parseJiraIssueKeys } from './issueKeyParser';
 
 describe('IssueKeyRegEx', () => {
     it('should match valid Jira issue keys', () => {
-        const validKeys = ['ABC-123', 'PROJECT-1', 'TEST-999', 'XY-1', 'ABC123-456', 'abc-123'];
+        const validKeys = ['ABC-123', 'PROJECT-1', 'TEST-999', 'XY-1', 'ABC123-456', 'abc-123', 'SDR_6-44', 'MY_PROJECT-7'];
 
         for (const key of validKeys) {
             expect(key).toMatch(IssueKeyRegEx);
@@ -10,7 +10,7 @@ describe('IssueKeyRegEx', () => {
     });
 
     it('should not match invalid Jira issue keys', () => {
-        const invalidKeys = ['ABC', 'ABC-', '-123', 'ABC-ABC', 'ABC_123', 'PROJECT_1', 'A@C-123'];
+        const invalidKeys = ['ABC', 'ABC-', '-123', 'ABC-ABC', 'ABC_123', 'PROJECT_1', 'A@C-123', '123-456'];
 
         for (const key of invalidKeys) {
             expect(key).not.toMatch(new RegExp(`^${IssueKeyRegEx.source}$`));
@@ -22,6 +22,12 @@ describe('parseJiraIssueKeys', () => {
     it('should return empty array for undefined input', () => {
         const result = parseJiraIssueKeys(undefined);
         expect(result).toEqual([]);
+    });
+
+    it('should extract issue keys with underscores in the project key', () => {
+        const text = 'Hovering over SDR_6-44 shows a preview';
+        const result = parseJiraIssueKeys(text);
+        expect(result).toEqual(['SDR_6-44']);
     });
 
     it('should return empty array for empty string', () => {
@@ -69,6 +75,6 @@ describe('parseJiraIssueKeys', () => {
     it('should handle issue keys with numeric project identifiers', () => {
         const text = 'Working on 123-456 and ABC-789';
         const result = parseJiraIssueKeys(text);
-        expect(result).toEqual(['123-456', 'ABC-789']);
+        expect(result).toEqual(['ABC-789']);
     });
 });
