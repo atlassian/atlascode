@@ -47,7 +47,7 @@
     ],
     "main": "./build/extension/extension",
     "rovoDev": {
-        "version": "202604.30.2"
+        "version": "202605.14.1"
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
