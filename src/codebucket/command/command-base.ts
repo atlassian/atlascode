@@ -35,7 +35,7 @@ export abstract class CommandBase {
         const workingDirectory = this.getDirectory();
         const shell = new Shell(workingDirectory);
         for (const backend of [Backend]) {
-            const { code, stdout } = await shell.exec(backend.root);
+            const { code, stdout } = await shell.exec('git', 'rev-parse', '--show-toplevel');
             if (code === 0) {
                 return new backend(stdout.trim());
             }
