@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.29
+
+### Improvements
+
+- **RovoDev**: Updated Rovo Dev version to 202605.14.1
+
 ## What's new in 4.0.28
 
 ### Bug Fixes
