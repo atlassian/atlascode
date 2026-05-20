@@ -65,7 +65,7 @@ export class Backend {
      * Get the hash of the revision associated with the current line.
      */
     public async findSelectedRevision(file: string, line: number): Promise<string> {
-        const output = await this.shell.output(`git blame --root -l -L ${line},${line} ${file}`);
+        const output = await this.shell.output('git', 'blame', '--root', '-l', `-L${line},${line}`, '--', file);
         const match = output.match(/^(\w+)/);
         if (match) {
             return match[1];

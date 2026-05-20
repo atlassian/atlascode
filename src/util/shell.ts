@@ -9,11 +9,18 @@ export interface Result {
 export class Shell {
     constructor(private readonly workingDirectory: string) {}
 
+    /**
+     * Execute a command with arguments safely, without spawning a shell.
+     * Arguments are passed directly to the process, preventing shell injection attacks.
+     *
+     * @param command - The executable to run (e.g. 'git')
+     * @param args - Arguments passed directly to the process (not interpreted by a shell)
+     */
     public async exec(command: string, ...args: string[]): Promise<Result> {
         return new Promise<Result>((resolve, reject) => {
             const proc = spawn(command, args, {
                 cwd: this.workingDirectory,
-                shell: true,
+                shell: false,
             });
 
             let stdout = '';
