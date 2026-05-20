@@ -5,14 +5,14 @@ import { IssueType, MinimalIssueOrKeyAndSite, User } from '@atlassian-pi/jira-pi
 import { FieldUI, FieldUIs, FieldValues, IssueLinkTypeSelectOption } from '@atlassian-pi/jira-pi-meta-models';
 import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+import { AdfAwareContent } from 'src/webviews/components/AdfAwareContent';
 
-import { AdfAwareContent } from '../../../AdfAwareContent';
 import { RenderedContent } from '../../../RenderedContent';
 import { AttachmentList } from '../../AttachmentList';
 import { AttachmentsModal } from '../../AttachmentsModal';
 import { convertAdfToWikimarkup, convertWikimarkupToAdf } from '../../common/adfToWikimarkup';
 import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
-import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
+import AtlaskitEditor, { AtlaskitMediaProvider } from '../../common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
 import { WorklogFormDialog } from '../../WorklogFormDialog';
 import Worklogs from '../../Worklogs';
@@ -43,6 +43,7 @@ type Props = {
     onIssueUpdate?: (issueKey: string, fieldKey: string, newValue: any) => void;
     isAtlaskitEditorEnabled?: boolean;
     mentionProvider: AtlascodeMentionProvider;
+    mediaProvider: AtlaskitMediaProvider;
     handleEditorFocus: (isFocused: boolean) => void;
 };
 
@@ -67,6 +68,7 @@ const IssueMainPanel: React.FC<Props> = ({
     onIssueUpdate,
     isAtlaskitEditorEnabled,
     mentionProvider,
+    mediaProvider,
     handleEditorFocus,
 }) => {
     const attachments = fields['attachment'] && fieldValues['attachment'] ? fieldValues['attachment'] : undefined;
@@ -249,6 +251,7 @@ const IssueMainPanel: React.FC<Props> = ({
                                     setDescriptionText(content);
                                 }}
                                 mentionProvider={Promise.resolve(mentionProvider)}
+                                mediaProvider={mediaProvider}
                                 onFocus={() => handleEditorFocus(true)}
                                 onBlur={() => handleEditorFocus(false)}
                             />
@@ -292,7 +295,7 @@ const IssueMainPanel: React.FC<Props> = ({
                             className="ac-inline-input-view-p"
                         >
                             {isAtlaskitEditorEnabled ? (
-                                <AdfAwareContent content={descriptionText} mentionProvider={mentionProvider} />
+                                <AdfAwareContent content={defaultDescription} mentionProvider={mentionProvider} />
                             ) : renderedDescription ? (
                                 <RenderedContent html={renderedDescription} fetchImage={fetchImage} />
                             ) : (

@@ -91,6 +91,17 @@ const mockMentionProvider = AtlascodeMentionProvider.init(
     jest.fn().mockResolvedValue(mockMentionUsers),
 );
 
+const mockMediaProvider = Promise.resolve({
+    viewMediaClientConfig: {
+        authProvider: () =>
+            Promise.resolve({
+                clientId: 'mock-client-id',
+                token: 'mock-token',
+                baseUrl: 'mock-base-url',
+            }),
+    },
+});
+
 describe('IssueMainPanel with Atlaskit Editor', () => {
     beforeAll(() => {
         disableConsole('warn', 'error');
@@ -117,6 +128,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
                     isAtlaskitEditorEnabled={true}
                     mentionProvider={mockMentionProvider}
                     handleEditorFocus={mockHandleEditorFocus}
+                    mediaProvider={mockMediaProvider}
                 />,
             ),
         );
@@ -145,6 +157,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
                     isAtlaskitEditorEnabled={true}
                     mentionProvider={mockMentionProvider}
                     handleEditorFocus={mockHandleEditorFocus}
+                    mediaProvider={mockMediaProvider}
                 />,
             ),
         );
@@ -183,6 +196,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
                         isAtlaskitEditorEnabled={true}
                         mentionProvider={mockMentionProvider}
                         handleEditorFocus={mockHandleEditorFocus}
+                        mediaProvider={mockMediaProvider}
                     />,
                 ),
             );
@@ -212,6 +226,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
                         isAtlaskitEditorEnabled={true}
                         mentionProvider={mockMentionProvider}
                         handleEditorFocus={mockHandleEditorFocus}
+                        mediaProvider={mockMediaProvider}
                     />,
                 ),
             );
@@ -281,6 +296,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
                         isAtlaskitEditorEnabled={true}
                         mentionProvider={mockMentionProvider}
                         handleEditorFocus={mockHandleEditorFocus}
+                        mediaProvider={mockMediaProvider}
                     />,
                 ),
             );
@@ -310,6 +326,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
                         isAtlaskitEditorEnabled={true}
                         mentionProvider={mockMentionProvider}
                         handleEditorFocus={mockHandleEditorFocus}
+                        mediaProvider={mockMediaProvider}
                     />,
                 ),
             );
@@ -353,6 +370,7 @@ describe('IssueMainPanel with Atlaskit Editor', () => {
                         isAtlaskitEditorEnabled={true}
                         mentionProvider={mockMentionProvider}
                         handleEditorFocus={mockHandleEditorFocus}
+                        mediaProvider={mockMediaProvider}
                     />,
                 ),
             );
