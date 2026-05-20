@@ -1,10 +1,12 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.30
+
+### Bug Fixes
+
+- Fixed shell command injection vulnerability (VULN-1825192) in git operations. The `Shell` utility class now uses `shell: false` when spawning processes, and all git commands pass arguments as separate array elements rather than interpolating user-controlled values (e.g. branch names, file paths, commit hashes) directly into shell command strings. This prevents Remote Code Execution via maliciously crafted git branch names.
+
 ## What's new in 4.0.29
-
-### Security Fixes
-
-- **Security**: Fixed shell command injection vulnerability (VULN-1825192) in git operations. The `Shell` utility class now uses `shell: false` when spawning processes, and all git commands pass arguments as separate array elements rather than interpolating user-controlled values (e.g. branch names, file paths, commit hashes) directly into shell command strings. This prevents Remote Code Execution via maliciously crafted git branch names.
 
 ### Improvements
 
@@ -27,7 +29,6 @@
 
 - **Webview**: Fixed `ChunkLoadError` for CSS chunks (e.g. `atlascodeRovoDev`, `compiled-css`) when running with a Firefox-based webview engine (e.g. code-server). Switched from `MiniCssExtractPlugin` to `style-loader` in the React webpack bundles so CSS is injected as `<style>` tags instead of being dynamically fetched as separate files, which Firefox cannot do for `vscode-resource` URLs.
 - **RovoDev**: Fixed rate limit exceeded message showing a literal `{title}` placeholder instead of the actual credit type title
-
 
 ## What's new in 4.0.27
 
@@ -65,7 +66,6 @@
 ### Features
 
 - **RovoDev**: Added copy code button within the Rovo Dev chat for code blocks in the chat.
-
 
 ## What's new in 4.0.23
 
