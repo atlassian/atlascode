@@ -9,9 +9,14 @@ export const unseenNotificationCountVSCode = gql`
 `;
 
 export const notificationFeedVSCode = gql`
-    query notificationFeedVSCode($first: Int) {
+    query notificationFeedVSCode($first: Int, $collabContextRoutingAri: String) {
         notifications {
-            notificationFeed(filter: { readStateFilter: unread, categoryFilter: direct }, flat: true, first: $first) {
+            notificationFeed(
+                filter: { readStateFilter: unread, categoryFilter: direct }
+                flat: true
+                first: $first
+                collabContextRoutingAri: $collabContextRoutingAri
+            ) {
                 nodes {
                     headNotification {
                         notificationId

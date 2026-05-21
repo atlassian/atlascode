@@ -23,7 +23,10 @@ jest.mock('../../container', () => ({
         },
         credentialManager: {
             onDidAuthChange: jest.fn(),
-            getCloudAuthInfo: jest.fn(() => Promise.resolve([])),
+            getAuthInfo: jest.fn(() => Promise.resolve(undefined)),
+        },
+        siteManager: {
+            getSitesAvailable: jest.fn(() => []),
         },
         config: {
             jira: {

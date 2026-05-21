@@ -1,6 +1,14 @@
 import { Disposable, Uri } from 'vscode';
 
-import { AuthInfo, AuthInfoEvent, isRemoveAuthEvent, ProductBitbucket, ProductJira } from '../../atlclients/authInfo';
+import {
+    AuthInfo,
+    AuthInfoEvent,
+    AuthInfoState,
+    DetailedSiteInfo,
+    isRemoveAuthEvent,
+    ProductBitbucket,
+    ProductJira,
+} from '../../atlclients/authInfo';
 import { graphqlRequest } from '../../atlclients/graphql/graphqlClient';
 import { notificationFeedVSCode, unseenNotificationCountVSCode } from '../../atlclients/graphql/graphqlDocuments';
 import { Container } from '../../container';
@@ -43,14 +51,18 @@ export class AtlassianNotificationNotifier extends Disposable implements Notific
     }
 
     public fetchNotifications(): void {
-        Container.credentialManager.getCloudAuthInfo(ProductJira).then((authInfos) => {
-            authInfos.forEach(async (authInfo: AuthInfo) => {
-                await this.getLatestNotifications(authInfo);
-            });
+        const site = Container.siteManager.primarySite;
+        if (!site) {
+            return;
+        }
+        Container.credentialManager.getAuthInfo(site).then((authInfo) => {
+            if (authInfo && authInfo.state !== AuthInfoState.Invalid) {
+                this.getLatestNotifications(authInfo, site);
+            }
         });
     }
 
-    private async getLatestNotifications(authInfo: AuthInfo): Promise<void> {
+    private async getLatestNotifications(authInfo: AuthInfo, site: DetailedSiteInfo): Promise<void> {
         if (this.shouldRateLimit(authInfo)) {
             return;
         }
@@ -71,7 +83,7 @@ export class AtlassianNotificationNotifier extends Disposable implements Notific
         this._lastUnseenNotificationCount[authInfo.user.id] = numUnseenNotifications;
 
         Logger.debug(`Found ${numUnseenNotifications} unseen notifications for ${authInfo.user.id}`);
-        this.getNotificationDetailsByAuthInfo(authInfo, numUnseenNotifications);
+        this.getNotificationDetailsByAuthInfo(authInfo, numUnseenNotifications, site);
     }
 
     private shouldFetchFullNotifications(authInfo: AuthInfo) {
@@ -79,14 +91,15 @@ export class AtlassianNotificationNotifier extends Disposable implements Notific
         return Date.now() - lastFullPull > AtlassianNotificationNotifier.NOTIFICATION_FULL_PULL_INTERVAL_MS;
     }
 
-    private getNotificationDetailsByAuthInfo(authInfo: AuthInfo, numberToFetch: number): void {
+    private getNotificationDetailsByAuthInfo(authInfo: AuthInfo, numberToFetch: number, site: DetailedSiteInfo): void {
         if (numberToFetch <= 0) {
             Logger.debug(`No unseen notifications to fetch for ${authInfo.user.id}`);
             return;
         }
         this._lastFullPull[authInfo.user.id] = Date.now();
         Logger.debug(`Fetching notifications for ${authInfo.user.id}`);
-        graphqlRequest(notificationFeedVSCode, { first: numberToFetch }, authInfo)
+        const collabContextRoutingAri = `ari:cloud:platform::site/${site.id}`;
+        graphqlRequest(notificationFeedVSCode, { first: numberToFetch, collabContextRoutingAri }, authInfo)
             .then((response) => {
                 if (!response?.notifications?.notificationFeed?.nodes) {
                     Logger.warn('notificationFeed is undefined in the response');
