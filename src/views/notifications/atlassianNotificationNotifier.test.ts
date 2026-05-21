@@ -37,6 +37,7 @@ describe('AtlassianNotificationNotifier', () => {
         // Mock Container.credentialManager
         (Container as any).credentialManager = {
             getAuthInfo: jest.fn(),
+            getCloudAuthInfo: jest.fn().mockResolvedValue([]),
             onDidAuthChange: jest.fn(() => ({ dispose: jest.fn() })),
         };
 
@@ -64,9 +65,10 @@ describe('AtlassianNotificationNotifier', () => {
         const authInfo1 = createMockAuthInfo('user1');
         const site1 = createMockSite('site1', 'cloud-id-1');
 
-        // Mock siteManager with primarySite and getAuthInfo
-        (Container as any).siteManager.primarySite = site1;
-        (Container.credentialManager.getAuthInfo as jest.Mock).mockResolvedValueOnce(authInfo1);
+        // Mock getCloudAuthInfo to return authInfo + site pairs
+        (Container.credentialManager.getCloudAuthInfo as jest.Mock).mockResolvedValueOnce([
+            { authInfo: authInfo1, site: site1 },
+        ]);
 
         // Mock unseen notification count and notification details responses
         mockGraphqlRequest
@@ -109,8 +111,7 @@ describe('AtlassianNotificationNotifier', () => {
         const authInfo = createMockAuthInfo('user1');
         const site = createMockSite('site1', 'cloud-id-1');
 
-        (Container as any).siteManager.primarySite = site;
-        (Container.credentialManager.getAuthInfo as jest.Mock).mockResolvedValue(authInfo);
+        (Container.credentialManager.getCloudAuthInfo as jest.Mock).mockResolvedValue([{ authInfo, site }]);
 
         // First call should work
         mockGraphqlRequest.mockResolvedValue({ notifications: { unseenNotificationCount: 1 } });
@@ -128,8 +129,7 @@ describe('AtlassianNotificationNotifier', () => {
         const authInfo = createMockAuthInfo('user1');
         const site = createMockSite('site1', 'cloud-id-1');
 
-        (Container as any).siteManager.primarySite = site;
-        (Container.credentialManager.getAuthInfo as jest.Mock).mockResolvedValue(authInfo);
+        (Container.credentialManager.getCloudAuthInfo as jest.Mock).mockResolvedValue([{ authInfo, site }]);
 
         // Mock same unseen count as before
         mockGraphqlRequest.mockResolvedValue({ notifications: { unseenNotificationCount: 5 } });

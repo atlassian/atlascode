@@ -201,14 +201,26 @@ export class CredentialManager implements Disposable {
     }
 
     // Gets valid auth info for cloud sites, deduplicated by user email (used for notifications and handles OAuth + API token for the same user)
-    public async getCloudAuthInfo(product: Product): Promise<AuthInfo[]> {
-        const authInfos = await this.getAllValidAuthInfo(product, (site) => site.isCloud);
+    public async getCloudAuthInfo(product: Product): Promise<{ authInfo: AuthInfo; site: DetailedSiteInfo }[]> {
+        const sites = Container.siteManager.getSitesAvailable(product).filter((site) => site.isCloud);
+        const uniquelyCredentialedSites = Array.from(new Map(sites.map((site) => [site.credentialId, site])).values());
 
-        const uniqueByEmail = new Map<string, AuthInfo>();
-        authInfos.forEach((authInfo) => {
-            const email = authInfo.user.email;
+        const authInfoWithSites = await Promise.all(
+            uniquelyCredentialedSites.map(async (site) => {
+                const authInfo = await this.getAuthInfo(site, true);
+                return authInfo && authInfo.state !== AuthInfoState.Invalid ? { authInfo, site } : undefined;
+            }),
+        );
+
+        const validEntries = authInfoWithSites.filter(
+            (entry): entry is { authInfo: AuthInfo; site: DetailedSiteInfo } => entry !== undefined,
+        );
+
+        const uniqueByEmail = new Map<string, { authInfo: AuthInfo; site: DetailedSiteInfo }>();
+        validEntries.forEach((entry) => {
+            const email = entry.authInfo.user.email;
             if (email && !uniqueByEmail.has(email)) {
-                uniqueByEmail.set(email, authInfo);
+                uniqueByEmail.set(email, entry);
             }
         });
         return Array.from(uniqueByEmail.values());

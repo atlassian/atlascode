@@ -24,6 +24,7 @@ jest.mock('../../container', () => ({
         credentialManager: {
             onDidAuthChange: jest.fn(),
             getAuthInfo: jest.fn(() => Promise.resolve(undefined)),
+            getCloudAuthInfo: jest.fn(() => Promise.resolve([])),
         },
         siteManager: {
             getSitesAvailable: jest.fn(() => []),

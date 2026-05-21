@@ -3,7 +3,6 @@ import { Disposable, Uri } from 'vscode';
 import {
     AuthInfo,
     AuthInfoEvent,
-    AuthInfoState,
     DetailedSiteInfo,
     isRemoveAuthEvent,
     ProductBitbucket,
@@ -51,14 +50,10 @@ export class AtlassianNotificationNotifier extends Disposable implements Notific
     }
 
     public fetchNotifications(): void {
-        const site = Container.siteManager.primarySite;
-        if (!site) {
-            return;
-        }
-        Container.credentialManager.getAuthInfo(site).then((authInfo) => {
-            if (authInfo && authInfo.state !== AuthInfoState.Invalid) {
+        Container.credentialManager.getCloudAuthInfo(ProductJira).then((entries) => {
+            entries.forEach(({ authInfo, site }) => {
                 this.getLatestNotifications(authInfo, site);
-            }
+            });
         });
     }
 
