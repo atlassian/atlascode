@@ -44,7 +44,7 @@ Compatible with VS Code, Cursor, Windsurf and other forks.
 
 
 # Troubleshooting 
-If the table below doesn't help you, [raise an issue here.](https://github.com/atlassian/atlascode/issues?q=is%3Aissue%20state%3Aopen%20sort%3Aupdated-desc)
+If the table below does not help you, [raise an issue here.](https://github.com/atlassian/atlascode/issues?q=is%3Aissue%20state%3Aopen%20sort%3Aupdated-desc)
 
 | Issue | Troubleshooting Steps |
 |-------|----------------------|
