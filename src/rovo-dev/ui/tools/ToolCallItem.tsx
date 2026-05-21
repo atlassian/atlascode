@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import { getProductName } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { RovoDevToolName } from 'src/rovo-dev/client';
 import { InitializingDownladingState, InitializingState, State } from 'src/rovo-dev/rovoDevTypes';
 
@@ -95,9 +96,9 @@ export function parseToolCallMessage(msgToolName: RovoDevToolName): string {
 function getInitStatusMessage(state: InitializingState | InitializingDownladingState): string {
     switch (state.subState) {
         case 'Other':
-            return 'Rovo Dev is initializing';
+            return `${getProductName()} is initializing`;
         case 'UpdatingBinaries':
-            return 'Rovo Dev is updating';
+            return `${getProductName()} is updating`;
         case 'MCPAcceptance':
             return 'MCPAcceptance'; // this substate is not displayed in the loading spinner
         default:

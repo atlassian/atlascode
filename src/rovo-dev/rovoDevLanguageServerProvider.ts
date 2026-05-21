@@ -1,6 +1,7 @@
 import { ChildProcess, spawn } from 'child_process';
 import { access, constants } from 'fs';
 import { Logger } from 'src/logger';
+import { getProductName } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { commands, Disposable, ExtensionContext, OutputChannel, window, workspace } from 'vscode';
 import {
     CloseAction,
@@ -67,7 +68,7 @@ export class RovoDevLanguageServerProvider extends Disposable {
         this.context = context;
 
         // Create output channel for LSP logging
-        this.outputChannel = window.createOutputChannel('Rovo Dev Language Server');
+        this.outputChannel = window.createOutputChannel(`${getProductName()} Language Server`);
 
         // Register the restart command
         this.disposables.push(commands.registerCommand(RESTART_LSP_COMMAND, () => this.restartLanguageServer()));
@@ -203,7 +204,7 @@ export class RovoDevLanguageServerProvider extends Disposable {
 
                         this.outputChannel.appendLine(
                             `Max restart attempts (${MAX_RESTART_ATTEMPTS}) reached. Not restarting. ` +
-                                `Use "Rovo Dev: Restart Language Server" command to manually restart.`,
+                                `Use "${getProductName()}: Restart Language Server" command to manually restart.`,
                         );
                         return { action: CloseAction.DoNotRestart };
                     },
@@ -213,7 +214,7 @@ export class RovoDevLanguageServerProvider extends Disposable {
             // Create the language client
             this.client = new LanguageClient(
                 'rovoDevLanguageServer',
-                'Rovo Dev Language Server',
+                `${getProductName()} Language Server`,
                 serverOptions,
                 clientOptions,
             );

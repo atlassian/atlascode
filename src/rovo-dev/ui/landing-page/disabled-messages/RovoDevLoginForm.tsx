@@ -2,6 +2,7 @@ import Button from '@atlaskit/button/new';
 import { CreatableSelect } from '@atlaskit/select';
 import Textfield from '@atlaskit/textfield';
 import * as React from 'react';
+import { getProductName } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
 const formStyles: React.CSSProperties = {
@@ -241,7 +242,7 @@ export const RovoDevLoginForm: React.FC<{
 
             <div style={fieldRowStyles}>
                 <label htmlFor="apiToken" style={labelStyles}>
-                    Rovo Dev API Token (
+                    {getProductName()} API Token (
                     <a
                         href="https://id.atlassian.com/manage-profile/security/api-tokens?autofillToken&expiryDays=max&appId=rovodev&selectedScopes=all"
                         target="_blank"
@@ -259,7 +260,7 @@ export const RovoDevLoginForm: React.FC<{
                     type="password"
                     value={apiToken}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setApiToken(e.target.value)}
-                    placeholder="Your Rovo Dev API token"
+                    placeholder={`Your ${getProductName()} API token`}
                     isDisabled={authValidationState.isValidating}
                     autoComplete="off"
                     style={textFieldStyles}

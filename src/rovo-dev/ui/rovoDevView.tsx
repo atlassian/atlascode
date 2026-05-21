@@ -45,7 +45,7 @@ import {
     ToolReturnParseResult,
 } from './utils';
 
-const DEFAULT_LOADING_MESSAGE: string = 'Rovo dev is working';
+const DEFAULT_LOADING_MESSAGE: string = `${RovodevStaticConfig.isRebrandJCA ? 'Jira Coding Agent' : 'Rovo dev'} is working`;
 
 const RovoDevView: React.FC = () => {
     const [currentState, setCurrentState] = useState<State>({ state: 'WaitingForPrompt' });
