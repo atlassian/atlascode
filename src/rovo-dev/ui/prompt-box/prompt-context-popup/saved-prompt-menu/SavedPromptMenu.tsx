@@ -7,6 +7,7 @@ import Spinner from '@atlaskit/spinner';
 import Textfield from '@atlaskit/textfield';
 import Tooltip from '@atlaskit/tooltip';
 import React from 'react';
+import { getProductName } from 'src/rovo-dev/api/rovodevStaticConfig';
 
 import { SavedPrompt } from '../../../utils';
 
@@ -140,7 +141,7 @@ export const SavedPromptMenu: React.FC<SavedPromptMenuProps> = ({
                             ))}
                             {!canFetchSavedPrompts && (
                                 <div className="saved-prompt-menu-no-results">
-                                    <Spinner /> Initializing Rovo Dev process...
+                                    <Spinner /> Initializing {getProductName()} process...
                                 </div>
                             )}
                             {filteredPrompts.length === 0 && canFetchSavedPrompts && (

@@ -1,5 +1,6 @@
 import { v4 } from 'uuid';
 
+import { getProductName } from './api/rovodevStaticConfig';
 import { RovoDevApiClient } from './client/rovoDevApiClient';
 import { RovoDevChatProvider } from './rovoDevChatProvider';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
@@ -300,7 +301,7 @@ describe('RovoDevChatProvider', () => {
             providerWithoutClient.setWebview(mockWebview);
 
             await expect(providerWithoutClient.executeReplay()).rejects.toThrow(
-                'Unable to replay the previous conversation. Rovo Dev failed to initialize',
+                `Unable to replay the previous conversation. ${getProductName()} failed to initialize`,
             );
         });
 

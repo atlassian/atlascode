@@ -1,4 +1,5 @@
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import { getProductName } from 'src/rovo-dev/api/rovodevStaticConfig';
 
 import { SavedPrompt } from '../../utils';
 
@@ -98,8 +99,12 @@ export function getSlashCommands(isBBY: boolean): SlashCommand[] {
         {
             label: '/feedback',
             insertText: '/feedback',
-            description: 'Provide feedback on Rovo Dev',
-            command: { title: 'Feedback', id: 'rovo-dev.triggerFeedback', tooltip: 'Provide feedback on Rovo Dev' },
+            description: `Provide feedback on ${getProductName()}`,
+            command: {
+                title: 'Feedback',
+                id: 'rovo-dev.triggerFeedback',
+                tooltip: `Provide feedback on ${getProductName()}`,
+            },
         },
         {
             label: '/mcp',
@@ -147,21 +152,21 @@ export function getSlashCommands(isBBY: boolean): SlashCommand[] {
         {
             label: '/status',
             insertText: '/status',
-            description: 'Show Rovo Dev status including version, account details and model',
+            description: `Show ${getProductName()} status including version, account details and model`,
             command: {
                 title: 'Status',
                 id: 'rovo-dev.triggerStatus',
-                tooltip: 'Show Rovo Dev status including version, account details and model',
+                tooltip: `Show ${getProductName()} status including version, account details and model`,
             },
         },
         {
             label: '/usage',
             insertText: '/usage',
-            description: 'Show Rovo Dev credit usage',
+            description: `Show ${getProductName()} credit usage`,
             command: {
                 title: 'Usage',
                 id: 'rovo-dev.triggerUsage',
-                tooltip: 'Show Rovo Dev credit usage',
+                tooltip: `Show ${getProductName()} credit usage`,
             },
         },
         {

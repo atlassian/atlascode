@@ -8,6 +8,7 @@ import React from 'react';
 import { RovoDevToolName } from 'src/rovo-dev/client';
 import { ToolPermissionChoice } from 'src/rovo-dev/client';
 
+import { getProductName } from '../../api/rovodevStaticConfig';
 import {
     chatMessageStyles,
     errorMessageStyles,
@@ -72,10 +73,10 @@ export const DialogMessageItem: React.FC<{
             parts.push(`\n\nExtension Stack Trace:\n${msg.stackTrace}`);
         }
         if (msg.rovoDevLogs && msg.rovoDevLogs.length > 0) {
-            parts.push(`\n\nRovo Dev Logs:\n${msg.rovoDevLogs.join('\n')}`);
+            parts.push(`\n\n${getProductName()} Logs:\n${msg.rovoDevLogs.join('\n')}`);
         }
         if (msg.stderr) {
-            parts.push(`\n\nRovo Dev Stderr:\n${msg.stderr}`);
+            parts.push(`\n\n${getProductName()} Stderr:\n${msg.stderr}`);
         }
         return parts.join('');
     }, [msg.title, msg.text, msg.statusCode, msg.stackTrace, msg.stderr, msg.rovoDevLogs]);
@@ -92,15 +93,15 @@ export const DialogMessageItem: React.FC<{
 
         switch (msg.type) {
             case 'error':
-                title = msg.title ?? 'Rovo Dev encountered an error';
+                title = msg.title ?? `${getProductName()} encountered an error`;
                 icon = <ErrorIcon title={title} />;
                 return [title, icon];
             case 'warning':
-                title = msg.title ?? 'Rovo Dev';
+                title = msg.title ?? getProductName();
                 icon = <WarningIcon title={title} />;
                 return [title, icon];
             case 'info':
-                title = msg.title ?? 'Rovo Dev';
+                title = msg.title ?? getProductName();
                 icon = <InfoIcon title={title} />;
                 return [title, icon];
             case 'toolPermissionRequest':

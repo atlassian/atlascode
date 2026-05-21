@@ -2,6 +2,7 @@ import * as React from 'react';
 import { State } from 'src/rovo-dev/rovoDevTypes';
 
 import { DetailedSiteInfo, MinimalIssue } from '../../api/extensionApiTypes';
+import { getProductName } from '../../api/rovodevStaticConfig';
 import { McpConsentChoice } from '../rovoDevViewMessages';
 import { DisabledMessage } from './disabled-messages/DisabledMessage';
 import { CredentialHint } from './disabled-messages/RovoDevLoginForm';
@@ -76,9 +77,9 @@ export const RovoDevLanding: React.FC<{
             <div>
                 <RovoDevImg />
             </div>
-            <div style={{ fontSize: '15px' }}>Welcome to Rovo Dev</div>
+            <div style={{ fontSize: '15px' }}>Welcome to {getProductName()}</div>
             <div style={{ fontSize: '12px', maxWidth: '270px' }}>
-                Rovo Dev can help you understand context of your repository, suggest and make updates.
+                {getProductName()} can help you understand context of your repository, suggest and make updates.
             </div>
 
             {!shouldHideSuggestions && (
