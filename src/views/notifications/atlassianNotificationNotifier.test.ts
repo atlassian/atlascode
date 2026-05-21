@@ -60,29 +60,36 @@ describe('AtlassianNotificationNotifier', () => {
         expect(instance1).toBe(instance2);
     });
 
-    it('should fetch notifications for primary site auth info', async () => {
-        // Create mock auth info and site
+    it('should fetch notifications for all valid auth infos', async () => {
+        // Create mock auth infos and sites
         const authInfo1 = createMockAuthInfo('user1');
+        const authInfo2 = createMockAuthInfo('user2');
         const site1 = createMockSite('site1', 'cloud-id-1');
+        const site2 = createMockSite('site2', 'cloud-id-2');
 
         // Mock getCloudAuthInfo to return authInfo + site pairs
         (Container.credentialManager.getCloudAuthInfo as jest.Mock).mockResolvedValueOnce([
             { authInfo: authInfo1, site: site1 },
+            { authInfo: authInfo2, site: site2 },
         ]);
 
-        // Mock unseen notification count and notification details responses
+        // Mock unseen notification count responses
         mockGraphqlRequest
             .mockResolvedValueOnce({ notifications: { unseenNotificationCount: 2 } }) // user1 count
+            .mockResolvedValueOnce({ notifications: { unseenNotificationCount: 1 } }) // user2 count
             .mockResolvedValueOnce({
                 // user1 notifications
                 notifications: {
                     notificationFeed: {
-                        nodes: [
-                            createPRTextCommentNode(),
-                            createPRADFCommentNode(),
-                            createJiraCommentNode(),
-                            createRandomNonRelevantNode(),
-                        ],
+                        nodes: [createPRTextCommentNode(), createPRADFCommentNode()],
+                    },
+                },
+            })
+            .mockResolvedValueOnce({
+                // user2 notifications
+                notifications: {
+                    notificationFeed: {
+                        nodes: [createJiraCommentNode(), createRandomNonRelevantNode()],
                     },
                 },
             });
@@ -93,10 +100,10 @@ describe('AtlassianNotificationNotifier', () => {
         // Wait for all async operations to complete
         await new Promise((resolve) => setTimeout(resolve, 0));
 
-        // Verify that graphqlRequest was called for unseen count and notification details for primary site only
-        expect(mockGraphqlRequest).toHaveBeenCalledTimes(2);
+        // Verify that graphqlRequest was called for unseen count and notification details for both users
+        expect(mockGraphqlRequest).toHaveBeenCalledTimes(4);
 
-        // Verify collabContextRoutingAri was passed correctly for the notification fetch
+        // Verify collabContextRoutingAri was passed correctly for user1's notification fetch
         expect(mockGraphqlRequest).toHaveBeenCalledWith(
             expect.anything(),
             expect.objectContaining({ collabContextRoutingAri: 'ari:cloud:platform::site/cloud-id-1' }),
