@@ -52,7 +52,7 @@ If the table below doesn't help you, [raise an issue here.](https://github.com/a
 | **Jira Work Items not displaying** | 1. Confirm you are on the latest stable release<br>2. Try restarting the IDE<br>3. Try re-authenticating |
 | **Bitbucket PRs not displaying** | 1. Confirm you are in a repo that uses Bitbucket as a remote<br>2. Confirm you are on the latest stable release<br>3. Try restarting the IDE<br>4. Try re-authenticating |
 | **Bitbucket Pipelines not displaying** | 1. Confirm you are in a repo that uses Bitbucket as a remote<br>2. Confirm you are on the latest stable release<br>3. Try restarting the IDE<br>4. Try re-authenticating |
-| **Authentication: Bitbucket/Jira Server failing to Authneticate** | 1. Confirm your server version is supported by the [Atlassian End of Support Policy](https://confluence.atlassian.com/support/atlassian-support-end-of-life-policy-201851003.html)<br>2. Confirm you are on the latest stable release<br>3. Try restarting the IDE<br>4. Try re-authenticating |
+| **Authentication: Bitbucket/Jira Server failing to Authenticate** | 1. Confirm your server version is supported by the [Atlassian End of Support Policy](https://confluence.atlassian.com/support/atlassian-support-end-of-life-policy-201851003.html)<br>2. Confirm you are on the latest stable release<br>3. Try restarting the IDE<br>4. Try re-authenticating |
 
 # Compatibility
 
