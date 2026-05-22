@@ -326,6 +326,12 @@ export class RovoDevChatProvider {
     public async executeCancel(fromNewSession: boolean): Promise<boolean> {
         const webview = this._webView!;
 
+        // Clear any pending deferred tool call so the next user prompt is sent
+        // as a plain message instead of a tool-call response.  Without this the
+        // backend would reject the prompt with "Cannot provide a new user prompt
+        // when the message history contains unprocessed tool calls".
+        this._pendingDeferredRequest = undefined;
+
         let success: boolean;
         if (this._rovoDevApiClient) {
             if (this._pendingCancellation) {
@@ -967,7 +973,7 @@ export class RovoDevChatProvider {
             try {
                 await func(this._rovoDevApiClient);
             } catch (error) {
-                if (error.name === 'AbortError') {
+                if (error.name === 'AbortError' || (error instanceof TypeError && error.message === 'terminated')) {
                     await webview.postMessage({
                         type: RovoDevProviderMessageType.CompleteMessage,
                         promptId: this._currentPromptId,
