@@ -14,12 +14,12 @@ import {
 
 export type SupportedConfigFiles = 'config.yml' | 'mcp.json' | '.agent.md' | 'rovodev.log';
 
-const FriendlyName: Record<SupportedConfigFiles, string> = {
+const getFriendlyName = (): Record<SupportedConfigFiles, string> => ({
     'config.yml': `${getProductName()} settings file`,
     'mcp.json': `${getProductName()} MCP configuration`,
     '.agent.md': `${getProductName()} Global Memory file`,
     'rovodev.log': `${getProductName()} log file`,
-};
+});
 
 // Read logging.path from ~/.rovodev/config.yml if present.
 function getLogPathFromConfig(home: string): string | undefined {
@@ -67,7 +67,7 @@ export async function openRovoDevConfigFile(configFile: SupportedConfigFiles) {
         const doc = await workspace.openTextDocument(filePath);
         await window.showTextDocument(doc);
     } catch (err) {
-        window.showErrorMessage(`Could not open ${FriendlyName[configFile]} (${filePath}): ${err}`);
+        window.showErrorMessage(`Could not open ${getFriendlyName()[configFile]} (${filePath}): ${err}`);
     }
 }
 

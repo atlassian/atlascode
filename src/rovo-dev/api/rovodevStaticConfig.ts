@@ -16,8 +16,11 @@ export const RovodevStaticConfig = {
      * Feature gate: rebrand "Rovo Dev" → "Jira Coding Agent" in Boysenberry environments.
      * Requires both `ROVODEV_REBRAND_JCA=true` (rollout gate) and `ROVODEV_BBY=true` (Boysenberry context).
      * The env var controls when the rebrand is rolled out; the BBY check ensures it only applies in Boysenberry.
+     * Defined as a getter so it is evaluated lazily at call time rather than once at module load.
      */
-    isRebrandJCA: process.env.ROVODEV_REBRAND_JCA === 'true' && process.env.ROVODEV_BBY === 'true',
+    get isRebrandJCA(): boolean {
+        return process.env.ROVODEV_REBRAND_JCA === 'true' && process.env.ROVODEV_BBY === 'true';
+    },
 };
 
 /**
