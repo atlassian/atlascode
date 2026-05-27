@@ -438,7 +438,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
 
                     case RovoDevViewResponseType.TriggerFeedback:
-                        await this.executeTriggerFeedback();
+                        await this.executeTriggerFeedback(e.isPositive);
                         break;
 
                     case RovoDevViewResponseType.SendFeedback:
@@ -1235,8 +1235,20 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
-    public async executeTriggerFeedback() {
+    public async executeTriggerFeedback(isPositive?: boolean) {
         const webview = this._webView!;
+
+        // Fire analytics event for the thumbs up/down vote click
+        if (isPositive !== undefined) {
+            await this._telemetryProvider.fireTelemetryEvent({
+                action: 'rovoDevChatVoteAction',
+                subject: 'atlascode',
+                attributes: {
+                    promptId: this._chatProvider.currentPromptId,
+                    direction: isPositive ? 'up' : 'down',
+                },
+            });
+        }
 
         await webview.postMessage({
             type: RovoDevProviderMessageType.ShowFeedbackForm,

@@ -79,7 +79,7 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.WebviewReady>
     | ReducerAction<RovoDevViewResponseType.OpenMcpConfiguration>
     | ReducerAction<RovoDevViewResponseType.GetAgentMemory>
-    | ReducerAction<RovoDevViewResponseType.TriggerFeedback>
+    | ReducerAction<RovoDevViewResponseType.TriggerFeedback, { isPositive: boolean }>
     | ReducerAction<
           RovoDevViewResponseType.SendFeedback,
           { feedbackType: FeedbackType; feedbackMessage: string; lastTenMessages?: string[]; canContact: boolean }

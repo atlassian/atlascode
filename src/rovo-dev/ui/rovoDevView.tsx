@@ -970,8 +970,10 @@ const RovoDevView: React.FC = () => {
         (isPositive: boolean) => {
             setFeedbackType(isPositive ? 'like' : 'dislike');
             setIsFeedbackFormVisible(true);
+            // Fire analytics event for the thumbs up/down vote click
+            postMessage({ type: RovoDevViewResponseType.TriggerFeedback, isPositive });
         },
-        [setIsFeedbackFormVisible],
+        [setIsFeedbackFormVisible, postMessage],
     );
 
     const confirmFeedback = () => {

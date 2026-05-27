@@ -35,7 +35,8 @@ export type TelemetryEvent =
     | PartialEvent<Track.ForkSessionClicked>
     | PartialEvent<Track.DeleteSessionClicked>
     | PartialEvent<Track.ReplayCompleted>
-    | PartialEvent<Track.LocalServerPromptReceived>;
+    | PartialEvent<Track.LocalServerPromptReceived>
+    | PartialEvent<Track.ChatVoteAction>;
 
 export type TelemetryScreenEvent = 'rovoDevSessionHistoryPicker';
 
@@ -138,6 +139,7 @@ export class RovoDevTelemetryProvider {
             eventId === 'atlascode_rovoDevFileChangedAction' ||
             eventId === 'rovoDevCreatePrButton_clicked' ||
             eventId === 'atlascode_rovoDevRestartProcessAction' || // We want to log every restart attempt
+            eventId === 'atlascode_rovoDevChatVoteAction' || // Each vote click is distinct
             // Otherwise, only allow if not fired yet
             !this._firedTelemetryForCurrentPrompt[eventId]
         );
@@ -152,14 +154,24 @@ export class RovoDevTelemetryProvider {
         }
 
         this._firedTelemetryForCurrentPrompt[eventId] = true;
-        await this._extensionApi.analytics.sendTrackEvent({
+        const fullEvent = {
             action: event.action,
             subject: event.subject,
             attributes: {
                 ...this.metadata,
                 ...event.attributes,
             },
-        } as TrackEvent);
+        } as TrackEvent;
+
+        await this._extensionApi.analytics.sendTrackEvent(fullEvent);
+
+        // In Boysenberry mode, also relay the event to Jira via the vscode bridge
+        // so that Jira can track all atlascode analytics events in one place.
+        if (this.rovoDevEnv === 'Boysenberry') {
+            this._extensionApi.commands
+                .executeCommand('workbench.action.sendAnalyticsEvent', fullEvent)
+                .then(undefined, (err) => Logger.error(err, 'Failed to relay analytics event to Jira bridge'));
+        }
 
         Logger.debug(`Event fired: ${event.subject} ${event.action} (${JSON.stringify(event.attributes)})`);
     }

@@ -216,6 +216,18 @@ export namespace Track {
             rovoDevPromptId: string;
         };
     };
+
+    export type ChatVoteAction = {
+        action: 'rovoDevChatVoteAction';
+        subject: 'atlascode';
+        attributes: {
+            rovoDevEnv: RovoDevEnv;
+            appInstanceId: string;
+            sessionId: string;
+            promptId: string;
+            direction: 'up' | 'down';
+        };
+    };
 }
 
 export type TrackEvent =
@@ -231,4 +243,5 @@ export type TrackEvent =
     | Track.RestartProcessAction
     | Track.ReplayCompleted
     | Track.PerformanceEvent
-    | Track.LocalServerPromptReceived;
+    | Track.LocalServerPromptReceived
+    | Track.ChatVoteAction;
