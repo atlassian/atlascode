@@ -94,11 +94,13 @@ describe('AtlassianNotificationNotifier', () => {
                 },
             });
 
-        // Call fetchNotifications
+        // fetchNotifications has 3 levels of promise chaining (getCloudAuthInfo → getLatestNotifications →
+        // getNotificationDetailsByAuthInfo), so one flush per level is needed to let all async work complete
+        const flushPromises = () => new Promise((resolve) => setImmediate(resolve));
         notifier.fetchNotifications();
-
-        // Wait for all async operations to complete
-        await new Promise((resolve) => setTimeout(resolve, 0));
+        await flushPromises();
+        await flushPromises();
+        await flushPromises();
 
         // Verify that graphqlRequest was called for unseen count and notification details for both users
         expect(mockGraphqlRequest).toHaveBeenCalledTimes(4);
