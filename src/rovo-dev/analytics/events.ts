@@ -214,6 +214,7 @@ export namespace Track {
             appInstanceId: string;
             rovoDevSessionId: string;
             rovoDevPromptId: string;
+            veryLargeRepo?: boolean;
         };
     };
 }

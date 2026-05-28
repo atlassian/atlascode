@@ -2,6 +2,10 @@
 
 ## What's new in 4.0.30
 
+### Improvements
+
+- **RovoDev**: Added optional `veryLargeRepo` attribute to the `PerformanceEvent` analytics type definition, aligning the TypeScript type with the runtime event payload for Data Portal registration.
+
 ### Bug Fixes
 
 - **RovoDev**: Fixed `TypeError: terminated` from Node.js undici being incorrectly surfaced as an error dialog when aborting an in-flight chat request. The error is now silently handled as a normal abort, preventing spurious error messages and noisy telemetry — particularly in Boysenberry mode where long-running YOLO streams make mid-stream aborts more common.
