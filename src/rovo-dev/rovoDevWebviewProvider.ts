@@ -602,6 +602,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         break;
                     }
 
+                    case RovoDevViewResponseType.ReportAnalyticsEvent:
+                        await this._telemetryProvider.fireTelemetryEvent(e.event);
+                        break;
+
                     case RovoDevViewResponseType.AskUserQuestionsSubmit:
                     case RovoDevViewResponseType.ExitPlanModeSubmit:
                         const deferredToolResponse: RovoDevDeferredToolCallResponse = {
