@@ -136,13 +136,16 @@ jest.mock('src/commandContext', () => ({
     },
 }));
 
-jest.mock('path', () => ({
-    isAbsolute: (path: string) => path.startsWith('/') || path.startsWith('C:'),
-    join: (...paths: string[]) => paths.join('/'),
-    relative: (from: string, to: string) => to.replace(from, ''),
-    basename: (path: string) => path.split('/').pop(),
-    sep: '/',
-}));
+jest.mock('path', () => {
+    const pathImpl = {
+        isAbsolute: (p: string) => p.startsWith('/') || p.startsWith('C:'),
+        join: (...paths: string[]) => paths.filter(Boolean).join('/'),
+        relative: (from: string, to: string) => to.replace(from, ''),
+        basename: (p: string) => p.split('/').pop(),
+        sep: '/',
+    };
+    return { ...pathImpl, default: pathImpl };
+});
 
 jest.mock('./util/fsPromises', () => ({
     getFsPromise: jest.fn(),
