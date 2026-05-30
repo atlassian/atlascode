@@ -3,8 +3,8 @@
  * These values are set at build time via environment variables.
  */
 export const RovodevStaticConfig = {
-    /** Is this a special BBY environment? True when BBY_USERID is set (injected by devai-sandbox into every sandbox pod). */
-    isBBY: !!process.env.BBY_USERID,
+    /** Is this a special BBY environment? Defaults to false */
+    isBBY: process.env.ROVODEV_BBY === 'true',
 
     /** User ID override for BBY environment */
     bbyUserIdOverride: process.env.BBY_USERID || undefined,
@@ -14,12 +14,11 @@ export const RovodevStaticConfig = {
 
     /**
      * Feature gate: rebrand "Rovo Dev" → "Jira Coding Agent" in Boysenberry environments.
-     * Requires both `ROVODEV_REBRAND_JCA=true` (rollout gate, injected by devai-sandbox via Switcheroo)
-     * and a BBY environment (derived from BBY_USERID, always injected by devai-sandbox into sandbox pods).
+     * Set `ROVODEV_REBRAND_JCA=true` to enable (injected by devai-sandbox at build time).
      * Defined as a getter so it is evaluated lazily at call time rather than once at module load.
      */
     get isRebrandJCA(): boolean {
-        return process.env.ROVODEV_REBRAND_JCA === 'true' && !!process.env.BBY_USERID;
+        return process.env.ROVODEV_REBRAND_JCA === 'true';
     },
 };
 
