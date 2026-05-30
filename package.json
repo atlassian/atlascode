@@ -653,7 +653,7 @@
             "atlascode-rovo-dev": [
                 {
                     "id": "atlascode.views.rovoDev.webView",
-                    "name": "Jira Coding Agent",
+                    "name": "Rovo Dev",
                     "type": "webview",
                     "when": "atlascode:rovoDevEnabled"
                 }
