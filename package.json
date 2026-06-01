@@ -583,11 +583,6 @@
                 "category": "Atlassian"
             },
             {
-                "command": "atlascode.rovodev.openHelp",
-                "title": "Documentation",
-                "category": "Atlassian"
-            },
-            {
                 "command": "atlascode.rovodev.enable",
                 "title": "Enable Rovo Dev",
                 "category": "Rovo Dev"
@@ -771,11 +766,6 @@
                     "command": "atlascode.rovodev.shareFeedback",
                     "when": "view == atlascode.views.rovoDev.webView",
                     "group": "rovoDevContextMenu2@1"
-                },
-                {
-                    "command": "atlascode.rovodev.openHelp",
-                    "when": "view == atlascode.views.rovoDev.webView",
-                    "group": "rovoDevContextMenu2@2"
                 },
                 {
                     "command": "atlascode.rovodev.restartProcess",

@@ -15,7 +15,6 @@ export const RovodevCommands = {
     OpenRovoDevLogFile: 'atlascode.openRovoDevLogFile',
     FocusRovoDevWindow: 'atlascode.views.rovoDev.webView.focus',
     RestartProcess: 'atlascode.rovodev.restartProcess',
-    RovodevOpenHelp: 'atlascode.rovodev.openHelp',
     RovodevEnable: 'atlascode.rovodev.enable',
     RovodevOpenChat: 'atlascode.rovodev.openChat',
 } as const;

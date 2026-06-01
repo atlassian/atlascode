@@ -5,12 +5,17 @@
 ### Improvements
 
 - **RovoDev (BBY)**: Analytics events from the Boysenberry environment are now piped through the webview messaging layer (via `ReportAnalyticsEvent`) rather than being called directly on the extension API, consistent with how live-preview and modified files data are handled.
+- **RovoDev**: Removed the "Documentation" link from the Boysenberry chat meatball dropdown menu.
 
 ### Bug Fixes
 
 - **RovoDev**: Fixed `TypeError: terminated` from Node.js undici being incorrectly surfaced as an error dialog when aborting an in-flight chat request. The error is now silently handled as a normal abort, preventing spurious error messages and noisy telemetry — particularly in Boysenberry mode where long-running YOLO streams make mid-stream aborts more common.
 
 - Fixed shell command injection vulnerability (VULN-1825192) in git operations. The `Shell` utility class now uses `shell: false` when spawning processes, and all git commands pass arguments as separate array elements rather than interpolating user-controlled values (e.g. branch names, file paths, commit hashes) directly into shell command strings. This prevents Remote Code Execution via maliciously crafted git branch names.
+
+### Improvements
+
+- **RovoDev**: Added support for Boysenberry-specific product branding. When the `ROVODEV_REBRAND_JCA` environment variable is set to `true` at build time (injected by devai-sandbox), the extension displays "Jira Coding Agent" in place of "Rovo Dev" across all UI surfaces (panel title, commands, messages, etc.).
 
 ## What's new in 4.0.29
 

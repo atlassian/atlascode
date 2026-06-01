@@ -19,6 +19,15 @@ const ENV_VARS = [
     // Is this BBY? (set to "true" if this is a special internal build)
     'ROVODEV_BBY',
 
+    // BBY user ID (injected by devai-sandbox into every sandbox pod)
+    'BBY_USERID',
+
+    // RovoDev port (injected by devai-sandbox in BBY environments)
+    'ROVODEV_PORT',
+
+    // RovoDev rebrand gate: set to "true" to enable "Jira Coding Agent" branding in BBY environments
+    'ROVODEV_REBRAND_JCA',
+
     // Sentry configuration
     'SENTRY_ENABLED',
     'SENTRY_DSN',
