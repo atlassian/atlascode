@@ -31,6 +31,7 @@ jest.mock('./api/extensionApi', () => ({
             showDiff: jest.fn(),
             setCommandContext: jest.fn(),
         },
+        getHtmlForView: jest.fn(() => '<html></html>'),
     })),
 }));
 
@@ -135,13 +136,16 @@ jest.mock('src/commandContext', () => ({
     },
 }));
 
-jest.mock('path', () => ({
-    isAbsolute: jest.fn((path) => path.startsWith('/') || path.startsWith('C:')),
-    join: jest.fn((...paths) => paths.join('/')),
-    relative: jest.fn((from, to) => to.replace(from, '')),
-    basename: jest.fn((path) => path.split('/').pop()),
-    sep: '/',
-}));
+jest.mock('path', () => {
+    const pathImpl = {
+        isAbsolute: (p: string) => p.startsWith('/') || p.startsWith('C:'),
+        join: (...paths: string[]) => paths.filter(Boolean).join('/'),
+        relative: (from: string, to: string) => to.replace(from, ''),
+        basename: (p: string) => p.split('/').pop(),
+        sep: '/',
+    };
+    return { ...pathImpl, default: pathImpl };
+});
 
 jest.mock('./util/fsPromises', () => ({
     getFsPromise: jest.fn(),
@@ -759,6 +763,67 @@ describe('RovoDevWebviewProvider - Business Logic', () => {
             expect(handleToolPermissionChoice('allowAll')).toBe('Allow all tools');
             expect(handleToolPermissionChoice('deny')).toBe('Handle tool permission: deny');
             expect(handleToolPermissionChoice('allow')).toBe('Handle tool permission: allow');
+        });
+    });
+
+    describe('ReportAnalyticsEvent message handling', () => {
+        let messageHandler: (msg: any) => Promise<void>;
+        let mockFireTelemetryEvent: jest.Mock;
+
+        beforeEach(() => {
+            let capturedHandler: (msg: any) => Promise<void>;
+            const localProvider = new RovoDevWebviewProvider(
+                { workspaceState: { get: jest.fn(), update: jest.fn() } } as any,
+                '/test/extension',
+            );
+
+            const mockWebview = {
+                options: {},
+                html: '',
+                asWebviewUri: jest.fn((uri) => uri),
+                cspSource: 'mock-csp',
+                postMessage: jest.fn().mockResolvedValue(true),
+                onDidReceiveMessage: jest.fn((handler) => {
+                    capturedHandler = handler;
+                    return { dispose: jest.fn() };
+                }),
+            };
+
+            const mockWebviewView = {
+                webview: mockWebview,
+                visible: true,
+                onDidChangeVisibility: jest.fn(() => ({ dispose: jest.fn() })),
+            };
+
+            localProvider.resolveWebviewView(mockWebviewView as any, {} as any, {} as any);
+            messageHandler = capturedHandler!;
+            mockFireTelemetryEvent = (localProvider as any)._telemetryProvider.fireTelemetryEvent;
+        });
+
+        it('should forward analytics events to the telemetry provider', async () => {
+            const event = {
+                action: 'rovoDevSomeAction',
+                subject: 'atlascode',
+                attributes: { promptId: 'test-prompt-id', someAttribute: 'value' },
+            };
+
+            await messageHandler({ type: 'reportAnalyticsEvent', event });
+
+            expect(mockFireTelemetryEvent).toHaveBeenCalledWith(event);
+        });
+
+        it('should forward analytics events with no attributes', async () => {
+            const event = { action: 'rovoDevMinimalEvent', subject: 'atlascode' };
+
+            await messageHandler({ type: 'reportAnalyticsEvent', event });
+
+            expect(mockFireTelemetryEvent).toHaveBeenCalledWith(event);
+        });
+
+        it('should not call fireTelemetryEvent for other message types', async () => {
+            await messageHandler({ type: 'refresh' });
+
+            expect(mockFireTelemetryEvent).not.toHaveBeenCalled();
         });
     });
 

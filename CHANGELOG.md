@@ -4,6 +4,7 @@
 
 ### Improvements
 
+- **RovoDev (BBY)**: Analytics events from the Boysenberry environment are now piped through the webview messaging layer (via `ReportAnalyticsEvent`) rather than being called directly on the extension API, consistent with how live-preview and modified files data are handled.
 - **RovoDev**: Removed the "Documentation" link from the Boysenberry chat meatball dropdown menu.
 
 ### Bug Fixes
