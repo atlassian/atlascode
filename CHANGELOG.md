@@ -4,6 +4,7 @@
 
 ### Improvements
 
+- **RovoDev (BBY)**: Rovo Dev telemetry events fired in Boysenberry mode are now also forwarded to the host Jira page via the new VSCode → Jira analytics bridge (`workbench.action.sendAnalyticsEvent`), in addition to the existing telemetry pipeline. Bridge failures are silently swallowed so they cannot interfere with standard telemetry.
 - **RovoDev (BBY)**: Analytics events from the Boysenberry environment are now piped through the webview messaging layer (via `ReportAnalyticsEvent`) rather than being called directly on the extension API, consistent with how live-preview and modified files data are handled.
 - **RovoDev**: Removed the "Documentation" link from the Boysenberry chat meatball dropdown menu.
 
