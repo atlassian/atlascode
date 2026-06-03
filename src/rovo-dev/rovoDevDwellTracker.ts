@@ -77,19 +77,26 @@ export class RovoDevDwellTracker implements Disposable {
                 // If this succeeds, the file has a pre-Rovo Dev cached version, meaning it was modified by Rovo Dev
                 await this.rovodevApiClient.getCacheFilePath(filename);
 
-                // Fire analytics: one-per-prompt deduping is handled by telemetry provider
+                // Fire unified AI analytics: aiResult viewed (client) with dwell time
                 await this.telemetry.fireTelemetryEvent({
                     subject: 'aiResult',
                     action: 'viewed',
                     attributes: {
                         promptId,
+                        actionSubjectId: 'client',
                         dwellMs: this.dwellMs,
                         xid: 'rovodev-sessions',
                         singleInstrumentationID: promptId,
-                        aiFeatureName: 'rovodevSessions',
+                        aiFeatureName: 'codingSessionsAgent',
                         proactiveGeneratedAI: 0,
                         userGeneratedAI: 1,
                         isAIFeature: 1,
+                        usecaseID: 'dev-ai',
+                        experienceID: 'coding-sessions',
+                        source: 'userTriggered',
+                        interactionMode: 'standard',
+                        doesNotMeetMAUCriteria: true,
+                        aiDwellTimeMilliSeconds: this.dwellMs,
                     },
                 });
             } catch {

@@ -454,6 +454,34 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                             this._userInfo,
                             !!this.isBoysenberry,
                         );
+
+                        // Fire unified AI analytics: aiFeedback submitted (client)
+                        {
+                            const promptId = this._chatProvider.currentPromptId;
+                            if (promptId) {
+                                this._telemetryProvider.fireTelemetryEvent({
+                                    action: 'submitted',
+                                    subject: 'aiFeedback',
+                                    attributes: {
+                                        promptId,
+                                        actionSubjectId: 'client',
+                                        singleInstrumentationID: promptId,
+                                        aiFeatureName: 'codingSessionsAgent',
+                                        proactiveGeneratedAI: 0,
+                                        userGeneratedAI: 1,
+                                        isAIFeature: 1,
+                                        usecaseID: 'dev-ai',
+                                        experienceID: 'coding-sessions',
+                                        source: 'userTriggered',
+                                        interactionMode: 'standard',
+                                        aiFeedbackResult: e.feedbackType === 'positive' ? 'up' : 'down',
+                                        jiraSessionAttrs: {
+                                            sessionID: this._telemetryProvider.sessionId,
+                                        },
+                                    },
+                                });
+                            }
+                        }
                         break;
 
                     case RovoDevViewResponseType.LaunchJiraAuth:

@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.31
+
+### Improvements
+
+- **RovoDev**: Added unified AI analytics events for Coding Sessions, aligning with the [Coding Sessions Event Instrumentation](https://hello.atlassian.net/wiki/spaces/swcde/pages/7020390994) spec. New events include `aiInteraction initiated`, `aiResult viewed`, `aiResult error`, `aiInteraction dismissed`, `aiResult actioned`, `aiResult adopted`, and `aiFeedback submitted`. These fire alongside existing Rovo Dev telemetry events for full analytics coverage.
+
 ## What's new in 4.0.30
 
 ### Improvements

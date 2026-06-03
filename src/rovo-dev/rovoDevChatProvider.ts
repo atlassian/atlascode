@@ -286,6 +286,29 @@ export class RovoDevChatProvider {
                 },
             });
 
+            // Fire unified AI analytics: aiInteraction initiated (client)
+            this._telemetryProvider.fireTelemetryEvent({
+                action: 'initiated',
+                subject: 'aiInteraction',
+                attributes: {
+                    promptId: this._currentPromptId,
+                    actionSubjectId: 'client',
+                    singleInstrumentationID: this._currentPromptId,
+                    aiFeatureName: 'codingSessionsAgent',
+                    proactiveGeneratedAI: 0,
+                    userGeneratedAI: 1,
+                    isAIFeature: 1,
+                    usecaseID: 'dev-ai',
+                    experienceID: 'coding-sessions',
+                    source: 'userTriggered',
+                    interactionMode: 'standard',
+                    jiraSessionAttrs: {
+                        sessionID: this._telemetryProvider.sessionId,
+                        actionType: 'promptInitiated',
+                    },
+                },
+            });
+
             return this.processResponse('chat', response);
         };
 
@@ -383,6 +406,30 @@ export class RovoDevChatProvider {
                     failed: success ? undefined : true,
                 },
             });
+
+            // Fire unified AI analytics: aiInteraction dismissed (client)
+            if (this._currentPromptId) {
+                this._telemetryProvider.fireTelemetryEvent({
+                    action: 'dismissed',
+                    subject: 'aiInteraction',
+                    attributes: {
+                        promptId: this._currentPromptId,
+                        actionSubjectId: 'client',
+                        singleInstrumentationID: this._currentPromptId,
+                        aiFeatureName: 'codingSessionsAgent',
+                        proactiveGeneratedAI: 0,
+                        userGeneratedAI: 1,
+                        isAIFeature: 1,
+                        usecaseID: 'dev-ai',
+                        experienceID: 'coding-sessions',
+                        source: 'userTriggered',
+                        interactionMode: 'standard',
+                        jiraSessionAttrs: {
+                            sessionID: this._telemetryProvider.sessionId,
+                        },
+                    },
+                });
+            }
         }
 
         return success;
@@ -1020,6 +1067,32 @@ export class RovoDevChatProvider {
         }: { isRetriable?: boolean; isProcessTerminated?: boolean; showOnlyInDebug?: boolean } = {},
     ) {
         RovoDevTelemetryProvider.logError(error);
+
+        // Fire unified AI analytics: aiResult error (client)
+        if (this._currentPromptId) {
+            this._telemetryProvider.fireTelemetryEvent({
+                action: 'error',
+                subject: 'aiResult',
+                attributes: {
+                    promptId: this._currentPromptId,
+                    actionSubjectId: 'client',
+                    singleInstrumentationID: this._currentPromptId,
+                    aiFeatureName: 'codingSessionsAgent',
+                    proactiveGeneratedAI: 0,
+                    userGeneratedAI: 1,
+                    isAIFeature: 1,
+                    usecaseID: 'dev-ai',
+                    experienceID: 'coding-sessions',
+                    source: 'userTriggered',
+                    interactionMode: 'standard',
+                    aiErrorMessage: error.message || 'Unknown error',
+                    aiErrorCode: isProcessTerminated ? 'SESSION_GENERATION_FAILED' : 'CODE_GENERATION_FAILED',
+                    jiraSessionAttrs: {
+                        sessionID: this._telemetryProvider.sessionId,
+                    },
+                },
+            });
+        }
 
         if (!showOnlyInDebug || this.isDebugging || this.isDebugPanelEnabled) {
             const webview = this._webView!;

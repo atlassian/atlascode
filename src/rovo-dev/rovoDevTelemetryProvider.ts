@@ -30,6 +30,12 @@ export type TelemetryEvent =
     | PartialEvent<Track.CreatePrButtonClicked>
     | PartialEvent<Track.CreateLivePreviewButtonClicked>
     | PartialEvent<Track.AiResultViewed>
+    | PartialEvent<Track.AiInteractionInitiated>
+    | PartialEvent<Track.AiResultError>
+    | PartialEvent<Track.AiInteractionDismissed>
+    | PartialEvent<Track.AiResultActioned>
+    | PartialEvent<Track.AiResultAdopted>
+    | PartialEvent<Track.AiFeedbackSubmitted>
     | PartialEvent<Track.RestartProcessAction>
     | PartialEvent<Track.RestoreSessionClicked>
     | PartialEvent<Track.ForkSessionClicked>
@@ -138,6 +144,11 @@ export class RovoDevTelemetryProvider {
             eventId === 'atlascode_rovoDevFileChangedAction' ||
             eventId === 'rovoDevCreatePrButton_clicked' ||
             eventId === 'atlascode_rovoDevRestartProcessAction' || // We want to log every restart attempt
+            // AI events that can fire multiple times per prompt
+            eventId === 'aiResult_actioned' || // User may perform multiple actions on results
+            eventId === 'aiResult_adopted' || // Multiple artifacts may be created
+            eventId === 'aiFeedback_submitted' || // User may change their feedback
+            eventId === 'aiResult_error' || // Multiple errors may occur
             // Otherwise, only allow if not fired yet
             !this._firedTelemetryForCurrentPrompt[eventId]
         );

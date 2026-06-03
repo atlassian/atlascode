@@ -44,13 +44,20 @@ describe('RovoDevDwellTracker', () => {
             subject: 'aiResult',
             attributes: {
                 promptId: 'prompt-123',
+                actionSubjectId: 'client',
                 dwellMs: 1000,
                 xid: 'rovodev-sessions',
                 singleInstrumentationID: 'prompt-123',
-                aiFeatureName: 'rovodevSessions',
+                aiFeatureName: 'codingSessionsAgent',
                 proactiveGeneratedAI: 0,
                 userGeneratedAI: 1,
                 isAIFeature: 1,
+                usecaseID: 'dev-ai',
+                experienceID: 'coding-sessions',
+                source: 'userTriggered',
+                interactionMode: 'standard',
+                doesNotMeetMAUCriteria: true,
+                aiDwellTimeMilliSeconds: 1000,
             },
         });
 

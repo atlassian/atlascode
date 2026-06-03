@@ -164,24 +164,6 @@ export namespace Track {
         };
     };
 
-    export type AiResultViewed = {
-        action: 'viewed';
-        subject: 'aiResult';
-        attributes: {
-            rovoDevEnv: RovoDevEnv;
-            appInstanceId: string;
-            sessionId: string;
-            promptId: string;
-            dwellMs: number;
-            xid: string;
-            singleInstrumentationID: string;
-            aiFeatureName: string;
-            proactiveGeneratedAI: number;
-            userGeneratedAI: number;
-            isAIFeature: number;
-        };
-    };
-
     export type ReplayCompleted = {
         action: 'rovoDevReplayCompleted';
         subject: 'atlascode';
@@ -200,6 +182,134 @@ export namespace Track {
             rovoDevEnv: RovoDevEnv;
             appInstanceId: string;
             result: 'triggered' | 'agent_busy' | 'provider_not_ready' | 'error' | 'invalid_request';
+        };
+    };
+
+    // --- Unified AI Analytics Events (Coding Sessions) ---
+    // These events follow the unified AI event standard defined in:
+    // https://hello.atlassian.net/wiki/spaces/swcde/pages/7020390994/Coding+Sessions+-+Event+Instrumentation
+
+    /** Common attributes shared by all AI analytics events */
+    export type AiCommonAttributes = {
+        rovoDevEnv: RovoDevEnv;
+        appInstanceId: string;
+        sessionId: string;
+        promptId: string;
+        singleInstrumentationID: string;
+        aiFeatureName: 'codingSessionsAgent';
+        proactiveGeneratedAI: 0 | 1;
+        userGeneratedAI: 0 | 1;
+        isAIFeature: 1;
+        usecaseID: 'dev-ai';
+        experienceID: 'coding-sessions';
+        source: 'userTriggered' | 'automationPlatform';
+        interactionMode: 'standard';
+    };
+
+    /** Attributes for jiraSessionAttrs within AI events */
+    export type JiraSessionAttrs = {
+        automationRuleID?: string;
+        sessionID: string;
+        actionType?: string;
+        pullRequestID?: string;
+        jiraWorkItemID?: string;
+        chatID?: string;
+    };
+
+    /**
+     * Fired when a user initiates an AI interaction (e.g. submits a prompt or joins a session).
+     * A new singleInstrumentationID should be configured for every new user request.
+     */
+    export type AiInteractionInitiated = {
+        action: 'initiated';
+        subject: 'aiInteraction';
+        attributes: Omit<AiCommonAttributes, 'sessionId'> & {
+            actionSubjectId: 'client' | 'server';
+            jiraSessionAttrs?: JiraSessionAttrs;
+        };
+    };
+
+    /**
+     * Fired when the user is presented with a successful result from the AI feature.
+     * Updated to align with the unified AI event standard.
+     */
+    export type AiResultViewed = {
+        action: 'viewed';
+        subject: 'aiResult';
+        attributes: Omit<AiCommonAttributes, 'sessionId'> & {
+            actionSubjectId: 'client' | 'server';
+            dwellMs?: number;
+            xid?: string;
+            doesNotMeetMAUCriteria?: boolean;
+            aiDwellTimeMilliSeconds?: number;
+            jiraSessionAttrs?: JiraSessionAttrs;
+        };
+    };
+
+    /**
+     * Fired when an error occurs instead of displaying results.
+     */
+    export type AiResultError = {
+        action: 'error';
+        subject: 'aiResult';
+        attributes: Omit<AiCommonAttributes, 'sessionId'> & {
+            actionSubjectId: 'client' | 'server';
+            aiErrorMessage: string;
+            aiErrorCode: string;
+            jiraSessionAttrs?: JiraSessionAttrs;
+        };
+    };
+
+    /**
+     * Fired when a user starts an interaction but drops off before any result is shown
+     * (e.g. closes the session or navigates away).
+     */
+    export type AiInteractionDismissed = {
+        action: 'dismissed';
+        subject: 'aiInteraction';
+        attributes: Omit<AiCommonAttributes, 'sessionId'> & {
+            actionSubjectId: 'client';
+            jiraSessionAttrs?: JiraSessionAttrs;
+        };
+    };
+
+    /**
+     * Fired when a user performs an action on the displayed AI result
+     * (e.g. clicks commit changes, view PR, publish branch, copy code, submit follow-up).
+     */
+    export type AiResultActioned = {
+        action: 'actioned';
+        subject: 'aiResult';
+        attributes: Omit<AiCommonAttributes, 'sessionId'> & {
+            actionSubjectId: 'client';
+            aiResultAction: string;
+            jiraSessionAttrs?: JiraSessionAttrs;
+        };
+    };
+
+    /**
+     * Fired when a work item (PR, Jira issue, etc.) is successfully created or modified by AI.
+     * This is a follow-up to the actioned event.
+     */
+    export type AiResultAdopted = {
+        action: 'adopted';
+        subject: 'aiResult';
+        attributes: Omit<AiCommonAttributes, 'sessionId'> & {
+            actionSubjectId: 'client';
+            jiraSessionAttrs?: JiraSessionAttrs;
+        };
+    };
+
+    /**
+     * Fired when a user provides thumbs up/down feedback on the displayed AI results.
+     */
+    export type AiFeedbackSubmitted = {
+        action: 'submitted';
+        subject: 'aiFeedback';
+        attributes: Omit<AiCommonAttributes, 'sessionId'> & {
+            actionSubjectId: 'client';
+            aiFeedbackResult: 'up' | 'down';
+            jiraSessionAttrs?: JiraSessionAttrs;
         };
     };
 
@@ -228,6 +338,12 @@ export type TrackEvent =
     | Track.DetailsExpanded
     | Track.CreatePrButtonClicked
     | Track.AiResultViewed
+    | Track.AiInteractionInitiated
+    | Track.AiResultError
+    | Track.AiInteractionDismissed
+    | Track.AiResultActioned
+    | Track.AiResultAdopted
+    | Track.AiFeedbackSubmitted
     | Track.RestartProcessAction
     | Track.ReplayCompleted
     | Track.PerformanceEvent
