@@ -1,5 +1,21 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.31
+
+### Bug Fixes
+
+- **RovoDev (BBY)**: Fixed the `ROVODEV_REBRAND_JCA` environment variable so that the "Jira Coding Agent" feature gate from devai-sandbox is correctly applied at runtime.
+- **Notifications**: Fixed `atlassianNotificationNotifier` to correctly flush all promise levels, resolving a test reliability issue.
+
+### Improvements
+
+- **Notifications**: Added `siteId` to the `notificationFeedVSCode` GraphQL query so notification feeds are correctly scoped per Atlassian site.
+- **Logger**: Removed a spurious client-side error from Sentry to reduce noise in error reporting.
+
+### Cleanup
+
+- **RovoDev**: Removed unused `canFetchInternalUrl` logic from the container.
+
 ## What's new in 4.0.30
 
 ### Improvements
