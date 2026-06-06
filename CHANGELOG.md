@@ -2,6 +2,10 @@
 
 ## What's new in 4.0.31
 
+### Improvements
+
+- **RovoDev**: Skill file opens (SKILL.md) are now displayed with the skill name in the chat UI instead of the generic "Opened file" label.
+
 ### Bug Fixes
 
 - **RovoDev (BBY)**: Fixed the `ROVODEV_REBRAND_JCA` environment variable so that the "Jira Coding Agent" feature gate from devai-sandbox is correctly applied at runtime.
