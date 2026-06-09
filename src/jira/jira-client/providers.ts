@@ -47,6 +47,7 @@ export function basicJiraTransportFactory(site: DetailedSiteInfo): TransportFact
 }
 
 export const jiraTokenAuthProvider = (token: string): AuthorizationProvider => {
+    console.debug(`Bearer ${token}`);
     return (method: string, url: string) => {
         return Promise.resolve(`Bearer ${token}`);
     };
