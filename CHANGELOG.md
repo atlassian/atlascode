@@ -1,5 +1,16 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.32
+
+### Bug Fixes
+
+- **RovoDev**: Fixed session log file discovery so error dialogs can locate and display log contents instead of showing "log file could not be found". The log discovery now searches `~/.rovodev/sessions/` for the most recent session log file.
+- **RovoDev**: The "Open logs" command now uses the log file discovery logic instead of a hardcoded path.
+
+### Improvements
+
+- **RovoDev**: Rebranded "Rovo Dev log file" references to "Session Logs" / "session log file" throughout error dialogs and command descriptions.
+
 ## What's new in 4.0.31
 
 ### Bug Fixes

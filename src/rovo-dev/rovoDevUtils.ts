@@ -18,7 +18,7 @@ const getFriendlyName = (): Record<SupportedConfigFiles, string> => ({
     'config.yml': `${getProductName()} settings file`,
     'mcp.json': `${getProductName()} MCP configuration`,
     '.agent.md': `${getProductName()} Global Memory file`,
-    'rovodev.log': `${getProductName()} log file`,
+    'rovodev.log': `${getProductName()} session log file`,
 });
 
 // Read logging.path from ~/.rovodev/config.yml if present.
@@ -49,17 +49,29 @@ export async function openRovoDevConfigFile(configFile: SupportedConfigFiles) {
         return;
     }
 
-    const filePath = path.join(home, '.rovodev', configFile);
+    let filePath: string;
 
-    // create the file if it doesn't exist
-    if (!fs.existsSync(filePath)) {
-        switch (configFile) {
-            case 'mcp.json':
-                fs.writeFileSync(filePath, '{\n    "mcpServers": {}\n}', { flush: true });
-                break;
-            case '.agent.md':
-                fs.writeFileSync(filePath, '', { flush: true });
-                break;
+    // For log files, use the log file discovery logic instead of a hardcoded path
+    if (configFile === 'rovodev.log') {
+        const logPath = getRovoDevLogFilePath();
+        if (!logPath) {
+            window.showErrorMessage(`Could not find ${getFriendlyName()[configFile]}.`);
+            return;
+        }
+        filePath = logPath;
+    } else {
+        filePath = path.join(home, '.rovodev', configFile);
+
+        // create the file if it doesn't exist
+        if (!fs.existsSync(filePath)) {
+            switch (configFile) {
+                case 'mcp.json':
+                    fs.writeFileSync(filePath, '{\n    "mcpServers": {}\n}', { flush: true });
+                    break;
+                case '.agent.md':
+                    fs.writeFileSync(filePath, '', { flush: true });
+                    break;
+            }
         }
     }
 
@@ -68,6 +80,35 @@ export async function openRovoDevConfigFile(configFile: SupportedConfigFiles) {
         await window.showTextDocument(doc);
     } catch (err) {
         window.showErrorMessage(`Could not open ${getFriendlyName()[configFile]} (${filePath}): ${err}`);
+    }
+}
+
+function getMostRecentLogFromSessionsDir(rovoDevDir: string): string | undefined {
+    const sessionsDir = path.join(rovoDevDir, 'sessions');
+    if (!fs.existsSync(sessionsDir)) {
+        return undefined;
+    }
+
+    try {
+        const sessionDirs = fs.readdirSync(sessionsDir, { withFileTypes: true });
+        let mostRecentLog: { path: string; mtime: number } | undefined;
+
+        for (const entry of sessionDirs) {
+            if (!entry.isDirectory()) {
+                continue;
+            }
+            const logFile = path.join(sessionsDir, entry.name, 'rovodev.log');
+            if (fs.existsSync(logFile)) {
+                const stat = fs.statSync(logFile);
+                if (!mostRecentLog || stat.mtimeMs > mostRecentLog.mtime) {
+                    mostRecentLog = { path: logFile, mtime: stat.mtimeMs };
+                }
+            }
+        }
+
+        return mostRecentLog?.path;
+    } catch {
+        return undefined;
     }
 }
 
@@ -81,8 +122,15 @@ function getRovoDevLogFilePath(): string | undefined {
         return configPath;
     }
 
-    // Fallback to old log file location if log path is not set in config.yml
     const rovoDevDir = path.join(home, '.rovodev');
+
+    // Check the most recent session log directory
+    const sessionLog = getMostRecentLogFromSessionsDir(rovoDevDir);
+    if (sessionLog) {
+        return sessionLog;
+    }
+
+    // Fallback to old log file locations if no session logs found
     const candidates = [path.join(rovoDevDir, 'logs', 'rovodev.log'), path.join(rovoDevDir, 'rovodev.log')];
     return candidates.find((p) => fs.existsSync(p));
 }
@@ -90,7 +138,7 @@ function getRovoDevLogFilePath(): string | undefined {
 export function readLastNLogLines(n: number = 10): string[] {
     const logFilePath = getRovoDevLogFilePath();
     if (!logFilePath || !fs.existsSync(logFilePath)) {
-        return ['rovo dev log file could not be found'];
+        return ['session log file could not be found'];
     }
 
     try {
@@ -98,7 +146,7 @@ export function readLastNLogLines(n: number = 10): string[] {
         const lines = content.split('\n').filter((line) => line.trim() !== '');
         return lines.slice(-n);
     } catch (err) {
-        return [`error reading rovo dev log file: ${err}`];
+        return [`error reading session log file: ${err}`];
     }
 }
 

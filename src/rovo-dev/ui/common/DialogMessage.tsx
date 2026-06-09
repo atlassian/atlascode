@@ -73,7 +73,7 @@ export const DialogMessageItem: React.FC<{
             parts.push(`\n\nExtension Stack Trace:\n${msg.stackTrace}`);
         }
         if (msg.rovoDevLogs && msg.rovoDevLogs.length > 0) {
-            parts.push(`\n\n${getProductName()} Logs:\n${msg.rovoDevLogs.join('\n')}`);
+            parts.push(`\n\nSession Logs:\n${msg.rovoDevLogs.join('\n')}`);
         }
         if (msg.stderr) {
             parts.push(`\n\n${getProductName()} Stderr:\n${msg.stderr}`);
