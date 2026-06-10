@@ -12,6 +12,12 @@ public class ChickenOrder {
         return total
     }
 
+        // Returns the estimated wait time in minutes based on current queue size
+    public int estimateWaitTime(int queueSize, int avgServiceTimeSeconds) {
+        int waitMinutes = (queueSize * avgServiceTimeSeconds) / 60;
+        return waitMinutes;
+    }
+
     // Returns the name of the most popular item given a list of order counts
     public String getMostPopular(String[] items, int[] counts) {
         int maxIndex = 0;
