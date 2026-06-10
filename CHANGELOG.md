@@ -2,6 +2,10 @@
 
 ## What's new in 4.0.31
 
+### Improvements
+
+- **Pull Requests**: Draft pull requests now display a grey "Draft" lozenge (`color.background.neutral.default`) instead of inheriting the "Open" state lozenge color.
+
 ### Bug Fixes
 
 - **RovoDev (BBY)**: Fixed the `ROVODEV_REBRAND_JCA` environment variable so that the "Jira Coding Agent" feature gate from devai-sandbox is correctly applied at runtime.

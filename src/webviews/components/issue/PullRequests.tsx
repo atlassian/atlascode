@@ -13,6 +13,10 @@ export default class PullRequests extends React.Component<
     {}
 > {
     private prState(pr: any): any {
+        if (pr.draft) {
+            return <Lozenge appearance="default">Draft</Lozenge>;
+        }
+
         switch (pr.state) {
             case 'MERGED':
                 return <Lozenge appearance="success">Merged</Lozenge>;
