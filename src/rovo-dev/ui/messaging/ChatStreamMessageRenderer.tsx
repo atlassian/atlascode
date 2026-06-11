@@ -25,6 +25,7 @@ interface ChatStreamMessageRendererProps {
     onLinkClick: (href: string) => void;
     deepPlanCreated?: string | null;
     onGeneratePlanClick?: (planId: string, proceed: boolean) => void;
+    isAtlassianUser?: boolean;
 }
 
 export const ChatStreamMessageRenderer = React.memo<ChatStreamMessageRendererProps>(
@@ -39,6 +40,7 @@ export const ChatStreamMessageRenderer = React.memo<ChatStreamMessageRendererPro
         onLinkClick,
         deepPlanCreated,
         onGeneratePlanClick,
+        isAtlassianUser,
     }) => {
         if (!chatHistory) {
             return null;
@@ -80,6 +82,7 @@ export const ChatStreamMessageRenderer = React.memo<ChatStreamMessageRendererPro
                     onLinkClick={onLinkClick}
                     deepPlanCreated={deepPlanCreated}
                     onGeneratePlanClick={onGeneratePlanClick}
+                    isAtlassianUser={isAtlassianUser}
                 />
             );
         });

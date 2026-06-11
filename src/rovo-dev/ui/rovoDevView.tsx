@@ -1031,7 +1031,7 @@ const RovoDevView: React.FC = () => {
 
     return (
         <RovoDevErrorContext.Provider value={{ reportError }}>
-            <RovoDevErrorBoundary postMessage={postMessage}>
+            <RovoDevErrorBoundary postMessage={postMessage} isAtlassianUser={isAtlassianUser}>
                 <div
                     id="rovoDevDragDropOverlay"
                     onDragLeave={(event) => {
@@ -1103,6 +1103,7 @@ const RovoDevView: React.FC = () => {
                         onJiraItemClick={onJiraItemClick}
                         onToolPermissionChoice={onToolPermissionChoice}
                         onLinkClick={onLinkClick}
+                        isAtlassianUser={isAtlassianUser}
                         credentialHints={credentialHints}
                         onGeneratePlanClick={(e: string, proceed: boolean) => handleExitPlanMode(proceed, e)}
                         showLivePreviewButton={showLivePreviewButton}

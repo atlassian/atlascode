@@ -18,6 +18,7 @@ interface MessageDrawerProps {
     opened: boolean;
     onCollapsiblePanelExpanded: () => void;
     onLinkClick: (link: string) => void;
+    isAtlassianUser?: boolean;
 }
 
 export const MessageDrawer: React.FC<MessageDrawerProps> = ({
@@ -33,6 +34,7 @@ export const MessageDrawer: React.FC<MessageDrawerProps> = ({
     onCollapsiblePanelExpanded,
     opened,
     onLinkClick,
+    isAtlassianUser,
 }) => {
     const [isOpen, setIsOpen] = React.useState(opened);
 
@@ -77,6 +79,7 @@ export const MessageDrawer: React.FC<MessageDrawerProps> = ({
                         isRetryAfterErrorButtonEnabled,
                         retryPromptAfterError,
                         onError,
+                        isAtlassianUser,
                     ),
                 )}
             </div>

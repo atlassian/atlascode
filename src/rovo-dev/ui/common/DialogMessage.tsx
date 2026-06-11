@@ -49,6 +49,7 @@ export const DialogMessageItem: React.FC<{
     customButton?: { text: string; onClick?: () => void };
     onLinkClick: (href: string) => void;
     onRestartProcess?: () => void;
+    isAtlassianUser?: boolean;
 }> = ({
     msg,
     isRetryAfterErrorButtonEnabled,
@@ -57,8 +58,10 @@ export const DialogMessageItem: React.FC<{
     customButton,
     onLinkClick,
     onRestartProcess,
+    isAtlassianUser = false,
 }) => {
     const [isCopied, setIsCopied] = React.useState(false);
+    const shouldShowErrorDetails = isAtlassianUser;
 
     const errorDetailsText = React.useMemo(() => {
         const parts = [];
@@ -69,17 +72,19 @@ export const DialogMessageItem: React.FC<{
         if (msg.statusCode) {
             parts.push(`\n${msg.statusCode}`);
         }
-        if (msg.stackTrace) {
-            parts.push(`\n\nExtension Stack Trace:\n${msg.stackTrace}`);
-        }
-        if (msg.rovoDevLogs && msg.rovoDevLogs.length > 0) {
-            parts.push(`\n\n${getProductName()} Logs:\n${msg.rovoDevLogs.join('\n')}`);
-        }
-        if (msg.stderr) {
-            parts.push(`\n\n${getProductName()} Stderr:\n${msg.stderr}`);
+        if (shouldShowErrorDetails) {
+            if (msg.stackTrace) {
+                parts.push(`\n\nExtension Stack Trace:\n${msg.stackTrace}`);
+            }
+            if (msg.rovoDevLogs && msg.rovoDevLogs.length > 0) {
+                parts.push(`\n\n${getProductName()} Logs:\n${msg.rovoDevLogs.join('\n')}`);
+            }
+            if (msg.stderr) {
+                parts.push(`\n\n${getProductName()} Stderr:\n${msg.stderr}`);
+            }
         }
         return parts.join('');
-    }, [msg.title, msg.text, msg.statusCode, msg.stackTrace, msg.stderr, msg.rovoDevLogs]);
+    }, [msg.title, msg.text, msg.statusCode, msg.stackTrace, msg.stderr, msg.rovoDevLogs, shouldShowErrorDetails]);
 
     const copyToClipboard = () => {
         navigator.clipboard.writeText(errorDetailsText);
@@ -209,62 +214,63 @@ export const DialogMessageItem: React.FC<{
                         </div>
                     )}
 
-                    {(msg.stackTrace || msg.stderr || (msg.rovoDevLogs && msg.rovoDevLogs.length > 0)) && (
-                        <div style={{ marginTop: '12px' }}>
-                            <div
-                                style={{
-                                    position: 'relative',
-                                    height: '300px',
-                                    overflow: 'auto',
-                                    backgroundColor: 'var(--vscode-editor-background)',
-                                    color: 'var(--vscode-editor-foreground)',
-                                    padding: '8px',
-                                    fontFamily: 'monospace',
-                                    fontSize: '12px',
-                                    whiteSpace: 'pre-wrap',
-                                    wordWrap: 'break-word',
-                                    borderRadius: '4px',
-                                    border: '1px solid var(--vscode-editorGroup-border)',
-                                }}
-                            >
+                    {shouldShowErrorDetails &&
+                        (msg.stackTrace || msg.stderr || (msg.rovoDevLogs && msg.rovoDevLogs.length > 0)) && (
+                            <div style={{ marginTop: '12px' }}>
                                 <div
                                     style={{
-                                        position: 'sticky',
-                                        top: '8px',
-                                        right: '8px',
-                                        zIndex: 10,
-                                        display: 'flex',
-                                        justifyContent: 'flex-end',
-                                        paddingRight: '8px',
-                                        paddingTop: '8px',
+                                        position: 'relative',
+                                        height: '300px',
+                                        overflow: 'auto',
                                         backgroundColor: 'var(--vscode-editor-background)',
-                                        marginLeft: 'auto',
-                                        width: 'fit-content',
-                                        marginRight: '0',
+                                        color: 'var(--vscode-editor-foreground)',
+                                        padding: '8px',
+                                        fontFamily: 'monospace',
+                                        fontSize: '12px',
+                                        whiteSpace: 'pre-wrap',
+                                        wordWrap: 'break-word',
+                                        borderRadius: '4px',
+                                        border: '1px solid var(--vscode-editorGroup-border)',
                                     }}
                                 >
-                                    <Tooltip
-                                        key={isCopied ? 'copied' : 'copy'}
-                                        content={isCopied ? 'Copied!' : 'Copy to clipboard'}
+                                    <div
+                                        style={{
+                                            position: 'sticky',
+                                            top: '8px',
+                                            right: '8px',
+                                            zIndex: 10,
+                                            display: 'flex',
+                                            justifyContent: 'flex-end',
+                                            paddingRight: '8px',
+                                            paddingTop: '8px',
+                                            backgroundColor: 'var(--vscode-editor-background)',
+                                            marginLeft: 'auto',
+                                            width: 'fit-content',
+                                            marginRight: '0',
+                                        }}
                                     >
-                                        <button
-                                            aria-label="copy-details-button"
-                                            className={`chat-message-action copy-button ${isCopied ? 'copied' : ''}`}
-                                            onClick={copyToClipboard}
+                                        <Tooltip
+                                            key={isCopied ? 'copied' : 'copy'}
+                                            content={isCopied ? 'Copied!' : 'Copy to clipboard'}
                                         >
-                                            {isCopied ? (
-                                                <CheckCircleIcon label="Copied!" spacing="none" />
-                                            ) : (
-                                                <CopyIcon label="Copy to clipboard" spacing="none" />
-                                            )}
-                                        </button>
-                                    </Tooltip>
-                                </div>
+                                            <button
+                                                aria-label="copy-details-button"
+                                                className={`chat-message-action copy-button ${isCopied ? 'copied' : ''}`}
+                                                onClick={copyToClipboard}
+                                            >
+                                                {isCopied ? (
+                                                    <CheckCircleIcon label="Copied!" spacing="none" />
+                                                ) : (
+                                                    <CopyIcon label="Copy to clipboard" spacing="none" />
+                                                )}
+                                            </button>
+                                        </Tooltip>
+                                    </div>
 
-                                {errorDetailsText}
+                                    {errorDetailsText}
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
                 </div>
             </div>
         </div>
