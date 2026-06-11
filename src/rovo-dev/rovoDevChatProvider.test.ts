@@ -1,5 +1,6 @@
 import { v4 } from 'uuid';
 
+import { getProductName } from './api/rovodevStaticConfig';
 import { RovoDevApiClient } from './client/rovoDevApiClient';
 import { RovoDevChatProvider } from './rovoDevChatProvider';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
@@ -300,7 +301,7 @@ describe('RovoDevChatProvider', () => {
             providerWithoutClient.setWebview(mockWebview);
 
             await expect(providerWithoutClient.executeReplay()).rejects.toThrow(
-                'Unable to replay the previous conversation. Rovo Dev failed to initialize',
+                `Unable to replay the previous conversation. ${getProductName()} failed to initialize`,
             );
         });
 
@@ -462,6 +463,19 @@ describe('RovoDevChatProvider', () => {
             await chatProvider.executeCancel(false);
 
             expect(chatProvider['_lastMessageSentTime']).toBeUndefined();
+        });
+
+        it('should clear pending deferred request on cancellation so next prompt is sent as plain message', async () => {
+            await chatProvider.setReady(mockApiClient);
+
+            // Simulate a pending deferred tool call (e.g. ask_user_questions)
+            chatProvider['_pendingDeferredRequest'] = 'deferred-tool-call-123';
+
+            mockApiClient.cancel.mockResolvedValue({ cancelled: true, message: 'Cancelled' });
+
+            await chatProvider.executeCancel(false);
+
+            expect(chatProvider['_pendingDeferredRequest']).toBeUndefined();
         });
     });
 
@@ -1040,6 +1054,54 @@ describe('RovoDevChatProvider', () => {
                     message: expect.objectContaining({
                         text: 'The command /unknowncommand is not supported.',
                     }),
+                }),
+            );
+        });
+
+        it('should handle undici TypeError: terminated as an abort (no error dialog)', async () => {
+            // Simulates the Node.js undici error thrown when AbortController.abort() is called
+            // on an in-flight fetch. undici throws a plain TypeError with message "terminated"
+            // rather than an AbortError, so it must be caught explicitly.
+            const terminatedError = new TypeError('terminated');
+            mockApiClient.chat.mockRejectedValue(terminatedError);
+
+            const mockPrompt: RovoDevPrompt = {
+                text: 'test prompt',
+                context: [],
+            };
+
+            await chatProvider.executeChat(mockPrompt, []);
+
+            // Should NOT show an error dialog — terminated is a normal abort side-effect
+            expect(mockWebview.postMessage).not.toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: RovoDevProviderMessageType.ShowDialog,
+                }),
+            );
+
+            // Should send CompleteMessage so the UI returns to an interactive state
+            expect(mockWebview.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: RovoDevProviderMessageType.CompleteMessage,
+                }),
+            );
+        });
+
+        it('should still show error dialog for other TypeErrors (not terminated)', async () => {
+            // Ensures the fix is narrowly scoped and doesn't swallow real TypeErrors
+            const otherTypeError = new TypeError('Failed to fetch');
+            mockApiClient.chat.mockRejectedValue(otherTypeError);
+
+            const mockPrompt: RovoDevPrompt = {
+                text: 'test prompt',
+                context: [],
+            };
+
+            await chatProvider.executeChat(mockPrompt, []);
+
+            expect(mockWebview.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: RovoDevProviderMessageType.ShowDialog,
                 }),
             );
         });

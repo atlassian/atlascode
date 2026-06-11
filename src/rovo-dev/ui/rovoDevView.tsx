@@ -12,7 +12,7 @@ import { RovoDevContextItem, State, ToolPermissionDialogChoice } from 'src/rovo-
 import { v4 } from 'uuid';
 
 import { DetailedSiteInfo, MinimalIssue } from '../api/extensionApiTypes';
-import { RovodevStaticConfig } from '../api/rovodevStaticConfig';
+import { getProductName, RovodevStaticConfig } from '../api/rovodevStaticConfig';
 import {
     RovoDevAgentModel,
     RovoDevProviderMessage,
@@ -45,7 +45,7 @@ import {
     ToolReturnParseResult,
 } from './utils';
 
-const DEFAULT_LOADING_MESSAGE: string = 'Rovo dev is working';
+const getDefaultLoadingMessage = (): string => `${getProductName()} is working`;
 
 const RovoDevView: React.FC = () => {
     const [currentState, setCurrentState] = useState<State>({ state: 'WaitingForPrompt' });
@@ -249,7 +249,7 @@ const RovoDevView: React.FC = () => {
             switch (event.type) {
                 case RovoDevProviderMessageType.SignalPromptSent:
                     setCurrentState({ state: 'GeneratingResponse' });
-                    setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE);
+                    setPendingToolCallMessage(getDefaultLoadingMessage());
                     if (event.echoMessage) {
                         handleAppendResponse({
                             event_kind: '_RovoDevUserPrompt',
@@ -282,7 +282,7 @@ const RovoDevView: React.FC = () => {
                             setPendingSubagentTasks([]);
                         }
                     } else if (last?.event_kind === 'tool-return') {
-                        setPendingToolCallMessage(DEFAULT_LOADING_MESSAGE); // Clear pending tool call
+                        setPendingToolCallMessage(getDefaultLoadingMessage()); // Clear pending tool call
                         setPendingSubagentTasks([]);
                     }
 

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { State } from 'src/rovo-dev/rovoDevTypes';
 
+import { getProductName } from '../../../api/rovodevStaticConfig';
 import { DialogMessageItem } from '../../common/DialogMessage';
 import { McpConsentChoice } from '../../rovoDevViewMessages';
 import { inChatButtonStyles, inChatSecondaryButtonStyles } from '../../rovoDevViewStyles';
@@ -29,7 +30,7 @@ export const DisabledMessage: React.FC<{
     if (currentState.state === 'Disabled' && currentState.subState === 'NeedAuth') {
         return (
             <div style={loginFormContainerStyles}>
-                <div style={{ marginBottom: '12px' }}>Sign in to Rovo Dev with an API token</div>
+                <div style={{ marginBottom: '12px' }}>Sign in to {getProductName()} with an API token</div>
                 <RovoDevLoginForm
                     onSubmit={(host, email, apiToken) => {
                         onRovoDevAuthSubmit(host, email, apiToken);
@@ -59,7 +60,7 @@ export const DisabledMessage: React.FC<{
     if (currentState.state === 'Disabled' && currentState.subState === 'NoWorkspaceOpen') {
         return (
             <div style={messageOuterStyles}>
-                <div>Please open a folder to start a chat session with Rovo Dev.</div>
+                <div>Please open a folder to start a chat session with {getProductName()}.</div>
                 <button style={{ ...inChatButtonStyles, marginTop: '12px' }} onClick={onOpenFolder}>
                     Open folder
                 </button>
@@ -105,7 +106,7 @@ export const DisabledMessage: React.FC<{
                         event_kind: '_RovoDevDialog',
                         type: 'error',
                         title: 'Unsupported architecture',
-                        text: `Sorry, Rovo Dev is not supported for the following architecture: ${process.platform}/${process.arch}.`,
+                        text: `Sorry, ${getProductName()} is not supported for the following architecture: ${process.platform}/${process.arch}.`,
                         uid: '',
                     }}
                     onLinkClick={onLinkClick}

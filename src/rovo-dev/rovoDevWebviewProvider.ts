@@ -29,7 +29,7 @@ import { Commands } from '../constants';
 import { GitErrorCodes } from '../typings/git';
 import { RovodevCommandContext, RovodevCommands } from './api/componentApi';
 import { DetailedSiteInfo, ExtensionApi, MinimalIssue } from './api/extensionApi';
-import { RovodevStaticConfig } from './api/rovodevStaticConfig';
+import { getProductName, RovodevStaticConfig } from './api/rovodevStaticConfig';
 import {
     AgentMode,
     RovoDevApiClient,
@@ -279,6 +279,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         this._webView = webviewView.webview;
         this._webviewView = webviewView;
+        webviewView.title = getProductName();
         // grab the webview from the instance field, so it's properly typed
         const webview = this._webView;
 
@@ -601,6 +602,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await this.executeCreateLivePreview();
                         break;
                     }
+
+                    case RovoDevViewResponseType.ReportAnalyticsEvent:
+                        await this._telemetryProvider.fireTelemetryEvent(e.event);
+                        break;
 
                     case RovoDevViewResponseType.AskUserQuestionsSubmit:
                     case RovoDevViewResponseType.ExitPlanModeSubmit:

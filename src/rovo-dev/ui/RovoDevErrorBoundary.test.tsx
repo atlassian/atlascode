@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
+import { getProductName } from '../api/rovodevStaticConfig';
 import { RovoDevErrorBoundary } from './RovoDevErrorBoundary';
 import { RovoDevViewResponseType } from './rovoDevViewMessages';
 
@@ -74,7 +75,7 @@ describe('RovoDevErrorBoundary', () => {
 
             expect(screen.getByTestId('dialog-message-item')).toBeTruthy();
             expect(screen.getByTestId('dialog-title')).toBeTruthy();
-            expect(screen.getByText('Rovo Dev encountered a rendering error')).toBeTruthy();
+            expect(screen.getByText(`${getProductName()} encountered a rendering error`)).toBeTruthy();
         });
 
         it('displays error message in dialog', () => {

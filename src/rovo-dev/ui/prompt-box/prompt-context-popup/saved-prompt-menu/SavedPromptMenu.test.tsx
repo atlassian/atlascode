@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
+import { getProductName } from 'src/rovo-dev/api/rovodevStaticConfig';
 
 import { SavedPrompt } from '../../../utils';
 import { SavedPromptMenu } from './SavedPromptMenu';
@@ -58,7 +59,7 @@ describe('SavedPromptMenu', () => {
                 />,
             );
 
-            expect(screen.getByText(/Initializing Rovo Dev process/)).toBeTruthy();
+            expect(screen.getByText(new RegExp(`Initializing ${getProductName()} process`))).toBeTruthy();
             expect(mockFetchSavedPrompts).not.toHaveBeenCalled();
         });
     });

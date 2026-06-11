@@ -130,7 +130,11 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
 
         const shell = new Shell(Uri.parse(wsRepo.rootUri).fsPath);
         const diff = await shell.output(
-            `git log --format=${this.commitFormat} ${destinationBranch.name}..${sourceBranchName} -z`,
+            'git',
+            'log',
+            `--format=${this.commitFormat}`,
+            `${destinationBranch.name}..${sourceBranchName}`,
+            '-z',
         );
         const gitCommits = this.parseGitCommits(diff);
 
@@ -222,7 +226,15 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
         //Using git diff --numstat will generate lines in the format '{lines added}      {lines removed}     {name of file}'
         //We want to seperate each line and extract this data so we can create a file diff
         //NOTE: the '-M50' flag will cause git to detect any added/deleted file combo as a rename if they're 50% similar
-        const numstatLines = await shell.lines(`git diff --numstat -C -M50 ${forkPoint} ${sourceBranch.commit}`);
+        const numstatLines = await shell.lines(
+            'git',
+            'diff',
+            '--numstat',
+            '-C',
+            '-M50',
+            forkPoint,
+            sourceBranch.commit!,
+        );
 
         if (numstatLines.length === 0) {
             return [];
@@ -231,7 +243,15 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
         //The bitbucket website also provides a status for each file (modified, added, deleted, etc.), so we need to get this info too.
         //git diff-index --name-status will return lines in the form {status}        {name of file}
         //It's important to note that the order of the files will be identical to git diff --numstat, and we can use that to our advantage
-        const namestatusLines = await shell.lines(`git diff --name-status -C -M50 ${forkPoint} ${sourceBranch.commit}`);
+        const namestatusLines = await shell.lines(
+            'git',
+            'diff',
+            '--name-status',
+            '-C',
+            '-M50',
+            forkPoint,
+            sourceBranch.commit!,
+        );
         const fileDiffs: FileDiff[] = [];
         for (let i = 0; i < numstatLines.length; i++) {
             const numstatWords = numstatLines[i].split(/\s+/);

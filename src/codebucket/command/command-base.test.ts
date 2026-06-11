@@ -159,7 +159,7 @@ describe('CommandBase', () => {
 
             expect(result).toBeDefined();
             expect(Shell).toHaveBeenCalledWith('/test/project/src');
-            expect(mockShell.exec).toHaveBeenCalledWith('git rev-parse --show-toplevel');
+            expect(mockShell.exec).toHaveBeenCalledWith('git', 'rev-parse', '--show-toplevel');
         });
 
         it('should throw error when no git repository is found', async () => {

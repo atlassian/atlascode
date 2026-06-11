@@ -268,7 +268,15 @@ describe('Backend', () => {
             const result = await backend.findSelectedRevision('src/file.ts', 5);
 
             expect(result).toBe('abc123def456');
-            expect(mockShellInstance.output).toHaveBeenCalledWith('git blame --root -l -L 5,5 src/file.ts');
+            expect(mockShellInstance.output).toHaveBeenCalledWith(
+                'git',
+                'blame',
+                '--root',
+                '-l',
+                '-L5,5',
+                '--',
+                'src/file.ts',
+            );
         });
 
         it('should throw error when git blame output is invalid', async () => {

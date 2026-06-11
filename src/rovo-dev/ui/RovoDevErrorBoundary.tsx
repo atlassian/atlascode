@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 
+import { getProductName } from '../api/rovodevStaticConfig';
 import { DialogMessageItem } from './common/DialogMessage';
 import { PostMessageFunc } from './messagingApi';
 import { RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
@@ -85,7 +86,7 @@ export class RovoDevErrorBoundary extends Component<Props, State> {
             const errorDialog: ErrorDialogMessage = {
                 event_kind: '_RovoDevDialog',
                 type: 'error',
-                title: 'Rovo Dev encountered a rendering error',
+                title: `${getProductName()} encountered a rendering error`,
                 text: this.state.error?.message || 'An unexpected error occurred',
                 stackTrace: this.state.error?.stack || undefined,
                 stderr: this.state.errorInfo?.componentStack || undefined, // Using stderr field for component stack

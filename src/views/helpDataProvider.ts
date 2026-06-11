@@ -1,4 +1,5 @@
 import { Container } from 'src/container';
+import { getProductName } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { Experiments } from 'src/util/featureFlags';
 
 import { ProductJira } from '../atlclients/authInfo';
@@ -56,9 +57,9 @@ export class HelpDataProvider extends BaseTreeDataProvider {
                 ),
                 ...(Container.isRovoDevEnabled && Container.siteManager.productHasAtLeastOneSite(ProductJira)
                     ? [
-                          new InternalLinkNode('Rovo Dev', 'Chat with Atlassian coding agent', iconSet.ROVODEV, {
+                          new InternalLinkNode(getProductName(), 'Chat with Atlassian coding agent', iconSet.ROVODEV, {
                               command: 'atlascode.views.rovoDev.webView.focus',
-                              title: 'Open Rovo Dev Chat',
+                              title: `Open ${getProductName()} Chat`,
                           }),
                       ]
                     : []),
@@ -86,9 +87,9 @@ export class HelpDataProvider extends BaseTreeDataProvider {
                 new LinkNode('Report an Issue', 'Report and vote on issues', iconSet.ISSUES, KnownLinkID.ReportAnIssue),
                 ...(Container.isRovoDevEnabled && Container.siteManager.productHasAtLeastOneSite(ProductJira)
                     ? [
-                          new InternalLinkNode('Rovo Dev', 'Chat with Atlassian coding agent', iconSet.ROVODEV, {
+                          new InternalLinkNode(getProductName(), 'Chat with Atlassian coding agent', iconSet.ROVODEV, {
                               command: 'atlascode.views.rovoDev.webView.focus',
-                              title: 'Open Rovo Dev Chat',
+                              title: `Open ${getProductName()} Chat`,
                           }),
                       ]
                     : []),

@@ -412,6 +412,55 @@ describe('Logger', () => {
             // Should still log to output channel
             expect(mockOutputChannel.appendLine).toHaveBeenCalled();
         });
+
+        describe('isExpectedHttpError filtering', () => {
+            it.each([401, 403, 404, 429])(
+                'should NOT send to Sentry when error has HTTP status %i via response.status',
+                (status) => {
+                    const err = Object.assign(new Error(`Request failed with status code ${status}`), {
+                        response: { status },
+                    });
+                    Logger.error(err, 'HTTP error');
+                    expect(mockSentryService.captureException).not.toHaveBeenCalled();
+                },
+            );
+
+            it.each([401, 403, 404, 429])(
+                'should NOT send to Sentry when error has HTTP status %i via top-level status',
+                (status) => {
+                    const err = Object.assign(new Error(`Request failed with status code ${status}`), { status });
+                    Logger.error(err, 'HTTP error');
+                    expect(mockSentryService.captureException).not.toHaveBeenCalled();
+                },
+            );
+
+            it.each([
+                "'Unauthorized' captured",
+                "'Forbidden' captured",
+                "'Not Found' captured",
+                "'Too Many Requests' captured",
+                'Request failed with status code 401',
+                'Request failed with status code 403',
+                'Request failed with status code 404',
+                'Request failed with status code 429',
+            ])('should NOT send to Sentry when error message contains "%s"', (message) => {
+                const err = new Error(message);
+                Logger.error(err, 'HTTP error');
+                expect(mockSentryService.captureException).not.toHaveBeenCalled();
+            });
+
+            it('should send to Sentry for non-HTTP errors', () => {
+                const err = new Error('Something unexpected happened');
+                Logger.error(err, 'Unexpected error');
+                expect(mockSentryService.captureException).toHaveBeenCalledWith(err, expect.anything());
+            });
+
+            it('should send to Sentry for HTTP 500 errors (server errors are actionable)', () => {
+                const err = Object.assign(new Error('Internal Server Error'), { response: { status: 500 } });
+                Logger.error(err, 'Server error');
+                expect(mockSentryService.captureException).toHaveBeenCalledWith(err, expect.anything());
+            });
+        });
     });
 
     describe('rovoDevErrorInternal', () => {

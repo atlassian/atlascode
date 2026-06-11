@@ -1,4 +1,4 @@
-import { AuthInfo, AuthInfoState, ProductJira } from '../../atlclients/authInfo';
+import { AuthInfo, AuthInfoState, DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { graphqlRequest } from '../../atlclients/graphql/graphqlClient';
 import { Container } from '../../container';
 import { AtlassianNotificationNotifier } from './atlassianNotificationNotifier';
@@ -36,8 +36,15 @@ describe('AtlassianNotificationNotifier', () => {
 
         // Mock Container.credentialManager
         (Container as any).credentialManager = {
-            getCloudAuthInfo: jest.fn(),
+            getAuthInfo: jest.fn(),
+            getCloudAuthInfo: jest.fn().mockResolvedValue([]),
             onDidAuthChange: jest.fn(() => ({ dispose: jest.fn() })),
+        };
+
+        // Mock Container.siteManager
+        (Container as any).siteManager = {
+            getSitesAvailable: jest.fn(() => []),
+            primarySite: undefined,
         };
 
         notifier = AtlassianNotificationNotifier.getInstance();
@@ -54,12 +61,17 @@ describe('AtlassianNotificationNotifier', () => {
     });
 
     it('should fetch notifications for all valid auth infos', async () => {
-        // Create mock auth infos
+        // Create mock auth infos and sites
         const authInfo1 = createMockAuthInfo('user1');
         const authInfo2 = createMockAuthInfo('user2');
+        const site1 = createMockSite('site1', 'cloud-id-1');
+        const site2 = createMockSite('site2', 'cloud-id-2');
 
-        // Mock getCloudAuthInfo to return 2 auth infos
-        (Container.credentialManager.getCloudAuthInfo as jest.Mock).mockResolvedValue([authInfo1, authInfo2]);
+        // Mock getCloudAuthInfo to return authInfo + site pairs
+        (Container.credentialManager.getCloudAuthInfo as jest.Mock).mockResolvedValueOnce([
+            { authInfo: authInfo1, site: site1 },
+            { authInfo: authInfo2, site: site2 },
+        ]);
 
         // Mock unseen notification count responses
         mockGraphqlRequest
@@ -82,14 +94,23 @@ describe('AtlassianNotificationNotifier', () => {
                 },
             });
 
-        // Call fetchNotifications
+        // fetchNotifications has 3 levels of promise chaining (getCloudAuthInfo → getLatestNotifications →
+        // getNotificationDetailsByAuthInfo), so one flush per level is needed to let all async work complete
+        const flushPromises = () => new Promise((resolve) => setImmediate(resolve));
         notifier.fetchNotifications();
-
-        // Wait for all async operations to complete
-        await new Promise((resolve) => setTimeout(resolve, 0));
+        await flushPromises();
+        await flushPromises();
+        await flushPromises();
 
         // Verify that graphqlRequest was called for unseen count and notification details for both users
         expect(mockGraphqlRequest).toHaveBeenCalledTimes(4);
+
+        // Verify collabContextRoutingAri was passed correctly for user1's notification fetch
+        expect(mockGraphqlRequest).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.objectContaining({ collabContextRoutingAri: 'ari:cloud:platform::site/cloud-id-1' }),
+            authInfo1,
+        );
 
         // Verify that notifications were added (should only add PR and Jira comment notifications, not the random one)
         expect(mockAddNotification).toHaveBeenCalledTimes(3);
@@ -97,7 +118,9 @@ describe('AtlassianNotificationNotifier', () => {
 
     it('should not fetch notifications if rate limit is hit', async () => {
         const authInfo = createMockAuthInfo('user1');
-        (Container.credentialManager.getCloudAuthInfo as jest.Mock).mockResolvedValue([authInfo]);
+        const site = createMockSite('site1', 'cloud-id-1');
+
+        (Container.credentialManager.getCloudAuthInfo as jest.Mock).mockResolvedValue([{ authInfo, site }]);
 
         // First call should work
         mockGraphqlRequest.mockResolvedValue({ notifications: { unseenNotificationCount: 1 } });
@@ -113,7 +136,9 @@ describe('AtlassianNotificationNotifier', () => {
 
     it('should not fetch notifications if no new notifications', async () => {
         const authInfo = createMockAuthInfo('user1');
-        (Container.credentialManager.getCloudAuthInfo as jest.Mock).mockResolvedValue([authInfo]);
+        const site = createMockSite('site1', 'cloud-id-1');
+
+        (Container.credentialManager.getCloudAuthInfo as jest.Mock).mockResolvedValue([{ authInfo, site }]);
 
         // Mock same unseen count as before
         mockGraphqlRequest.mockResolvedValue({ notifications: { unseenNotificationCount: 5 } });
@@ -128,6 +153,7 @@ describe('AtlassianNotificationNotifier', () => {
         jest.spyOn(Date, 'now').mockReturnValue(Date.now() + 61000);
 
         // Second call with same count
+        (Container.credentialManager.getAuthInfo as jest.Mock).mockResolvedValue(authInfo);
         mockGraphqlRequest.mockResolvedValue({ notifications: { unseenNotificationCount: 5 } });
         notifier.fetchNotifications();
 
@@ -157,6 +183,21 @@ describe('AtlassianNotificationNotifier', () => {
 });
 
 // Helper functions for creating test objects
+function createMockSite(name: string, cloudId: string): DetailedSiteInfo {
+    return {
+        id: cloudId,
+        name,
+        host: `${name}.atlassian.net`,
+        avatarUrl: generateRandomUrl(),
+        baseLinkUrl: `https://${name}.atlassian.net`,
+        baseApiUrl: `https://api.atlassian.com/ex/jira/${cloudId}/rest`,
+        product: ProductJira,
+        isCloud: true,
+        userId: generateRandomString(),
+        credentialId: generateRandomString(),
+    };
+}
+
 function createMockAuthInfo(userId: string): AuthInfo {
     return {
         user: {

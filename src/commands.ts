@@ -30,6 +30,7 @@ import { Logger } from './logger';
 import { runQuickAuth } from './onboarding/quickFlow';
 import { AuthenticationType } from './onboarding/quickFlow/authentication/types';
 import { RovodevCommands } from './rovo-dev/api/componentApi';
+import { getProductName } from './rovo-dev/api/rovodevStaticConfig';
 import { RovoDevContextItem } from './rovo-dev/rovoDevTypes';
 import { openRovoDevConfigFile } from './rovo-dev/rovoDevUtils';
 import { Experiments, Features } from './util/featureFlags';
@@ -377,9 +378,10 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(RovodevCommands.RovodevAskInteractive, async () => {
             const context = buildContext(window.activeTextEditor, vscodeContext);
 
+            const productName = getProductName();
             const prompt = await window.showInputBox({
-                placeHolder: 'Type your Rovo Dev command',
-                prompt: 'Send a command to RovoDev for the selected code',
+                placeHolder: `Type your ${productName} command`,
+                prompt: `Send a command to ${productName} for the selected code`,
             });
 
             if (!prompt?.trim()) {
@@ -399,19 +401,16 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(RovodevCommands.RovodevShareFeedback, () =>
             Container.rovodevWebviewProvider.executeTriggerFeedback(),
         ),
-        commands.registerCommand(RovodevCommands.RovodevOpenHelp, () => {
-            env.openExternal(Uri.parse('https://support.atlassian.com/rovo/docs/work-with-rovo-dev-in-the-ide/'));
-        }),
         commands.registerCommand(RovodevCommands.RovodevOpenChat, () => {
             commands.executeCommand(RovodevCommands.FocusRovoDevWindow);
         }),
         commands.registerCommand(RovodevCommands.RovodevEnable, async () => {
             try {
                 await configuration.updateEffective('rovodev.enabled', true);
-                window.showInformationMessage('Rovo Dev has been enabled successfully!');
+                window.showInformationMessage(`${getProductName()} has been enabled successfully!`);
             } catch (error) {
-                Logger.error(error, 'Failed to enable Rovo Dev');
-                window.showErrorMessage('Failed to enable Rovo Dev. Please try again.');
+                Logger.error(error, `Failed to enable ${getProductName()}`);
+                window.showErrorMessage(`Failed to enable ${getProductName()}. Please try again.`);
             }
         }),
         commands.registerCommand(RovodevCommands.RovodevLogout, () => {

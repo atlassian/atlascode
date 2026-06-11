@@ -1,4 +1,5 @@
 import { Logger } from 'src/logger';
+import { getProductName } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { RovoDevViewResponse } from 'src/rovo-dev/ui/rovoDevViewMessages';
 import { v4 } from 'uuid';
 import { commands, Event, EventEmitter } from 'vscode';
@@ -294,8 +295,13 @@ export class RovoDevChatProvider {
 
     public async executeReplay(): Promise<void> {
         if (!this._rovoDevApiClient) {
-            const error = new Error('Unable to replay the previous conversation. Rovo Dev failed to initialize');
-            RovoDevTelemetryProvider.logError(error, 'Cannot replay conversation - Rovo Dev not initialized');
+            const error = new Error(
+                `Unable to replay the previous conversation. ${getProductName()} failed to initialize`,
+            );
+            RovoDevTelemetryProvider.logError(
+                error,
+                `Cannot replay conversation - ${getProductName()} not initialized`,
+            );
             throw error;
         }
 
@@ -319,6 +325,12 @@ export class RovoDevChatProvider {
 
     public async executeCancel(fromNewSession: boolean): Promise<boolean> {
         const webview = this._webView!;
+
+        // Clear any pending deferred tool call so the next user prompt is sent
+        // as a plain message instead of a tool-call response.  Without this the
+        // backend would reject the prompt with "Cannot provide a new user prompt
+        // when the message history contains unprocessed tool calls".
+        this._pendingDeferredRequest = undefined;
 
         let success: boolean;
         if (this._rovoDevApiClient) {
@@ -386,8 +398,8 @@ export class RovoDevChatProvider {
 
         const response = await fetchOp;
         if (!response.body) {
-            const error = new Error("Error processing the Rovo Dev's response: response is empty.");
-            RovoDevTelemetryProvider.logError(error, 'Received empty response from Rovo Dev');
+            const error = new Error(`Error processing the ${getProductName()}'s response: response is empty.`);
+            RovoDevTelemetryProvider.logError(error, `Received empty response from ${getProductName()}`);
             throw error;
         }
 
@@ -775,7 +787,7 @@ export class RovoDevChatProvider {
                         type: RovoDevProviderMessageType.ShowDialog,
                         message: {
                             type: 'warning',
-                            title: "You've reached your Rovo Dev credit limit",
+                            title: `You've reached your ${getProductName()} credit limit`,
                             text: alert_message.message
                                 .replace('{title}', response.data.content.title)
                                 .replace('{ctaLink}', ''),
@@ -859,8 +871,9 @@ export class RovoDevChatProvider {
             default:
                 // this should really never happen, as unknown messages are caugh and wrapped into the
                 // message `_parsing_error`
-                // @ts-expect-error ts(2339) - response here should be 'never'
-                const error = new Error(`Rovo Dev response error: unknown event kind: ${response.event_kind}`);
+                const error = new Error(
+                    `${getProductName()} response error: unknown event kind: ${(response as any).event_kind}`,
+                );
                 RovoDevTelemetryProvider.logError(error);
                 throw error;
         }
@@ -960,7 +973,7 @@ export class RovoDevChatProvider {
             try {
                 await func(this._rovoDevApiClient);
             } catch (error) {
-                if (error.name === 'AbortError') {
+                if (error.name === 'AbortError' || (error instanceof TypeError && error.message === 'terminated')) {
                     await webview.postMessage({
                         type: RovoDevProviderMessageType.CompleteMessage,
                         promptId: this._currentPromptId,
@@ -1050,8 +1063,8 @@ export class RovoDevChatProvider {
      */
     public async executeLivePreview(): Promise<void> {
         if (!this._rovoDevApiClient) {
-            const error = new Error('Unable to start live preview. Rovo Dev failed to initialize');
-            RovoDevTelemetryProvider.logError(error, 'Cannot start live preview - Rovo Dev not initialized');
+            const error = new Error(`Unable to start live preview. ${getProductName()} failed to initialize`);
+            RovoDevTelemetryProvider.logError(error, `Cannot start live preview - ${getProductName()} not initialized`);
             throw error;
         }
         if (!this._webView) {

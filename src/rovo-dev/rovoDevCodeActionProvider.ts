@@ -1,5 +1,6 @@
 import path from 'path';
 import { Logger } from 'src/logger';
+import { getProductName } from 'src/rovo-dev/api/rovodevStaticConfig';
 import * as vscode from 'vscode';
 
 import { RovodevCommands } from './api/componentApi';
@@ -25,17 +26,24 @@ export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
             return [];
         }
 
+        const productName = getProductName();
         return [
-            this.generateCommand('Fix with Rovo Dev', 'Please fix problem with this code', document, range, context),
+            this.generateCommand(
+                `Fix with ${productName}`,
+                'Please fix problem with this code',
+                document,
+                range,
+                context,
+            ),
             {
-                title: 'Rovo Dev: Add to Context',
+                title: `${productName}: Add to Context`,
                 command: {
                     command: RovodevCommands.RovodevAddToContext,
-                    title: 'Add to Rovo Dev Context',
+                    title: `Add to ${productName} Context`,
                 },
             },
             this.generateCommand(
-                'Explain with Rovo Dev',
+                `Explain with ${productName}`,
                 'Please explain what is the problem with this code',
                 document,
                 range,
@@ -63,7 +71,7 @@ export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
 
         action.command = {
             command: RovodevCommands.RovodevAsk,
-            title: 'Ask Rovo Dev',
+            title: `Ask ${getProductName()}`,
             arguments: [
                 enhancedPrompt,
                 [
@@ -103,7 +111,7 @@ export class RovoDevCodeActionProvider implements vscode.CodeActionProvider {
             return buildContextualPrompt(basePrompt, extractedContext, intent);
         } catch (error) {
             // Fallback to basic prompt if context extraction fails
-            Logger.warn('Failed to extract context for Rovo Dev:', error);
+            Logger.warn(`Failed to extract context for ${getProductName()}:`, error);
             // Sanitize diagnostic messages to prevent JSON parsing errors
             const sanitizedMessages = diagnostics.map((d) => d.message.replace(/[\r\n]+/g, ' ').trim()).join('\n');
             return diagnostics.length ? `${basePrompt}\nAdditional problem context:\n${sanitizedMessages}` : basePrompt;

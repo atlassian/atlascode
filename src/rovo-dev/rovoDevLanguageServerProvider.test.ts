@@ -1,4 +1,5 @@
 import { Logger } from 'src/logger';
+import { getProductName } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { ExtensionContext } from 'vscode';
 
 import { RovoDevLanguageServerProvider } from './rovoDevLanguageServerProvider';
@@ -182,7 +183,7 @@ describe('RovoDevLanguageServerProvider', () => {
 
         expect(LanguageClient).toHaveBeenCalledWith(
             'rovoDevLanguageServer',
-            'Rovo Dev Language Server',
+            `${getProductName()} Language Server`,
             expect.any(Function), // serverOptions is now a function that spawns the process
             expect.objectContaining({
                 documentSelector: [{ scheme: 'file' }, { scheme: 'untitled' }],
@@ -248,7 +249,7 @@ describe('RovoDevLanguageServerProvider', () => {
 
         new RovoDevLanguageServerProvider(mockContext);
 
-        expect(window.createOutputChannel).toHaveBeenCalledWith('Rovo Dev Language Server');
+        expect(window.createOutputChannel).toHaveBeenCalledWith(`${getProductName()} Language Server`);
     });
 
     it('should not start language server if binary does not exist', async () => {

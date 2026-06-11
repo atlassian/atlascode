@@ -1,3 +1,4 @@
+import { TelemetryEvent } from 'src/rovo-dev/rovoDevTelemetryProvider';
 import { RovoDevContextItem, RovoDevPrompt, ToolPermissionDialogChoice } from 'src/rovo-dev/rovoDevTypes';
 
 import { AgentMode } from '../client';
@@ -49,6 +50,7 @@ export const enum RovoDevViewResponseType {
     ExitPlanModeSubmit = 'exitPlanModeSubmit',
     RefreshModifiedFiles = 'refreshModifiedFiles',
     CreateLivePreview = 'createLivePreview',
+    ReportAnalyticsEvent = 'reportAnalyticsEvent',
 }
 
 export type FileOperationType = 'modify' | 'create' | 'delete';
@@ -116,4 +118,5 @@ export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.CreateLivePreview>
     | ReducerAction<RovoDevViewResponseType.AskUserQuestionsSubmit, AskUserQuestionsResultMessage>
     | ReducerAction<RovoDevViewResponseType.ExitPlanModeSubmit, ExitPlanModeResultMessage>
-    | ReducerAction<RovoDevViewResponseType.RefreshModifiedFiles>;
+    | ReducerAction<RovoDevViewResponseType.RefreshModifiedFiles>
+    | ReducerAction<RovoDevViewResponseType.ReportAnalyticsEvent, { event: TelemetryEvent }>;
