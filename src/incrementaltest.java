@@ -31,6 +31,11 @@ public class ChickenOrder {
         return items[maxIndex];
     }
 
+    // Returns a formatted receipt line for a single item
+    public String formatReceiptLine(String item, double price) {
+        return String.format("%-20s $%.2f", item, price);
+    }
+
     public static void main(String[] args) {
         ChickenOrder order = new ChickenOrder();
 
