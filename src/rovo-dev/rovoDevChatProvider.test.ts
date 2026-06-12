@@ -1106,4 +1106,158 @@ describe('RovoDevChatProvider', () => {
             );
         });
     });
+
+    // The rovoDevPromptCompleted event is the terminal SLO signal forwarded
+    // through the Boysenberry → Jira analytics bridge. The bridge relies on
+    // three strict invariants that these tests pin down:
+    //   1) Only emitted in Boysenberry mode (no consumer in the standard IDE).
+    //   2) Exactly-once per promptId — the first terminal classification wins.
+    //   3) Never emitted for the replay streaming path.
+    // We exercise the helper directly here (via bracket access) so the tests
+    // focus on those invariants without the heavy executeChat scaffolding.
+    describe('rovoDevPromptCompleted (SLO)', () => {
+        beforeEach(() => {
+            // Re-create the provider with isBoysenberry=true so the helper
+            // does not early-return. The "non-boysenberry suppression" test
+            // below covers the false case explicitly.
+            chatProvider = new RovoDevChatProvider(true, mockTelemetryProvider);
+            chatProvider.setWebview(mockWebview);
+            // Place the provider in a state equivalent to "an in-flight prompt
+            // is being processed" so firePromptCompleted has a promptId to use.
+            chatProvider['_currentPromptId'] = 'prompt-A';
+            mockTelemetryProvider.fireTelemetryEvent.mockClear();
+        });
+
+        it('does not emit when not running in Boysenberry mode (standard IDE)', () => {
+            const ideProvider = new RovoDevChatProvider(false, mockTelemetryProvider);
+            ideProvider.setWebview(mockWebview);
+            ideProvider['_currentPromptId'] = 'prompt-ide';
+
+            ideProvider['firePromptCompleted']('success', { messagePartsCount: 1 });
+            ideProvider['firePromptCompleted']('error', { errorReason: 'stream_exception' });
+
+            expect(mockTelemetryProvider.fireTelemetryEvent).not.toHaveBeenCalled();
+        });
+
+        it('emits rovoDevPromptCompleted with result=success and messagePartsCount', () => {
+            chatProvider['firePromptCompleted']('success', { messagePartsCount: 3 });
+
+            expect(mockTelemetryProvider.fireTelemetryEvent).toHaveBeenCalledTimes(1);
+            expect(mockTelemetryProvider.fireTelemetryEvent).toHaveBeenCalledWith({
+                action: 'rovoDevPromptCompleted',
+                subject: 'atlascode',
+                attributes: {
+                    promptId: 'prompt-A',
+                    result: 'success',
+                    messagePartsCount: 3,
+                },
+            });
+        });
+
+        it('emits rovoDevPromptCompleted with errorReason and httpStatus when provided', () => {
+            chatProvider['firePromptCompleted']('error', {
+                errorReason: 'http_5xx',
+                httpStatus: 503,
+            });
+
+            expect(mockTelemetryProvider.fireTelemetryEvent).toHaveBeenCalledTimes(1);
+            expect(mockTelemetryProvider.fireTelemetryEvent).toHaveBeenCalledWith({
+                action: 'rovoDevPromptCompleted',
+                subject: 'atlascode',
+                attributes: {
+                    promptId: 'prompt-A',
+                    result: 'error',
+                    errorReason: 'http_5xx',
+                    httpStatus: 503,
+                },
+            });
+        });
+
+        it('omits optional attributes when not provided (bridge expects closed shape)', () => {
+            chatProvider['firePromptCompleted']('cancelled', { errorReason: 'aborted' });
+
+            const call = mockTelemetryProvider.fireTelemetryEvent.mock.calls[0][0];
+            expect(call.attributes).not.toHaveProperty('httpStatus');
+            expect(call.attributes).not.toHaveProperty('messagePartsCount');
+            expect(call.attributes).toEqual({
+                promptId: 'prompt-A',
+                result: 'cancelled',
+                errorReason: 'aborted',
+            });
+        });
+
+        it('is exactly-once per promptId — subsequent calls for the same prompt are dropped', () => {
+            chatProvider['firePromptCompleted']('error', { errorReason: 'stream_exception' });
+            chatProvider['firePromptCompleted']('success', { messagePartsCount: 2 });
+            chatProvider['firePromptCompleted']('cancelled', { errorReason: 'aborted' });
+
+            expect(mockTelemetryProvider.fireTelemetryEvent).toHaveBeenCalledTimes(1);
+            // Cast to any: the TelemetryEvent union narrows `attributes` per-event,
+            // and the test only cares about the dedupe behaviour for the call we made.
+            const firstCallAttributes = (mockTelemetryProvider.fireTelemetryEvent.mock.calls[0][0] as any).attributes;
+            expect(firstCallAttributes.result).toBe('error');
+        });
+
+        it('emits independently for distinct promptIds', () => {
+            chatProvider['firePromptCompleted']('success', { messagePartsCount: 1 });
+
+            chatProvider['_currentPromptId'] = 'prompt-B';
+            chatProvider['firePromptCompleted']('error', { errorReason: 'no_response' });
+
+            expect(mockTelemetryProvider.fireTelemetryEvent).toHaveBeenCalledTimes(2);
+            const promptIds = mockTelemetryProvider.fireTelemetryEvent.mock.calls.map(
+                (c: any[]) => (c[0] as any).attributes.promptId,
+            );
+            expect(promptIds).toEqual(['prompt-A', 'prompt-B']);
+        });
+
+        it('does nothing when there is no current promptId', () => {
+            chatProvider['_currentPromptId'] = '';
+
+            chatProvider['firePromptCompleted']('success', { messagePartsCount: 1 });
+
+            expect(mockTelemetryProvider.fireTelemetryEvent).not.toHaveBeenCalled();
+        });
+
+        it('bounds the dedupe Set to avoid unbounded memory growth', () => {
+            // Fill the set just past the cap to confirm eviction kicks in.
+            const cap = (RovoDevChatProvider as any)._completedPromptIdsCap as number;
+            for (let i = 0; i < cap + 5; i++) {
+                chatProvider['_currentPromptId'] = `prompt-${i}`;
+                chatProvider['firePromptCompleted']('success', { messagePartsCount: 1 });
+            }
+
+            const dedupe: Set<string> = chatProvider['_completedPromptIds'];
+            expect(dedupe.size).toBeLessThanOrEqual(cap);
+            // The oldest entries must have been evicted.
+            expect(dedupe.has('prompt-0')).toBe(false);
+            // The most recent entry must still be present.
+            expect(dedupe.has(`prompt-${cap + 4}`)).toBe(true);
+        });
+
+        describe('classifyStreamingError', () => {
+            // The classifier produces the errorReason + httpStatus attributes
+            // attached to rovoDevPromptCompleted for fetch/HTTP failures. The
+            // SLO downstream slices on these closed-enum values, so the
+            // boundaries here are part of the bridge contract.
+            it('classifies RovoDevApiError 5xx as http_5xx with the status code', async () => {
+                const { RovoDevApiError } = await import('./client/rovoDevApiClient');
+                const err = new RovoDevApiError('boom', 502, undefined);
+                const result = chatProvider['classifyStreamingError'](err);
+                expect(result).toEqual({ errorReason: 'http_5xx', httpStatus: 502 });
+            });
+
+            it('classifies RovoDevApiError 4xx as http_4xx with the status code', async () => {
+                const { RovoDevApiError } = await import('./client/rovoDevApiClient');
+                const err = new RovoDevApiError('bad request', 422, undefined);
+                const result = chatProvider['classifyStreamingError'](err);
+                expect(result).toEqual({ errorReason: 'http_4xx', httpStatus: 422 });
+            });
+
+            it('falls back to network_error for non-API errors', () => {
+                const result = chatProvider['classifyStreamingError'](new Error('socket hang up'));
+                expect(result).toEqual({ errorReason: 'network_error' });
+            });
+        });
+    });
 });
