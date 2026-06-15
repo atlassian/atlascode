@@ -11,10 +11,10 @@ const ENV_VARS = [
     'ATLASCODE_FF_OVERRIDES',
     'ATLASCODE_EXP_OVERRIDES_BOOL',
     'ATLASCODE_EXP_OVERRIDES_STRING',
+    // Build-time Boysenberry flag: BBY uses a separate AtlasCode build from the standard IDE.
     'ROVODEV_BBY',
     'BBY_USERID',
     'ROVODEV_PORT',
-    'ROVODEV_REBRAND_JCA',
     'SENTRY_ENABLED',
     'SENTRY_DSN',
     'SENTRY_ENVIRONMENT',
@@ -22,7 +22,10 @@ const ENV_VARS = [
 ];
 
 // Vars that must always be defined (default to "" if unset) so DefinePlugin substitutes them
-const ALWAYS_DEFINE_VARS = new Set(['ROVODEV_BBY', 'ROVODEV_REBRAND_JCA', 'SANDBOX_VERY_LARGE_REPO']);
+// Do not add ROVODEV_REBRAND_JCA here. It is a runtime sandbox feature flag,
+// so baking it at build time prevents the shared Boysenberry artifact from responding
+// to devai-sandbox-provided environment values.
+const ALWAYS_DEFINE_VARS = new Set(['ROVODEV_BBY', 'SANDBOX_VERY_LARGE_REPO']);
 
 function createEnvPlugin({ nodeEnv, isBrowser = false }) {
     const definitions = {
