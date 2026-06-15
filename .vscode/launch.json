@@ -35,6 +35,7 @@
             "env": {
                 "ROVODEV_PORT": "8899",
                 "ROVODEV_ENABLED": "true",
+                "ROVODEV_REBRAND_JCA": "true",
                 "ROVODEV_BBY": "true",
                 "ROVODEV_SANDBOX_ID": "bby_sandbox",
                 "ROVODEV_SERVE_SESSION_TOKEN": "bby-dev-session-token"

@@ -1,6 +1,15 @@
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
+jest.mock('mustache', () => {
+    const actual = jest.requireActual('mustache');
+
+    return {
+        __esModule: true,
+        default: actual,
+    };
+});
+
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import { Resources } from 'src/resources';
 import { JIRA_CODING_AGENT_PRODUCT_NAME, ROVODEV_STATIC_CONFIG_GLOBAL } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { Uri } from 'vscode';
@@ -50,9 +59,12 @@ describe('getHtmlForView', () => {
 
         expect(html).toContain(`window.${ROVODEV_STATIC_CONFIG_GLOBAL} = `);
         expect(html).toContain(`"productName":"${JIRA_CODING_AGENT_PRODUCT_NAME}"`);
-        expect(html.indexOf(`window.${ROVODEV_STATIC_CONFIG_GLOBAL}`)).toBeLessThan(
-            html.indexOf('build/mui.bundle.js'),
-        );
+        const staticConfigIndex = html.indexOf(`window.${ROVODEV_STATIC_CONFIG_GLOBAL}`);
+        const bundleScriptIndex = html.indexOf('mui.bundle.js');
+
+        expect(staticConfigIndex).toBeGreaterThanOrEqual(0);
+        expect(bundleScriptIndex).toBeGreaterThanOrEqual(0);
+        expect(staticConfigIndex).toBeLessThan(bundleScriptIndex);
     });
 
     it('uses the same nonce for CSP and injected config script', () => {
