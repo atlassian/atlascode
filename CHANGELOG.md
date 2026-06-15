@@ -4,12 +4,8 @@
 
 ### Bug Fixes
 
-<<<<<<< HEAD
 - **RovoDev**: Hid stack traces, stderr, and log details from external users while preserving them for Atlassian users.
-- **RovoDev (BBY)**: Fixed the `ROVODEV_REBRAND_JCA` environment variable so that the "Jira Coding Agent" feature gate from devai-sandbox is correctly applied at runtime.
-=======
 - **RovoDev (BBY)**: Fixed `ROVODEV_REBRAND_JCA` env var handling so the "Jira Coding Agent" rebrand works correctly in webviews.
->>>>>>> main
 - **Notifications**: Fixed `atlassianNotificationNotifier` to correctly flush all promise levels, resolving a test reliability issue.
 
 ### Improvements
