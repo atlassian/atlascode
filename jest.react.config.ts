@@ -1,8 +1,5 @@
 import type { Config } from 'jest';
-import { createRequire } from 'module';
-
-const require = createRequire(import.meta.url);
-const { baseConfigFor } = require('./jest.base.config.cjs');
+import { baseConfigFor } from './jest.config';
 
 const config: Config = {
     ...baseConfigFor('react', 'tsx'),
