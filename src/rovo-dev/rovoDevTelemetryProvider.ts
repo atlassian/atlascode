@@ -35,7 +35,8 @@ export type TelemetryEvent =
     | PartialEvent<Track.ForkSessionClicked>
     | PartialEvent<Track.DeleteSessionClicked>
     | PartialEvent<Track.ReplayCompleted>
-    | PartialEvent<Track.LocalServerPromptReceived>;
+    | PartialEvent<Track.LocalServerPromptReceived>
+    | PartialEvent<Track.PromptCompleted>;
 
 export type TelemetryScreenEvent = 'rovoDevSessionHistoryPicker';
 

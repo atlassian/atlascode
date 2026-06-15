@@ -5,6 +5,7 @@ import { v4 } from 'uuid';
 import { commands, Event, EventEmitter } from 'vscode';
 
 import { Container } from '../container';
+import { Track } from './analytics/events';
 import { ExtensionApi } from './api/extensionApi';
 import {
     AgentMode,
@@ -77,6 +78,20 @@ export class RovoDevChatProvider {
     private _rovoDevApiClient: RovoDevApiClient | undefined;
     private _webView: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse> | undefined;
     private _onUnauthorizedCallback: (() => Promise<void>) | undefined;
+
+    /**
+     * Bounded LRU of `promptId`s for which `rovoDevPromptCompleted` has already
+     * been fired. Used to enforce the exactly-once-per-prompt invariant on the
+     * `rovoDevPromptCompleted` telemetry event without unbounded memory growth.
+     *
+     * Insertion-ordered (a `Set` preserves insertion order); when the cap is
+     * exceeded the oldest entry is evicted. The cap is set well above the
+     * realistic number of concurrent in-flight + recently-finished prompts.
+     */
+    private _completedPromptIds: Set<string> = new Set<string>();
+    private static readonly _completedPromptIdsCap = 64;
+    /** Counts user-visible message parts seen during the current prompt's stream. */
+    private _currentPromptUserVisiblePartsCount = 0;
 
     private _replayInProgress = false;
     private _lastMessageSentTime: number | undefined;
@@ -383,6 +398,15 @@ export class RovoDevChatProvider {
                     failed: success ? undefined : true,
                 },
             });
+
+            // Fire the terminal `rovoDevPromptCompleted` for this prompt so the
+            // chat-response SLO sees a cancelled outcome. We only emit when the
+            // cancel actually succeeded; a failed cancel leaves the stream
+            // running, in which case the eventual stream-end path will classify
+            // the prompt instead.
+            if (success) {
+                this.firePromptCompleted('cancelled', { errorReason: 'aborted' });
+            }
         }
 
         return success;
@@ -390,6 +414,10 @@ export class RovoDevChatProvider {
 
     private beginNewPrompt(overrideId?: string): void {
         this._currentPromptId = overrideId || v4();
+        // Reset the per-prompt user-visible message-part counter so that the
+        // `no_response` vs `success` classification at the end of the stream
+        // reflects only this prompt.
+        this._currentPromptUserVisiblePartsCount = 0;
         this._telemetryProvider.startNewPrompt(this._currentPromptId);
     }
 
@@ -467,6 +495,14 @@ export class RovoDevChatProvider {
                     isFirstMessage = false;
                 }
 
+                // Count user-visible parts so the terminal classification can
+                // distinguish a successful response from a stream that ended
+                // without delivering anything (`no_response`). Only the chat
+                // path participates in the SLO.
+                if (sourceApi === 'chat' && this.isUserVisiblePart(msg)) {
+                    this._currentPromptUserVisiblePartsCount++;
+                }
+
                 await this.processRovoDevResponse(sourceApi, msg);
             }
         }
@@ -478,6 +514,9 @@ export class RovoDevChatProvider {
         this._lastMessageSentTime = performance.now();
 
         for (const msg of parser.flush()) {
+            if (sourceApi === 'chat' && this.isUserVisiblePart(msg)) {
+                this._currentPromptUserVisiblePartsCount++;
+            }
             await this.processRovoDevResponse(sourceApi, msg);
         }
 
@@ -485,6 +524,41 @@ export class RovoDevChatProvider {
         // While we should handle such events in real time, this is meant to capture anything that we
         // may have missed, and make sure the agent selector is always in sync with Rovo Dev
         this._onAgentModelChanged.fire();
+
+        // Terminal classification for the SLO:
+        //   - `success` ⇒ at least one user-visible part was rendered.
+        //   - `no_response` ⇒ stream ended cleanly but no part was rendered
+        //     (e.g. backend returned an empty stream).
+        // The dedupe Set ensures this is a no-op if a mid-stream error already
+        // classified the prompt (e.g. `_parsing_error`, `exception`).
+        if (sourceApi === 'chat') {
+            const partsCount = this._currentPromptUserVisiblePartsCount;
+            if (partsCount > 0) {
+                this.firePromptCompleted('success', { messagePartsCount: partsCount });
+            } else {
+                this.firePromptCompleted('error', {
+                    errorReason: 'no_response',
+                    messagePartsCount: 0,
+                });
+            }
+        }
+    }
+
+    /**
+     * Whether a streamed `RovoDevResponse` represents a "user-visible" message
+     * part for the purposes of the chat-response SLO. Text and tool activity
+     * count as user-visible output; control / lifecycle events (warnings,
+     * prune notices, replay markers, dialog signals, …) do not.
+     */
+    private isUserVisiblePart(response: RovoDevResponse): boolean {
+        switch (response.event_kind) {
+            case 'text':
+            case 'tool-call':
+            case 'tool-return':
+                return true;
+            default:
+                return false;
+        }
     }
 
     private async processRovoDevReplayResponse(responses: RovoDevResponse[]): Promise<void> {
@@ -634,6 +708,12 @@ export class RovoDevChatProvider {
                 break;
 
             case '_parsing_error':
+                // Terminal classification for this prompt. The dedupe Set in
+                // firePromptCompleted ensures the later `success` emit from
+                // processResponse's normal exit path becomes a no-op.
+                if (sourceApi !== 'replay') {
+                    this.firePromptCompleted('parse_error', { errorReason: 'parsing_error' });
+                }
                 await this.processError(response.error, { showOnlyInDebug: true });
                 break;
 
@@ -664,6 +744,13 @@ export class RovoDevChatProvider {
                     response.title || undefined,
                     ...(response.params || []),
                 );
+
+                // Terminal classification: an `exception` event_kind from the
+                // stream means the agent surfaced a hard error mid-response.
+                // Replay path never fires PromptCompleted.
+                if (sourceApi !== 'replay') {
+                    this.firePromptCompleted('error', { errorReason: 'stream_exception' });
+                }
 
                 const { text, link } = this.parseExceptionMessage(response.message);
                 await webview.postMessage({
@@ -974,6 +1061,13 @@ export class RovoDevChatProvider {
                 await func(this._rovoDevApiClient);
             } catch (error) {
                 if (error.name === 'AbortError' || (error instanceof TypeError && error.message === 'terminated')) {
+                    // Unexpected mid-stream abort that did not go through
+                    // executeCancel (which would have already emitted
+                    // 'cancelled'). The dedupe Set keeps this a no-op when the
+                    // user-initiated cancel already classified the prompt.
+                    if (sourceApi === 'chat') {
+                        this.firePromptCompleted('cancelled', { errorReason: 'aborted' });
+                    }
                     await webview.postMessage({
                         type: RovoDevProviderMessageType.CompleteMessage,
                         promptId: this._currentPromptId,
@@ -989,14 +1083,32 @@ export class RovoDevChatProvider {
                 if (isUnauthorizedError) {
                     Logger.info('Detected unauthorized error - triggering login UI');
                     if (this._onUnauthorizedCallback) {
+                        // Intentionally do NOT emit rovoDevPromptCompleted here:
+                        // the user will re-authenticate and the next prompt
+                        // (or retry) provides a clean SLO sample.
                         await this._onUnauthorizedCallback();
                         return;
                     }
+                }
+                // Terminal classification for fetch / HTTP / reader errors.
+                // Replay path is excluded — the SLO only covers user-submitted
+                // prompts. The dedupe Set ensures that if an in-stream event
+                // (e.g. `_parsing_error` or `exception`) already classified
+                // this prompt, this call becomes a no-op.
+                if (sourceApi === 'chat') {
+                    const { errorReason, httpStatus } = this.classifyStreamingError(error);
+                    this.firePromptCompleted('error', {
+                        errorReason,
+                        ...(httpStatus !== undefined ? { httpStatus } : {}),
+                    });
                 }
                 // the error is retriable only when it happens during the streaming of a 'chat' response
                 await this.processError(error, { isRetriable: sourceApi === 'chat' });
             }
         } else {
+            if (sourceApi === 'chat') {
+                this.firePromptCompleted('error', { errorReason: 'unknown' });
+            }
             await this.processError(new Error('RovoDev client not initialized'));
         }
 
@@ -1009,6 +1121,84 @@ export class RovoDevChatProvider {
 
         // Signal that the prompt is complete so listeners can refresh data
         this._onPromptComplete.fire();
+    }
+
+    /**
+     * Classify a thrown error from the streaming-API catch block into a
+     * `PromptCompletedErrorReason` and (when applicable) an HTTP status code.
+     * Kept in one place so the chat-response SLO classification stays in sync
+     * with the user-facing error dialog logic in `processError`.
+     */
+    private classifyStreamingError(error: unknown): {
+        errorReason: Track.PromptCompletedErrorReason;
+        httpStatus?: number;
+    } {
+        if (error instanceof RovoDevApiError && typeof error.httpStatus === 'number') {
+            const status = error.httpStatus;
+            if (status >= 500 && status < 600) {
+                return { errorReason: 'http_5xx', httpStatus: status };
+            }
+            if (status >= 400 && status < 500) {
+                return { errorReason: 'http_4xx', httpStatus: status };
+            }
+        }
+        return { errorReason: 'network_error' };
+    }
+
+    /**
+     * Emit the terminal `rovoDevPromptCompleted` event for the current prompt.
+     *
+     * Enforces the exactly-once-per-prompt invariant via `_completedPromptIds`,
+     * so it is safe to call from multiple terminal paths (in-stream exception,
+     * parse error, fetch error catch block, normal stream end, user cancel) for
+     * the same prompt — the first call wins.
+     *
+     * Only emits when running in Boysenberry mode — this event exists solely to
+     * drive the chat-response SLO computed on the host Jira page via the
+     * VSCode → Jira analytics bridge. In the standard IDE there is no consumer
+     * for the event and emitting it would just add noise to the analytics
+     * pipeline.
+     *
+     * Never emits for the replay streaming path (the caller should not invoke
+     * this with `sourceApi === 'replay'`).
+     */
+    private firePromptCompleted(
+        result: Track.PromptCompletedResult,
+        extras: {
+            errorReason?: Track.PromptCompletedErrorReason;
+            httpStatus?: number;
+            messagePartsCount?: number;
+        } = {},
+    ): void {
+        if (!this._isBoysenberry) {
+            return;
+        }
+
+        const promptId = this._currentPromptId;
+        if (!promptId || this._completedPromptIds.has(promptId)) {
+            return; // exactly-once dedupe
+        }
+
+        // Bounded LRU: evict oldest entry when at cap. `Set` preserves insertion order.
+        if (this._completedPromptIds.size >= RovoDevChatProvider._completedPromptIdsCap) {
+            const oldest = this._completedPromptIds.values().next().value;
+            if (oldest !== undefined) {
+                this._completedPromptIds.delete(oldest);
+            }
+        }
+        this._completedPromptIds.add(promptId);
+
+        this._telemetryProvider.fireTelemetryEvent({
+            action: 'rovoDevPromptCompleted',
+            subject: 'atlascode',
+            attributes: {
+                promptId,
+                result,
+                ...(extras.errorReason !== undefined ? { errorReason: extras.errorReason } : {}),
+                ...(extras.httpStatus !== undefined ? { httpStatus: extras.httpStatus } : {}),
+                ...(extras.messagePartsCount !== undefined ? { messagePartsCount: extras.messagePartsCount } : {}),
+            },
+        });
     }
 
     private async processError(

@@ -1,49 +1,44 @@
 const webpack = require('webpack');
 const dotenv = require('dotenv');
 
-// Load environment variables from .env file
 dotenv.config();
 
 const ENV_VARS = [
-    // FX3 configuration
     'ATLASCODE_FX3_API_KEY',
     'ATLASCODE_FX3_ENVIRONMENT',
     'ATLASCODE_FX3_TARGET_APP',
     'ATLASCODE_FX3_TIMEOUT',
-
-    // Developer feature flag overrides
     'ATLASCODE_FF_OVERRIDES',
     'ATLASCODE_EXP_OVERRIDES_BOOL',
     'ATLASCODE_EXP_OVERRIDES_STRING',
-
-    // Is this BBY? (set to "true" if this is a special internal build)
+    // Build-time Boysenberry flag: BBY uses a separate AtlasCode build from the standard IDE.
     'ROVODEV_BBY',
-
-    // BBY user ID (injected by devai-sandbox into every sandbox pod)
     'BBY_USERID',
-
-    // RovoDev port (injected by devai-sandbox in BBY environments)
     'ROVODEV_PORT',
-
-    // RovoDev rebrand gate: set to "true" to enable "Jira Coding Agent" branding in BBY environments
-    'ROVODEV_REBRAND_JCA',
-
-    // Sentry configuration
     'SENTRY_ENABLED',
     'SENTRY_DSN',
     'SENTRY_ENVIRONMENT',
     'SENTRY_SAMPLE_RATE',
 ];
 
+// Vars that must always be defined (default to "" if unset) so DefinePlugin substitutes them
+// Do not add ROVODEV_REBRAND_JCA here. It is a runtime sandbox feature flag,
+// so baking it at build time prevents the shared Boysenberry artifact from responding
+// to devai-sandbox-provided environment values.
+const ALWAYS_DEFINE_VARS = new Set(['ROVODEV_BBY', 'SANDBOX_VERY_LARGE_REPO']);
+
 function createEnvPlugin({ nodeEnv, isBrowser = false }) {
     const definitions = {
         ...Object.fromEntries(
-            ENV_VARS.map((varName) => [`process.env.${varName}`, JSON.stringify(process.env[varName])]),
+            ENV_VARS.map((varName) => {
+                const raw = process.env[varName];
+                const value = raw === undefined && ALWAYS_DEFINE_VARS.has(varName) ? '' : raw;
+                return [`process.env.${varName}`, JSON.stringify(value)];
+            }),
         ),
         'process.env.NODE_ENV': JSON.stringify(nodeEnv),
     };
 
-    // Add process.browser for browser builds
     if (isBrowser) {
         definitions['process.browser'] = JSON.stringify(true);
     }

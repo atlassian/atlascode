@@ -4,15 +4,20 @@
 
 ### Bug Fixes
 
+<<<<<<< HEAD
 - **RovoDev**: Hid stack traces, stderr, and log details from external users while preserving them for Atlassian users.
 - **RovoDev (BBY)**: Fixed the `ROVODEV_REBRAND_JCA` environment variable so that the "Jira Coding Agent" feature gate from devai-sandbox is correctly applied at runtime.
+=======
+- **RovoDev (BBY)**: Fixed `ROVODEV_REBRAND_JCA` env var handling so the "Jira Coding Agent" rebrand works correctly in webviews.
+>>>>>>> main
 - **Notifications**: Fixed `atlassianNotificationNotifier` to correctly flush all promise levels, resolving a test reliability issue.
 
 ### Improvements
 
-- **RovoDev**: Updated Rovo Dev version to 202606.10.1b2
+- **RovoDev**: Updated Rovo Dev version to 202606.10.1b3
 - **Notifications**: Added `siteId` to the `notificationFeedVSCode` GraphQL query so notification feeds are correctly scoped per Atlassian site.
 - **Logger**: Removed a spurious client-side error from Sentry to reduce noise in error reporting.
+- **RovoDev (BBY)**: Added a new `rovoDevPromptCompleted` telemetry event that fires exactly once per user-submitted prompt with a closed-enum `result` (`success`, `error`, `cancelled`, `timeout`, `parse_error`) and optional `errorReason` / `httpStatus` / `messagePartsCount`. The event is only emitted in Boysenberry mode (no consumer in the standard IDE) and is forwarded through the Boysenberry → Jira analytics bridge so a chat-response SLO can be computed as a simple counter ratio without joining on `promptId`. Never emitted for the replay streaming path.
 
 ### Cleanup
 

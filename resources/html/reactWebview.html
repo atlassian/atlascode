@@ -10,7 +10,7 @@
         <link rel="stylesheet" type="text/css" href="{{styleUri}}" />
         <meta
             http-equiv="Content-Security-Policy"
-            content="default-src https://api.atlassian.com ; img-src data: {{cspSource}} http: https: blob:; object-src data:; script-src {{cspSource}}; style-src {{cspSource}} 'unsafe-inline' blob: http: https: data:; font-src {{cspSource}} blob: http: https: data:;"
+            content="default-src https://api.atlassian.com ; img-src data: {{cspSource}} http: https: blob:; object-src data:; script-src {{cspSource}} 'nonce-{{nonce}}'; style-src {{cspSource}} 'unsafe-inline' blob: http: https: data:; font-src {{cspSource}} blob: http: https: data:;"
         />
     </head>
 
@@ -18,6 +18,9 @@
         <noscript>You need to enable JavaScript to run this app.</noscript>
 
         <div id="root"></div>
+        <script nonce="{{nonce}}">
+            window.{{rovodevStaticConfigGlobal}} = {{{rovodevStaticConfigJson}}};
+        </script>
         <script src="{{scriptUri}}"></script>
     </body>
 </html>
