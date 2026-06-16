@@ -2,6 +2,7 @@ import Avatar from '@atlaskit/avatar';
 import Lozenge from '@atlaskit/lozenge';
 import { components } from '@atlaskit/select';
 import { SelectFieldUI, ValueType } from '@atlassian-pi/jira-pi-meta-models';
+import DOMPurify from 'dompurify';
 import * as React from 'react';
 
 import { colorToLozengeAppearanceMap } from './colors';
@@ -181,21 +182,28 @@ const MultiAvatarValue = (props: any) => {
 };
 
 const LabelOption = (props: any) => {
-    let label: string = '';
-    if (typeof props.label === 'object') {
-        if (props.label.label) {
-            label = props.label.label;
-        } else if (props.label.value) {
-            label = props.label.value;
+    const sanitizedLabel = React.useMemo(() => {
+        let label: string = '';
+        if (typeof props.label === 'object') {
+            if (props.label.label) {
+                label = props.label.label;
+            } else if (props.label.value) {
+                label = props.label.value;
+            }
+        } else if (typeof props.label === 'string') {
+            label = props.label;
         }
-    } else if (typeof props.label === 'string') {
-        label = props.label;
-    }
+        return DOMPurify.sanitize(label);
+    }, [props.label]);
 
     return (
         <components.Option {...props}>
-            {/* eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- TODO check if needed */}
-            <div ref={props.innerRef} {...props.innerProps} dangerouslySetInnerHTML={{ __html: label }} />
+            <div
+                ref={props.innerRef}
+                {...props.innerProps}
+                // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- sanitized with DOMPurify
+                dangerouslySetInnerHTML={{ __html: sanitizedLabel }}
+            />
         </components.Option>
     );
 };

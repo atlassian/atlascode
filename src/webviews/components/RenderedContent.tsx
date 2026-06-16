@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import DOMPurify from 'dompurify';
+import React, { useEffect, useMemo, useRef } from 'react';
 
 interface Props {
     html: string;
@@ -8,6 +9,13 @@ const VSCODE_IMG_CONTEXT = JSON.stringify({ webviewSection: 'jiraImageElement', 
 
 export const RenderedContent: React.FC<Props> = (props: Props) => {
     const ref = useRef<HTMLParagraphElement>(null);
+    const sanitizedHtml = useMemo(
+        () =>
+            DOMPurify.sanitize(props.html, {
+                ADD_ATTR: ['atlascode-original-src', 'atlascode-original-src-handled'],
+            }),
+        [props.html],
+    );
 
     useEffect(() => {
         if (!ref.current || !props.fetchImage) {
@@ -41,6 +49,7 @@ export const RenderedContent: React.FC<Props> = (props: Props) => {
         };
     }, [props.fetchImage, ref]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- TODO check if needed
-    return <p ref={ref} dangerouslySetInnerHTML={{ __html: props.html }} />;
+    /* eslint-disable react-dom/no-dangerously-set-innerhtml -- sanitized with DOMPurify */
+    return <p ref={ref} dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />;
+    /* eslint-enable react-dom/no-dangerously-set-innerhtml */
 };
