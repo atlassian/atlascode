@@ -50,6 +50,7 @@ export const baseConfigFor = (project: string, testExtension: string): Config =>
         'is-what/',
         'axios-curlirize/',
         'clipboard-polyfill/',
+        'uuid/',
     ),
 
     collectCoverage: true,
