@@ -2,7 +2,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { Box, darken, Grid, lighten, Theme, Tooltip, Typography } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import DOMPurify from 'dompurify';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { User } from '../../../bitbucket/model';
 import { MarkdownEditor } from '../common/editor/MarkdownEditor';
@@ -51,6 +51,8 @@ const InlineRenderedTextEditor: React.FC<InlineTextEditorProps> = (props: Inline
     const handleFocusIn = useCallback(() => setShowEditButton(true), []);
     const handleFocusOut = useCallback(() => setShowEditButton(false), []);
 
+    const sanitizedHtml = useMemo(() => DOMPurify.sanitize(props.htmlContent), [props.htmlContent]);
+
     const handleSave = useCallback(
         async (value: string) => {
             props.onSave?.(value);
@@ -81,7 +83,7 @@ const InlineRenderedTextEditor: React.FC<InlineTextEditorProps> = (props: Inline
                 <Typography
                     variant="body1"
                     // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- sanitized with DOMPurify
-                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(props.htmlContent) }}
+                    dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
                 />
             </Grid>
             <Grid item>

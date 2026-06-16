@@ -87,12 +87,13 @@ export const MarkedDown: React.FC<{
     const spanRef = React.useRef<HTMLSpanElement>(null);
     const { reportError } = React.useContext(RovoDevErrorContext);
 
-    const html = React.useMemo(() => {
+    const sanitizedHtml = React.useMemo(() => {
+        let rendered: string;
         try {
             // Ensure value is always a string to prevent "Input data should be a String" errors
             const stringValue =
                 value !== null && value !== undefined && typeof value !== 'string' ? String(value) : (value ?? '');
-            return mdParser.render(stringValue);
+            rendered = mdParser.render(stringValue);
         } catch (error) {
             // If markdown parsing fails, report error to backend and return plain text
             console.error('Markdown parsing error:', error);
@@ -105,8 +106,9 @@ export const MarkedDown: React.FC<{
             // Fallback to plain text instead of crashing
             const stringValue =
                 value !== null && value !== undefined && typeof value !== 'string' ? String(value) : (value ?? '');
-            return stringValue;
+            rendered = stringValue;
         }
+        return DOMPurify.sanitize(rendered);
     }, [value, reportError]);
 
     React.useEffect(() => {
@@ -171,10 +173,10 @@ export const MarkedDown: React.FC<{
                 root.unmount();
             });
         };
-    }, [onLinkClick, onCopy, html]);
+    }, [onLinkClick, onCopy, sanitizedHtml]);
 
     // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- sanitized with DOMPurify
-    return <span ref={spanRef} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }} />;
+    return <span ref={spanRef} dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />;
 };
 
 export interface OpenFileFunc {

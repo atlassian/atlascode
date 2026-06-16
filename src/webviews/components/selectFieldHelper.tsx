@@ -182,16 +182,19 @@ const MultiAvatarValue = (props: any) => {
 };
 
 const LabelOption = (props: any) => {
-    let label: string = '';
-    if (typeof props.label === 'object') {
-        if (props.label.label) {
-            label = props.label.label;
-        } else if (props.label.value) {
-            label = props.label.value;
+    const sanitizedLabel = React.useMemo(() => {
+        let label: string = '';
+        if (typeof props.label === 'object') {
+            if (props.label.label) {
+                label = props.label.label;
+            } else if (props.label.value) {
+                label = props.label.value;
+            }
+        } else if (typeof props.label === 'string') {
+            label = props.label;
         }
-    } else if (typeof props.label === 'string') {
-        label = props.label;
-    }
+        return DOMPurify.sanitize(label);
+    }, [props.label]);
 
     return (
         <components.Option {...props}>
@@ -199,7 +202,7 @@ const LabelOption = (props: any) => {
                 ref={props.innerRef}
                 {...props.innerProps}
                 // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- sanitized with DOMPurify
-                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(label) }}
+                dangerouslySetInnerHTML={{ __html: sanitizedLabel }}
             />
         </components.Option>
     );

@@ -2,7 +2,7 @@ import { Avatar, Box, Button, CircularProgress, Grid, Tooltip, Typography } from
 import { makeStyles } from '@mui/styles';
 import { format, parseISO } from 'date-fns';
 import DOMPurify from 'dompurify';
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { Comment, PullRequestState, User } from '../../../bitbucket/model';
 import CommentForm from '../common/CommentForm';
@@ -133,6 +133,8 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
         setIsLoading(false);
     }, [comment]);
 
+    const sanitizedHtml = useMemo(() => DOMPurify.sanitize(comment.htmlContent), [comment.htmlContent]);
+
     return (
         <React.Fragment>
             <Box hidden={isEditing}>
@@ -162,7 +164,7 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
                             <Box hidden={isLoading}>
                                 <Typography
                                     // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- sanitized with DOMPurify
-                                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(comment.htmlContent) }}
+                                    dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
                                 />
                             </Box>
                             <Grid item>
