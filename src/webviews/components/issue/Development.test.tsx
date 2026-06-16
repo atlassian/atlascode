@@ -373,6 +373,124 @@ describe('Development Component', () => {
         });
     });
 
+    describe('Pull Request Status Labels', () => {
+        it('should display "Open PR" for non-draft open pull requests', async () => {
+            const infoWithOpenPR: DevelopmentInfo = {
+                branches: [],
+                commits: [],
+                pullRequests: [
+                    {
+                        id: '1',
+                        title: 'Feature implementation',
+                        url: 'https://bitbucket.org/repo/pull-requests/1',
+                        state: 'OPEN',
+                        draft: false,
+                    } as any,
+                ],
+                builds: [],
+            };
+
+            render(
+                <Development
+                    developmentInfo={infoWithOpenPR}
+                    onOpenPullRequest={mockOnOpenPullRequest}
+                    onOpenExternalUrl={mockOnOpenExternalUrl}
+                />,
+            );
+
+            const chevronButton = screen.getByRole('button');
+            fireEvent.click(chevronButton);
+
+            const prButtons = screen.getAllByText((content, element) => {
+                return element?.textContent === '1 pull request';
+            });
+            const prButton = prButtons.find((el) => el.tagName === 'BUTTON')!;
+            fireEvent.click(prButton);
+
+            await waitFor(() => {
+                expect(screen.getByText('Open PR')).toBeTruthy();
+            });
+        });
+
+        it('should display "Draft PR" with neutral background for draft pull requests', async () => {
+            const infoWithDraftPR: DevelopmentInfo = {
+                branches: [],
+                commits: [],
+                pullRequests: [
+                    {
+                        id: '2',
+                        title: 'Draft feature',
+                        url: 'https://bitbucket.org/repo/pull-requests/2',
+                        state: 'OPEN',
+                        draft: true,
+                    } as any,
+                ],
+                builds: [],
+            };
+
+            render(
+                <Development
+                    developmentInfo={infoWithDraftPR}
+                    onOpenPullRequest={mockOnOpenPullRequest}
+                    onOpenExternalUrl={mockOnOpenExternalUrl}
+                />,
+            );
+
+            const chevronButton = screen.getByRole('button');
+            fireEvent.click(chevronButton);
+
+            const prButtons = screen.getAllByText((content, element) => {
+                return element?.textContent === '1 pull request';
+            });
+            const prButton = prButtons.find((el) => el.tagName === 'BUTTON')!;
+            fireEvent.click(prButton);
+
+            await waitFor(() => {
+                const draftLabel = screen.getByText('Draft PR');
+                expect(draftLabel).toBeTruthy();
+                expect(draftLabel.style.background).toBe('var(--vscode-badge-background)');
+            });
+        });
+
+        it('should display raw state for non-open states like MERGED', async () => {
+            const infoWithMergedPR: DevelopmentInfo = {
+                branches: [],
+                commits: [],
+                pullRequests: [
+                    {
+                        id: '3',
+                        title: 'Merged feature',
+                        url: 'https://bitbucket.org/repo/pull-requests/3',
+                        state: 'MERGED',
+                        draft: false,
+                    } as any,
+                ],
+                builds: [],
+            };
+
+            render(
+                <Development
+                    developmentInfo={infoWithMergedPR}
+                    onOpenPullRequest={mockOnOpenPullRequest}
+                    onOpenExternalUrl={mockOnOpenExternalUrl}
+                />,
+            );
+
+            const chevronButton = screen.getByRole('button');
+            fireEvent.click(chevronButton);
+
+            const prButtons = screen.getAllByText((content, element) => {
+                return element?.textContent === '1 pull request';
+            });
+            const prButton = prButtons.find((el) => el.tagName === 'BUTTON')!;
+            fireEvent.click(prButton);
+
+            await waitFor(() => {
+                expect(screen.getByText('MERGED')).toBeTruthy();
+            });
+        });
+    });
+
     describe('Edge Cases', () => {
         it('should handle items without URLs gracefully', () => {
             const infoWithoutUrls: DevelopmentInfo = {

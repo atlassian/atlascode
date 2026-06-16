@@ -4,6 +4,7 @@
 
 ### Bug Fixes
 
+- **Jira**: Changed the "Draft PR" lozenge in the Development section to use a neutral grey background (`--vscode-badge-background`) and display "Draft PR" / "Open PR" labels for better visual clarity.
 - **RovoDev**: Hid stack traces, stderr, and log details from external users while preserving them for Atlassian users.
 - **RovoDev (BBY)**: Fixed `ROVODEV_REBRAND_JCA` env var handling so the "Jira Coding Agent" rebrand works correctly in webviews.
 - **Notifications**: Fixed `atlassianNotificationNotifier` to correctly flush all promise levels, resolving a test reliability issue.

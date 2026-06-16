@@ -250,17 +250,18 @@ const PullRequestList: React.FC<{ pullRequests: PullRequestData[]; onOpen: (pr: 
                                 color: 'var(--vscode-foreground)',
                                 padding: '2px 6px',
                                 borderRadius: '3px',
-                                background:
-                                    pr.state === 'OPEN'
-                                        ? 'var(--vscode-statusBarItem-prominentHoverBackground)'
-                                        : pr.state === 'MERGED'
-                                          ? 'var(--vscode-statusBarItem-prominentBackground)'
-                                          : 'var(--vscode-statusBarItem-errorBackground)',
+                                background: pr.draft
+                                    ? 'var(--vscode-badge-background)'
+                                    : pr.state === 'OPEN'
+                                      ? 'var(--vscode-statusBarItem-prominentHoverBackground)'
+                                      : pr.state === 'MERGED'
+                                        ? 'var(--vscode-statusBarItem-prominentBackground)'
+                                        : 'var(--vscode-statusBarItem-errorBackground)',
                                 whiteSpace: 'nowrap',
                                 flexShrink: 0,
                             }}
                         >
-                            {pr.state}
+                            {pr.draft ? 'Draft PR' : pr.state === 'OPEN' ? 'Open PR' : pr.state}
                         </span>
                         <Button
                             appearance="link"
