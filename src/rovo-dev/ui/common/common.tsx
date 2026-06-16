@@ -2,6 +2,7 @@ import CheckCircleIcon from '@atlaskit/icon/core/check-circle';
 import CopyIcon from '@atlaskit/icon/core/copy';
 import CrossCircleIcon from '@atlaskit/icon/core/cross-circle';
 import Tooltip from '@atlaskit/tooltip';
+import DOMPurify from 'dompurify';
 import MarkdownIt from 'markdown-it';
 import React, { useCallback, useState } from 'react';
 import ReactDOM from 'react-dom/client';
@@ -172,8 +173,8 @@ export const MarkedDown: React.FC<{
         };
     }, [onLinkClick, onCopy, html]);
 
-    // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- necessary to apply MarkDown formatting
-    return <span ref={spanRef} dangerouslySetInnerHTML={{ __html: html }} />;
+    // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- sanitized with DOMPurify
+    return <span ref={spanRef} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }} />;
 };
 
 export interface OpenFileFunc {

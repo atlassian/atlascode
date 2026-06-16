@@ -1,6 +1,7 @@
 import { Avatar, Box, Button, CircularProgress, Grid, Tooltip, Typography } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import { format, parseISO } from 'date-fns';
+import DOMPurify from 'dompurify';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { Comment, PullRequestState, User } from '../../../bitbucket/model';
@@ -159,8 +160,10 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
                                 <CircularProgress />
                             </Box>
                             <Box hidden={isLoading}>
-                                {/* eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- TODO check if needed */}
-                                <Typography dangerouslySetInnerHTML={{ __html: comment.htmlContent }} />
+                                <Typography
+                                    // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- sanitized with DOMPurify
+                                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(comment.htmlContent) }}
+                                />
                             </Box>
                             <Grid item>
                                 <Grid container direction={'row'} alignItems="center">

@@ -2,6 +2,7 @@ import Avatar from '@atlaskit/avatar';
 import Lozenge from '@atlaskit/lozenge';
 import { components } from '@atlaskit/select';
 import { SelectFieldUI, ValueType } from '@atlassian-pi/jira-pi-meta-models';
+import DOMPurify from 'dompurify';
 import * as React from 'react';
 
 import { colorToLozengeAppearanceMap } from './colors';
@@ -194,8 +195,12 @@ const LabelOption = (props: any) => {
 
     return (
         <components.Option {...props}>
-            {/* eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- TODO check if needed */}
-            <div ref={props.innerRef} {...props.innerProps} dangerouslySetInnerHTML={{ __html: label }} />
+            <div
+                ref={props.innerRef}
+                {...props.innerProps}
+                // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- sanitized with DOMPurify
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(label) }}
+            />
         </components.Option>
     );
 };

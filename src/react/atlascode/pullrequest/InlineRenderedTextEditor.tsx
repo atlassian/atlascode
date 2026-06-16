@@ -1,6 +1,7 @@
 import EditIcon from '@mui/icons-material/Edit';
 import { Box, darken, Grid, lighten, Theme, Tooltip, Typography } from '@mui/material';
 import { makeStyles } from '@mui/styles';
+import DOMPurify from 'dompurify';
 import React, { useCallback, useState } from 'react';
 
 import { User } from '../../../bitbucket/model';
@@ -77,8 +78,11 @@ const InlineRenderedTextEditor: React.FC<InlineTextEditorProps> = (props: Inline
             onMouseLeave={handleFocusOut}
         >
             <Grid item xs>
-                {/* eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- TODO check if needed */}
-                <Typography variant="body1" dangerouslySetInnerHTML={{ __html: props.htmlContent }} />
+                <Typography
+                    variant="body1"
+                    // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- sanitized with DOMPurify
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(props.htmlContent) }}
+                />
             </Grid>
             <Grid item>
                 <Box

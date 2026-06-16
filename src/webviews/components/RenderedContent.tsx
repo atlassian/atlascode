@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import React, { useEffect, useRef } from 'react';
 
 interface Props {
@@ -41,6 +42,16 @@ export const RenderedContent: React.FC<Props> = (props: Props) => {
         };
     }, [props.fetchImage, ref]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- TODO check if needed
-    return <p ref={ref} dangerouslySetInnerHTML={{ __html: props.html }} />;
+    /* eslint-disable react-dom/no-dangerously-set-innerhtml -- sanitized with DOMPurify */
+    return (
+        <p
+            ref={ref}
+            dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(props.html, {
+                    ADD_ATTR: ['atlascode-original-src', 'atlascode-original-src-handled'],
+                }),
+            }}
+        />
+    );
+    /* eslint-enable react-dom/no-dangerously-set-innerhtml */
 };
