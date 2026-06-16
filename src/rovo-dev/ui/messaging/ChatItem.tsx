@@ -28,6 +28,7 @@ interface ChatItemProps {
     onLinkClick: (href: string) => void;
     deepPlanCreated?: string | null;
     onGeneratePlanClick?: (planId: string, proceed: boolean) => void;
+    isAtlassianUser?: boolean;
 }
 
 export const ChatItem = React.memo<ChatItemProps>(
@@ -42,6 +43,7 @@ export const ChatItem = React.memo<ChatItemProps>(
         onLinkClick,
         deepPlanCreated,
         onGeneratePlanClick,
+        isAtlassianUser,
     }) => {
         if (!block) {
             return null;
@@ -55,6 +57,7 @@ export const ChatItem = React.memo<ChatItemProps>(
                     renderProps={renderProps}
                     onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
                     onLinkClick={onLinkClick}
+                    isAtlassianUser={isAtlassianUser}
                 />
             );
         } else if (
@@ -103,6 +106,7 @@ export const ChatItem = React.memo<ChatItemProps>(
                     onToolPermissionChoice={onToolPermissionChoice}
                     customButton={customButton}
                     onLinkClick={onLinkClick}
+                    isAtlassianUser={isAtlassianUser}
                 />
             );
         } else if (block.event_kind === 'retry-prompt') {

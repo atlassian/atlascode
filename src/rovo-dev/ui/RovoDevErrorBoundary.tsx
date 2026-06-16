@@ -12,6 +12,7 @@ interface Props {
     children: ReactNode;
     postMessage: PostMessageFunc<RovoDevViewResponse>;
     onStartNewSession?: () => void;
+    isAtlassianUser?: boolean;
 }
 
 interface State {
@@ -101,6 +102,7 @@ export class RovoDevErrorBoundary extends Component<Props, State> {
                         onClick: this.handleStartNewSession,
                     }}
                     onLinkClick={() => {}} // Required prop, but not used for error boundary
+                    isAtlassianUser={this.props.isAtlassianUser}
                 />
             );
         }

@@ -211,6 +211,7 @@ export const renderChatHistory = (
     isRetryAfterErrorButtonEnabled: (uid: string) => boolean,
     retryAfterError: () => void,
     onError: (error: Error, errorMessage: string) => void,
+    isAtlassianUser?: boolean,
 ) => {
     switch (msg.event_kind) {
         case 'tool-return':
@@ -241,6 +242,7 @@ export const renderChatHistory = (
                     }
                     customButton={customButton}
                     onLinkClick={onLinkClick}
+                    isAtlassianUser={isAtlassianUser}
                 />
             );
         case 'text':
