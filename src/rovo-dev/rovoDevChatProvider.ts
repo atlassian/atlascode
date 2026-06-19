@@ -1059,7 +1059,8 @@ export class RovoDevChatProvider {
         if (this._rovoDevApiClient) {
             try {
                 await func(this._rovoDevApiClient);
-            } catch (error) {
+            } catch (rawError) {
+                const error = rawError instanceof Error ? rawError : new Error(String(rawError));
                 if (error.name === 'AbortError' || (error instanceof TypeError && error.message === 'terminated')) {
                     // Unexpected mid-stream abort that did not go through
                     // executeCancel (which would have already emitted
@@ -1212,7 +1213,11 @@ export class RovoDevChatProvider {
         RovoDevTelemetryProvider.logError(error);
 
         if (!showOnlyInDebug || this.isDebugging || this.isDebugPanelEnabled) {
-            const webview = this._webView!;
+            const webview = this._webView;
+            if (!webview) {
+                Logger.warn('RovoDevChatProvider.processError: webview is not available, skipping dialog', error);
+                return;
+            }
             await webview.postMessage({
                 type: RovoDevProviderMessageType.ShowDialog,
                 message: {
