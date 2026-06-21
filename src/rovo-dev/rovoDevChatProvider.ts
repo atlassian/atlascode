@@ -841,10 +841,15 @@ export class RovoDevChatProvider {
                 }
                 break;
 
-            case 'deferred_request':
+            case 'deferred_request': {
                 const deferredTool = response.tools[0]; // currently we only support one deferred tool call at a time, so we take the first one from the array
-                this.processDeferredToolCallResponse(deferredTool);
+                if (deferredTool) {
+                    await this.processDeferredToolCallResponse(deferredTool);
+                } else {
+                    Logger.warn('Received deferred_request with no tools');
+                }
                 break;
+            }
             case 'status':
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.ShowDialog,
