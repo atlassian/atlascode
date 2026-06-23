@@ -1206,8 +1206,10 @@ export class RovoDevChatProvider {
     }
 
     private isRateLimitWarning(response: { title?: string; message?: string }): boolean {
-        const haystack = `${response.title ?? ''} ${response.message ?? ''}`.toLowerCase();
-        return haystack.includes('rate limit');
+        return (
+            !!response.title?.toLowerCase().includes('rate limit') ||
+            !!response.message?.toLowerCase().includes('rate limit')
+        );
     }
 
     private firePromptWarning(reason: Track.PromptWarningReason, title?: string): void {

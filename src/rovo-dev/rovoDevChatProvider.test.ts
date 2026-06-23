@@ -1273,6 +1273,7 @@ describe('RovoDevChatProvider', () => {
             expect(chatProvider['isRateLimitWarning']({ title: 'Rate limit exceeded' })).toBe(true);
             expect(chatProvider['isRateLimitWarning']({ message: "We've hit a RATE LIMIT" })).toBe(true);
             expect(chatProvider['isRateLimitWarning']({ title: 'Heads up', message: 'Model switched' })).toBe(false);
+            expect(chatProvider['isRateLimitWarning']({ title: 'current rate', message: 'limit hit' })).toBe(false);
             expect(chatProvider['isRateLimitWarning']({})).toBe(false);
         });
 
