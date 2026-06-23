@@ -36,6 +36,11 @@ public class ChickenOrder {
         return String.format("%-20s $%.2f", item, price);
     }
 
+    // Returns true if the order qualifies for free delivery (total over $25)
+    public boolean qualifiesForFreeDelivery(double orderTotal) {
+        return orderTotal >= 25.0;
+    }
+
     public static void main(String[] args) {
         ChickenOrder order = new ChickenOrder();
 
