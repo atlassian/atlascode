@@ -256,6 +256,7 @@ export namespace Track {
         };
     };
 
+    // TODO: rovodev metadata fields here are different from other events, reconcile later?
     export type PromptWarningReason = 'rate_limit';
 
     export type PromptWarning = {
