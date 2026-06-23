@@ -257,6 +257,40 @@ export namespace Track {
     };
 
     // TODO: rovodev metadata fields here are different from other events, reconcile later?
+    /**
+     * Closed enum for `PromptWarning.attributes.reason`.
+     *
+     * Values outside this set will be dropped by the Boysenberry → Jira
+     * analytics bridge. Add new values via a coordinated change on both sides.
+     */
+    export type PromptWarningReason = 'rate_limit';
+
+    /**
+     * Emitted when a non-terminal `warning` event is surfaced to the user during
+     * the chat-streaming flow. Unlike `PromptCompleted`, this is NOT a terminal
+     * outcome — the agent continues (and typically auto-retries) afterwards, so
+     * it can fire multiple times for the same `promptId`.
+     *
+     * Currently only emitted for rate-limit warnings (`reason: 'rate_limit'`),
+     * which surface as "Rate limit exceeded / We'll try again in N seconds".
+     * Used downstream to measure how often users are rate-limited mid-prompt.
+     *
+     * Boysenberry-only: there is no consumer for this event in the standard IDE.
+     */
+    export type PromptWarning = {
+        action: 'rovoDevPromptWarning';
+        subject: 'atlascode';
+        attributes: {
+            rovoDevEnv: RovoDevEnv;
+            appInstanceId: string;
+            sessionId: string;
+            promptId: string;
+            reason: PromptWarningReason;
+            /** Optional: the warning title shown to the user, e.g. "Rate limit exceeded". */
+            title?: string;
+        };
+    };
+
     export type PerformanceEvent = {
         action: 'performanceEvent';
         subject: 'atlascode';
@@ -285,4 +319,5 @@ export type TrackEvent =
     | Track.ReplayCompleted
     | Track.PerformanceEvent
     | Track.LocalServerPromptReceived
-    | Track.PromptCompleted;
+    | Track.PromptCompleted
+    | Track.PromptWarning;

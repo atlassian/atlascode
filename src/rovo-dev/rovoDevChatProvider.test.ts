@@ -1260,4 +1260,103 @@ describe('RovoDevChatProvider', () => {
             });
         });
     });
+
+    // The rovoDevPromptWarning event counts non-terminal rate-limit throttles
+    // ("Rate limit exceeded / We'll try again in N seconds") surfaced to the
+    // user mid-prompt. Unlike rovoDevPromptCompleted it is NOT deduped (a single
+    // prompt can be throttled repeatedly) and, like the SLO event, it is only
+    // emitted in Boysenberry mode and never for replay.
+    describe('rovoDevPromptWarning (rate limit)', () => {
+        beforeEach(() => {
+            chatProvider = new RovoDevChatProvider(true, mockTelemetryProvider);
+            chatProvider.setWebview(mockWebview);
+            chatProvider['_currentPromptId'] = 'prompt-A';
+            mockTelemetryProvider.fireTelemetryEvent.mockClear();
+        });
+
+        it('detects rate-limit warnings by title or message (case-insensitive)', () => {
+            expect(chatProvider['isRateLimitWarning']({ title: 'Rate limit exceeded' })).toBe(true);
+            expect(chatProvider['isRateLimitWarning']({ message: "We've hit a RATE LIMIT" })).toBe(true);
+            expect(chatProvider['isRateLimitWarning']({ title: 'Heads up', message: 'Model switched' })).toBe(false);
+            expect(chatProvider['isRateLimitWarning']({})).toBe(false);
+        });
+
+        it('emits rovoDevPromptWarning with reason=rate_limit and the title', () => {
+            chatProvider['firePromptWarning']('rate_limit', 'Rate limit exceeded');
+
+            expect(mockTelemetryProvider.fireTelemetryEvent).toHaveBeenCalledTimes(1);
+            expect(mockTelemetryProvider.fireTelemetryEvent).toHaveBeenCalledWith({
+                action: 'rovoDevPromptWarning',
+                subject: 'atlascode',
+                attributes: {
+                    promptId: 'prompt-A',
+                    reason: 'rate_limit',
+                    title: 'Rate limit exceeded',
+                },
+            });
+        });
+
+        it('omits the title attribute when none is provided', () => {
+            chatProvider['firePromptWarning']('rate_limit');
+
+            const call = mockTelemetryProvider.fireTelemetryEvent.mock.calls[0][0];
+            expect(call.attributes).not.toHaveProperty('title');
+            expect(call.attributes).toEqual({ promptId: 'prompt-A', reason: 'rate_limit' });
+        });
+
+        it('can fire multiple times for the same prompt (not deduped)', () => {
+            chatProvider['firePromptWarning']('rate_limit', 'Rate limit exceeded');
+            chatProvider['firePromptWarning']('rate_limit', 'Rate limit exceeded');
+            chatProvider['firePromptWarning']('rate_limit', 'Rate limit exceeded');
+
+            expect(mockTelemetryProvider.fireTelemetryEvent).toHaveBeenCalledTimes(3);
+        });
+
+        it('does not emit when not running in Boysenberry mode (standard IDE)', () => {
+            const ideProvider = new RovoDevChatProvider(false, mockTelemetryProvider);
+            ideProvider.setWebview(mockWebview);
+            ideProvider['_currentPromptId'] = 'prompt-ide';
+
+            ideProvider['firePromptWarning']('rate_limit', 'Rate limit exceeded');
+
+            expect(mockTelemetryProvider.fireTelemetryEvent).not.toHaveBeenCalled();
+        });
+
+        it('does nothing when there is no current promptId', () => {
+            chatProvider['_currentPromptId'] = '';
+
+            chatProvider['firePromptWarning']('rate_limit', 'Rate limit exceeded');
+
+            expect(mockTelemetryProvider.fireTelemetryEvent).not.toHaveBeenCalled();
+        });
+
+        it('fires on a rate-limit warning stream event but not a non-rate-limit warning', async () => {
+            await chatProvider['processRovoDevResponse']('chat', {
+                event_kind: 'warning',
+                message: 'Some models are slow',
+                title: 'Heads up',
+            } as any);
+            expect(mockTelemetryProvider.fireTelemetryEvent).not.toHaveBeenCalled();
+
+            await chatProvider['processRovoDevResponse']('chat', {
+                event_kind: 'warning',
+                message: "We'll try again in 10 seconds.",
+                title: 'Rate limit exceeded',
+            } as any);
+            expect(mockTelemetryProvider.fireTelemetryEvent).toHaveBeenCalledTimes(1);
+            const call = mockTelemetryProvider.fireTelemetryEvent.mock.calls[0][0];
+            expect(call.action).toBe('rovoDevPromptWarning');
+            expect((call.attributes as { reason?: string }).reason).toBe('rate_limit');
+        });
+
+        it('never emits for the replay streaming path', async () => {
+            await chatProvider['processRovoDevResponse']('replay', {
+                event_kind: 'warning',
+                message: "We'll try again in 10 seconds.",
+                title: 'Rate limit exceeded',
+            } as any);
+
+            expect(mockTelemetryProvider.fireTelemetryEvent).not.toHaveBeenCalled();
+        });
+    });
 });

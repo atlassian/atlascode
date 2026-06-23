@@ -771,6 +771,15 @@ export class RovoDevChatProvider {
             }
 
             case 'warning': {
+                // Non-terminal: the agent continues (and typically auto-retries)
+                // after a warning. We only instrument rate-limit warnings, which
+                // surface as "Rate limit exceeded / We'll try again in N seconds",
+                // so we can measure how often users are throttled mid-prompt.
+                // Replay never participates in telemetry.
+                if (sourceApi !== 'replay' && this.isRateLimitWarning(response)) {
+                    this.firePromptWarning('rate_limit', response.title);
+                }
+
                 const { text, link } = this.parseExceptionMessage(response.message);
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.ShowDialog,
@@ -1197,6 +1206,49 @@ export class RovoDevChatProvider {
                 ...(extras.errorReason !== undefined ? { errorReason: extras.errorReason } : {}),
                 ...(extras.httpStatus !== undefined ? { httpStatus: extras.httpStatus } : {}),
                 ...(extras.messagePartsCount !== undefined ? { messagePartsCount: extras.messagePartsCount } : {}),
+            },
+        });
+    }
+
+    /**
+     * Returns true when a `warning` stream event represents a rate-limit
+     * throttle (e.g. "Rate limit exceeded / We'll try again in N seconds").
+     * Detection is based on the human-readable title/message since the backend
+     * does not currently send a structured reason code on `warning` events.
+     */
+    private isRateLimitWarning(response: { title?: string; message?: string }): boolean {
+        const haystack = `${response.title ?? ''} ${response.message ?? ''}`.toLowerCase();
+        return haystack.includes('rate limit');
+    }
+
+    /**
+     * Emit a non-terminal `rovoDevPromptWarning` event for the current prompt.
+     *
+     * Unlike `firePromptCompleted`, this is NOT deduped: a single prompt can be
+     * rate-limited multiple times, and we want a count of every occurrence. The
+     * `canFire` allow-list in RovoDevTelemetryProvider permits repeated firings
+     * of this event within a prompt.
+     *
+     * Boysenberry-only — there is no consumer for this event in the standard IDE
+     * and emitting it would only add noise to the analytics pipeline.
+     */
+    private firePromptWarning(reason: Track.PromptWarningReason, title?: string): void {
+        if (!this._isBoysenberry) {
+            return;
+        }
+
+        const promptId = this._currentPromptId;
+        if (!promptId) {
+            return;
+        }
+
+        this._telemetryProvider.fireTelemetryEvent({
+            action: 'rovoDevPromptWarning',
+            subject: 'atlascode',
+            attributes: {
+                promptId,
+                reason,
+                ...(title !== undefined ? { title } : {}),
             },
         });
     }

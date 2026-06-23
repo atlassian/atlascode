@@ -36,7 +36,8 @@ export type TelemetryEvent =
     | PartialEvent<Track.DeleteSessionClicked>
     | PartialEvent<Track.ReplayCompleted>
     | PartialEvent<Track.LocalServerPromptReceived>
-    | PartialEvent<Track.PromptCompleted>;
+    | PartialEvent<Track.PromptCompleted>
+    | PartialEvent<Track.PromptWarning>;
 
 export type TelemetryScreenEvent = 'rovoDevSessionHistoryPicker';
 
@@ -139,6 +140,7 @@ export class RovoDevTelemetryProvider {
             eventId === 'atlascode_rovoDevFileChangedAction' ||
             eventId === 'rovoDevCreatePrButton_clicked' ||
             eventId === 'atlascode_rovoDevRestartProcessAction' || // We want to log every restart attempt
+            eventId === 'atlascode_rovoDevPromptWarning' || // A single prompt can be rate-limited multiple times
             // Otherwise, only allow if not fired yet
             !this._firedTelemetryForCurrentPrompt[eventId]
         );
