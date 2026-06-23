@@ -13,13 +13,15 @@ import { waitFor } from 'src/rovo-dev/util/waitFor';
 import { v4 } from 'uuid';
 import { Disposable, Event, EventEmitter, ExtensionContext, Uri, workspace } from 'vscode';
 
+import { Container } from '../container';
 import { FeatureFlagClient } from '../util/featureFlags/featureFlagClient';
 import { Features } from '../util/features';
 import { ExtensionApi, ValidBasicAuthSiteData } from './api/extensionApi';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 import { RovoDevDisabledReason, RovoDevEntitlementCheckFailedDetail } from './rovoDevWebviewProviderMessages';
 
-export const MIN_SUPPORTED_ROVODEV_VERSION = packageJson.rovoDev.version;
+export const ROVODEV_VERSION = packageJson.rovoDev.version;
+export const ROVODEV_VERSION_BBY = packageJson.rovoDev.version_bby;
 
 // Rovodev port mapping settings
 const RovoDevInfo = {
@@ -34,11 +36,13 @@ const RovoDevInfo = {
 };
 
 export function GetRovoDevURIs(context: ExtensionContext) {
+    const isBoysenberry = Container.isBoysenberryMode;
     const platform = process.platform;
     const arch = process.arch;
     const extensionPath = context.storageUri!.fsPath;
     const rovoDevBaseDir = path.join(extensionPath, 'atlascode-rovodev-bin');
-    const rovoDevVersionDir = path.join(rovoDevBaseDir, MIN_SUPPORTED_ROVODEV_VERSION);
+    const version = isBoysenberry ? ROVODEV_VERSION_BBY : ROVODEV_VERSION;
+    const rovoDevVersionDir = path.join(rovoDevBaseDir, version);
     const rovoDevBinPath = path.join(rovoDevVersionDir, 'atlassian_cli_rovodev') + (platform === 'win32' ? '.exe' : '');
 
     let rovoDevZipUrl = undefined;
@@ -46,7 +50,6 @@ export function GetRovoDevURIs(context: ExtensionContext) {
         const platformDir = platform === 'win32' ? 'windows' : platform;
         if (arch === 'x64' || arch === 'arm64') {
             const archDir = arch === 'x64' ? 'amd64' : arch;
-            const version = MIN_SUPPORTED_ROVODEV_VERSION;
             rovoDevZipUrl = Uri.parse(
                 `https://acli.atlassian.com/plugins/rovodev/${platformDir}/${archDir}/${version}/rovodev.zip`,
             );
@@ -220,7 +223,7 @@ export abstract class RovoDevProcessManager {
     }
 
     public static get state(): RovoDevProcessState {
-        if (RovoDevProcessManager.extensionApi.metadata.isBoysenberry()) {
+        if (Container.isBoysenberryMode) {
             const httpPort = parseInt(process.env[RovoDevInfo.envVars.port] || '0');
             const sessionToken = process.env.ROVODEV_SERVE_SESSION_TOKEN || '';
             return { state: 'Boysenberry', hostname: RovoDevInfo.hostname, httpPort, sessionToken };

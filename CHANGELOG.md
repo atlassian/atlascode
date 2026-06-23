@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.32
+
+### Improvements
+
+- **RovoDev**: Differentiated RovoDev binary version into separate `version` (standard IDE) and `version_bby` (Boysenberry) settings in `package.json`, so each environment can track its own binary version independently.
+
 ## What's new in 4.0.31
 
 ### Bug Fixes

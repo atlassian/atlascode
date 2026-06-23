@@ -53,6 +53,7 @@ jest.mock('./api/extensionApi', () => {
             },
             metadata: {
                 appInstanceId: jest.fn().mockReturnValue('test-sandbox-id'),
+                isBoysenberry: jest.fn().mockReturnValue(false),
             },
         })),
     };

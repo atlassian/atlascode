@@ -3,7 +3,7 @@ import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import * as vscode from 'vscode';
 
 import { ExtensionApi, getAxiosInstance } from './api/extensionApi';
-import { MIN_SUPPORTED_ROVODEV_VERSION } from './rovoDevProcessManager';
+import { ROVODEV_VERSION, ROVODEV_VERSION_BBY } from './rovoDevProcessManager';
 import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 
 interface FeedbackObject {
@@ -103,7 +103,7 @@ export class RovoDevFeedbackManager {
             component: isBBY ? 'Boysenberry - vscode' : 'IDE - vscode',
             extensionVersion: extensionApi.metadata.version(),
             vscodeVersion: vscode.version,
-            rovoDevVersion: MIN_SUPPORTED_ROVODEV_VERSION,
+            rovoDevVersion: isBBY ? ROVODEV_VERSION_BBY : ROVODEV_VERSION,
             ...(rovoDevSessionId && { rovoDevSessionId }),
         };
     }
