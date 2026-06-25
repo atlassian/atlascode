@@ -28,4 +28,19 @@ def reverse_linked_list(head):
         prev = current
         current = next_node
 
-    return current 
+    return current
+
+
+def is_valid_parentheses(s):
+    stack = []
+    mapping = {')': '(', '}': '{', ']': '['}
+
+    for char in s:
+        if char in mapping:
+            top = stack.pop() if stack else '#'
+            if mapping[char] != top:
+                return False
+        else:
+            stack.append(char)
+
+    return True  
