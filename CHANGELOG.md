@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.32
+
+### Bug Fixes
+
+- **RovoDev**: Fixed model selection to include premium models (e.g. Claude Sonnet, Claude Opus) by passing `include_premium=true` to the `/v3/agent-models` API, matching the model list shown in Jira.
+
 ## What's new in 4.0.31
 
 ### Bug Fixes

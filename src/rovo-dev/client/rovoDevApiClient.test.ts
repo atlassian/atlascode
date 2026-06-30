@@ -2041,7 +2041,7 @@ describe('RovoDevApiClient', () => {
 
             const result = await client.getAvailableAgentModels();
 
-            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/agent-models', {
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/agent-models?include_premium=true', {
                 method: 'GET',
                 headers: {
                     accept: 'text/event-stream',
@@ -2055,6 +2055,39 @@ describe('RovoDevApiClient', () => {
             expect(result.models[0].model_id).toBe('gpt-4');
             expect(result.models[0].name).toBe('GPT-4');
             expect(result.models[0].credit_multiplier).toBe('1.5');
+        });
+
+        it('should pass include_premium=false when includePremium is false', async () => {
+            const mockAvailableModelsResponse = {
+                models: [
+                    {
+                        name: 'GPT-4',
+                        model_id: 'gpt-4',
+                        description: 'Most capable model',
+                        credit_multiplier: '1.5',
+                    },
+                ],
+            };
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue(mockAvailableModelsResponse),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await client.getAvailableAgentModels(false);
+
+            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v3/agent-models?include_premium=false', {
+                method: 'GET',
+                headers: {
+                    accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer sessionToken',
+                },
+                body: undefined,
+            });
+            expect(result).toEqual(mockAvailableModelsResponse);
         });
 
         it('should handle empty models list', async () => {
@@ -2084,7 +2117,7 @@ describe('RovoDevApiClient', () => {
             mockFetch.mockResolvedValue(mockResponse);
 
             await expect(client.getAvailableAgentModels()).rejects.toThrow(
-                "Failed to fetch '/v3/agent-models API: HTTP 500",
+                "Failed to fetch '/v3/agent-models?include_premium=true API: HTTP 500",
             );
         });
     });
