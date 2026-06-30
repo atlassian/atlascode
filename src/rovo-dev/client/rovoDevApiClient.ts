@@ -359,10 +359,14 @@ export class RovoDevApiClient {
     }
 
     /** Invokes the GET `/v3/agent-models` API.
+     * @param {boolean} includePremium Whether to include premium models in the response. Defaults to true.
      * @returns {Promise<RovoDevGetAvailableAgentModelsResponse>} An object representing all available agent models.
      */
-    public async getAvailableAgentModels(): Promise<RovoDevGetAvailableAgentModelsResponse> {
-        const response = await this.fetchApi('/v3/agent-models', 'GET');
+    public async getAvailableAgentModels(
+        includePremium: boolean = true,
+    ): Promise<RovoDevGetAvailableAgentModelsResponse> {
+        const qs = `include_premium=${includePremium ? 'true' : 'false'}`;
+        const response = await this.fetchApi(`/v3/agent-models?${qs}`, 'GET');
         return await response.json();
     }
 
