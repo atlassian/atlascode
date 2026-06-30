@@ -1,10 +1,11 @@
+import { isAxiosError } from 'axios';
 import { truncate } from 'lodash';
+import { Logger } from 'src/logger';
 import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import * as vscode from 'vscode';
 
 import { ExtensionApi, getAxiosInstance } from './api/extensionApi';
 import { MIN_SUPPORTED_ROVODEV_VERSION } from './rovoDevProcessManager';
-import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 
 interface FeedbackObject {
     feedbackType: 'bug' | 'reportContent' | 'general';
@@ -91,7 +92,13 @@ export class RovoDevFeedbackManager {
                 data: payload,
             });
         } catch (error) {
-            RovoDevTelemetryProvider.logError(error, 'Error submitting Rovo Dev feedback');
+            if (isAxiosError(error)) {
+                const status = error.response?.status;
+                const message = error.message;
+                Logger.warn(`Feedback submission failed: ${status ? `HTTP ${status}` : 'Network error'} - ${message}`);
+            } else {
+                Logger.warn('Feedback submission failed with unexpected error:', String(error));
+            }
             vscode.window.showErrorMessage('There was an error submitting your feedback. Please try again later.');
             return;
         }
