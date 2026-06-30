@@ -172,6 +172,10 @@ interface SubagentArgs {
     task_descriptions?: string[];
 }
 
+interface SkillArgs {
+    skill_name_or_path?: string;
+}
+
 /**
  * Safely parses JSON string or returns the value if it's already an object.
  * @param value - The value to parse (string or already parsed object)
@@ -304,6 +308,14 @@ export function parseToolReturnMessage(
                 resp.push({
                     content: 'Exited plan mode',
                     type: 'modify',
+                });
+                break;
+            case 'get_skill':
+                const skillArgs = safeJsonParse<SkillArgs>(msg.toolCallMessage.args);
+                const skillName = skillArgs?.skill_name_or_path;
+                resp.push({
+                    content: skillName ? `Loaded skill: ${skillName}` : 'Loaded skill',
+                    type: 'open',
                 });
                 break;
             case 'invoke_subagents':

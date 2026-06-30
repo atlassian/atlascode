@@ -2,6 +2,10 @@
 
 ## What's new in 4.0.31
 
+### Improvements
+
+- **RovoDev**: Show the skill name when the agent loads a skill (e.g. "Loading skill: jira") instead of displaying a generic "opened file" message.
+
 ### Bug Fixes
 
 - **RovoDev**: Hid stack traces, stderr, and log details from external users while preserving them for Atlassian users.

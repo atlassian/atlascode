@@ -181,4 +181,40 @@ describe('ToolCallItem', () => {
         const loadingIcon = document.querySelector('.codicon.codicon-loading.codicon-modifier-spin');
         expect(loadingIcon).toBeTruthy();
     });
+
+    it('renders the correct message for get_skill tool without args', () => {
+        const toolMessage = parseToolCallMessage('get_skill');
+        const { getByText } = render(
+            <ToolCallItem toolMessage={toolMessage} currentState={{ state: 'WaitingForPrompt' }} />,
+        );
+
+        validateMessage('Loading skill', toolMessage, getByText);
+    });
+
+    it('renders the correct message for get_skill tool with skill name', () => {
+        const toolMessage = parseToolCallMessage('get_skill', JSON.stringify({ skill_name_or_path: 'jira' }));
+        const { getByText } = render(
+            <ToolCallItem toolMessage={toolMessage} currentState={{ state: 'WaitingForPrompt' }} />,
+        );
+
+        validateMessage('Loading skill: jira', toolMessage, getByText);
+    });
+
+    it('renders the correct message for get_skill tool with skill path', () => {
+        const toolMessage = parseToolCallMessage('get_skill', JSON.stringify({ skill_name_or_path: 'agentic-search' }));
+        const { getByText } = render(
+            <ToolCallItem toolMessage={toolMessage} currentState={{ state: 'WaitingForPrompt' }} />,
+        );
+
+        validateMessage('Loading skill: agentic-search', toolMessage, getByText);
+    });
+
+    it('renders the correct message for get_skill tool with invalid args', () => {
+        const toolMessage = parseToolCallMessage('get_skill', 'invalid-json');
+        const { getByText } = render(
+            <ToolCallItem toolMessage={toolMessage} currentState={{ state: 'WaitingForPrompt' }} />,
+        );
+
+        validateMessage('Loading skill', toolMessage, getByText);
+    });
 });

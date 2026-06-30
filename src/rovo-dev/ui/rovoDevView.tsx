@@ -268,7 +268,7 @@ const RovoDevView: React.FC = () => {
 
                     const last = messages.at(-1);
                     if (last?.event_kind === 'tool-call') {
-                        setPendingToolCallMessage(parseToolCallMessage(last.tool_name));
+                        setPendingToolCallMessage(parseToolCallMessage(last.tool_name, last.args));
                         if (last.tool_name === 'invoke_subagents') {
                             const args = safeJsonParse<{ subagent_names?: string[]; task_names?: string[] }>(last.args);
                             const subagentNames: string[] = args?.subagent_names || [];
