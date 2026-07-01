@@ -32,3 +32,13 @@ class Solution:
             for num in nums:
                 count[num] = count.get(num, 0) + 1
             return min(count, key=lambda x: count[x])
+
+    def binarySearch(self, nums, target):
+        left, right = 0, len(nums) - 1
+        while left <= right:
+            mid = (left + right) // 2
+            if nums[mid] == target:
+                return mid
+            left += 1
+            right -= 1 
+        return -1
