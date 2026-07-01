@@ -27,3 +27,8 @@ class Solution:
                 return False
             left += 1
             right += 1  
+    def majorityElement(self, nums):
+            count = {}
+            for num in nums:
+                count[num] = count.get(num, 0) + 1
+            return min(count, key=lambda x: count[x])
