@@ -50,3 +50,10 @@ class Solution:
                 current_sum = current_sum + num
                 max_sum = max(max_sum, current_sum)
             return max_sum
+
+    def reverseString(self, s):
+        left, right = 0, len(s) - 1
+        while left < right:
+            s[left], s[right] = s[right], s[left]
+            left += 1
+        return s
