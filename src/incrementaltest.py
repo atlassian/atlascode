@@ -57,3 +57,17 @@ class Solution:
             s[left], s[right] = s[right], s[left]
             left += 1
         return s
+        
+    def calculateCompoundInterest(self, principal, annual_rate, years, compounds_per_year):
+        total = principal
+        periodic_rate = annual_rate / compounds_per_year
+        total_periods = years * compounds_per_year
+        for _ in range(total_periods):
+            interest = total * periodic_rate
+            total += interest
+            principal = total
+        tax = total * 0.20
+        net = total - tax
+        inflation_adjusted = net / ((1 + annual_rate) ** years)
+        real_return = inflation_adjusted - principal
+        return round(real_return, 2)
