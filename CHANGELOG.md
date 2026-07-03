@@ -7,6 +7,7 @@
 - **RovoDev**: Hid stack traces, stderr, and log details from external users while preserving them for Atlassian users.
 - **RovoDev (BBY)**: Fixed `ROVODEV_REBRAND_JCA` env var handling so the "Jira Coding Agent" rebrand works correctly in webviews.
 - **Notifications**: Fixed `atlassianNotificationNotifier` to correctly flush all promise levels, resolving a test reliability issue.
+- **RovoDev**: Fixed `SyntaxError: Unexpected token 'i', ""input"": {""""...` thrown from `parseToolReturnMessage` when the backend accidentally double-stringifies `toolCallMessage.args` for MCP tool returns (e.g. `mcp__atlassian__invoke_tool`, `mcp__atlassian__get_tool_schema`, `mcp__scout__invoke_tool`). `safeJsonParse` now defensively detects a double-stringified payload and parses it a second time so the chat UI displays the meaningful "Invoked <server> MCP tool: `<tool>`" label instead of the generic `mcp__<server>__invoke_tool` fallback. See FLOW-1577.
 
 ### Improvements
 
