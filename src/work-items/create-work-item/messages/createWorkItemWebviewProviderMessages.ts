@@ -28,6 +28,7 @@ export type CreateWorkItemWebviewProviderMessage =
               selectedProjectId?: string;
               selectedIssueTypeId?: string;
               requiredFields: CreateWorkItemRequiredField[];
+              createScreenHasFields: boolean;
           };
       }
     | {
@@ -39,6 +40,7 @@ export type CreateWorkItemWebviewProviderMessage =
               selectedProjectId?: string;
               selectedIssueTypeId?: string;
               requiredFields: CreateWorkItemRequiredField[];
+              createScreenHasFields: boolean;
           };
       }
     | {
@@ -47,12 +49,14 @@ export type CreateWorkItemWebviewProviderMessage =
               availableIssueTypes: IssueType[];
               selectedIssueTypeId?: string;
               requiredFields: CreateWorkItemRequiredField[];
+              createScreenHasFields: boolean;
           };
       }
     | {
           type: CreateWorkItemWebviewProviderMessageType.UpdatedSelectedIssueType;
           payload: {
               requiredFields: CreateWorkItemRequiredField[];
+              createScreenHasFields: boolean;
           };
       }
     | {

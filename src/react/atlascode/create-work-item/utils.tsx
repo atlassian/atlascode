@@ -21,6 +21,7 @@ export interface CreateFormState {
     selectedIssueTypeId?: string;
     hasMoreProjects?: boolean;
     requiredFieldsForIssueType: CreateWorkItemViewRequiredField[];
+    createScreenHasFields: boolean;
 }
 
 export enum CreateFormActionType {
@@ -78,6 +79,7 @@ export function createReducer(state: CreateFormState, action: CreateFormAction):
                 selectedProjectId: action.payload.selectedProjectId || action.payload.availableProjects[0]?.id,
                 selectedIssueTypeId: action.payload.selectedIssueTypeId || action.payload.availableIssueTypes[0]?.id,
                 requiredFieldsForIssueType: action.payload.requiredFields,
+                createScreenHasFields: action.payload.createScreenHasFields,
             };
         }
         case CreateFormActionType.SetSummary: {
@@ -103,6 +105,7 @@ export function createReducer(state: CreateFormState, action: CreateFormAction):
                 selectedProjectId: action.payload.selectedProjectId || action.payload.availableProjects[0]?.id,
                 selectedIssueTypeId: action.payload.selectedIssueTypeId || action.payload.availableIssueTypes[0]?.id,
                 requiredFieldsForIssueType: action.payload.requiredFields,
+                createScreenHasFields: action.payload.createScreenHasFields,
             };
         }
         case CreateWorkItemWebviewProviderMessageType.UpdatedSelectedProject: {
@@ -115,12 +118,14 @@ export function createReducer(state: CreateFormState, action: CreateFormAction):
                 })),
                 selectedIssueTypeId: action.payload.selectedIssueTypeId || action.payload.availableIssueTypes[0]?.id,
                 requiredFieldsForIssueType: action.payload.requiredFields,
+                createScreenHasFields: action.payload.createScreenHasFields,
             };
         }
         case CreateWorkItemWebviewProviderMessageType.UpdatedSelectedIssueType: {
             return {
                 ...state,
                 requiredFieldsForIssueType: action.payload.requiredFields,
+                createScreenHasFields: action.payload.createScreenHasFields,
             };
         }
         case CreateFormActionType.SetSelectedField: {

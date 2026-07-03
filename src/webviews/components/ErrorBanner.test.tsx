@@ -215,6 +215,28 @@ describe('ErrorBanner', () => {
             expect(container.textContent).toContain('Custom Error Title');
         });
 
+        it('displays Jira field errors when errorMessages is omitted', () => {
+            const { container } = render(
+                <ErrorBanner
+                    errorDetails={{
+                        title: 'Error creating issue',
+                        errors: {
+                            summary: "Field 'summary' cannot be set. It is not on the appropriate screen, or unknown.",
+                        },
+                    }}
+                    onDismissError={mockOnDismissError}
+                    onRetry={mockOnRetry}
+                />,
+            );
+
+            expect(container.textContent).toContain('Error creating issue');
+            expect(container.textContent).toContain('summary:');
+            expect(container.textContent).toContain(
+                "Field 'summary' cannot be set. It is not on the appropriate screen, or unknown.",
+            );
+            expect(container.textContent).not.toContain('{"summary"');
+        });
+
         it('displays default title when not provided', () => {
             const { container } = render(
                 <ErrorBanner errorDetails="Some error" onDismissError={mockOnDismissError} onRetry={mockOnRetry} />,

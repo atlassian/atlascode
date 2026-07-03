@@ -32,6 +32,7 @@ export const CreateIssueButton: React.FC<CreateIssueButtonProps> = (props) => {
                     color: 'var(--vscode-button-foreground)',
                     cursor: 'pointer',
                 }}
+                disabled={props.disabled}
                 className="ac-button ac-button-spinner"
                 data-vscode-context='{"webviewSection": "createButton", "preventDefaultContextMenuItems": true}'
                 onClick={(e) => {

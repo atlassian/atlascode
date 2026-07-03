@@ -12,6 +12,7 @@ export type ErrorDetails =
     | ErrorCollection
     | ErrorWithMessages
     | { message: string }
+    | { title?: string; errors: Record<string, string>; errorMessages?: string[] }
     | { title?: string }
     | undefined;
 
@@ -71,6 +72,33 @@ export default class ErrorBanner extends React.Component<ErrorBannerProps, { err
         return '';
     }
 
+    private getErrorCollectionMarkup(errorDetails: ErrorCollection) {
+        const errorMarkup: React.ReactNode[] = [];
+
+        Object.keys(errorDetails.errors).forEach((key) => {
+            errorMarkup.push(
+                <p className="force-wrap" key={`field-${key}`}>
+                    <b>{key}:</b>
+                    <span className="force-wrap" style={{ marginLeft: '5px' }}>
+                        {errorDetails.errors[key]}
+                    </span>
+                </p>,
+            );
+        });
+
+        errorDetails.errorMessages.forEach((msg, index) => {
+            errorMarkup.push(
+                <p className="force-wrap" key={`message-${index}`}>
+                    <span className="force-wrap" style={{ marginLeft: '5px' }}>
+                        {msg}
+                    </span>
+                </p>,
+            );
+        });
+
+        return errorMarkup;
+    }
+
     /**
      * Determines if an error is retryable based on its content
      * Auth/permission errors cannot be retried - user must re-authenticate
@@ -107,26 +135,7 @@ export default class ErrorBanner extends React.Component<ErrorBannerProps, { err
         const errorDetails = this.state.errorDetails;
 
         if (isErrorCollection(errorDetails)) {
-            Object.keys(errorDetails.errors).forEach((key) => {
-                errorMarkup.push(
-                    <p className="force-wrap">
-                        <b>{key}:</b>
-                        <span className="force-wrap" style={{ marginLeft: '5px' }}>
-                            {errorDetails.errors[key]}
-                        </span>
-                    </p>,
-                );
-            });
-
-            errorDetails.errorMessages.forEach((msg) => {
-                errorMarkup.push(
-                    <p className="force-wrap">
-                        <span className="force-wrap" style={{ marginLeft: '5px' }}>
-                            {msg}
-                        </span>
-                    </p>,
-                );
-            });
+            errorMarkup.push(...this.getErrorCollectionMarkup(errorDetails));
         } else if (isErrorWithMessages(errorDetails)) {
             errorDetails.errorMessages.forEach((msg) => {
                 errorMarkup.push(
@@ -138,17 +147,26 @@ export default class ErrorBanner extends React.Component<ErrorBannerProps, { err
                 );
             });
         } else if (typeof errorDetails === 'object') {
-            Object.keys(errorDetails).forEach((key) => {
-                const value = errorDetails[key as keyof typeof errorDetails];
-                errorMarkup.push(
-                    <p className="force-wrap">
-                        <b>{key}:</b>
-                        <span className="force-wrap" style={{ marginLeft: '5px' }}>
-                            {JSON.stringify(value)}
-                        </span>
-                    </p>,
-                );
-            });
+            const maybeErrorCollection = {
+                errorMessages: [],
+                ...errorDetails,
+            };
+
+            if (isErrorCollection(maybeErrorCollection)) {
+                errorMarkup.push(...this.getErrorCollectionMarkup(maybeErrorCollection));
+            } else {
+                Object.keys(errorDetails).forEach((key) => {
+                    const value = errorDetails[key as keyof typeof errorDetails];
+                    errorMarkup.push(
+                        <p className="force-wrap">
+                            <b>{key}:</b>
+                            <span className="force-wrap" style={{ marginLeft: '5px' }}>
+                                {JSON.stringify(value)}
+                            </span>
+                        </p>,
+                    );
+                });
+            }
         } else {
             errorMarkup.push(<p className="force-wrap">{errorDetails}</p>);
         }

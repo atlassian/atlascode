@@ -45,6 +45,16 @@ jest.mock('@atlaskit/page', () => ({
     default: ({ children }: any) => <div data-testid="page">{children}</div>,
 }));
 
+jest.mock('@atlaskit/section-message', () => ({
+    __esModule: true,
+    default: ({ children, title }: any) => (
+        <div data-testid="section-message">
+            {title}
+            {children}
+        </div>
+    ),
+}));
+
 jest.mock('@atlaskit/select', () => ({
     __esModule: true,
     default: (props: any) => <div data-testid="select">{props.value?.name || 'Select'}</div>,
@@ -138,6 +148,30 @@ describe('CreateIssuePage', () => {
         jest.clearAllMocks();
     });
 
+    const projectField = {
+        key: 'project',
+        name: 'Project',
+        required: true,
+        uiType: UIType.Select,
+        displayOrder: 1,
+        valueType: ValueType.Project,
+        advanced: false,
+        isArray: false,
+        schema: 'project',
+    };
+
+    const issueTypeField = {
+        key: 'issuetype',
+        name: 'Work type',
+        required: true,
+        uiType: UIType.Select,
+        displayOrder: 2,
+        valueType: ValueType.IssueType,
+        advanced: false,
+        isArray: false,
+        schema: 'issuetype',
+    };
+
     describe('Error state rendering', () => {
         it('should show ErrorBanner and form content when isErrorBannerOpen is true', () => {
             const component = new CreateIssuePage({});
@@ -218,6 +252,63 @@ describe('CreateIssuePage', () => {
             // Error banner should NOT be visible
             expect(queryByTestId('error-banner')).toBeNull();
             expect(container.textContent).not.toContain('Error:');
+        });
+    });
+
+    describe('Empty create screen rendering', () => {
+        it('shows an explanation and disables create when no fields are configured beyond project and issue type', () => {
+            const component = new CreateIssuePage({});
+            component.state = {
+                ...component.state,
+                isErrorBannerOpen: false,
+                siteDetails: mockSiteDetails,
+                fieldValues: {
+                    issuetype: { id: '1', name: 'Task' },
+                    project: { key: 'TEST', name: 'Test Project' },
+                },
+                fields: {
+                    project: projectField,
+                    issuetype: issueTypeField,
+                },
+                selectFieldOptions: {
+                    site: [mockSiteDetails],
+                },
+            };
+            component.updateInternals(component.state);
+
+            const { container, queryByTestId } = render(component.render());
+
+            expect(queryByTestId('section-message')).not.toBeNull();
+            expect(container.textContent).toContain('No create fields are configured');
+            expect(container.textContent).toContain(
+                "This project's create screen has no fields configured for the selected work type.",
+            );
+            expect((container.querySelector('button[name="Create"]') as HTMLButtonElement).disabled).toBe(true);
+        });
+
+        it('does not post createIssue when no create fields are configured', async () => {
+            const component = new CreateIssuePage({});
+            const postMessageSpy = jest.spyOn(component, 'postMessage');
+            component.state = {
+                ...component.state,
+                siteDetails: mockSiteDetails,
+                fieldValues: {
+                    issuetype: { id: '1', name: 'Task' },
+                    project: { key: 'TEST', name: 'Test Project' },
+                },
+                fields: {
+                    project: projectField,
+                    issuetype: issueTypeField,
+                },
+                selectFieldOptions: {
+                    site: [mockSiteDetails],
+                },
+            };
+
+            await expect(component.handleSubmit({} as any)).resolves.toEqual({
+                _form: 'No create fields are configured for the selected work type.',
+            });
+            expect(postMessageSpy).not.toHaveBeenCalledWith(expect.objectContaining({ action: 'createIssue' }));
         });
     });
 
