@@ -394,14 +394,13 @@ export class CredentialManager implements Disposable {
             return authInfo; // not an OAuth info, no need to refresh
         }
 
-        if (credentials.state === AuthInfoState.Invalid) {
-            Logger.debug(`Skipping token refresh for ${site.baseApiUrl}; credentials are invalid.`);
-            return credentials;
-        }
-
         const GRACE_PERIOD = 30 * Time.MINUTES;
 
-        if (credentials.expirationDate) {
+        if (credentials.state === AuthInfoState.Invalid) {
+            // Credentials may have been invalidated spuriously (e.g. a transient 401 from the token
+            // endpoint), so attempt a refresh anyway; a successful one marks them Valid again.
+            Logger.debug(`Credentials for ${site.baseApiUrl} are marked invalid; attempting to recover.`);
+        } else if (credentials.expirationDate) {
             const diff = credentials.expirationDate - Date.now();
             Logger.debug(
                 `${Math.floor(diff / 1000)} seconds remaining for ${site.name} refresh token. ${diff > GRACE_PERIOD ? 'No refresh needed yet.' : 'refreshing...'}`,
@@ -567,13 +566,9 @@ export class CredentialManager implements Disposable {
         }
 
         if (credentials.state === AuthInfoState.Invalid) {
-            Logger.debug(`Skipping token refresh for credentialID: ${site.credentialId}; credentials are invalid.`);
-            this._failedRefreshCache.set(site.credentialId, {
-                attemptsCount: this._failedRefreshCache.get(site.credentialId)?.attemptsCount ?? 0,
-                lastAttemptAt: new Date(),
-                permanentFailure: true,
-            });
-            return undefined;
+            Logger.debug(
+                `Credentials for credentialID: ${site.credentialId} are marked invalid; attempting to recover.`,
+            );
         }
 
         const failedRefresh = this._failedRefreshCache.get(site.credentialId);
@@ -618,6 +613,8 @@ export class CredentialManager implements Disposable {
                     credentials.refresh = newTokens.refreshToken;
                     credentials.iat = newTokens.iat ?? 0;
                 }
+                // A successful refresh proves the credentials work, even if they were marked invalid before
+                credentials.state = AuthInfoState.Valid;
 
                 await this.saveAuthInfo(site, credentials);
                 if (this._failedRefreshCache.has(site.credentialId)) {
