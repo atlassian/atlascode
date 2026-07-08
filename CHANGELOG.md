@@ -14,6 +14,8 @@
 - **Notifications**: Added `siteId` to the `notificationFeedVSCode` GraphQL query so notification feeds are correctly scoped per Atlassian site.
 - **Logger**: Removed a spurious client-side error from Sentry to reduce noise in error reporting.
 - **RovoDev (BBY)**: Added a new `rovoDevPromptCompleted` telemetry event that fires exactly once per user-submitted prompt with a closed-enum `result` (`success`, `error`, `cancelled`, `timeout`, `parse_error`) and optional `errorReason` / `httpStatus` / `messagePartsCount`. The event is only emitted in Boysenberry mode (no consumer in the standard IDE) and is forwarded through the Boysenberry → Jira analytics bridge so a chat-response SLO can be computed as a simple counter ratio without joining on `promptId`. Never emitted for the replay streaming path.
+- **RovoDev (BBY)**: The agent model selector now requests premium models in Boysenberry (via `include_premium=true` on the `/v3/agent-models` API), so premium models appear in the list.
+- **RovoDev**: Removed the credit multiplier label from each entry in the agent model selector.
 
 ### Cleanup
 

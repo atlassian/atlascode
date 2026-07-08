@@ -98,7 +98,6 @@ export const AgentModelSelector: React.FC<AgentModelSelectorProps> = ({
                     {availableModels.map((model) => (
                         <PromptAgentModel
                             label={model.modelName}
-                            description={`${model.creditMultiplier}x credits`}
                             action={() => {
                                 onModelChange(model);
                                 setIsOpen(false);
