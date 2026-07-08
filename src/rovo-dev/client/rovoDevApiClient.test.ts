@@ -2074,6 +2074,23 @@ describe('RovoDevApiClient', () => {
             expect(result.models).toHaveLength(0);
         });
 
+        it('should include premium query param when includePremium is true', async () => {
+            const mockResponse = {
+                status: 200,
+                json: jest.fn().mockResolvedValue({ models: [] }),
+                headers: mockStandardResponseHeaders(),
+            } as unknown as Response;
+
+            mockFetch.mockResolvedValue(mockResponse);
+
+            await client.getAvailableAgentModels(true);
+
+            expect(mockFetch).toHaveBeenCalledWith(
+                'http://localhost:8080/v3/agent-models?include_premium=true',
+                expect.objectContaining({ method: 'GET' }),
+            );
+        });
+
         it('should throw error when API call fails', async () => {
             const mockResponse = {
                 status: 500,

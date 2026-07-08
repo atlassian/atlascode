@@ -2,6 +2,7 @@ import Button from '@atlaskit/button';
 import ChevronDownIcon from '@atlaskit/icon/core/chevron-down';
 import Popup, { PopupComponentProps } from '@atlaskit/popup';
 import React from 'react';
+import { RovodevStaticConfig } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { RovoDevAgentModel } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
 import { PromptAgentModel } from './AgentModelItem';
@@ -98,7 +99,8 @@ export const AgentModelSelector: React.FC<AgentModelSelectorProps> = ({
                     {availableModels.map((model) => (
                         <PromptAgentModel
                             label={model.modelName}
-                            description={`${model.creditMultiplier}x credits`}
+                            // Credit multipliers are hidden in Boysenberry only
+                            description={RovodevStaticConfig.isBBY ? undefined : `${model.creditMultiplier}x credits`}
                             action={() => {
                                 onModelChange(model);
                                 setIsOpen(false);
