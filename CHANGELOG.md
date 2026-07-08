@@ -2,6 +2,10 @@
 
 ## What's new in 4.0.31
 
+### Improvements
+
+- **RovoDev**: Collapsed completed tool call results in the thinking drawer for a more compact chat view. Users can still expand the drawer to see details.
+
 ### Bug Fixes
 
 - **RovoDev**: Hid stack traces, stderr, and log details from external users while preserving them for Atlassian users.

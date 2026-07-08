@@ -13,7 +13,8 @@ export const ToolReturnParsedItem: React.FC<{
     msg: ToolReturnParseResult;
     openFile: OpenFileFunc;
     onLinkClick: (href: string) => void;
-}> = ({ msg, openFile, onLinkClick }) => {
+    collapsed?: boolean;
+}> = ({ msg, openFile, onLinkClick, collapsed = false }) => {
     const toolIcon = React.useMemo(() => (msg.type ? iconMap[msg.type] : undefined), [msg.type]);
 
     const filePathClass = msg.filePath && msg.type !== 'delete' ? 'tool-return-file-path' : '';
@@ -27,6 +28,21 @@ export const ToolReturnParsedItem: React.FC<{
         },
         [msg.filePath, msg.type, openFile],
     );
+
+    if (collapsed) {
+        return (
+            <a
+                className={`tool-return-item-base tool-return-item tool-return-collapsed ${filePathClass}`}
+                onClick={handleOpenFile}
+            >
+                {toolIcon}
+                <span className="tool-return-collapsed-text">
+                    {msg.content ?? ''}
+                    {msg.title ? ` — ${msg.title}` : ''}
+                </span>
+            </a>
+        );
+    }
 
     return (
         <a className={`tool-return-item-base tool-return-item ${filePathClass}`} onClick={handleOpenFile}>
