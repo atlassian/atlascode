@@ -1,5 +1,13 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.32
+
+### Bug Fixes
+
+- **RovoDev**: Fixed prompt box toolbar breaking into multiple lines in narrow sidebars by preventing flex wrapping.
+- **RovoDev**: Reduced prompt box toolbar button and icon sizes for a more compact and consistent appearance.
+- **RovoDev**: Fixed dropdown-over-dropdown issue where clicking a second popup (e.g. preferences) while another (e.g. model selector) was open would show both simultaneously. Only one popup can now be open at a time.
+
 ## What's new in 4.0.31
 
 ### Bug Fixes

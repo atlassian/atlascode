@@ -356,6 +356,17 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
 
     const disableAgentModelSelector = React.useMemo(() => currentState.state !== 'WaitingForPrompt', [currentState]);
 
+    // Coordinated dropdown state: only one popup can be open at a time
+    const [activePopup, setActivePopup] = React.useState<'context' | 'settings' | 'model' | null>(null);
+
+    const handlePopupToggle = React.useCallback((popup: 'context' | 'settings' | 'model') => {
+        setActivePopup((prev) => (prev === popup ? null : popup));
+    }, []);
+
+    const handlePopupClose = React.useCallback((popup: 'context' | 'settings' | 'model') => {
+        setActivePopup((prev) => (prev === popup ? null : prev));
+    }, []);
+
     return (
         <>
             <div id="prompt-editor-container" style={{ ...{ fieldSizing: 'content' }, ...rovoDevTextareaStyles }} />
@@ -364,16 +375,21 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                     display: 'flex',
                     flexDirection: 'row',
                     alignItems: 'center',
-                    flexWrap: 'wrap',
+                    flexWrap: 'nowrap',
                     gap: 4,
+                    minWidth: 0,
+                    overflow: 'hidden',
                 }}
             >
-                <div style={{ display: 'flex', flexDirection: 'row', alignContent: 'center', gap: 4 }}>
+                <div style={{ display: 'flex', flexDirection: 'row', alignContent: 'center', gap: 4, flexShrink: 0 }}>
                     <PromptContextPopup
                         fetchSavedPrompts={handleFetchSavedPrompts}
                         canFetchSavedPrompts={canFetchSavedPrompts}
                         onSelectedSavedPrompt={handleSelectSavedPrompt}
                         onAddRepositoryFile={onAddContext}
+                        isOpen={activePopup === 'context'}
+                        onToggle={() => handlePopupToggle('context')}
+                        onClose={() => handlePopupClose('context')}
                     />
                     <PromptSettingsPopup
                         onDeepPlanToggled={onDeepPlanToggled}
@@ -384,7 +400,9 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         availableAgentModes={availableAgentModes}
                         currentAgentMode={currentAgentMode}
                         onAgentModeChange={onAgentModeChange}
-                        onClose={() => {}}
+                        isOpen={activePopup === 'settings'}
+                        onToggle={() => handlePopupToggle('settings')}
+                        onClose={() => handlePopupClose('settings')}
                     />
                     {isDeepPlanEnabled && onDeepPlanToggled && (
                         <Tooltip content="Disable deep plan">
@@ -447,15 +465,18 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         </Tooltip>
                     )}
                 </div>
-                <div>
+                <div style={{ minWidth: 0, flexShrink: 1, overflow: 'hidden' }}>
                     <AgentModelSelector
                         availableModels={availableAgentModels}
                         currentModel={currentAgentModel}
                         onModelChange={onAgentModelChange}
                         isDisabled={disableAgentModelSelector}
+                        isOpen={activePopup === 'model'}
+                        onToggle={() => handlePopupToggle('model')}
+                        onClose={() => handlePopupClose('model')}
                     />
                 </div>
-                <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+                <div style={{ display: 'flex', gap: 8, marginLeft: 'auto', flexShrink: 0 }}>
                     {showCancelButton ? (
                         <Tooltip content="Stop generating" position="top">
                             <button

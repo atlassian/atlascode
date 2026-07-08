@@ -863,9 +863,16 @@ body {
     justify-content: center;
     border-radius: 50%;
     border: none;
-    padding: 2px 6px;
-    height: 32px;
-    width: 32px;
+    padding: 2px;
+    height: 26px;
+    width: 26px;
+}
+
+.prompt-button-primary svg,
+.prompt-button-secondary svg,
+.prompt-button-secondary-open svg {
+    height: 16px;
+    width: 16px;
 }
 
 .prompt-button-primary {
@@ -938,14 +945,19 @@ body {
 .mode-indicator {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 2px;
     border: 1px solid var(--vscode-focusBorder);
-    height: 32px;
+    height: 26px;
     padding: 2px 6px;
-    border-radius: 16px;
+    border-radius: 13px;
     background-color: var(--vscode-inputOption-activeBackground);
     color: var(--vscode-inputOption-activeForeground);
     cursor: pointer;
+}
+
+.mode-indicator svg {
+    height: 14px;
+    width: 14px;
 }
 
 .ai-disclaimer {

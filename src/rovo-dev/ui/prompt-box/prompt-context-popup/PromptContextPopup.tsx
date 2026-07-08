@@ -16,6 +16,8 @@ interface PromptContextPopupProps {
     fetchSavedPrompts?: () => Promise<SavedPrompt[]>;
     canFetchSavedPrompts?: boolean;
     onSelectedSavedPrompt?: (prompt: SavedPrompt) => void;
+    isOpen?: boolean;
+    onToggle?: () => void;
     onClose?: () => void;
 }
 
@@ -32,9 +34,26 @@ const PromptContextPopup: React.FC<PromptContextPopupProps> = ({
     fetchSavedPrompts,
     canFetchSavedPrompts,
     onSelectedSavedPrompt,
+    isOpen: controlledIsOpen,
+    onToggle,
     onClose,
 }) => {
-    const [isOpen, setIsOpen] = React.useState(false);
+    const [uncontrolledIsOpen, setUncontrolledIsOpen] = React.useState(false);
+    const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : uncontrolledIsOpen;
+    const setIsOpen = React.useCallback(
+        (open: boolean) => {
+            if (controlledIsOpen !== undefined) {
+                if (open) {
+                    onToggle?.();
+                } else {
+                    onClose?.();
+                }
+            } else {
+                setUncontrolledIsOpen(open);
+            }
+        },
+        [controlledIsOpen, onToggle, onClose],
+    );
     const [isSavedPromptsMenuOpen, setIsSavedPromptsMenuOpen] = React.useState(false);
 
     const handlePromptSelected = React.useCallback(
@@ -43,7 +62,7 @@ const PromptContextPopup: React.FC<PromptContextPopupProps> = ({
             setIsSavedPromptsMenuOpen(false);
             setIsOpen(false);
         },
-        [onSelectedSavedPrompt],
+        [onSelectedSavedPrompt, setIsOpen],
     );
 
     return (
@@ -64,7 +83,13 @@ const PromptContextPopup: React.FC<PromptContextPopupProps> = ({
                     ) : (
                         <button
                             {...props}
-                            onClick={() => setIsOpen(true)}
+                            onClick={() => {
+                                if (controlledIsOpen !== undefined) {
+                                    onToggle?.();
+                                } else {
+                                    setUncontrolledIsOpen(true);
+                                }
+                            }}
                             className="prompt-button-secondary"
                             aria-label="Prompt context"
                         >
@@ -112,7 +137,9 @@ const PromptContextPopup: React.FC<PromptContextPopupProps> = ({
             onClose={() => {
                 setIsOpen(false);
                 setIsSavedPromptsMenuOpen(false);
-                onClose?.();
+                if (controlledIsOpen === undefined) {
+                    onClose?.();
+                }
             }}
         />
     );

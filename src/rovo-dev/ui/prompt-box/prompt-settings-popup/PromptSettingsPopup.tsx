@@ -40,6 +40,8 @@ interface PromptSettingsPopupProps {
     availableAgentModes: RovoDevModeInfo[];
     currentAgentMode: AgentMode | null;
     onAgentModeChange: (mode: AgentMode) => void;
+    isOpen?: boolean;
+    onToggle?: () => void;
     onClose: () => void;
 }
 
@@ -73,17 +75,33 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
     availableAgentModes,
     currentAgentMode,
     onAgentModeChange,
+    isOpen: controlledIsOpen,
+    onToggle,
     onClose,
 }) => {
-    const [isOpen, setIsOpen] = React.useState(false);
+    const [uncontrolledIsOpen, setUncontrolledIsOpen] = React.useState(false);
+    const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : uncontrolledIsOpen;
+    const setIsOpen = useCallback(
+        (open: boolean) => {
+            if (controlledIsOpen !== undefined) {
+                if (open) {
+                    onToggle?.();
+                } else {
+                    onClose();
+                }
+            } else {
+                setUncontrolledIsOpen(open);
+            }
+        },
+        [controlledIsOpen, onToggle, onClose],
+    );
 
     const handleAgentModeChange = useCallback(
         (mode: AgentMode) => {
             onAgentModeChange(mode);
             setIsOpen(false);
-            onClose();
         },
-        [onAgentModeChange, onClose],
+        [onAgentModeChange, setIsOpen],
     );
 
     const otherSectionItems = useMemo((): OtherSectionItem[] => {
@@ -127,7 +145,7 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                     {isOpen ? (
                         <button
                             {...props}
-                            onClick={() => setIsOpen((prev) => !prev)}
+                            onClick={() => setIsOpen(false)}
                             className="prompt-button-secondary-open"
                             aria-label="Prompt settings (open)"
                         >
@@ -136,7 +154,13 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                     ) : (
                         <button
                             {...props}
-                            onClick={() => setIsOpen((prev) => !prev)}
+                            onClick={() => {
+                                if (controlledIsOpen !== undefined) {
+                                    onToggle?.();
+                                } else {
+                                    setUncontrolledIsOpen(true);
+                                }
+                            }}
                             className="prompt-button-secondary"
                             aria-label="Prompt settings"
                         >
@@ -182,7 +206,9 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
             popupComponent={PopupContainer}
             onClose={() => {
                 setIsOpen(false);
-                onClose();
+                if (controlledIsOpen === undefined) {
+                    onClose();
+                }
             }}
         />
     );

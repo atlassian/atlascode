@@ -11,6 +11,9 @@ interface AgentModelSelectorProps {
     availableModels: RovoDevAgentModel[];
     onModelChange: (model: RovoDevAgentModel) => void;
     isDisabled?: boolean;
+    isOpen?: boolean;
+    onToggle?: () => void;
+    onClose?: () => void;
 }
 
 // TODO - this is a patch, the id format needs to be returned consistently by Rovo Dev
@@ -53,8 +56,26 @@ export const AgentModelSelector: React.FC<AgentModelSelectorProps> = ({
     availableModels,
     onModelChange,
     isDisabled,
+    isOpen: controlledIsOpen,
+    onToggle,
+    onClose: controlledOnClose,
 }) => {
-    const [isOpen, setIsOpen] = React.useState(false);
+    const [uncontrolledIsOpen, setUncontrolledIsOpen] = React.useState(false);
+    const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : uncontrolledIsOpen;
+    const setIsOpen = React.useCallback(
+        (open: boolean) => {
+            if (controlledIsOpen !== undefined) {
+                if (open) {
+                    onToggle?.();
+                } else {
+                    controlledOnClose?.();
+                }
+            } else {
+                setUncontrolledIsOpen(open);
+            }
+        },
+        [controlledIsOpen, onToggle, controlledOnClose],
+    );
 
     // try to match the current model against the available models
     const currentModelFromAvailable = React.useMemo(
@@ -86,7 +107,17 @@ export const AgentModelSelector: React.FC<AgentModelSelectorProps> = ({
                     appearance="subtle"
                     isSelected={isOpen}
                     iconAfter={<ChevronDownIcon label="Open" />}
-                    onClick={() => setIsOpen((prev) => !prev)}
+                    onClick={() => {
+                        if (controlledIsOpen !== undefined) {
+                            if (isOpen) {
+                                controlledOnClose?.();
+                            } else {
+                                onToggle?.();
+                            }
+                        } else {
+                            setUncontrolledIsOpen((prev) => !prev);
+                        }
+                    }}
                     aria-label="Agent model selection"
                     isDisabled={isDisabled}
                 >
@@ -111,6 +142,7 @@ export const AgentModelSelector: React.FC<AgentModelSelectorProps> = ({
             placement="top-start"
             popupComponent={PopupContainer}
             onClose={() => setIsOpen(false)}
+            shouldUseCaptureOnOutsideClick
         />
     );
 };
