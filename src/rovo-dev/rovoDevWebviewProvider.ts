@@ -1045,7 +1045,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             return;
         }
 
-        const availableModelsData = await this.rovoDevApiClient.getAvailableAgentModels();
+        const availableModelsData = await this.rovoDevApiClient.getAvailableAgentModels(this.isBoysenberry);
         const availableModels = availableModelsData.models ?? [];
         const availableModelsForWebview = availableModels.map((model) => ({
             modelId: model.model_id,
