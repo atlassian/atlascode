@@ -1105,6 +1105,42 @@ describe('RovoDevChatProvider', () => {
                 }),
             );
         });
+
+        it('should handle non-Error thrown values without crashing (e.g. thrown string)', async () => {
+            // If something throws a plain string or non-Error value, processError
+            // must not itself throw — it should convert it to an Error and show a dialog.
+            mockApiClient.chat.mockRejectedValue('plain string error');
+
+            const mockPrompt: RovoDevPrompt = {
+                text: 'test prompt',
+                context: [],
+            };
+
+            await expect(chatProvider.executeChat(mockPrompt, [])).resolves.not.toThrow();
+
+            expect(mockWebview.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: RovoDevProviderMessageType.ShowDialog,
+                }),
+            );
+        });
+
+        it('should not throw when processError is called without a webview available', async () => {
+            // processError must not throw when _webView is undefined — it should log
+            // a warning and return gracefully instead of crashing the error handler.
+            const providerNoWebview = new RovoDevChatProvider(false, mockTelemetryProvider);
+            providerNoWebview.setWebview(undefined);
+            await providerNoWebview.setReady(mockApiClient as unknown as RovoDevApiClient);
+
+            mockApiClient.chat.mockRejectedValue(new Error('some error'));
+
+            const mockPrompt: RovoDevPrompt = {
+                text: 'test prompt',
+                context: [],
+            };
+
+            await expect(providerNoWebview.executeChat(mockPrompt, [])).resolves.not.toThrow();
+        });
     });
 
     // The rovoDevPromptCompleted event is the terminal SLO signal forwarded
