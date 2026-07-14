@@ -468,6 +468,66 @@ body {
     color: var(--ds-text-inverse) !important;
 }
 
+/* Markdown headers: keep them a consistent, readable size in the narrow sidebar */
+.message-content h1,
+.message-content h2,
+.message-content h3,
+.message-content h4,
+.message-content h5,
+.message-content h6,
+.tool-return-content h1,
+.tool-return-content h2,
+.tool-return-content h3,
+.tool-return-content h4,
+.tool-return-content h5,
+.tool-return-content h6 {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+    margin: 12px 0 6px;
+}
+
+.message-content h1:first-child,
+.message-content h2:first-child,
+.message-content h3:first-child,
+.message-content h4:first-child,
+.message-content h5:first-child,
+.message-content h6:first-child,
+.tool-return-content h1:first-child,
+.tool-return-content h2:first-child,
+.tool-return-content h3:first-child,
+.tool-return-content h4:first-child,
+.tool-return-content h5:first-child,
+.tool-return-content h6:first-child {
+    margin-top: 0;
+}
+
+/* Markdown tables: make them responsive so they don't overflow the sidebar */
+.message-content table,
+.tool-return-content table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+    margin: 8px 0;
+}
+
+.message-content th,
+.message-content td,
+.tool-return-content th,
+.tool-return-content td {
+    padding: 4px 8px;
+    border: 1px solid var(--vscode-editorWidget-border);
+    text-align: left;
+    word-break: break-word;
+}
+
+.message-content th,
+.tool-return-content th {
+    background-color: var(--vscode-editorWidget-background);
+    font-weight: 600;
+}
+
 .rovodev-markdown-link {
     cursor: pointer;
     color: var(--vscode-textLink-foreground);

@@ -4,6 +4,7 @@
 
 ### Bug Fixes
 
+- **RovoDev**: Fixed markdown formatting in the chat view - headers now render at a consistent 16px, and tables are responsive so they no longer overflow the narrow sidebar.
 - **RovoDev**: Hid stack traces, stderr, and log details from external users while preserving them for Atlassian users.
 - **RovoDev (BBY)**: Fixed `ROVODEV_REBRAND_JCA` env var handling so the "Jira Coding Agent" rebrand works correctly in webviews.
 - **Notifications**: Fixed `atlassianNotificationNotifier` to correctly flush all promise levels, resolving a test reliability issue.
