@@ -1,6 +1,7 @@
 import Button from '@atlaskit/button';
 import Form, { ErrorMessage, Field, FormFooter, FormHeader, RequiredAsterisk } from '@atlaskit/form';
 import Page from '@atlaskit/page';
+import SectionMessage from '@atlaskit/section-message';
 import Select, { components } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
 import { IssueKeyAndSite } from '@atlassian-pi/jira-pi-common-models';
@@ -49,6 +50,7 @@ const emptyState: ViewState = {
 };
 
 const fallbackTimerDuration = 5000; // 5 seconds
+const universalCreateFieldKeys = new Set(['project', 'issuetype']);
 
 const getFaviconUrl = (siteData: any): string | null => {
     if (siteData?.baseLinkUrl) {
@@ -272,6 +274,25 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         });
     }
 
+    private hasCreateScreenFields(): boolean {
+        return Object.values(this.state.fields).some((field) => !universalCreateFieldKeys.has(field.key));
+    }
+
+    private getEmptyCreateScreenMessage(): React.ReactElement | undefined {
+        if (this.hasCreateScreenFields()) {
+            return undefined;
+        }
+
+        return (
+            <SectionMessage appearance="warning" title="No create fields are configured">
+                <p>
+                    This project&apos;s create screen has no fields configured for the selected work type. Contact your
+                    Jira administrator to add the required fields to the create screen.
+                </p>
+            </SectionMessage>
+        );
+    }
+
     checkRequiredFields(): Record<string, string> {
         const requiredFields = Object.values(this.state.fields).filter((field) => field.required);
 
@@ -321,6 +342,10 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     handleSubmit = async (e: any) => {
         if (this.state.isLoggedOut) {
             return { _form: 'You have been logged out. Please close this tab and log in again.' };
+        }
+
+        if (!this.hasCreateScreenFields()) {
+            return { _form: 'No create fields are configured for the selected work type.' };
         }
 
         const errs = this.checkRequiredFields();
@@ -552,6 +577,8 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
             return <AtlLoader />;
         }
 
+        const emptyCreateScreenMessage = this.getEmptyCreateScreenMessage();
+
         return (
             <Page>
                 <AtlascodeErrorBoundary
@@ -637,13 +664,16 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                                         <div>{this.getAdvancedFieldMarkup()}</div>
                                                     </Panel>
                                                 )}
+                                                {emptyCreateScreenMessage}
                                                 <FormFooter actions={{}}>
                                                     <CreateIssueButton
                                                         type="submit"
                                                         name="Create"
                                                         className="ac-button"
                                                         disabled={
-                                                            this.state.isSomethingLoading || this.state.isLoggedOut
+                                                            this.state.isSomethingLoading ||
+                                                            this.state.isLoggedOut ||
+                                                            !!emptyCreateScreenMessage
                                                         }
                                                         isLoading={
                                                             this.state.isSomethingLoading &&

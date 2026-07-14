@@ -2,6 +2,7 @@ import './CreateWorkItem.css';
 
 import Form, { Field } from '@atlaskit/form';
 import ChevronDownIcon from '@atlaskit/icon/core/chevron-down';
+import SectionMessage from '@atlaskit/section-message';
 import Select from '@atlaskit/select';
 import React from 'react';
 import { ConnectionTimeout } from 'src/util/time';
@@ -25,6 +26,7 @@ const emptyState: CreateFormState = {
     selectedProjectId: undefined,
     selectedIssueTypeId: undefined,
     requiredFieldsForIssueType: [],
+    createScreenHasFields: true,
 };
 
 const CreateWorkItemWebview: React.FC = () => {
@@ -69,6 +71,9 @@ const CreateWorkItemWebview: React.FC = () => {
             if (!state.summary || state.summary.trim().length === 0) {
                 errors['summary'] = 'EMPTY';
             }
+            if (!state.createScreenHasFields) {
+                errors['_form'] = 'No create fields are configured for the selected work type.';
+            }
             if (Object.keys(errors).length > 0) {
                 return errors;
             }
@@ -83,7 +88,13 @@ const CreateWorkItemWebview: React.FC = () => {
 
             return undefined;
         },
-        [state.selectedIssueTypeId, state.selectedProjectId, state.selectedSiteId, state.summary],
+        [
+            state.createScreenHasFields,
+            state.selectedIssueTypeId,
+            state.selectedProjectId,
+            state.selectedSiteId,
+            state.summary,
+        ],
     );
 
     const onMessageHandler = React.useCallback(
@@ -272,10 +283,20 @@ const CreateWorkItemWebview: React.FC = () => {
                                     className="form-input"
                                     placeholder="What needs to be done?"
                                     type="text"
+                                    disabled={!state.createScreenHasFields}
                                     onChange={handleUpdateSummary}
                                 />
                             )}
                         </Field>
+                        {!state.createScreenHasFields && (
+                            <SectionMessage appearance="warning" title="No create fields are configured">
+                                <p>
+                                    This project&apos;s create screen has no fields configured for the selected work
+                                    type. Contact your Jira administrator to add the required fields to the create
+                                    screen.
+                                </p>
+                            </SectionMessage>
+                        )}
                         <div className="form-actions-row">
                             <button type="button" className="more-options-link" onClick={handleOpenFullEditor}>
                                 More options
@@ -286,11 +307,16 @@ const CreateWorkItemWebview: React.FC = () => {
                                 Cancel
                             </button>
                             <div>
-                                <button className="form-button button-primary" type="submit">
+                                <button
+                                    className="form-button button-primary"
+                                    disabled={!state.createScreenHasFields}
+                                    type="submit"
+                                >
                                     Create
                                 </button>
                                 <button
                                     className="form-button button-primary"
+                                    disabled={!state.createScreenHasFields}
                                     style={{
                                         borderLeft: '1px solid var(--vscode-button-foreground)',
                                         padding: '6px',

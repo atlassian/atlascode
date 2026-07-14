@@ -48,7 +48,9 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
     private _selectedProject?: Project;
     private _hasMoreProjects: boolean = false;
     private _selectedIssueType?: IssueType;
+    private _issueTypeUIs: IssueTypeUIs<DetailedSiteInfo> = {};
     private _requiredFieldsForIssueType: CreateWorkItemRequiredField[] = [];
+    private _createScreenHasFields: boolean = false;
     private _id: string = 'createWorkItemWebview';
     private _disposables: Disposable[] = [];
 
@@ -204,6 +206,7 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
                 selectedProjectId: this._selectedProject?.id,
                 selectedIssueTypeId: this._selectedIssueType?.id,
                 requiredFields: this._requiredFieldsForIssueType,
+                createScreenHasFields: this._createScreenHasFields,
             },
         });
     }
@@ -248,10 +251,12 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
 
             this._availableIssueTypes = this.toFieldMap(issueTypes);
             this._selectedIssueType = selectedIssueType;
+            this._issueTypeUIs = issueTypeUIs;
 
             const requiredFields = this.getRequiredFieldsForIssueType(issueTypeUIs[this._selectedIssueType.id]);
 
             this._requiredFieldsForIssueType = requiredFields;
+            this._createScreenHasFields = this.hasCreateScreenFields(issueTypeUIs[this._selectedIssueType.id]);
             this._pendingState = false;
             if (this._isWebviewReady) {
                 await this.initFields();
@@ -346,10 +351,12 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
 
             this._selectedIssueType = selectedIssueType;
             this._availableIssueTypes = this.toFieldMap(issueTypes);
+            this._issueTypeUIs = issueTypeUIs;
 
             const requiredFields = this.getRequiredFieldsForIssueType(issueTypeUIs[this._selectedIssueType.id]);
 
             this._requiredFieldsForIssueType = requiredFields;
+            this._createScreenHasFields = this.hasCreateScreenFields(issueTypeUIs[this._selectedIssueType.id]);
             this._pendingState = false;
 
             this.webview.postMessage({
@@ -361,6 +368,7 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
                     selectedProjectId: this._selectedProject.id,
                     selectedIssueTypeId: this._selectedIssueType.id,
                     requiredFields: this._requiredFieldsForIssueType,
+                    createScreenHasFields: this._createScreenHasFields,
                 },
             });
         } catch (err) {
@@ -410,10 +418,12 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
 
             this._availableIssueTypes = this.toFieldMap(issueTypes);
             this._selectedIssueType = selectedIssueType;
+            this._issueTypeUIs = issueTypeUIs;
 
             const requiredFields = this.getRequiredFieldsForIssueType(issueTypeUIs[this._selectedIssueType.id]);
 
             this._requiredFieldsForIssueType = requiredFields;
+            this._createScreenHasFields = this.hasCreateScreenFields(issueTypeUIs[this._selectedIssueType.id]);
 
             await this.webview.postMessage({
                 type: CreateWorkItemWebviewProviderMessageType.UpdatedSelectedProject,
@@ -421,6 +431,7 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
                     availableIssueTypes: Object.values(this._availableIssueTypes),
                     selectedIssueTypeId: this._selectedIssueType.id,
                     requiredFields: this._requiredFieldsForIssueType,
+                    createScreenHasFields: this._createScreenHasFields,
                 },
             });
             this._pendingState = false;
@@ -447,6 +458,17 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
             }
 
             this._selectedIssueType = selectedIssueType;
+            const issueTypeUI = this._issueTypeUIs[this._selectedIssueType.id];
+            this._requiredFieldsForIssueType = this.getRequiredFieldsForIssueType(issueTypeUI);
+            this._createScreenHasFields = this.hasCreateScreenFields(issueTypeUI);
+
+            await this.webview?.postMessage({
+                type: CreateWorkItemWebviewProviderMessageType.UpdatedSelectedIssueType,
+                payload: {
+                    requiredFields: this._requiredFieldsForIssueType,
+                    createScreenHasFields: this._createScreenHasFields,
+                },
+            });
         } catch (err) {
             console.error('Error updating selected issue type in Create Work Item webview:', err);
         } finally {
@@ -463,6 +485,13 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
         }
         if (!this._selectedSite || !this._selectedProject || !this._selectedIssueType || !message.payload.summary) {
             window.showErrorMessage('Cannot create work item. Missing required information.');
+            return;
+        }
+
+        if (!this._createScreenHasFields) {
+            window.showErrorMessage(
+                'Cannot create work item. This project has no create fields configured for the selected work type.',
+            );
             return;
         }
 
@@ -608,6 +637,10 @@ export class CreateWorkItemWebviewProvider extends Disposable implements Webview
         }
 
         return requiredFields;
+    }
+
+    private hasCreateScreenFields<S extends JiraSiteInfo>(issueTypeUI: IssueTypeUI<S>): boolean {
+        return Object.keys(issueTypeUI.fields).some((key) => key !== 'project' && key !== 'issuetype');
     }
 
     private toFieldMap<T extends { id: string }>(arr: T[]): Record<string, T> {

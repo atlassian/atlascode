@@ -20,11 +20,18 @@ AtlasCode VSCode extension - Atlassian integration (Jira, Bitbucket, RovoDev)
 - Unit: `*.test.ts` alongside source (`npm test`)
 - React: `jest.react.config.ts` (`npm run test:react`) 
 - E2E: `e2e/` directory (`npm run test:e2e`)
+- Create issue React coverage lives under `src/webviews/components/issue/create-issue-screen/`; compact Create Work Item reducer/UI coverage lives under `src/react/atlascode/create-work-item/`
 
 ### Architecture
 - All Atlassian API calls → `src/atlclients/`
 - Webview communication → `src/ipc/`
 - Authentication → `authStore.ts`
+- Jira create flows have two surfaces: full editor (`src/webviews/createIssueWebview.ts` + `CreateIssuePage.tsx`) and compact work item view (`src/work-items/create-work-item/` + `src/react/atlascode/create-work-item/`)
+- Jira API error payloads often include actionable field errors in `errors`; preserve and render those instead of replacing them with generic Axios status messages
+
+### Common Gotchas
+- `npm ci` may fail if `package-lock.json` is out of sync with `package.json`; avoid committing lockfile churn unless dependency updates are the task
+- Public npm installs may fail on private Atlassian packages such as `@atlassian/assets-workspace-host`; note this explicitly when tests or lint cannot run locally
 
 ## Environment Context
 - `atlascode:bbyEnvironmentActive` = Boysenberry (internal Atlassian environment)
@@ -51,4 +58,4 @@ AtlasCode VSCode extension - Atlassian integration (Jira, Bitbucket, RovoDev)
 3. Keep concise and actionable - focus on helping future agents avoid problems
 
 **Include:** File patterns, integration points, auth requirements, testing strategies, error patterns
-**Exclude:** Implementation details, temporary workarounds, user preferences 
+**Exclude:** Implementation details, temporary workarounds, user preferences
