@@ -4,6 +4,7 @@
 
 ### Bug Fixes
 
+- **Authentication**: OAuth credentials that were previously marked invalid are now re-validated by attempting a token refresh instead of being skipped forever. A credential invalidated by a transient token-endpoint error now self-heals on the next refresh, so users no longer see a persistent "There was an error connecting to ... Please log in again." message in every new window despite still being signed in.
 - **RovoDev**: Hid stack traces, stderr, and log details from external users while preserving them for Atlassian users.
 - **RovoDev (BBY)**: Fixed `ROVODEV_REBRAND_JCA` env var handling so the "Jira Coding Agent" rebrand works correctly in webviews.
 - **Notifications**: Fixed `atlassianNotificationNotifier` to correctly flush all promise levels, resolving a test reliability issue.
