@@ -4,6 +4,8 @@
 
 ### Bug Fixes
 
+- **RovoDev**: Fixed unhandled promise rejection in `processRovoDevResponse` when handling `deferred_request` events — the call to `processDeferredToolCallResponse` was not awaited, causing errors (e.g. JSON parse failures in `ask_user_questions` or `exit_plan_mode` args) to escape as unhandled rejections instead of being surfaced as error dialogs. Also added a guard against empty `tools` arrays in `deferred_request` payloads.
+
 - **RovoDev**: Hid stack traces, stderr, and log details from external users while preserving them for Atlassian users.
 - **RovoDev (BBY)**: Fixed `ROVODEV_REBRAND_JCA` env var handling so the "Jira Coding Agent" rebrand works correctly in webviews.
 - **Notifications**: Fixed `atlassianNotificationNotifier` to correctly flush all promise levels, resolving a test reliability issue.

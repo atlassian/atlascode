@@ -1260,4 +1260,114 @@ describe('RovoDevChatProvider', () => {
             });
         });
     });
+
+    describe('deferred_request handling', () => {
+        beforeEach(async () => {
+            await chatProvider.setReady(mockApiClient);
+            mockApiClient.chat.mockResolvedValue({ body: new ReadableStream({ start(c) { c.close(); } }) } as Response);
+        });
+
+        it('should await processDeferredToolCallResponse so errors are caught and shown as dialogs', async () => {
+            // Build a stream that emits a deferred_request with ask_user_questions carrying invalid JSON args.
+            // Without the await fix the error would be an unhandled promise rejection; with the fix it
+            // gets caught by the try/catch inside processDeferredToolCallResponse.
+            const deferredStream = new ReadableStream({
+                start(controller) {
+                    const chunk = JSON.stringify({
+                        calls: [
+                            {
+                                tool_name: 'ask_user_questions',
+                                args: 'not-valid-json{{{',
+                                tool_call_id: 'call-deferred-1',
+                            },
+                        ],
+                    });
+                    controller.enqueue(
+                        new TextEncoder().encode(`event: deferred-request\ndata: ${chunk}\n\n`),
+                    );
+                    controller.enqueue(new TextEncoder().encode('event: close\ndata: \n\n'));
+                    controller.close();
+                },
+            });
+
+            // executeDeferredToolCall is called in the error-recovery path; mock chat for that second call
+            mockApiClient.chat
+                .mockResolvedValueOnce({ body: deferredStream } as Response)
+                .mockResolvedValueOnce({
+                    body: new ReadableStream({
+                        start(c) {
+                            c.enqueue(new TextEncoder().encode('event: close\ndata: \n\n'));
+                            c.close();
+                        },
+                    }),
+                } as Response);
+
+            const mockPrompt: RovoDevPrompt = { text: 'test', context: [] };
+            await chatProvider.executeChat(mockPrompt, []);
+
+            // The error should have been surfaced as a ShowDialog message, not an unhandled rejection
+            expect(mockWebview.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: RovoDevProviderMessageType.ShowDialog,
+                    message: expect.objectContaining({ type: 'error' }),
+                }),
+            );
+        });
+
+        it('should handle deferred_request with no tools gracefully (no crash)', async () => {
+            // If the backend sends a deferred_request with an empty calls array, the provider
+            // should handle it gracefully without throwing.
+            const deferredStream = new ReadableStream({
+                start(controller) {
+                    const chunk = JSON.stringify({ calls: [] });
+                    controller.enqueue(
+                        new TextEncoder().encode(`event: deferred-request\ndata: ${chunk}\n\n`),
+                    );
+                    controller.enqueue(new TextEncoder().encode('event: close\ndata: \n\n'));
+                    controller.close();
+                },
+            });
+
+            mockApiClient.chat.mockResolvedValueOnce({ body: deferredStream } as Response);
+
+            const mockPrompt: RovoDevPrompt = { text: 'test', context: [] };
+            // Should resolve without throwing
+            await expect(chatProvider.executeChat(mockPrompt, [])).resolves.toBeUndefined();
+        });
+
+        it('should show deferred ask_user_questions to webview when args are valid', async () => {
+            const args = { questions: [{ id: 'q1', question: 'Is this ok?', options: ['Yes', 'No'] }] };
+            const deferredStream = new ReadableStream({
+                start(controller) {
+                    const chunk = JSON.stringify({
+                        calls: [
+                            {
+                                tool_name: 'ask_user_questions',
+                                args: JSON.stringify(args),
+                                tool_call_id: 'call-aq-1',
+                            },
+                        ],
+                    });
+                    controller.enqueue(
+                        new TextEncoder().encode(`event: deferred-request\ndata: ${chunk}\n\n`),
+                    );
+                    controller.enqueue(new TextEncoder().encode('event: close\ndata: \n\n'));
+                    controller.close();
+                },
+            });
+
+            mockApiClient.chat.mockResolvedValueOnce({ body: deferredStream } as Response);
+
+            const mockPrompt: RovoDevPrompt = { text: 'test', context: [] };
+            await chatProvider.executeChat(mockPrompt, []);
+
+            expect(mockWebview.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: RovoDevProviderMessageType.ShowDeferredAskUserQuestions,
+                    toolCallId: 'call-aq-1',
+                    args,
+                }),
+            );
+        });
+    });
 });
