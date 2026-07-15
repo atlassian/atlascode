@@ -181,7 +181,24 @@ export function safeJsonParse<T = any>(value: string | T | null | undefined): T 
     if (!value) {
         return null;
     }
-    return typeof value === 'string' ? JSON.parse(value) : value;
+    if (typeof value !== 'string') {
+        return value;
+    }
+    // Defensive parsing: some upstream producers (e.g. the RovoDev backend for MCP tool
+    // returns) may accidentally double-stringify JSON payloads. In that case the first
+    // JSON.parse yields another JSON string rather than the expected object/array. Detect
+    // that condition and parse a second time so callers always receive the intended value.
+    // See FLOW-1577 for context.
+    const parsed = JSON.parse(value);
+    if (typeof parsed === 'string') {
+        try {
+            return JSON.parse(parsed) as T;
+        } catch {
+            // The inner string was not itself JSON; fall through and return it as-is.
+            return parsed as unknown as T;
+        }
+    }
+    return parsed as T;
 }
 
 /**

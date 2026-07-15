@@ -619,6 +619,69 @@ describe('parseToolReturnMessage', () => {
             expect(mockOnError).not.toHaveBeenCalled();
         });
 
+        it('should defensively handle double-stringified MCP tool args (FLOW-1577)', () => {
+            // Simulate the backend accidentally double-stringifying the args payload.
+            const innerArgs = { tool_name: 'get_jira_issue', input: { issueKey: 'FLOW-1577' } };
+            const doubleStringified = JSON.stringify(JSON.stringify(innerArgs));
+
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'mcp__atlassian__invoke_tool',
+                args: doubleStringified as any,
+                mcp_server: 'atlassian',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'mcp__atlassian__invoke_tool',
+                content: 'results',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                content: 'Invoked atlassian MCP tool: `get_jira_issue`',
+                type: 'bash',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should defensively handle double-stringified args for get_tool_schema (FLOW-1577)', () => {
+            const innerArgs = { tool_name: 'get_confluence_page' };
+            const doubleStringified = JSON.stringify(JSON.stringify(innerArgs));
+
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'mcp__atlassian__get_tool_schema',
+                args: doubleStringified as any,
+                mcp_server: 'atlassian',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'mcp__atlassian__get_tool_schema',
+                content: 'schema',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                content: 'Invoked atlassian MCP tool: `get_confluence_page`',
+                type: 'bash',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
         it('should return individual subagent tasks for invoke_subagents tool', () => {
             const toolCallMessage: RovoDevToolCallResponse = {
                 event_kind: 'tool-call',
