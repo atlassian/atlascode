@@ -10,6 +10,7 @@ import Tooltip from '@atlaskit/tooltip';
 import React, { useCallback, useMemo } from 'react';
 import { AgentMode, RovoDevModeInfo } from 'src/rovo-dev/client';
 
+import { useControllableOpen } from '../useControllableOpen';
 import AgentModeSection from './AgentModeSection';
 import PromptSettingsItem from './PromptSettingsItem';
 
@@ -41,6 +42,8 @@ interface PromptSettingsPopupProps {
     currentAgentMode: AgentMode | null;
     onAgentModeChange: (mode: AgentMode) => void;
     onClose: () => void;
+    isOpen?: boolean;
+    onOpenChange?: (isOpen: boolean) => void;
 }
 
 const PopupContainer = React.forwardRef<HTMLDivElement, PopupComponentProps>(
@@ -74,8 +77,10 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
     currentAgentMode,
     onAgentModeChange,
     onClose,
+    isOpen: controlledIsOpen,
+    onOpenChange,
 }) => {
-    const [isOpen, setIsOpen] = React.useState(false);
+    const [isOpen, setIsOpen] = useControllableOpen(controlledIsOpen, onOpenChange);
 
     const handleAgentModeChange = useCallback(
         (mode: AgentMode) => {
@@ -83,7 +88,7 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
             setIsOpen(false);
             onClose();
         },
-        [onAgentModeChange, onClose],
+        [onAgentModeChange, onClose, setIsOpen],
     );
 
     const otherSectionItems = useMemo((): OtherSectionItem[] => {
@@ -127,7 +132,7 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                     {isOpen ? (
                         <button
                             {...props}
-                            onClick={() => setIsOpen((prev) => !prev)}
+                            onClick={() => setIsOpen(false)}
                             className="prompt-button-secondary-open"
                             aria-label="Prompt settings (open)"
                         >
@@ -136,7 +141,7 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                     ) : (
                         <button
                             {...props}
-                            onClick={() => setIsOpen((prev) => !prev)}
+                            onClick={() => setIsOpen(true)}
                             className="prompt-button-secondary"
                             aria-label="Prompt settings"
                         >
