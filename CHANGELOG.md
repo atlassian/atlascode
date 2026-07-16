@@ -8,6 +8,7 @@
 - **RovoDev**: Hid stack traces, stderr, and log details from external users while preserving them for Atlassian users.
 - **RovoDev (BBY)**: Fixed `ROVODEV_REBRAND_JCA` env var handling so the "Jira Coding Agent" rebrand works correctly in webviews.
 - **Notifications**: Fixed `atlassianNotificationNotifier` to correctly flush all promise levels, resolving a test reliability issue.
+- **RovoDev**: Fixed the prompt toolbar so only one dropdown (Add, Preferences, or model selector) can be open at a time - opening one now closes any other that was open, instead of stacking a dropdown over a dropdown.
 
 ### Improvements
 
