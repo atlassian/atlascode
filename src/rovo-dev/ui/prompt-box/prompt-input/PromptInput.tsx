@@ -142,9 +142,18 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
     // Tracks which prompt toolbar popup is currently open so that only one can be open at a time.
     const [openPopup, setOpenPopup] = React.useState<'context' | 'settings' | 'model' | null>(null);
 
-    const makePopupOpenChangeHandler = React.useCallback(
-        (popup: 'context' | 'settings' | 'model') => (isOpen: boolean) =>
-            setOpenPopup((prev) => (isOpen ? popup : prev === popup ? null : prev)),
+    // Pre-memoize one stable handler per popup so `onOpenChange` keeps a stable reference across
+    // renders (a fresh reference would defeat memoization in useControllableOpen).
+    const handleContextOpenChange = React.useCallback(
+        (isOpen: boolean) => setOpenPopup((prev) => (isOpen ? 'context' : prev === 'context' ? null : prev)),
+        [],
+    );
+    const handleSettingsOpenChange = React.useCallback(
+        (isOpen: boolean) => setOpenPopup((prev) => (isOpen ? 'settings' : prev === 'settings' ? null : prev)),
+        [],
+    );
+    const handleModelOpenChange = React.useCallback(
+        (isOpen: boolean) => setOpenPopup((prev) => (isOpen ? 'model' : prev === 'model' ? null : prev)),
         [],
     );
     const promptCompletionProviderRef = React.useRef<monaco.IDisposable | null>(null);
@@ -383,7 +392,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         onSelectedSavedPrompt={handleSelectSavedPrompt}
                         onAddRepositoryFile={onAddContext}
                         isOpen={openPopup === 'context'}
-                        onOpenChange={makePopupOpenChangeHandler('context')}
+                        onOpenChange={handleContextOpenChange}
                     />
                     <PromptSettingsPopup
                         onDeepPlanToggled={onDeepPlanToggled}
@@ -396,7 +405,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         onAgentModeChange={onAgentModeChange}
                         onClose={() => {}}
                         isOpen={openPopup === 'settings'}
-                        onOpenChange={makePopupOpenChangeHandler('settings')}
+                        onOpenChange={handleSettingsOpenChange}
                     />
                     {isDeepPlanEnabled && onDeepPlanToggled && (
                         <Tooltip content="Disable deep plan">
@@ -466,7 +475,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         onModelChange={onAgentModelChange}
                         isDisabled={disableAgentModelSelector}
                         isOpen={openPopup === 'model'}
-                        onOpenChange={makePopupOpenChangeHandler('model')}
+                        onOpenChange={handleModelOpenChange}
                     />
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
