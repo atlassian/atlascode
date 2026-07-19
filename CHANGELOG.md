@@ -2,6 +2,10 @@
 
 ## What's new in 4.0.31
 
+### Improvements
+
+- **RovoDev**: Collapsed completed tool call results in the thinking drawer for a more compact chat view. Users can still expand the drawer to see details.
+
 ### Bug Fixes
 
 - **RovoDev**: Fixed markdown formatting in the chat view - headers now render at a consistent 16px, and tables are responsive so they no longer overflow the narrow sidebar.
