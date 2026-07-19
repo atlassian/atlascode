@@ -4,6 +4,8 @@
 
 ### Bug Fixes
 
+- **RovoDev**: Fixed the prompt box toolbar breaking into multiple lines when the sidebar is narrow by preventing wrapping and allowing toolbar sections to shrink gracefully. Reduced prompt button and icon sizes from 32px/24px to 24px/16px so they no longer appear oversized.
+
 - **RovoDev**: Fixed markdown formatting in the chat view - headers now render at a consistent 16px, and tables are responsive so they no longer overflow the narrow sidebar.
 - **RovoDev**: Hid stack traces, stderr, and log details from external users while preserving them for Atlassian users.
 - **RovoDev (BBY)**: Fixed `ROVODEV_REBRAND_JCA` env var handling so the "Jira Coding Agent" rebrand works correctly in webviews.
