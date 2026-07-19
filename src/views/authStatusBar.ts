@@ -88,13 +88,14 @@ export class AuthStatusBar extends Disposable {
 
     private async updateAuthenticationStatusBar(product: Product, authInfo?: AuthInfo): Promise<void> {
         const statusBarItem = this.ensureStatusItem(product);
-        if (
+        const shouldShowStatusBar =
             (product.name === 'Jira' && Container.config.jira.enabled && Container.config.jira.statusbar.enabled) ||
             (product.name === 'Bitbucket' &&
                 Container.config.bitbucket.enabled &&
-                Container.config.bitbucket.statusbar.enabled)
-        ) {
-            const statusBarItem = this.ensureStatusItem(product);
+                Container.config.bitbucket.statusbar.enabled);
+        const shouldHideInBoysenberry = Container.isBoysenberryMode && !authInfo;
+
+        if (shouldShowStatusBar && !shouldHideInBoysenberry) {
             await this.updateStatusBarItem(statusBarItem, product, authInfo);
         } else {
             statusBarItem.hide();
