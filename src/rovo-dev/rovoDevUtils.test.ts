@@ -1,7 +1,69 @@
-import { RovoDevModelsResponse } from './client/responseParserInterfaces';
-import { modelsJsonResponseToMarkdown, parseCustomCliTagsForMarkdown, removeCustomCliTags } from './rovoDevUtils';
+import { RovoDevModelsResponse, RovoDevUsageResponse } from './client/responseParserInterfaces';
+import {
+    modelsJsonResponseToMarkdown,
+    parseCustomCliTagsForMarkdown,
+    removeCustomCliTags,
+    usageJsonResponseToMarkdown,
+} from './rovoDevUtils';
+
+const makeUsageResponse = (overrides: Partial<RovoDevUsageResponse['data']['content']> = {}): RovoDevUsageResponse => ({
+    event_kind: 'usage',
+    data: {
+        content: {
+            isBetaSite: false,
+            title: 'My Credits',
+            status: 'ok',
+            credit_type: 'standard',
+            credit_used: 100,
+            credit_remaining: 900,
+            credit_total: 1000,
+            retry_after_seconds: 0,
+            ...overrides,
+        },
+    },
+});
 
 describe('rovoDevUtils', () => {
+    describe('usageJsonResponseToMarkdown', () => {
+        it('should replace {title} placeholder in exceeded_message with the actual title', () => {
+            const response = makeUsageResponse({
+                exceeded_message: {
+                    message: 'You have exceeded your {title} limit.',
+                },
+            });
+            const { alert_message } = usageJsonResponseToMarkdown(response);
+            expect(alert_message?.message).toBe('You have exceeded your My Credits limit.');
+        });
+
+        it('should replace {title} placeholder in exceeded_message that also has a ctaLink', () => {
+            const response = makeUsageResponse({
+                exceeded_message: {
+                    message: '{title} limit reached. Visit {ctaLink} for more info.',
+                    ctaLink: { link: 'https://example.com', text: 'Upgrade' },
+                },
+            });
+            const { alert_message } = usageJsonResponseToMarkdown(response);
+            expect(alert_message?.message).toBe('My Credits limit reached. Visit {ctaLink} for more info.');
+            expect(alert_message?.ctaLink).toEqual({ link: 'https://example.com', text: 'Upgrade' });
+        });
+
+        it('should return exceeded_message unchanged when there is no {title} placeholder', () => {
+            const response = makeUsageResponse({
+                exceeded_message: {
+                    message: 'You have reached your credit limit.',
+                },
+            });
+            const { alert_message } = usageJsonResponseToMarkdown(response);
+            expect(alert_message?.message).toBe('You have reached your credit limit.');
+        });
+
+        it('should return undefined alert_message when exceeded_message is not set', () => {
+            const response = makeUsageResponse();
+            const { alert_message } = usageJsonResponseToMarkdown(response);
+            expect(alert_message).toBeUndefined();
+        });
+    });
+
     describe('modelsJsonResponseToMarkdown', () => {
         it('should return undefined when models array is empty', () => {
             const response: RovoDevModelsResponse = {

@@ -49,6 +49,11 @@
 
 ## What's new in 4.0.28
 
+### Bug Fixes
+
+- **RovoDev**: Fixed `{title}` placeholder not being resolved in the rate limit exceeded message
+
+
 ### Improvements
 
 - **RovoDev (Boysenberry)**: Added feature-gated rebrand of "Rovo Dev" to "Jira Coding Agent" for Boysenberry environments only. Requires both `ROVODEV_REBRAND_JCA=true` (rollout gate) and `ROVODEV_BBY=true` (Boysenberry context). Affects all user-facing strings including headers, error messages, code actions, slash commands, landing page, and login forms.
