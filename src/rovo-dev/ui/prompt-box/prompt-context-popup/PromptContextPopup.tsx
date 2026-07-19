@@ -64,7 +64,7 @@ const PromptContextPopup: React.FC<PromptContextPopupProps> = ({
                             className="prompt-button-secondary-open"
                             aria-label="Prompt context (open)"
                         >
-                            <CrossIcon label="Close" />
+                            <CrossIcon label="Close" size="small" />
                         </button>
                     ) : (
                         <button
@@ -73,7 +73,7 @@ const PromptContextPopup: React.FC<PromptContextPopupProps> = ({
                             className="prompt-button-secondary"
                             aria-label="Prompt context"
                         >
-                            <AddIcon label="Open prompt context" />
+                            <AddIcon label="Open prompt context" size="small" />
                         </button>
                     )}
                 </Tooltip>
