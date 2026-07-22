@@ -12,6 +12,7 @@
 
 ### Improvements
 
+- **RovoDev**: Updated Rovo Dev version to 202607.21.1b1
 - **RovoDev**: Updated Rovo Dev version to 202606.10.1b3
 - **Notifications**: Added `siteId` to the `notificationFeedVSCode` GraphQL query so notification feeds are correctly scoped per Atlassian site.
 - **Logger**: Removed a spurious client-side error from Sentry to reduce noise in error reporting.
