@@ -44,12 +44,11 @@ export async function activate(context: ExtensionContext) {
 
         // Register global error handlers as last resort to catch any unhandled exceptions
         const uncaughtExceptionHandler = (error: Error) => {
-            Logger.error(error, 'Uncaught exception in extension');
+            Logger.error(new Error('Uncaught exception in extension'), String(error));
         };
 
         const unhandledRejectionHandler = (reason: any) => {
-            const error = reason instanceof Error ? reason : new Error(String(reason));
-            Logger.error(error, 'Unhandled promise rejection in extension');
+            Logger.error(new Error('Unhandled promise rejection in extension'), String(reason));
         };
 
         process.on('uncaughtException', uncaughtExceptionHandler);
