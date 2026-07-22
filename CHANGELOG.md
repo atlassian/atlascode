@@ -2,6 +2,10 @@
 
 ## What's new in 4.0.31
 
+### Improvements
+
+- **RovoDev**: Skill file opens (SKILL.md) are now displayed with the skill name in the chat UI instead of the generic "Opened file" label.
+
 ### Bug Fixes
 
 - **RovoDev**: Fixed markdown formatting in the chat view - headers now render at a consistent 16px, and tables are responsive so they no longer overflow the narrow sidebar.
