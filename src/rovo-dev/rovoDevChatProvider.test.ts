@@ -1260,4 +1260,72 @@ describe('RovoDevChatProvider', () => {
             });
         });
     });
+
+    describe('rovoDevPromptWarning (rate limit)', () => {
+        beforeEach(() => {
+            chatProvider = new RovoDevChatProvider(true, mockTelemetryProvider);
+            chatProvider.setWebview(mockWebview);
+            chatProvider['_currentPromptId'] = 'prompt-A';
+            mockTelemetryProvider.fireTelemetryEvent.mockClear();
+        });
+
+        it('detects rate-limit warnings by title or message (case-insensitive)', () => {
+            expect(chatProvider['isRateLimitWarning']({ title: 'Rate limit exceeded' })).toBe(true);
+            expect(chatProvider['isRateLimitWarning']({ message: "We've hit a RATE LIMIT" })).toBe(true);
+            expect(chatProvider['isRateLimitWarning']({ title: 'Heads up', message: 'Model switched' })).toBe(false);
+            expect(chatProvider['isRateLimitWarning']({ title: 'current rate', message: 'limit hit' })).toBe(false);
+            expect(chatProvider['isRateLimitWarning']({})).toBe(false);
+        });
+
+        it('emits reason=rate_limit (with title), can fire repeatedly, and omits absent title', () => {
+            chatProvider['firePromptWarning']('rate_limit', 'Rate limit exceeded');
+            expect(mockTelemetryProvider.fireTelemetryEvent).toHaveBeenCalledWith({
+                action: 'rovoDevPromptWarning',
+                subject: 'atlascode',
+                attributes: { promptId: 'prompt-A', reason: 'rate_limit', title: 'Rate limit exceeded' },
+            });
+
+            chatProvider['firePromptWarning']('rate_limit');
+            expect(mockTelemetryProvider.fireTelemetryEvent).toHaveBeenCalledTimes(2);
+            expect(mockTelemetryProvider.fireTelemetryEvent.mock.calls[1][0].attributes).toEqual({
+                promptId: 'prompt-A',
+                reason: 'rate_limit',
+            });
+        });
+
+        it('does not emit outside Boysenberry mode or without a current promptId', () => {
+            const ideProvider = new RovoDevChatProvider(false, mockTelemetryProvider);
+            ideProvider['_currentPromptId'] = 'prompt-ide';
+            ideProvider['firePromptWarning']('rate_limit', 'Rate limit exceeded');
+
+            chatProvider['_currentPromptId'] = '';
+            chatProvider['firePromptWarning']('rate_limit', 'Rate limit exceeded');
+
+            expect(mockTelemetryProvider.fireTelemetryEvent).not.toHaveBeenCalled();
+        });
+
+        it('fires only for rate-limit chat warnings, never for other warnings or replay', async () => {
+            await chatProvider['processRovoDevResponse']('chat', {
+                event_kind: 'warning',
+                message: 'Some models are slow',
+                title: 'Heads up',
+            } as any);
+            await chatProvider['processRovoDevResponse']('replay', {
+                event_kind: 'warning',
+                message: "We'll try again in 10 seconds.",
+                title: 'Rate limit exceeded',
+            } as any);
+            expect(mockTelemetryProvider.fireTelemetryEvent).not.toHaveBeenCalled();
+
+            await chatProvider['processRovoDevResponse']('chat', {
+                event_kind: 'warning',
+                message: "We'll try again in 10 seconds.",
+                title: 'Rate limit exceeded',
+            } as any);
+            expect(mockTelemetryProvider.fireTelemetryEvent).toHaveBeenCalledTimes(1);
+            const call = mockTelemetryProvider.fireTelemetryEvent.mock.calls[0][0];
+            expect(call.action).toBe('rovoDevPromptWarning');
+            expect((call.attributes as { reason?: string }).reason).toBe('rate_limit');
+        });
+    });
 });

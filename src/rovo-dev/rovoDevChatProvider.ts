@@ -771,6 +771,10 @@ export class RovoDevChatProvider {
             }
 
             case 'warning': {
+                if (sourceApi !== 'replay' && this.isRateLimitWarning(response)) {
+                    this.firePromptWarning('rate_limit', response.title);
+                }
+
                 const { text, link } = this.parseExceptionMessage(response.message);
                 await webview.postMessage({
                     type: RovoDevProviderMessageType.ShowDialog,
@@ -1197,6 +1201,34 @@ export class RovoDevChatProvider {
                 ...(extras.errorReason !== undefined ? { errorReason: extras.errorReason } : {}),
                 ...(extras.httpStatus !== undefined ? { httpStatus: extras.httpStatus } : {}),
                 ...(extras.messagePartsCount !== undefined ? { messagePartsCount: extras.messagePartsCount } : {}),
+            },
+        });
+    }
+
+    private isRateLimitWarning(response: { title?: string; message?: string }): boolean {
+        return (
+            !!response.title?.toLowerCase().includes('rate limit') ||
+            !!response.message?.toLowerCase().includes('rate limit')
+        );
+    }
+
+    private firePromptWarning(reason: Track.PromptWarningReason, title?: string): void {
+        if (!this._isBoysenberry) {
+            return;
+        }
+
+        const promptId = this._currentPromptId;
+        if (!promptId) {
+            return;
+        }
+
+        this._telemetryProvider.fireTelemetryEvent({
+            action: 'rovoDevPromptWarning',
+            subject: 'atlascode',
+            attributes: {
+                promptId,
+                reason,
+                ...(title !== undefined ? { title } : {}),
             },
         });
     }
