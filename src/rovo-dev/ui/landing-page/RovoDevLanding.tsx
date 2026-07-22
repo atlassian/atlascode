@@ -6,6 +6,7 @@ import { getProductName } from '../../api/rovodevStaticConfig';
 import { McpConsentChoice } from '../rovoDevViewMessages';
 import { DisabledMessage } from './disabled-messages/DisabledMessage';
 import { CredentialHint } from './disabled-messages/RovoDevLoginForm';
+import { QuickActionsButton } from './QuickActionsButton';
 import { RovoDevActions, RovoDevJiraWorkItems } from './RovoDevSuggestions';
 
 const RovoDevImg = () => {
@@ -39,6 +40,7 @@ export const RovoDevLanding: React.FC<{
     jiraWorkItems: MinimalIssue<DetailedSiteInfo>[] | undefined;
     onJiraItemClick: (issue: MinimalIssue<DetailedSiteInfo>) => void;
     onLinkClick: (url: string) => void;
+    onNewChat: () => void;
     credentialHints?: CredentialHint[];
 }> = ({
     currentState,
@@ -51,6 +53,7 @@ export const RovoDevLanding: React.FC<{
     jiraWorkItems,
     onJiraItemClick,
     onLinkClick,
+    onNewChat,
     credentialHints,
 }) => {
     const shouldHideSuggestions = React.useMemo(
@@ -84,6 +87,9 @@ export const RovoDevLanding: React.FC<{
 
             {!shouldHideSuggestions && (
                 <>
+                    <div style={{ width: '100%', maxWidth: '270px', marginTop: '8px' }}>
+                        <QuickActionsButton label="New Chat" onClick={onNewChat} variant="primary" />
+                    </div>
                     <RovoDevActions setPromptText={setPromptText} />
                     <RovoDevJiraWorkItems jiraWorkItems={jiraWorkItems} onJiraItemClick={onJiraItemClick} />
                 </>
