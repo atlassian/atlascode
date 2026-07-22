@@ -91,7 +91,7 @@ export function createReducer(state: CreateFormState, action: CreateFormAction):
                 ...state,
                 availableProjects: action.payload.availableProjects.map((project) => ({
                     name: project.name,
-                    value: project.key,
+                    value: project.id,
                     iconPath: project.avatarUrls['48x48'],
                 })),
                 hasMoreProjects: action.payload.hasMoreProjects,
