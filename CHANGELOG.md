@@ -23,6 +23,7 @@
 
 ### Cleanup
 
+- **RovoDev**: Removed stale feature flag `atlascode-rovodev-entitlement-notification`; entitlement notifications are now always enabled (matching the flag's final value of `true`).
 - **RovoDev**: Removed unused `canFetchInternalUrl` logic from the container.
 
 ## What's new in 4.0.30
