@@ -675,6 +675,21 @@ const RovoDevView: React.FC = () => {
         });
     }, [postMessage]);
 
+    const onCreateLivePreview = useCallback((): void => {
+        // only start when idle, and hide the button immediately to avoid a
+        // double-click race that triggers an HTTP 409 ("agent busy")
+        if (currentState.state !== 'WaitingForPrompt') {
+            return;
+        }
+
+        setShowLivePreviewButton(false);
+        setCurrentState({ state: 'GeneratingResponse' });
+
+        postMessage({
+            type: RovoDevViewResponseType.CreateLivePreview,
+        });
+    }, [currentState.state, postMessage]);
+
     const cancelResponse = useCallback((): void => {
         if (currentState.state === 'CancellingResponse') {
             return;
@@ -1107,6 +1122,7 @@ const RovoDevView: React.FC = () => {
                         credentialHints={credentialHints}
                         onGeneratePlanClick={(e: string, proceed: boolean) => handleExitPlanMode(proceed, e)}
                         showLivePreviewButton={showLivePreviewButton}
+                        onCreateLivePreview={onCreateLivePreview}
                     />
                     {!hidePromptBox && (
                         <div className="input-section-container">

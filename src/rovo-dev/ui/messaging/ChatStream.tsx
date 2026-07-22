@@ -49,6 +49,7 @@ interface ChatStreamProps {
     credentialHints?: CredentialHint[];
     onGeneratePlanClick?: (planId: string, proceed: boolean) => void;
     showLivePreviewButton?: boolean;
+    onCreateLivePreview?: () => void;
     isAtlassianUser?: boolean;
 }
 
@@ -75,6 +76,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     credentialHints,
     onGeneratePlanClick,
     showLivePreviewButton,
+    onCreateLivePreview,
     isAtlassianUser,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
@@ -283,7 +285,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
             {showActionFooter && (
                 <FollowUpActionFooter>
-                    <LivePreviewButton messagingApi={messagingApi} />
+                    <LivePreviewButton messagingApi={messagingApi} onCreateLivePreview={onCreateLivePreview} />
                 </FollowUpActionFooter>
             )}
             <div id="sentinel" ref={sentinelRef} style={{ height: '10px', width: '100%', pointerEvents: 'none' }} />

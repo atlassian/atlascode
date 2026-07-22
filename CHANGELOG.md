@@ -9,6 +9,7 @@
 - **RovoDev (BBY)**: Fixed `ROVODEV_REBRAND_JCA` env var handling so the "Jira Coding Agent" rebrand works correctly in webviews.
 - **Notifications**: Fixed `atlassianNotificationNotifier` to correctly flush all promise levels, resolving a test reliability issue.
 - **RovoDev**: Fixed the prompt toolbar so only one dropdown (Add, Preferences, or model selector) can be open at a time - opening one now closes any other that was open, instead of stacking a dropdown over a dropdown.
+- **RovoDev (BBY)**: Fixed frequent live preview failures (`HTTP 409` on `/v3/stream_chat`) caused by triggering a live preview while the agent was already streaming. The Live Preview button is now hidden as soon as it is clicked (and while the agent is running), and a backstop guard prevents a live preview request from being sent when a response is already in progress. When a live preview attempt fails or ends without starting a preview, the button is automatically restored so it can be clicked again to retry (the button itself is the retry affordance, so live-preview errors no longer show a non-functional "Try again").
 
 ### Improvements
 
