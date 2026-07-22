@@ -2,6 +2,10 @@
 
 ## What's new in 4.0.31
 
+### Improvements
+
+- **RovoDev**: Show the skill name when the agent loads a skill (e.g. "Loading skill: jira") instead of displaying a generic "opened file" message.
+
 ### Bug Fixes
 
 - **RovoDev**: Fixed markdown formatting in the chat view - headers now render at a consistent 16px, and tables are responsive so they no longer overflow the narrow sidebar.
