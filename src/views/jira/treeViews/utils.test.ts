@@ -7,7 +7,7 @@ import { Uri } from 'vscode';
 
 import * as issuesForJQL from '../../../jira/issuesForJql';
 import { Logger } from '../../../logger';
-import { executeJqlQuery, JiraIssueNode, TreeViewIssue } from './utils';
+import { clearFailedJqlSites, executeJqlQuery, JiraIssueNode, TreeViewIssue } from './utils';
 
 jest.mock('../../../container', () => ({
     Container: {
@@ -68,6 +68,7 @@ describe('utils', () => {
     afterEach(() => {
         jest.clearAllMocks();
         jest.restoreAllMocks();
+        clearFailedJqlSites();
     });
 
     describe('executeJqlQuery', () => {
@@ -189,6 +190,63 @@ describe('utils', () => {
             );
             expect(issuesForJQLSpy).not.toHaveBeenCalled();
             expect(Logger.error).not.toHaveBeenCalled();
+        });
+
+        it('silently swallows 401 errors without logging', async () => {
+            const error = { response: { status: 401 } };
+            const jqlEntry = expansionCastTo<JQLEntry>({
+                id: 'id1',
+                query: 'assignee = currentUser()',
+                siteId: 'site-id-guid',
+            });
+            jest.spyOn(issuesForJQL, 'issuesForJQL').mockRejectedValue(error);
+
+            const issues = await executeJqlQuery(jqlEntry);
+
+            expect(issues).toHaveLength(0);
+            expect(Logger.error).not.toHaveBeenCalled();
+            expect(Logger.warn).not.toHaveBeenCalled();
+        });
+
+        it('short-circuits subsequent calls for the same site after a 401', async () => {
+            const error = { response: { status: 401 } };
+            const jqlEntry = expansionCastTo<JQLEntry>({
+                id: 'id1',
+                query: 'assignee = currentUser()',
+                siteId: 'site-id-guid',
+            });
+            const spy = jest.spyOn(issuesForJQL, 'issuesForJQL').mockRejectedValue(error);
+
+            await executeJqlQuery(jqlEntry);
+            spy.mockClear();
+
+            // second call should short-circuit without hitting issuesForJQL
+            const issues = await executeJqlQuery(jqlEntry);
+
+            expect(issues).toHaveLength(0);
+            expect(spy).not.toHaveBeenCalled();
+            expect(Logger.error).not.toHaveBeenCalled();
+        });
+
+        it('resumes calling issuesForJQL after clearFailedJqlSites()', async () => {
+            const error = { response: { status: 401 } };
+            const jqlEntry = expansionCastTo<JQLEntry>({
+                id: 'id1',
+                query: 'assignee = currentUser()',
+                siteId: 'site-id-guid',
+            });
+            const spy = jest.spyOn(issuesForJQL, 'issuesForJQL').mockRejectedValue(error);
+
+            // first call marks the site as failed
+            await executeJqlQuery(jqlEntry);
+            spy.mockClear();
+
+            clearFailedJqlSites();
+
+            // after clearing, the site should be retried
+            await executeJqlQuery(jqlEntry);
+
+            expect(spy).toHaveBeenCalledTimes(1);
         });
     });
 
