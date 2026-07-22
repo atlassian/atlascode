@@ -5,7 +5,6 @@ import * as http from 'http';
 import Mustache from 'mustache';
 import PCancelable from 'p-cancelable';
 import pTimeout from 'p-timeout';
-import { promisify } from 'util';
 import { v4 } from 'uuid';
 import * as vscode from 'vscode';
 import { Disposable } from 'vscode';
@@ -309,12 +308,16 @@ export class OAuthDancer implements Disposable {
 
         if (!this._srv) {
             this._srv = http.createServer(this._app);
-            const listenPromise = promisify(this._srv.listen.bind(this._srv));
             try {
-                await listenPromise(31415, () => {});
+                await new Promise<void>((resolve, reject) => {
+                    this._srv!.once('listening', resolve);
+                    this._srv!.once('error', reject);
+                    this._srv!.listen(31415, '127.0.0.1');
+                });
                 Logger.debug('auth server started on port 31415');
             } catch (err) {
                 Logger.error(err, 'Unable to start auth listener on localhost:31415');
+                this._srv = undefined;
                 return Promise.reject(`Unable to start auth listener on localhost:31415: ${err}`);
             }
 
