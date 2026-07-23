@@ -9,8 +9,9 @@ interface LivePreviewButtonProps {
         typeof useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>
     >;
     // preferred handler for starting a live preview; the parent guards re-clicks and
-    // hides the button. falls back to posting the message directly when omitted.
-    onCreateLivePreview?: () => void;
+    // hides the button. returns false if it did not start (so we can reset the
+    // spinner). falls back to posting the message directly when omitted.
+    onCreateLivePreview?: () => boolean;
 }
 
 export const LivePreviewButton: React.FC<LivePreviewButtonProps> = ({
@@ -26,7 +27,10 @@ export const LivePreviewButton: React.FC<LivePreviewButtonProps> = ({
         }
         setIsLoading(true);
         if (onCreateLivePreview) {
-            onCreateLivePreview();
+            // reset the spinner if the preview wasn't started (e.g. agent no longer idle)
+            if (!onCreateLivePreview()) {
+                setIsLoading(false);
+            }
         } else {
             postMessage({ type: RovoDevViewResponseType.CreateLivePreview });
         }

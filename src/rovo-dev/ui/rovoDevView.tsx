@@ -675,11 +675,13 @@ const RovoDevView: React.FC = () => {
         });
     }, [postMessage]);
 
-    const onCreateLivePreview = useCallback((): void => {
+    // returns true if the live preview was started, false if it was skipped
+    // (agent no longer idle) so the caller can reset its own state
+    const onCreateLivePreview = useCallback((): boolean => {
         // only start when idle, and hide the button immediately to avoid a
         // double-click race that triggers an HTTP 409 ("agent busy")
         if (currentState.state !== 'WaitingForPrompt') {
-            return;
+            return false;
         }
 
         setShowLivePreviewButton(false);
@@ -688,6 +690,8 @@ const RovoDevView: React.FC = () => {
         postMessage({
             type: RovoDevViewResponseType.CreateLivePreview,
         });
+
+        return true;
     }, [currentState.state, postMessage]);
 
     const cancelResponse = useCallback((): void => {

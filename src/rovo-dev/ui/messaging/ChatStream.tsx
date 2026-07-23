@@ -49,7 +49,7 @@ interface ChatStreamProps {
     credentialHints?: CredentialHint[];
     onGeneratePlanClick?: (planId: string, proceed: boolean) => void;
     showLivePreviewButton?: boolean;
-    onCreateLivePreview?: () => void;
+    onCreateLivePreview?: () => boolean;
     isAtlassianUser?: boolean;
 }
 
