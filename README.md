@@ -1,4 +1,8 @@
 # Your Atlassian workspace, right in VS Code
+
+## 👋 Welcome!
+Hello and thanks for checking out the Atlassian extension for VS Code! Whether you're a seasoned Atlassian user or just getting started, we're glad you're here. We hope this extension makes your development workflow smoother, faster, and more enjoyable. Happy coding! 🎉
+
 Stop switching tabs. Start shipping code. The Atlassian extension brings **Jira**, **Bitbucket**, and AI-powered **Rovo Dev** directly into your IDE.
 
 Browse, View, Create, and Manage your Jira Work Items, Bitbucket PRs, Bitbucket Pipelines.
