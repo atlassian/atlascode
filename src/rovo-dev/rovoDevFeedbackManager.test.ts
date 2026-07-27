@@ -12,23 +12,18 @@ jest.mock('./api/extensionApi', () => ({
     ExtensionApi: jest.fn().mockImplementation(() => mockExtensionApiInstance),
 }));
 
-jest.mock('./rovoDevTelemetryProvider', () => ({
-    RovoDevTelemetryProvider: {
-        logError: jest.fn(),
-    },
-}));
-
 jest.mock('lodash', () => ({
     ...jest.requireActual('lodash'),
     truncate: jest.fn((str, options) => str),
 }));
 
+import { AxiosError } from 'axios';
+import { Logger } from 'src/logger';
 import { UserInfo } from 'src/rovo-dev/api/extensionApiTypes';
 import * as vscode from 'vscode';
 
 import { getAxiosInstance } from './api/extensionApi';
 import { RovoDevFeedbackManager } from './rovoDevFeedbackManager';
-import { RovoDevTelemetryProvider } from './rovoDevTelemetryProvider';
 
 describe('RovoDevFeedbackManager', () => {
     const mockTransport = jest.fn();
@@ -158,8 +153,50 @@ describe('RovoDevFeedbackManager', () => {
             expect(vscode.window.showErrorMessage).not.toHaveBeenCalled();
         });
 
-        it('should handle submission error and show error message', async () => {
-            const error = new Error('Network error');
+        it('should handle AxiosError with response status and log warning without sending to Sentry', async () => {
+            const axiosError = new AxiosError('Request failed with status code 500', '500', undefined, undefined, {
+                status: 500,
+                statusText: 'Internal Server Error',
+                headers: {},
+                config: {} as any,
+                data: {},
+            });
+            mockTransport.mockRejectedValue(axiosError);
+
+            const feedback = {
+                feedbackType: 'general' as const,
+                feedbackMessage: 'Test feedback',
+                canContact: false,
+            };
+
+            await RovoDevFeedbackManager.submitFeedback(feedback);
+
+            expect(Logger.warn).toHaveBeenCalledWith(expect.stringContaining('HTTP 500'));
+            expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
+                'There was an error submitting your feedback. Please try again later.',
+            );
+        });
+
+        it('should handle AxiosError without response (network error) and log warning', async () => {
+            const axiosError = new AxiosError('Network Error', 'ERR_NETWORK');
+            mockTransport.mockRejectedValue(axiosError);
+
+            const feedback = {
+                feedbackType: 'general' as const,
+                feedbackMessage: 'Test feedback',
+                canContact: false,
+            };
+
+            await RovoDevFeedbackManager.submitFeedback(feedback);
+
+            expect(Logger.warn).toHaveBeenCalledWith(expect.stringContaining('Network error'));
+            expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
+                'There was an error submitting your feedback. Please try again later.',
+            );
+        });
+
+        it('should handle non-Axios errors and log warning', async () => {
+            const error = new Error('Unexpected error');
             mockTransport.mockRejectedValue(error);
 
             const feedback = {
@@ -170,11 +207,13 @@ describe('RovoDevFeedbackManager', () => {
 
             await RovoDevFeedbackManager.submitFeedback(feedback);
 
-            expect(RovoDevTelemetryProvider.logError).toHaveBeenCalledWith(error, 'Error submitting Rovo Dev feedback');
+            expect(Logger.warn).toHaveBeenCalledWith(
+                'Feedback submission failed with unexpected error:',
+                'Error: Unexpected error',
+            );
             expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
                 'There was an error submitting your feedback. Please try again later.',
             );
-            expect(vscode.window.showInformationMessage).not.toHaveBeenCalled();
         });
 
         it('should include context information in payload: BBY', async () => {

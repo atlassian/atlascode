@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.32
+
+### Bug Fixes
+
+- **RovoDev**: Fixed `AxiosError` in `RovoDevFeedbackManager.submitFeedback` being sent to Sentry and triggering SLO errors. Feedback submission failures (network errors, non-2xx responses) are now logged as warnings instead, since they are non-critical and expected in transient failure scenarios.
+
 ## What's new in 4.0.31
 
 ### Bug Fixes
