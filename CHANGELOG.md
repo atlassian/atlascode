@@ -1,5 +1,9 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.32
+
+- Added a welcome greetings section to the README
+
 ## What's new in 4.0.31
 
 ### Bug Fixes
