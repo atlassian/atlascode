@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.32
+
+### Security
+
+- Fixed arbitrary code execution via `core.fsmonitor` in repository `.git/config`
+
 ## What's new in 4.0.31
 
 ### Bug Fixes
