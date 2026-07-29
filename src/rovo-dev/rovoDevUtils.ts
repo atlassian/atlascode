@@ -163,13 +163,22 @@ export function usageJsonResponseToMarkdown(response: RovoDevUsageResponse): {
         }
     } else {
         // If credit_total returns -1, it means unlimited credits
+        // If credit_total is 0 or missing, omit Remaining and Total lines
+        const hasValidTotal =
+            data.credit_total !== undefined &&
+            data.credit_total !== null &&
+            data.credit_total !== 0 &&
+            !Number.isNaN(data.credit_total);
+
         const remaining = data.credit_total === -1 ? 'Unlimited' : numberFormatter.format(data.credit_remaining);
         const total = data.credit_total === -1 ? 'Unlimited' : numberFormatter.format(data.credit_total);
 
         buffer += `**${data.title}**\n`;
         buffer += `- Used: ${numberFormatter.format(data.credit_used)}\n`;
-        buffer += `- Remaining: ${remaining}\n`;
-        buffer += `- Total: ${total}\n`;
+        if (hasValidTotal) {
+            buffer += `- Remaining: ${remaining}\n`;
+            buffer += `- Total: ${total}\n`;
+        }
         buffer += '\n';
     }
 

@@ -9,6 +9,7 @@ import Tooltip from '@atlaskit/tooltip';
 import React from 'react';
 
 import { SavedPrompt } from '../../utils';
+import { useControllableOpen } from '../useControllableOpen';
 import { SavedPromptMenu } from './saved-prompt-menu/SavedPromptMenu';
 
 interface PromptContextPopupProps {
@@ -17,6 +18,8 @@ interface PromptContextPopupProps {
     canFetchSavedPrompts?: boolean;
     onSelectedSavedPrompt?: (prompt: SavedPrompt) => void;
     onClose?: () => void;
+    isOpen?: boolean;
+    onOpenChange?: (isOpen: boolean) => void;
 }
 
 const PopupContainer = React.forwardRef<HTMLDivElement, PopupComponentProps>(
@@ -33,8 +36,10 @@ const PromptContextPopup: React.FC<PromptContextPopupProps> = ({
     canFetchSavedPrompts,
     onSelectedSavedPrompt,
     onClose,
+    isOpen: controlledIsOpen,
+    onOpenChange,
 }) => {
-    const [isOpen, setIsOpen] = React.useState(false);
+    const [isOpen, setIsOpen] = useControllableOpen(controlledIsOpen, onOpenChange);
     const [isSavedPromptsMenuOpen, setIsSavedPromptsMenuOpen] = React.useState(false);
 
     const handlePromptSelected = React.useCallback(
@@ -43,7 +48,7 @@ const PromptContextPopup: React.FC<PromptContextPopupProps> = ({
             setIsSavedPromptsMenuOpen(false);
             setIsOpen(false);
         },
-        [onSelectedSavedPrompt],
+        [onSelectedSavedPrompt, setIsOpen],
     );
 
     return (

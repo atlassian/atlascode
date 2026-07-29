@@ -8,15 +8,32 @@ interface LivePreviewButtonProps {
     messagingApi: ReturnType<
         typeof useMessagingApi<RovoDevViewResponse, RovoDevProviderMessage, RovoDevProviderMessage>
     >;
+    // preferred handler for starting a live preview; the parent guards re-clicks and
+    // hides the button. returns false if it did not start (so we can reset the
+    // spinner). falls back to posting the message directly when omitted.
+    onCreateLivePreview?: () => boolean;
 }
 
-export const LivePreviewButton: React.FC<LivePreviewButtonProps> = ({ messagingApi: { postMessage } }) => {
+export const LivePreviewButton: React.FC<LivePreviewButtonProps> = ({
+    messagingApi: { postMessage },
+    onCreateLivePreview,
+}) => {
     const [isLoading, setIsLoading] = React.useState(false);
 
     const handleClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
+        if (isLoading) {
+            return;
+        }
         setIsLoading(true);
-        postMessage({ type: RovoDevViewResponseType.CreateLivePreview });
+        if (onCreateLivePreview) {
+            // reset the spinner if the preview wasn't started (e.g. agent no longer idle)
+            if (!onCreateLivePreview()) {
+                setIsLoading(false);
+            }
+        } else {
+            postMessage({ type: RovoDevViewResponseType.CreateLivePreview });
+        }
     };
 
     return (

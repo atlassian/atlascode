@@ -10,14 +10,62 @@ const mockedChildProcess = {
     on: jest.fn(),
 };
 
+const mockSpawn = jest.fn((..._args: any[]) => mockedChildProcess);
+
 jest.mock('child_process', () => ({
-    spawn: () => mockedChildProcess,
+    spawn: (...args: any[]) => mockSpawn(...args),
 }));
 
 describe('shell', () => {
+    beforeEach(() => {
+        mockSpawn.mockClear();
+        mockSpawn.mockReturnValue(mockedChildProcess);
+    });
+
     it('constructor works', () => {
         const instance = new Shell('workingDirectory');
         expect(instance).toBeDefined();
+    });
+
+    describe('git hardening (VULN-2216191)', () => {
+        it('prepends core.fsmonitor and core.hooksPath neutralisation flags for git commands', () => {
+            const instance = new Shell('workingDirectory');
+            instance.exec('git', 'blame', '--root', '-l', '-L1,1', '--', 'file.ts');
+
+            expect(mockSpawn).toHaveBeenCalledWith(
+                'git',
+                ['-c', 'core.fsmonitor=', '-c', 'core.hooksPath=', 'blame', '--root', '-l', '-L1,1', '--', 'file.ts'],
+                expect.objectContaining({ shell: false }),
+            );
+        });
+
+        it('sets GIT_CONFIG_NOSYSTEM=1 and GIT_CONFIG_GLOBAL="" in the env for git commands', () => {
+            const instance = new Shell('workingDirectory');
+            instance.exec('git', 'rev-parse', '--show-toplevel');
+
+            const spawnOptions = (mockSpawn.mock.calls[0] as any[])[2] as { env: NodeJS.ProcessEnv };
+            expect(spawnOptions.env).toBeDefined();
+            expect(spawnOptions.env!['GIT_CONFIG_NOSYSTEM']).toBe('1');
+            expect(spawnOptions.env!['GIT_CONFIG_GLOBAL']).toBe('');
+        });
+
+        it('does NOT prepend git hardening flags for non-git commands', () => {
+            const instance = new Shell('workingDirectory');
+            instance.exec('echo', 'hello');
+
+            expect(mockSpawn).toHaveBeenCalledWith('echo', ['hello'], expect.objectContaining({ shell: false }));
+
+            const spawnArgs = (mockSpawn.mock.calls[0] as any[])[1] as string[];
+            expect(spawnArgs).not.toContain('core.fsmonitor=');
+        });
+
+        it('does NOT set GIT_CONFIG_NOSYSTEM for non-git commands', () => {
+            const instance = new Shell('workingDirectory');
+            instance.exec('echo', 'hello');
+
+            const spawnOptions = (mockSpawn.mock.calls[0] as any[])[2] as { env?: NodeJS.ProcessEnv };
+            expect(spawnOptions?.env?.['GIT_CONFIG_NOSYSTEM']).toBeUndefined();
+        });
     });
 
     describe('exec', () => {

@@ -63,6 +63,7 @@ describe('RovoDevChatProvider', () => {
         // Mock API client
         mockApiClient = {
             chat: jest.fn(),
+            createLivePreview: jest.fn(),
             cancel: jest.fn(),
             replay: jest.fn(),
             resumeToolCall: jest.fn(),
@@ -290,6 +291,109 @@ describe('RovoDevChatProvider', () => {
                     type: RovoDevProviderMessageType.SignalPromptSent,
                     text: 'test prompt',
                     echoMessage: true,
+                }),
+            );
+        });
+    });
+
+    describe('executeLivePreview', () => {
+        it('should throw error if API client is not initialized', async () => {
+            const providerWithoutClient = new RovoDevChatProvider(false, mockTelemetryProvider);
+            providerWithoutClient.setWebview(mockWebview);
+
+            await expect(providerWithoutClient.executeLivePreview()).rejects.toThrow(/failed to initialize/);
+            expect(mockApiClient.createLivePreview).not.toHaveBeenCalled();
+        });
+
+        it('should call createLivePreview when the agent is idle', async () => {
+            await chatProvider.setReady(mockApiClient);
+
+            const mockReadableStream = new ReadableStream({
+                start(controller) {
+                    controller.enqueue(new TextEncoder().encode('data: {"event_kind": "close"}\n\n'));
+                    controller.close();
+                },
+            });
+            mockApiClient.createLivePreview.mockResolvedValue({ body: mockReadableStream } as Response);
+
+            await chatProvider.executeLivePreview();
+
+            expect(mockApiClient.createLivePreview).toHaveBeenCalledTimes(1);
+        });
+
+        it('should NOT call createLivePreview when the agent is already running (avoids HTTP 409)', async () => {
+            await chatProvider.setReady(mockApiClient);
+
+            // Simulate an in-flight stream by marking the agent as running.
+            (chatProvider as any)._abortController = new AbortController();
+            expect(chatProvider.isAgentRunning).toBe(true);
+
+            await chatProvider.executeLivePreview();
+
+            // The guard must short-circuit before hitting the backend so the
+            // second concurrent stream is never requested.
+            expect(mockApiClient.createLivePreview).not.toHaveBeenCalled();
+
+            // The button (hidden optimistically on click) should be restored so it
+            // reappears once the in-flight response finishes and the user can retry.
+            expect(mockWebview.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: RovoDevProviderMessageType.ShowLivePreviewButton,
+                    show: true,
+                }),
+            );
+        });
+
+        it('should restore the button when the attempt ends without starting a preview', async () => {
+            await chatProvider.setReady(mockApiClient);
+
+            // A stream that finishes cleanly but never emits a `configure_live_preview`
+            // tool-call — i.e. the preview did not actually start.
+            const mockReadableStream = new ReadableStream({
+                start(controller) {
+                    controller.enqueue(new TextEncoder().encode('data: {"event_kind": "close"}\n\n'));
+                    controller.close();
+                },
+            });
+            mockApiClient.createLivePreview.mockResolvedValue({ body: mockReadableStream } as Response);
+
+            await chatProvider.executeLivePreview();
+
+            expect(mockWebview.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: RovoDevProviderMessageType.ShowLivePreviewButton,
+                    show: true,
+                }),
+            );
+        });
+
+        it('should NOT restore the button when the preview actually starts', async () => {
+            await chatProvider.setReady(mockApiClient);
+
+            // A stream that emits a `configure_live_preview` tool-call — the preview
+            // started successfully, so the button must stay hidden.
+            const toolCallData = JSON.stringify({
+                tool_name: 'configure_live_preview',
+                tool_call_id: 'tc-1',
+                args: '{}',
+            });
+            const mockReadableStream = new ReadableStream({
+                start(controller) {
+                    controller.enqueue(new TextEncoder().encode(`event: tool-call\ndata: ${toolCallData}\n\n`));
+                    controller.enqueue(new TextEncoder().encode('event: close\ndata: {}\n\n'));
+                    controller.close();
+                },
+            });
+            mockApiClient.createLivePreview.mockResolvedValue({ body: mockReadableStream } as Response);
+
+            await chatProvider.executeLivePreview();
+
+            // The tool-call handler hides the button (show:false); the completion
+            // path must NOT subsequently re-show it (show:true).
+            expect(mockWebview.postMessage).not.toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: RovoDevProviderMessageType.ShowLivePreviewButton,
+                    show: true,
                 }),
             );
         });

@@ -96,6 +96,12 @@ export class RovoDevChatProvider {
     private _replayInProgress = false;
     private _lastMessageSentTime: number | undefined;
 
+    // true while a live-preview stream is being processed (drives non-retriable
+    // errors and restoring the button when the attempt doesn't start a preview)
+    private _livePreviewInProgress = false;
+    // set when a `configure_live_preview` tool-call is seen, i.e. the preview started
+    private _livePreviewStarted = false;
+
     private get isDebugPanelEnabled() {
         return this.extensionApi.config.isDebugPanelEnabled();
     }
@@ -656,6 +662,7 @@ export class RovoDevChatProvider {
                     message: response,
                 });
                 if (response.tool_name === 'configure_live_preview' && sourceApi !== 'replay') {
+                    this._livePreviewStarted = true;
                     webview
                         .postMessage({
                             type: RovoDevProviderMessageType.ShowLivePreviewButton,
@@ -1102,8 +1109,10 @@ export class RovoDevChatProvider {
                         ...(httpStatus !== undefined ? { httpStatus } : {}),
                     });
                 }
-                // the error is retriable only when it happens during the streaming of a 'chat' response
-                await this.processError(error, { isRetriable: sourceApi === 'chat' });
+                // retriable only for a 'chat' response; live-preview retries via the restored button
+                await this.processError(error, {
+                    isRetriable: sourceApi === 'chat' && !this._livePreviewInProgress,
+                });
             }
         } else {
             if (sourceApi === 'chat') {
@@ -1261,9 +1270,22 @@ export class RovoDevChatProvider {
             return;
         }
 
-        // Put the chat into "listen" mode (GeneratingResponse) without echoing a synthetic
-        // user-message bubble — the live-preview click is implicitly a prompt, but we don't
-        // want to display fake user text for it.
+        // Backstop against the HTTP 409 "agent busy" race: `/v3/live-preview` starts a
+        // `stream_chat`, which the backend rejects if one is already in flight.
+        if (this.isAgentRunning) {
+            Logger.info('Ignoring live preview request: the agent is already running');
+            // Restore the button (hidden optimistically on click) without touching the
+            // running response's state, so it reappears once the response finishes.
+            await this._webView.postMessage({
+                type: RovoDevProviderMessageType.ShowLivePreviewButton,
+                show: true,
+            });
+            return;
+        }
+
+        this._livePreviewInProgress = true;
+        this._livePreviewStarted = false;
+
         this.beginNewPrompt();
         await this.signalPromptSent({ text: 'Start a live preview for this project', context: [] }, true);
 
@@ -1274,8 +1296,21 @@ export class RovoDevChatProvider {
             return this.processResponse('chat', response);
         };
 
-        await this.executeStreamingApiWithErrorHandling('chat', fetchOp);
-        this._abortController = null;
+        try {
+            await this.executeStreamingApiWithErrorHandling('chat', fetchOp);
+        } finally {
+            this._abortController = null;
+
+            // if the preview never started, restore the button so the user can retry
+            if (!this._livePreviewStarted && this._webView) {
+                await this._webView.postMessage({
+                    type: RovoDevProviderMessageType.ShowLivePreviewButton,
+                    show: true,
+                });
+            }
+
+            this._livePreviewInProgress = false;
+        }
     }
 
     private preparePayloadForChatRequest(prompt: RovoDevPrompt): RovoDevChatRequest {

@@ -1,19 +1,32 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.32
+
+### Security
+
+- Fixed arbitrary code execution via `core.fsmonitor` in repository `.git/config`
+
 ## What's new in 4.0.31
 
 ### Bug Fixes
 
+- **RovoDev**: Fixed markdown formatting in the chat view - headers now render at a consistent 16px, and tables are responsive so they no longer overflow the narrow sidebar.
 - **RovoDev**: Hid stack traces, stderr, and log details from external users while preserving them for Atlassian users.
 - **RovoDev (BBY)**: Fixed `ROVODEV_REBRAND_JCA` env var handling so the "Jira Coding Agent" rebrand works correctly in webviews.
 - **Notifications**: Fixed `atlassianNotificationNotifier` to correctly flush all promise levels, resolving a test reliability issue.
+- **RovoDev**: Fixed the prompt toolbar so only one dropdown (Add, Preferences, or model selector) can be open at a time - opening one now closes any other that was open, instead of stacking a dropdown over a dropdown.
+- **RovoDev (BBY)**: Fixed frequent live preview failures (`HTTP 409` on `/v3/stream_chat`) caused by triggering a live preview while the agent was already streaming. The Live Preview button is now hidden as soon as it is clicked (and while the agent is running), and a backstop guard prevents a live preview request from being sent when a response is already in progress. When a live preview attempt fails or ends without starting a preview, the button is automatically restored so it can be clicked again to retry (the button itself is the retry affordance, so live-preview errors no longer show a non-functional "Try again").
 
 ### Improvements
 
+- **RovoDev**: Updated Rovo Dev version to 202607.22.1b1
+- **RovoDev**: Updated Rovo Dev version to 202607.21.1b1
 - **RovoDev**: Updated Rovo Dev version to 202606.10.1b3
 - **Notifications**: Added `siteId` to the `notificationFeedVSCode` GraphQL query so notification feeds are correctly scoped per Atlassian site.
 - **Logger**: Removed a spurious client-side error from Sentry to reduce noise in error reporting.
 - **RovoDev (BBY)**: Added a new `rovoDevPromptCompleted` telemetry event that fires exactly once per user-submitted prompt with a closed-enum `result` (`success`, `error`, `cancelled`, `timeout`, `parse_error`) and optional `errorReason` / `httpStatus` / `messagePartsCount`. The event is only emitted in Boysenberry mode (no consumer in the standard IDE) and is forwarded through the Boysenberry → Jira analytics bridge so a chat-response SLO can be computed as a simple counter ratio without joining on `promptId`. Never emitted for the replay streaming path.
+- **RovoDev (BBY)**: The agent model selector now requests premium models in Boysenberry (via `include_premium=true` on the `/v3/agent-models` API), so premium models appear in the list.
+- **RovoDev (BBY)**: Removed the credit multiplier label from each entry in the agent model selector in Boysenberry only; the label is still shown in the standard IDE.
 
 ### Cleanup
 

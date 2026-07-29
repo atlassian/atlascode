@@ -1,5 +1,10 @@
-import { RovoDevModelsResponse } from './client/responseParserInterfaces';
-import { modelsJsonResponseToMarkdown, parseCustomCliTagsForMarkdown, removeCustomCliTags } from './rovoDevUtils';
+import { RovoDevModelsResponse, RovoDevUsageResponse } from './client/responseParserInterfaces';
+import {
+    modelsJsonResponseToMarkdown,
+    parseCustomCliTagsForMarkdown,
+    removeCustomCliTags,
+    usageJsonResponseToMarkdown,
+} from './rovoDevUtils';
 
 describe('rovoDevUtils', () => {
     describe('modelsJsonResponseToMarkdown', () => {
@@ -111,6 +116,53 @@ describe('rovoDevUtils', () => {
                 text: 'Model changed',
                 agentModelChanged: true,
             });
+        });
+    });
+
+    describe('usageJsonResponseToMarkdown', () => {
+        const baseContent = {
+            isBetaSite: false,
+            title: 'Credits',
+            status: 'ok',
+            credit_type: 'standard',
+            credit_used: 500,
+            credit_remaining: 1500,
+            credit_total: 2000,
+            retry_after_seconds: 3600,
+        };
+
+        const makeResponse = (overrides: Partial<typeof baseContent>): RovoDevUsageResponse => ({
+            event_kind: 'usage',
+            data: { content: { ...baseContent, ...overrides } },
+        });
+
+        it('should include Remaining and Total when credit_total is a positive number', () => {
+            const result = usageJsonResponseToMarkdown(makeResponse({}));
+            expect(result.usage_response).toContain('- Remaining:');
+            expect(result.usage_response).toContain('- Total:');
+        });
+
+        it('should omit Remaining and Total when credit_total is 0', () => {
+            const result = usageJsonResponseToMarkdown(makeResponse({ credit_total: 0 }));
+            expect(result.usage_response).not.toContain('- Remaining:');
+            expect(result.usage_response).not.toContain('- Total:');
+        });
+
+        it('should show Unlimited for Remaining and Total when credit_total is -1', () => {
+            const result = usageJsonResponseToMarkdown(makeResponse({ credit_total: -1 }));
+            expect(result.usage_response).toContain('- Remaining: Unlimited');
+            expect(result.usage_response).toContain('- Total: Unlimited');
+        });
+
+        it('should omit Remaining and Total when credit_total is NaN', () => {
+            const result = usageJsonResponseToMarkdown(makeResponse({ credit_total: NaN }));
+            expect(result.usage_response).not.toContain('- Remaining:');
+            expect(result.usage_response).not.toContain('- Total:');
+        });
+
+        it('should always include Used line', () => {
+            const result = usageJsonResponseToMarkdown(makeResponse({ credit_total: 0 }));
+            expect(result.usage_response).toContain('- Used:');
         });
     });
 

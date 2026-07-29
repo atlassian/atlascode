@@ -139,6 +139,23 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
 }) => {
     const [editor, setEditor] = React.useState<ReturnType<typeof createEditor>>(undefined);
     const [isEmpty, setIsEmpty] = React.useState(true);
+    // Tracks which prompt toolbar popup is currently open so that only one can be open at a time.
+    const [openPopup, setOpenPopup] = React.useState<'context' | 'settings' | 'model' | null>(null);
+
+    // Pre-memoize one stable handler per popup so `onOpenChange` keeps a stable reference across
+    // renders (a fresh reference would defeat memoization in useControllableOpen).
+    const handleContextOpenChange = React.useCallback(
+        (isOpen: boolean) => setOpenPopup((prev) => (isOpen ? 'context' : prev === 'context' ? null : prev)),
+        [],
+    );
+    const handleSettingsOpenChange = React.useCallback(
+        (isOpen: boolean) => setOpenPopup((prev) => (isOpen ? 'settings' : prev === 'settings' ? null : prev)),
+        [],
+    );
+    const handleModelOpenChange = React.useCallback(
+        (isOpen: boolean) => setOpenPopup((prev) => (isOpen ? 'model' : prev === 'model' ? null : prev)),
+        [],
+    );
     const promptCompletionProviderRef = React.useRef<monaco.IDisposable | null>(null);
     const contentChangeListenerRef = React.useRef<monaco.IDisposable | null>(null);
     const autoResizeRef = React.useRef<monaco.IDisposable | null>(null);
@@ -374,6 +391,8 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         canFetchSavedPrompts={canFetchSavedPrompts}
                         onSelectedSavedPrompt={handleSelectSavedPrompt}
                         onAddRepositoryFile={onAddContext}
+                        isOpen={openPopup === 'context'}
+                        onOpenChange={handleContextOpenChange}
                     />
                     <PromptSettingsPopup
                         onDeepPlanToggled={onDeepPlanToggled}
@@ -385,6 +404,8 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         currentAgentMode={currentAgentMode}
                         onAgentModeChange={onAgentModeChange}
                         onClose={() => {}}
+                        isOpen={openPopup === 'settings'}
+                        onOpenChange={handleSettingsOpenChange}
                     />
                     {isDeepPlanEnabled && onDeepPlanToggled && (
                         <Tooltip content="Disable deep plan">
@@ -453,6 +474,8 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         currentModel={currentAgentModel}
                         onModelChange={onAgentModelChange}
                         isDisabled={disableAgentModelSelector}
+                        isOpen={openPopup === 'model'}
+                        onOpenChange={handleModelOpenChange}
                     />
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>

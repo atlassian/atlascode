@@ -2,8 +2,10 @@ import Button from '@atlaskit/button';
 import ChevronDownIcon from '@atlaskit/icon/core/chevron-down';
 import Popup, { PopupComponentProps } from '@atlaskit/popup';
 import React from 'react';
+import { RovodevStaticConfig } from 'src/rovo-dev/api/rovodevStaticConfig';
 import { RovoDevAgentModel } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
+import { useControllableOpen } from '../useControllableOpen';
 import { PromptAgentModel } from './AgentModelItem';
 
 interface AgentModelSelectorProps {
@@ -11,6 +13,8 @@ interface AgentModelSelectorProps {
     availableModels: RovoDevAgentModel[];
     onModelChange: (model: RovoDevAgentModel) => void;
     isDisabled?: boolean;
+    isOpen?: boolean;
+    onOpenChange?: (isOpen: boolean) => void;
 }
 
 // TODO - this is a patch, the id format needs to be returned consistently by Rovo Dev
@@ -53,8 +57,10 @@ export const AgentModelSelector: React.FC<AgentModelSelectorProps> = ({
     availableModels,
     onModelChange,
     isDisabled,
+    isOpen: controlledIsOpen,
+    onOpenChange,
 }) => {
-    const [isOpen, setIsOpen] = React.useState(false);
+    const [isOpen, setIsOpen] = useControllableOpen(controlledIsOpen, onOpenChange);
 
     // try to match the current model against the available models
     const currentModelFromAvailable = React.useMemo(
@@ -86,7 +92,7 @@ export const AgentModelSelector: React.FC<AgentModelSelectorProps> = ({
                     appearance="subtle"
                     isSelected={isOpen}
                     iconAfter={<ChevronDownIcon label="Open" />}
-                    onClick={() => setIsOpen((prev) => !prev)}
+                    onClick={() => setIsOpen(!isOpen)}
                     aria-label="Agent model selection"
                     isDisabled={isDisabled}
                 >
@@ -98,7 +104,8 @@ export const AgentModelSelector: React.FC<AgentModelSelectorProps> = ({
                     {availableModels.map((model) => (
                         <PromptAgentModel
                             label={model.modelName}
-                            description={`${model.creditMultiplier}x credits`}
+                            // Credit multipliers are hidden in Boysenberry only
+                            description={RovodevStaticConfig.isBBY ? undefined : `${model.creditMultiplier}x credits`}
                             action={() => {
                                 onModelChange(model);
                                 setIsOpen(false);
