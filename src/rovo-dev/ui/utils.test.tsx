@@ -825,11 +825,14 @@ describe('parseToolReturnMessage', () => {
             expect(mockOnError).not.toHaveBeenCalled();
         });
 
-        it('should handle parse errors gracefully and call onError', () => {
+        it('should handle non-JSON bash args gracefully without firing a parse error', () => {
+            // Regression for the top RovoDev parsing_error in production:
+            // `SyntaxError: ... ": "curl -s"... is not valid JSON`. The CLI can send
+            // a raw command string as `args`; this must NOT throw or fire onError.
             const toolCallMessage: RovoDevToolCallResponse = {
                 event_kind: 'tool-call',
                 tool_name: 'bash',
-                args: 'invalid json{',
+                args: 'curl -s https://example.com: "curl -s"',
                 tool_call_id: 'id1',
             };
 
@@ -844,14 +847,10 @@ describe('parseToolReturnMessage', () => {
 
             const result = parseToolReturnMessage(msg, mockOnError);
 
-            expect(result).toHaveLength(1);
-            expect(result[0]).toEqual({
-                content: 'bash',
-            });
-            expect(mockOnError).toHaveBeenCalledWith(
-                expect.any(Error),
-                'Error parsing ToolReturnMessage for tool bash',
-            );
+            // args could not be parsed, so no command title is produced, but the
+            // render succeeds and no error is reported.
+            expect(result).toHaveLength(0);
+            expect(mockOnError).not.toHaveBeenCalled();
         });
     });
 });

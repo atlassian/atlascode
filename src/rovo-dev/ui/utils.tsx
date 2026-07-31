@@ -174,14 +174,31 @@ interface SubagentArgs {
 
 /**
  * Safely parses JSON string or returns the value if it's already an object.
+ *
+ * Tool-call `args` are not guaranteed to be valid JSON: some tools (e.g. `bash`)
+ * can stream a raw command string, which would make `JSON.parse` throw
+ * (e.g. `Unexpected token ':', ": "curl -s"... is not valid JSON`). A throw here
+ * aborts the entire tool-return render and surfaces as a `parsing_error`, so we
+ * swallow parse failures and return `null` instead, letting callers fall back to
+ * their existing null-handling.
+ *
  * @param value - The value to parse (string or already parsed object)
- * @returns Parsed object or the original value if already parsed, or null if value is falsy
+ * @returns Parsed object, the original value if already parsed, or null if the
+ *          value is falsy or cannot be parsed as JSON.
  */
 export function safeJsonParse<T = any>(value: string | T | null | undefined): T | null {
     if (!value) {
         return null;
     }
-    return typeof value === 'string' ? JSON.parse(value) : value;
+    if (typeof value !== 'string') {
+        return value;
+    }
+    try {
+        return JSON.parse(value) as T;
+    } catch {
+        // Not valid JSON (e.g. a raw command string) - treat as unparseable.
+        return null;
+    }
 }
 
 /**

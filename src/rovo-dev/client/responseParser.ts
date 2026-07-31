@@ -611,12 +611,15 @@ export class RovoDevResponseParser {
                     : { event_kind: 'ui_changes_detected' };
             }
 
-            // events we ignore
+            // Events we ignore. These carry no meaningful payload and can legitimately
+            // interleave with an in-progress streaming part (arriving as a part_delta
+            // while a text part is being reconstructed). Previously this raised a
+            // spurious "seem to be split" parser error - the single largest source of
+            // parsing_error. Instead, when a buffer is in progress we preserve it
+            // unchanged (so the accumulated part is not discarded); otherwise we ignore.
             case 'request-usage':
             case 'thinking':
-                return buffer
-                    ? generateError(Error(`Rovo Dev parser error: ${chunk.event_kind} seem to be split`))
-                    : { event_kind: '_ignored' };
+                return buffer ?? { event_kind: '_ignored' };
 
             // events with no payload
             case 'close':

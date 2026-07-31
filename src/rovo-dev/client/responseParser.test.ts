@@ -797,6 +797,39 @@ describe('RovoDevResponseParser', () => {
                     event_kind: '_ignored',
                 });
             });
+
+            it('should ignore a thinking part_delta mid-part without a "seem to be split" error', () => {
+                // Regression: previously an ignored event (thinking/request-usage)
+                // arriving as a part_delta while another part was being reconstructed
+                // returned a `_parsing_error` ("thinking seem to be split") - the single
+                // largest source of parsing_error in production. It must now be ignored
+                // while preserving the in-progress buffer. We use a tool-call part
+                // because it accumulates across deltas (and enable mergeAllChunks so the
+                // buffer persists deterministically).
+                const mergingParser = new RovoDevResponseParser({ mergeAllChunks: true });
+
+                const startInput =
+                    'event: part_start\ndata: {"part": {"part_kind": "tool-call", "tool_name": "search", "args": "{\\"qu", "tool_call_id": "call_123"}}\n\n';
+                const thinkingDelta =
+                    'event: part_delta\ndata: {"delta": {"part_delta_kind": "thinking", "content_delta": "hmm"}}\n\n';
+
+                Array.from(mergingParser.parse(startInput)); // start buffering a tool-call part
+                const results = Array.from(mergingParser.parse(thinkingDelta));
+
+                // The interleaved ignored event must not produce a parsing error.
+                expect(results.some((r) => r.event_kind === '_parsing_error')).toBe(false);
+
+                // The buffered tool-call is preserved: a following tool-call delta
+                // continues accumulating its args and eventually flushes correctly.
+                const argsDelta =
+                    'event: part_delta\ndata: {"delta": {"part_delta_kind": "tool-call", "args_delta": "ery\\": \\"test\\"}"}}\n\n';
+                Array.from(mergingParser.parse(argsDelta));
+                const flushed = Array.from(mergingParser.flush());
+
+                expect(flushed).toHaveLength(1);
+                expect(flushed[0].event_kind).toBe('tool-call');
+                expect((flushed[0] as any).args).toBe('{"query": "test"}');
+            });
         });
     });
 });
