@@ -1277,6 +1277,25 @@ describe('RovoDevChatProvider', () => {
             });
         });
 
+        it('emits rovoDevPromptCompleted with errorName when provided (diagnostic breakdown)', () => {
+            chatProvider['firePromptCompleted']('error', {
+                errorReason: 'stream_exception',
+                errorName: 'UserError',
+            });
+
+            expect(mockTelemetryProvider.fireTelemetryEvent).toHaveBeenCalledTimes(1);
+            expect(mockTelemetryProvider.fireTelemetryEvent).toHaveBeenCalledWith({
+                action: 'rovoDevPromptCompleted',
+                subject: 'atlascode',
+                attributes: {
+                    promptId: 'prompt-A',
+                    result: 'error',
+                    errorReason: 'stream_exception',
+                    errorName: 'UserError',
+                },
+            });
+        });
+
         it('omits optional attributes when not provided (bridge expects closed shape)', () => {
             chatProvider['firePromptCompleted']('cancelled', { errorReason: 'aborted' });
 
@@ -1344,22 +1363,27 @@ describe('RovoDevChatProvider', () => {
             // attached to rovoDevPromptCompleted for fetch/HTTP failures. The
             // SLO downstream slices on these closed-enum values, so the
             // boundaries here are part of the bridge contract.
-            it('classifies RovoDevApiError 5xx as http_5xx with the status code', async () => {
+            it('classifies RovoDevApiError 5xx as http_5xx with the status code and error name', async () => {
                 const { RovoDevApiError } = await import('./client/rovoDevApiClient');
                 const err = new RovoDevApiError('boom', 502, undefined);
                 const result = chatProvider['classifyStreamingError'](err);
-                expect(result).toEqual({ errorReason: 'http_5xx', httpStatus: 502 });
+                expect(result).toEqual({ errorReason: 'http_5xx', errorName: err.name, httpStatus: 502 });
             });
 
-            it('classifies RovoDevApiError 4xx as http_4xx with the status code', async () => {
+            it('classifies RovoDevApiError 4xx as http_4xx with the status code and error name', async () => {
                 const { RovoDevApiError } = await import('./client/rovoDevApiClient');
                 const err = new RovoDevApiError('bad request', 422, undefined);
                 const result = chatProvider['classifyStreamingError'](err);
-                expect(result).toEqual({ errorReason: 'http_4xx', httpStatus: 422 });
+                expect(result).toEqual({ errorReason: 'http_4xx', errorName: err.name, httpStatus: 422 });
             });
 
-            it('falls back to network_error for non-API errors', () => {
-                const result = chatProvider['classifyStreamingError'](new Error('socket hang up'));
+            it('falls back to network_error for non-API errors and captures the error name', () => {
+                const result = chatProvider['classifyStreamingError'](new TypeError('socket hang up'));
+                expect(result).toEqual({ errorReason: 'network_error', errorName: 'TypeError' });
+            });
+
+            it('omits errorName for non-Error thrown values', () => {
+                const result = chatProvider['classifyStreamingError']('a string error');
                 expect(result).toEqual({ errorReason: 'network_error' });
             });
         });
