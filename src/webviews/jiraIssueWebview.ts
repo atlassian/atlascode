@@ -84,7 +84,7 @@ import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
 import { RovoDevContextItem } from '../rovo-dev/rovoDevTypes';
 import { OnJiraEditedRefreshDelay } from '../util/time';
-import { getJiraIssueUri } from '../views/jira/treeViews/utils';
+import { getJiraIssueUri, is401Error, isFailedDevInfoSite, markFailedDevInfoSite } from '../views/jira/treeViews/utils';
 import { NotificationManagerImpl } from '../views/notifications/notificationManager';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { ContextMenuCommandData, InitializingWebview } from './abstractWebview';
@@ -423,6 +423,10 @@ export class JiraIssueWebview
     private async fetchJiraDevelopmentInfo(): Promise<DevelopmentInfo> {
         const emptyResult: DevelopmentInfo = { branches: [], commits: [], pullRequests: [], builds: [] };
 
+        if (isFailedDevInfoSite(this._issue.siteDetails.id)) {
+            return emptyResult;
+        }
+
         try {
             if (!this._issue.siteDetails.isCloud) {
                 return emptyResult;
@@ -450,7 +454,12 @@ export class JiraIssueWebview
 
             return emptyResult;
         } catch (e) {
-            Logger.error(e, 'Could not fetch Jira development info, falling back to local data');
+            if (is401Error(e)) {
+                markFailedDevInfoSite(this._issue.siteDetails.id);
+                // 401 is silently suppressed - site is now blocked until auth changes
+            } else {
+                Logger.error(e, 'Could not fetch Jira development info, falling back to local data');
+            }
             return emptyResult;
         }
     }
