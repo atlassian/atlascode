@@ -542,8 +542,19 @@ export class RovoDevChatProvider {
             if (partsCount > 0) {
                 this.firePromptCompleted('success', { messagePartsCount: partsCount });
             } else {
+                // Sub-classify `no_response` via `errorName` so the SLO can tell
+                // genuinely-empty backend streams apart from turns that only
+                // produced control/lifecycle events (thinking, warning,
+                // deferred permission request, …) and therefore legitimately
+                // rendered no user-visible part:
+                //   - `no_response_empty_stream`  ⇒ not a single message was
+                //     parsed from the stream (isFirstMessage never flipped).
+                //   - `no_response_control_only`  ⇒ messages arrived but none
+                //     were user-visible (often a benign, expected outcome).
+                const errorName = isFirstMessage ? 'no_response_empty_stream' : 'no_response_control_only';
                 this.firePromptCompleted('error', {
                     errorReason: 'no_response',
+                    errorName,
                     messagePartsCount: 0,
                 });
             }

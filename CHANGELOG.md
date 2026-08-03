@@ -6,6 +6,11 @@
 
 - Fixed arbitrary code execution via `core.fsmonitor` in repository `.git/config`
 
+### Bug Fixes
+
+- **RovoDev (BBY)**: Fixed the response-stream parser so well-formed responses whose `data:` payload contains newlines (e.g. multi-line tool output, code blocks, stack traces) are no longer misclassified as parse errors. The parser now follows the SSE line grammar (multi-line `data:` fields are concatenated) and ignores all comment/keep-alive lines, which removes a large source of false `parse_error` outcomes in the `rovoDevPromptCompleted` telemetry / chat-response SLO. Parser failures are now tagged with distinct error names (`RovoDevChunkShapeError`, `RovoDevJsonParseError`, `RovoDevIncompleteStreamError`) so the remaining genuine cases surface via the event's `errorName` attribute.
+- **RovoDev (BBY)**: The `no_response` outcome of the `rovoDevPromptCompleted` telemetry event is now sub-classified via `errorName` (`no_response_empty_stream` when the stream carried no messages at all, vs `no_response_control_only` when only control/lifecycle events were received and no user-visible part was rendered), so the chat-response SLO can distinguish genuinely-empty backend streams from benign control-only turns.
+
 ## What's new in 4.0.31
 
 ### Bug Fixes

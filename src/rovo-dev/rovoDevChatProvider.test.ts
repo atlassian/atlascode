@@ -1296,6 +1296,67 @@ describe('RovoDevChatProvider', () => {
             });
         });
 
+        // The terminal `no_response` classification is sub-typed via `errorName`
+        // so the SLO can separate genuinely-empty backend streams from turns
+        // that only emitted control/lifecycle events (and thus legitimately
+        // rendered nothing user-visible). We drive processResponse end-to-end
+        // because the discriminator (isFirstMessage) lives inside that loop.
+        describe('no_response sub-classification', () => {
+            const findPromptCompletedCall = () =>
+                mockTelemetryProvider.fireTelemetryEvent.mock.calls
+                    .map((c: any[]) => c[0])
+                    .find((e: any) => e.action === 'rovoDevPromptCompleted');
+
+            it('classifies a completely empty stream as no_response_empty_stream', async () => {
+                await chatProvider.setReady(mockApiClient);
+                chatProvider['_currentPromptId'] = 'prompt-empty';
+                mockTelemetryProvider.fireTelemetryEvent.mockClear();
+
+                const emptyStream = new ReadableStream({
+                    start(controller) {
+                        controller.close();
+                    },
+                });
+                const response = { body: emptyStream } as Response;
+
+                await chatProvider['processResponse']('chat', response);
+
+                const event = findPromptCompletedCall();
+                expect(event).toBeDefined();
+                expect(event.attributes.result).toBe('error');
+                expect(event.attributes.errorReason).toBe('no_response');
+                expect(event.attributes.errorName).toBe('no_response_empty_stream');
+                expect(event.attributes.messagePartsCount).toBe(0);
+            });
+
+            it('classifies a control-only stream (no user-visible parts) as no_response_control_only', async () => {
+                await chatProvider.setReady(mockApiClient);
+                chatProvider['_currentPromptId'] = 'prompt-control';
+                mockTelemetryProvider.fireTelemetryEvent.mockClear();
+
+                // A `thinking` event is a control/lifecycle message: it is parsed
+                // (so isFirstMessage flips) but is not a user-visible part.
+                const controlOnlyStream = new ReadableStream({
+                    start(controller) {
+                        controller.enqueue(
+                            new TextEncoder().encode('event: thinking\ndata: {"content": "pondering"}\n\n'),
+                        );
+                        controller.close();
+                    },
+                });
+                const response = { body: controlOnlyStream } as Response;
+
+                await chatProvider['processResponse']('chat', response);
+
+                const event = findPromptCompletedCall();
+                expect(event).toBeDefined();
+                expect(event.attributes.result).toBe('error');
+                expect(event.attributes.errorReason).toBe('no_response');
+                expect(event.attributes.errorName).toBe('no_response_control_only');
+                expect(event.attributes.messagePartsCount).toBe(0);
+            });
+        });
+
         it('omits optional attributes when not provided (bridge expects closed shape)', () => {
             chatProvider['firePromptCompleted']('cancelled', { errorReason: 'aborted' });
 
