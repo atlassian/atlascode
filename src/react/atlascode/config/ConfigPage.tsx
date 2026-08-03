@@ -1,4 +1,6 @@
 import { RefreshButton } from '@atlassianlabs/guipi-core-components';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import PersonIcon from '@mui/icons-material/Person';
 import WorkIcon from '@mui/icons-material/Work';
 import {
@@ -17,6 +19,7 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
+import IconButton from '@mui/material/IconButton';
 import { makeStyles } from '@mui/styles';
 import equal from 'fast-deep-equal/es6';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -139,6 +142,22 @@ const ConfigPage: React.FunctionComponent = () => {
         }
     }, []);
 
+    const sections = [ConfigSection.Jira, ConfigSection.Bitbucket, ConfigSection.General, ConfigSection.Explore];
+
+    const handlePrev = () => {
+        const idx = sections.indexOf(openSection);
+        if (idx > 0) {
+            handleTabChange({} as React.ChangeEvent<{}>, sections[idx - 1]);
+        }
+    };
+
+    const handleNext = () => {
+        const idx = sections.indexOf(openSection);
+        if (idx < sections.length - 1) {
+            handleTabChange({} as React.ChangeEvent<{}>, sections[idx + 1]);
+        }
+    };
+
     useEffect(() => {
         if (Object.keys(changes).length > 0) {
             controller.updateConfig(changes);
@@ -180,101 +199,151 @@ const ConfigPage: React.FunctionComponent = () => {
                     >
                         <Container maxWidth="xl">
                             <AppBar position="relative">
-                                <Toolbar>
-                                    <Typography variant="h3" className={classes.title}>
+                                <Toolbar sx={{ flexWrap: 'wrap', gap: 1 }}>
+                                    <Typography variant="h3" sx={{ whiteSpace: 'nowrap', flexGrow: 0 }}>
                                         Atlassian Settings
                                     </Typography>
-                                    <Tabs
-                                        value={openSection}
-                                        onChange={handleTabChange}
-                                        aria-label="simple tabs example"
-                                        indicatorColor="primary"
-                                        variant="scrollable"
-                                        scrollButtons
-                                        allowScrollButtonsMobile
+
+                                    {/* Large screen: show all tabs */}
+                                    <Box
+                                        sx={{
+                                            display: { xs: 'none', lg: 'flex' },
+                                            alignItems: 'center',
+                                            gap: 1,
+                                            flex: 1,
+                                        }}
                                     >
-                                        <Tab
-                                            id="simple-tab-0"
-                                            aria-controls="simple-tabpanel-0"
-                                            value={ConfigSection.Jira}
-                                            label={
+                                        <Tabs
+                                            value={openSection}
+                                            onChange={handleTabChange}
+                                            indicatorColor="primary"
+                                            aria-label="settings sections"
+                                        >
+                                            <Tab
+                                                value={ConfigSection.Jira}
+                                                label={
+                                                    <ProductEnabler
+                                                        label="Jira"
+                                                        enabled={state.config['jira.enabled']}
+                                                        onToggle={handleJiraToggle}
+                                                    />
+                                                }
+                                            />
+                                            <Tab
+                                                value={ConfigSection.Bitbucket}
+                                                label={
+                                                    <ProductEnabler
+                                                        label="Bitbucket"
+                                                        enabled={state.config['bitbucket.enabled']}
+                                                        onToggle={handleBitbucketToggle}
+                                                    />
+                                                }
+                                            />
+                                            <Tab value={ConfigSection.General} label="General" />
+                                            <Tab value={ConfigSection.Explore} label="Explore" />
+                                        </Tabs>
+                                    </Box>
+
+                                    {/* Small screen: arrow navigation */}
+                                    <Box
+                                        sx={{
+                                            display: { xs: 'flex', lg: 'none' },
+                                            alignItems: 'center',
+                                            flex: 1,
+                                            justifyContent: 'center',
+                                        }}
+                                    >
+                                        <IconButton
+                                            onClick={handlePrev}
+                                            disabled={sections.indexOf(openSection) === 0}
+                                            size="small"
+                                        >
+                                            <ChevronLeftIcon />
+                                        </IconButton>
+                                        <Box sx={{ minWidth: 140, textAlign: 'center' }}>
+                                            {openSection === ConfigSection.Jira && (
                                                 <ProductEnabler
                                                     label="Jira"
                                                     enabled={state.config['jira.enabled']}
                                                     onToggle={handleJiraToggle}
                                                 />
-                                            }
-                                        />
-                                        <Tab
-                                            id="simple-tab-1"
-                                            aria-controls="simple-tabpanel-1"
-                                            value={ConfigSection.Bitbucket}
-                                            label={
+                                            )}
+                                            {openSection === ConfigSection.Bitbucket && (
                                                 <ProductEnabler
                                                     label="Bitbucket"
                                                     enabled={state.config['bitbucket.enabled']}
                                                     onToggle={handleBitbucketToggle}
                                                 />
-                                            }
-                                        />
-                                        <Tab
-                                            id="simple-tab-2"
-                                            aria-controls="simple-tabpanel-2"
-                                            value={ConfigSection.General}
-                                            label="General"
-                                        />
-                                        <Tab
-                                            id="simple-tab-3"
-                                            aria-controls="simple-tabpanel-3"
-                                            value={ConfigSection.Explore}
-                                            label="Explore"
-                                        />
-                                    </Tabs>
-                                    <div className={classes.grow} />
-                                    <Typography variant="subtitle1" classes={{ root: classes.targetSelectLabel }}>
-                                        Save settings to:{' '}
-                                    </Typography>
-                                    <ToggleButtonGroup
-                                        color="primary"
-                                        size="small"
-                                        value={internalTarget}
-                                        exclusive
-                                        onChange={handleTargetChange}
-                                    >
-                                        <Tooltip title="User settings">
-                                            <ToggleButton
-                                                key={1}
-                                                value={ConfigTarget.User}
-                                                selected={internalTarget !== ConfigTarget.User}
-                                                disableRipple={internalTarget === ConfigTarget.User}
-                                            >
-                                                <Badge
-                                                    color="primary"
-                                                    variant="dot"
-                                                    invisible={internalTarget !== ConfigTarget.User}
+                                            )}
+                                            {openSection === ConfigSection.General && (
+                                                <Typography variant="subtitle1">General</Typography>
+                                            )}
+                                            {openSection === ConfigSection.Explore && (
+                                                <Typography variant="subtitle1">Explore</Typography>
+                                            )}
+                                        </Box>
+                                        <IconButton
+                                            onClick={handleNext}
+                                            disabled={sections.indexOf(openSection) === sections.length - 1}
+                                            size="small"
+                                        >
+                                            <ChevronRightIcon />
+                                        </IconButton>
+                                    </Box>
+
+                                    {/* Save settings — always right */}
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
+                                        <Typography
+                                            variant="subtitle1"
+                                            sx={{ whiteSpace: 'nowrap', display: { xs: 'none', lg: 'block' } }}
+                                        >
+                                            Save settings to:{' '}
+                                        </Typography>
+                                        <ToggleButtonGroup
+                                            color="primary"
+                                            size="small"
+                                            value={internalTarget}
+                                            exclusive
+                                            onChange={handleTargetChange}
+                                        >
+                                            <Tooltip title="User settings">
+                                                <ToggleButton
+                                                    key={1}
+                                                    value={ConfigTarget.User}
+                                                    selected={internalTarget !== ConfigTarget.User}
+                                                    disableRipple={internalTarget === ConfigTarget.User}
                                                 >
-                                                    <PersonIcon />
-                                                </Badge>
-                                            </ToggleButton>
-                                        </Tooltip>
-                                        <Tooltip title="Workspace settings">
-                                            <ToggleButton
-                                                key={2}
-                                                value={ConfigTarget.Workspace}
-                                                selected={internalTarget !== ConfigTarget.Workspace}
-                                                disableRipple={internalTarget === ConfigTarget.Workspace}
-                                            >
-                                                <Badge
-                                                    color="primary"
-                                                    variant="dot"
-                                                    invisible={internalTarget !== ConfigTarget.Workspace}
+                                                    <Badge
+                                                        color="primary"
+                                                        variant="dot"
+                                                        invisible={internalTarget !== ConfigTarget.User}
+                                                    >
+                                                        <PersonIcon />
+                                                    </Badge>
+                                                </ToggleButton>
+                                            </Tooltip>
+                                            <Tooltip title="Workspace settings">
+                                                <ToggleButton
+                                                    key={2}
+                                                    value={ConfigTarget.Workspace}
+                                                    selected={internalTarget !== ConfigTarget.Workspace}
+                                                    disableRipple={internalTarget === ConfigTarget.Workspace}
                                                 >
-                                                    <WorkIcon />
-                                                </Badge>
-                                            </ToggleButton>
-                                        </Tooltip>
-                                    </ToggleButtonGroup>
-                                    <RefreshButton loading={state.isSomethingLoading} onClick={controller.refresh} />
+                                                    <Badge
+                                                        color="primary"
+                                                        variant="dot"
+                                                        invisible={internalTarget !== ConfigTarget.Workspace}
+                                                    >
+                                                        <WorkIcon />
+                                                    </Badge>
+                                                </ToggleButton>
+                                            </Tooltip>
+                                        </ToggleButtonGroup>
+                                        <RefreshButton
+                                            loading={state.isSomethingLoading}
+                                            onClick={controller.refresh}
+                                        />
+                                    </Box>
                                 </Toolbar>
                             </AppBar>
                             <Grid container spacing={1}>
