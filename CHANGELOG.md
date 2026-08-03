@@ -6,6 +6,10 @@
 
 - Fixed arbitrary code execution via `core.fsmonitor` in repository `.git/config`
 
+### Bug Fixes
+
+- **RovoDev**: Store the downloaded Rovo Dev binary bundle in global storage instead of per-workspace storage. The bundle is version-pinned and identical across workspaces, so it was previously duplicated (~400MB each) into every workspace's storage folder. Leftover per-workspace copies are now removed automatically when a workspace is opened.
+
 ## What's new in 4.0.31
 
 ### Bug Fixes

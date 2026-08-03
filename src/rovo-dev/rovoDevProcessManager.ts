@@ -36,8 +36,11 @@ const RovoDevInfo = {
 export function GetRovoDevURIs(context: ExtensionContext) {
     const platform = process.platform;
     const arch = process.arch;
-    const extensionPath = context.storageUri!.fsPath;
-    const rovoDevBaseDir = path.join(extensionPath, 'atlascode-rovodev-bin');
+    // The binary bundle is version-pinned and identical across workspaces, so store it in
+    // global storage (shared, keyed by version) rather than per-workspace storage. Using
+    // storageUri duplicated the ~400MB bundle into every workspace's storage folder.
+    const globalStoragePath = context.globalStorageUri.fsPath;
+    const rovoDevBaseDir = path.join(globalStoragePath, 'atlascode-rovodev-bin');
     const rovoDevVersionDir = path.join(rovoDevBaseDir, MIN_SUPPORTED_ROVODEV_VERSION);
     const rovoDevBinPath = path.join(rovoDevVersionDir, 'atlassian_cli_rovodev') + (platform === 'win32' ? '.exe' : '');
 
@@ -219,6 +222,39 @@ export abstract class RovoDevProcessManager {
         this.rovoDevInstance = undefined;
     }
 
+    /** Ensures the legacy per-workspace binary cleanup only runs once per session. */
+    private static legacyBinaryCleanupDone = false;
+
+    /**
+     * Prior versions stored the Rovo Dev binary bundle under per-workspace storage
+     * (`context.storageUri`), which duplicated the ~400MB bundle into every workspace's
+     * storage folder. The bundle now lives in global storage, so remove any leftover
+     * per-workspace copy for the current workspace to reclaim the space automatically.
+     */
+    private static async cleanupLegacyWorkspaceBinary(context: ExtensionContext) {
+        if (this.legacyBinaryCleanupDone) {
+            return;
+        }
+        this.legacyBinaryCleanupDone = true;
+
+        // storageUri is undefined when no workspace/folder is open; in that case there is
+        // no legacy per-workspace bundle to clean up.
+        const workspaceStoragePath = context.storageUri?.fsPath;
+        if (!workspaceStoragePath) {
+            return;
+        }
+
+        const legacyBinDir = path.join(workspaceStoragePath, 'atlascode-rovodev-bin');
+        try {
+            if (fs.existsSync(legacyBinDir)) {
+                await getFsPromise((callback) => fs.rm(legacyBinDir, { recursive: true, force: true }, callback));
+                Logger.info(`Removed legacy per-workspace Rovo Dev binary bundle at ${legacyBinDir}`);
+            }
+        } catch (error) {
+            Logger.warn(`Failed to remove legacy per-workspace Rovo Dev binary bundle: ${error}`);
+        }
+    }
+
     public static get state(): RovoDevProcessState {
         if (RovoDevProcessManager.extensionApi.metadata.isBoysenberry()) {
             const httpPort = parseInt(process.env[RovoDevInfo.envVars.port] || '0');
@@ -364,6 +400,8 @@ export abstract class RovoDevProcessManager {
     }
 
     public static async initializeRovoDev(context: ExtensionContext, forceNewInstance?: boolean) {
+        await this.cleanupLegacyWorkspaceBinary(context);
+
         if (this.asyncLocked) {
             throw new Error('Multiple initialization of Rovo Dev attempted');
         }
