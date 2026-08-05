@@ -16,7 +16,7 @@ type ItemData = { worklog: Worklog; onEdit?: (worklog: Worklog) => void; onDelet
 const Created = (data: ItemData) => (
     <p style={{ display: 'inline' }}>{`${formatDistanceToNow(parseISO(data.worklog.created))} ago`}</p>
 );
-const Comment = (data: ItemData) => <p style={{ display: 'inline' }}>{data.worklog.comment}</p>;
+const Comment = (data: ItemData) => <p style={{ display: 'inline' }}>{`${data.worklog.comment}`}</p>;
 const TimeSpent = (data: ItemData) => <p style={{ display: 'inline' }}>{data.worklog.timeSpent}</p>;
 const Author = (data: ItemData) => {
     const avatar =

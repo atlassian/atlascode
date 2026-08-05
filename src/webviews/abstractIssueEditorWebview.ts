@@ -1,3 +1,4 @@
+import { JiraCloudClient } from '@atlassian-pi/jira-pi-client';
 import {
     isAutocompleteSuggestionsResult,
     isGroupPickerResult,
@@ -8,6 +9,7 @@ import {
     IssuePickerResult,
 } from '@atlassian-pi/jira-pi-common-models';
 import { ValueType } from '@atlassian-pi/jira-pi-meta-models';
+import { DetailedSiteInfo } from 'src/atlclients/authInfo';
 import { Features } from 'src/util/features';
 
 import { showIssue } from '../commands/jira/showIssue';
@@ -225,12 +227,11 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                 break;
                             }
 
-                            const readTokenName = 'read:media-credentials:jira';
-                            const writeTokenName = 'write:media-credentials:jira';
+                            const jiraExternalTokenName = 'jira:atlassian-external';
 
                             const checkScopesResult = await Container.credentialManager.checkScopes(
                                 this.siteOrUndefined,
-                                [readTokenName, writeTokenName],
+                                [jiraExternalTokenName],
                             );
 
                             if (!checkScopesResult) {
@@ -241,24 +242,47 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                 break;
                             }
 
-                            const mediaRead =
-                                readTokenName in checkScopesResult.checkedScopes
-                                    ? checkScopesResult.checkedScopes[readTokenName]
-                                    : false;
-                            const mediaWrite =
-                                writeTokenName in checkScopesResult.checkedScopes
-                                    ? checkScopesResult.checkedScopes[writeTokenName]
+                            const jiraExternalScope =
+                                jiraExternalTokenName in checkScopesResult.checkedScopes
+                                    ? checkScopesResult.checkedScopes[jiraExternalTokenName]
                                     : false;
                             const message = {
                                 type: 'scopeCheckResult',
                                 checkedScopes: {
-                                    mediaRead,
-                                    mediaWrite,
+                                    jiraExternal: jiraExternalScope,
                                 },
                                 isApiToken: checkScopesResult.isApiToken,
                             };
+
                             this.postMessage(message);
                             // Fetch and post message with media token here
+
+                            const client = (await Container.clientManager.jiraClient(
+                                this.siteOrUndefined,
+                            )) as JiraCloudClient<DetailedSiteInfo>;
+                            try {
+                                if (msg.issueKey) {
+                                    let readToken: string = '';
+                                    let writeToken: string = '';
+                                    if (jiraExternalScope) {
+                                        readToken = await client.getMediaReadToken(msg.issueKey);
+                                        writeToken = await client.getMediaWriteToken(msg.issueKey);
+                                    }
+                                    this.postMessage({
+                                        type: 'mediaToken',
+                                        readToken,
+                                        writeToken,
+                                    });
+                                } else {
+                                    throw new Error('Issue key is missing for media token fetch');
+                                }
+                            } catch (error) {
+                                Logger.error(
+                                    new Error('Error fetching media token'),
+                                    'Error fetching media token',
+                                    error,
+                                );
+                            }
                         }
                         break;
                     }

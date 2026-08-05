@@ -1,10 +1,11 @@
+import { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
 import { ReactRenderer } from '@atlaskit/renderer';
 import React, { memo, useMemo } from 'react';
 import { IntlProvider } from 'react-intl-next';
 
 import { AtlascodeMentionProvider } from './issue/common/AtlaskitEditor/AtlascodeMentionsProvider';
 interface AdfAwareContentProps {
-    content: string;
+    content: any; // ADF formatted content
     mentionProvider: AtlascodeMentionProvider;
 }
 
@@ -27,10 +28,27 @@ export const AdfAwareContent: React.FC<AdfAwareContentProps> = memo(({ content, 
     if (!document) {
         return <p>{content}</p>;
     }
+    const providerFactory = useMemo(() => {
+        return ProviderFactory.create({
+            mediaProvider: Promise.resolve({
+                viewMediaClientConfig: {
+                    authProvider: () =>
+                        // TODO: Provide token and clientId from request to Jira token endpoint
+                        // For testing purposes you can get a token and clientId on Jira Fronted by intercepting network requests
+                        Promise.resolve({
+                            token: '',
+                            clientId: '',
+                            baseUrl: 'https://api.media.atlassian.com',
+                        }),
+                },
+            }),
+            mentionProvider: Promise.resolve(mentionProvider),
+        });
+    }, [mentionProvider]);
 
     return (
         <IntlProvider locale="en">
-            <ReactRenderer data-test-id="adf-renderer" document={document} />
+            <ReactRenderer data-test-id="adf-renderer" document={document} dataProviders={providerFactory} />
         </IntlProvider>
     );
 });

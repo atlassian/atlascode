@@ -796,8 +796,7 @@ describe('AbstractIssueEditorWebview', () => {
             expect(webviewWithSite.postMessage).toHaveBeenCalledWith({
                 type: 'scopeCheckResult',
                 checkedScopes: {
-                    mediaRead: true,
-                    mediaWrite: true,
+                    jiraExternal: true,
                 },
                 isApiToken: false,
             });
@@ -843,8 +842,7 @@ describe('AbstractIssueEditorWebview', () => {
             expect(webviewWithSite.postMessage).toHaveBeenCalledWith({
                 type: 'scopeCheckResult',
                 checkedScopes: {
-                    mediaRead: false,
-                    mediaWrite: false,
+                    jiraExternal: false,
                 },
                 isApiToken: false,
             });

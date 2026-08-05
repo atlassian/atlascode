@@ -103,6 +103,16 @@ const mockHandleEditorFocus = jest.fn();
 
 // Mock mention provider
 const mockMentionProvider = AtlascodeMentionProvider.init({ url: '' }, jest.fn().mockResolvedValue([]));
+const mockMediaProvider = Promise.resolve({
+    viewMediaClientConfig: {
+        authProvider: () =>
+            Promise.resolve({
+                clientId: 'mock-client-id',
+                token: 'mock-token',
+                baseUrl: 'mock-base-url',
+            }),
+    },
+});
 
 describe('IssueCommentComponent with Atlaskit Editor', () => {
     const renderComponent = ({
@@ -121,6 +131,7 @@ describe('IssueCommentComponent with Atlaskit Editor', () => {
         onEditingCommentChange = mockOnEditingCommentChange,
         isAtlaskitEditorEnabled = true,
         mentionProvider = mockMentionProvider,
+        mediaProvider = mockMediaProvider,
     }: Partial<IssueCommentComponentProps>) => {
         return (
             <EditorStateProvider>
@@ -141,6 +152,7 @@ describe('IssueCommentComponent with Atlaskit Editor', () => {
                     isAtlaskitEditorEnabled={isAtlaskitEditorEnabled}
                     mentionProvider={mentionProvider}
                     handleEditorFocus={mockHandleEditorFocus}
+                    mediaProvider={mediaProvider}
                 />
             </EditorStateProvider>
         );

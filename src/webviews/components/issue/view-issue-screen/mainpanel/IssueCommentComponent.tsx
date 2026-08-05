@@ -11,12 +11,12 @@ import { Box } from '@mui/material';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import React from 'react';
 import { DetailedSiteInfo } from 'src/atlclients/authInfo';
+import { AdfAwareContent } from 'src/webviews/components/AdfAwareContent';
 
-import { AdfAwareContent } from '../../../AdfAwareContent';
 import { RenderedContent } from '../../../RenderedContent';
 import { convertAdfToWikimarkup, convertWikimarkupToAdf } from '../../common/adfToWikimarkup';
 import { AtlascodeMentionProvider } from '../../common/AtlaskitEditor/AtlascodeMentionsProvider';
-import AtlaskitEditor from '../../common/AtlaskitEditor/AtlaskitEditor';
+import AtlaskitEditor, { AtlaskitMediaProvider } from '../../common/AtlaskitEditor/AtlaskitEditor';
 import JiraIssueTextAreaEditor from '../../common/JiraIssueTextArea';
 import { useEditorState } from '../EditorStateContext';
 import { useEditorForceClose } from '../hooks/useEditorForceClose';
@@ -38,6 +38,7 @@ export type IssueCommentComponentProps = {
     isAtlaskitEditorEnabled?: boolean;
     mentionProvider: AtlascodeMentionProvider;
     handleEditorFocus: (isFocused: boolean) => void;
+    mediaProvider: AtlaskitMediaProvider;
 };
 const CommentComponent: React.FC<{
     siteDetails: DetailedSiteInfo;
@@ -50,6 +51,7 @@ const CommentComponent: React.FC<{
     isAtlaskitEditorEnabled?: boolean;
     mentionProvider: AtlascodeMentionProvider;
     handleEditorFocus: (isFocused: boolean) => void;
+    mediaProvider: AtlaskitMediaProvider;
 }> = ({
     siteDetails,
     comment,
@@ -61,6 +63,7 @@ const CommentComponent: React.FC<{
     isAtlaskitEditorEnabled,
     mentionProvider,
     handleEditorFocus,
+    mediaProvider,
 }) => {
     const { openEditor, closeEditor, isEditorActive } = useEditorState();
     const editorId = `edit-comment-${comment.id}` as const;
@@ -171,6 +174,7 @@ const CommentComponent: React.FC<{
                                 mentionProvider={Promise.resolve(mentionProvider)}
                                 onFocus={() => handleEditorFocus(true)}
                                 onBlur={() => handleEditorFocus(false)}
+                                mediaProvider={mediaProvider}
                             />
                         ) : (
                             <JiraIssueTextAreaEditor
@@ -230,6 +234,7 @@ const AddCommentComponent: React.FC<{
     setIsEditing: (editing: boolean) => void;
     mentionProvider: AtlascodeMentionProvider;
     handleEditorFocus: (isFocused: boolean) => void;
+    mediaProvider: AtlaskitMediaProvider;
 }> = ({
     fetchUsers,
     user,
@@ -242,6 +247,7 @@ const AddCommentComponent: React.FC<{
     setIsEditing,
     mentionProvider,
     handleEditorFocus,
+    mediaProvider,
 }) => {
     const { openEditor, closeEditor } = useEditorState();
 
@@ -338,6 +344,7 @@ const AddCommentComponent: React.FC<{
                             mentionProvider={Promise.resolve(mentionProvider)}
                             onFocus={() => handleEditorFocus(true)}
                             onBlur={() => handleEditorFocus(false)}
+                            mediaProvider={mediaProvider}
                         />
                     </Box>
                 ) : (
@@ -394,6 +401,7 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
     isAtlaskitEditorEnabled,
     mentionProvider,
     handleEditorFocus,
+    mediaProvider,
 }) => {
     const commentList = Array.isArray(comments) ? comments : [];
     return (
@@ -413,6 +421,7 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
                 setIsEditing={onEditingCommentChange}
                 mentionProvider={mentionProvider}
                 handleEditorFocus={handleEditorFocus}
+                mediaProvider={mediaProvider}
             />
             {commentList
                 .sort((a, b) => (a.created > b.created ? -1 : 1))
@@ -429,6 +438,7 @@ export const IssueCommentComponent: React.FC<IssueCommentComponentProps> = ({
                         isAtlaskitEditorEnabled={isAtlaskitEditorEnabled}
                         mentionProvider={mentionProvider}
                         handleEditorFocus={handleEditorFocus}
+                        mediaProvider={mediaProvider}
                     />
                 ))}
         </Box>

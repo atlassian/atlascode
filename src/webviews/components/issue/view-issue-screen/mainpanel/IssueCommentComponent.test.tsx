@@ -105,6 +105,16 @@ const mockHandleEditorFocus = jest.fn();
 // Mock mention provider
 const mockMentionProvider = AtlascodeMentionProvider.init({ url: '' }, jest.fn().mockResolvedValue([]));
 
+const mockMediaProvider = Promise.resolve({
+    viewMediaClientConfig: {
+        authProvider: () =>
+            Promise.resolve({
+                clientId: 'mock-client-id',
+                token: 'mock-token',
+                baseUrl: 'mock-base-url',
+            }),
+    },
+});
 // Helper function to wrap components with EditorStateProvider for testing
 const renderWithEditorProvider = (component: React.ReactElement) => {
     return render(<EditorStateProvider>{component}</EditorStateProvider>);
@@ -133,6 +143,7 @@ describe('IssueCommentComponent', () => {
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={false}
                 mentionProvider={mockMentionProvider}
+                mediaProvider={mockMediaProvider}
                 handleEditorFocus={mockHandleEditorFocus}
             />,
         );
@@ -158,6 +169,7 @@ describe('IssueCommentComponent', () => {
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={false}
                 mentionProvider={mockMentionProvider}
+                mediaProvider={mockMediaProvider}
                 handleEditorFocus={mockHandleEditorFocus}
             />,
         );
@@ -185,6 +197,7 @@ describe('IssueCommentComponent', () => {
                     onEditingCommentChange={mockOnEditingCommentChange}
                     isAtlaskitEditorEnabled={false}
                     mentionProvider={mockMentionProvider}
+                    mediaProvider={mockMediaProvider}
                     handleEditorFocus={mockHandleEditorFocus}
                 />,
             ),
@@ -226,6 +239,7 @@ describe('IssueCommentComponent', () => {
                 onEditingCommentChange={mockOnEditingCommentChange}
                 isAtlaskitEditorEnabled={false}
                 mentionProvider={mockMentionProvider}
+                mediaProvider={mockMediaProvider}
                 handleEditorFocus={mockHandleEditorFocus}
             />,
         );
@@ -257,6 +271,7 @@ describe('IssueCommentComponent', () => {
                     onEditingCommentChange={setIsEditingComment}
                     isAtlaskitEditorEnabled={false}
                     mentionProvider={mockMentionProvider}
+                    mediaProvider={mockMediaProvider}
                     handleEditorFocus={mockHandleEditorFocus}
                 />
             );
