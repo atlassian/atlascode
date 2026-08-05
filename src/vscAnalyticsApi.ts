@@ -50,6 +50,7 @@ import {
     quickFlowEvent,
     saveManualCodeEvent,
     sentryCapturedExceptionFailedEvent,
+    sourceLinkCopiedEvent,
     startIssueCreationEvent,
     uiErrorEvent,
     upgradedEvent,
@@ -232,6 +233,12 @@ export class VSCAnalyticsApi implements AnalyticsApi {
 
     public async firePrUrlCopiedEvent(): Promise<void> {
         return prUrlCopiedEvent().then((e) => {
+            this._analyticsClient.sendTrackEvent(e);
+        });
+    }
+
+    public async fireSourceLinkCopiedEvent(): Promise<void> {
+        return sourceLinkCopiedEvent().then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }

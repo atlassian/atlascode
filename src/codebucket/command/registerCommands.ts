@@ -1,6 +1,9 @@
-import { commands, ExtensionContext } from 'vscode';
+import { commands, ExtensionContext, Uri } from 'vscode';
 
+import { Container } from '../../container';
+import { Features } from '../../util/featureFlags';
 import { CopyBitbucketPullRequestCommand } from './command-copy-pullreqest';
+import { CopySourceLinkCommand } from './command-copy-source-link';
 import { OpenInBitbucketCommand } from './command-open';
 import { OpenBitbucketChangesetCommand } from './command-open-changeset';
 import { OpenBitbucketPullRequestCommand } from './command-open-pullrequest';
@@ -10,6 +13,7 @@ enum CodebucketCommands {
     OpenChangeset = 'atlascode.bb.openChangeset',
     ViewPullRequest = 'atlascode.bb.viewPullRequest',
     CopyPullRequest = 'atlascode.bb.copyPullRequest',
+    CopySourceLink = 'atlascode.bb.copySourceLink',
 }
 
 export function activate(context: ExtensionContext) {
@@ -34,4 +38,14 @@ export function activate(context: ExtensionContext) {
         copyPullRequest.run(),
     );
     context.subscriptions.push(copyPullRequestCmd);
+
+    const copySourceLinkEnabled = Container.featureFlagClient.checkGate(Features.CopySourceLinkCommand);
+    if (copySourceLinkEnabled) {
+        const copySourceLink = new CopySourceLinkCommand();
+        const copySourceLinkCmd = commands.registerCommand(CodebucketCommands.CopySourceLink, (uri?: Uri) => {
+            copySourceLink.setContextUri(uri);
+            return copySourceLink.run();
+        });
+        context.subscriptions.push(copySourceLinkCmd);
+    }
 }
