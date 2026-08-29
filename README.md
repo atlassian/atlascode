@@ -10,6 +10,19 @@ Browse, View, Create, and Manage your Jira Work Items, Bitbucket PRs, Bitbucket 
 - Get work suggestions, view your code reviews, and tackle tasks directly from VS Code
 - Manage notifications and reviews in-flow—no context switching
 
+```
+    ╔═══════════════════════════════════════════════════════════════╗
+    ║                        AtlasCode                              ║
+    ║                                                               ║
+    ║  ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐   ║
+    ║  │   🏗️    │    │   📋    │    │   🤖    │    │   🔀    │   ║
+    ║  │ VS Code │ ←→ │  Jira   │ ←→ │ Rovo Dev│ ←→ │Bitbucket│   ║
+    ║  │   IDE   │    │ Issues  │    │   AI    │    │   Git   │   ║
+    ║  └─────────┘    └─────────┘    └─────────┘    └─────────┘   ║
+    ║                                                               ║
+    ║           🚀 Stay in your IDE; don't switch contexts          ║
+    ╚═══════════════════════════════════════════════════════════════╝
+```
 
 **New in GA:** Mode control for AI autonomy, auto-saving sessions, file-aware context, full change history with native diff views and more.
 
