@@ -537,7 +537,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
 
     override componentDidMount() {
         this.postMessage({ action: 'getFeatureFlags' });
-        this.postMessage({ action: 'fetchMediaToken' });
+        this.postMessage({ action: 'fetchMediaToken', site: this.state.siteDetails });
     }
 
     override componentDidUpdate(_: Readonly<{}>, prevState: Readonly<ViewState>): void {

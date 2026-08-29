@@ -5,8 +5,12 @@ import { ComposableEditor, EditorNextProps } from '@atlaskit/editor-core/composa
 import { createDefaultPreset } from '@atlaskit/editor-core/preset-default';
 import { usePreset } from '@atlaskit/editor-core/use-preset';
 import { JSONTransformer } from '@atlaskit/editor-json-transformer';
+import { contentInsertionPlugin } from '@atlaskit/editor-plugin-content-insertion';
+import { editorDisabledPlugin } from '@atlaskit/editor-plugin-editor-disabled';
+import { gridPlugin } from '@atlaskit/editor-plugin-grid';
 import { insertBlockPlugin } from '@atlaskit/editor-plugin-insert-block';
 import { listPlugin } from '@atlaskit/editor-plugin-list';
+import { mediaPlugin, MediaPluginOptions } from '@atlaskit/editor-plugin-media';
 import { mentionsPlugin } from '@atlaskit/editor-plugin-mentions';
 import { tasksAndDecisionsPlugin } from '@atlaskit/editor-plugin-tasks-and-decisions';
 import { textColorPlugin } from '@atlaskit/editor-plugin-text-color';
@@ -45,6 +49,7 @@ class StringADFTransformer implements Transformer<string> {
     }
 }
 
+export type AtlaskitMediaProvider = MediaPluginOptions['provider'];
 interface AtlaskitEditorProps extends Omit<Partial<EditorNextProps>, 'onChange' | 'onSave'> {
     onSave?: (content: any) => void; // Can be string or ADF object for v3 API
     onCancel?: () => void;
@@ -54,6 +59,7 @@ interface AtlaskitEditorProps extends Omit<Partial<EditorNextProps>, 'onChange' 
     onFocus: () => void;
     onBlur: () => void;
     isSaveOnBlur?: boolean;
+    mediaProvider: AtlaskitMediaProvider;
 }
 
 const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProps) => {
@@ -67,10 +73,12 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
         onBlur,
         onContentChange,
         mentionProvider,
+        mediaProvider,
         isSaveOnBlur,
     } = props;
 
     const { preset, editorApi } = usePreset(() => {
+        console.debug('Initializing editor preset with mediaProvider', mediaProvider);
         return (
             createDefaultPreset({
                 allowUndoRedoButtons: true,
@@ -96,6 +104,33 @@ const AtlaskitEditor: React.FC<AtlaskitEditorProps> = (props: AtlaskitEditorProp
                 ])
                 .add(mentionsPlugin)
                 .add(tasksAndDecisionsPlugin)
+                .add(contentInsertionPlugin)
+                .add(gridPlugin)
+                .add(editorDisabledPlugin)
+                .maybeAdd(
+                    [
+                        mediaPlugin,
+                        {
+                            provider: mediaProvider,
+                            /*
+                            {
+                                viewMediaClientConfig: {
+                                    authProvider: () =>
+                                        // TODO: Provide token and clientId from request to Jira token endpoint
+                                        // For testing purposes you can get a token and clientId on Jira Fronted by intercepting network requests
+                                        Promise.resolve({
+                                            token: '',
+                                            clientId: '',
+                                            baseUrl: 'https://api.media.atlassian.com',
+                                        }),
+                                },
+                            }
+                        */
+                            allowMediaSingle: true,
+                        },
+                    ],
+                    true,
+                )
         );
     }, []);
     // Helper function to get current document content

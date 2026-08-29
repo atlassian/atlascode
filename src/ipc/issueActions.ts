@@ -265,6 +265,7 @@ export interface DismissRovoDevPromoBannerAction extends Action {
 
 export interface MediaTokenFetchAction extends Action {
     action: 'fetchMediaToken';
+    issueKey: string;
 }
 
 export interface CreateIssueValidationFailedAction extends Action {
@@ -464,7 +465,7 @@ export function isDismissRovoDevPromoBanner(a: Action): a is DismissRovoDevPromo
 }
 
 export function isMediaTokenFetchAction(a: Action): a is MediaTokenFetchAction {
-    return (<MediaTokenFetchAction>a).action === 'fetchMediaToken';
+    return a && a.action === 'fetchMediaToken';
 }
 
 export function isCreateIssueValidationFailed(a: Action): a is CreateIssueValidationFailedAction {
