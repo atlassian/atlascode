@@ -10,6 +10,7 @@ export enum Features {
     RovoDevLspEnabled = 'atlascode-enable-rovodev-lsp',
     SentryLogging = 'atlascode-sentry-logging',
     RequireDedicatedRovoDevAuth = 'atlascode-require-dedicated-rovodev-auth',
+    CopySourceLinkCommand = 'atlascode-copy-source-link',
 }
 
 /**
@@ -18,6 +19,7 @@ export enum Features {
  */
 export const defaultFeatureGateValues: Partial<FeatureGateValues> = {
     [Features.RequireDedicatedRovoDevAuth]: false,
+    [Features.CopySourceLinkCommand]: false,
 };
 
 export const enum Experiments {
