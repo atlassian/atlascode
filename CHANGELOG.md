@@ -24,6 +24,7 @@
 
 ### Improvements
 
+- **RovoDev**: Updated Rovo Dev version to 202609.9.1b3
 - **RovoDev**: Updated Rovo Dev version to 202607.22.1b1
 - **RovoDev**: Updated Rovo Dev version to 202607.21.1b1
 - **RovoDev**: Updated Rovo Dev version to 202606.10.1b3
