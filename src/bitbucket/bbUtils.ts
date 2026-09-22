@@ -3,6 +3,7 @@ import gitUrlParse from 'git-url-parse';
 import { DetailedSiteInfo, ProductBitbucket } from '../atlclients/authInfo';
 import { bbAPIConnectivityError } from '../constants';
 import { Container } from '../container';
+import { Logger } from '../logger';
 import { Remote, Repository } from '../typings/git';
 import { BitbucketApi, BitbucketSite, WorkspaceRepo } from './model';
 
@@ -13,18 +14,26 @@ const bbServerRepoRegEx = new RegExp(/(?<type>users|projects)\/(?<owner>.*)\/rep
 const parseUrl = require('parse-url');
 parseUrl.MAX_INPUT_LENGTH = 3000;
 
-export function parseGitUrl(url: string): gitUrlParse.GitUrl {
-    const parsed = gitUrlParse(url);
-    parsed.owner = parsed.owner.slice(parsed.owner.lastIndexOf('/') + 1);
+export const URL_PARSING_ERROR = 'url parsing';
 
-    if (parsed.owner === 'repos') {
-        const matches = url.match(bbServerRepoRegEx);
-        if (matches && matches.groups && matches.groups.type && matches.groups.owner) {
-            parsed.owner = matches.groups.type === 'users' ? `~${matches.groups.owner}` : matches.groups.owner;
-            parsed.full_name = `${parsed.owner}/${parsed.name}`;
+export function parseGitUrl(url: string): gitUrlParse.GitUrl {
+    try {
+        const parsed = gitUrlParse(url);
+        parsed.owner = parsed.owner.slice(parsed.owner.lastIndexOf('/') + 1);
+
+        if (parsed.owner === 'repos') {
+            const matches = url.match(bbServerRepoRegEx);
+            if (matches && matches.groups && matches.groups.type && matches.groups.owner) {
+                parsed.owner = matches.groups.type === 'users' ? `~${matches.groups.owner}` : matches.groups.owner;
+                parsed.full_name = `${parsed.owner}/${parsed.name}`;
+            }
         }
+
+        return parsed;
+    } catch (e) {
+        Logger.warn('URL parsing failed.', url, e);
+        throw new Error(URL_PARSING_ERROR);
     }
-    return parsed;
 }
 
 export function getBitbucketRemotes(repository: Repository): Remote[] {

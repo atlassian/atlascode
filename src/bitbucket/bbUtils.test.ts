@@ -24,6 +24,7 @@ jest.mock('../container', () => ({
 import { DetailedSiteInfo, ProductBitbucket } from '../atlclients/authInfo';
 import { bbAPIConnectivityError } from '../constants';
 import { Container } from '../container';
+import { Logger } from '../logger';
 import { Remote, Repository, RepositoryState } from '../typings/git';
 import {
     bitbucketSiteForRemote,
@@ -35,6 +36,7 @@ import {
     getBitbucketRemotes,
     parseGitUrl,
     siteDetailsForRemote,
+    URL_PARSING_ERROR,
     urlForRemote,
     workspaceRepoFor,
 } from './bbUtils';
@@ -130,6 +132,27 @@ describe('bbUtils', () => {
 
             expect(result.owner).toBe('TESTPROJECT');
             expect(result.full_name).toBe('TESTPROJECT/testrepo');
+        });
+
+        it('should catch parsing errors, log warning, and throw url parsing error', () => {
+            const parseError = new Error('URL parsing failed.');
+            const warnSpy = jest.spyOn(Logger, 'warn').mockImplementation(() => {});
+            mockGitUrlParse.mockImplementation(() => {
+                throw parseError;
+            });
+
+            const testUrl = 'https://bitbucket.org/testuser/testrepo.git';
+            expect(() => parseGitUrl(testUrl)).toThrow(URL_PARSING_ERROR);
+
+            expect(warnSpy).toHaveBeenCalledWith('URL parsing failed.', testUrl, parseError);
+
+            warnSpy.mockRestore();
+        });
+
+        it('should skip parsing for invalid URL format and throw url parsing error', () => {
+            expect(() => parseGitUrl('invalid-url')).toThrow(URL_PARSING_ERROR);
+
+            expect(mockGitUrlParse).toHaveBeenCalledWith('invalid-url');
         });
     });
 
