@@ -22,6 +22,9 @@ export const ProductEnabler: React.FunctionComponent<ProductEnablerProps> = ({ l
     return (
         <Grid container justifyContent="center" alignItems="center" spacing={1}>
             <Grid item>
+                <span>{label}</span>
+            </Grid>
+            <Grid item>
                 <Tooltip title={enabled ? `Disable ${label} features` : `Enable ${label} features`}>
                     <Switch
                         color="primary"
@@ -31,9 +34,6 @@ export const ProductEnabler: React.FunctionComponent<ProductEnablerProps> = ({ l
                         onChange={toggleProduct}
                     />
                 </Tooltip>
-            </Grid>
-            <Grid item>
-                <span>{label}</span>
             </Grid>
         </Grid>
     );
