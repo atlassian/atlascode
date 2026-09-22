@@ -1,4 +1,7 @@
 prompts:
-  - name: bump-version
-    description: Bump version
-    content_file: bump-version.md
+    - name: bump-version
+      description: Bump version
+      content_file: bump-version.md
+    - name: release-stable
+      description: Find next stable version and run release script
+      content_file: release-stable.md
