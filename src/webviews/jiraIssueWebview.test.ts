@@ -17,6 +17,7 @@ import * as fetchIssue from '../jira/fetchIssue';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
 import { Resources } from '../resources';
+import { clearFailedDevInfoSites } from '../views/jira/treeViews/utils';
 import { NotificationManagerImpl } from '../views/notifications/notificationManager';
 import { JiraIssueWebview } from './jiraIssueWebview';
 
@@ -2705,6 +2706,94 @@ describe('JiraIssueWebview - Additional Method Tests', () => {
 
                 expect(result).toHaveLength(1);
                 expect(result[0].name).toBe('Build #2');
+            });
+        });
+
+        describe('fetchJiraDevelopmentInfo', () => {
+            const emptyResult = { branches: [], commits: [], pullRequests: [], builds: [] };
+
+            beforeEach(() => {
+                (webview as any)._issue = mockIssue;
+            });
+
+            afterEach(() => {
+                clearFailedDevInfoSites();
+            });
+
+            it('silently swallows 401 errors without logging', async () => {
+                const error = { response: { status: 401 } };
+                const mockTransport = { get: jest.fn().mockRejectedValue(error) };
+                const mockClient = {
+                    transportFactory: jest.fn(() => mockTransport),
+                    authorizationProvider: jest.fn().mockResolvedValue('Bearer token'),
+                };
+                (Container.clientManager.jiraClient as jest.Mock).mockResolvedValue(mockClient);
+
+                const result = await (webview as any).fetchJiraDevelopmentInfo();
+
+                expect(result).toEqual(emptyResult);
+                expect(Logger.error).not.toHaveBeenCalled();
+            });
+
+            it('short-circuits subsequent calls for the same site after a 401', async () => {
+                const error = { response: { status: 401 } };
+                const mockGet = jest.fn().mockRejectedValue(error);
+                const mockTransport = { get: mockGet };
+                const mockClient = {
+                    transportFactory: jest.fn(() => mockTransport),
+                    authorizationProvider: jest.fn().mockResolvedValue('Bearer token'),
+                };
+                (Container.clientManager.jiraClient as jest.Mock).mockResolvedValue(mockClient);
+
+                // first call marks the site as failed
+                await (webview as any).fetchJiraDevelopmentInfo();
+                (Container.clientManager.jiraClient as jest.Mock).mockClear();
+
+                // second call should short-circuit without contacting the server
+                const result = await (webview as any).fetchJiraDevelopmentInfo();
+
+                expect(result).toEqual(emptyResult);
+                expect(Container.clientManager.jiraClient).not.toHaveBeenCalled();
+                expect(Logger.error).not.toHaveBeenCalled();
+            });
+
+            it('still logs non-401 errors', async () => {
+                const error = new Error('Network failure');
+                const mockTransport = { get: jest.fn().mockRejectedValue(error) };
+                const mockClient = {
+                    transportFactory: jest.fn(() => mockTransport),
+                    authorizationProvider: jest.fn().mockResolvedValue('Bearer token'),
+                };
+                (Container.clientManager.jiraClient as jest.Mock).mockResolvedValue(mockClient);
+
+                await (webview as any).fetchJiraDevelopmentInfo();
+
+                expect(Logger.error).toHaveBeenCalledWith(
+                    error,
+                    'Could not fetch Jira development info, falling back to local data',
+                );
+            });
+
+            it('resumes calls after clearFailedDevInfoSites()', async () => {
+                const error = { response: { status: 401 } };
+                const mockGet = jest.fn().mockRejectedValue(error);
+                const mockTransport = { get: mockGet };
+                const mockClient = {
+                    transportFactory: jest.fn(() => mockTransport),
+                    authorizationProvider: jest.fn().mockResolvedValue('Bearer token'),
+                };
+                (Container.clientManager.jiraClient as jest.Mock).mockResolvedValue(mockClient);
+
+                // first call marks the site as failed
+                await (webview as any).fetchJiraDevelopmentInfo();
+
+                clearFailedDevInfoSites();
+                (Container.clientManager.jiraClient as jest.Mock).mockClear();
+
+                // after clearing, the site should be retried
+                await (webview as any).fetchJiraDevelopmentInfo();
+
+                expect(Container.clientManager.jiraClient).toHaveBeenCalledTimes(1);
             });
         });
     });

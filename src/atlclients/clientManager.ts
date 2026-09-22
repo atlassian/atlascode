@@ -25,6 +25,7 @@ import { PipelineApiImpl } from '../pipelines/pipelines';
 import { SitesAvailableUpdateEvent } from '../siteManager';
 import { CacheMap } from '../util/cachemap';
 import { Time } from '../util/time';
+import { clearFailedDevInfoSites, clearFailedJqlSites } from '../views/jira/treeViews/utils';
 import {
     AuthInfo,
     AuthInfoState,
@@ -74,6 +75,8 @@ export class ClientManager implements Disposable {
     private onAuthChange() {
         // When credentials change, clear all failed sites to give them a fresh chance
         this._failedSites.clear();
+        clearFailedJqlSites();
+        clearFailedDevInfoSites();
     }
 
     /*
