@@ -178,22 +178,30 @@ class JiraIssueQueryNode extends TreeItem {
         return [...rootIssues];
     }
 
-    // Fetch any parents and grandparents that might be missing from the set to ensure that the a path can be drawn all
-    // the way from a subtask to an epic.
+    // Fetch any ancestors that might be missing from the set to ensure that a path can be drawn all
+    // the way from a subtask up to the root issue, regardless of hierarchy depth.
     private async fetchMissingAncestorIssues(newIssues: TreeViewIssue[]): Promise<TreeViewIssue[]> {
         if (!newIssues.length) {
             return [];
         }
         const site = newIssues[0].siteDetails;
 
-        const missingParentKeys = this.calculateMissingParentKeys(newIssues);
-        const parentIssues = await this.fetchIssuesForKeys(site, missingParentKeys);
+        // Iteratively fetch missing ancestors until the full hierarchy is resolved or the depth
+        // cap is reached. A fixed 2-round approach fails for projects with hierarchies deeper than
+        // subtask -> task -> epic (e.g. Sub-Initiative -> Epic -> Task -> Root).
+        const fetched: TreeViewIssue[] = [];
+        let allIssues = [...newIssues];
+        for (let depth = 0; depth < 10; depth++) {
+            const missingKeys = this.calculateMissingParentKeys(allIssues);
+            if (!missingKeys.length) {
+                break;
+            }
+            const batch = await this.fetchIssuesForKeys(site, missingKeys);
+            fetched.push(...batch);
+            allIssues = [...allIssues, ...batch];
+        }
 
-        // If a jqlIssue is a sub-task we make a second call to make sure we get its parent's epic.
-        const missingGrandparentKeys = this.calculateMissingParentKeys([...newIssues, ...parentIssues]);
-        const grandparentIssues = await this.fetchIssuesForKeys(site, missingGrandparentKeys);
-
-        return [...parentIssues, ...grandparentIssues];
+        return fetched;
     }
 
     private calculateMissingParentKeys(issues: TreeViewIssue[]): string[] {
