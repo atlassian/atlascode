@@ -197,6 +197,7 @@ export type RovoDevToolName =
     | 'mcp__scout__invoke_tool'
     | 'update_todo'
     | 'configure_live_preview'
+    | 'get_skill'
     | RovoDevDeferredToolCallName;
 
 export type RovoDevToolPemissionScenario = 'ASK' | 'ALLOWED' | 'DENIED';
