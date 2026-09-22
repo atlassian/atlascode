@@ -228,15 +228,28 @@ export function parseToolReturnMessage(
                         }
 
                         const toolReturnType = matches[1].trim();
-                        const title = filePath ? filePath.match(/([^/\\]+)$/)?.[0] : undefined;
+                        let title = filePath ? filePath.match(/([^/\\]+)$/)?.[0] : undefined;
 
                         const content = modifyFileTitleMap[toolReturnType.replace(/ /g, '_')];
 
+                        // Detect skill SKILL.md files: e.g. .../skills/<skill-name>/SKILL.md
+                        // and surface the skill name instead of just "SKILL.md"
+                        const skillMatch = filePath.match(/[/\\]skills[/\\]([^/\\]+)[/\\]SKILL\.md$/i);
+                        const isSkillFile = skillMatch !== null || /^SKILL\.md$/i.test(title ?? '');
+                        let skillName: string | undefined;
+                        if (skillMatch) {
+                            skillName = skillMatch[1];
+                        }
+
                         resp.push({
-                            content: content ? content.title : matches[1].trim().toUpperCase(),
+                            content: isSkillFile
+                                ? `Loaded skill${skillName ? `: ${skillName}` : ''}`
+                                : content
+                                  ? content.title
+                                  : matches[1].trim().toUpperCase(),
                             filePath: filePath,
-                            title: title,
-                            type: content ? content.type : undefined,
+                            title: isSkillFile ? (skillName ?? 'SKILL.md') : title,
+                            type: isSkillFile ? 'open' : content ? content.type : undefined,
                         });
                     }
                 }
