@@ -19,7 +19,6 @@ describe('RovoDevEntitlementChecker', () => {
     let mockAnalyticsClient: jest.Mocked<AnalyticsClient>;
     let mockClientManager: any;
     let mockConfig: any;
-    let mockFeatureGateClient: any;
     let mockSiteManager: any;
     beforeEach(() => {
         mockSiteManager = {
@@ -40,13 +39,8 @@ describe('RovoDevEntitlementChecker', () => {
             },
         };
 
-        mockFeatureGateClient = {
-            checkGate: jest.fn().mockResolvedValue(true),
-        };
-
         (Container as any).clientManager = mockClientManager;
         (Container as any).config = mockConfig;
-        (Container as any).featureFlagClient = mockFeatureGateClient;
         (Container as any).siteManager = mockSiteManager;
         (Logger.debug as jest.Mock).mockImplementation(() => {});
         (Logger.error as jest.Mock).mockImplementation(() => {});
