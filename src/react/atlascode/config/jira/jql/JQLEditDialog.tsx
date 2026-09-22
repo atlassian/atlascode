@@ -50,7 +50,7 @@ export const JQLEditDialog: React.FunctionComponent<JQLEditDialogProps> = ({
     onSave,
 }) => {
     const controller = useContext(ConfigControllerContext);
-    const [site, setSite] = useState(Array.isArray(sites) && sites.length > 0 ? sites[0] : emptySiteInfo);
+    const [site, setSite] = useState(() => sites.find((s) => s.id === jqlEntry?.siteId) ?? sites[0] ?? emptySiteInfo);
 
     const jqlRestOptions = useAsync(async () => {
         return await controller.fetchJqlOptions(site);
