@@ -15,7 +15,14 @@ export class IssueHoverProvider implements HoverProvider {
             return null;
         }
         const text = doc.getText(range);
+        if (this.isDateLike(text)) {
+            return null;
+        }
         return this.getIssueDetails(text);
+    }
+
+    private isDateLike(key: string): boolean {
+        return /^\d{4}-\d{2}$/.test(key);
     }
 
     private async getIssueDetails(key: string): Promise<vscode.Hover> {
