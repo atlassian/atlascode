@@ -310,20 +310,19 @@ export class SiteManager extends Disposable {
         // look for match in mirror hosts (for Bitbucket Server)
         site = this.getSitesAvailable(product).find((site) =>
             Container.bitbucketContext
-                ? Container.bitbucketContext.getMirrors(site.host).find((mirror) => mirror.includes(hostname)) !==
-                  undefined
+                ? Container.bitbucketContext
+                      .getMirrors(site.host)
+                      .some((mirror) => mirror.includes(hostname) || mirror.includes(domain))
                 : false,
         );
         if (site) {
             return site;
         }
 
-        return this.getSitesAvailable(product).find((site) =>
-            Container.bitbucketContext
-                ? Container.bitbucketContext.getMirrors(site.host).find((mirror) => mirror.includes(domain)) !==
-                  undefined
-                : false,
-        );
+        // look for match via a resolved HTTP redirect (e.g. an old/alias hostname that the
+        // webserver redirects to the real Bitbucket Server host)
+        const redirectedHostname = Container.bitbucketContext?.getRedirectHost(hostname);
+        return redirectedHostname ? this.getSiteForHostname(product, redirectedHostname) : undefined;
     }
 
     public getSiteForId(product: Product, id: string): DetailedSiteInfo | undefined {

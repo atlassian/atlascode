@@ -10,8 +10,16 @@ import { CacheMap } from '../util/cachemap';
 import { Time } from '../util/time';
 import { PullRequestCommentController } from '../views/pullrequest/prCommentController';
 import { PullRequestsExplorer } from '../views/pullrequest/pullRequestsExplorer';
-import { clientForSite, getBitbucketCloudRemotes, getBitbucketRemotes, workspaceRepoFor } from './bbUtils';
+import {
+    clientForSite,
+    getBitbucketCloudRemotes,
+    getBitbucketRemotes,
+    parseGitUrl,
+    urlForRemote,
+    workspaceRepoFor,
+} from './bbUtils';
 import { BitbucketSite, PullRequest, User, WorkspaceRepo } from './model';
+import { resolveRedirectHostname } from './redirectResolver';
 
 // BitbucketContext stores the context (hosts, auth, current repo etc.)
 // for all Bitbucket related actions.
@@ -26,6 +34,7 @@ export class BitbucketContext extends Disposable {
     private _currentUsers: CacheMap;
     private _pullRequestCache = new CacheMap();
     private _mirrorsCache = new CacheMap();
+    private _redirectsCache = new CacheMap();
     public readonly prCommentController: PullRequestCommentController;
 
     constructor(gitApi: GitApi) {
@@ -108,6 +117,8 @@ export class BitbucketContext extends Disposable {
             );
 
             const repos = this.getAllRepositoriesRaw();
+            await this.resolveUnmatchedRemoteHosts(repos);
+
             for (let i = 0; i < repos.length; i++) {
                 const repo: Repository = repos[i];
 
@@ -143,6 +154,52 @@ export class BitbucketContext extends Disposable {
             }
             Logger.error(err, 'Error refreshing Bitbucket repositories');
         }
+    }
+
+    /**
+     * Some Bitbucket Server instances are reachable under an old/alias hostname that the
+     * webserver 301/302-redirects to the real host (e.g. after a server migration). Since
+     * that alias won't match any configured site by hostname/domain/mirror, probe it directly
+     * for a redirect and cache the resolved hostname so `siteManager.getSiteForHostname` can
+     * match remotes using the alias. See GH issue about "no redirection when remote is an
+     * alias of true URL".
+     */
+    private async resolveUnmatchedRemoteHosts(repos: Repository[]) {
+        const serverSites = Container.siteManager.getSitesAvailable(ProductBitbucket).filter((s) => !s.isCloud);
+        if (serverSites.length === 0) {
+            return;
+        }
+
+        const hostnames = new Set<string>();
+        repos.forEach((repo) => {
+            (repo.state?.remotes || []).forEach((remote) => {
+                const url = urlForRemote(remote);
+                if (!url) {
+                    return;
+                }
+                try {
+                    hostnames.add(parseGitUrl(url).resource);
+                } catch {
+                    // ignore unparsable remote urls
+                }
+            });
+        });
+
+        await Promise.all(
+            Array.from(hostnames).map(async (hostname) => {
+                if (
+                    Container.siteManager.getSiteForHostname(ProductBitbucket, hostname) ||
+                    this._redirectsCache.getItem(hostname) !== undefined
+                ) {
+                    return;
+                }
+
+                const resolvedHostname = await resolveRedirectHostname(hostname);
+                if (resolvedHostname) {
+                    this._redirectsCache.setItem(hostname, resolvedHostname, 60 * Time.MINUTES);
+                }
+            }),
+        );
     }
 
     private updateUsers(sites: DetailedSiteInfo[]) {
@@ -194,6 +251,10 @@ export class BitbucketContext extends Disposable {
 
     public getMirrors(hostname: string): string[] {
         return this._mirrorsCache.getItem<string[]>(hostname) || [];
+    }
+
+    public getRedirectHost(hostname: string): string | undefined {
+        return this._redirectsCache.getItem<string>(hostname);
     }
 
     override dispose() {

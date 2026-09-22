@@ -22,8 +22,16 @@ import { Time } from '../util/time';
 import { PullRequestCommentController } from '../views/pullrequest/prCommentController';
 import { PullRequestsExplorer } from '../views/pullrequest/pullRequestsExplorer';
 import { BitbucketContext } from './bbContext';
-import { clientForSite, getBitbucketCloudRemotes, getBitbucketRemotes, workspaceRepoFor } from './bbUtils';
+import {
+    clientForSite,
+    getBitbucketCloudRemotes,
+    getBitbucketRemotes,
+    parseGitUrl,
+    urlForRemote,
+    workspaceRepoFor,
+} from './bbUtils';
 import { BitbucketSite, PullRequest, User, WorkspaceRepo } from './model';
+import { resolveRedirectHostname } from './redirectResolver';
 
 // Mock all other dependencies
 jest.mock('../container');
@@ -31,6 +39,7 @@ jest.mock('../logger');
 jest.mock('../views/pullrequest/prCommentController');
 jest.mock('../views/pullrequest/pullRequestsExplorer');
 jest.mock('./bbUtils');
+jest.mock('./redirectResolver');
 jest.mock('../util/cachemap');
 
 describe('BitbucketContext', () => {
@@ -59,6 +68,7 @@ describe('BitbucketContext', () => {
             onDidSitesAvailableChange: jest.fn().mockReturnValue({ dispose: jest.fn() }),
             getSitesAvailable: jest.fn().mockReturnValue([]),
             getFirstAAID: jest.fn(),
+            getSiteForHostname: jest.fn().mockReturnValue(undefined),
         };
 
         mockClientManager = {
@@ -441,6 +451,80 @@ describe('BitbucketContext', () => {
 
             const result = bitbucketContext.getMirrors('bitbucket.org');
             expect(result).toEqual([]);
+        });
+    });
+
+    describe('getRedirectHost', () => {
+        beforeEach(() => {
+            bitbucketContext = new BitbucketContext(mockGitApi);
+        });
+
+        it('should return resolved redirect host for hostname', () => {
+            const mockRedirectsCache = bitbucketContext['_redirectsCache'];
+            mockRedirectsCache.getItem = jest.fn().mockReturnValue('real-host.example.com');
+
+            const result = bitbucketContext.getRedirectHost('alias-host.example.com');
+            expect(result).toEqual('real-host.example.com');
+            expect(mockRedirectsCache.getItem).toHaveBeenCalledWith('alias-host.example.com');
+        });
+
+        it('should return undefined if no redirect resolved', () => {
+            const mockRedirectsCache = bitbucketContext['_redirectsCache'];
+            mockRedirectsCache.getItem = jest.fn().mockReturnValue(undefined);
+
+            const result = bitbucketContext.getRedirectHost('unknown-host.example.com');
+            expect(result).toBeUndefined();
+        });
+    });
+
+    describe('resolveUnmatchedRemoteHosts', () => {
+        beforeEach(() => {
+            Object.defineProperty(mockGitApi, 'repositories', { value: [mockRepository], writable: true });
+        });
+
+        it('should skip probing when no Bitbucket Server sites are configured', async () => {
+            mockSiteManager.getSitesAvailable.mockReturnValue([{ ...mockBitbucketSite.details, isCloud: true }]);
+
+            bitbucketContext = new BitbucketContext(mockGitApi);
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            expect(resolveRedirectHostname).not.toHaveBeenCalled();
+        });
+
+        it('should probe unmatched remote hostnames and cache resolved redirects', async () => {
+            const serverSite = { ...mockBitbucketSite.details, host: 'bitbucket.example.com', isCloud: false };
+            mockSiteManager.getSitesAvailable.mockReturnValue([serverSite]);
+            mockSiteManager.getSiteForHostname.mockReturnValue(undefined);
+
+            (urlForRemote as jest.Mock).mockReturnValue('https://old-alias.example.com/scm/proj/repo.git');
+            (parseGitUrl as jest.Mock).mockReturnValue({ resource: 'old-alias.example.com' });
+            (resolveRedirectHostname as jest.Mock).mockResolvedValue('bitbucket.example.com');
+
+            bitbucketContext = new BitbucketContext(mockGitApi);
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            expect(resolveRedirectHostname).toHaveBeenCalledWith('old-alias.example.com');
+
+            const mockRedirectsCache = bitbucketContext['_redirectsCache'];
+            expect(mockRedirectsCache.setItem).toHaveBeenCalledWith(
+                'old-alias.example.com',
+                'bitbucket.example.com',
+                60 * Time.MINUTES,
+            );
+        });
+
+        it('should not probe hostnames that already resolve to a configured site', async () => {
+            const serverSite = { ...mockBitbucketSite.details, host: 'bitbucket.example.com', isCloud: false };
+            mockSiteManager.getSitesAvailable.mockReturnValue([serverSite]);
+            mockSiteManager.getSiteForHostname.mockReturnValue(serverSite);
+
+            (urlForRemote as jest.Mock).mockReturnValue('https://bitbucket.example.com/scm/proj/repo.git');
+            (parseGitUrl as jest.Mock).mockReturnValue({ resource: 'bitbucket.example.com' });
+
+            bitbucketContext = new BitbucketContext(mockGitApi);
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            expect(resolveRedirectHostname).not.toHaveBeenCalled();
         });
     });
 
