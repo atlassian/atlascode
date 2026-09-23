@@ -302,6 +302,21 @@ body {
     word-break: break-all;
 }
 
+.tool-return-collapsed {
+    border: none;
+    padding: 2px 6px;
+    margin-bottom: 2px;
+    gap: 6px;
+}
+
+.tool-return-collapsed-text {
+    font-size: 12px;
+    color: var(--vscode-input-placeholderForeground);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .tool-return-bash-command {
     pre {
         margin: 0;
