@@ -136,7 +136,7 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                             className="prompt-button-secondary-open"
                             aria-label="Prompt settings (open)"
                         >
-                            <CrossIcon label="Close prompt settings" />
+                            <CrossIcon label="Close prompt settings" size="small" />
                         </button>
                     ) : (
                         <button
@@ -145,7 +145,7 @@ const PromptSettingsPopup: React.FC<PromptSettingsPopupProps> = ({
                             className="prompt-button-secondary"
                             aria-label="Prompt settings"
                         >
-                            <CustomizeIcon label="Prompt settings" />
+                            <CustomizeIcon label="Prompt settings" size="small" />
                         </button>
                     )}
                 </Tooltip>
