@@ -124,4 +124,65 @@ describe('ToolReturnParsedItem', () => {
             render(<ToolReturnParsedItem msg={msg} openFile={mockOpenFile} onLinkClick={mockOnLinkClick} />);
         }).not.toThrow();
     });
+
+    test('renders collapsed view with content and title', () => {
+        const msg: ToolReturnParseResult = {
+            content: 'Replaced code',
+            title: 'myFile.ts',
+            type: 'modify',
+            filePath: '/path/to/myFile.ts',
+        };
+
+        const { getByText, container } = render(
+            <ToolReturnParsedItem msg={msg} openFile={mockOpenFile} onLinkClick={mockOnLinkClick} collapsed={true} />,
+        );
+
+        expect(container.querySelector('.tool-return-collapsed')).toBeTruthy();
+        expect(getByText('Replaced code — myFile.ts')).toBeTruthy();
+    });
+
+    test('renders collapsed view with content only (no title)', () => {
+        const msg: ToolReturnParseResult = {
+            content: 'Searched files',
+            type: 'open',
+        };
+
+        const { getByText, container } = render(
+            <ToolReturnParsedItem msg={msg} openFile={mockOpenFile} onLinkClick={mockOnLinkClick} collapsed={true} />,
+        );
+
+        expect(container.querySelector('.tool-return-collapsed')).toBeTruthy();
+        expect(getByText('Searched files')).toBeTruthy();
+    });
+
+    test('collapsed view calls openFile when clicked with filePath', () => {
+        const filePath = '/path/to/file.ts';
+        const msg: ToolReturnParseResult = {
+            content: 'Opened file',
+            type: 'open',
+            filePath,
+        };
+
+        const { getByText } = render(
+            <ToolReturnParsedItem msg={msg} openFile={mockOpenFile} onLinkClick={mockOnLinkClick} collapsed={true} />,
+        );
+
+        fireEvent.click(getByText('Opened file'));
+        expect(mockOpenFile).toHaveBeenCalledWith(filePath);
+    });
+
+    test('renders expanded view by default (collapsed=false)', () => {
+        const msg: ToolReturnParseResult = {
+            content: 'Replaced code',
+            title: 'myFile.ts',
+            type: 'modify',
+            filePath: '/path/to/myFile.ts',
+        };
+
+        const { container } = render(
+            <ToolReturnParsedItem msg={msg} openFile={mockOpenFile} onLinkClick={mockOnLinkClick} />,
+        );
+
+        expect(container.querySelector('.tool-return-collapsed')).toBeNull();
+    });
 });

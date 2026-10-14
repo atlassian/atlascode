@@ -80,6 +80,7 @@ export const MessageDrawer: React.FC<MessageDrawerProps> = ({
                         retryPromptAfterError,
                         onError,
                         isAtlassianUser,
+                        true, // collapse tool returns for compact display
                     ),
                 )}
             </div>
