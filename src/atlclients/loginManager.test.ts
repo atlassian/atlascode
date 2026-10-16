@@ -236,6 +236,31 @@ describe('LoginManager', () => {
             },
         );
 
+        it('generates distinct credential IDs for different Server/Data Center hosts sharing the same PAT username', async () => {
+            const siteA: SiteInfo = { host: 'atmjira.indra.es', product: ProductJira };
+            const siteB: SiteInfo = { host: 'jira.indra.es', product: ProductJira };
+            const authInfoData = { token: 'token' } as unknown as PATAuthInfo;
+
+            jest.spyOn(authInfo, 'isBasicAuthInfo').mockReturnValue(false);
+            jest.spyOn(authInfo, 'isPATAuthInfo').mockReturnValue(true);
+            jest.spyOn(jira_client_providers, 'getAxiosInstance').mockReturnValue(mockedAxiosInstance);
+            jest.spyOn(credentialManager, 'saveAuthInfo').mockResolvedValue();
+            jest.spyOn(siteManager as any, 'addOrUpdateSite');
+            const generateCredentialIdSpy = jest.spyOn(CredentialManager, 'generateCredentialId');
+
+            // Same PAT username on both Data Center hosts (mockedAxiosInstance always returns the same `name`),
+            // as happens when the same corporate/LDAP account is used to authenticate to two on-prem instances.
+            await loginManager.userInitiatedServerLogin(siteA, authInfoData);
+            await loginManager.userInitiatedServerLogin(siteB, authInfoData);
+
+            const [siteIdForA] = generateCredentialIdSpy.mock.calls[0];
+            const [siteIdForB] = generateCredentialIdSpy.mock.calls[1];
+
+            expect(siteIdForA).toContain('atmjira.indra.es');
+            expect(siteIdForB).toContain('jira.indra.es');
+            expect(siteIdForA).not.toEqual(siteIdForB);
+        });
+
         it.each([ProductJira, ProductBitbucket])('should save auth info and new sites', async (product: Product) => {
             const site: SiteInfo = { host: `${product.key}.atlassian.com`, product };
             const user = forceCastTo<UserInfo>({ id: 'user' });
