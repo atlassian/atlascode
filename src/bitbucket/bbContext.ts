@@ -127,7 +127,11 @@ export class BitbucketContext extends Disposable {
                     }
                 }
                 if (repo.state.remotes && repo.state.remotes.length > 0) {
-                    this._repoMap.set(repo.rootUri.toString(), workspaceRepoFor(repo));
+                    try {
+                        this._repoMap.set(repo.rootUri.toString(), workspaceRepoFor(repo));
+                    } catch (err) {
+                        Logger.warn(`Failed to process repository ${repo.rootUri}: ${err}`);
+                    }
                 } else {
                     Logger.warn(`JS-1324 no remotes found for ${repo.rootUri}`);
                 }

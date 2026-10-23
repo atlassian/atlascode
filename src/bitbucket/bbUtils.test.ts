@@ -337,6 +337,35 @@ describe('bbUtils', () => {
 
             expect(result).toBeUndefined();
         });
+
+        it('should return undefined when remote URL is empty or undefined', () => {
+            const mockRemote: Remote = {
+                name: 'origin',
+                fetchUrl: '',
+                pushUrl: '',
+                isReadOnly: false,
+            };
+
+            const result = siteDetailsForRemote(mockRemote);
+
+            expect(result).toBeUndefined();
+        });
+
+        it('should return undefined when parseGitUrl throws an error', () => {
+            const mockRemote: Remote = {
+                name: 'unparseable',
+                fetchUrl: 'bad://invalid-url-format',
+                isReadOnly: false,
+            };
+
+            mockGitUrlParse.mockImplementation(() => {
+                throw new Error('URL parsing failed.');
+            });
+
+            const result = siteDetailsForRemote(mockRemote);
+
+            expect(result).toBeUndefined();
+        });
     });
 
     describe('bitbucketSiteForRemote', () => {
@@ -380,6 +409,35 @@ describe('bbUtils', () => {
             } as any);
 
             (Container.siteManager.getSiteForHostname as jest.Mock).mockReturnValue(undefined);
+
+            const result = bitbucketSiteForRemote(mockRemote);
+
+            expect(result).toBeUndefined();
+        });
+
+        it('should return undefined when remote URL is empty or undefined', () => {
+            const mockRemote: Remote = {
+                name: 'origin',
+                fetchUrl: '',
+                pushUrl: '',
+                isReadOnly: false,
+            };
+
+            const result = bitbucketSiteForRemote(mockRemote);
+
+            expect(result).toBeUndefined();
+        });
+
+        it('should return undefined when parseGitUrl throws an error', () => {
+            const mockRemote: Remote = {
+                name: 'unparseable',
+                fetchUrl: 'bad://invalid-url-format',
+                isReadOnly: false,
+            };
+
+            mockGitUrlParse.mockImplementation(() => {
+                throw new Error('URL parsing failed.');
+            });
 
             const result = bitbucketSiteForRemote(mockRemote);
 
@@ -604,6 +662,47 @@ describe('bbUtils', () => {
 
             // Should prefer 'origin' over 'upstream' based on preferredRemotes config
             expect(result.mainSiteRemote.remote).toBe(mockOriginRemote);
+        });
+
+        it('should handle repositories with multiple remotes where secondary remotes have unparseable URLs', () => {
+            const mockOriginRemote: Remote = {
+                name: 'origin',
+                fetchUrl: 'git@bitbucket.org:user/repo.git',
+                isReadOnly: false,
+            };
+            const mockBadRemote: Remote = {
+                name: 'secondary',
+                fetchUrl: 'bad://unparseable-remote-url',
+                isReadOnly: false,
+            };
+            const mockRepository: Repository = {
+                rootUri: { toString: () => '/path/to/repo' } as any,
+                state: {
+                    remotes: [mockOriginRemote, mockBadRemote],
+                } as RepositoryState,
+            } as Repository;
+
+            mockGitUrlParse.mockImplementation((url: string) => {
+                if (url.includes('bitbucket.org')) {
+                    return {
+                        resource: 'bitbucket.org',
+                        owner: 'user',
+                        name: 'repo',
+                    } as any;
+                }
+                throw new Error('URL parsing failed.');
+            });
+
+            (Container.siteManager.getSiteForHostname as jest.Mock).mockReturnValue(mockSiteInfo);
+
+            const result = workspaceRepoFor(mockRepository);
+
+            expect(result.rootUri).toBe('/path/to/repo');
+            expect(result.mainSiteRemote.remote).toBe(mockOriginRemote);
+            expect(result.mainSiteRemote.site).toBeDefined();
+            expect(result.siteRemotes).toHaveLength(2);
+            expect(result.siteRemotes[0].site).toBeDefined();
+            expect(result.siteRemotes[1].site).toBeUndefined();
         });
     });
 
