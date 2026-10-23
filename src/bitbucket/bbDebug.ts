@@ -31,12 +31,20 @@ export function showBitbucketDebugInfo() {
 
     const wsRepos = Container.bitbucketContext.getAllRepositories().map((wsRepo) => ({
         uri: wsRepo.rootUri,
-        remotes: wsRepo.siteRemotes.map((siteRemote) => ({
-            name: siteRemote.remote.name,
-            url: urlForRemote(siteRemote.remote),
-            host: parseGitUrl(urlForRemote(siteRemote.remote)).resource,
-            matchingBitbucketSite: siteRemote.site ? siteRemote.site.details.name : 'Not found',
-        })),
+        remotes: wsRepo.siteRemotes.map((siteRemote) => {
+            let host = '';
+            try {
+                host = parseGitUrl(urlForRemote(siteRemote.remote)).resource;
+            } catch {
+                host = '';
+            }
+            return {
+                name: siteRemote.remote.name,
+                url: urlForRemote(siteRemote.remote),
+                host,
+                matchingBitbucketSite: siteRemote.site ? siteRemote.site.details.name : 'Not found',
+            };
+        }),
     }));
 
     Logger.show();

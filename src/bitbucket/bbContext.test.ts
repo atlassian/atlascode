@@ -603,6 +603,49 @@ describe('BitbucketContext', () => {
             );
             expect(workspaceRepoFor).toHaveBeenCalledWith(goodRepo);
         });
+
+        it('should continue processing remaining repos when workspaceRepoFor throws for one repo', async () => {
+            const failingRepo = {
+                ...mockRepository,
+                rootUri: Uri.file('/test/failing-repo'),
+                state: {
+                    HEAD: { name: 'main' },
+                    remotes: [{ name: 'broken', fetchUrl: 'invalid' }],
+                },
+                status: jest.fn().mockResolvedValue(undefined),
+            };
+            const goodRepo = {
+                ...mockRepository,
+                rootUri: Uri.file('/test/good-repo'),
+                state: {
+                    HEAD: { name: 'main' },
+                    remotes: [{ name: 'origin', fetchUrl: 'https://bitbucket.org/test/good.git' }],
+                },
+                status: jest.fn().mockResolvedValue(undefined),
+            };
+
+            (workspaceRepoFor as jest.Mock).mockImplementation((repo: Repository) => {
+                if (repo.rootUri.toString() === failingRepo.rootUri.toString()) {
+                    throw new Error('Failed to parse repo');
+                }
+                return mockWorkspaceRepo;
+            });
+
+            Object.defineProperty(mockGitApi, 'repositories', {
+                value: [failingRepo, goodRepo],
+                writable: true,
+            });
+
+            bitbucketContext = new BitbucketContext(mockGitApi);
+
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            expect(Logger.warn).toHaveBeenCalledWith(
+                expect.stringContaining('Failed to process repository file:///test/failing-repo'),
+            );
+            expect(workspaceRepoFor).toHaveBeenCalledWith(goodRepo);
+            expect(bitbucketContext.getRepository(goodRepo.rootUri)).toBe(mockWorkspaceRepo);
+        });
     });
 
     describe('updateUsers', () => {

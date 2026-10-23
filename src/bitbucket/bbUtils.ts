@@ -44,42 +44,40 @@ export function getBitbucketCloudRemotes(repository: Repository): Remote[] {
 }
 
 export function siteDetailsForRemote(remote: Remote): DetailedSiteInfo | undefined {
-    const parsed = parseGitUrl(urlForRemote(remote));
-    const site = Container.siteManager.getSiteForHostname(ProductBitbucket, parsed.resource);
-    if (site) {
-        return site;
-    }
+    try {
+        const url = urlForRemote(remote);
+        if (!url) {
+            return undefined;
+        }
+        const parsed = parseGitUrl(url);
+        const site = Container.siteManager.getSiteForHostname(ProductBitbucket, parsed.resource);
+        if (site) {
+            return site;
+        }
 
-    const hostname = parsed.source;
-    if (
-        hostname.includes('bitbucket.org') ||
-        hostname.includes('bitbucket_org') ||
-        hostname.includes('bitbucket-org')
-    ) {
-        return Container.siteManager.getSiteForHostname(ProductBitbucket, 'bitbucket.org');
+        const hostname = parsed.source;
+        if (
+            hostname.includes('bitbucket.org') ||
+            hostname.includes('bitbucket_org') ||
+            hostname.includes('bitbucket-org')
+        ) {
+            return Container.siteManager.getSiteForHostname(ProductBitbucket, 'bitbucket.org');
+        }
+    } catch {
+        return undefined;
     }
 
     return undefined;
 }
 
 export function bitbucketSiteForRemote(remote: Remote): BitbucketSite | undefined {
-    const parsed = parseGitUrl(urlForRemote(remote));
-    const site = Container.siteManager.getSiteForHostname(ProductBitbucket, parsed.resource);
-    if (site) {
-        return {
-            details: site,
-            ownerSlug: parsed.owner,
-            repoSlug: parsed.name,
-        };
-    }
-
-    const hostname = parsed.source;
-    if (
-        hostname.includes('bitbucket.org') ||
-        hostname.includes('bitbucket_org') ||
-        hostname.includes('bitbucket-org')
-    ) {
-        const site = Container.siteManager.getSiteForHostname(ProductBitbucket, 'bitbucket.org');
+    try {
+        const url = urlForRemote(remote);
+        if (!url) {
+            return undefined;
+        }
+        const parsed = parseGitUrl(url);
+        const site = Container.siteManager.getSiteForHostname(ProductBitbucket, parsed.resource);
         if (site) {
             return {
                 details: site,
@@ -87,6 +85,24 @@ export function bitbucketSiteForRemote(remote: Remote): BitbucketSite | undefine
                 repoSlug: parsed.name,
             };
         }
+
+        const hostname = parsed.source;
+        if (
+            hostname.includes('bitbucket.org') ||
+            hostname.includes('bitbucket_org') ||
+            hostname.includes('bitbucket-org')
+        ) {
+            const site = Container.siteManager.getSiteForHostname(ProductBitbucket, 'bitbucket.org');
+            if (site) {
+                return {
+                    details: site,
+                    ownerSlug: parsed.owner,
+                    repoSlug: parsed.name,
+                };
+            }
+        }
+    } catch {
+        return undefined;
     }
 
     return undefined;
