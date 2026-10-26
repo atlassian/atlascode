@@ -10,6 +10,15 @@ import { Logger } from '../../logger';
 import { categorizeNetworkError } from '../../util/retry';
 import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 
+// Each check sends one request per repo, and Bitbucket Cloud rate-limits each user to 1,000 requests per hour (shared with
+// the browser). Above this many repos, polling every few minutes can exhaust that budget (BBS-257100), so don't poll.
+const MAX_REPOS_TO_MONITOR = 10;
+
+function isRateLimitError(e: any): boolean {
+    // Bitbucket's ClientError drops the HTTP status, keeping only statusText and the error message.
+    return e?.response?.status === 429 || /rate limit|too many requests/i.test(`${e?.name} ${e?.message}`);
+}
+
 export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
     private _lastCheckedTime = new Map<string, Date>();
     private _lastSuccessfulFetch = new Map<string, Date | undefined>();
@@ -29,9 +38,17 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
         // Reset failed credentials at the start of each check cycle
         this._failedCredentials.clear();
 
+        const repos = this._bbCtx.getBitbucketRepositories();
+        if (repos.length > MAX_REPOS_TO_MONITOR) {
+            Logger.debug(
+                `Skipping new pull request check: ${repos.length} repos exceeds the limit of ${MAX_REPOS_TO_MONITOR}`,
+            );
+            return;
+        }
+
         // Group repos by credential to process sequentially per credential
         const reposByCredential = new Map<string, WorkspaceRepo[]>();
-        for (const wsRepo of this._bbCtx.getBitbucketRepositories()) {
+        for (const wsRepo of repos) {
             const site = wsRepo.mainSiteRemote.site;
             if (!site) {
                 continue;
@@ -109,8 +126,8 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
                         );
                     }
 
-                    // Mark credential as failed for systemic errors
-                    if (['auth', 'network', 'dns', 'timeout'].includes(errorInfo.category)) {
+                    // Mark credential as failed for systemic errors; a rate limit applies to every repo of the user
+                    if (isRateLimitError(e) || ['auth', 'network', 'dns', 'timeout'].includes(errorInfo.category)) {
                         this._failedCredentials.add(credentialId);
                     }
 
