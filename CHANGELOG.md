@@ -1,5 +1,15 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.33
+
+### Security
+
+- Upgraded `dompurify` to 3.4.17 to fix multiple XSS sanitizer bypasses (critical `npm audit` advisory)
+
+### Bug Fixes
+
+- **Bitbucket**: The background "new pull request" notification check no longer exhausts the Bitbucket Cloud per-user rate limit (which also breaks the Bitbucket website for that user). It now stops polling for the rest of a refresh cycle once Bitbucket returns a rate-limit error, and is skipped for workspaces with more than 10 Bitbucket repositories.
+
 ## What's new in 4.0.32
 
 ### Security
