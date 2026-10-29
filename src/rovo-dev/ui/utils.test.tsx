@@ -853,5 +853,86 @@ describe('parseToolReturnMessage', () => {
                 'Error parsing ToolReturnMessage for tool bash',
             );
         });
+
+        it('should handle get_skill tool with skill name', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'get_skill',
+                args: '{"skill_name_or_path": "jira"}',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'get_skill',
+                content: 'skill content',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                content: 'Loaded skill: jira',
+                type: 'open',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should handle get_skill tool with skill path', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'get_skill',
+                args: '{"skill_name_or_path": "agentic-search"}',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'get_skill',
+                content: 'skill content',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                content: 'Loaded skill: agentic-search',
+                type: 'open',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should handle get_skill tool without skill name in args', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'get_skill',
+                args: '{}',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'get_skill',
+                content: 'skill content',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                content: 'Loaded skill',
+                type: 'open',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
     });
 });
