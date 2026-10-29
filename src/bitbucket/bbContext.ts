@@ -10,7 +10,13 @@ import { CacheMap } from '../util/cachemap';
 import { Time } from '../util/time';
 import { PullRequestCommentController } from '../views/pullrequest/prCommentController';
 import { PullRequestsExplorer } from '../views/pullrequest/pullRequestsExplorer';
-import { clientForSite, getBitbucketCloudRemotes, getBitbucketRemotes, workspaceRepoFor } from './bbUtils';
+import {
+    clientForSite,
+    getBitbucketCloudRemotes,
+    getBitbucketRemotes,
+    URL_PARSING_ERROR,
+    workspaceRepoFor,
+} from './bbUtils';
 import { BitbucketSite, PullRequest, User, WorkspaceRepo } from './model';
 
 // BitbucketContext stores the context (hosts, auth, current repo etc.)
@@ -141,7 +147,11 @@ export class BitbucketContext extends Disposable {
             if (err?.subject_url !== undefined) {
                 err.subject_url = undefined; // remove potentially sensitive info
             }
-            Logger.error(err, 'Error refreshing Bitbucket repositories');
+            if (err instanceof Error && err.message === URL_PARSING_ERROR) {
+                Logger.warn('Error refreshing Bitbucket repositories due to URL parsing issue');
+            } else {
+                Logger.error(err, 'Error refreshing Bitbucket repositories');
+            }
         }
     }
 
