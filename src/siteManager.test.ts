@@ -74,6 +74,7 @@ describe('SiteManager', () => {
             credentialManager: mockCredentialManager,
             bitbucketContext: {
                 getMirrors: jest.fn((host) => []),
+                getRedirectHost: jest.fn((host) => undefined),
             },
             config: {
                 jira: {
@@ -309,6 +310,32 @@ describe('SiteManager', () => {
             const result = siteManager.getSiteForHostname(ProductBitbucket, 'mirror.example.com');
 
             expect(result).toBe(site);
+        });
+
+        it('should find a site via a resolved HTTP redirect hostname (alias URL)', () => {
+            const site = createDetailedSiteInfo(ProductBitbucket);
+            site.host = 'https://bitbucket.example.com';
+
+            storedSites.set(`${ProductBitbucket.key}Sites`, [site]);
+
+            (Container.bitbucketContext!.getRedirectHost as jest.Mock).mockImplementation((host: string) =>
+                host === 'old-alias.example.com' ? 'bitbucket.example.com' : undefined,
+            );
+
+            const result = siteManager.getSiteForHostname(ProductBitbucket, 'old-alias.example.com');
+
+            expect(result).toBe(site);
+        });
+
+        it('should return undefined if no match is found via hostname, mirrors, or redirects', () => {
+            const site = createDetailedSiteInfo(ProductBitbucket);
+            site.host = 'https://bitbucket.example.com';
+
+            storedSites.set(`${ProductBitbucket.key}Sites`, [site]);
+
+            const result = siteManager.getSiteForHostname(ProductBitbucket, 'unrelated.other.com');
+
+            expect(result).toBeUndefined();
         });
     });
 
