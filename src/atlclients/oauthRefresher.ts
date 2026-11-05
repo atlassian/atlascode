@@ -76,8 +76,23 @@ export class OAuthRefesher implements Disposable {
             const responseStatusDescription = err.response?.status ? ` ${err.response.status}` : '';
             const axiosErrorData = ` (Axios message: ${err?.response?.data?.error}. Axios description: ${err?.response?.data?.error_description})`;
 
-            if (!err.response && err.code === 'ENOTFOUND') {
-                Logger.debug(`Network error while refreshing tokens. Hostname: "${err.hostname}". Will retry later.`);
+            const isNetworkError =
+                !err.response ||
+                err.code === 'ENOTFOUND' ||
+                err.code === 'EAI_AGAIN' ||
+                err.code === 'ECONNREFUSED' ||
+                err.code === 'ECONNRESET' ||
+                err.code === 'ETIMEDOUT' ||
+                err.code === 'ECONNABORTED' ||
+                err.code === 'ENETUNREACH' ||
+                err.code === 'EHOSTUNREACH' ||
+                err.code === 'ERR_NETWORK' ||
+                err.message?.includes('ERR_BLOCKED_BY_CLIENT');
+
+            if (isNetworkError && !err.response) {
+                Logger.debug(
+                    `Network error while refreshing tokens. Hostname: "${err.hostname ?? ''}". Error: ${err.message ?? err.code}. Will retry later.`,
+                );
                 response.shouldSlowDown = true;
             } else if (err.response?.status === 401) {
                 Logger.debug(
