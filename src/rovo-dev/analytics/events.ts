@@ -267,6 +267,21 @@ export namespace Track {
     };
 
     // TODO: rovodev metadata fields here are different from other events, reconcile later?
+    export type PromptWarningReason = 'rate_limit';
+
+    export type PromptWarning = {
+        action: 'rovoDevPromptWarning';
+        subject: 'atlascode';
+        attributes: {
+            rovoDevEnv: RovoDevEnv;
+            appInstanceId: string;
+            sessionId: string;
+            promptId: string;
+            reason: PromptWarningReason;
+            title?: string;
+        };
+    };
+
     export type PerformanceEvent = {
         action: 'performanceEvent';
         subject: 'atlascode';
@@ -295,4 +310,5 @@ export type TrackEvent =
     | Track.ReplayCompleted
     | Track.PerformanceEvent
     | Track.LocalServerPromptReceived
-    | Track.PromptCompleted;
+    | Track.PromptCompleted
+    | Track.PromptWarning;
