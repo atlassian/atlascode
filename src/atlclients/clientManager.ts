@@ -233,8 +233,11 @@ export class ClientManager implements Disposable {
                 await newClient.getCurrentUser();
             } catch (e) {
                 Logger.warn(e as Error, `${tag}: getCurrentUser failed for ${site.baseApiUrl}`);
-                // Mark this site as failed
-                this._failedSites.add(siteKey);
+                // Only mark site as failed for authentication errors (401/403), not network or connection errors
+                const status = (e as any)?.response?.status;
+                if (status === 401 || status === 403) {
+                    this._failedSites.add(siteKey);
+                }
                 throw e;
             }
         }

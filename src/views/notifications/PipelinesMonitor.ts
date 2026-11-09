@@ -6,6 +6,7 @@ import { WorkspaceRepo } from '../../bitbucket/model';
 import { configuration } from '../../config/configuration';
 import { Commands } from '../../constants';
 import { Container } from '../../container';
+import { Logger } from '../../logger';
 import { Pipeline, PipelineTarget } from '../../pipelines/model';
 import { BitbucketActivityMonitor } from '../BitbucketActivityMonitor';
 import { descriptionForState, generatePipelineTitle, shouldDisplay } from '../pipelines/Helpers';
@@ -33,12 +34,18 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
                 return;
             }
 
-            const bbApi = await clientForSite(site);
-            if (!bbApi.pipelines) {
-                return; //Bitbucket Server instances will not have pipelines
-            }
+            let newResults: Pipeline[];
+            try {
+                const bbApi = await clientForSite(site);
+                if (!bbApi.pipelines) {
+                    return; //Bitbucket Server instances will not have pipelines
+                }
 
-            const newResults = await bbApi.pipelines.getRecentActivity(site);
+                newResults = await bbApi.pipelines.getRecentActivity(site);
+            } catch (err) {
+                Logger.debug(`PipelinesMonitor: Error checking activity for ${wsRepo.rootUri}:`, err);
+                continue;
+            }
             const diffs = this.diffResults(previousResults, newResults).filter((p) =>
                 this.shouldDisplayTarget(p.target),
             );

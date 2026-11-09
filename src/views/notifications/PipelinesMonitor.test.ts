@@ -237,6 +237,15 @@ describe('PipelinesMonitor', () => {
                 true,
             );
         });
+
+        it('should handle network or DNS errors gracefully without throwing', async () => {
+            const dnsError = new Error('getaddrinfo ENOTFOUND api.bitbucket.org');
+            (dnsError as any).code = 'ENOTFOUND';
+            mockPipelineApi.getRecentActivity.mockRejectedValue(dnsError);
+
+            await expect(monitor.checkForNewActivity()).resolves.not.toThrow();
+            expect(window.showInformationMessage).not.toHaveBeenCalled();
+        });
     });
 
     describe('diffResults', () => {

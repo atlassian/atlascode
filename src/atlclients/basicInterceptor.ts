@@ -34,12 +34,14 @@ export class BasicInterceptor implements AuthInterceptor {
             return config;
         };
 
-        this._errorInterceptor = (e: any) => {
+        this._errorInterceptor = async (e: any) => {
             if (e.response?.status === 401 || e.response?.status === 403) {
                 Logger.debug(`Received ${e.response?.status} - marking credentials as invalid`);
-                this.showError();
-                this._invalidCredentials = true;
-                this.authStore.handleApiUnauthorized(this.site);
+                const result = await this.authStore.handleApiUnauthorized(this.site);
+                if (!result?.isOAuth) {
+                    this.showError();
+                    this._invalidCredentials = true;
+                }
             }
             return Promise.reject(e);
         };

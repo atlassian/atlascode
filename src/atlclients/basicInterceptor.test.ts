@@ -135,6 +135,60 @@ describe('BasicInterceptor', () => {
             expect(mockedLogger.debug).toHaveBeenCalledWith('Received 403 - marking credentials as invalid');
             expect(mockAuthStore.handleApiUnauthorized).toHaveBeenCalledWith(mockSite);
         });
+
+        it('should not show error or mark invalid when handleApiUnauthorized returns isOAuth: true', async () => {
+            mockAuthStore.handleApiUnauthorized.mockResolvedValue({ isOAuth: true });
+
+            const interceptor = new BasicInterceptor(mockSite, mockAuthStore);
+            await interceptor.attachToAxios(mockAxiosInstance);
+
+            const errorInterceptor = mockResponseInterceptorUse.mock.calls[0][1];
+            const error401 = { response: { status: 401 } };
+
+            await expect(errorInterceptor(error401)).rejects.toBe(error401);
+
+            expect(mockAuthStore.handleApiUnauthorized).toHaveBeenCalledWith(mockSite);
+            expect(mockedWindow.showErrorMessage).not.toHaveBeenCalled();
+        });
+
+        it('should not call handleApiUnauthorized or show error for DNS errors (ENOTFOUND)', async () => {
+            const interceptor = new BasicInterceptor(mockSite, mockAuthStore);
+            await interceptor.attachToAxios(mockAxiosInstance);
+
+            const errorInterceptor = mockResponseInterceptorUse.mock.calls[0][1];
+            const dnsError = { code: 'ENOTFOUND', message: 'getaddrinfo ENOTFOUND api.bitbucket.org' };
+
+            await expect(errorInterceptor(dnsError)).rejects.toBe(dnsError);
+
+            expect(mockAuthStore.handleApiUnauthorized).not.toHaveBeenCalled();
+            expect(mockedWindow.showErrorMessage).not.toHaveBeenCalled();
+        });
+
+        it('should not call handleApiUnauthorized or show error for client-blocking errors', async () => {
+            const interceptor = new BasicInterceptor(mockSite, mockAuthStore);
+            await interceptor.attachToAxios(mockAxiosInstance);
+
+            const errorInterceptor = mockResponseInterceptorUse.mock.calls[0][1];
+            const blockedError = { message: 'net::ERR_BLOCKED_BY_CLIENT' };
+
+            await expect(errorInterceptor(blockedError)).rejects.toBe(blockedError);
+
+            expect(mockAuthStore.handleApiUnauthorized).not.toHaveBeenCalled();
+            expect(mockedWindow.showErrorMessage).not.toHaveBeenCalled();
+        });
+
+        it('should not call handleApiUnauthorized or show error for connection errors', async () => {
+            const interceptor = new BasicInterceptor(mockSite, mockAuthStore);
+            await interceptor.attachToAxios(mockAxiosInstance);
+
+            const errorInterceptor = mockResponseInterceptorUse.mock.calls[0][1];
+            const connError = { code: 'ECONNREFUSED', message: 'connect ECONNREFUSED 127.0.0.1:443' };
+
+            await expect(errorInterceptor(connError)).rejects.toBe(connError);
+
+            expect(mockAuthStore.handleApiUnauthorized).not.toHaveBeenCalled();
+            expect(mockedWindow.showErrorMessage).not.toHaveBeenCalled();
+        });
     });
 
     describe('showError', () => {
