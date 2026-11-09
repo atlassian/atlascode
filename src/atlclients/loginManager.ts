@@ -255,8 +255,6 @@ export class LoginManager {
         credentials: BasicAuthInfo | PATAuthInfo,
     ): Promise<DetailedSiteInfo> {
         const authHeader = this.authHeader(credentials);
-        // For cloud instances we can use the user ID as the credential ID (they're globally unique). Server instances
-        // will have a much smaller pool of user IDs so we use an arbitrary UUID as the credential ID.
 
         let siteDetailsUrl = '';
         let avatarUrl = '';
@@ -303,7 +301,9 @@ export class LoginManager {
 
         const userId = site.product.key === ProductJira.key ? json.name : json.slug;
         const baseLinkUrl = `${site.host}${contextPath}`;
-        const siteId = isBasicAuthInfo(credentials) ? baseLinkUrl : site.product.key;
+        // This method is only used for Server/Data Center sites, which are not globally unique across hosts
+        // the way cloud accounts are, so the credential ID must always be scoped to the site's host.
+        const siteId = baseLinkUrl;
         const username = isBasicAuthInfo(credentials) ? credentials.username : userId;
         const credentialId = CredentialManager.generateCredentialId(siteId, username);
 
