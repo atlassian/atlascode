@@ -825,6 +825,122 @@ describe('parseToolReturnMessage', () => {
             expect(mockOnError).not.toHaveBeenCalled();
         });
 
+        it('should parse open_files with a skill SKILL.md path and show skill name', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'open_files',
+                args: '{"file_paths": ["/workspace/home/.agents/skills/twg/SKILL.md"]}',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'open_files',
+                content: 'Successfully opened /workspace/home/.agents/skills/twg/SKILL.md:',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                content: 'Loaded skill: twg',
+                filePath: '/workspace/home/.agents/skills/twg/SKILL.md',
+                title: 'twg',
+                type: 'open',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should parse open_files with a nested skill SKILL.md path (backslash separators)', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'open_files',
+                args: '{"file_paths": ["C:\\\\agents\\\\skills\\\\mitigating-vuln\\\\SKILL.md"]}',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'open_files',
+                content: 'Successfully opened C:\\agents\\skills\\mitigating-vuln\\SKILL.md:',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                content: 'Loaded skill: mitigating-vuln',
+                filePath: 'C:\\agents\\skills\\mitigating-vuln\\SKILL.md',
+                title: 'mitigating-vuln',
+                type: 'open',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should parse open_files with a bare SKILL.md path (no parent skills dir) and show generic label', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'open_files',
+                args: '{"file_paths": ["SKILL.md"]}',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'open_files',
+                content: 'Successfully opened SKILL.md:',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                content: 'Loaded skill',
+                filePath: 'SKILL.md',
+                title: 'SKILL.md',
+                type: 'open',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
+        it('should NOT treat a regular non-SKILL.md file as a skill file', () => {
+            const toolCallMessage: RovoDevToolCallResponse = {
+                event_kind: 'tool-call',
+                tool_name: 'open_files',
+                args: '{"file_paths": ["src/rovo-dev/ui/utils.tsx"]}',
+                tool_call_id: 'id1',
+            };
+
+            const msg: RovoDevToolReturnResponse = {
+                event_kind: 'tool-return',
+                tool_name: 'open_files',
+                content: 'Successfully opened src/rovo-dev/ui/utils.tsx:',
+                tool_call_id: 'id1',
+                timestamp: '0',
+                toolCallMessage,
+            };
+
+            const result = parseToolReturnMessage(msg, mockOnError);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                content: 'Opened file',
+                filePath: 'src/rovo-dev/ui/utils.tsx',
+                title: 'utils.tsx',
+                type: 'open',
+            });
+            expect(mockOnError).not.toHaveBeenCalled();
+        });
+
         it('should handle parse errors gracefully and call onError', () => {
             const toolCallMessage: RovoDevToolCallResponse = {
                 event_kind: 'tool-call',
