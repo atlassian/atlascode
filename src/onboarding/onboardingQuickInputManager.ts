@@ -212,10 +212,10 @@ class OnboardingQuickInputManager {
 
             case OnboardingInputBoxStep.Password: // Input password
                 this._quickInput[step].password = true;
-                this._quickInput[step].title = `Enter your ${product.name} ${env} password`;
 
                 // Jira cloud remote login
                 if (product === ProductJira && env === 'Cloud') {
+                    this._quickInput[step].title = `Enter your ${product.name} ${env} API token`;
                     this._quickInput[step].prompt = 'Use an API token to connect.';
                     this._quickInput[step].placeholder =
                         'Enter your API token. Click the key button above to create one.';
@@ -225,6 +225,7 @@ class OnboardingQuickInputManager {
                         OnboardingButtons.dismiss,
                     ];
                 } else {
+                    this._quickInput[step].title = `Enter your ${product.name} ${env} password`;
                     this._quickInput[step].prompt = 'Enter your password';
                     this._quickInput[step].placeholder = 'Enter your password';
                 }
