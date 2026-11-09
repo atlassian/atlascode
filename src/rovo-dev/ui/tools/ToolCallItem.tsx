@@ -48,7 +48,7 @@ export const ToolCallItem: React.FC<{
     );
 };
 
-export function parseToolCallMessage(msgToolName: RovoDevToolName): string {
+export function parseToolCallMessage(msgToolName: RovoDevToolName, toolArgs?: string): string {
     if (!msgToolName) {
         return '';
     }
@@ -87,9 +87,25 @@ export function parseToolCallMessage(msgToolName: RovoDevToolName): string {
             return 'Updating todo';
         case 'configure_live_preview':
             return 'Configuring live preview';
+        case 'get_skill': {
+            const skillName = extractSkillName(toolArgs);
+            return skillName ? `Loading skill: ${skillName}` : 'Loading skill';
+        }
         default:
             // @ts-expect-error ts(2339) - msgToolName here should be 'never'
             return msgToolName.toString();
+    }
+}
+
+function extractSkillName(toolArgs?: string): string | undefined {
+    if (!toolArgs) {
+        return undefined;
+    }
+    try {
+        const parsed = JSON.parse(toolArgs);
+        return parsed?.skill_name_or_path;
+    } catch {
+        return undefined;
     }
 }
 

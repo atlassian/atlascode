@@ -326,6 +326,7 @@ const friendlyToolName: Record<RovoDevToolName, string> = {
     ask_user_questions: 'Ask user questions',
     exit_plan_mode: 'Exit plan mode',
     configure_live_preview: 'Configure live preview',
+    get_skill: 'Load skill',
 };
 
 const ToolCall: React.FC<{
@@ -365,6 +366,8 @@ const ToolCallBody: React.FC<{
         );
     } else if (toolName === 'grep') {
         return <code style={{ maxWidth: '100%' }}>{jsonArgs.content_pattern}</code>;
+    } else if (toolName === 'get_skill') {
+        return <code style={{ maxWidth: '100%' }}>{jsonArgs.skill_name_or_path}</code>;
     } else if (toolName === 'mcp_invoke_tool') {
         return (
             <table style={{ border: '0' }}>
