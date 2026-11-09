@@ -756,6 +756,17 @@ export class CreateIssueWebview
         return issuelinks;
     }
 
+    formatIssueSummary(summary: string, maxLength: number = 100): string {
+        if (!summary) {
+            return '';
+        }
+        const trimmed = summary.trim(;
+        if (trimmed.length <= maxLength) {
+            return trimmed;
+        }
+        return trimmed.substring(0, maxLength) + '...';
+    }
+
     async setGeneratingIssueSuggestions(status: boolean) {
         if (this._generatingSuggestions === status) {
             return;
