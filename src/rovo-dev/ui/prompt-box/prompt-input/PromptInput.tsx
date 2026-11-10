@@ -381,11 +381,12 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                     display: 'flex',
                     flexDirection: 'row',
                     alignItems: 'center',
-                    flexWrap: 'wrap',
+                    flexWrap: 'nowrap',
                     gap: 4,
+                    minWidth: 0,
                 }}
             >
-                <div style={{ display: 'flex', flexDirection: 'row', alignContent: 'center', gap: 4 }}>
+                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 4, minWidth: 0, flexShrink: 1, overflow: 'hidden' }}>
                     <PromptContextPopup
                         fetchSavedPrompts={handleFetchSavedPrompts}
                         canFetchSavedPrompts={canFetchSavedPrompts}
@@ -417,7 +418,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                 role="button"
                                 aria-label="Disable deep plan"
                             >
-                                <AiGenerativeTextSummaryIcon label="deep plan icon" />
+                                <AiGenerativeTextSummaryIcon label="deep plan icon" size="small" />
                                 <CrossIcon size="small" label="disable deep plan" />
                             </div>
                         </Tooltip>
@@ -432,7 +433,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                 role="button"
                                 aria-label="Disable Full-Context mode"
                             >
-                                <TelescopeIcon label="full-context mode icon" />
+                                <TelescopeIcon label="full-context mode icon" size="small" />
                                 <CrossIcon size="small" label="disable full-context mode" />
                             </div>
                         </Tooltip>
@@ -447,7 +448,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                 role="button"
                                 aria-label="Disable YOLO mode"
                             >
-                                <LockUnlockedIcon label="yolo mode icon" />
+                                <LockUnlockedIcon label="yolo mode icon" size="small" />
                                 <CrossIcon size="small" label="disable yolo mode" />
                             </div>
                         </Tooltip>
@@ -462,13 +463,13 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                 role="button"
                                 aria-label={`${capitalizeFirst(currentAgentMode)} mode`}
                             >
-                                {getAgentModeIcon(currentAgentMode)}
-                                <CrossIcon size="small" label={`${currentAgentMode} mode`} />
+                                {getAgentModeIcon(currentAgentMode, 'small')}
+                                <CrossIcon label={`${currentAgentMode} mode`} size="small" />
                             </div>
                         </Tooltip>
                     )}
                 </div>
-                <div>
+                <div style={{ minWidth: 0, flexShrink: 1, overflow: 'hidden' }}>
                     <AgentModelSelector
                         availableModels={availableAgentModels}
                         currentModel={currentAgentModel}
@@ -478,7 +479,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                         onOpenChange={handleModelOpenChange}
                     />
                 </div>
-                <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+                <div style={{ display: 'flex', gap: 8, marginLeft: 'auto', flexShrink: 0 }}>
                     {showCancelButton ? (
                         <Tooltip content="Stop generating" position="top">
                             <button
@@ -488,7 +489,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                                 onClick={() => onCancel()}
                                 disabled={disableSendButton || currentState.state === 'CancellingResponse'}
                             >
-                                <VideoStopOverlayIcon color={token('color.icon.danger')} label="Stop" />
+                                <VideoStopOverlayIcon color={token('color.icon.danger')} label="Stop" size="small" />
                             </button>
                         </Tooltip>
                     ) : (
@@ -498,7 +499,7 @@ export const PromptInputBox: React.FC<PromptInputBoxProps> = ({
                             onClick={() => handleSend()}
                             disabled={disableSendButton || !isWaitingForPrompt || isEmpty}
                         >
-                            <SendIcon label="Send prompt" />
+                            <SendIcon label="Send prompt" size="small" />
                         </button>
                     )}
                 </div>

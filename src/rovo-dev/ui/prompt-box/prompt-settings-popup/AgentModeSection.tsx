@@ -23,14 +23,14 @@ interface AgentModeSectionProps {
     setAgentMode: (mode: AgentMode) => void;
 }
 
-export const getAgentModeIcon = (mode: string) => {
+export const getAgentModeIcon = (mode: string, size?: 'small' | 'medium') => {
     switch (mode) {
         case 'default':
-            return <RandomizeIcon label={'default mode'} />;
+            return <RandomizeIcon label={'default mode'} size={size} />;
         case 'plan':
-            return <ZoomInIcon label={'plan mode'} />;
+            return <ZoomInIcon label={'plan mode'} size={size} />;
         case 'ask':
-            return <AiGenerativeRemoveSilenceIcon label={'ask mode'} />;
+            return <AiGenerativeRemoveSilenceIcon label={'ask mode'} size={size} />;
         default:
             return null;
     }
