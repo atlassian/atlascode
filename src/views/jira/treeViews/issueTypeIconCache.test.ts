@@ -67,6 +67,15 @@ describe('issueTypeIconCache', () => {
             [`${EPIC}?v=2`, site, true],
             ['https://EXAMPLE.atlassian.net:443/a/epic.svg', site, true],
             [AVATAR, site, true],
+            [AVATAR_API, site, true],
+            [
+                'https://api.atlassian.com/ex/jira/other/rest/api/2/universal_avatar/view/type/issuetype/avatar/1',
+                site,
+                false,
+            ],
+            ['https://api.atlassian.com/ex/jira/abc/rest/api/2/issue/10001', site, false],
+            ['https://api.atlassian.com/ex/jira/abc/images/icons/issuetypes/epic.svg', site, false],
+            [AVATAR_API, expansionCastTo<DetailedSiteInfo>({ host: 'example.atlassian.net' }), false],
             ['https://other.example.com/rest/api/2/universal_avatar/view/type/issuetype/avatar/1', site, false],
             ['https://example.atlassian.net/rest/api/2/issue/10001', site, false],
             ['https://other.example.com/epic.svg', site, false],
@@ -79,6 +88,17 @@ describe('issueTypeIconCache', () => {
         ])('%s -> %s', (url, s, expected) => {
             expect(needsLocalIconCopy(url, s)).toBe(expected);
         });
+    });
+
+    it('fetches a gateway-hosted avatar with auth and serves the local copy', async () => {
+        await prefetchIssueTypeIcons([{ issuetype: { iconUrl: AVATAR_API }, siteDetails: site }]);
+
+        expect(request).not.toHaveBeenCalled();
+        expect(authorizationProvider).toHaveBeenCalledWith('GET', AVATAR_API);
+        expect(get).toHaveBeenCalledWith(AVATAR_API, expect.anything());
+        const written = writeFile.mock.calls[0][0] as Uri;
+        expect(written.path).toMatch(/\/storage\/issuetype-icons\/[0-9a-f]{16}\.png$/);
+        expect(issueTypeIconUri(AVATAR_API, site).toString()).toBe(written.toString());
     });
 
     it('downloads a qualifying icon and serves the local file uri', async () => {

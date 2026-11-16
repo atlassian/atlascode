@@ -27,20 +27,40 @@ function stripPort(host: string): string {
 
 type IconKind = 'builtin' | 'avatar';
 
-function iconKind(iconUrl: string | undefined, site: { host: string } | undefined): IconKind | undefined {
+type IconSite = { host: string; baseApiUrl?: string };
+
+// OAuth (3LO) cloud sites return avatar urls on the api gateway (site.baseApiUrl) rather than on the site host.
+function isUnderBaseApiUrl(url: URL, site: IconSite): boolean {
+    if (!site.baseApiUrl) {
+        return false;
+    }
+    try {
+        const base = new URL(site.baseApiUrl);
+        return (
+            url.protocol === base.protocol &&
+            url.host.toLowerCase() === base.host.toLowerCase() &&
+            url.pathname.toLowerCase().startsWith(`${base.pathname.toLowerCase().replace(/\/$/, '')}/`)
+        );
+    } catch {
+        return false;
+    }
+}
+
+function iconKind(iconUrl: string | undefined, site: IconSite | undefined): IconKind | undefined {
     if (!iconUrl || !site?.host) {
         return undefined;
     }
     try {
         const url = new URL(iconUrl);
-        if (
-            (url.protocol !== 'https:' && url.protocol !== 'http:') ||
-            url.hostname.toLowerCase() !== stripPort(site.host)
-        ) {
+        if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+            return undefined;
+        }
+        const onSiteHost = url.hostname.toLowerCase() === stripPort(site.host);
+        if (!onSiteHost && !isUnderBaseApiUrl(url, site)) {
             return undefined;
         }
         const path = url.pathname.toLowerCase();
-        if (path.endsWith('.svg')) {
+        if (onSiteHost && path.endsWith('.svg')) {
             return 'builtin';
         }
         // Encoded separators or dots could climb out of the API path once the url is rebased on the authenticated host.
@@ -54,7 +74,7 @@ function iconKind(iconUrl: string | undefined, site: { host: string } | undefine
     }
 }
 
-export function needsLocalIconCopy(iconUrl: string | undefined, site: { host: string } | undefined): boolean {
+export function needsLocalIconCopy(iconUrl: string | undefined, site: IconSite | undefined): boolean {
     return iconKind(iconUrl, site) !== undefined;
 }
 
@@ -74,7 +94,7 @@ export function issueTypeFallbackIcon(): ThemeIcon {
 }
 
 // VS Code cannot render qualifying urls remotely, so they get a codicon until (or unless) a local copy exists.
-export function issueTypeIconUri(iconUrl: string | undefined, site: { host: string } | undefined): Uri | ThemeIcon {
+export function issueTypeIconUri(iconUrl: string | undefined, site: IconSite | undefined): Uri | ThemeIcon {
     if (!iconUrl) {
         return issueTypeFallbackIcon();
     }
