@@ -104,7 +104,7 @@ describe('IssueNode', () => {
 
             const treeItem = new IssueNode(mockIssue).getTreeItem();
 
-            expect(iconCache.issueTypeIconUri).toHaveBeenCalledWith(mockIssue.issuetype.iconUrl);
+            expect(iconCache.issueTypeIconUri).toHaveBeenCalledWith(mockIssue.issuetype.iconUrl, mockIssue.siteDetails);
             expect(treeItem.iconPath).toBe(localIcon);
         });
 

@@ -5,6 +5,7 @@ import { Uri, workspace } from 'vscode';
 import { getAxiosInstance } from '../../../jira/jira-client/providers';
 import {
     _resetIssueTypeIconCacheForTests,
+    issueTypeFallbackIcon,
     issueTypeIconUri,
     needsLocalIconCopy,
     prefetchIssueTypeIcons,
@@ -88,7 +89,7 @@ describe('issueTypeIconCache', () => {
         expect(createDirectory).toHaveBeenCalledTimes(1);
         const written = writeFile.mock.calls[0][0] as Uri;
         expect(written.path).toMatch(/\/storage\/issuetype-icons\/[0-9a-f]{16}\.svg$/);
-        expect(issueTypeIconUri(EPIC).toString()).toBe(written.toString());
+        expect(issueTypeIconUri(EPIC, site).toString()).toBe(written.toString());
     });
 
     it('serves a file uri when storage uses the vscode-userdata scheme', async () => {
@@ -99,7 +100,7 @@ describe('issueTypeIconCache', () => {
 
             const written = writeFile.mock.calls[0][0] as Uri;
             expect(written.scheme).toBe('vscode-userdata');
-            const served = issueTypeIconUri(EPIC);
+            const served = issueTypeIconUri(EPIC, site) as Uri;
             expect(served.scheme).toBe('file');
             expect(served.path).toBe(written.path);
         } finally {
@@ -111,8 +112,8 @@ describe('issueTypeIconCache', () => {
         await prefetchIssueTypeIcons([{ issuetype: { iconUrl: EPIC }, siteDetails: site }]);
 
         const written = writeFile.mock.calls[0][0] as Uri;
-        expect(issueTypeIconUri(EPIC).toString()).toBe(written.toString());
-        expect(issueTypeIconUri(EPIC).scheme).toBe('file');
+        expect(issueTypeIconUri(EPIC, site).toString()).toBe(written.toString());
+        expect((issueTypeIconUri(EPIC, site) as Uri).scheme).toBe('file');
     });
 
     it('downloads a shared url once, including nested children', async () => {
@@ -145,7 +146,7 @@ describe('issueTypeIconCache', () => {
         await prefetchIssueTypeIcons([{ issuetype: { iconUrl: url }, siteDetails: site }]);
 
         expect(request).not.toHaveBeenCalled();
-        expect(issueTypeIconUri(url).toString()).toBe(Uri.parse(url).toString());
+        expect(issueTypeIconUri(url, site).toString()).toBe(Uri.parse(url).toString());
     });
 
     it.each([
@@ -170,7 +171,7 @@ describe('issueTypeIconCache', () => {
         ).resolves.toBeUndefined();
 
         expect(writeFile).not.toHaveBeenCalled();
-        expect(issueTypeIconUri(EPIC).toString()).toBe(Uri.parse(EPIC).toString());
+        expect(issueTypeIconUri(EPIC, site)).toEqual(issueTypeFallbackIcon());
     });
 
     it('retries a failed download on a later prefetch', async () => {
@@ -179,7 +180,7 @@ describe('issueTypeIconCache', () => {
         await prefetchIssueTypeIcons([{ issuetype: { iconUrl: EPIC }, siteDetails: site }]);
 
         expect(request).toHaveBeenCalledTimes(2);
-        expect(issueTypeIconUri(EPIC).scheme).toBe('file');
+        expect((issueTypeIconUri(EPIC, site) as Uri).scheme).toBe('file');
     });
 
     it('shares one request between concurrent prefetch calls', async () => {
@@ -217,7 +218,7 @@ describe('issueTypeIconCache', () => {
             );
             const written = writeFile.mock.calls[0][0] as Uri;
             expect(written.path).toMatch(/\/[0-9a-f]{16}\.png$/);
-            expect(issueTypeIconUri(AVATAR).toString()).toBe(written.toString());
+            expect(issueTypeIconUri(AVATAR, site).toString()).toBe(written.toString());
         });
 
         it('writes an svg file when the avatar is an svg', async () => {
@@ -235,7 +236,7 @@ describe('issueTypeIconCache', () => {
             await prefetchIssueTypeIcons([{ issuetype: { iconUrl: AVATAR }, siteDetails: odd }]);
 
             expect(get).not.toHaveBeenCalled();
-            expect(issueTypeIconUri(AVATAR).toString()).toBe(Uri.parse(AVATAR).toString());
+            expect(issueTypeIconUri(AVATAR, site)).toEqual(issueTypeFallbackIcon());
         });
 
         it('falls back when the client cannot be created', async () => {
@@ -243,15 +244,70 @@ describe('issueTypeIconCache', () => {
 
             await expect(prefetchIssueTypeIcons(issues)).resolves.toBeUndefined();
 
+            expect(request).not.toHaveBeenCalled();
             expect(writeFile).not.toHaveBeenCalled();
-            expect(issueTypeIconUri(AVATAR).toString()).toBe(Uri.parse(AVATAR).toString());
+            expect(issueTypeIconUri(AVATAR, site)).toEqual(issueTypeFallbackIcon());
+        });
+
+        it('keeps a DC context path in the request url', async () => {
+            const dc = expansionCastTo<DetailedSiteInfo>({
+                host: 'jira.example.com',
+                baseApiUrl: 'https://jira.example.com/jira/rest',
+            });
+            const url =
+                'https://jira.example.com/jira/rest/api/2/universal_avatar/view/type/issuetype/avatar/1?size=medium';
+            await prefetchIssueTypeIcons([{ issuetype: { iconUrl: url }, siteDetails: dc }]);
+
+            expect(get).toHaveBeenCalledWith(url, expect.anything());
+        });
+
+        it.each(['%2f', '%2F', '%5c', '%5C', '%2e', '%2E'])('refuses avatar paths containing %s', async (enc) => {
+            const url = `https://example.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/${enc}${enc}/x`;
+
+            expect(needsLocalIconCopy(url, site)).toBe(false);
+            await prefetchIssueTypeIcons([{ issuetype: { iconUrl: url }, siteDetails: site }]);
+            expect(get).not.toHaveBeenCalled();
+            expect(request).not.toHaveBeenCalled();
         });
 
         it('rejects unsupported content types', async () => {
             get.mockResolvedValue({ data: svgBody(), headers: { 'content-type': 'image/jpeg' } });
             await prefetchIssueTypeIcons(issues);
 
+            expect(get).toHaveBeenCalledTimes(1);
             expect(writeFile).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('issueTypeIconUri', () => {
+        const fallback = (r: unknown) => expect(r).toEqual(issueTypeFallbackIcon());
+
+        it('uses the issues codicon', () => {
+            expect(issueTypeFallbackIcon()).toMatchObject({ id: 'issues' });
+        });
+
+        it.each([undefined, ''])('falls back to the codicon for url %p', (url) => {
+            fallback(issueTypeIconUri(url, site));
+        });
+
+        it('falls back to the codicon for a qualifying url without a local copy', () => {
+            fallback(issueTypeIconUri(EPIC, site));
+            fallback(issueTypeIconUri(AVATAR, site));
+        });
+
+        it('returns the local file once cached', async () => {
+            await prefetchIssueTypeIcons([{ issuetype: { iconUrl: EPIC }, siteDetails: site }]);
+
+            expect((issueTypeIconUri(EPIC, site) as Uri).scheme).toBe('file');
+        });
+
+        it('parses other urls unchanged', () => {
+            const publicAvatar = 'https://example.atlassian.net/secure/viewavatar?avatarId=1';
+            const otherHost = 'https://other.example.com/epic.svg';
+
+            expect((issueTypeIconUri(publicAvatar, site) as Uri).toString()).toBe(Uri.parse(publicAvatar).toString());
+            expect((issueTypeIconUri(otherHost, site) as Uri).toString()).toBe(Uri.parse(otherHost).toString());
+            expect((issueTypeIconUri(EPIC, undefined) as Uri).toString()).toBe(Uri.parse(EPIC).toString());
         });
     });
 });

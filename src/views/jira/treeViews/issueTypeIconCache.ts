@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import { Uri, workspace } from 'vscode';
+import { ThemeIcon, Uri, workspace } from 'vscode';
 
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { Container } from '../../../container';
@@ -43,6 +43,11 @@ function iconKind(iconUrl: string | undefined, site: { host: string } | undefine
         if (path.endsWith('.svg')) {
             return 'builtin';
         }
+        // Encoded separators or dots could climb out of the API path once the url is rebased on the authenticated host.
+        // Checked on the raw url: the URL parser collapses %2e%2e before pathname is read.
+        if (/%2f|%5c|%2e/i.test(iconUrl.split(/[?#]/)[0])) {
+            return undefined;
+        }
         return path.includes('/rest/api/') && path.includes('/universal_avatar/') ? 'avatar' : undefined;
     } catch {
         return undefined;
@@ -53,7 +58,7 @@ export function needsLocalIconCopy(iconUrl: string | undefined, site: { host: st
     return iconKind(iconUrl, site) !== undefined;
 }
 
-// Custom avatars need credentials, and OAuth tokens only work on the site's API base, so the request is moved there.
+// Custom avatars need credentials, which are valid on the site's API base (OAuth, basic auth and DC), so the request is moved there.
 function toApiUrl(iconUrl: string, site: DetailedSiteInfo): string | undefined {
     const base = site.baseApiUrl;
     if (!base?.endsWith('/rest')) {
@@ -64,8 +69,24 @@ function toApiUrl(iconUrl: string, site: DetailedSiteInfo): string | undefined {
     return restIndex < 0 ? undefined : `${base}${url.pathname.slice(restIndex + '/rest'.length)}${url.search}`;
 }
 
-export function issueTypeIconUri(iconUrl: string): Uri {
-    return localUris.get(iconUrl) ?? Uri.parse(iconUrl);
+export function issueTypeFallbackIcon(): ThemeIcon {
+    return new ThemeIcon('issues');
+}
+
+// VS Code cannot render qualifying urls remotely, so they get a codicon until (or unless) a local copy exists.
+export function issueTypeIconUri(iconUrl: string | undefined, site: { host: string } | undefined): Uri | ThemeIcon {
+    if (!iconUrl) {
+        return issueTypeFallbackIcon();
+    }
+    const local = localUris.get(iconUrl);
+    if (local) {
+        return local;
+    }
+    try {
+        return needsLocalIconCopy(iconUrl, site) ? issueTypeFallbackIcon() : Uri.parse(iconUrl);
+    } catch {
+        return issueTypeFallbackIcon();
+    }
 }
 
 // The workbench CSP rejects the vscode-userdata scheme for images; the same path as a file: Uri is allowed.

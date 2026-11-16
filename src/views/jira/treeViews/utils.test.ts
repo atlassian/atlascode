@@ -241,7 +241,7 @@ describe('utils', () => {
 
             const jiraIssueNode = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, mockedIssue1);
 
-            expect(iconCache.issueTypeIconUri).toHaveBeenCalledWith('/issueType/');
+            expect(iconCache.issueTypeIconUri).toHaveBeenCalledWith('/issueType/', mockedIssue1.siteDetails);
             expect(jiraIssueNode.iconPath).toBe(localIcon);
         });
 
