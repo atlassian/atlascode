@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Commands } from '../../constants';
+import { issueTypeIconUri } from '../jira/treeViews/issueTypeIconCache';
 import { AbstractBaseNode } from './abstractBaseNode';
 
 const ISSUE_NODE_CONTEXT_VALUE = 'jiraIssue';
@@ -24,7 +25,7 @@ export class IssueNode extends AbstractBaseNode {
                 : vscode.TreeItemCollapsibleState.None,
         );
         treeItem.command = { command: Commands.ShowIssue, title: 'Show Issue', arguments: [this.issue] };
-        treeItem.iconPath = vscode.Uri.parse(this.issue.issuetype.iconUrl);
+        treeItem.iconPath = issueTypeIconUri(this.issue.issuetype.iconUrl);
         treeItem.contextValue = ISSUE_NODE_CONTEXT_VALUE;
         treeItem.description = this.issue.status.name;
         treeItem.tooltip = `${this.issue.key} - ${this.issue.summary}\n\n${this.issue.priority.name}    |    ${this.issue.status.name}`;

@@ -21,6 +21,7 @@ import { fetchMinimalIssue } from '../../../jira/fetchIssue';
 import { SitesAvailableUpdateEvent } from '../../../siteManager';
 import { RefreshTimer } from '../../RefreshTimer';
 import { SearchJiraHelper } from '../searchJiraHelper';
+import { prefetchIssueTypeIcons } from './issueTypeIconCache';
 import { createLabelItem, executeJqlQuery, JiraIssueNode, TreeViewIssue } from './utils';
 
 const enum ViewStrings {
@@ -160,6 +161,7 @@ class JiraIssueQueryNode extends TreeItem {
 
     private async constructIssueTree(jqlIssues: TreeViewIssue[]): Promise<TreeViewIssue[]> {
         const parentIssues = await this.fetchMissingAncestorIssues(jqlIssues);
+        await prefetchIssueTypeIcons(parentIssues);
         const jqlAndParents = [...jqlIssues, ...parentIssues];
 
         const rootIssues: TreeViewIssue[] = [];
