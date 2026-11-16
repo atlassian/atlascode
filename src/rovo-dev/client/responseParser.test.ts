@@ -417,6 +417,16 @@ describe('RovoDevResponseParser', () => {
                     timestamp: '2025-07-02T12:00:00Z',
                 });
             });
+
+            it('ignores generic SSE comment lines (not just ": ping - ")', () => {
+                const input =
+                    ': keep-alive\n\nevent: user-prompt\ndata: {"content": "Hi", "timestamp": "2025-07-02T12:00:00Z"}\n\n';
+
+                const results = Array.from(parser.parse(input));
+
+                expect(results).toHaveLength(1);
+                expect(results[0].event_kind).toBe('user-prompt');
+            });
         });
 
         describe('error handling', () => {
@@ -469,6 +479,52 @@ describe('RovoDevResponseParser', () => {
                 // In practice, this shouldn't happen according to the parser logic, but we test the defensive code
                 // The important thing is that tool-return responses work correctly in normal scenarios
                 expect(true).toBe(true); // Placeholder - this error condition is defensive code
+            });
+
+            it('does NOT misclassify a well-formed chunk whose JSON data spans multiple lines', () => {
+                // A single `data:` payload that legitimately contains newlines
+                // (e.g. multi-line tool output). Previously the single-line
+                // regex would fail to match this and emit a `_parsing_error`,
+                // inflating the parse_error SLO bucket.
+                const input = 'event: text\ndata: {"index": 0, "content": "line one\\nline two\\nline three"}\n\n';
+
+                const results = Array.from(parser.parse(input));
+
+                expect(results).toHaveLength(1);
+                expect(results[0].event_kind).toBe('text');
+                expect((results[0] as any).content).toBe('line one\nline two\nline three');
+            });
+
+            it('parses a payload split across multiple data: lines (SSE multi-line data)', () => {
+                // Per the SSE spec, successive `data:` lines are concatenated
+                // with `\n`. The JSON below is valid once the lines are joined.
+                const input = 'event: text\ndata: {"index": 0,\ndata: "content": "hello"}\n\n';
+
+                const results = Array.from(parser.parse(input));
+
+                expect(results).toHaveLength(1);
+                expect(results[0].event_kind).toBe('text');
+                expect((results[0] as any).content).toBe('hello');
+            });
+
+            it('tags a malformed (missing event:) chunk with RovoDevChunkShapeError', () => {
+                const input = 'data: {"index": 0, "content": "no event line"}\n\n';
+
+                const results = Array.from(parser.parse(input));
+
+                expect(results).toHaveLength(1);
+                expect(results[0].event_kind).toBe('_parsing_error');
+                expect((results[0] as any).error.name).toBe('RovoDevChunkShapeError');
+            });
+
+            it('tags an invalid-JSON payload with RovoDevJsonParseError', () => {
+                const input = 'event: text\ndata: {not valid json}\n\n';
+
+                const results = Array.from(parser.parse(input));
+
+                expect(results).toHaveLength(1);
+                expect(results[0].event_kind).toBe('_parsing_error');
+                expect((results[0] as any).error.name).toBe('RovoDevJsonParseError');
             });
         });
     });

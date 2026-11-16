@@ -542,8 +542,19 @@ export class RovoDevChatProvider {
             if (partsCount > 0) {
                 this.firePromptCompleted('success', { messagePartsCount: partsCount });
             } else {
+                // Sub-classify `no_response` via `errorName` so the SLO can tell
+                // genuinely-empty backend streams apart from turns that only
+                // produced control/lifecycle events (thinking, warning,
+                // deferred permission request, …) and therefore legitimately
+                // rendered no user-visible part:
+                //   - `no_response_empty_stream`  ⇒ not a single message was
+                //     parsed from the stream (isFirstMessage never flipped).
+                //   - `no_response_control_only`  ⇒ messages arrived but none
+                //     were user-visible (often a benign, expected outcome).
+                const errorName = isFirstMessage ? 'no_response_empty_stream' : 'no_response_control_only';
                 this.firePromptCompleted('error', {
                     errorReason: 'no_response',
+                    errorName,
                     messagePartsCount: 0,
                 });
             }
@@ -719,7 +730,10 @@ export class RovoDevChatProvider {
                 // firePromptCompleted ensures the later `success` emit from
                 // processResponse's normal exit path becomes a no-op.
                 if (sourceApi !== 'replay') {
-                    this.firePromptCompleted('parse_error', { errorReason: 'parsing_error' });
+                    this.firePromptCompleted('parse_error', {
+                        errorReason: 'parsing_error',
+                        errorName: response.error?.name || undefined,
+                    });
                 }
                 await this.processError(response.error, { showOnlyInDebug: true });
                 break;
@@ -756,7 +770,13 @@ export class RovoDevChatProvider {
                 // stream means the agent surfaced a hard error mid-response.
                 // Replay path never fires PromptCompleted.
                 if (sourceApi !== 'replay') {
-                    this.firePromptCompleted('error', { errorReason: 'stream_exception' });
+                    this.firePromptCompleted('error', {
+                        errorReason: 'stream_exception',
+                        // `response.type` is the concrete agent error class (e.g.
+                        // `UserError`, `RuntimeError`), letting the SLO break down
+                        // stream_exception by real cause.
+                        errorName: response.type || undefined,
+                    });
                 }
 
                 const { text, link } = this.parseExceptionMessage(response.message);
@@ -1103,9 +1123,10 @@ export class RovoDevChatProvider {
                 // (e.g. `_parsing_error` or `exception`) already classified
                 // this prompt, this call becomes a no-op.
                 if (sourceApi === 'chat') {
-                    const { errorReason, httpStatus } = this.classifyStreamingError(error);
+                    const { errorReason, errorName, httpStatus } = this.classifyStreamingError(error);
                     this.firePromptCompleted('error', {
                         errorReason,
+                        ...(errorName !== undefined ? { errorName } : {}),
                         ...(httpStatus !== undefined ? { httpStatus } : {}),
                     });
                 }
@@ -1140,18 +1161,22 @@ export class RovoDevChatProvider {
      */
     private classifyStreamingError(error: unknown): {
         errorReason: Track.PromptCompletedErrorReason;
+        errorName?: string;
         httpStatus?: number;
     } {
+        // Concrete error name for diagnosis (e.g. `TypeError`, `RovoDevApiError`,
+        // `FetchError`). High-cardinality companion to the closed `errorReason`.
+        const errorName = error instanceof Error ? error.name : undefined;
         if (error instanceof RovoDevApiError && typeof error.httpStatus === 'number') {
             const status = error.httpStatus;
             if (status >= 500 && status < 600) {
-                return { errorReason: 'http_5xx', httpStatus: status };
+                return { errorReason: 'http_5xx', errorName, httpStatus: status };
             }
             if (status >= 400 && status < 500) {
-                return { errorReason: 'http_4xx', httpStatus: status };
+                return { errorReason: 'http_4xx', errorName, httpStatus: status };
             }
         }
-        return { errorReason: 'network_error' };
+        return { errorReason: 'network_error', errorName };
     }
 
     /**
@@ -1175,6 +1200,7 @@ export class RovoDevChatProvider {
         result: Track.PromptCompletedResult,
         extras: {
             errorReason?: Track.PromptCompletedErrorReason;
+            errorName?: string;
             httpStatus?: number;
             messagePartsCount?: number;
         } = {},
@@ -1204,6 +1230,7 @@ export class RovoDevChatProvider {
                 promptId,
                 result,
                 ...(extras.errorReason !== undefined ? { errorReason: extras.errorReason } : {}),
+                ...(extras.errorName !== undefined ? { errorName: extras.errorName } : {}),
                 ...(extras.httpStatus !== undefined ? { httpStatus: extras.httpStatus } : {}),
                 ...(extras.messagePartsCount !== undefined ? { messagePartsCount: extras.messagePartsCount } : {}),
             },

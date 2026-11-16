@@ -249,6 +249,16 @@ export namespace Track {
             result: PromptCompletedResult;
             /** Only present when `result !== 'success'`. */
             errorReason?: PromptCompletedErrorReason;
+            /**
+             * Optional free-form name of the specific underlying error, present
+             * only when `result !== 'success'`. Unlike the closed `errorReason`
+             * bucket, this carries the concrete cause so backend failures can be
+             * diagnosed from the SLO without cross-referencing Sentry — e.g. the
+             * agent exception class (`response.type`) for `stream_exception`, or
+             * `error.name` for fetch/HTTP failures. High-cardinality: intended for
+             * grouping/inspection, not as a primary SLO dimension.
+             */
+            errorName?: string;
             /** Optional: HTTP status when the error was an HTTP-layer failure. */
             httpStatus?: number;
             /** Optional: number of user-visible message parts processed in the stream. */

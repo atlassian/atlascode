@@ -1,10 +1,25 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.33
+
+### Security
+
+- Upgraded `dompurify` to 3.4.17 to fix multiple XSS sanitizer bypasses (critical `npm audit` advisory)
+
+### Bug Fixes
+
+- **Bitbucket**: The background "new pull request" notification check no longer exhausts the Bitbucket Cloud per-user rate limit (which also breaks the Bitbucket website for that user). It now stops polling for the rest of a refresh cycle once Bitbucket returns a rate-limit error, and is skipped for workspaces with more than 10 Bitbucket repositories.
+
 ## What's new in 4.0.32
 
 ### Security
 
 - Fixed arbitrary code execution via `core.fsmonitor` in repository `.git/config`
+
+### Bug Fixes
+
+- **RovoDev (BBY)**: Fixed the response-stream parser so well-formed responses whose `data:` payload contains newlines (e.g. multi-line tool output, code blocks, stack traces) are no longer misclassified as parse errors. The parser now follows the SSE line grammar (multi-line `data:` fields are concatenated) and ignores all comment/keep-alive lines, which removes a large source of false `parse_error` outcomes in the `rovoDevPromptCompleted` telemetry / chat-response SLO. Parser failures are now tagged with distinct error names (`RovoDevChunkShapeError`, `RovoDevJsonParseError`, `RovoDevIncompleteStreamError`) so the remaining genuine cases surface via the event's `errorName` attribute.
+- **RovoDev (BBY)**: The `no_response` outcome of the `rovoDevPromptCompleted` telemetry event is now sub-classified via `errorName` (`no_response_empty_stream` when the stream carried no messages at all, vs `no_response_control_only` when only control/lifecycle events were received and no user-visible part was rendered), so the chat-response SLO can distinguish genuinely-empty backend streams from benign control-only turns.
 
 ## What's new in 4.0.31
 
@@ -19,6 +34,7 @@
 
 ### Improvements
 
+- **RovoDev**: Updated Rovo Dev version to 202609.9.1b3
 - **RovoDev**: Updated Rovo Dev version to 202607.22.1b1
 - **RovoDev**: Updated Rovo Dev version to 202607.21.1b1
 - **RovoDev**: Updated Rovo Dev version to 202606.10.1b3

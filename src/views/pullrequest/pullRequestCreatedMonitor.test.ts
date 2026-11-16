@@ -383,4 +383,57 @@ describe('PullRequestCreatedMonitor', () => {
             expect(monitor['_lastSuccessfulFetch'].get(mockRepo.rootUri)).toBeUndefined();
         });
     });
+
+    describe('rate limit protection', () => {
+        const makeRepo = (i: number): WorkspaceRepo =>
+            ({
+                rootUri: `/path/to/repo${i}`,
+                mainSiteRemote: {
+                    site: {
+                        details: { isCloud: true, credentialId: 'cred-1' },
+                        ownerSlug: 'test-owner',
+                        repoSlug: `test-repo${i}`,
+                    } as BitbucketSite,
+                },
+            }) as WorkspaceRepo;
+
+        it.each([
+            [
+                'ClientError message',
+                { name: 'Too Many Requests', message: 'Rate limit for this resource has been exceeded' },
+            ],
+            ['axios response status', { message: 'Request failed', response: { status: 429 } }],
+        ])('should stop polling the credential for the cycle when rate limited (%s)', async (_, rateLimitError) => {
+            mockBbContext.getBitbucketRepositories = jest.fn().mockReturnValue([makeRepo(1), makeRepo(2), makeRepo(3)]);
+            mockPullRequestApi.getLatest.mockRejectedValue(rateLimitError);
+            (categorizeNetworkError as jest.Mock).mockReturnValue({ category: 'unknown', message: 'Unknown error' });
+
+            monitor.checkForNewActivity();
+            await flushPromises();
+
+            expect(mockPullRequestApi.getLatest).toHaveBeenCalledTimes(1);
+        });
+
+        it('should not poll when the workspace has more than 10 repos', async () => {
+            const repos = Array.from({ length: 11 }, (_, i) => makeRepo(i));
+            mockBbContext.getBitbucketRepositories = jest.fn().mockReturnValue(repos);
+
+            monitor.checkForNewActivity();
+            await flushPromises();
+
+            expect(clientForSite).not.toHaveBeenCalled();
+            expect(mockPullRequestApi.getLatest).not.toHaveBeenCalled();
+        });
+
+        it('should poll every repo when the workspace has 10 repos', async () => {
+            const repos = Array.from({ length: 10 }, (_, i) => makeRepo(i));
+            mockBbContext.getBitbucketRepositories = jest.fn().mockReturnValue(repos);
+            mockPullRequestApi.getLatest.mockResolvedValue({ workspaceRepo: repos[0], site: mockSite, data: [] });
+
+            monitor.checkForNewActivity();
+            await flushPromises();
+
+            expect(mockPullRequestApi.getLatest).toHaveBeenCalledTimes(10);
+        });
+    });
 });
