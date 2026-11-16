@@ -8,6 +8,8 @@ import { Logger } from '../../../logger';
 
 const ICON_DIR = 'issuetype-icons';
 const MAX_ICON_BYTES = 100 * 1024;
+// Short timeout: the first tree render awaits the prefetch.
+const ICON_REQUEST_TIMEOUT_MS = 5000;
 
 // VS Code blocks http(s) resources whose path ends in .svg, so such icons are copied locally.
 const localUris = new Map<string, Uri>();
@@ -16,7 +18,7 @@ const downloads = new Map<string, Promise<void>>();
 interface IconIssue {
     issuetype?: { iconUrl?: string };
     siteDetails?: DetailedSiteInfo;
-    children?: ReadonlyArray<any>;
+    children?: ReadonlyArray<IconIssue>;
 }
 
 function stripPort(host: string): string {
@@ -48,6 +50,8 @@ async function download(iconUrl: string, site: DetailedSiteInfo): Promise<void> 
         const res = await getAxiosInstance()(iconUrl, {
             method: 'GET',
             responseType: 'arraybuffer',
+            timeout: ICON_REQUEST_TIMEOUT_MS,
+            maxContentLength: MAX_ICON_BYTES,
             ...getAgent(site),
         });
 
@@ -95,7 +99,12 @@ export async function prefetchIssueTypeIcons(issues: ReadonlyArray<IconIssue>): 
         for (const [iconUrl, site] of found) {
             let work = downloads.get(iconUrl);
             if (!work) {
-                work = download(iconUrl, site);
+                work = download(iconUrl, site).then(() => {
+                    // Allow a later prefetch to retry when no local copy was produced.
+                    if (!localUris.has(iconUrl)) {
+                        downloads.delete(iconUrl);
+                    }
+                });
                 downloads.set(iconUrl, work);
             }
             pending.push(work);

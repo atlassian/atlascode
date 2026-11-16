@@ -135,11 +135,28 @@ describe('issueTypeIconCache', () => {
         expect(issueTypeIconUri(EPIC).toString()).toBe(Uri.parse(EPIC).toString());
     });
 
-    it('does not retry a failed download in the same session', async () => {
-        request.mockRejectedValue(new Error('boom'));
+    it('retries a failed download on a later prefetch', async () => {
+        request.mockRejectedValueOnce(new Error('boom'));
         await prefetchIssueTypeIcons([{ issuetype: { iconUrl: EPIC }, siteDetails: site }]);
         await prefetchIssueTypeIcons([{ issuetype: { iconUrl: EPIC }, siteDetails: site }]);
 
+        expect(request).toHaveBeenCalledTimes(2);
+        expect(issueTypeIconUri(EPIC).scheme).toBe('file');
+    });
+
+    it('shares one request between concurrent prefetch calls', async () => {
+        const issues = [{ issuetype: { iconUrl: EPIC }, siteDetails: site }];
+        await Promise.all([prefetchIssueTypeIcons(issues), prefetchIssueTypeIcons(issues)]);
+
         expect(request).toHaveBeenCalledTimes(1);
+    });
+
+    it('requests icons with a timeout and a size limit', async () => {
+        await prefetchIssueTypeIcons([{ issuetype: { iconUrl: EPIC }, siteDetails: site }]);
+
+        expect(request).toHaveBeenCalledWith(
+            EPIC,
+            expect.objectContaining({ timeout: 5000, maxContentLength: 100 * 1024 }),
+        );
     });
 });

@@ -3,6 +3,7 @@ import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { issueForKey } from '../../jira/issueForKey';
 import { Resources } from '../../resources';
 import { Promise_allSucceeded } from '../../util/promises';
+import { prefetchIssueTypeIcons } from '../jira/treeViews/issueTypeIconCache';
 import { JiraIssueNode, TreeViewIssue } from '../jira/treeViews/utils';
 import { AbstractBaseNode } from './abstractBaseNode';
 import { SimpleNode } from './simpleNode';
@@ -18,9 +19,10 @@ export class RelatedIssuesNode extends TreeItem implements AbstractBaseNode {
 
         this.childrenPromises = Promise_allSucceeded(
             jiraKeys.map((key) =>
-                issueForKey(key).then((issue) => {
+                issueForKey(key).then(async (issue) => {
                     (issue as TreeViewIssue).children = [];
                     (issue as TreeViewIssue).source = { id: prId };
+                    await prefetchIssueTypeIcons([issue]);
                     return new JiraIssueNode(
                         JiraIssueNode.NodeType.RelatedJiraIssueInBitbucketPR,
                         issue as TreeViewIssue,
