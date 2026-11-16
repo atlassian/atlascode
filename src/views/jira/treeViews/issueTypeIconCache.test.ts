@@ -29,6 +29,7 @@ const SUBTASK = 'https://example.atlassian.net/images/icons/issuetypes/subtask.s
 const svgBody = (size = 20) => new Uint8Array(size).buffer;
 
 describe('issueTypeIconCache', () => {
+    const container = jest.requireMock('../../../container').Container;
     const request = jest.fn();
     const createDirectory = jest.fn();
     const writeFile = jest.fn();
@@ -75,6 +76,30 @@ describe('issueTypeIconCache', () => {
         const written = writeFile.mock.calls[0][0] as Uri;
         expect(written.path).toMatch(/\/storage\/issuetype-icons\/[0-9a-f]{16}\.svg$/);
         expect(issueTypeIconUri(EPIC).toString()).toBe(written.toString());
+    });
+
+    it('serves a file uri when storage uses the vscode-userdata scheme', async () => {
+        const original = container.context.globalStorageUri;
+        container.context.globalStorageUri = Uri.from({ scheme: 'vscode-userdata', path: '/storage' });
+        try {
+            await prefetchIssueTypeIcons([{ issuetype: { iconUrl: EPIC }, siteDetails: site }]);
+
+            const written = writeFile.mock.calls[0][0] as Uri;
+            expect(written.scheme).toBe('vscode-userdata');
+            const served = issueTypeIconUri(EPIC);
+            expect(served.scheme).toBe('file');
+            expect(served.path).toBe(written.path);
+        } finally {
+            container.context.globalStorageUri = original;
+        }
+    });
+
+    it('serves a file-scheme storage uri unchanged', async () => {
+        await prefetchIssueTypeIcons([{ issuetype: { iconUrl: EPIC }, siteDetails: site }]);
+
+        const written = writeFile.mock.calls[0][0] as Uri;
+        expect(issueTypeIconUri(EPIC).toString()).toBe(written.toString());
+        expect(issueTypeIconUri(EPIC).scheme).toBe('file');
     });
 
     it('downloads a shared url once, including nested children', async () => {

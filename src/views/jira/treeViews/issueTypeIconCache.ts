@@ -45,6 +45,11 @@ export function issueTypeIconUri(iconUrl: string): Uri {
     return localUris.get(iconUrl) ?? Uri.parse(iconUrl);
 }
 
+// The workbench CSP rejects the vscode-userdata scheme for images; the same path as a file: Uri is allowed.
+function toRenderableUri(target: Uri): Uri {
+    return target.scheme === 'vscode-userdata' ? Uri.file(target.fsPath) : target;
+}
+
 async function download(iconUrl: string, site: DetailedSiteInfo): Promise<void> {
     try {
         const res = await getAxiosInstance()(iconUrl, {
@@ -72,7 +77,7 @@ async function download(iconUrl: string, site: DetailedSiteInfo): Promise<void> 
         const file = Uri.joinPath(dir, name);
         await workspace.fs.createDirectory(dir);
         await workspace.fs.writeFile(file, body);
-        localUris.set(iconUrl, file);
+        localUris.set(iconUrl, toRenderableUri(file));
     } catch (e) {
         Logger.debug(`Could not cache issue type icon ${iconUrl}: ${e}`);
     }
