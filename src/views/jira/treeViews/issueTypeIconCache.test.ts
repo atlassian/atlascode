@@ -13,6 +13,7 @@ import {
 jest.mock('../../../container', () => ({
     Container: {
         context: { globalStorageUri: jest.requireMock('vscode').Uri.file('/storage') },
+        clientManager: { jiraClient: jest.fn() },
     },
 }));
 jest.mock('../../../jira/jira-client/providers', () => ({
@@ -23,7 +24,13 @@ jest.mock('../../../logger', () => ({
     Logger: { debug: jest.fn(), error: jest.fn() },
 }));
 
-const site = expansionCastTo<DetailedSiteInfo>({ host: 'example.atlassian.net' });
+const site = expansionCastTo<DetailedSiteInfo>({
+    host: 'example.atlassian.net',
+    baseApiUrl: 'https://api.atlassian.com/ex/jira/abc/rest',
+});
+const AVATAR = 'https://example.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10761?size=medium';
+const AVATAR_API =
+    'https://api.atlassian.com/ex/jira/abc/rest/api/2/universal_avatar/view/type/issuetype/avatar/10761?size=medium';
 const EPIC = 'https://example.atlassian.net/images/icons/issuetypes/epic.svg';
 const SUBTASK = 'https://example.atlassian.net/images/icons/issuetypes/subtask.svg';
 const svgBody = (size = 20) => new Uint8Array(size).buffer;
@@ -33,6 +40,8 @@ describe('issueTypeIconCache', () => {
     const request = jest.fn();
     const createDirectory = jest.fn();
     const writeFile = jest.fn();
+    const get = jest.fn();
+    const authorizationProvider = jest.fn();
 
     beforeEach(() => {
         _resetIssueTypeIconCacheForTests();
@@ -41,6 +50,12 @@ describe('issueTypeIconCache', () => {
         createDirectory.mockResolvedValue(undefined);
         writeFile.mockResolvedValue(undefined);
         (getAxiosInstance as jest.Mock).mockReturnValue(request);
+        get.mockResolvedValue({ data: svgBody(), headers: { 'content-type': 'image/png' } });
+        authorizationProvider.mockResolvedValue('Bearer tok');
+        container.clientManager.jiraClient.mockResolvedValue({
+            transportFactory: () => ({ get }),
+            authorizationProvider,
+        });
         Object.defineProperty(workspace, 'fs', { value: { createDirectory, writeFile }, configurable: true });
     });
 
@@ -50,11 +65,9 @@ describe('issueTypeIconCache', () => {
             ['https://example.atlassian.net/images/icons/epic.SVG', site, true],
             [`${EPIC}?v=2`, site, true],
             ['https://EXAMPLE.atlassian.net:443/a/epic.svg', site, true],
-            [
-                'https://example.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/1?size=medium',
-                site,
-                false,
-            ],
+            [AVATAR, site, true],
+            ['https://other.example.com/rest/api/2/universal_avatar/view/type/issuetype/avatar/1', site, false],
+            ['https://example.atlassian.net/rest/api/2/issue/10001', site, false],
             ['https://other.example.com/epic.svg', site, false],
             ['data:image/svg+xml;base64,AAAA', site, false],
             ['/images/epic.svg', site, false],
@@ -128,7 +141,7 @@ describe('issueTypeIconCache', () => {
     });
 
     it('skips non-qualifying urls', async () => {
-        const url = 'https://example.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/1';
+        const url = 'https://example.atlassian.net/rest/api/2/issue/10001';
         await prefetchIssueTypeIcons([{ issuetype: { iconUrl: url }, siteDetails: site }]);
 
         expect(request).not.toHaveBeenCalled();
@@ -183,5 +196,62 @@ describe('issueTypeIconCache', () => {
             EPIC,
             expect.objectContaining({ timeout: 5000, maxContentLength: 100 * 1024 }),
         );
+    });
+
+    describe('custom avatars', () => {
+        const issues = [{ issuetype: { iconUrl: AVATAR }, siteDetails: site }];
+
+        it('downloads through the authenticated client on the api base url', async () => {
+            await prefetchIssueTypeIcons(issues);
+
+            expect(request).not.toHaveBeenCalled();
+            expect(authorizationProvider).toHaveBeenCalledWith('GET', AVATAR_API);
+            expect(get).toHaveBeenCalledWith(
+                AVATAR_API,
+                expect.objectContaining({
+                    headers: { Authorization: 'Bearer tok' },
+                    responseType: 'arraybuffer',
+                    timeout: 5000,
+                    maxContentLength: 100 * 1024,
+                }),
+            );
+            const written = writeFile.mock.calls[0][0] as Uri;
+            expect(written.path).toMatch(/\/[0-9a-f]{16}\.png$/);
+            expect(issueTypeIconUri(AVATAR).toString()).toBe(written.toString());
+        });
+
+        it('writes an svg file when the avatar is an svg', async () => {
+            get.mockResolvedValue({ data: svgBody(), headers: { 'content-type': 'image/svg+xml' } });
+            await prefetchIssueTypeIcons(issues);
+
+            expect((writeFile.mock.calls[0][0] as Uri).path).toMatch(/\.svg$/);
+        });
+
+        it.each([
+            ['missing', undefined],
+            ['not ending in /rest', 'https://api.atlassian.com/ex/jira/abc'],
+        ])('makes no request when baseApiUrl is %s', async (_n, baseApiUrl) => {
+            const odd = expansionCastTo<DetailedSiteInfo>({ host: 'example.atlassian.net', baseApiUrl });
+            await prefetchIssueTypeIcons([{ issuetype: { iconUrl: AVATAR }, siteDetails: odd }]);
+
+            expect(get).not.toHaveBeenCalled();
+            expect(issueTypeIconUri(AVATAR).toString()).toBe(Uri.parse(AVATAR).toString());
+        });
+
+        it('falls back when the client cannot be created', async () => {
+            container.clientManager.jiraClient.mockRejectedValue(new Error('no creds'));
+
+            await expect(prefetchIssueTypeIcons(issues)).resolves.toBeUndefined();
+
+            expect(writeFile).not.toHaveBeenCalled();
+            expect(issueTypeIconUri(AVATAR).toString()).toBe(Uri.parse(AVATAR).toString());
+        });
+
+        it('rejects unsupported content types', async () => {
+            get.mockResolvedValue({ data: svgBody(), headers: { 'content-type': 'image/jpeg' } });
+            await prefetchIssueTypeIcons(issues);
+
+            expect(writeFile).not.toHaveBeenCalled();
+        });
     });
 });
