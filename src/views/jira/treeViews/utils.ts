@@ -8,6 +8,7 @@ import { Container } from '../../../container';
 import { issuesForJQL } from '../../../jira/issuesForJql';
 import { Logger } from '../../../logger';
 import { AbstractBaseNode } from '../../../views/nodes/abstractBaseNode';
+import { issueTypeIconUri, prefetchIssueTypeIcons } from './issueTypeIconCache';
 
 export function createLabelItem(label: string, command?: Command): TreeItem {
     const item = new TreeItem(label);
@@ -54,6 +55,8 @@ export async function executeJqlQuery(jqlEntry: JQLEntry): Promise<TreeViewIssue
                     i.children = [];
                 });
 
+                await prefetchIssueTypeIcons(issues);
+
                 return issues;
             }
         }
@@ -97,7 +100,7 @@ export class JiraIssueNode extends TreeItem implements AbstractBaseNode {
         const summary = isMinimalIssue(issue) && issue.isEpic ? issue.epicName : issue.summary;
         this.description = `${summary} | ${issue.status.name}`;
         this.command = { command: Commands.ShowIssue, title: 'Show Issue', arguments: [issue] };
-        this.iconPath = Uri.parse(issue.issuetype.iconUrl);
+        this.iconPath = issueTypeIconUri(issue.issuetype.iconUrl, issue.siteDetails);
         this.contextValue = nodeType;
         this.tooltip = `${issue.key} - ${issue.summary}\n\n${issue.priority.name}    |    ${issue.status.name}`;
         this.resourceUri = getJiraIssueUri(issue);

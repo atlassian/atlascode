@@ -4,10 +4,15 @@ jest.mock('@atlassian-pi/jira-pi-common-models', () => {
     };
 });
 
+jest.mock('../jira/treeViews/issueTypeIconCache', () => ({
+    issueTypeIconUri: jest.fn(),
+}));
+
 import { MinimalORIssueLink } from '@atlassian-pi/jira-pi-common-models';
 import * as vscode from 'vscode';
 
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
+import * as iconCache from '../jira/treeViews/issueTypeIconCache';
 import { IssueNode } from './issueNode';
 
 const mockIssue: MinimalORIssueLink<DetailedSiteInfo> = {
@@ -91,6 +96,16 @@ describe('IssueNode', () => {
             const issueNode = new IssueNode(mockIssue);
             const treeItem = issueNode.getTreeItem();
             expect(treeItem.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
+        });
+
+        it('should set the icon from issueTypeIconUri', () => {
+            const localIcon = vscode.Uri.file('/storage/issuetype-icons/epic.svg');
+            jest.mocked(iconCache.issueTypeIconUri).mockReturnValue(localIcon);
+
+            const treeItem = new IssueNode(mockIssue).getTreeItem();
+
+            expect(iconCache.issueTypeIconUri).toHaveBeenCalledWith(mockIssue.issuetype.iconUrl, mockIssue.siteDetails);
+            expect(treeItem.iconPath).toBe(localIcon);
         });
 
         it('should return a TreeItem with a command to show the issue', () => {

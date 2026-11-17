@@ -7,6 +7,7 @@ import * as commandContext from '../../../commandContext';
 import { configuration, JQLEntry } from '../../../config/configuration';
 import { Container } from '../../../container';
 import { CustomJQLViewProvider } from './customJqlViewProvider';
+import * as iconCache from './issueTypeIconCache';
 import { TreeViewIssue } from './utils';
 import * as utils from './utils';
 
@@ -49,6 +50,10 @@ function getMockedIssue(key: string, status: 'To Do' | 'In Progress' | 'Done', p
     });
 }
 
+jest.mock('./issueTypeIconCache', () => ({
+    issueTypeIconUri: (url: string) => ({ toString: () => url }),
+    prefetchIssueTypeIcons: jest.fn(() => Promise.resolve()),
+}));
 jest.mock('../searchJiraHelper');
 jest.mock('../../RefreshTimer');
 jest.mock('../../../logger');
@@ -227,6 +232,21 @@ describe('CustomJqlViewProvider', () => {
                 }
             },
         );
+
+        it('prefetches the icons of the missing ancestor issues before building the nodes', async () => {
+            Container.config.jira.explorer.nestSubtasks = true;
+
+            const parentKey = 'AXON-123';
+            const child = getMockedIssue('AXON-1', 'To Do', parentKey);
+            executeJqlQueryMock.mockResolvedValue([child]);
+
+            provider = new CustomJQLViewProvider();
+            const children = await provider.getChildren();
+            await provider.getChildren(children[0]);
+
+            const prefetched = jest.mocked(iconCache.prefetchIssueTypeIcons).mock.calls.flatMap(([issues]) => issues);
+            expect(prefetched.map((i) => forceCastTo<TreeViewIssue>(i).key)).toContain(parentKey);
+        });
 
         it.each([[false], [true]])(
             "should return a 'No issues' node under a jql node without results (nestSubtasks %p)",

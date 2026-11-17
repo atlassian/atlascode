@@ -7,6 +7,7 @@ import { Uri } from 'vscode';
 
 import * as issuesForJQL from '../../../jira/issuesForJql';
 import { Logger } from '../../../logger';
+import * as iconCache from './issueTypeIconCache';
 import { executeJqlQuery, JiraIssueNode, TreeViewIssue } from './utils';
 
 jest.mock('../../../container', () => ({
@@ -25,6 +26,10 @@ jest.mock('../../../commands', () => ({
         ShowConfigPage: 'atlascode.showConfigPage',
         ShowIssue: 'atlascode.jira.showIssue',
     },
+}));
+jest.mock('./issueTypeIconCache', () => ({
+    issueTypeIconUri: jest.fn((url: string) => Uri.parse(url)),
+    prefetchIssueTypeIcons: jest.fn(() => Promise.resolve()),
 }));
 jest.mock('../../../logger', () => ({
     Logger: {
@@ -112,6 +117,25 @@ describe('utils', () => {
             }
 
             expect(Logger.error).not.toHaveBeenCalled();
+        });
+
+        it('prefetches the issue type icons of the fetched issues', async () => {
+            const jqlEntry = expansionCastTo<JQLEntry>({
+                id: 'id1',
+                query: 'assignee = currentUser()',
+                siteId: 'site-id-guid',
+            });
+            const mockedMinimalIssues = [
+                expansionCastTo<MinimalIssue<DetailedSiteInfo>>({ key: 'AXON-1' }),
+                expansionCastTo<MinimalIssue<DetailedSiteInfo>>({ key: 'AXON-2' }),
+            ];
+            jest.spyOn(issuesForJQL, 'issuesForJQL').mockResolvedValue(mockedMinimalIssues);
+
+            const issues = await executeJqlQuery(jqlEntry);
+
+            expect(iconCache.prefetchIssueTypeIcons).toHaveBeenCalledTimes(1);
+            expect(iconCache.prefetchIssueTypeIcons).toHaveBeenCalledWith(issues);
+            expect(issues).toHaveLength(2);
         });
 
         it('logs an error in case of failure, and returns an empty collection of issues', async () => {
@@ -209,6 +233,16 @@ describe('utils', () => {
             const jiraIssueNode = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, mockedIssue2);
             const children = await jiraIssueNode.getChildren();
             expect(children).toHaveLength(1);
+        });
+
+        it('sets iconPath from issueTypeIconUri', () => {
+            const localIcon = Uri.file('/storage/issuetype-icons/epic.svg');
+            jest.mocked(iconCache.issueTypeIconUri).mockReturnValueOnce(localIcon);
+
+            const jiraIssueNode = new JiraIssueNode(JiraIssueNode.NodeType.CustomJqlQueriesNode, mockedIssue1);
+
+            expect(iconCache.issueTypeIconUri).toHaveBeenCalledWith('/issueType/', mockedIssue1.siteDetails);
+            expect(jiraIssueNode.iconPath).toBe(localIcon);
         });
 
         it('getTreeItem should return resourceUri', async () => {

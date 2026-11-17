@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.34
+
+### Bug Fixes
+
+- **Jira**: Fixed Epic, Sub-task and custom issue-type icons missing in the Jira tree views (#1965)
+
 ## What's new in 4.0.33
 
 ### Security

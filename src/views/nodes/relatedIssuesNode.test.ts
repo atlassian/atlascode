@@ -4,6 +4,9 @@ jest.mock('../jira/treeViews/utils', () => ({
 jest.mock('../../jira/issueForKey', () => ({
     issueForKey: () => Promise.reject('error'),
 }));
+jest.mock('../jira/treeViews/issueTypeIconCache', () => ({
+    prefetchIssueTypeIcons: jest.fn(() => Promise.resolve()),
+}));
 jest.mock('../../resources', () => ({
     Resources: {
         icons: {
@@ -18,6 +21,7 @@ import { expansionCastTo } from 'testsutil';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 
 import * as issueForKey from '../../jira/issueForKey';
+import { prefetchIssueTypeIcons } from '../jira/treeViews/issueTypeIconCache';
 import { JiraIssueNode } from '../jira/treeViews/utils';
 import { RelatedIssuesNode } from './relatedIssuesNode';
 import { SimpleNode } from './simpleNode';
@@ -81,6 +85,13 @@ describe('RelatedIssuesNode', () => {
         expect(children).toHaveLength(2);
         expect(children[0]).toBeInstanceOf(JiraIssueNode);
         expect(children[1]).toBeInstanceOf(JiraIssueNode);
+    });
+
+    it('prefetches issue type icons before building the nodes', async () => {
+        const node = new RelatedIssuesNode('prId1', ['JIRA-1'], 'Related Issues');
+        await node.getChildren();
+
+        expect(prefetchIssueTypeIcons).toHaveBeenCalledWith([expect.objectContaining({ key: 'JIRA-1' })]);
     });
 
     it('should return a SimpleNode when getChildren is called and no issues are found', async () => {
