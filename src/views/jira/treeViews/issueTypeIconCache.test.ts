@@ -194,13 +194,24 @@ describe('issueTypeIconCache', () => {
         expect(issueTypeIconUri(EPIC, site)).toEqual(issueTypeFallbackIcon());
     });
 
-    it('retries a failed download on a later prefetch', async () => {
-        request.mockRejectedValueOnce(new Error('boom'));
-        await prefetchIssueTypeIcons([{ issuetype: { iconUrl: EPIC }, siteDetails: site }]);
-        await prefetchIssueTypeIcons([{ issuetype: { iconUrl: EPIC }, siteDetails: site }]);
+    it('retries a failed download only after a cooldown', async () => {
+        const now = jest.spyOn(Date, 'now').mockReturnValue(1_000_000);
+        try {
+            const issues = [{ issuetype: { iconUrl: EPIC }, siteDetails: site }];
+            request.mockRejectedValueOnce(new Error('boom'));
+            await prefetchIssueTypeIcons(issues);
+            now.mockReturnValue(1_000_000 + 9 * 60 * 1000);
+            await prefetchIssueTypeIcons(issues);
+            expect(request).toHaveBeenCalledTimes(1);
+            expect(issueTypeIconUri(EPIC, site)).toEqual(issueTypeFallbackIcon());
 
-        expect(request).toHaveBeenCalledTimes(2);
-        expect((issueTypeIconUri(EPIC, site) as Uri).scheme).toBe('file');
+            now.mockReturnValue(1_000_000 + 11 * 60 * 1000);
+            await prefetchIssueTypeIcons(issues);
+            expect(request).toHaveBeenCalledTimes(2);
+            expect((issueTypeIconUri(EPIC, site) as Uri).scheme).toBe('file');
+        } finally {
+            now.mockRestore();
+        }
     });
 
     it('shares one request between concurrent prefetch calls', async () => {

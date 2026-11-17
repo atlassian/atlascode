@@ -10,10 +10,13 @@ const ICON_DIR = 'issuetype-icons';
 const MAX_ICON_BYTES = 100 * 1024;
 // Short timeout: the first tree render awaits the prefetch.
 const ICON_REQUEST_TIMEOUT_MS = 5000;
+// Tree refreshes await the prefetch, so a failing icon is not retried on every refresh.
+const FAILED_RETRY_AFTER_MS = 10 * 60 * 1000;
 
 // VS Code blocks http(s) .svg resources and cannot authenticate avatar requests, so such icons are copied locally.
 const localUris = new Map<string, Uri>();
 const downloads = new Map<string, Promise<void>>();
+const failedAt = new Map<string, number>();
 
 interface IconIssue {
     issuetype?: { iconUrl?: string };
@@ -193,12 +196,19 @@ export async function prefetchIssueTypeIcons(issues: ReadonlyArray<IconIssue>): 
 
         const pending: Promise<void>[] = [];
         for (const [iconUrl, { site, kind }] of found) {
+            const failed = failedAt.get(iconUrl);
+            if (failed !== undefined && Date.now() - failed < FAILED_RETRY_AFTER_MS) {
+                continue;
+            }
             let work = downloads.get(iconUrl);
             if (!work) {
                 work = download(iconUrl, site, kind).then(() => {
-                    // Allow a later prefetch to retry when no local copy was produced.
+                    // Allow a later prefetch to retry, after a cooldown, when no local copy was produced.
                     if (!localUris.has(iconUrl)) {
                         downloads.delete(iconUrl);
+                        failedAt.set(iconUrl, Date.now());
+                    } else {
+                        failedAt.delete(iconUrl);
                     }
                 });
                 downloads.set(iconUrl, work);
@@ -214,4 +224,5 @@ export async function prefetchIssueTypeIcons(issues: ReadonlyArray<IconIssue>): 
 export function _resetIssueTypeIconCacheForTests(): void {
     localUris.clear();
     downloads.clear();
+    failedAt.clear();
 }
