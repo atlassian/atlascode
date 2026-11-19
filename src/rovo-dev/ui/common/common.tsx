@@ -215,6 +215,7 @@ export const renderChatHistory = (
     retryAfterError: () => void,
     onError: (error: Error, errorMessage: string) => void,
     isAtlassianUser?: boolean,
+    collapsedToolReturns?: boolean,
 ) => {
     switch (msg.event_kind) {
         case 'tool-return':
@@ -223,7 +224,15 @@ export const renderChatHistory = (
                 if (message.todoData) {
                     return <ToDoList key={index} todos={message.todoData} />;
                 }
-                return <ToolReturnParsedItem key={index} msg={message} openFile={openFile} onLinkClick={onLinkClick} />;
+                return (
+                    <ToolReturnParsedItem
+                        key={index}
+                        msg={message}
+                        openFile={openFile}
+                        onLinkClick={onLinkClick}
+                        collapsed={collapsedToolReturns}
+                    />
+                );
             });
         case '_RovoDevDialog':
             let customButton: { text: string; onClick: () => void } | undefined = undefined;
