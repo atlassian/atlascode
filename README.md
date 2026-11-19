@@ -10,6 +10,27 @@ Browse, View, Create, and Manage your Jira Work Items, Bitbucket PRs, Bitbucket 
 - Get work suggestions, view your code reviews, and tackle tasks directly from VS Code
 - Manage notifications and reviews in-flow—no context switching
 
+```
+╔══════════════════════════════════════════════════════════════════════════════════════╗
+║                          🛩️  DEVELOPER AIRLINES FLIGHT DEV-2024  🛩️                ║
+║                                                                                      ║
+║  ✈️ Captain's Announcement:                                                          ║
+║     "Ladies and gentlemen, we're now cruising at 30,000 lines of code.             ║
+║      We may experience some turbulence due to legacy code ahead."                   ║
+║                                                                                      ║
+║  🧑‍✈️ Flight Attendant:                                                               ║
+║     "In case of a production emergency, oxygen masks will drop from above.          ║
+║      Please secure your own rollback strategy before helping others with theirs."   ║
+║                                                                                      ║
+║  🪂 Emergency Procedures:                                                            ║
+║     • 🔴 Code Red: Deploy hotfix immediately                                        ║
+║     • 🟡 Code Yellow: Schedule fix for next sprint                                  ║
+║     • 🟢 Code Green: Everything's flying smoothly                                   ║
+║                                                                                      ║
+║  🎯 Thank you for flying with us! Your co-pilot Rovo Dev is here to help           ║
+║     navigate any coding turbulence and ensure a smooth deployment landing! ✈️      ║
+╚══════════════════════════════════════════════════════════════════════════════════════╝
+```
 
 **New in GA:** Mode control for AI autonomy, auto-saving sessions, file-aware context, full change history with native diff views and more.
 
