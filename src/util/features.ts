@@ -3,7 +3,6 @@ export enum Features {
     AtlassianNotifications = 'atlascode-atlassian-notifications-v2',
     RovoDevEnabled = 'rovo_dev_ff',
     UseNewAuthFlow = 'atlascode-use-new-auth-flow',
-    EnableAiSuggestions = 'atlascode-enable-ai-suggestions-new',
     AtlaskitEditor = 'atlascode-use-new-atlaskit-editor',
     CreateWorkItemWebviewV2 = 'atlascode-create-work-item-webview-test',
     RovoDevEntitlementNotification = 'atlascode-rovodev-entitlement-notification',

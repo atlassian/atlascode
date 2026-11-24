@@ -46,7 +46,6 @@ import { Action } from '../ipc/messaging';
 import { fetchCreateIssueUI } from '../jira/fetchIssue';
 import { WebViewID } from '../lib/ipc/models/common';
 import { Logger } from '../logger';
-import { Features } from '../util/featureFlags';
 import { OnJiraEditedRefreshDelay } from '../util/time';
 import { SearchJiraHelper } from '../views/jira/searchJiraHelper';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
@@ -1114,10 +1113,9 @@ export class CreateIssueWebview
 
                 case 'webviewReady': {
                     handled = true;
-                    const areSuggestionsEnabled = Container.featureFlagClient.checkGate(Features.EnableAiSuggestions);
                     this.postMessage({
                         type: 'updateFeatureFlag',
-                        value: areSuggestionsEnabled,
+                        value: true,
                     });
                     await this.updateSuggestionData({
                         suggestions: this._issueSuggestionSettings,

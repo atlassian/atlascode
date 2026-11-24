@@ -6,7 +6,6 @@ import { Uri, window, workspace } from 'vscode';
 
 import { fetchIssueSuggestions } from '../../atlclients/issueBuilder';
 import { IssueSuggestionContextLevel, IssueSuggestionSettings, SimplifiedTodoIssueData } from '../../config/model';
-import { Features } from '../../util/featureFlags';
 
 export class IssueSuggestionManager {
     constructor(private readonly settings: IssueSuggestionSettings) {}
@@ -130,10 +129,6 @@ export async function buildSuggestionSettings(): Promise<IssueSuggestionSettings
     };
 }
 function getSuggestionEnabled(): boolean {
-    if (!Container.featureFlagClient.checkGate(Features.EnableAiSuggestions)) {
-        return false;
-    }
-
     const config = workspace.getConfiguration('atlascode.issueSuggestion').get<boolean>('enabled');
     return Boolean(config);
 }
@@ -152,11 +147,6 @@ function getSelectedSite(): DetailedSiteInfo | undefined {
 }
 
 async function getSuggestionAvailable(): Promise<boolean> {
-    const isFeatureEnabled = Container.featureFlagClient.checkGate(Features.EnableAiSuggestions);
-    if (!isFeatureEnabled) {
-        return false;
-    }
-
     const selectedSite = getSelectedSite();
     if (!selectedSite) {
         return false;
