@@ -10,6 +10,10 @@
 
 - **Bitbucket**: The background "new pull request" notification check no longer exhausts the Bitbucket Cloud per-user rate limit (which also breaks the Bitbucket website for that user). It now stops polling for the rest of a refresh cycle once Bitbucket returns a rate-limit error, and is skipped for workspaces with more than 10 Bitbucket repositories.
 
+### Cleanup
+
+- **Notifications**: Removed the Atlassian notifications v2 feature flag; Atlassian notifications (Jira and PR comments) are now always enabled.
+
 ## What's new in 4.0.32
 
 ### Security
