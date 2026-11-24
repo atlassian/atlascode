@@ -4,7 +4,6 @@ import { AuthInfoEvent, isRemoveAuthEvent, Product, ProductBitbucket, ProductJir
 import { configuration } from '../../config/configuration';
 import { Container } from '../../container';
 import { Logger } from '../../logger';
-import { Features } from '../../util/featureFlags';
 import { Time } from '../../util/time';
 import { AtlassianNotificationNotifier } from './atlassianNotificationNotifier';
 import { AuthNotifier } from './authNotifier';
@@ -112,9 +111,7 @@ export class NotificationManagerImpl extends Disposable {
             NotificationManagerImpl.instance = new NotificationManagerImpl();
 
             NotificationManagerImpl.instance.notifiers.add(AuthNotifier.getInstance());
-            if (Container.featureFlagClient.checkGate(Features.AtlassianNotifications)) {
-                NotificationManagerImpl.instance.notifiers.add(AtlassianNotificationNotifier.getInstance());
-            }
+            NotificationManagerImpl.instance.notifiers.add(AtlassianNotificationNotifier.getInstance());
 
             // Note: the badge delegate is not registered here as it needs the context of the tree view
             NotificationManagerImpl.instance.registerDelegate(BannerDelegate.getInstance());

@@ -18,9 +18,6 @@ jest.mock('../../container', () => ({
         analyticsClient: {
             sendTrackEvent: jest.fn(),
         },
-        featureFlagClient: {
-            checkGate: jest.fn(() => Promise.resolve(true)),
-        },
         credentialManager: {
             onDidAuthChange: jest.fn(),
             getAuthInfo: jest.fn(() => Promise.resolve(undefined)),
