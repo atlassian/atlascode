@@ -9,7 +9,6 @@ import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } 
 import { StartWorkActionApi } from '../../lib/webview/controller/startwork/startWorkActionApi';
 import { Logger } from '../../logger';
 import { Branch, RefType } from '../../typings/git';
-import { Experiments } from '../../util/featureFlags';
 
 const startWorkPushBranchToRemote = 'startWorkPushBranchToRemote';
 
@@ -122,17 +121,10 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
 
     openSettings(section?: ConfigSection | ConfigV3Section, subsection?: ConfigSubSection | ConfigV3SubSection): void {
         if (section) {
-            if (Container.featureFlagClient.checkExperimentValue(Experiments.AtlascodeNewSettingsExperiment)) {
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigV3Section.AdvancedConfig,
-                    subSection: ConfigV3SubSection.StartWork,
-                });
-            } else {
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigSection.Jira,
-                    subSection: ConfigSubSection.StartWork,
-                });
-            }
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Jira,
+                subSection: ConfigSubSection.StartWork,
+            });
         } else {
             Container.settingsWebviewFactory.createOrShow(undefined);
         }

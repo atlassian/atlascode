@@ -45,7 +45,7 @@ import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { SentryConfig, SentryService } from './sentry';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, SETTINGS_URL } from './uriHandler';
-import { Experiments, FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
+import { FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
 import { isDebugging } from './util/isDebugging';
 import { RovoDevEntitlementChecker } from './util/rovo-dev-entitlement/rovoDevEntitlementChecker';
 import { AuthStatusBar } from './views/authStatusBar';
@@ -60,7 +60,6 @@ import { PipelinesExplorer } from './views/pipelines/PipelinesExplorer';
 import { VSCAnalyticsApi } from './vscAnalyticsApi';
 import { VSCCommonMessageHandler } from './webview/common/vscCommonMessageActionHandler';
 import { VSCConfigActionApi } from './webview/config/vscConfigActionApi';
-import { VSCConfigV3WebviewControllerFactory } from './webview/config/vscConfigV3WebviewControllerFactory';
 import { VSCConfigWebviewControllerFactory } from './webview/config/vscConfigWebviewControllerFactory';
 import { ExplorerFocusManager } from './webview/ExplorerFocusManager';
 import { MultiWebview } from './webview/multiViewFactory';
@@ -147,17 +146,6 @@ export class Container {
             this._analyticsApi,
         );
 
-        const settingsV3ViewFactory = new SingleWebview<SectionV3ChangeMessage, ConfigAction>(
-            context.extensionPath,
-            new VSCConfigV3WebviewControllerFactory(
-                new VSCConfigActionApi(this._analyticsApi, this._cancellationManager),
-                this._commonMessageHandler,
-                this._analyticsApi,
-                SETTINGS_URL,
-            ),
-            this._analyticsApi,
-        );
-
         const startWorkViewFactory = new SingleWebview<StartWorkIssueMessage, StartWorkAction>(
             context.extensionPath,
             new VSCStartWorkWebviewControllerFactory(
@@ -200,11 +188,7 @@ export class Container {
 
         await this.initializeFeatureFlagClient();
 
-        if (this._featureFlagClient.checkExperimentValue(Experiments.AtlascodeNewSettingsExperiment)) {
-            context.subscriptions.push((this._settingsWebviewFactory = settingsV3ViewFactory));
-        } else {
-            context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
-        }
+        context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
 
         if (this._featureFlagClient.checkGate(Features.UseNewAuthFlow)) {
             setCommandContext(CommandContext.UseNewAuthFlow, true);

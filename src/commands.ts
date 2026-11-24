@@ -20,12 +20,12 @@ import { createIssueCommand } from './commands/jira/createIssue';
 import { showIssue, showIssueForKey, showIssueForSiteIdAndKey, showIssueForURL } from './commands/jira/showIssue';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
 import { configuration } from './config/configuration';
-import { Commands, ExtensionId, HelpTreeViewId } from './constants';
+import { Commands, HelpTreeViewId } from './constants';
 import { Container } from './container';
 import { FilterProvider } from './filter/filterProvider';
 import { transitionIssue } from './jira/transitionIssue';
 import { knownLinkIdMap } from './lib/ipc/models/common';
-import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } from './lib/ipc/models/config';
+import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
 import { Logger } from './logger';
 import { runQuickAuth } from './onboarding/quickFlow';
 import { AuthenticationType } from './onboarding/quickFlow/authentication/types';
@@ -33,7 +33,7 @@ import { RovodevCommands } from './rovo-dev/api/componentApi';
 import { getProductName } from './rovo-dev/api/rovodevStaticConfig';
 import { RovoDevContextItem } from './rovo-dev/rovoDevTypes';
 import { openRovoDevConfigFile } from './rovo-dev/rovoDevUtils';
-import { Experiments, Features } from './util/featureFlags';
+import { Features } from './util/featureFlags';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
 import { PipelineNode } from './views/pipelines/PipelinesTree';
@@ -191,160 +191,85 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         ),
     );
 
-    const settingsFeatureValue = Container.featureFlagClient.checkExperimentValue(
-        Experiments.AtlascodeNewSettingsExperiment,
+    vscodeContext.subscriptions.push(
+        commands.registerCommand(Commands.AddJiraSite, () =>
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Jira,
+                subSection: ConfigSubSection.Auth,
+            }),
+        ),
+        commands.registerCommand(Commands.CreateNewJql, () =>
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Jira,
+                subSection: ConfigSubSection.Issues,
+            }),
+        ),
+        commands.registerCommand(Commands.ShowConfigPage, () =>
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Jira,
+                subSection: ConfigSubSection.Auth,
+            }),
+        ),
+        commands.registerCommand(Commands.ShowConfigPageFromExtensionContext, () => {
+            Container.analyticsApi.fireOpenSettingsButtonEvent('extensionContext');
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Jira,
+                subSection: ConfigSubSection.Auth,
+            });
+        }),
+        commands.registerCommand(Commands.ShowJiraAuth, () =>
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Jira,
+                subSection: ConfigSubSection.Auth,
+            }),
+        ),
+        commands.registerCommand(Commands.ShowBitbucketAuth, () =>
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Bitbucket,
+                subSection: ConfigSubSection.Auth,
+            }),
+        ),
+        commands.registerCommand(Commands.ShowJiraIssueSettings, () =>
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Jira,
+                subSection: ConfigSubSection.Issues,
+            }),
+        ),
+        commands.registerCommand(Commands.ShowPullRequestSettings, () =>
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Bitbucket,
+                subSection: ConfigSubSection.PR,
+            }),
+        ),
+        commands.registerCommand(Commands.ShowPipelineSettings, () =>
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Bitbucket,
+                subSection: ConfigSubSection.Pipelines,
+            }),
+        ),
+        commands.registerCommand(Commands.ShowExploreSettings, () => {
+            Container.analyticsApi.fireExploreFeaturesButtonEvent(HelpTreeViewId);
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Explore,
+                subSection: undefined,
+            });
+        }),
+        commands.registerCommand(Commands.JiraAPITokenLogin, () => {
+            const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
+            if (useNewAuthFlow) {
+                runQuickAuth({
+                    initialState: { product: ProductJira, authenticationType: AuthenticationType.ApiToken },
+                    origin: 'nudge',
+                });
+            } else {
+                Container.settingsWebviewFactory.createOrShow({
+                    section: ConfigSection.Jira,
+                    subSection: ConfigSubSection.Auth,
+                    initiateApiTokenAuth: true,
+                });
+            }
+        }),
     );
-
-    // here, add any setting for which their implementation depends on which settings page is enabled
-    if (settingsFeatureValue) {
-        vscodeContext.subscriptions.push(
-            commands.registerCommand(Commands.AddJiraSite, () =>
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigV3Section.Auth,
-                    subSection: ConfigV3SubSection.JiraAuth,
-                }),
-            ),
-            commands.registerCommand(Commands.CreateNewJql, () =>
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigV3Section.AdvancedConfig,
-                    subSection: ConfigV3SubSection.Issues,
-                }),
-            ),
-            commands.registerCommand(Commands.ShowConfigPage, () =>
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigV3Section.Auth,
-                    subSection: ConfigV3SubSection.JiraAuth,
-                }),
-            ),
-            commands.registerCommand(Commands.ShowConfigPageFromExtensionContext, () => {
-                Container.analyticsApi.fireOpenSettingsButtonEvent('extensionContext');
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigV3Section.Auth,
-                    subSection: ConfigV3SubSection.JiraAuth,
-                });
-            }),
-            commands.registerCommand(Commands.ShowJiraAuth, () =>
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigV3Section.Auth,
-                    subSection: ConfigV3SubSection.JiraAuth,
-                }),
-            ),
-            commands.registerCommand(Commands.ShowBitbucketAuth, () =>
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigV3Section.Auth,
-                    subSection: ConfigV3SubSection.BbAuth,
-                }),
-            ),
-            commands.registerCommand(Commands.ShowJiraIssueSettings, () =>
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigV3Section.AdvancedConfig,
-                    subSection: undefined,
-                }),
-            ),
-            // Natigate them to VSCode Native settings
-            commands.registerCommand(Commands.ShowPullRequestSettings, () =>
-                commands.executeCommand('workbench.action.openSettings', `@ext:${ExtensionId} pull requests`),
-            ),
-            commands.registerCommand(Commands.ShowPipelineSettings, () =>
-                commands.executeCommand('workbench.action.openSettings', `@ext:${ExtensionId} pipeline`),
-            ),
-            commands.registerCommand(Commands.JiraAPITokenLogin, () => {
-                const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
-                if (useNewAuthFlow) {
-                    runQuickAuth({
-                        initialState: { product: ProductJira, authenticationType: AuthenticationType.ApiToken },
-                        origin: 'nudge',
-                    });
-                } else {
-                    Container.settingsWebviewFactory.createOrShow({
-                        section: ConfigV3Section.Auth,
-                        subSection: ConfigV3SubSection.JiraAuth,
-                        initiateApiTokenAuth: true,
-                    });
-                }
-            }),
-        );
-    } else {
-        vscodeContext.subscriptions.push(
-            commands.registerCommand(Commands.AddJiraSite, () =>
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigSection.Jira,
-                    subSection: ConfigSubSection.Auth,
-                }),
-            ),
-            commands.registerCommand(Commands.CreateNewJql, () =>
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigSection.Jira,
-                    subSection: ConfigSubSection.Issues,
-                }),
-            ),
-            commands.registerCommand(Commands.ShowConfigPage, () =>
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigSection.Jira,
-                    subSection: ConfigSubSection.Auth,
-                }),
-            ),
-            commands.registerCommand(Commands.ShowConfigPageFromExtensionContext, () => {
-                Container.analyticsApi.fireOpenSettingsButtonEvent('extensionContext');
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigSection.Jira,
-                    subSection: ConfigSubSection.Auth,
-                });
-            }),
-            commands.registerCommand(Commands.ShowJiraAuth, () =>
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigSection.Jira,
-                    subSection: ConfigSubSection.Auth,
-                }),
-            ),
-            commands.registerCommand(Commands.ShowBitbucketAuth, () =>
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigSection.Bitbucket,
-                    subSection: ConfigSubSection.Auth,
-                }),
-            ),
-            commands.registerCommand(Commands.ShowJiraIssueSettings, () =>
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigSection.Jira,
-                    subSection: ConfigSubSection.Issues,
-                }),
-            ),
-            commands.registerCommand(Commands.ShowPullRequestSettings, () =>
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigSection.Bitbucket,
-                    subSection: ConfigSubSection.PR,
-                }),
-            ),
-            commands.registerCommand(Commands.ShowPipelineSettings, () =>
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigSection.Bitbucket,
-                    subSection: ConfigSubSection.Pipelines,
-                }),
-            ),
-            commands.registerCommand(Commands.ShowExploreSettings, () => {
-                Container.analyticsApi.fireExploreFeaturesButtonEvent(HelpTreeViewId);
-                Container.settingsWebviewFactory.createOrShow({
-                    section: ConfigSection.Explore,
-                    subSection: undefined,
-                });
-            }),
-            commands.registerCommand(Commands.JiraAPITokenLogin, () => {
-                const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
-                if (useNewAuthFlow) {
-                    runQuickAuth({
-                        initialState: { product: ProductJira, authenticationType: AuthenticationType.ApiToken },
-                        origin: 'nudge',
-                    });
-                } else {
-                    Container.settingsWebviewFactory.createOrShow({
-                        section: ConfigSection.Jira,
-                        subSection: ConfigSubSection.Auth,
-                        initiateApiTokenAuth: true,
-                    });
-                }
-            }),
-        );
-    }
 }
 
 const buildContext = (editor?: TextEditor, vscodeContext?: ExtensionContext): RovoDevContextItem[] | undefined => {

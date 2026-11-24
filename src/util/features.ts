@@ -20,16 +20,11 @@ export const defaultFeatureGateValues: Partial<FeatureGateValues> = {
     [Features.RequireDedicatedRovoDevAuth]: false,
 };
 
-export const enum Experiments {
-    AtlascodeNewSettingsExperiment = 'atlascode_new_settings_experiment',
-}
+// No experiments are currently defined. When adding one, replace this type with a string enum, e.g.
+// export const enum Experiments { MyExperiment = 'my_experiment_name' }
+export type Experiments = string & { readonly __experimentBrand: unique symbol };
 
-export const ExperimentGates: Record<Experiments, ExperimentPayload> = {
-    [Experiments.AtlascodeNewSettingsExperiment]: {
-        parameter: 'enabledSettings',
-        defaultValue: false,
-    },
-};
+export const ExperimentGates: Record<Experiments, ExperimentPayload> = {};
 
 type ExperimentPayload = { parameter: string; defaultValue: any };
 

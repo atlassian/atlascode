@@ -53,6 +53,6 @@ export const FeatureFlagOverrides = {
             process.env.ATLASCODE_EXP_OVERRIDES_STRING,
         ),
         // Uncomment to add code-based experiment overrides:
-        // [Experiments.AtlascodeNewSettingsExperiment]: ['setting1', 'setting2'],
+        // [Experiments.MyExperiment]: ['setting1', 'setting2'],
     },
 };
