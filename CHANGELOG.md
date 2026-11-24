@@ -6,6 +6,10 @@
 
 - Upgraded `dompurify` to 3.4.17 to fix multiple XSS sanitizer bypasses (critical `npm audit` advisory)
 
+### Improvements
+
+- **Jira**: Removed the `atlascode-enable-ai-suggestions-new` feature flag; AI issue suggestions are now always available (still controlled by the `atlascode.issueSuggestion.enabled` setting)
+
 ### Bug Fixes
 
 - **Bitbucket**: The background "new pull request" notification check no longer exhausts the Bitbucket Cloud per-user rate limit (which also breaks the Bitbucket website for that user). It now stops polling for the rest of a refresh cycle once Bitbucket returns a rate-limit error, and is skipped for workspaces with more than 10 Bitbucket repositories.
