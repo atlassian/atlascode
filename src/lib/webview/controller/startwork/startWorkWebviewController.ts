@@ -1,5 +1,5 @@
 import { defaultActionGuard } from 'src/ipc/messaging';
-import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } from 'src/lib/ipc/models/config';
+import { ConfigSection, ConfigSubSection } from 'src/lib/ipc/models/config';
 import { Logger } from 'src/logger';
 import * as vscode from 'vscode';
 
@@ -7,7 +7,6 @@ import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import { BitbucketBranchingModel } from '../../../../bitbucket/model';
 import { Commands } from '../../../../constants';
 import { Container } from '../../../../container';
-import { Experiments } from '../../../../util/featureFlags';
 import { OnJiraEditedRefreshDelay } from '../../../../util/time';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
@@ -172,11 +171,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                 break;
             }
             case StartWorkActionType.OpenSettings: {
-                if (Container.featureFlagClient.checkExperimentValue(Experiments.AtlascodeNewSettingsExperiment)) {
-                    this.api.openSettings(ConfigV3Section.AdvancedConfig, ConfigV3SubSection.StartWork);
-                } else {
-                    this.api.openSettings(ConfigSection.Jira, ConfigSubSection.StartWork);
-                }
+                this.api.openSettings(ConfigSection.Jira, ConfigSubSection.StartWork);
 
                 break;
             }

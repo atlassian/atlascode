@@ -1,6 +1,5 @@
 import { Container } from 'src/container';
 import { getProductName } from 'src/rovo-dev/api/rovodevStaticConfig';
-import { Experiments } from 'src/util/featureFlags';
 
 import { ProductJira } from '../atlclients/authInfo';
 import { Commands } from '../constants';
@@ -21,79 +20,38 @@ export class HelpDataProvider extends BaseTreeDataProvider {
     }
 
     async getChildren(element: IssueNode | undefined) {
-        const renderExplorePanel = !Container.featureFlagClient.checkExperimentValue(
-            Experiments.AtlascodeNewSettingsExperiment,
-        );
-
-        if (renderExplorePanel) {
-            return [
-                new LinkNode(
-                    'Get Started',
-                    'Check out our quick-start guide',
-                    iconSet.ATLASSIANICON,
-                    KnownLinkID.GettingStarted,
-                ),
-                new LinkNode(
-                    'What is JQL?',
-                    'Learn about Jira Query Language',
-                    iconSet.JIRAICON,
-                    KnownLinkID.WhatIsJQL,
-                ),
-                new LinkNode(
-                    'Contribute',
-                    'Create pull requests for this extension',
-                    iconSet.PULLREQUEST,
-                    KnownLinkID.Contribute,
-                ),
-                new LinkNode('Report an Issue', 'Report and vote on issues', iconSet.ISSUES, KnownLinkID.ReportAnIssue),
-                new InternalLinkNode(
-                    'Explore Features',
-                    'Overwhelmed? Check out some of the most common features, all in one place',
-                    iconSet.SEARCH,
-                    {
-                        command: Commands.ShowExploreSettings,
-                        title: 'Open Explore Page',
-                    },
-                ),
-                ...(Container.isRovoDevEnabled && Container.siteManager.productHasAtLeastOneSite(ProductJira)
-                    ? [
-                          new InternalLinkNode(getProductName(), 'Chat with Atlassian coding agent', iconSet.ROVODEV, {
-                              command: 'atlascode.views.rovoDev.webView.focus',
-                              title: `Open ${getProductName()} Chat`,
-                          }),
-                      ]
-                    : []),
-            ];
-        } else {
-            return [
-                new LinkNode(
-                    'Get Started',
-                    'Check out our quick-start guide',
-                    iconSet.ATLASSIANICON,
-                    KnownLinkID.GettingStarted,
-                ),
-                new LinkNode(
-                    'What is JQL?',
-                    'Learn about Jira Query Language',
-                    iconSet.JIRAICON,
-                    KnownLinkID.WhatIsJQL,
-                ),
-                new LinkNode(
-                    'Contribute',
-                    'Create pull requests for this extension',
-                    iconSet.PULLREQUEST,
-                    KnownLinkID.Contribute,
-                ),
-                new LinkNode('Report an Issue', 'Report and vote on issues', iconSet.ISSUES, KnownLinkID.ReportAnIssue),
-                ...(Container.isRovoDevEnabled && Container.siteManager.productHasAtLeastOneSite(ProductJira)
-                    ? [
-                          new InternalLinkNode(getProductName(), 'Chat with Atlassian coding agent', iconSet.ROVODEV, {
-                              command: 'atlascode.views.rovoDev.webView.focus',
-                              title: `Open ${getProductName()} Chat`,
-                          }),
-                      ]
-                    : []),
-            ];
-        }
+        return [
+            new LinkNode(
+                'Get Started',
+                'Check out our quick-start guide',
+                iconSet.ATLASSIANICON,
+                KnownLinkID.GettingStarted,
+            ),
+            new LinkNode('What is JQL?', 'Learn about Jira Query Language', iconSet.JIRAICON, KnownLinkID.WhatIsJQL),
+            new LinkNode(
+                'Contribute',
+                'Create pull requests for this extension',
+                iconSet.PULLREQUEST,
+                KnownLinkID.Contribute,
+            ),
+            new LinkNode('Report an Issue', 'Report and vote on issues', iconSet.ISSUES, KnownLinkID.ReportAnIssue),
+            new InternalLinkNode(
+                'Explore Features',
+                'Overwhelmed? Check out some of the most common features, all in one place',
+                iconSet.SEARCH,
+                {
+                    command: Commands.ShowExploreSettings,
+                    title: 'Open Explore Page',
+                },
+            ),
+            ...(Container.isRovoDevEnabled && Container.siteManager.productHasAtLeastOneSite(ProductJira)
+                ? [
+                      new InternalLinkNode(getProductName(), 'Chat with Atlassian coding agent', iconSet.ROVODEV, {
+                          command: 'atlascode.views.rovoDev.webView.focus',
+                          title: `Open ${getProductName()} Chat`,
+                      }),
+                  ]
+                : []),
+        ];
     }
 }

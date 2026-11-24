@@ -10,6 +10,10 @@
 
 - **Bitbucket**: The background "new pull request" notification check no longer exhausts the Bitbucket Cloud per-user rate limit (which also breaks the Bitbucket website for that user). It now stops polling for the rest of a refresh cycle once Bitbucket returns a rate-limit error, and is skipped for workspaces with more than 10 Bitbucket repositories.
 
+### Cleanup
+
+- **Settings**: Removed the abandoned new settings page experiment; the existing settings page experience is now permanent.
+
 ## What's new in 4.0.32
 
 ### Security
