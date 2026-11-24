@@ -10,6 +10,10 @@
 
 - **Bitbucket**: The background "new pull request" notification check no longer exhausts the Bitbucket Cloud per-user rate limit (which also breaks the Bitbucket website for that user). It now stops polling for the rest of a refresh cycle once Bitbucket returns a rate-limit error, and is skipped for workspaces with more than 10 Bitbucket repositories.
 
+### Cleanup
+
+- **RovoDev**: Removed the `atlascode-rovodev-entitlement-notification` feature flag; Rovo Dev entitlement notifications are now always enabled (still controlled by the `showEntitlementNotifications` setting).
+
 ## What's new in 4.0.32
 
 ### Security
