@@ -105,12 +105,6 @@
         ],
         "commands": [
             {
-                "command": "atlascode.rovodev.quickAuth",
-                "title": "Authenticate",
-                "category": "Jira",
-                "when": "atlascode:useNewAuthFlow && !atlascode:bbyEnvironmentActive"
-            },
-            {
                 "command": "atlascode.rovodev.askInteractive",
                 "title": "Ask & Open",
                 "enablement": "atlascode:rovoDevEnabled && !atlascode:bbyEnvironmentActive",
@@ -972,10 +966,6 @@
             ],
             "commandPalette": [
                 {
-                    "command": "atlascode.rovodev.quickAuth",
-                    "when": "atlascode:useNewAuthFlow"
-                },
-                {
                     "command": "atlascode.rovodev.askRovoDev",
                     "when": "atlascode:rovoDevEnabled"
                 },
@@ -1809,7 +1799,6 @@
         "turndown": "^7.2.2",
         "use-constant": "^2.0.0",
         "uuid": "^14.0.0",
-        "vscode-languageclient": "^9.0.1",
         "websocket": "^1.0.35"
     },
     "devDependencies": {
@@ -1887,9 +1876,6 @@
     },
     "overrides": {
         "@sentry/node": {
-            "minimatch": "^10.2.5"
-        },
-        "vscode-languageclient": {
             "minimatch": "^10.2.5"
         },
         "@atlaskit/analytics-next-stable-react-context": {

@@ -27,13 +27,11 @@ import { transitionIssue } from './jira/transitionIssue';
 import { knownLinkIdMap } from './lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection, ConfigV3Section, ConfigV3SubSection } from './lib/ipc/models/config';
 import { Logger } from './logger';
-import { runQuickAuth } from './onboarding/quickFlow';
-import { AuthenticationType } from './onboarding/quickFlow/authentication/types';
 import { RovodevCommands } from './rovo-dev/api/componentApi';
 import { getProductName } from './rovo-dev/api/rovodevStaticConfig';
 import { RovoDevContextItem } from './rovo-dev/rovoDevTypes';
 import { openRovoDevConfigFile } from './rovo-dev/rovoDevUtils';
-import { Experiments, Features } from './util/featureFlags';
+import { Experiments } from './util/featureFlags';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
 import { PipelineNode } from './views/pipelines/PipelinesTree';
@@ -162,12 +160,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(Commands.ShowOnboardingFlow, () => Container.onboardingProvider.start()),
         commands.registerCommand(Commands.JiraFilter, () => FilterProvider.createFilterQuickPick()),
         commands.registerCommand(Commands.JiraLogin, () => {
-            const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
-            if (useNewAuthFlow) {
-                runQuickAuth({ initialState: { product: ProductJira }, origin: 'settings' });
-            } else {
-                commands.executeCommand(Commands.ShowConfigPage);
-            }
+            commands.executeCommand(Commands.ShowConfigPage);
         }),
         commands.registerCommand(Commands.AddRecommendedExtension, addAtlascodeAsRecommendedExtension),
         commands.registerCommand(Commands.ExpandCreateWorkItemWebview, () => {
@@ -249,19 +242,11 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 commands.executeCommand('workbench.action.openSettings', `@ext:${ExtensionId} pipeline`),
             ),
             commands.registerCommand(Commands.JiraAPITokenLogin, () => {
-                const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
-                if (useNewAuthFlow) {
-                    runQuickAuth({
-                        initialState: { product: ProductJira, authenticationType: AuthenticationType.ApiToken },
-                        origin: 'nudge',
-                    });
-                } else {
-                    Container.settingsWebviewFactory.createOrShow({
-                        section: ConfigV3Section.Auth,
-                        subSection: ConfigV3SubSection.JiraAuth,
-                        initiateApiTokenAuth: true,
-                    });
-                }
+                Container.settingsWebviewFactory.createOrShow({
+                    section: ConfigV3Section.Auth,
+                    subSection: ConfigV3SubSection.JiraAuth,
+                    initiateApiTokenAuth: true,
+                });
             }),
         );
     } else {
@@ -329,19 +314,11 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 });
             }),
             commands.registerCommand(Commands.JiraAPITokenLogin, () => {
-                const useNewAuthFlow = Container.featureFlagClient.checkGate(Features.UseNewAuthFlow);
-                if (useNewAuthFlow) {
-                    runQuickAuth({
-                        initialState: { product: ProductJira, authenticationType: AuthenticationType.ApiToken },
-                        origin: 'nudge',
-                    });
-                } else {
-                    Container.settingsWebviewFactory.createOrShow({
-                        section: ConfigSection.Jira,
-                        subSection: ConfigSubSection.Auth,
-                        initiateApiTokenAuth: true,
-                    });
-                }
+                Container.settingsWebviewFactory.createOrShow({
+                    section: ConfigSection.Jira,
+                    subSection: ConfigSubSection.Auth,
+                    initiateApiTokenAuth: true,
+                });
             }),
         );
     }

@@ -3,7 +3,6 @@ import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { Product } from '../../../../atlclients/authInfo';
 import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
-import { Features, useFeatureFlags } from '../../common/FeatureFlagContext';
 import { ConfigControllerContext } from '../configController';
 import { CloudAuthButton } from './CloudAuthButton';
 import { SiteList } from './SiteList';
@@ -111,27 +110,13 @@ const AuthContainer = ({
     remoteAuth,
     isRemoteAuthButtonVisible,
 }: AuthContainerProps) => {
-    const { flags } = useFeatureFlags();
-    const configController = useContext(ConfigControllerContext);
-
     return (
         <React.Fragment>
             <Grid item>
                 <Grid container direction="column" spacing={2}>
                     <Grid item>
                         <Grid container spacing={2}>
-                            {flags[Features.UseNewAuthFlow] && product.key === 'jira' ? (
-                                // Only enabled for jira for now
-                                <Grid item>
-                                    <Button
-                                        color="primary"
-                                        variant="contained"
-                                        onClick={configController.startAuthFlow}
-                                    >
-                                        Login to {product.name}
-                                    </Button>
-                                </Grid>
-                            ) : !isRemote ? (
+                            {!isRemote ? (
                                 <React.Fragment>
                                     <Grid item>
                                         <CloudAuthButton product={product} />

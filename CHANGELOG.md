@@ -10,6 +10,10 @@
 
 - **Bitbucket**: The background "new pull request" notification check no longer exhausts the Bitbucket Cloud per-user rate limit (which also breaks the Bitbucket website for that user). It now stops polling for the rest of a refresh cycle once Bitbucket returns a rate-limit error, and is skipped for workspaces with more than 10 Bitbucket repositories.
 
+### Internal
+
+- Removed the unreleased `atlascode-use-new-auth-flow` and `atlascode-enable-rovodev-lsp` feature flags and the code behind them (the quick-auth login flow and the Rovo Dev language server). The existing login behaviour is unchanged.
+
 ## What's new in 4.0.32
 
 ### Security

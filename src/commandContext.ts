@@ -14,7 +14,6 @@ export enum CommandContext {
     IsRovoDevAuthenticated = 'atlascode:isRovoDevAuthenticated',
     BbyEnvironmentActive = 'atlascode:bbyEnvironmentActive',
     DebugMode = 'atlascode:debugMode',
-    UseNewAuthFlow = 'atlascode:useNewAuthFlow',
     IsEditorFocused = 'atlascode:isEditorFocused',
     ShowCreateWorkItemWebview = 'atlascode:showCreateWorkItemWebview',
     IsBitbucketCloudRepo = 'atlascode:isBitbucketCloudRepo',

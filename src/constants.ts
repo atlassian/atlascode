@@ -92,7 +92,6 @@ export const enum Commands {
     DoneIssue = 'atlascode.jira.doneIssue',
     ShowOnboardingFlow = 'atlascode.showOnboardingFlow',
     OpenNativeSettings = 'atlascode.openNativeSettings',
-    QuickAuth = 'atlascode.rovodev.quickAuth',
     JiraLogin = 'atlascode.jira.login',
     JiraAPITokenLogin = 'atlascode.jira.apiTokenLogin',
     ExpandCreateWorkItemWebview = 'atlascode.jira.expandCreateWorkItem',

@@ -2,13 +2,12 @@ import Axios from 'axios';
 import { defaultActionGuard } from 'src/ipc/messaging';
 import { ConfigV3Section } from 'src/lib/ipc/models/config';
 import { Logger } from 'src/logger';
-import { Features } from 'src/util/features';
 import { v4 } from 'uuid';
 import { env } from 'vscode';
 import * as vscode from 'vscode';
 
 import { isBasicAuthInfo, isEmptySiteInfo, isPATAuthInfo } from '../../../../atlclients/authInfo';
-import { Commands, ExtensionId } from '../../../../constants';
+import { ExtensionId } from '../../../../constants';
 import { Container } from '../../../../container';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
@@ -26,7 +25,7 @@ const AUTH_URI = `${env.uriScheme || 'vscode'}://${ExtensionId}/auth`;
 export const id: string = 'atlascodeSettingsV3';
 
 export class ConfigV3WebviewController implements WebviewController<SectionV3ChangeMessage> {
-    public readonly requiredFeatureFlags = [Features.UseNewAuthFlow];
+    public readonly requiredFeatureFlags = [];
     public readonly requiredExperiments = [];
 
     private _messagePoster: MessagePoster;
@@ -311,10 +310,6 @@ export class ConfigV3WebviewController implements WebviewController<SectionV3Cha
             }
             case ConfigActionType.OpenNativeSettings: {
                 await this._api.openNativeSettings();
-                break;
-            }
-            case ConfigActionType.StartAuthFlow: {
-                vscode.commands.executeCommand(Commands.JiraLogin);
                 break;
             }
             case CommonActionType.SendAnalytics:

@@ -33,12 +33,10 @@ import { StartWorkIssueMessage } from './lib/ipc/toUI/startWork';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
 import { Logger } from './logger';
 import OnboardingProvider from './onboarding/onboardingProvider';
-import { registerQuickAuthCommand } from './onboarding/quickFlow';
 import { Pipeline } from './pipelines/model';
 import { RovodevCommandContext } from './rovo-dev/api/componentApi';
 import { RovodevStaticConfig } from './rovo-dev/api/rovodevStaticConfig';
 import { RovoDevCodeActionProvider } from './rovo-dev/rovoDevCodeActionProvider';
-import { RovoDevLanguageServerProvider } from './rovo-dev/rovoDevLanguageServerProvider';
 import { RovoDevProcessManager } from './rovo-dev/rovoDevProcessManager';
 import { RovoDevTelemetryProvider } from './rovo-dev/rovoDevTelemetryProvider';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
@@ -206,13 +204,6 @@ export class Container {
             context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
         }
 
-        if (this._featureFlagClient.checkGate(Features.UseNewAuthFlow)) {
-            setCommandContext(CommandContext.UseNewAuthFlow, true);
-            context.subscriptions.push(registerQuickAuthCommand());
-        } else {
-            setCommandContext(CommandContext.UseNewAuthFlow, false);
-        }
-
         context.subscriptions.push(
             (this._rovoDevEntitlementChecker = new RovoDevEntitlementChecker(this._analyticsClient)),
         );
@@ -352,16 +343,11 @@ export class Container {
         } else {
             try {
                 // don't add anything async before initializing _rovodevDisposable
-                const lspEnabled = this._featureFlagClient.checkGate(Features.RovoDevLspEnabled);
-
                 this._rovodevDisposable = vscode.Disposable.from(
                     languages.registerCodeActionsProvider({ scheme: 'file' }, new RovoDevCodeActionProvider(), {
                         providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
                     }),
                     (this._rovodevWebviewProvider = new RovoDevWebviewProvider(context, context.extensionPath)),
-                    ...(lspEnabled
-                        ? [(this._rovodevLanguageServerProvider = new RovoDevLanguageServerProvider(context))]
-                        : []),
                 );
 
                 context.subscriptions.push(this._rovodevDisposable);
@@ -677,11 +663,6 @@ export class Container {
     private static _rovodevWebviewProvider: RovoDevWebviewProvider;
     public static get rovodevWebviewProvider() {
         return this._rovodevWebviewProvider;
-    }
-
-    private static _rovodevLanguageServerProvider: RovoDevLanguageServerProvider;
-    public static get rovodevLanguageServerProvider() {
-        return this._rovodevLanguageServerProvider;
     }
 
     private static _rovoDevEntitlementChecker: RovoDevEntitlementChecker;
