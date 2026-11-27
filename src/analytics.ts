@@ -24,7 +24,6 @@ import { IssueSuggestionSettings } from './config/configuration';
 import { BitbucketIssuesTreeViewId, PullRequestTreeViewId } from './constants';
 import { Container } from './container';
 import { RovoDevTelemetryParams } from './logger';
-import { QuickFlowAnalyticsEvent } from './onboarding/quickFlow/types';
 import { RovoDevCommonParams, RovodevPerformanceTag } from './rovo-dev/analytics/events';
 import { NotificationSurface, NotificationType } from './views/notifications/notificationManager';
 import { NotificationSource } from './views/notifications/notificationSources';
@@ -530,10 +529,6 @@ export async function apiTokenNudgeClickedEvent(source: string): Promise<TrackEv
 
 export async function apiTokenRetainedEvent() {
     return trackEvent('retained', 'apiToken');
-}
-
-export async function quickFlowEvent(event: QuickFlowAnalyticsEvent): Promise<TrackEvent> {
-    return trackEvent('statusUpdated', 'quickFlow', { attributes: { ...event } });
 }
 
 export async function uiErrorEvent(errorInfo: UIErrorInfo): Promise<TrackEvent> {
